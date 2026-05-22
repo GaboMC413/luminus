@@ -1,10 +1,11 @@
 version: 1
 applications:
-  - appRoot: .
+  - appRoot: apps/platform
     frontend:
       phases:
         preBuild:
           commands:
+            - cd ../..
             - npm ci --cache .npm --prefer-offline
         build:
           commands:
