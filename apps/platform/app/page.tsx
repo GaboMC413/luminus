@@ -1,52 +1,34 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { generateClient } from "aws-amplify/data";
-import type { Schema } from "@/amplify/data/resource";
-import "./../app/app.css";
-import { Amplify } from "aws-amplify";
-/*import outputs from "@/amplify_outputs.json";*/
-import "@aws-amplify/ui-react/styles.css";
-
-/*Amplify.configure(outputs);*/
-
-const client = generateClient<Schema>();
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function App() {
-  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
-
-  function listTodos() {
-    client.models.Todo.observeQuery().subscribe({
-      next: (data) => setTodos([...data.items]),
-    });
-  }
+  const { user, loading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    listTodos();
-  }, []);
+    if (loading) return;
 
-  function createTodo() {
-    client.models.Todo.create({
-      content: window.prompt("Todo content"),
-    });
-  }
+    if (!user) {
+      router.push("/signin");
+    } else if (!user.isOnboarded) {
+      router.push("/onboarding");
+    } else {
+      router.push("/profile");
+    }
+  }, [user, loading, router]);
 
   return (
-    <main>
-      <h1>My todos</h1>
-      <button onClick={createTodo}>+ new</button>
-      <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>{todo.content}</li>
-        ))}
-      </ul>
-      <div>
-        🥳 App successfully hosted. Try creating a new todo.
-        <br />
-        <a href="https://docs.amplify.aws/nextjs/start/quickstart/nextjs-app-router-client-components/">
-          Review next steps of this tutorial.
-        </a>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-tr from-wellness-sand-50 via-white to-wellness-sage-50">
+      <div className="relative flex items-center justify-center">
+        {/* Tranquil breathing circular indicator */}
+        <div className="w-16 h-16 border-2 border-wellness-sage-100 rounded-full animate-ping duration-1000"></div>
+        <div className="absolute w-12 h-12 border border-t-2 border-wellness-sage-500 rounded-full animate-spin"></div>
+        <div className="absolute w-6 h-6 bg-wellness-sage-200/50 rounded-full"></div>
       </div>
-    </main>
+      <p className="mt-6 text-wellness-sage-600 text-xs font-semibold tracking-widest uppercase animate-pulse">LUMINUS</p>
+    </div>
   );
 }
