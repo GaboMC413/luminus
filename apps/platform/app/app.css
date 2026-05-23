@@ -1,56 +1,6 @@
-@import "tailwindcss";
-@config "../tailwind.config.js";
-
-@layer base {
-  body {
-    @apply bg-gradient-to-tr from-wellness-sand-50 via-white to-wellness-sage-50 text-wellness-slate-900 min-h-screen font-sans antialiased overflow-x-hidden;
-    background-attachment: fixed;
-  }
-  
-  ::selection {
-    @apply bg-wellness-sage-100 text-wellness-sage-800;
-  }
-
-  /* Calm Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-wellness-sage-200 rounded-full hover:bg-wellness-sage-300 transition-colors duration-300;
-  }
-}
-
-@layer utilities {
-  .bg-glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/40;
-  }
-  .bg-glass-dark {
-    @apply bg-wellness-slate-900/90 backdrop-blur-md border border-white/10;
-  }
-  .transition-premium {
-    @apply transition-all duration-300 ease-out;
-  }
-}
-
-/* Micro-animations */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-4px); }
-}
-
-.animate-float {
-  animation: float 4s ease-in-out infinite;
-}
-
-@keyframes pulse-slow {
-  0%, 100% { opacity: 0.4; }
-  50% { opacity: 0.8; }
-}
-
-.animate-pulse-slow {
-  animation: pulse-slow 8s ease-in-out infinite;
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: #000000;
 }

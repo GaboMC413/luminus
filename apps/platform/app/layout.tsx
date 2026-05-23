@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { AuthProvider } from "@/context/AuthContext";
 import "./app.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "LUMINUS | Wellbeing & Professional Growth LATAM",
-  description: "A professional wellness space in Latin America focused on meaningful connections, expert advice, and personal alignment.",
+  title: "LUMINUS",
+  description: "Nuestra luz pronto volverá a brillar",
 };
 
 export default function RootLayout({
@@ -17,12 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
-      </body>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }
-
