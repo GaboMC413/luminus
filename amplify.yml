@@ -11,11 +11,11 @@ applications:
           commands:
             - npm run build:platform
       artifacts:
-        baseDirectory: apps/platform/.next
+        baseDirectory: .next
         files:
           - '**/*'
       cache:
         paths:
-          - apps/platform/.next/cache/**/*
-          - .npm/**/*
-          - node_modules/**/*
+          - .next/cache/**/*
+          - ../../.npm/**/*
+          - ../../node_modules/**/*
