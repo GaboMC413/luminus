@@ -27,15 +27,15 @@ export default function RootLayout({
               <Link href="/" className="text-sm font-medium text-luminus-secondary hover:text-luminus-text transition-colors">
                 Inicio
               </Link>
-              <a href="#sobre-nosotros" className="text-sm font-medium text-luminus-secondary hover:text-luminus-text transition-colors">
-                Sobre nosotros
-              </a>
               <Link href="/expertos" className="text-sm font-medium text-luminus-secondary hover:text-luminus-text transition-colors">
                 Para expertos
               </Link>
-              <a href="#contacto" className="text-sm font-medium text-luminus-secondary hover:text-luminus-text transition-colors">
+              <Link href="/sobre-nosotros" className="text-sm font-medium text-luminus-secondary hover:text-luminus-text transition-colors">
+                Sobre nosotros
+              </Link>
+              <Link href="/contacto" className="text-sm font-medium text-luminus-secondary hover:text-luminus-text transition-colors">
                 Contactarnos
-              </a>
+              </Link>
             </nav>
 
             <div className="flex items-center gap-4">
@@ -73,15 +73,15 @@ export default function RootLayout({
                 <Link href="/" className="hover:text-luminus-text transition-colors">
                   Inicio
                 </Link>
-                <a href="#sobre-nosotros" className="hover:text-luminus-text transition-colors">
-                  Sobre nosotros
-                </a>
                 <Link href="/expertos" className="hover:text-luminus-text transition-colors">
                   Para expertos
                 </Link>
-                <a href="#contacto" className="hover:text-luminus-text transition-colors">
+                <Link href="/sobre-nosotros" className="hover:text-luminus-text transition-colors">
+                  Sobre nosotros
+                </Link>
+                <Link href="/contacto" className="hover:text-luminus-text transition-colors">
                   Contactarnos
-                </a>
+                </Link>
               </div>
             </div>
             
