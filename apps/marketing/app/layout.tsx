@@ -27,15 +27,15 @@ export default function RootLayout({
               <Link href="/" className="text-sm font-medium text-luminus-secondary hover:text-luminus-text transition-colors">
                 Inicio
               </Link>
-              <a href="#funcionalidades" className="text-sm font-medium text-luminus-secondary hover:text-luminus-text transition-colors">
-                Funcionalidades
+              <a href="#sobre-nosotros" className="text-sm font-medium text-luminus-secondary hover:text-luminus-text transition-colors">
+                Sobre nosotros
               </a>
-              <a href="#planes" className="text-sm font-medium text-luminus-secondary hover:text-luminus-text transition-colors">
-                Planes
-              </a>
-              <Link href="/legal" className="text-sm font-medium text-luminus-secondary hover:text-luminus-text transition-colors">
-                Términos
+              <Link href="/expertos" className="text-sm font-medium text-luminus-secondary hover:text-luminus-text transition-colors">
+                Para expertos
               </Link>
+              <a href="#contacto" className="text-sm font-medium text-luminus-secondary hover:text-luminus-text transition-colors">
+                Contactarnos
+              </a>
             </nav>
 
             <div className="flex items-center gap-4">
@@ -73,15 +73,15 @@ export default function RootLayout({
                 <Link href="/" className="hover:text-luminus-text transition-colors">
                   Inicio
                 </Link>
-                <a href="#funcionalidades" className="hover:text-luminus-text transition-colors">
-                  Funcionalidades
+                <a href="#sobre-nosotros" className="hover:text-luminus-text transition-colors">
+                  Sobre nosotros
                 </a>
-                <a href="#planes" className="hover:text-luminus-text transition-colors">
-                  Planes
-                </a>
-                <Link href="/legal" className="hover:text-luminus-text transition-colors">
-                  Términos Legales
+                <Link href="/expertos" className="hover:text-luminus-text transition-colors">
+                  Para expertos
                 </Link>
+                <a href="#contacto" className="hover:text-luminus-text transition-colors">
+                  Contactarnos
+                </a>
               </div>
             </div>
             

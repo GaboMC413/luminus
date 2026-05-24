@@ -50,7 +50,7 @@ export default function FeaturesSection() {
   ];
 
   return (
-    <section id="funcionalidades" className="py-24 bg-luminus-bg">
+    <section id="para-expertos" className="py-24 bg-luminus-bg">
       <div className="mx-auto max-w-7xl px-6">
         {/* Section Header */}
         <div className="mx-auto max-w-3xl text-center mb-16">

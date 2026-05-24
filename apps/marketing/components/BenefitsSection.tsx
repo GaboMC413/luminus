@@ -24,7 +24,7 @@ export default function BenefitsSection() {
   ];
 
   return (
-    <section className="py-24 bg-white border-y border-slate-100 relative overflow-hidden">
+    <section id="sobre-nosotros" className="py-24 bg-white border-y border-slate-100 relative overflow-hidden">
       {/* Soft decorative background elements */}
       <div className="absolute right-0 top-1/2 -translate-y-1/2 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute left-10 bottom-10 w-48 h-48 bg-blue-500/5 rounded-full blur-2xl pointer-events-none" />
