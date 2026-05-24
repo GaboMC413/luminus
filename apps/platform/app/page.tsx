@@ -5,11 +5,13 @@ export default function ComingSoon() {
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: '100vh',
+      minHeight: '100dvh',
       backgroundColor: '#000000',
       color: '#FFFFFF',
       fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       padding: '24px',
+      paddingTop: 'calc(24px + env(safe-area-inset-top))',
+      paddingBottom: 'calc(24px + env(safe-area-inset-bottom))',
       textAlign: 'center'
     }}>
       <h1 style={{
@@ -35,3 +37,4 @@ export default function ComingSoon() {
     </main>
   );
 }
+
