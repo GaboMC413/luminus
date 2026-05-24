@@ -7,31 +7,40 @@ export default function ExpertStepsSection() {
       num: "01",
       title: "Crea tu cuenta",
       description: "Regístrate en LUMINUS como primer paso para ingresar a la red.",
-      bg: "bg-blue-50/50 text-luminus-blue border-blue-100",
+      numColor: "text-luminus-blue",
+      badgeBg: "bg-luminus-blue text-white",
+      shadowColor: "shadow-bold-blue",
     },
     {
       num: "02",
       title: "Completa tu perfil",
       description: "Presenta tu experiencia, especialidad, enfoque y áreas de acompañamiento.",
-      bg: "bg-teal-50/50 text-teal-600 border-teal-100",
+      numColor: "text-luminus-orange",
+      badgeBg: "bg-luminus-orange text-black",
+      shadowColor: "shadow-bold-orange",
     },
     {
       num: "03",
       title: "Activa tu presencia",
       description: "Accede a las funciones para expertos y comienza a compartir tu trabajo con la comunidad.",
-      bg: "bg-indigo-50/50 text-indigo-600 border-indigo-100",
+      numColor: "text-luminus-lime",
+      badgeBg: "bg-luminus-lime text-black",
+      shadowColor: "shadow-bold-lime",
     },
   ];
 
   return (
-    <section className="py-24 bg-luminus-bg border-b border-slate-100">
+    <section className="py-24 bg-white border-b-2 border-black relative overflow-hidden">
+      {/* Decorative background glows */}
+      <div className="absolute left-0 bottom-0 w-80 h-80 bg-luminus-pink/5 rounded-full blur-3xl pointer-events-none" />
+
       <div className="mx-auto max-w-7xl px-6">
         {/* Section Header */}
         <div className="mx-auto max-w-3xl text-center mb-20">
-          <h2 className="font-display text-4xl font-extrabold tracking-tight text-luminus-text sm:text-5xl mb-4">
+          <h2 className="font-display text-4xl font-black tracking-tight text-black sm:text-5xl mb-4">
             El primer paso es registrarte
           </h2>
-          <p className="text-lg leading-relaxed text-luminus-secondary max-w-2xl mx-auto">
+          <p className="text-lg leading-relaxed text-slate-700 font-bold max-w-2xl mx-auto">
             Para formar parte como Experto LUMINUS, primero debes crear tu cuenta en la plataforma. Luego podrás avanzar con la configuración de tu perfil y acceder a las funciones disponibles para profesionales.
           </p>
         </div>
@@ -41,25 +50,25 @@ export default function ExpertStepsSection() {
           {steps.map((step, idx) => (
             <div 
               key={idx}
-              className="relative flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-8 hover:shadow-premium transition-all duration-300 group"
+              className={`relative flex flex-col justify-between rounded-[2.5rem] border-2 border-black bg-white p-8 ${step.shadowColor} hover:shadow-bold hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all duration-150 group`}
             >
               {/* Number indicator */}
               <div className="flex items-baseline justify-between mb-8">
-                <span className="font-display text-5xl font-black tracking-tight text-slate-100 group-hover:text-luminus-blue/10 transition-colors duration-300">
+                <span className={`font-display text-6xl font-black tracking-tight ${step.numColor} transition-transform duration-200 group-hover:scale-110`}>
                   {step.num}
                 </span>
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border ${step.bg}`}>
+                <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-black border-2 border-black shadow-bold-sm ${step.badgeBg}`}>
                   Paso {idx + 1}
                 </span>
               </div>
 
               <div>
                 {/* Title */}
-                <h3 className="font-display text-xl font-bold text-luminus-text mb-3">
+                <h3 className="font-display text-2xl font-black text-black mb-3">
                   {step.title}
                 </h3>
                 {/* Description */}
-                <p className="text-sm text-luminus-secondary leading-relaxed">
+                <p className="text-sm text-slate-700 font-semibold leading-relaxed">
                   {step.description}
                 </p>
               </div>
@@ -71,7 +80,7 @@ export default function ExpertStepsSection() {
         <div className="flex flex-col items-center justify-center">
           <a
             href="https://app.luminuslatam.com/signup"
-            className="inline-flex items-center justify-center rounded-2xl bg-luminus-blue px-8 py-4 text-base font-bold text-white shadow-accent hover:shadow-accent-hover hover:bg-blue-700 hover:-translate-y-0.5 transition-all duration-200"
+            className="inline-flex items-center justify-center rounded-full bg-black border-2 border-black px-10 py-4 text-base font-bold text-white shadow-bold hover:shadow-none hover:bg-luminus-orange hover:text-black hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-150"
           >
             Registrarme como primer paso
             <ArrowRight className="ml-2 h-5 w-5" />

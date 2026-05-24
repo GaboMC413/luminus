@@ -26,7 +26,6 @@ export default function PricingCard({
   disclaimer,
   isPopular = false,
 }: PricingCardProps) {
-  // Features included in the platform
   const inclusions = [
     "Acceso completo a la Comunidad",
     "Próximamente: Asistente Faro con IA",
@@ -37,21 +36,21 @@ export default function PricingCard({
 
   return (
     <div 
-      className={`relative flex flex-col justify-between rounded-3xl p-8 bg-white border transition-all duration-300 ${
+      className={`relative flex flex-col justify-between rounded-[2.5rem] p-8 border-2 border-black bg-white transition-all duration-150 ${
         isPopular 
-          ? "border-luminus-blue/40 shadow-premium-hover scale-[1.02] md:scale-105 z-10" 
-          : "border-slate-200 shadow-premium hover:border-slate-300"
+          ? "bg-luminus-lime/5 border-2 border-black shadow-bold-lg scale-[1.02] md:scale-105 z-10 hover:-translate-x-0.5 hover:-translate-y-0.5" 
+          : "shadow-bold hover:shadow-bold-lg hover:-translate-x-0.5 hover:-translate-y-0.5"
       }`}
     >
       {/* Top badges for discount or popular plan */}
       <div className="absolute -top-4 left-6 flex items-center gap-2">
         {discountBadge && (
-          <span className="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700 border border-amber-200 shadow-sm animate-pulse">
+          <span className="inline-flex items-center rounded-full bg-luminus-pink px-3 py-1 text-xs font-black text-black border-2 border-black shadow-bold-sm">
             {discountBadge}
           </span>
         )}
         {isPopular && (
-          <span className="inline-flex items-center rounded-full bg-luminus-blue px-3 py-1 text-xs font-bold text-white shadow-sm">
+          <span className="inline-flex items-center rounded-full bg-luminus-orange px-3 py-1 text-xs font-black text-white border-2 border-black shadow-bold-sm">
             Recomendado
           </span>
         )}
@@ -60,43 +59,43 @@ export default function PricingCard({
       <div>
         {/* Plan Title & Trial Badge */}
         <div className="flex items-center justify-between mb-4 mt-2">
-          <h3 className="font-display text-2xl font-bold text-luminus-text">
+          <h3 className="font-display text-2xl font-black text-black">
             {name}
           </h3>
-          <span className="inline-flex items-center rounded-full bg-luminus-blue-soft px-2.5 py-0.5 text-xs font-semibold text-luminus-blue border border-blue-100">
+          <span className="inline-flex items-center rounded-full bg-luminus-blue-soft px-2.5 py-0.5 text-xs font-bold text-luminus-blue border border-blue-150">
             {trialBadge}
           </span>
         </div>
 
         {/* Plan Pricing */}
         <div className="flex items-baseline gap-1 mb-6">
-          <span className="font-display text-4xl font-extrabold tracking-tight text-luminus-text">
+          <span className="font-display text-4xl font-black tracking-tight text-black">
             {price}
           </span>
-          <span className="text-sm font-medium text-luminus-secondary">
+          <span className="text-sm font-bold text-slate-500">
             {billing}
           </span>
         </div>
 
         {/* Short Description */}
-        <p className="text-sm text-luminus-secondary leading-relaxed mb-6">
+        <p className="text-sm text-slate-700 leading-relaxed mb-6 font-semibold">
           {description}
         </p>
 
-        <hr className="border-slate-100 my-6" />
+        <hr className="border-black/10 my-6" />
 
         {/* Plan Inclusions */}
         <div className="mb-8">
-          <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">
+          <p className="text-xs font-black uppercase tracking-wider text-slate-400 mb-4">
             ¿Qué incluye LUMINUS?
           </p>
           <ul className="space-y-3.5">
             {inclusions.map((feature, idx) => (
-              <li key={idx} className="flex items-start gap-2.5 text-sm text-luminus-secondary">
+              <li key={idx} className="flex items-start gap-2.5 text-sm text-slate-700 font-semibold">
                 <Check className={`h-4 w-5 shrink-0 mt-0.5 ${
-                  feature.startsWith("Próximamente") ? "text-slate-300" : "text-teal-600"
+                  feature.startsWith("Próximamente") ? "text-slate-300" : "text-emerald-500"
                 }`} />
-                <span className={feature.startsWith("Próximamente") ? "text-slate-400" : ""}>
+                <span className={feature.startsWith("Próximamente") ? "text-slate-400 font-medium" : "text-black"}>
                   {feature}
                 </span>
               </li>
@@ -109,17 +108,17 @@ export default function PricingCard({
       <div>
         <a
           href={ctaLink}
-          className={`w-full inline-flex items-center justify-center rounded-2xl py-4 px-6 text-base font-bold transition-all duration-200 ${
+          className={`w-full inline-flex items-center justify-center rounded-full py-4 px-6 text-base font-bold transition-all duration-150 border-2 border-black ${
             isPopular
-              ? "bg-luminus-blue text-white shadow-accent hover:shadow-accent-hover hover:bg-blue-700 hover:-translate-y-0.5"
-              : "border border-slate-200 bg-white text-luminus-text hover:bg-slate-50 hover:border-slate-300"
+              ? "bg-black text-white shadow-bold hover:shadow-none hover:bg-luminus-orange hover:text-black hover:translate-x-0.5 hover:translate-y-0.5"
+              : "bg-white text-black shadow-bold-sm hover:shadow-none hover:bg-slate-50 hover:translate-x-0.5 hover:translate-y-0.5"
           }`}
         >
           {ctaText}
         </a>
         
         {/* Disclaimer */}
-        <p className="text-[11px] leading-relaxed text-slate-400 mt-4 text-center">
+        <p className="text-[11px] leading-relaxed text-slate-500 mt-4 text-center font-medium">
           {disclaimer}
         </p>
       </div>

@@ -11,6 +11,7 @@ export default function FeaturesSection() {
       ctaLink: "https://app.luminuslatam.com/signup",
       isComingSoon: false,
       icon: <Users className="h-6 w-6" />,
+      accentBgClass: "bg-luminus-blue text-white",
     },
     {
       title: "Expertos",
@@ -19,6 +20,7 @@ export default function FeaturesSection() {
       ctaLink: "#",
       isComingSoon: true,
       icon: <UserCheck className="h-6 w-6" />,
+      accentBgClass: "bg-luminus-lime text-black",
     },
     {
       title: "Espacios LUMINUS",
@@ -27,6 +29,7 @@ export default function FeaturesSection() {
       ctaLink: "#",
       isComingSoon: true,
       icon: <Compass className="h-6 w-6" />,
+      accentBgClass: "bg-luminus-orange text-white",
     },
   ];
 
@@ -38,6 +41,7 @@ export default function FeaturesSection() {
       ctaLink: "#",
       isComingSoon: true,
       icon: <MapPin className="h-6 w-6" />,
+      accentBgClass: "bg-luminus-pink text-black",
     },
     {
       title: "Faro LUMINUS",
@@ -46,18 +50,22 @@ export default function FeaturesSection() {
       ctaLink: "#",
       isComingSoon: true,
       icon: <Sparkles className="h-6 w-6" />,
+      accentBgClass: "bg-black text-white",
     },
   ];
 
   return (
-    <section id="para-expertos" className="py-24 bg-luminus-bg">
+    <section id="para-expertos" className="py-24 bg-white">
       <div className="mx-auto max-w-7xl px-6">
         {/* Section Header */}
         <div className="mx-auto max-w-3xl text-center mb-16">
-          <h2 className="font-display text-4xl font-extrabold tracking-tight text-luminus-text sm:text-5xl mb-4">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-luminus-pink border-2 border-black px-3 py-1 text-xs font-black text-black shadow-bold-sm mb-4">
+            Explora la Red
+          </span>
+          <h2 className="font-display text-4xl font-black tracking-tight text-black sm:text-5xl mb-4">
             Todo lo que necesitas para avanzar con más claridad
           </h2>
-          <p className="text-lg leading-relaxed text-luminus-secondary">
+          <p className="text-lg leading-relaxed text-slate-700 font-bold">
             LUMINUS reúne comunidad, expertos, espacios de aprendizaje y herramientas digitales para que puedas explorar, conectar y encontrar acompañamiento de forma más consciente.
           </p>
         </div>

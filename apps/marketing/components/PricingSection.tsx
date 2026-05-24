@@ -29,14 +29,17 @@ export default function PricingSection() {
   ];
 
   return (
-    <section id="planes" className="py-24 bg-luminus-bg border-t border-slate-100">
+    <section id="planes" className="py-24 bg-white border-t-2 border-black">
       <div className="mx-auto max-w-7xl px-6">
         {/* Section Header */}
         <div className="mx-auto max-w-3xl text-center mb-20">
-          <h2 className="font-display text-4xl font-extrabold tracking-tight text-luminus-text sm:text-5xl mb-4">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-luminus-blue-soft border-2 border-black px-3 py-1 text-xs font-black text-black shadow-bold-sm mb-4">
+            Planes LUMINUS
+          </span>
+          <h2 className="font-display text-4xl font-black tracking-tight text-black sm:text-5xl mb-4">
             Selecciona tu plan
           </h2>
-          <p className="text-lg leading-relaxed text-luminus-secondary">
+          <p className="text-lg leading-relaxed text-slate-700 font-bold">
             Comienza hoy con 3 meses de acceso sin costo.
           </p>
         </div>

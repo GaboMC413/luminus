@@ -11,6 +11,7 @@ export default function ExpertFeaturesSection() {
       ctaLink: "https://app.luminuslatam.com/signup",
       isComingSoon: false,
       icon: <User className="h-6 w-6" />,
+      accentBgClass: "bg-luminus-blue text-white",
     },
     {
       title: "Conexión con personas",
@@ -19,6 +20,7 @@ export default function ExpertFeaturesSection() {
       ctaLink: "https://app.luminuslatam.com/signup",
       isComingSoon: false,
       icon: <HeartHandshake className="h-6 w-6" />,
+      accentBgClass: "bg-luminus-orange text-black",
     },
     {
       title: "Sesiones y servicios",
@@ -27,6 +29,7 @@ export default function ExpertFeaturesSection() {
       ctaLink: "#",
       isComingSoon: true,
       icon: <Calendar className="h-6 w-6" />,
+      accentBgClass: "bg-luminus-lime text-black",
     },
     {
       title: "Cursos y recursos",
@@ -35,6 +38,7 @@ export default function ExpertFeaturesSection() {
       ctaLink: "https://app.luminuslatam.com/signup",
       isComingSoon: false,
       icon: <BookOpen className="h-6 w-6" />,
+      accentBgClass: "bg-luminus-pink text-black",
     },
     {
       title: "Espacios LUMINUS",
@@ -43,6 +47,7 @@ export default function ExpertFeaturesSection() {
       ctaLink: "#",
       isComingSoon: true,
       icon: <Compass className="h-6 w-6" />,
+      accentBgClass: "bg-luminus-blue text-white",
     },
     {
       title: "Mapa LUMINUS",
@@ -51,18 +56,23 @@ export default function ExpertFeaturesSection() {
       ctaLink: "#",
       isComingSoon: true,
       icon: <MapPin className="h-6 w-6" />,
+      accentBgClass: "bg-luminus-orange text-black",
     },
   ];
 
   return (
-    <section id="funciones-expertos" className="py-24 bg-luminus-bg border-t border-slate-100">
+    <section id="funciones-expertos" className="py-24 bg-white border-b-2 border-black relative overflow-hidden">
+      {/* Soft background accents */}
+      <div className="absolute left-0 bottom-0 w-80 h-80 bg-luminus-lime/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-64 h-64 bg-luminus-pink/5 rounded-full blur-3xl pointer-events-none" />
+
       <div className="mx-auto max-w-7xl px-6">
         {/* Section Header */}
         <div className="mx-auto max-w-3xl text-center mb-16">
-          <h2 className="font-display text-4xl font-extrabold tracking-tight text-luminus-text sm:text-5xl mb-4">
+          <h2 className="font-display text-4xl font-black tracking-tight text-black sm:text-5xl mb-4">
             Funciones pensadas para expertos del bienestar
           </h2>
-          <p className="text-lg leading-relaxed text-luminus-secondary">
+          <p className="text-lg leading-relaxed text-slate-700 font-bold">
             LUMINUS ofrecerá herramientas exclusivas para que los profesionales puedan mostrarse, conectar, compartir contenido y ofrecer experiencias a la comunidad.
           </p>
         </div>

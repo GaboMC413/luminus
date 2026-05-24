@@ -8,18 +8,28 @@ module.exports = {
     extend: {
       colors: {
         luminus: {
-          bg: '#F8FAFC',
-          text: '#111827',
-          secondary: '#4B5563',
           blue: {
-            DEFAULT: '#2563EB',
+            DEFAULT: '#0450FB',
             soft: '#EFF6FF',
           },
-          mint: {
-            soft: '#DFF7EF',
-            text: '#0D9488', // professional dark teal for legible text on mint background
+          lime: {
+            DEFAULT: '#D4E600',
+            soft: '#F7FEE7',
           },
-          border: '#E5E7EB',
+          orange: {
+            DEFAULT: '#FF7700',
+            soft: '#FFF7ED',
+          },
+          pink: {
+            DEFAULT: '#FF80FC',
+            soft: '#FDF2F8',
+          },
+          white: '#FFFFFF',
+          black: '#000000',
+          bg: '#FFFFFF',
+          text: '#000000',
+          secondary: '#4B5563',
+          border: '#000000',
         }
       },
       fontFamily: {
@@ -27,10 +37,15 @@ module.exports = {
         display: ['Outfit', 'sans-serif'],
       },
       boxShadow: {
-        'premium': '0 4px 30px rgba(0, 0, 0, 0.03)',
-        'premium-hover': '0 10px 40px rgba(37, 99, 235, 0.06)',
-        'accent': '0 4px 20px rgba(37, 99, 235, 0.15)',
-        'accent-hover': '0 6px 24px rgba(37, 99, 235, 0.25)',
+        'premium': '0 4px 30px rgba(0, 0, 0, 0.02)',
+        'premium-hover': '0 10px 40px rgba(0, 0, 0, 0.05)',
+        'bold-sm': '2px 2px 0px 0px #000000',
+        'bold': '4px 4px 0px 0px #000000',
+        'bold-lg': '8px 8px 0px 0px #000000',
+        'bold-blue': '4px 4px 0px 0px #0450FB',
+        'bold-orange': '4px 4px 0px 0px #FF7700',
+        'bold-lime': '4px 4px 0px 0px #D4E600',
+        'bold-pink': '4px 4px 0px 0px #FF80FC',
       }
     },
   },

@@ -6,20 +6,23 @@ export default function AboutPrinciplesSection() {
     {
       title: "Conexión significativa",
       text: "Creamos espacios donde las personas puedan encontrarse desde intereses, búsquedas y experiencias reales.",
-      icon: <Link2 className="h-5 w-5 text-luminus-blue" />,
-      bg: "bg-luminus-blue-soft border-blue-100",
+      icon: <Link2 className="h-5 w-5 text-white" />,
+      iconBg: "bg-luminus-blue",
+      shadowColor: "shadow-bold-blue",
     },
     {
       title: "Confianza",
-      text: "Buscamos construir una red cuidada, clara y profesional, donde cada vínculo tenga valor.",
-      icon: <ShieldCheck className="h-5 w-5 text-teal-600" />,
-      bg: "bg-luminus-mint-soft border-teal-150",
+      text: "Buscamos construir una red cuidada, clara y profesional, donde cada vínculo tenga valor real.",
+      icon: <ShieldCheck className="h-5 w-5 text-black" />,
+      iconBg: "bg-luminus-orange",
+      shadowColor: "shadow-bold-orange",
     },
     {
       title: "Bienestar integral",
       text: "Entendemos el bienestar como una experiencia física, emocional, mental, social y espiritual.",
-      icon: <HeartHandshake className="h-5 w-5 text-rose-500" />,
-      bg: "bg-rose-50 border-rose-100",
+      icon: <HeartHandshake className="h-5 w-5 text-black" />,
+      iconBg: "bg-luminus-lime",
+      shadowColor: "shadow-bold-lime",
     },
   ];
 
@@ -27,30 +30,35 @@ export default function AboutPrinciplesSection() {
     {
       title: "Claridad",
       text: "Organizamos personas, recursos y herramientas para que cada usuario pueda avanzar con más dirección.",
-      icon: <Milestone className="h-5 w-5 text-amber-600" />,
-      bg: "bg-amber-50 border-amber-100",
+      icon: <Milestone className="h-5 w-5 text-black" />,
+      iconBg: "bg-luminus-pink",
+      shadowColor: "shadow-bold-pink",
     },
     {
       title: "Humanidad + tecnología",
       text: "Usamos tecnología para potenciar la conexión humana, no para reemplazarla.",
-      icon: <Cpu className="h-5 w-5 text-violet-600" />,
-      bg: "bg-violet-50 border-violet-100",
+      icon: <Cpu className="h-5 w-5 text-white" />,
+      iconBg: "bg-luminus-blue",
+      shadowColor: "shadow-bold-blue",
     },
   ];
 
   return (
-    <section className="py-24 bg-luminus-bg border-b border-slate-100">
+    <section className="py-24 bg-white border-b-2 border-black relative overflow-hidden">
+      {/* Background glow effects */}
+      <div className="absolute right-0 bottom-0 w-80 h-80 bg-luminus-orange/5 rounded-full blur-3xl pointer-events-none" />
+
       <div className="mx-auto max-w-7xl px-6">
         
         {/* Section Header */}
-        <div className="mx-auto max-w-3xl text-center mb-16">
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 block">
-            Nuestra Filosofía
-          </span>
-          <h2 className="font-display text-4xl font-extrabold tracking-tight text-luminus-text sm:text-5xl mb-4">
+        <div className="mx-auto max-w-3xl text-center mb-16 flex flex-col items-center">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-luminus-lime border-2 border-black px-4 py-1.5 text-xs font-black text-black shadow-bold-sm mb-6">
+            <span>Nuestra Filosofía</span>
+          </div>
+          <h2 className="font-display text-4xl font-black tracking-tight text-black sm:text-5xl mb-4">
             Principios que nos definen
           </h2>
-          <p className="text-lg leading-relaxed text-luminus-secondary max-w-2xl mx-auto">
+          <p className="text-lg leading-relaxed text-slate-700 font-bold max-w-2xl mx-auto">
             LUMINUS se construye sobre una forma de entender el bienestar: más conectada, integral, clara y humana.
           </p>
         </div>
@@ -62,17 +70,17 @@ export default function AboutPrinciplesSection() {
             {row1Principles.map((principle, idx) => (
               <div 
                 key={idx}
-                className="flex items-start gap-4 p-6 rounded-2xl border border-slate-200 bg-white hover:shadow-premium transition-all duration-300 group"
+                className={`flex items-start gap-4 p-6 rounded-[2rem] border-2 border-black bg-white ${principle.shadowColor} hover:shadow-bold hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all duration-150 group`}
               >
                 {/* Icon wrapper */}
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${principle.bg}`}>
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-black shadow-bold-sm ${principle.iconBg}`}>
                   {principle.icon}
                 </div>
                 <div>
-                  <h3 className="font-display text-base font-bold text-slate-900 mb-2">
+                  <h3 className="font-display text-lg font-black text-black mb-2">
                     {principle.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-luminus-secondary leading-relaxed">
+                  <p className="text-sm text-slate-700 font-semibold leading-relaxed">
                     {principle.text}
                   </p>
                 </div>
@@ -85,17 +93,17 @@ export default function AboutPrinciplesSection() {
             {row2Principles.map((principle, idx) => (
               <div 
                 key={idx}
-                className="flex items-start gap-4 p-6 rounded-2xl border border-slate-200 bg-white hover:shadow-premium transition-all duration-300 group"
+                className={`flex items-start gap-4 p-6 rounded-[2rem] border-2 border-black bg-white ${principle.shadowColor} hover:shadow-bold hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all duration-150 group`}
               >
                 {/* Icon wrapper */}
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${principle.bg}`}>
+                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-2 border-black shadow-bold-sm ${principle.iconBg}`}>
                   {principle.icon}
                 </div>
                 <div>
-                  <h3 className="font-display text-base font-bold text-slate-900 mb-2">
+                  <h3 className="font-display text-lg font-black text-black mb-2">
                     {principle.title}
                   </h3>
-                  <p className="text-xs sm:text-sm text-luminus-secondary leading-relaxed">
+                  <p className="text-sm text-slate-700 font-semibold leading-relaxed">
                     {principle.text}
                   </p>
                 </div>
