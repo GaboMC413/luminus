@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
+import Navbar from "../components/Navbar";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,53 +15,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className="scroll-smooth">
-      <body className="bg-luminus-bg text-luminus-text font-sans antialiased">
+    <html lang="es" className="scroll-smooth overflow-x-hidden max-w-full">
+      <body className="bg-luminus-bg text-luminus-text font-sans antialiased overflow-x-hidden max-w-full w-full">
         {/* Navigation Navbar */}
-        <header className="sticky top-0 z-50 w-full border-b-2 border-black bg-white/95 transition-colors duration-300">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-            <Link href="/" className="group flex items-center gap-3 transition-transform duration-205 hover:scale-[1.01]">
-              <Image
-                src="/logo-luminus-black.svg"
-                alt="LUMINUS Latam Logo"
-                width={157}
-                height={20}
-                className="h-5 sm:h-6 w-auto"
-                priority
-              />
-            </Link>
-
-            <nav className="hidden md:flex items-center gap-8">
-              <Link href="/" className="text-sm font-bold text-black hover:text-luminus-blue transition-colors">
-                Inicio
-              </Link>
-              <Link href="/expertos" className="text-sm font-bold text-black hover:text-luminus-blue transition-colors">
-                Para expertos
-              </Link>
-              <Link href="/sobre-nosotros" className="text-sm font-bold text-black hover:text-luminus-blue transition-colors">
-                Sobre nosotros
-              </Link>
-              <Link href="/contacto" className="text-sm font-bold text-black hover:text-luminus-blue transition-colors">
-                Contactarnos
-              </Link>
-            </nav>
-
-            <div className="flex items-center gap-4">
-              <a
-                href="https://app.luminuslatam.com/signin"
-                className="text-sm font-bold text-black hover:text-luminus-orange transition-colors px-3 py-2"
-              >
-                Ingresar
-              </a>
-              <a
-                href="https://app.luminuslatam.com/signup"
-                className="inline-flex items-center justify-center rounded-full bg-black border-2 border-black px-5 py-2.5 text-sm font-bold text-white shadow-bold-sm hover:shadow-none hover:bg-luminus-orange hover:text-black hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-150"
-              >
-                Crear cuenta
-              </a>
-            </div>
-          </div>
-        </header>
+        <Navbar />
 
         {/* Main Content Area */}
         <main className="min-h-screen">
