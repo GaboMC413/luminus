@@ -1,7 +1,7 @@
 import React from "react";
 import { Check } from "lucide-react";
 
-interface PricingCardProps {
+export interface PricingCardProps {
   name: string;
   price: string;
   billing: string;
@@ -12,9 +12,10 @@ interface PricingCardProps {
   ctaLink: string;
   disclaimer: string;
   isPopular?: boolean;
+  inclusions: string[];
 }
 
-export default function PricingCard({
+export function PricingCard({
   name,
   price,
   billing,
@@ -25,15 +26,8 @@ export default function PricingCard({
   ctaLink,
   disclaimer,
   isPopular = false,
+  inclusions,
 }: PricingCardProps) {
-  const inclusions = [
-    "Acceso completo a la Comunidad",
-    "Próximamente: Asistente Faro con IA",
-    "Próximamente: Directorio de Expertos",
-    "Próximamente: Espacios de Aprendizaje",
-    "Próximamente: Mapa de bienestar Latam",
-  ];
-
   return (
     <div 
       className={`relative flex flex-col justify-between rounded-[2.5rem] p-8 border-2 border-black bg-white transition-all duration-150 ${

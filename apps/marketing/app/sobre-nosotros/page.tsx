@@ -1,12 +1,11 @@
 import React from "react";
 import type { Metadata } from "next";
-import AboutHeroSection from "../../components/AboutHeroSection";
-import AboutExistSection from "../../components/AboutExistSection";
-import AboutResponseSection from "../../components/AboutResponseSection";
-import AboutMissionSection from "../../components/AboutMissionSection";
-import AboutPrinciplesSection from "../../components/AboutPrinciplesSection";
-import AboutBuildingSection from "../../components/AboutBuildingSection";
-import AboutFinalCTA from "../../components/AboutFinalCTA";
+import { Hero } from "../../components/marketing/Hero";
+import { ProblemSection } from "../../components/marketing/about/ProblemSection";
+import { FeatureGrid } from "../../components/marketing/FeatureGrid";
+import { PlatformSection } from "../../components/marketing/about/PlatformSection";
+import { CTASection } from "../../components/marketing/CTASection";
+import { aboutContent } from "../../content/about";
 
 export const metadata: Metadata = {
   title: "LUMINUS Latam | Sobre Nosotros",
@@ -17,25 +16,25 @@ export default function SobreNosotrosPage() {
   return (
     <>
       {/* 1. Hero Section */}
-      <AboutHeroSection />
+      <Hero {...aboutContent.hero} />
 
       {/* 2. Sección: Por qué existe LUMINUS */}
-      <AboutExistSection />
+      <ProblemSection {...aboutContent.problem} />
 
       {/* 3. Sección: Nuestra respuesta */}
-      <AboutResponseSection />
+      <FeatureGrid {...aboutContent.response} />
 
       {/* 4. Sección: Misión, visión y propósito */}
-      <AboutMissionSection />
+      <FeatureGrid {...aboutContent.mission} />
 
       {/* 5. Sección: Principios */}
-      <AboutPrinciplesSection />
+      <FeatureGrid {...aboutContent.principles} />
 
       {/* 6. Sección: Qué estamos construyendo */}
-      <AboutBuildingSection />
+      <PlatformSection {...aboutContent.platform} />
 
       {/* 7. Sección final CTA */}
-      <AboutFinalCTA />
+      <CTASection {...aboutContent.finalCta} />
     </>
   );
 }

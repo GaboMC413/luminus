@@ -82,7 +82,8 @@ export default function Navbar() {
             aria-label="Toggle navigation menu"
             className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black bg-white text-black shadow-bold-sm hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-150 focus:outline-none"
           >
-            {isOpen ? <X className="h-6 w-6 stroke-[2.5]" /> : <Menu className="h-6 w-6 stroke-[2.5]" />}
+            <X className={`h-6 w-6 stroke-[2.5] ${isOpen ? "block" : "hidden"}`} />
+            <Menu className={`h-6 w-6 stroke-[2.5] ${isOpen ? "hidden" : "block"}`} />
           </button>
         </div>
       </div>

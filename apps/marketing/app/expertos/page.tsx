@@ -1,12 +1,13 @@
 import React from "react";
 import type { Metadata } from "next";
-import ExpertHeroSection from "../../components/ExpertHeroSection";
-import ExpertBenefitsSection from "../../components/ExpertBenefitsSection";
-import ExpertFeaturesSection from "../../components/ExpertFeaturesSection";
-import ExpertComparisonSection from "../../components/ExpertComparisonSection";
-import ExpertStepsSection from "../../components/ExpertStepsSection";
-import ExpertTrustSection from "../../components/ExpertTrustSection";
-import ExpertFinalCTA from "../../components/ExpertFinalCTA";
+import { Hero } from "../../components/marketing/Hero";
+import { BenefitsGrid } from "../../components/marketing/BenefitsGrid";
+import { FeatureGrid } from "../../components/marketing/FeatureGrid";
+import { ComparisonSection } from "../../components/marketing/ComparisonSection";
+import { StepsSection } from "../../components/marketing/StepsSection";
+import { TrustSection } from "../../components/marketing/TrustSection";
+import { CTASection } from "../../components/marketing/CTASection";
+import { expertsContent } from "../../content/experts";
 
 export const metadata: Metadata = {
   title: "LUMINUS Latam | Para Expertos y Profesionales del Bienestar",
@@ -17,25 +18,25 @@ export default function ExpertosPage() {
   return (
     <>
       {/* 1. Hero Section */}
-      <ExpertHeroSection />
+      <Hero {...expertsContent.hero} />
 
       {/* 2. Sección: Por qué formar parte de LUMINUS */}
-      <ExpertBenefitsSection />
+      <BenefitsGrid {...expertsContent.benefits} />
 
       {/* 3. Sección: Qué podrán hacer los expertos en LUMINUS */}
-      <ExpertFeaturesSection />
+      <FeatureGrid {...expertsContent.features} />
 
       {/* 4. Sección: Diferencia entre usuario general y experto */}
-      <ExpertComparisonSection />
+      <ComparisonSection {...expertsContent.comparison} />
 
       {/* 5. Sección: Cómo empezar */}
-      <ExpertStepsSection />
+      <StepsSection {...expertsContent.steps} />
 
       {/* 6. Sección de confianza */}
-      <ExpertTrustSection />
+      <TrustSection {...expertsContent.trust} />
 
       {/* 7. CTA final */}
-      <ExpertFinalCTA />
+      <CTASection {...expertsContent.finalCta} />
     </>
   );
 }
