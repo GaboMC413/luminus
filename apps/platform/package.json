@@ -11,15 +11,19 @@
   "dependencies": {
     "@aws-amplify/ui-react": "^6.5.5",
     "aws-amplify": "^6.6.6",
+    "libphonenumber-js": "^1.13.3",
     "lucide-react": "^1.16.0",
     "next": "14.2.10",
     "react": "^18",
-    "react-dom": "^18"
+    "react-avatar-editor": "^15.1.0",
+    "react-dom": "^18",
+    "use-places-autocomplete": "^4.0.1"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.3.0",
     "@types/node": "^20",
     "@types/react": "^18",
+    "@types/react-avatar-editor": "^13.0.4",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.5.0",
     "postcss": "^8.4.31",

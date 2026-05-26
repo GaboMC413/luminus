@@ -34,6 +34,106 @@
   .transition-premium {
     @apply transition-all duration-300 ease-out;
   }
+
+  /* LUMINUS SIGNATURE GRADIENT BACKGROUND */
+  .luminus-gradient {
+    background-color: rgb(155, 150, 150);
+    background-image:
+      radial-gradient(circle at 90.65% 7.69%, hsla(299, 100%, 75%, 0.9) 0%, transparent 51%),
+      radial-gradient(circle at 74.35% 88.25%, hsla(222, 97%, 50%, 0.8) 0%, transparent 62%),
+      radial-gradient(circle at 33.5% 79.7%, hsla(67, 100%, 45%, 0.8) 0%, transparent 72%),
+      radial-gradient(circle at 21.02% 16.96%, hsla(28, 100%, 50%, 0.8) 5%, transparent 59%);
+    background-blend-mode: overlay, normal, normal, normal;
+  }
+
+  /* PRODUCT-STYLE TYPOGRAPHY SYSTEM */
+  .text-page-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.025em;
+  }
+
+  .text-section-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.375;
+  }
+
+  .text-body {
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.625;
+  }
+
+  .text-body-small {
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.625;
+  }
+
+  .text-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #64748b;
+  }
+
+  .text-button {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+
+  .text-input {
+    font-size: 1rem;
+    font-weight: 400;
+  }
+
+  /* INPUT FIELDS */
+  .reg-input-clean {
+    width: 100%;
+    height: 3rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+    border-radius: 40px;
+    font-size: 1rem;
+    font-weight: 400;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    display: flex;
+    align-items: center;
+    background-color: #ffffff;
+    border: none;
+    justify-content: flex-start;
+  }
+  .reg-input-clean:focus-within {
+    border: 1px solid #000000;
+  }
+
+  .reg-input-bordered {
+    width: 100%;
+    height: 3rem;
+    padding-left: 1.25rem;
+    padding-right: 1.25rem;
+    border-radius: 40px;
+    font-size: 1rem;
+    font-weight: 400;
+    transition-property: all;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    display: flex;
+    align-items: center;
+    background-color: #ffffff;
+    border: 1px solid #e4e4e7;
+    justify-content: flex-start;
+  }
+  .reg-input-bordered:focus-within {
+    border-color: #000000;
+  }
 }
 
 /* Micro-animations */
@@ -53,4 +153,16 @@
 
 .animate-pulse-slow {
   animation: pulse-slow 8s ease-in-out infinite;
+}
+
+/* Forced Global Cursor Hand */
+button,
+a,
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+select,
+label,
+.cursor-pointer {
+  cursor: pointer !important;
 }

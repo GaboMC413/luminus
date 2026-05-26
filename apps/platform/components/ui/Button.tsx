@@ -1,76 +1,97 @@
-import React from "react";
+import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
-  size?: "sm" | "md" | "lg";
-  isLoading?: boolean;
+  variant?: 'primary' | 'outline' | 'slate' | 'small' | 'back' | 'secondary';
+  children?: React.ReactNode;
 }
 
-export const Button: React.FC<ButtonProps> = ({
-  children,
-  variant = "primary",
-  size = "md",
-  isLoading = false,
-  className = "",
-  disabled,
-  ...props
-}) => {
-  const baseStyles =
-    "inline-flex items-center justify-center font-medium tracking-wide transition-premium rounded-2xl focus:outline-none focus:ring-2 focus:ring-wellness-sage-400 focus:ring-offset-2 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:active:scale-100";
+// --- STANDARD BUTTON COMPONENT ---
+// Used for general actions, forms, and primary/secondary navigation buttons.
+export function Button({ variant = 'primary', children, className = '', ...props }: ButtonProps) {
+  // Base styles for standard buttons
+  const baseStyles = "transition-all outline-none flex items-center justify-center font-jakarta duration-300 ease-out active:scale-95 cursor-pointer select-none";
 
   const variants = {
-    primary:
-      "bg-wellness-sage-500 hover:bg-wellness-sage-600 text-white shadow-premium hover:shadow-premium-hover hover:-translate-y-[1px]",
-    secondary:
-      "bg-wellness-sand-100 hover:bg-wellness-sand-200 text-wellness-sage-800 border border-wellness-sand-200",
-    outline:
-      "bg-transparent hover:bg-wellness-sage-50 text-wellness-sage-700 border border-wellness-sage-200 hover:border-wellness-sage-300",
-    ghost:
-      "bg-transparent hover:bg-wellness-sage-50 text-wellness-sage-600",
-    danger:
-      "bg-wellness-clay-500 hover:bg-wellness-clay-600 text-white shadow-sm hover:shadow-md hover:-translate-y-[1px]"
+    primary: "w-full h-12 px-5 sm:px-6 rounded-[40px] text-button font-medium bg-black text-white hover:bg-zinc-900",
+    outline: "w-full h-12 px-5 sm:px-6 rounded-[40px] text-button font-medium bg-white text-secondary border border-zinc-200 hover:bg-slate-50",
+    secondary: "w-full h-12 px-5 sm:px-6 rounded-[40px] text-button font-medium bg-slate-50 text-secondary border border-slate-200 hover:bg-slate-100",
+    slate: "h-9 px-4 rounded-full text-button font-medium bg-slate-400 text-white hover:bg-slate-500 gap-2",
+    small: "h-8 md:h-9 px-4 rounded-full text-label font-semibold bg-slate-100 text-secondary border border-slate-200 hover:bg-slate-200",
+    back: "flex items-center gap-1.5 group w-fit !bg-transparent !border-none !p-0"
   };
 
-  const sizes = {
-    sm: "px-4 py-2 text-xs",
-    md: "px-6 py-3 text-sm",
-    lg: "px-8 py-4 text-base"
-  };
+  if (variant === 'back') {
+    return (
+      <button className={`${variants.back} ${className}`} {...props}>
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="3"
+          className="text-slate-400 group-hover:text-slate-900 transition-colors"
+        >
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+        <span className="text-slate-400 text-[14px] font-bold group-hover:text-slate-900 transition-colors">
+          {children || 'Volver'}
+        </span>
+      </button>
+    );
+  }
 
   return (
-    <button
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-      disabled={disabled || isLoading}
-      {...props}
-    >
-      {isLoading ? (
-        <>
-          <svg
-            className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            ></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-          Please wait...
-        </>
-      ) : (
-        children
-      )}
+    <button className={`${baseStyles} ${variants[variant as keyof typeof variants]} ${className}`} {...props}>
+      {children}
     </button>
   );
-};
+}
+
+interface ProfileButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  icon: string;
+  label?: string;
+  showDot?: boolean;
+}
+
+// --- PROFILE/ACTION BUTTON COMPONENT ---
+// Used for edit actions, section triggers, and icon-based buttons with a premium aesthetic.
+// Features a glassmorphism style (slate-50 background, backdrop-blur).
+export function ProfileButton({ icon, label, showDot, className = "", ...props }: ProfileButtonProps) {
+  return (
+    <button
+      {...props}
+      className={`h-11 ${label ? 'px-4 min-w-[120px]' : 'w-11'} bg-white hover:bg-slate-50 text-slate-400 hover:text-black rounded-[12px] text-[14px] font-semibold transition-all flex items-center justify-center gap-2 border-none cursor-pointer shadow-none ${className}`}
+    >
+      {showDot && (
+        <div className="w-3 h-3 rounded-full bg-[#FF4B4B] border-2 border-white shrink-0 shadow-sm" />
+      )}
+      <span className="material-symbols-rounded text-[22px] shrink-0">{icon}</span>
+      {label && <span className="truncate">{label}</span>}
+    </button>
+  );
+}
+
+// --- EMPTY PROFILE BUTTON COMPONENT ---
+// Used for empty state profile actions with a notification dot
+export interface EmptyProfileButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  label: string;
+  icon?: string;
+}
+
+export function EmptyProfileButton({ label, icon, className = "", ...props }: EmptyProfileButtonProps) {
+  return (
+    <button
+      {...props}
+      className={`relative flex items-center justify-start h-8 px-2 bg-white hover:bg-slate-50 text-slate-400 text-[12px] font-bold rounded-[12px] transition-all w-fit gap-2 ${className}`}
+    >
+      <span className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 z-10 w-3 h-3 bg-[#FF4B4B] rounded-full border-2 border-white"></span>
+      {icon && (
+        <span className="material-symbols-rounded text-[12px] shrink-0">{icon}</span>
+      )}
+      {label}
+    </button>
+  );
+}
+
 export default Button;
