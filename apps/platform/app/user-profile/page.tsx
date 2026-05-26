@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
-import { ProfileContent } from "./components/ProfileContent";
+import { ProfileContent } from "@/features/user-profile/components/ProfileContent";
 
 export default function ProfilePage() {
   return (

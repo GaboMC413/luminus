@@ -112,7 +112,7 @@ export function PlatformNavbar() {
       <header className="fixed top-0 left-0 w-full bg-white border-b border-slate-200 z-50 h-[64px] md:h-[80px] px-6 md:px-8 flex items-center justify-between shadow-premium">
         <div className="flex items-center gap-8">
           <Link href="/">
-            <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[20px] cursor-pointer invert brightness-0" />
+            <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[20px] cursor-pointer" />
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
