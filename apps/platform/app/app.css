@@ -88,6 +88,30 @@
     font-weight: 400;
   }
 
+  .text-profile-name {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.025em;
+  }
+
+  .text-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.375;
+  }
+
+  .material-icon-premium {
+    font-size: 32px;
+    line-height: 1;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 40;
+  }
+
+  .material-icon-filled {
+    font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 40;
+  }
+
+
   /* INPUT FIELDS */
   .reg-input-clean {
     width: 100%;

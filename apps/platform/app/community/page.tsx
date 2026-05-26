@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button, ProfileButton } from "@/components/ui/Button";
+import { PlatformNavbar } from "@/components/ui/PlatformNavbar";
 
 interface Post {
   id: number;
@@ -141,49 +142,10 @@ export default function CommunityPage() {
     <div className="w-full min-h-screen bg-[#FAF9F6] text-wellness-slate-900 font-sans flex flex-col antialiased">
       
       {/* 1. STUNNING HEADER */}
-      <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-zinc-200/60 shadow-premium">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
-              <img
-                src="/logo-luminus-white.svg"
-                alt="Luminus"
-                className="h-[20px] invert brightness-0"
-              />
-            </Link>
-            
-            <nav className="hidden md:flex items-center gap-6">
-              <span className="text-[14px] font-bold text-wellness-sage-600 border-b-2 border-wellness-sage-500 pb-1 cursor-pointer">
-                Comunidad
-              </span>
-              <span 
-                onClick={() => alert("Próximamente: Explora y agenda sesiones con expertos en bienestar.")}
-                className="text-[14px] font-medium text-slate-500 hover:text-black transition-colors cursor-pointer"
-              >
-                Expertos
-              </span>
-              <span 
-                onClick={() => alert("Próximamente: Revisa tus chats y videollamadas activas.")}
-                className="text-[14px] font-medium text-slate-500 hover:text-black transition-colors cursor-pointer"
-              >
-                Conversaciones
-              </span>
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <ProfileButton
-              icon="logout"
-              label="Cerrar Sesión"
-              onClick={handleLogout}
-              className="!text-slate-500 hover:!text-wellness-clay-600 transition-all border border-slate-200/80 shadow-sm font-semibold !text-[12px] !h-9 !px-3"
-            />
-          </div>
-        </div>
-      </header>
+      <PlatformNavbar />
 
       {/* 2. MAIN LAYOUT */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-[88px] pb-[88px] md:pt-[104px] md:pb-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* LEFT COLUMN: USER PANEL & EXPERTS LIST */}
         <section className="lg:col-span-4 flex flex-col gap-6 order-2 lg:order-1">
