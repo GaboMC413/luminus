@@ -30,7 +30,7 @@ export default function SignUpView() {
     city: "",
     country: "",
     phone: "",
-    phoneCountry: { code: 'AR', dial: '+54', name: 'Argentina', priority: true },
+    phoneCountry: { code: 'XX', dial: '+00', name: 'Seleccionar país', priority: false },
     birthdateString: "",
     avatarUrl: null as string | null,
     interests: [] as string[],

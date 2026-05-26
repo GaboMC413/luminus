@@ -142,7 +142,7 @@ export function PersonalData({
             {uploading && <div className="absolute inset-0 flex items-center justify-center text-slate-900 font-bold text-xs bg-white/40">...</div>}
           </div>
 
-          <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileChange} disabled={uploading} />
+          <input type="file" accept="image/png, image/jpeg, image/webp, .png, .jpg, .jpeg, .webp" className="hidden" ref={fileInputRef} onChange={handleFileChange} disabled={uploading} />
 
           <Button
             variant="slate"
@@ -262,15 +262,11 @@ export function PersonalData({
           <div className="w-full flex flex-col justify-start items-start gap-2 relative">
             <label className="text-label ml-1">Celular</label>
             <PhoneInput
-              value={phone ? `${phoneCountry?.dial || ''} ${phone}` : ''}
-              onChange={(fullVal) => {
-                const dial = fullVal.split(' ')[0] || '';
-                const rest = fullVal.slice(dial.length).trim();
-                const matched = ALL_COUNTRIES.find(c => c.dial === dial);
-                if (matched) {
-                  setPhoneCountry(matched);
-                }
-                setPhone(rest);
+              value={phone}
+              phoneCountry={phoneCountry || { code: 'XX', dial: '+00', name: 'Seleccionar país', priority: false }}
+              onCountryChange={(matched) => setPhoneCountry(matched)}
+              onChange={(newNumber) => {
+                setPhone(newNumber);
                 if (errorField === 'phone') setErrorField(null);
               }}
               error={errorField === 'phone'}

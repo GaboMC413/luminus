@@ -7,6 +7,8 @@ import { AsYouType, CountryCode } from 'libphonenumber-js';
 interface PhoneInputProps {
   value: string;
   onChange: (value: string) => void;
+  phoneCountry: { code: string; dial: string; name: string; priority?: boolean };
+  onCountryChange: (country: any) => void;
   disabled?: boolean;
   className?: string;
   error?: boolean;
@@ -15,6 +17,8 @@ interface PhoneInputProps {
 export function PhoneInput({
   value,
   onChange,
+  phoneCountry,
+  onCountryChange,
   disabled = false,
   className = "",
   error = false
@@ -22,54 +26,18 @@ export function PhoneInput({
   const [showPhoneDropdown, setShowPhoneDropdown] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Try to parse the incoming value to find the dial code
-  const detectInitialCountry = () => {
-    if (!value) return ALL_COUNTRIES.find(c => c.code === 'AR') || ALL_COUNTRIES[0];
-    
-    // Simple matching: find the longest dial code that matches the start of the string
-    const matchingCountries = ALL_COUNTRIES.filter(c => value.startsWith(c.dial));
-    if (matchingCountries.length > 0) {
-      return matchingCountries.reduce((prev, current) => 
-        (prev.dial.length > current.dial.length) ? prev : current
-      );
-    }
-    return ALL_COUNTRIES.find(c => c.code === 'AR') || ALL_COUNTRIES[0];
-  };
-
-  const [phoneCountry, setPhoneCountry] = useState(detectInitialCountry());
-  const [number, setNumber] = useState("");
-
-  // Update local number and country when external value changes
-  useEffect(() => {
-    if (value) {
-      // Find matching country dial prefix
-      const matchingCountries = ALL_COUNTRIES.filter(c => value.startsWith(c.dial));
-      if (matchingCountries.length > 0) {
-        const detected = matchingCountries.reduce((prev, current) => 
-          (prev.dial.length > current.dial.length) ? prev : current
-        );
-        setPhoneCountry(detected);
-        setNumber(value.slice(detected.dial.length).trim());
-      } else {
-        setNumber(value);
-      }
-    } else {
-      setNumber("");
-    }
-  }, [value]);
-
   const handleNumberChange = (rawValue: string) => {
-    const formatter = new AsYouType(phoneCountry.code as CountryCode);
-    const formatted = formatter.input(rawValue);
-    setNumber(formatted);
-    onChange(`${phoneCountry.dial} ${formatted}`.trim());
+    let formatted = rawValue;
+    if (phoneCountry.code !== 'XX') {
+      const formatter = new AsYouType(phoneCountry.code as CountryCode);
+      formatted = formatter.input(rawValue);
+    }
+    onChange(formatted);
   };
 
   const handleCountrySelect = (c: any) => {
-    setPhoneCountry(c);
+    onCountryChange(c);
     setShowPhoneDropdown(false);
-    // Keep the same formatted number but trigger change with new dial code
-    onChange(`${c.dial} ${number}`.trim());
   };
 
   // Close dropdown when clicking outside
@@ -82,6 +50,11 @@ export function PhoneInput({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const dropdownCountries = [
+    { code: 'XX', dial: '+00', name: 'Seleccionar país', priority: false },
+    ...ALL_COUNTRIES
+  ];
 
   return (
     <div 
@@ -105,7 +78,7 @@ export function PhoneInput({
 
       {showPhoneDropdown && (
         <div className="absolute top-[calc(100%+8px)] left-0 w-[240px] bg-white rounded-3xl py-2 z-[100] border border-slate-200 shadow-xl overflow-y-auto max-h-[240px] custom-scrollbar animate-in fade-in duration-200">
-          {ALL_COUNTRIES.map((c) => (
+          {dropdownCountries.map((c) => (
             <div
               key={c.code}
               onClick={(e) => { 
@@ -127,7 +100,7 @@ export function PhoneInput({
       <input
         type="tel"
         placeholder="Número de celular"
-        value={number}
+        value={value}
         disabled={disabled}
         onChange={(e) => handleNumberChange(e.target.value)}
         className="flex-1 bg-transparent px-2 outline-none text-black text-body text-secondary placeholder:text-slate-400 h-full"

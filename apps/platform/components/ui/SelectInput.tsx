@@ -29,6 +29,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
   autoFocus
 }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [coords, setCoords] = useState<{ top: number; left: number; width: number } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -38,6 +39,16 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
     setMounted(true);
     return () => setMounted(false);
   }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      const currentIdx = options.findIndex((opt) => {
+        const val = typeof opt === 'string' ? opt : opt.value;
+        return val === value;
+      });
+      setHighlightedIndex(currentIdx >= 0 ? currentIdx : 0);
+    }
+  }, [isOpen, value, options]);
 
   const updateCoords = () => {
     if (containerRef.current) {
@@ -99,10 +110,11 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
       }}
       className="bg-white rounded-[12px] outline outline-1 outline-zinc-200 overflow-y-auto max-h-[240px] custom-scrollbar animate-in fade-in duration-200"
     >
-      {options.map((option) => {
+      {options.map((option, index) => {
         const optLabel = typeof option === 'string' ? option : option.label;
         const optValue = typeof option === 'string' ? option : option.value;
         const isSelected = value === optValue;
+        const isHighlighted = highlightedIndex === index;
 
         return (
           <div
@@ -111,9 +123,11 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
               onSelect(optValue);
               setIsOpen(false);
             }}
+            onMouseEnter={() => setHighlightedIndex(index)}
             className={`
-              px-6 py-2.5 cursor-pointer transition-colors text-body text-secondary
-              ${isSelected ? 'bg-slate-50 font-semibold text-black' : 'hover:bg-slate-50 text-slate-600'}
+              px-6 py-2.5 cursor-pointer transition-colors text-body
+              ${isSelected ? 'font-semibold text-black' : ''}
+              ${isHighlighted ? 'bg-slate-100 text-black' : 'text-slate-600 hover:bg-slate-50'}
             `}
           >
             {optLabel}
@@ -129,22 +143,81 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
 
       <div
         ref={ref}
-        tabIndex={0}
+        tabIndex={disabled ? -1 : 0}
         autoFocus={autoFocus}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => {
+          if (!disabled) setIsOpen(!isOpen);
+        }}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            setIsOpen(!isOpen);
+          if (disabled) return;
+
+          // 1. QUICK CHAR MATCHING (e.g. typing 'm' -> Masculino)
+          if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            const char = e.key.toLowerCase();
+            const foundIdx = options.findIndex((opt) => {
+              const labelText = typeof opt === 'string' ? opt : opt.label;
+              return labelText.toLowerCase().startsWith(char);
+            });
+            if (foundIdx !== -1) {
+              e.preventDefault();
+              const matchedOption = options[foundIdx];
+              const val = typeof matchedOption === 'string' ? matchedOption : matchedOption.value;
+              onSelect(val);
+              setHighlightedIndex(foundIdx);
+            }
+            return;
+          }
+
+          // 2. STANDARD ACCESSIBLE KEY NAVIGATION
+          switch (e.key) {
+            case 'Enter':
+            case ' ':
+              e.preventDefault();
+              if (isOpen) {
+                if (highlightedIndex >= 0 && highlightedIndex < options.length) {
+                  const selectedOption = options[highlightedIndex];
+                  const val = typeof selectedOption === 'string' ? selectedOption : selectedOption.value;
+                  onSelect(val);
+                }
+                setIsOpen(false);
+              } else {
+                setIsOpen(true);
+              }
+              break;
+            case 'ArrowDown':
+              e.preventDefault();
+              if (!isOpen) {
+                setIsOpen(true);
+              } else {
+                setHighlightedIndex((prev) => (prev + 1) % options.length);
+              }
+              break;
+            case 'ArrowUp':
+              e.preventDefault();
+              if (!isOpen) {
+                setIsOpen(true);
+              } else {
+                setHighlightedIndex((prev) => (prev - 1 + options.length) % options.length);
+              }
+              break;
+            case 'Escape':
+              e.preventDefault();
+              setIsOpen(false);
+              break;
+            case 'Tab':
+              // Close on Tab to let browser move focus smoothly
+              setIsOpen(false);
+              break;
           }
         }}
         className={`
-          ${variantClass} px-5 flex items-center cursor-pointer transition-all duration-300 group
-          ${error ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : ''}
+          ${variantClass} px-5 flex items-center cursor-pointer transition-all duration-300 group outline-none
+          ${error ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : 'focus:border-black focus:ring-1 focus:ring-black'}
           ${isOpen ? 'border-black' : ''}
+          ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
         `}
       >
-        <span className={`${!value ? 'text-slate-400' : 'text-black'} text-body text-secondary truncate`}>
+        <span className={`${!value ? 'text-slate-400' : 'text-black'} text-body truncate select-none`}>
           {currentOptionLabel || placeholder}
         </span>
         {!disabled && (
