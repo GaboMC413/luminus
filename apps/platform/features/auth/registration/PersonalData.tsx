@@ -12,6 +12,24 @@ import { AsYouType, CountryCode } from 'libphonenumber-js';
 
 const NEUTRAL_COUNTRY = { code: 'XX', dial: '+00', name: 'Seleccionar país', priority: false };
 
+const isValidBirthdate = (val: string): boolean => {
+  const clean = val.replace(/\s+/g, '');
+  const parts = clean.split('/').map(p => parseInt(p.trim())).filter(p => !isNaN(p));
+  if (parts.length !== 3) return false;
+  
+  const [day, month, year] = parts;
+  if (month < 1 || month > 12) return false;
+  if (day < 1 || day > 31) return false;
+  
+  const daysInMonth = new Date(year, month, 0).getDate();
+  if (day > daysInMonth) return false;
+  
+  const currentYear = new Date().getFullYear();
+  if (year < 1900 || year > currentYear) return false;
+  
+  return true;
+};
+
 export function PersonalData({
   onNext,
   data,
@@ -42,7 +60,6 @@ export function PersonalData({
   const setPhone = (val: string) => onUpdate({ phone: val });
   const setBirthdateString = (val: string) => onUpdate({ birthdateString: val });
   const setAvatarUrl = (val: string | null) => onUpdate({ avatarUrl: val });
-
   const [isSaving, setIsSaving] = useState(false);
   const [errorField, setErrorField] = useState<string | null>(null);
 
@@ -50,6 +67,36 @@ export function PersonalData({
   const [isCropping, setIsCropping] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Split birthdate states
+  const [birthDay, setBirthDay] = useState("");
+  const [birthMonth, setBirthMonth] = useState("");
+  const [birthYear, setBirthYear] = useState("");
+
+  // Refs for auto-focusing & auto-tabbing
+  const dayRef = useRef<HTMLInputElement>(null);
+  const monthRef = useRef<HTMLInputElement>(null);
+  const yearRef = useRef<HTMLInputElement>(null);
+
+  // Initialize birthdate splits from parent state on mount
+  React.useEffect(() => {
+    if (birthdateString) {
+      const parts = birthdateString.split(" / ");
+      if (parts.length === 3) {
+        setBirthDay(parts[0]);
+        setBirthMonth(parts[1]);
+        setBirthYear(parts[2]);
+      }
+    }
+  }, []);
+
+  const updateParentBirthdate = (day: string, month: string, year: string) => {
+    let formatted = "";
+    if (day || month || year) {
+      formatted = `${day} / ${month} / ${year}`;
+    }
+    setBirthdateString(formatted);
+  };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -87,11 +134,23 @@ export function PersonalData({
 
   const handleContinue = async () => {
     setErrorField(null);
+
+    // Pad single digits and expand years
+    const paddedDay = birthDay.length === 1 ? '0' + birthDay : birthDay;
+    const paddedMonth = birthMonth.length === 1 ? '0' + birthMonth : birthMonth;
+    let fullYear = birthYear;
+    if (birthYear.length === 2) {
+      const yr = parseInt(birthYear);
+      fullYear = (yr > 26 ? '19' : '20') + birthYear;
+    }
+
+    const finalBirthdate = (birthDay || birthMonth || birthYear) ? `${paddedDay} / ${paddedMonth} / ${fullYear}` : "";
+
     if (!avatarUrl) { setErrorField('photo'); return; }
     if (!firstName) { setErrorField('firstName'); return; }
     if (!lastName) { setErrorField('lastName'); return; }
     if (!gender) { setErrorField('gender'); return; }
-    if (!birthdateString || birthdateString.length < 10) { setErrorField('birthdate'); return; }
+    if (!finalBirthdate || !isValidBirthdate(finalBirthdate)) { setErrorField('birthdate'); return; }
     if (!city) { setErrorField('city'); return; }
     if (!phone) { setErrorField('phone'); return; }
 
@@ -108,7 +167,7 @@ export function PersonalData({
       localStorage.setItem("luminus_profile_country", country);
       localStorage.setItem("luminus_profile_phone", `${phoneCountry.dial}${phone}`);
       localStorage.setItem("luminus_profile_gender", gender);
-      localStorage.setItem("luminus_profile_birthdate", birthdateString);
+      localStorage.setItem("luminus_profile_birthdate", `${fullYear}-${paddedMonth}-${paddedDay}`);
       localStorage.setItem("luminus_profile_avatar", avatarUrl || "");
 
       if (onNext) onNext();
@@ -211,26 +270,69 @@ export function PersonalData({
         />
         {errorField === 'gender' && <p className="text-[#FF3D3D] text-[12px] font-bold -mt-4">Selecciona género</p>}
 
-        {/* Fecha */}
+        {/* Fecha de Nacimiento */}
         <div className="flex flex-col justify-start items-start gap-6">
           <div className="w-full flex flex-col justify-start items-start gap-2">
             <label className="text-label ml-1">Fecha de Nacimiento</label>
-            <InputField
-              type="text"
-              placeholder="DD / MM / YYYY"
-              value={birthdateString}
-              onChange={(e) => {
-                let v = e.target.value.replace(/\D/g, '').slice(0, 8);
-                if (v.length >= 5) v = `${v.slice(0, 2)} / ${v.slice(2, 4)} / ${v.slice(4)}`;
-                else if (v.length >= 3) v = `${v.slice(0, 2)} / ${v.slice(2)}`;
-                setBirthdateString(v);
-                if (errorField === 'birthdate') setErrorField(null);
-              }}
-              variant="bordered"
-              className={errorField === 'birthdate' ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : ''}
-              enterKeyHint="next"
-            />
-            {errorField === 'birthdate' && <p className="text-[#FF3D3D] text-[12px] font-bold">Fecha inválida</p>}
+            <div className="flex gap-2 items-center w-full">
+              <InputField
+                ref={dayRef}
+                type="text"
+                placeholder="DD"
+                value={birthDay}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, '').slice(0, 2);
+                  setBirthDay(v);
+                  updateParentBirthdate(v, birthMonth, birthYear);
+                  if (errorField === 'birthdate') setErrorField(null);
+                  if (v.length === 2) monthRef.current?.focus();
+                }}
+                className={`text-center !w-16 bg-white text-black ${errorField === 'birthdate' ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : ''}`}
+                variant="bordered"
+              />
+              <span className="text-slate-400">/</span>
+              <InputField
+                ref={monthRef}
+                type="text"
+                placeholder="MM"
+                value={birthMonth}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, '').slice(0, 2);
+                  setBirthMonth(v);
+                  updateParentBirthdate(birthDay, v, birthYear);
+                  if (errorField === 'birthdate') setErrorField(null);
+                  if (v.length === 2) yearRef.current?.focus();
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Backspace' && !birthMonth) {
+                    dayRef.current?.focus();
+                  }
+                }}
+                className={`text-center !w-16 bg-white text-black ${errorField === 'birthdate' ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : ''}`}
+                variant="bordered"
+              />
+              <span className="text-slate-400">/</span>
+              <InputField
+                ref={yearRef}
+                type="text"
+                placeholder="AAAA"
+                value={birthYear}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/\D/g, '').slice(0, 4);
+                  setBirthYear(v);
+                  updateParentBirthdate(birthDay, birthMonth, v);
+                  if (errorField === 'birthdate') setErrorField(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Backspace' && !birthYear) {
+                    monthRef.current?.focus();
+                  }
+                }}
+                className={`text-center flex-1 bg-white text-black ${errorField === 'birthdate' ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : ''}`}
+                variant="bordered"
+              />
+            </div>
+            {errorField === 'birthdate' && <p className="text-[#FF3D3D] text-[12px] font-bold">Fecha inválida o incompleta</p>}
           </div>
         </div>
 

@@ -68,7 +68,9 @@ export function PhoneInput({
           if (!disabled) setShowPhoneDropdown(!showPhoneDropdown);
         }}
       >
-        <span className="text-black text-body text-secondary mr-2">{phoneCountry.dial}</span>
+        <span className={`${phoneCountry.dial === '+00' ? 'text-slate-400' : 'text-black'} text-body text-secondary mr-2`}>
+          {phoneCountry.dial}
+        </span>
         {!disabled && (
           <svg width="10" height="6" viewBox="0 0 10 6" fill="none" className={`transition-transform duration-200 ${showPhoneDropdown ? 'rotate-180' : ''}`}>
             <path d="M1 1L5 5L9 1" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
