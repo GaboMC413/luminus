@@ -5,11 +5,16 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6.5.5",
+    "@prisma/client": "^5.22.0",
     "aws-amplify": "^6.6.6",
     "libphonenumber-js": "^1.13.3",
     "lucide-react": "^1.16.0",
@@ -27,6 +32,7 @@
     "@types/react-dom": "^18",
     "autoprefixer": "^10.5.0",
     "postcss": "^8.4.31",
+    "prisma": "^5.22.0",
     "tailwindcss": "^4.3.0",
     "typescript": "^5.6.2"
   }

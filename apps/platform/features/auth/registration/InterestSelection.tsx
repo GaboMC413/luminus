@@ -32,7 +32,7 @@ export function InterestSelection({
     }
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (selectedInterests.length === 0) {
       setShowError(true);
       const container = document.querySelector('.overflow-y-auto');
@@ -43,13 +43,30 @@ export function InterestSelection({
 
     setIsSaving(true);
 
-    // Simulate local saving
-    setTimeout(() => {
+    try {
+      const response = await fetch("/api/onboarding/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          ...data,
+          interests: selectedInterests,
+          otherInterests,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Could not save interests.");
+      }
+
       setIsSaving(false);
       localStorage.setItem("luminus_profile_interests", JSON.stringify(selectedInterests));
       localStorage.setItem("luminus_profile_otherInterests", otherInterests);
       if (onNext) onNext();
-    }, 800);
+    } catch {
+      setIsSaving(false);
+      alert("No pudimos guardar tus intereses. Intenta nuevamente.");
+    }
   };
 
   return (

@@ -16,18 +16,29 @@ export default function UserProfileLayout({
   const [userEmail, setUserEmail] = useState("");
 
   useEffect(() => {
-    setIsMounted(true);
-    const isLoggedIn = localStorage.getItem("luminus_logged_in") === "true";
-    if (!isLoggedIn) {
-      router.push("/auth/signin");
-    } else {
-      setUserEmail(localStorage.getItem("luminus_user_email") || "Usuario Luminus");
+    async function checkSession() {
+      const response = await fetch("/api/auth/me", {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        router.push("/auth/signin");
+        return;
+      }
+
+      const data = await response.json();
+      setUserEmail(data.user?.email ?? "Usuario Luminus");
+      setIsMounted(true);
     }
+
+    checkSession();
   }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("luminus_logged_in");
-    localStorage.removeItem("luminus_user_email");
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
     router.push("/auth/signin");
   };
 

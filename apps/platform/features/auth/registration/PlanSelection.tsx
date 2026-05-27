@@ -3,19 +3,44 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 
-export function PlanSelection({ onNext, onBack }: { onNext?: () => void; onBack?: () => void }) {
+export function PlanSelection({
+  onNext,
+  onBack,
+  data,
+}: {
+  onNext?: () => void;
+  onBack?: () => void;
+  data?: Record<string, unknown>;
+}) {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSelectPlan = async (plan: 'Mensual' | 'Anual') => {
     setIsSaving(true);
 
-    // Simulate local plan saving
-    setTimeout(() => {
+    try {
+      const response = await fetch("/api/onboarding/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          ...data,
+          selectedPlan: plan,
+          isOnboarded: true,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Could not save onboarding profile.");
+      }
+
       setIsSaving(false);
       localStorage.setItem("luminus_profile_plan", plan);
       localStorage.setItem("luminus_onboarding_completed", "true");
       if (onNext) onNext();
-    }, 800);
+    } catch {
+      setIsSaving(false);
+      alert("No pudimos guardar tu plan. Intenta nuevamente.");
+    }
   };
 
   return (

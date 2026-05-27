@@ -1,0 +1,125 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { getCurrentSession } from "@/lib/auth/session";
+
+export const runtime = "nodejs";
+
+function parseBirthdate(value: unknown) {
+  if (typeof value !== "string" || !value.trim()) {
+    return undefined;
+  }
+
+  const normalized = value.includes("/")
+    ? value
+        .split("/")
+        .map((part) => part.trim())
+        .reverse()
+        .join("-")
+    : value;
+  const date = new Date(`${normalized}T00:00:00.000Z`);
+
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
+export async function POST(request: Request) {
+  const session = getCurrentSession();
+
+  if (!session) {
+    return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+  }
+
+  const body = await request.json().catch(() => null);
+
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ message: "Datos invalidos." }, { status: 400 });
+  }
+
+  const data = body as Record<string, unknown>;
+  const firstName = typeof data.firstName === "string" ? data.firstName.trim() : undefined;
+  const lastName = typeof data.lastName === "string" ? data.lastName.trim() : undefined;
+  const fullName = [firstName, lastName].filter(Boolean).join(" ") || undefined;
+  const phoneCountry = data.phoneCountry as { dial?: unknown } | undefined;
+  const phone = typeof data.phone === "string" ? data.phone.trim() : "";
+  const phoneNumber =
+    typeof phoneCountry?.dial === "string" && phone ? `${phoneCountry.dial}${phone}` : phone || undefined;
+  const birthdate = parseBirthdate(data.birthdateString);
+  const shouldUpdateInterests = Array.isArray(data.interests);
+  const interests = shouldUpdateInterests
+    ? (data.interests as unknown[]).filter((interest): interest is string => typeof interest === "string")
+    : [];
+  const otherInterests =
+    typeof data.otherInterests === "string" && data.otherInterests.trim()
+      ? data.otherInterests.trim()
+      : undefined;
+
+  const profile = await prisma.$transaction(async (tx) => {
+    const savedProfile = await tx.userProfile.upsert({
+      where: { userId: session.userId },
+      create: {
+        userId: session.userId,
+        fullName,
+        firstName,
+        lastName,
+        avatarUrl: typeof data.avatarUrl === "string" ? data.avatarUrl : undefined,
+        city: typeof data.city === "string" ? data.city : undefined,
+        country: typeof data.country === "string" ? data.country : undefined,
+        phoneNumber,
+        gender: typeof data.gender === "string" ? data.gender : undefined,
+        birthdate,
+        selectedPlan: typeof data.selectedPlan === "string" ? data.selectedPlan : undefined,
+        intention: otherInterests,
+        isOnboarded: data.isOnboarded === true,
+      },
+      update: {
+        fullName,
+        firstName,
+        lastName,
+        avatarUrl: typeof data.avatarUrl === "string" ? data.avatarUrl : undefined,
+        city: typeof data.city === "string" ? data.city : undefined,
+        country: typeof data.country === "string" ? data.country : undefined,
+        phoneNumber,
+        gender: typeof data.gender === "string" ? data.gender : undefined,
+        birthdate,
+        selectedPlan: typeof data.selectedPlan === "string" ? data.selectedPlan : undefined,
+        intention: otherInterests,
+        isOnboarded: data.isOnboarded === true ? true : undefined,
+      },
+    });
+
+    if (shouldUpdateInterests) {
+      await tx.userInterest.deleteMany({
+        where: {
+          userId: session.userId,
+          source: "onboarding",
+        },
+      });
+
+      if (interests.length > 0) {
+        const interestRows = await tx.interest.findMany({
+          where: {
+            name: {
+              in: interests,
+            },
+            isActive: true,
+          },
+          select: { id: true },
+        });
+
+        if (interestRows.length > 0) {
+          await tx.userInterest.createMany({
+            data: interestRows.map((interest) => ({
+              userId: session.userId,
+              interestId: interest.id,
+              source: "onboarding",
+            })),
+            skipDuplicates: true,
+          });
+        }
+      }
+    }
+
+    return savedProfile;
+  });
+
+  return NextResponse.json({ profile });
+}

@@ -133,9 +133,11 @@ export function ProfileContent() {
   setLoading(false);
  }, [isEmpty]);
 
- const handleSignOut = () => {
-  localStorage.removeItem("luminus_logged_in");
-  localStorage.removeItem("luminus_user_email");
+ const handleSignOut = async () => {
+  await fetch("/api/auth/logout", {
+   method: "POST",
+   credentials: "include",
+  });
   router.push("/auth/signin");
  };
 
