@@ -25,6 +25,30 @@ export function PhoneInput({
 }: PhoneInputProps) {
   const [showPhoneDropdown, setShowPhoneDropdown] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const instanceIdRef = useRef(Math.random().toString(36).substring(2, 9));
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setShowPhoneDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Listen to global open broadcasts to close when another select opens
+  useEffect(() => {
+    const handleOtherSelectOpen = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.id !== instanceIdRef.current) {
+        setShowPhoneDropdown(false);
+      }
+    };
+    window.addEventListener('luminus-select-open', handleOtherSelectOpen);
+    return () => window.removeEventListener('luminus-select-open', handleOtherSelectOpen);
+  }, []);
 
   const handleNumberChange = (rawValue: string) => {
     let formatted = rawValue;
@@ -40,21 +64,9 @@ export function PhoneInput({
     setShowPhoneDropdown(false);
   };
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setShowPhoneDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  // No-op - moved logic to top useEffect
 
-  const dropdownCountries = [
-    { code: 'XX', dial: '+00', name: 'Seleccionar país', priority: false },
-    ...ALL_COUNTRIES
-  ];
+  const dropdownCountries = ALL_COUNTRIES;
 
   return (
     <div 
@@ -65,7 +77,13 @@ export function PhoneInput({
         className={`relative flex items-center pr-2 shrink-0 h-full border-r border-slate-100 mr-2 ${!disabled ? 'cursor-pointer' : ''}`}
         onClick={(e) => {
           e.preventDefault();
-          if (!disabled) setShowPhoneDropdown(!showPhoneDropdown);
+          if (!disabled) {
+            const nextOpen = !showPhoneDropdown;
+            setShowPhoneDropdown(nextOpen);
+            if (nextOpen) {
+              window.dispatchEvent(new CustomEvent('luminus-select-open', { detail: { id: instanceIdRef.current } }));
+            }
+          }
         }}
       >
         <span className={`${phoneCountry.dial === '+00' ? '!text-slate-400' : 'text-black'} text-body text-secondary mr-2`}>
@@ -87,13 +105,11 @@ export function PhoneInput({
                 e.stopPropagation(); 
                 handleCountrySelect(c);
               }}
-              className="px-5 py-2 hover:bg-slate-50 cursor-pointer transition flex justify-between items-center group"
+              className="px-4 py-2 hover:bg-slate-50 cursor-pointer transition flex items-center group w-full truncate"
             >
-              <div className="flex flex-col">
-                <span className="text-slate-900 text-body text-secondary group-hover:text-black font-semibold">{c.name}</span>
-                <span className="text-slate-400 text-[10px] uppercase font-bold tracking-wider">{c.code}</span>
-              </div>
-              <span className="text-slate-400 text-xs font-bold tracking-wide">{c.dial}</span>
+              <span className={`text-body truncate whitespace-nowrap transition-colors ${phoneCountry.code === c.code ? 'font-semibold text-black' : 'text-slate-600 group-hover:text-black'}`}>
+                {c.name} ({c.dial})
+              </span>
             </div>
           ))}
         </div>

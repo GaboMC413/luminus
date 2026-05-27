@@ -34,10 +34,22 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  const instanceIdRef = useRef(Math.random().toString(36).substring(2, 9));
 
   useEffect(() => {
     setMounted(true);
     return () => setMounted(false);
+  }, []);
+
+  useEffect(() => {
+    const handleOtherSelectOpen = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.id !== instanceIdRef.current) {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener('luminus-select-open', handleOtherSelectOpen);
+    return () => window.removeEventListener('luminus-select-open', handleOtherSelectOpen);
   }, []);
 
   useEffect(() => {
@@ -125,7 +137,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
             }}
             onMouseEnter={() => setHighlightedIndex(index)}
             className={`
-              px-6 py-2.5 cursor-pointer transition-colors text-body
+              px-4 py-2 cursor-pointer transition-colors text-body truncate w-full block
               ${isSelected ? 'font-semibold text-black' : ''}
               ${isHighlighted ? 'bg-slate-100 text-black' : 'text-slate-600 hover:bg-slate-50'}
             `}
@@ -146,7 +158,13 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
         tabIndex={disabled ? -1 : 0}
         autoFocus={autoFocus}
         onClick={() => {
-          if (!disabled) setIsOpen(!isOpen);
+          if (!disabled) {
+            const nextOpen = !isOpen;
+            setIsOpen(nextOpen);
+            if (nextOpen) {
+              window.dispatchEvent(new CustomEvent('luminus-select-open', { detail: { id: instanceIdRef.current } }));
+            }
+          }
         }}
         onKeyDown={(e) => {
           if (disabled) return;
@@ -211,13 +229,13 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
           }
         }}
         className={`
-          ${variantClass} px-5 flex items-center cursor-pointer transition-all duration-300 group outline-none
+          ${variantClass} px-5 flex items-center cursor-pointer transition-all duration-300 group outline-none w-full min-w-0
           ${error ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : 'focus:border-black focus:ring-1 focus:ring-black'}
           ${isOpen ? 'border-black' : ''}
           ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
         `}
       >
-        <span className={`${!value ? '!text-slate-400' : 'text-black'} text-body truncate select-none`}>
+        <span className={`${!value ? '!text-slate-400' : 'text-black'} text-body truncate select-none min-w-0 flex-1`}>
           {currentOptionLabel || placeholder}
         </span>
         {!disabled && (
@@ -226,7 +244,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
             height="6"
             viewBox="0 0 10 6"
             fill="none"
-            className={`ml-auto transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+            className={`ml-auto shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
           >
             <path d="M1 1L5 5L9 1" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>

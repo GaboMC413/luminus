@@ -60,7 +60,7 @@ export function InterestSelection({
         {onBack && <Button variant="back" onClick={onBack} />}
         <h1 className="text-page-title text-primary mt-2">Intereses</h1>
         <p className="text-body text-secondary">Elige los temas que más te interesan para personalizar tu experiencia.</p>
-        {showError && <p className="text-red-600 text-[11px] font-bold">Selecciona al menos un interés</p>}
+        {showError && <p className="text-[#FF3D3D] text-[11px] font-bold">Selecciona al menos un interés</p>}
       </div>
 
       {/* Categories Area */}

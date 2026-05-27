@@ -12,6 +12,17 @@ import { AsYouType, CountryCode } from 'libphonenumber-js';
 
 const NEUTRAL_COUNTRY = { code: 'XX', dial: '+00', name: 'Seleccionar país', priority: false };
 
+const COUNTRY_SYNONYMS: Record<string, string> = {
+  'spain': 'españa',
+  'united states': 'estados unidos',
+  'usa': 'estados unidos',
+  'us': 'estados unidos',
+  'brazil': 'brasil',
+  'mexico': 'méxico',
+  'peru': 'perú',
+  'panama': 'panamá',
+};
+
 const MONTHS = [
   { label: 'Enero', value: '01' },
   { label: 'Febrero', value: '02' },
@@ -42,17 +53,17 @@ const isValidBirthdate = (val: string): boolean => {
   const clean = val.replace(/\s+/g, '');
   const parts = clean.split('/').map(p => parseInt(p.trim())).filter(p => !isNaN(p));
   if (parts.length !== 3) return false;
-  
+
   const [day, month, year] = parts;
   if (month < 1 || month > 12) return false;
   if (day < 1 || day > 31) return false;
-  
+
   const daysInMonth = new Date(year, month, 0).getDate();
   if (day > daysInMonth) return false;
-  
+
   const currentYear = new Date().getFullYear();
   if (year < 1900 || year > currentYear) return false;
-  
+
   return true;
 };
 
@@ -178,11 +189,11 @@ export function PersonalData({
     if (!phone) { setErrorField('phone'); return; }
 
     setIsSaving(true);
-    
+
     // Simulate frontend local saving
     setTimeout(() => {
       setIsSaving(false);
-      
+
       // Save data locally
       localStorage.setItem("luminus_profile_firstName", firstName);
       localStorage.setItem("luminus_profile_lastName", lastName);
@@ -281,37 +292,29 @@ export function PersonalData({
           </div>
         </div>
 
-        <SelectInput
-          label="Género"
-          value={gender}
-          options={['Femenino', 'Masculino', 'No binario', 'Prefiero no decirlo']}
-          onSelect={(val) => {
-            setGender(val);
-            if (errorField === 'gender') setErrorField(null);
-          }}
-          error={errorField === 'gender'}
-        />
-        {errorField === 'gender' && <p className="text-[#FF3D3D] text-[12px] font-bold -mt-4">Selecciona género</p>}
+        {/* Género */}
+        <div className="flex flex-col justify-start items-start gap-6">
+          <div className="w-full flex flex-col justify-start items-start gap-2">
+            <SelectInput
+              label="Género"
+              value={gender}
+              options={['Femenino', 'Masculino', 'No binario', 'Prefiero no decirlo']}
+              onSelect={(val) => {
+                setGender(val);
+                if (errorField === 'gender') setErrorField(null);
+              }}
+              error={errorField === 'gender'}
+            />
+            {errorField === 'gender' && <p className="text-[#FF3D3D] text-[12px] font-bold">Selecciona género</p>}
+          </div>
+        </div>
 
         {/* Fecha de Nacimiento */}
         <div className="flex flex-col justify-start items-start gap-6">
           <div className="w-full flex flex-col justify-start items-start gap-2">
             <label className="text-label ml-1">Fecha de Nacimiento</label>
             <div className="flex gap-3 items-center w-full">
-              <div className="flex-1">
-                <SelectInput
-                  value={birthMonth}
-                  options={MONTHS}
-                  onSelect={(val) => {
-                    setBirthMonth(val);
-                    updateParentBirthdate(birthDay, val, birthYear);
-                    if (errorField === 'birthdate') setErrorField(null);
-                  }}
-                  placeholder="Mes"
-                  error={errorField === 'birthdate'}
-                />
-              </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <SelectInput
                   value={birthDay}
                   options={DAYS}
@@ -324,7 +327,20 @@ export function PersonalData({
                   error={errorField === 'birthdate'}
                 />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
+                <SelectInput
+                  value={birthMonth}
+                  options={MONTHS}
+                  onSelect={(val) => {
+                    setBirthMonth(val);
+                    updateParentBirthdate(birthDay, val, birthYear);
+                    if (errorField === 'birthdate') setErrorField(null);
+                  }}
+                  placeholder="Mes"
+                  error={errorField === 'birthdate'}
+                />
+              </div>
+              <div className="flex-1 min-w-0">
                 <SelectInput
                   value={birthYear}
                   options={YEARS}
@@ -342,28 +358,38 @@ export function PersonalData({
           </div>
         </div>
 
-        <LocationInput
-          label="Ciudad"
-          defaultValue={city}
-          onSelect={({ city, country }) => {
-            setCity(city);
-            setCountry(country);
+        {/* Ciudad */}
+        <div className="flex flex-col justify-start items-start gap-6">
+          <div className="w-full flex flex-col justify-start items-start gap-2">
+            <LocationInput
+              label="Ciudad"
+              defaultValue={city}
+              onSelect={({ city, country, countryCode }) => {
+                setCity(city);
+                setCountry(country);
 
-            // Auto-detect phone country from city selection
-            const detected = ALL_COUNTRIES.find(c =>
-              c.name.toLowerCase() === country.toLowerCase()
-            );
-            if (detected) {
-              setPhoneCountry(detected);
-              if (phone) {
-                const formatter = new AsYouType(detected.code as CountryCode);
-                setPhone(formatter.input(phone));
-              }
-            }
-          }}
-          className={errorField === 'city' ? '[&_input]:!border-[#FF3D3D] [&_input]:!ring-1 [&_input]:!ring-[#FF3D3D]' : ''}
-        />
-        {errorField === 'city' && <p className="text-[#FF3D3D] text-[12px] font-bold -mt-4">Selecciona ciudad</p>}
+                // Auto-detect phone country from city selection
+                const normalizedCountry = country.toLowerCase().trim();
+                const mappedName = COUNTRY_SYNONYMS[normalizedCountry] || normalizedCountry;
+
+                const detected = ALL_COUNTRIES.find(c =>
+                  (countryCode && c.code.toLowerCase() === countryCode.toLowerCase()) ||
+                  c.name.toLowerCase() === mappedName ||
+                  c.name.toLowerCase() === normalizedCountry
+                );
+                if (detected) {
+                  setPhoneCountry(detected);
+                  if (phone) {
+                    const formatter = new AsYouType(detected.code as CountryCode);
+                    setPhone(formatter.input(phone));
+                  }
+                }
+              }}
+              className={errorField === 'city' ? '[&_input]:!border-[#FF3D3D] [&_input]:!ring-1 [&_input]:!ring-[#FF3D3D]' : ''}
+            />
+            {errorField === 'city' && <p className="text-[#FF3D3D] text-[12px] font-bold">Selecciona ciudad</p>}
+          </div>
+        </div>
 
         {/* Celular */}
         <div className="flex flex-col justify-start items-start gap-6">

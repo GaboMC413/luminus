@@ -9,7 +9,7 @@ import { InputField } from './InputField';
 
 interface LocationInputProps {
   defaultValue?: string;
-  onSelect: (data: { city: string; country: string }) => void;
+  onSelect: (data: { city: string; country: string; countryCode?: string }) => void;
   placeholder?: string;
   variant?: 'clean' | 'bordered';
   className?: string;
@@ -46,9 +46,39 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
     debounce: 300,
   });
 
+  const instanceIdRef = useRef(Math.random().toString(36).substring(2, 9));
+
   useEffect(() => {
     setMounted(true);
     return () => setMounted(false);
+  }, []);
+
+  // Listen to global open broadcasts to close suggestions when another dropdown opens
+  useEffect(() => {
+    const handleOtherSelectOpen = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail?.id !== instanceIdRef.current) {
+        clearSuggestions();
+      }
+    };
+    window.addEventListener('luminus-select-open', handleOtherSelectOpen);
+    return () => window.removeEventListener('luminus-select-open', handleOtherSelectOpen);
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        clearSuggestions();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const updateCoords = () => {
@@ -104,7 +134,8 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
 
       onSelect({
         city: formatted,
-        country: countryComp ? countryComp.long_name : ''
+        country: countryComp ? countryComp.long_name : '',
+        countryCode: countryComp ? countryComp.short_name : ''
       });
 
       setHighlightedIndex(-1);
@@ -130,7 +161,7 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
           key={place_id}
           onClick={() => handleSelect(description, structured_formatting.main_text, structured_formatting.secondary_text)}
           onMouseEnter={() => setHighlightedIndex(index)}
-          className={`px-6 py-3 cursor-pointer transition flex flex-col min-w-0 ${highlightedIndex === index ? 'bg-slate-50' : 'hover:bg-slate-50'}`}
+          className={`px-4 py-2.5 cursor-pointer transition flex flex-col min-w-0 ${highlightedIndex === index ? 'bg-slate-50' : 'hover:bg-slate-50'}`}
         >
           <span className="text-black text-body text-secondary truncate whitespace-nowrap">
             {structured_formatting.main_text}
@@ -154,6 +185,10 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
         onChange={(e) => {
           setValue(e.target.value);
           setHighlightedIndex(-1);
+          window.dispatchEvent(new CustomEvent('luminus-select-open', { detail: { id: instanceIdRef.current } }));
+        }}
+        onFocus={() => {
+          window.dispatchEvent(new CustomEvent('luminus-select-open', { detail: { id: instanceIdRef.current } }));
         }}
         onKeyDown={(e) => {
           if (status !== "OK" || suggestions.length === 0) return;

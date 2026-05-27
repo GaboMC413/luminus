@@ -149,3 +149,12 @@ label,
 .cursor-pointer {
   cursor: pointer !important;
 }
+
+/* Hide aggressive scrollbars globally on custom-scrollbar dropdowns/popups */
+.custom-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+.custom-scrollbar::-webkit-scrollbar {
+  display: none !important;  /* Chrome, Safari and Opera */
+}

@@ -38,10 +38,10 @@ export default function SignInView() {
     }, 1000);
   };
   return (
-    <div className="w-full min-h-dvh flex flex-col md:flex-row font-sans overflow-x-hidden md:overflow-hidden bg-slate-50 text-slate-900">
+    <div className="w-full min-h-dvh flex flex-col lg:flex-row font-sans overflow-x-hidden lg:overflow-hidden bg-slate-50 text-slate-900">
 
       {/* 1. Left Branding/Marketing Pane (Desktop only - 42% width) */}
-      <div className="hidden md:flex md:w-[42%] lg:w-[40%] xl:w-[45%] luminus-gradient flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden border-r border-slate-200/10 animate-in slide-in-from-left duration-500">
+      <div className="hidden lg:flex lg:w-[42%] lg:w-[40%] xl:w-[45%] luminus-gradient flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden border-r border-slate-200/10 animate-in slide-in-from-left duration-500">
         {/* Subtle overlay for enhanced visual depth */}
         <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] pointer-events-none" />
 
@@ -69,17 +69,17 @@ export default function SignInView() {
       </div>
 
       {/* 2. Right Form Pane - No shadows, no borders, plain elements on slate-50 */}
-      <div className="flex-1 flex flex-col bg-slate-50 justify-between min-h-dvh md:min-h-0 overflow-y-auto">
+      <div className="flex-1 flex flex-col bg-slate-50 justify-between lg:min-h-0 overflow-y-auto">
 
         {/* Mobile Header: Logo (only visible on mobile) */}
-        <div className="md:hidden w-full h-14 luminus-gradient flex items-center justify-center shrink-0 z-10">
+        <div className="lg:hidden w-full h-14 luminus-gradient flex items-center justify-center shrink-0 z-10">
           <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
             <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[20px]" />
           </Link>
         </div>
 
         {/* Central Content Area (Plain, no card, no shadow, no border!) */}
-        <div className="flex-1 flex items-center justify-center px-6 py-12 md:py-16">
+        <div className="flex-1 flex items-center justify-center px-6 py-8 md:py-16">
           <div className="w-full max-w-[344px] md:max-w-[380px] flex flex-col gap-8">
 
             {/* Title Section */}
@@ -162,8 +162,8 @@ export default function SignInView() {
           </div>
         </div>
 
-        {/* Footer (Mobile only) */}
-        <div className="md:hidden w-full shrink-0 h-[64px] flex flex-col justify-center border-t border-slate-200 mt-auto bg-white">
+        {/* Footer (Mobile/Tablet only) */}
+        <div className="lg:hidden w-full shrink-0 h-14 flex flex-col justify-center mt-auto">
           <p className="text-[9px] text-slate-400 text-center uppercase tracking-wide">LUMINUS LATAM © 2026</p>
         </div>
 
