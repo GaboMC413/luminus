@@ -55,7 +55,7 @@ export function ProfileSidebar({
   const fullName = `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
 
   return (
-    <div className="bg-white rounded-[16px] border border-slate-200 flex flex-col items-center shadow-none overflow-hidden relative group">
+    <div className="bg-white rounded-[24px] border border-slate-200 flex flex-col items-center shadow-none overflow-hidden relative group">
       {/* Local Cover - Mobile Only */}
       <div className={`md:hidden w-full h-[160px] relative shrink-0 ${!coverUrl || coverUrl.includes("empty") ? 'luminus-gradient' : ''}`}>
         {coverUrl && !coverUrl.includes("empty") && (
@@ -64,7 +64,7 @@ export function ProfileSidebar({
         <ProfileButton
           onClick={onShowCoverModal}
           icon="photo_camera"
-          label={coverUrl && !coverUrl.includes("empty") ? "Cambiar portada" : "Agregar portada"}
+          label={coverUrl && !coverUrl.includes("empty") ? "Cambiar portada" : "Seleccionar portada"}
           className="absolute bottom-3 right-3 h-10 px-3 z-10"
         />
       </div>
@@ -91,12 +91,12 @@ export function ProfileSidebar({
       </div>
 
       <div className="w-full p-5 pt-6 flex flex-col items-center gap-6">
-        <div className="text-center flex flex-col gap-1">
-          <h2 className="text-profile-name text-primary">
+        <div className="text-center flex flex-col gap-1.5">
+          <h2 className="text-profile-name font-jakarta text-slate-900">
             {fullName || "Tu Nombre"}
           </h2>
           {hasLocation ? (
-            <p className="text-body font-medium text-muted">
+            <p className="text-body font-medium text-slate-400">
               {profile.city?.split(',')[0] || ""}{profile.city && profile.country ? ", " : ""}{profile.country || ""}
             </p>
           ) : (
@@ -155,7 +155,7 @@ function DetailItem({ label, value, icon, onClick }: { label: string; value: str
 
   return (
     <div className="flex items-center gap-4 relative">
-      <span className="material-symbols-rounded text-muted text-[20px] shrink-0">
+      <span className="material-symbols-rounded text-slate-400 text-[20px] shrink-0">
         {icon}
       </span>
       <div className="flex flex-col min-w-0 flex-1">

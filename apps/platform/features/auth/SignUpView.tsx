@@ -47,6 +47,27 @@ export default function SignUpView() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+    
+    // Clear old profile test session keys on signup mount to ensure pristine state
+    const profileKeys = [
+      "luminus_profile_firstName",
+      "luminus_profile_lastName",
+      "luminus_profile_city",
+      "luminus_profile_country",
+      "luminus_profile_phone",
+      "luminus_profile_gender",
+      "luminus_profile_birthdate",
+      "luminus_profile_avatar",
+      "luminus_profile_interests",
+      "luminus_profile_otherInterests",
+      "luminus_profile_cover",
+      "luminus_profile_bio",
+      "luminus_profile_prompts",
+      "luminus_profile_profession",
+      "luminus_profile_plan",
+      "luminus_onboarding_completed"
+    ];
+    profileKeys.forEach(key => localStorage.removeItem(key));
   }, []);
 
   const handleSignUp = async () => {

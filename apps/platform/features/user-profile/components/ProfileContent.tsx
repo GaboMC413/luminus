@@ -43,10 +43,7 @@ export function ProfileContent() {
  const [profile, setProfile] = useState<Profile | null>(null);
  const [email, setEmail] = useState<string>("");
  const [loading, setLoading] = useState(true);
- const [coverUrl, setCoverUrl] = useState("/covers/cover-1.png");
-
- // Demo State
- const [isEmpty, setIsEmpty] = useState(false);
+ const [coverUrl, setCoverUrl] = useState("");
 
  // Modal states
  const [showCoverModal, setShowCoverModal] = useState(false);
@@ -63,28 +60,6 @@ export function ProfileContent() {
  const fileInputRef = useRef<HTMLInputElement>(null);
 
  useEffect(() => {
-  if (isEmpty) {
-   setProfile({
-    first_name: "",
-    last_name: "",
-    city: "",
-    country: "",
-    profession: "",
-    interests: [],
-    prompts: [],
-    profile_picture_url: "",
-    gender: "",
-    birthdate: "",
-    phone_number: "",
-    selected_plan: "Mensual",
-    created_at: new Date().toISOString(),
-    bio: ""
-   });
-   setCoverUrl("");
-   setLoading(false);
-   return;
-  }
-
   // Load from local storage or fallback to mock data
   const storedFirstName = localStorage.getItem("luminus_profile_firstName") || "";
   const storedLastName = localStorage.getItem("luminus_profile_lastName") || "";
@@ -128,10 +103,10 @@ export function ProfileContent() {
     bio: storedBio,
     other_interests: storedOtherInterests
   });
-  setCoverUrl(localStorage.getItem("luminus_profile_cover") || "/covers/cover-1.png");
+  setCoverUrl(localStorage.getItem("luminus_profile_cover") || "");
   setEmail(localStorage.getItem("luminus_user_email") || "");
   setLoading(false);
- }, [isEmpty]);
+ }, []);
 
  const handleSignOut = async () => {
   await fetch("/api/auth/logout", {
@@ -230,18 +205,6 @@ export function ProfileContent() {
 
  return (
   <div className="w-full flex flex-col pb-12 md:pb-0 relative">
-   {/* Toggle Empty State - Demo Only */}
-   <div className="fixed bottom-4 right-4 z-[100] select-none">
-    <button
-     onClick={() => setIsEmpty(!isEmpty)}
-     className="bg-black/80 backdrop-blur-sm text-white text-[11px] font-bold px-3 py-2 rounded-full shadow-2xl hover:bg-black transition-all flex items-center gap-2 border border-white/10"
-    >
-     <span className="material-symbols-rounded text-[16px]">
-      {isEmpty ? "person" : "person_off"}
-     </span>
-     {isEmpty ? "Perfil Lleno" : "Perfil Vacío"}
-    </button>
-   </div>
 
    <ProfileHeaderCover
     coverUrl={coverUrl}

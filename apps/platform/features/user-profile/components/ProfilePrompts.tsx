@@ -125,7 +125,7 @@ export function PromptsDisplay({ prompts, onEdit }: { prompts: Prompt[]; onEdit?
   const hasPrompts = prompts && prompts.length > 0;
 
   return (
-    <div className={`bg-white rounded-[16px] p-5 md:p-6 flex flex-col gap-5 border border-slate-200 shadow-none transition-all ${!hasPrompts ? 'bg-slate-50/50 border-slate-100' : ''}`}>
+    <div className={`bg-white rounded-[24px] p-5 md:p-6 flex flex-col gap-5 border border-slate-200 shadow-none transition-all ${!hasPrompts ? 'bg-slate-50/50 border-slate-100' : ''}`}>
       <div className="flex items-center gap-2.5">
         <h3 className="text-label text-[0.8125rem] uppercase font-semibold ml-1">Reflexiones</h3>
       </div>
@@ -134,8 +134,8 @@ export function PromptsDisplay({ prompts, onEdit }: { prompts: Prompt[]; onEdit?
         <div className="flex flex-col gap-2">
           {prompts.map((prompt, index) => (
             <div key={index} className="flex flex-col">
-              <p className="text-body text-secondary italic leading-relaxed">
-                "<span className="text-secondary">
+              <p className="text-body text-slate-600 italic leading-relaxed">
+                "<span className="text-slate-600">
                   {prompt.question.replace(/[…\. ]+$/, '')}
                 </span>{" "}
                 {prompt.answer.replace(/[…\. ]+$/, '').charAt(0).toLowerCase() + prompt.answer.replace(/[…\. ]+$/, '').slice(1)}"

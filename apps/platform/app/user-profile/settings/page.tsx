@@ -513,18 +513,6 @@ function EditableField({
               <div className="flex gap-3 items-center w-full">
                 <div className="flex-1">
                   <SelectInput
-                    value={birthMonth}
-                    options={MONTHS}
-                    onSelect={(val) => {
-                      setBirthMonth(val);
-                      setDateError("");
-                    }}
-                    placeholder="Mes"
-                    error={!!dateError}
-                  />
-                </div>
-                <div className="flex-1">
-                  <SelectInput
                     value={birthDay}
                     options={DAYS}
                     onSelect={(val) => {
@@ -532,6 +520,18 @@ function EditableField({
                       setDateError("");
                     }}
                     placeholder="Día"
+                    error={!!dateError}
+                  />
+                </div>
+                <div className="flex-1">
+                  <SelectInput
+                    value={birthMonth}
+                    options={MONTHS}
+                    onSelect={(val) => {
+                      setBirthMonth(val);
+                      setDateError("");
+                    }}
+                    placeholder="Mes"
                     error={!!dateError}
                   />
                 </div>

@@ -11,7 +11,7 @@ export function ProfileAboutSection({ bio, onEdit }: ProfileAboutSectionProps) {
   const hasBio = bio && bio.trim().length > 0;
 
   return (
-    <div className="bg-white rounded-[16px] p-5 md:p-6 flex flex-col gap-5 border border-slate-200 shadow-none relative group">
+    <div className="bg-white rounded-[24px] p-5 md:p-6 flex flex-col gap-5 border border-slate-200 shadow-none relative group">
       <ProfileButton
         onClick={onEdit}
         icon="edit"
@@ -22,7 +22,7 @@ export function ProfileAboutSection({ bio, onEdit }: ProfileAboutSectionProps) {
       </div>
 
       {hasBio ? (
-        <p className="text-body text-secondary leading-relaxed">
+        <p className="text-body text-slate-600 leading-relaxed animate-in fade-in duration-300">
           {bio}
         </p>
       ) : (

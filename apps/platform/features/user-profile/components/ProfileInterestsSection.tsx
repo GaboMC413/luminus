@@ -13,7 +13,7 @@ export function ProfileInterestsSection({ interests, otherInterests, onEdit }: P
   const hasInterests = (interests && interests.length > 0) || (otherInterests && otherInterests.trim().length > 0);
 
   return (
-    <div className="bg-white rounded-[16px] p-5 md:p-6 flex flex-col gap-2 md:gap-6 border border-slate-200 shadow-none relative group">
+    <div className="bg-white rounded-[24px] p-5 md:p-6 flex flex-col gap-2 md:gap-6 border border-slate-200 shadow-none relative group">
       <ProfileButton
         onClick={onEdit}
         icon="edit"
@@ -29,7 +29,7 @@ export function ProfileInterestsSection({ interests, otherInterests, onEdit }: P
             <InterestPill key={idx} interest={interest} />
           ))}
           {otherInterests && (
-            <div className="h-9 px-4 bg-slate-50 text-slate-400 border border-slate-100 rounded-[16px] text-[12px] md:text-[14px] font-medium italic tracking-tight font-sans flex items-center shadow-none shrink-0 select-none">
+            <div className="h-9 px-4 bg-slate-50 text-slate-400 border border-slate-100 rounded-[12px] text-[12px] md:text-[14px] font-medium italic tracking-tight font-sans flex items-center shadow-none shrink-0 select-none">
               + {otherInterests}
             </div>
           )}
