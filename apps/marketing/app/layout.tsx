@@ -57,6 +57,17 @@ export default function RootLayout({
 
             <div className="flex flex-col md:flex-row items-center justify-between border-t border-slate-200 pt-8 gap-4 text-xs text-slate-500 font-medium">
               <p>&copy; {new Date().getFullYear()} LUMINUS Latam. Todos los derechos reservados.</p>
+              <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center">
+                <Link href="/legal/terms" className="hover:text-black transition-colors">
+                  Términos y Condiciones
+                </Link>
+                <Link href="/legal/privacy" className="hover:text-black transition-colors">
+                  Política de Privacidad
+                </Link>
+                <Link href="/legal/cookies" className="hover:text-black transition-colors">
+                  Política de Cookies
+                </Link>
+              </div>
               <p className="flex items-center gap-1.5">
                 Una plataforma de bienestar colorida, consciente y humana.
               </p>
