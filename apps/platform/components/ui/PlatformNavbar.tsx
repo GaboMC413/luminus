@@ -53,6 +53,25 @@ export function PlatformNavbar() {
 
     const storedAvatar = localStorage.getItem("luminus_profile_avatar") || "";
     setProfileAvatar(storedAvatar);
+
+    async function loadSessionUser() {
+      const response = await fetch("/api/auth/me", {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      const email = data.user?.email;
+
+      if (!fullName && email) {
+        setProfileName(email.split("@")[0]);
+      }
+    }
+
+    loadSessionUser();
   }, []);
 
   // Determine active tab based on pathname
@@ -100,9 +119,11 @@ export function PlatformNavbar() {
     setMessages(prev => prev.map(m => ({ ...m, isUnread: false })));
   };
 
-  const handleSignOut = () => {
-    localStorage.removeItem("luminus_logged_in");
-    localStorage.removeItem("luminus_user_email");
+  const handleSignOut = async () => {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include",
+    });
     router.push("/auth/signin");
   };
 

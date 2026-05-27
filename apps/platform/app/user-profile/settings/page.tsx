@@ -71,13 +71,23 @@ function SettingsContent() {
   const [phoneCountry, setPhoneCountry] = useState<Country>({ code: 'XX', dial: '+00', name: 'Seleccionar país', priority: false });
   const [email, setEmail] = useState("");
 
-  // Load from localStorage
+  // Load profile data from the active session and temporary local profile state.
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem("luminus_logged_in") === "true";
-    if (!isLoggedIn) {
-      router.push("/auth/signin");
-      return;
+    async function loadProfile() {
+      const response = await fetch("/api/auth/me", {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        router.push("/auth/signin");
+        return;
+      }
+
+      const data = await response.json();
+      setEmail(data.user?.email ?? "");
     }
+
+    loadProfile();
 
     setFirstName(localStorage.getItem("luminus_profile_firstName") || "");
     setLastName(localStorage.getItem("luminus_profile_lastName") || "");
@@ -117,7 +127,6 @@ function SettingsContent() {
       setPhone("");
     }
 
-    setEmail(localStorage.getItem("luminus_user_email") || "");
   }, [router]);
 
   useEffect(() => {

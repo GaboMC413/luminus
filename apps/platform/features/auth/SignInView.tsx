@@ -27,19 +27,27 @@ export default function SignInView() {
     setLoading(true);
     setMessage({ text: "", type: "" });
 
-    // Simulate mock sign in verification (preserving state locally)
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
 
-      // Let's do a mock validation
-      if (password.length < 6) {
-        setMessage({ text: "La contraseña es incorrecta", type: "error" });
-      } else {
-        localStorage.setItem("luminus_logged_in", "true");
-        localStorage.setItem("luminus_user_email", email);
-        router.push("/community");
+      if (!response.ok) {
+        setMessage({ text: data.message ?? "No pudimos iniciar sesion.", type: "error" });
+        return;
       }
-    }, 1000);
+
+      router.push("/community");
+    } catch {
+      setMessage({ text: "No pudimos conectar con el servidor.", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+
   };
   return (
     <div className="w-full min-h-dvh flex flex-col lg:flex-row font-sans overflow-y-auto lg:overflow-hidden lg:h-dvh bg-slate-50 text-slate-900">

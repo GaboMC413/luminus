@@ -7,12 +7,15 @@ export default function PlatformHomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem("luminus_logged_in") === "true";
-    if (isLoggedIn) {
-      router.push("/community");
-    } else {
-      router.push("/auth/signin");
+    async function checkSession() {
+      const response = await fetch("/api/auth/me", {
+        credentials: "include",
+      });
+
+      router.push(response.ok ? "/community" : "/auth/signin");
     }
+
+    checkSession();
   }, [router]);
 
   return (

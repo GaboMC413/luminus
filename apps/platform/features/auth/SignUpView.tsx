@@ -58,27 +58,39 @@ export default function SignUpView() {
       setMessage({ text: "Las contraseñas no coinciden.", type: "error" });
       return;
     }
-    if (password.length < 8) {
-      setMessage({ text: "La contraseña debe tener al menos 8 caracteres.", type: "error" });
+    if (password.length < 12) {
+      setMessage({ text: "La contrasena debe tener al menos 12 caracteres.", type: "error" });
       return;
     }
-    if (!/\d/.test(password)) {
-      setMessage({ text: "La contraseña debe incluir al menos un número.", type: "error" });
+    if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+      setMessage({ text: "La contrasena debe incluir al menos una letra y un numero.", type: "error" });
       return;
     }
 
     setLoading(true);
     setMessage({ text: "", type: "" });
 
-    // Simulate mock sign up action
-    setTimeout(() => {
-      setLoading(false);
-      localStorage.setItem("luminus_registered_email", email);
-      localStorage.setItem("luminus_registered_password", password);
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
 
-      // Move directly to Step 2: PersonalData!
+      if (!response.ok) {
+        setMessage({ text: data.message ?? "No pudimos crear tu cuenta.", type: "error" });
+        return;
+      }
+
       setStep(2);
-    }, 800);
+    } catch {
+      setMessage({ text: "No pudimos conectar con el servidor.", type: "error" });
+    } finally {
+      setLoading(false);
+    }
+
   };
 
   const isRegistration = step > 1;
@@ -348,6 +360,7 @@ export default function SignUpView() {
                   router.push('/');
                 }}
                 onBack={() => setStep(3)}
+                data={profileData}
               />
             )}
           </div>

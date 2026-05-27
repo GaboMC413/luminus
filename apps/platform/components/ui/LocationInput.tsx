@@ -187,7 +187,10 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
         placeholder={placeholder}
         value={value}
         onChange={(e) => {
-          setValue(e.target.value);
+          const nextValue = e.target.value;
+
+          setValue(nextValue);
+          onSelect({ city: nextValue, country: '' });
           setHighlightedIndex(-1);
           window.dispatchEvent(new CustomEvent('luminus-select-open', { detail: { id: instanceIdRef.current } }));
         }}
@@ -216,7 +219,7 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
             );
           }
         }}
-        disabled={disabled || !ready}
+        disabled={disabled}
         variant={variant}
         autoComplete="new-password"
         enterKeyHint="next"

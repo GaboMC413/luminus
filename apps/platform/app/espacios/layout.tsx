@@ -13,11 +13,20 @@ export default function EspaciosLayout({
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
-    const isLoggedIn = localStorage.getItem("luminus_logged_in") === "true";
-    if (!isLoggedIn) {
-      router.push("/auth/signin");
+    async function checkSession() {
+      const response = await fetch("/api/auth/me", {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        router.push("/auth/signin");
+        return;
+      }
+
+      setIsMounted(true);
     }
+
+    checkSession();
   }, [router]);
 
   if (!isMounted) {
