@@ -71,6 +71,7 @@ export function PhoneInput({
   return (
     <div 
       ref={containerRef}
+      style={{ scrollMarginTop: '100px' }}
       className={`reg-input-bordered px-5 flex items-center transition w-full relative ${className} ${disabled ? 'pointer-events-none' : ''} ${error ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : ''}`}
     >
       <div
@@ -82,6 +83,9 @@ export function PhoneInput({
             setShowPhoneDropdown(nextOpen);
             if (nextOpen) {
               window.dispatchEvent(new CustomEvent('luminus-select-open', { detail: { id: instanceIdRef.current } }));
+              setTimeout(() => {
+                containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 150);
             }
           }
         }}

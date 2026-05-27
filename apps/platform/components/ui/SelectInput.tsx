@@ -59,6 +59,11 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
         return val === value;
       });
       setHighlightedIndex(currentIdx >= 0 ? currentIdx : 0);
+
+      // Smooth scroll the select box higher in the viewport on mobile/devices when opened
+      setTimeout(() => {
+        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
     }
   }, [isOpen, value, options]);
 
@@ -150,7 +155,11 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
   );
 
   return (
-    <div className={`flex flex-col gap-2 relative w-full ${className}`} ref={containerRef}>
+    <div 
+      className={`flex flex-col gap-2 relative w-full ${className}`} 
+      ref={containerRef}
+      style={{ scrollMarginTop: '100px' }}
+    >
       {label && <label className="text-label ml-1">{label}</label>}
 
       <div

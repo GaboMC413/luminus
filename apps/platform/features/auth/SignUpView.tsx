@@ -80,7 +80,7 @@ export default function SignUpView() {
 
   if (step === 1) {
     return (
-      <div className="w-full min-h-dvh flex flex-col lg:flex-row font-sans overflow-x-hidden lg:overflow-hidden bg-slate-50 text-slate-900">
+      <div className="w-full min-h-dvh flex flex-col lg:flex-row font-sans overflow-y-auto lg:overflow-hidden lg:h-dvh bg-slate-50 text-slate-900">
 
         {/* 1. Left Branding/Marketing Pane (Desktop only - 42% width) */}
         <div className="hidden lg:flex lg:w-[42%] lg:w-[40%] xl:w-[45%] luminus-gradient flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden border-r border-slate-200/10 animate-in slide-in-from-left duration-500">
@@ -162,7 +162,7 @@ export default function SignUpView() {
         </div>
 
         {/* 2. Right Form Pane - No shadows, no borders, plain elements on slate-50 */}
-        <div className="flex-1 flex flex-col bg-slate-50 justify-between lg:min-h-0 overflow-y-auto">
+        <div className="flex-1 flex flex-col bg-slate-50 lg:min-h-0 lg:overflow-y-auto">
 
           {/* Mobile Header: Logo (only visible on mobile) */}
           <div className="lg:hidden w-full h-14 luminus-gradient flex items-center justify-center shrink-0 z-10">
@@ -299,7 +299,7 @@ export default function SignUpView() {
 
   // Registration Flow (Step 2+)
   return (
-    <div className="w-full h-dvh bg-slate-50 flex flex-col lg:flex-row font-sans overflow-hidden">
+    <div className="w-full min-h-dvh lg:h-dvh bg-slate-50 flex flex-col lg:flex-row font-sans overflow-y-auto lg:overflow-hidden">
 
       {/* LATERAL SIDEBAR */}
       <div className="w-full h-14 lg:h-full lg:w-80 luminus-gradient shrink-0 flex lg:flex-col items-center justify-center lg:justify-start lg:pt-12 z-10 transition-all duration-500">
@@ -318,7 +318,7 @@ export default function SignUpView() {
       {/* Main Content Area */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 flex flex-col overflow-y-auto"
+        className="flex-1 flex flex-col lg:overflow-y-auto"
       >
         <div className="flex-1 flex flex-col items-center pt-8 md:pt-12 pb-10 md:pb-20 px-6 md:px-12">
           {/* Constrain width to 665px */}

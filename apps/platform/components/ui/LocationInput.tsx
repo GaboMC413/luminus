@@ -176,7 +176,11 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
   );
 
   return (
-    <div className={`flex flex-col gap-2 relative w-full ${className}`} ref={containerRef}>
+    <div 
+      className={`flex flex-col gap-2 relative w-full ${className}`} 
+      ref={containerRef}
+      style={{ scrollMarginTop: '100px' }}
+    >
       {label && <label className="text-label ml-1">{label}</label>}
       <InputField
         ref={ref}
@@ -189,6 +193,9 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
         }}
         onFocus={() => {
           window.dispatchEvent(new CustomEvent('luminus-select-open', { detail: { id: instanceIdRef.current } }));
+          setTimeout(() => {
+            containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 150);
         }}
         onKeyDown={(e) => {
           if (status !== "OK" || suggestions.length === 0) return;

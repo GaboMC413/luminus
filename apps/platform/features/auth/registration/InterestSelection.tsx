@@ -67,7 +67,8 @@ export function InterestSelection({
       <div className="flex flex-col gap-8 w-full pr-2">
         {INTEREST_CATEGORIES.map((category) => (
           <div key={category.title} className="flex flex-col gap-4">
-            <h3 className="flex items-center gap-2 text-[16px] md:text-[17px] font-bold font-sans" style={{ color: category.color }}>
+            <h3 className="flex items-center gap-2 text-[16px] md:text-[17px] font-bold font-sans animate-in fade-in duration-300" style={{ color: category.color }}>
+              <span className="material-symbols-outlined select-none text-[20px]">{category.icon}</span>
               {category.title}
             </h3>
             <div className="flex flex-wrap gap-2">
