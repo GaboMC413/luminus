@@ -10,6 +10,32 @@ import { COUNTRIES, Country } from "@/utils/countries";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 
+const MONTHS = [
+  { label: 'Enero', value: '01' },
+  { label: 'Febrero', value: '02' },
+  { label: 'Marzo', value: '03' },
+  { label: 'Abril', value: '04' },
+  { label: 'Mayo', value: '05' },
+  { label: 'Junio', value: '06' },
+  { label: 'Julio', value: '07' },
+  { label: 'Agosto', value: '08' },
+  { label: 'Septiembre', value: '09' },
+  { label: 'Octubre', value: '10' },
+  { label: 'Noviembre', value: '11' },
+  { label: 'Diciembre', value: '12' },
+];
+
+const DAYS = Array.from({ length: 31 }, (_, i) => {
+  const d = (i + 1).toString().padStart(2, '0');
+  return { label: d, value: d };
+});
+
+const currentYearNum = new Date().getFullYear();
+const YEARS = Array.from({ length: currentYearNum - 1900 + 1 }, (_, i) => {
+  const y = (currentYearNum - i).toString();
+  return { label: y, value: y };
+});
+
 export default function SettingsPage() {
   return (
     <Suspense fallback={
@@ -345,11 +371,6 @@ function EditableField({
   const [birthYear, setBirthYear] = useState("");
   const [dateError, setDateError] = useState("");
 
-  // Refs for auto-focusing & auto-tabbing
-  const dayRef = useRef<HTMLInputElement>(null);
-  const monthRef = useRef<HTMLInputElement>(null);
-  const yearRef = useRef<HTMLInputElement>(null);
-
   // Sync state with incoming value
   useEffect(() => {
     setCurrentValue(value);
@@ -380,14 +401,10 @@ function EditableField({
     lastAttentionRef.current = attentionCounter;
   }, [attentionCounter, isEditing]);
 
-  // Focus day field when editing starts
+  // Reset errors when editing starts
   useEffect(() => {
     if (isEditing && isDate) {
       setDateError("");
-      const timer = setTimeout(() => {
-        dayRef.current?.focus();
-      }, 100);
-      return () => clearTimeout(timer);
     }
   }, [isEditing, isDate]);
 
@@ -484,62 +501,43 @@ function EditableField({
             />
           ) : isDate && isEditing ? (
             <div className="flex flex-col gap-2 w-full">
-              <div className="flex gap-2 items-center w-full">
-                <InputField
-                  ref={dayRef}
-                  type="text"
-                  placeholder="DD"
-                  value={birthDay}
-                  onChange={(e) => {
-                    const v = e.target.value.replace(/\D/g, '').slice(0, 2);
-                    setBirthDay(v);
-                    setDateError("");
-                    if (v.length === 2) monthRef.current?.focus();
-                  }}
-                  className={`text-center !w-16 bg-white text-black ${dateError ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : 'border-black'}`}
-                  variant="bordered"
-                />
-                <span className="text-slate-400">/</span>
-                <InputField
-                  ref={monthRef}
-                  type="text"
-                  placeholder="MM"
-                  value={birthMonth}
-                  onChange={(e) => {
-                    const v = e.target.value.replace(/\D/g, '').slice(0, 2);
-                    setBirthMonth(v);
-                    setDateError("");
-                    if (v.length === 2) {
-                      yearRef.current?.focus();
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Backspace' && !birthMonth) {
-                      dayRef.current?.focus();
-                    }
-                  }}
-                  className={`text-center !w-16 bg-white text-black ${dateError ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : 'border-black'}`}
-                  variant="bordered"
-                />
-                <span className="text-slate-400">/</span>
-                <InputField
-                  ref={yearRef}
-                  type="text"
-                  placeholder="AAAA"
-                  value={birthYear}
-                  onChange={(e) => {
-                    const v = e.target.value.replace(/\D/g, '').slice(0, 4);
-                    setBirthYear(v);
-                    setDateError("");
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Backspace' && !birthYear) {
-                      monthRef.current?.focus();
-                    }
-                  }}
-                  className={`text-center flex-1 bg-white text-black ${dateError ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : 'border-black'}`}
-                  variant="bordered"
-                />
+              <div className="flex gap-3 items-center w-full">
+                <div className="flex-1">
+                  <SelectInput
+                    value={birthMonth}
+                    options={MONTHS}
+                    onSelect={(val) => {
+                      setBirthMonth(val);
+                      setDateError("");
+                    }}
+                    placeholder="Mes"
+                    error={!!dateError}
+                  />
+                </div>
+                <div className="flex-1">
+                  <SelectInput
+                    value={birthDay}
+                    options={DAYS}
+                    onSelect={(val) => {
+                      setBirthDay(val);
+                      setDateError("");
+                    }}
+                    placeholder="Día"
+                    error={!!dateError}
+                  />
+                </div>
+                <div className="flex-1">
+                  <SelectInput
+                    value={birthYear}
+                    options={YEARS}
+                    onSelect={(val) => {
+                      setBirthYear(val);
+                      setDateError("");
+                    }}
+                    placeholder="Año"
+                    error={!!dateError}
+                  />
+                </div>
               </div>
               {dateError && <p className="text-[#FF3D3D] text-[12px] font-bold mt-1">{dateError}</p>}
             </div>

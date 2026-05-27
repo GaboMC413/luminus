@@ -3,12 +3,18 @@
 
 @layer base {
   body {
-    @apply bg-gradient-to-tr from-wellness-sand-50 via-white to-wellness-sage-50 text-wellness-slate-900 min-h-screen font-sans antialiased overflow-x-hidden;
-    background-attachment: fixed;
+    @apply bg-slate-50 text-slate-900 min-h-screen font-sans antialiased overflow-x-hidden;
   }
   
   ::selection {
-    @apply bg-wellness-sage-100 text-wellness-sage-800;
+    @apply bg-slate-200 text-slate-800;
+  }
+
+  /* Force global placeholder colors */
+  input::placeholder,
+  textarea::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
   }
 
   /* Calm Custom scrollbar */
@@ -20,17 +26,12 @@
     @apply bg-transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-wellness-sage-200 rounded-full hover:bg-wellness-sage-300 transition-colors duration-300;
+    @apply bg-slate-200 rounded-full hover:bg-slate-300 transition-colors duration-300;
   }
 }
 
 @layer utilities {
-  .bg-glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/40;
-  }
-  .bg-glass-dark {
-    @apply bg-wellness-slate-900/90 backdrop-blur-md border border-white/10;
-  }
+  /* TRANSITION UTILITY */
   .transition-premium {
     @apply transition-all duration-300 ease-out;
   }
@@ -46,117 +47,75 @@
     background-blend-mode: overlay, normal, normal, normal;
   }
 
-  /* PRODUCT-STYLE TYPOGRAPHY SYSTEM */
-  .text-page-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    line-height: 1.25;
-    letter-spacing: -0.025em;
+  /* HIGH-END TYPOGRAPHY SYSTEM (Tailwind @apply semantic classes, no custom sizing properties) */
+  .text-title-display, .text-page-title, .text-profile-name {
+    @apply text-2xl md:text-3xl font-bold tracking-tight text-slate-900 leading-snug;
   }
 
-  .text-section-title {
-    font-size: 1.125rem;
-    font-weight: 600;
-    line-height: 1.375;
+  .text-title-section, .text-section-title {
+    @apply text-sm font-bold text-slate-400 uppercase tracking-widest;
   }
 
-  .text-body {
-    font-size: 1rem;
-    font-weight: 400;
-    line-height: 1.625;
+  .text-title-card, .text-card-title {
+    @apply text-base font-bold text-slate-900 leading-tight;
   }
 
-  .text-body-small {
-    font-size: 0.875rem;
-    font-weight: 400;
-    line-height: 1.625;
+  .text-body-primary, .text-body {
+    @apply text-base text-slate-700 leading-relaxed;
   }
 
-  .text-label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: #64748b;
+  .text-body-secondary, .text-body-small {
+    @apply text-sm text-slate-500 leading-relaxed;
+  }
+
+  .text-caption, .text-label {
+    @apply text-xs font-semibold uppercase tracking-wider text-slate-400;
   }
 
   .text-button {
-    font-size: 0.875rem;
-    font-weight: 500;
+    @apply text-sm font-semibold;
   }
 
   .text-input {
-    font-size: 1rem;
-    font-weight: 400;
+    @apply text-base font-normal;
   }
 
-  .text-profile-name {
-    font-size: 1.5rem;
-    font-weight: 600;
-    line-height: 1.25;
-    letter-spacing: -0.025em;
+  /* PREMIUM FLAT FORM INPUTS (No shadows, rounded-xl) */
+  .input-text-field, .reg-input-clean, .reg-input-bordered {
+    @apply w-full h-12 px-4 bg-white border border-zinc-200/80 rounded-xl text-base text-zinc-900 placeholder-zinc-400 focus-within:border-slate-800 outline-none transition-all duration-300;
   }
 
-  .text-card-title {
-    font-size: 1rem;
-    font-weight: 600;
-    line-height: 1.375;
+  /* PREMIUM FLAT BUTTONS (No shadows, rounded-xl) */
+  .btn-pill-primary {
+    @apply h-12 px-6 rounded-xl bg-black hover:bg-zinc-900 text-white font-medium text-sm flex items-center justify-center transition-all duration-300 active:scale-95 cursor-pointer select-none border-none outline-none;
+  }
+
+  .btn-pill-secondary {
+    @apply h-12 px-6 rounded-xl bg-white hover:bg-slate-50 text-slate-900 font-medium text-sm flex items-center justify-center border border-zinc-200 transition-all duration-300 active:scale-95 cursor-pointer select-none;
+  }
+
+  /* FLAT CONTAINERS & INTERACTIVE ITEMS (No shadows, rounded-2xl, flat borders) */
+  .card-container {
+    @apply bg-white rounded-2xl p-6 border border-zinc-200/40;
+  }
+
+  .card-interactive {
+    @apply bg-white rounded-2xl p-6 border border-zinc-200/40 hover:bg-slate-50/50 cursor-pointer transition-all duration-300 ease-out;
+  }
+
+  /* Navigation & Panels */
+  .panel-navbar {
+    @apply bg-white/90 border-b border-zinc-200/50;
   }
 
   .material-icon-premium {
-    font-size: 32px;
+    font-size: 24px;
     line-height: 1;
-    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 40;
+    font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
   }
 
   .material-icon-filled {
-    font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 40;
-  }
-
-
-  /* INPUT FIELDS */
-  .reg-input-clean {
-    width: 100%;
-    height: 3rem;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-    border-radius: 40px;
-    font-size: 1rem;
-    font-weight: 400;
-    transition-property: all;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 300ms;
-    outline: 2px solid transparent;
-    outline-offset: 2px;
-    display: flex;
-    align-items: center;
-    background-color: #ffffff;
-    border: none;
-    justify-content: flex-start;
-  }
-  .reg-input-clean:focus-within {
-    border: 1px solid #000000;
-  }
-
-  .reg-input-bordered {
-    width: 100%;
-    height: 3rem;
-    padding-left: 1.25rem;
-    padding-right: 1.25rem;
-    border-radius: 40px;
-    font-size: 1rem;
-    font-weight: 400;
-    transition-property: all;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 300ms;
-    outline: 2px solid transparent;
-    outline-offset: 2px;
-    display: flex;
-    align-items: center;
-    background-color: #ffffff;
-    border: 1px solid #e4e4e7;
-    justify-content: flex-start;
-  }
-  .reg-input-bordered:focus-within {
-    border-color: #000000;
+    font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
   }
 }
 

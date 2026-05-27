@@ -12,11 +12,11 @@ export function Button({ variant = 'primary', children, className = '', ...props
   const baseStyles = "transition-all outline-none flex items-center justify-center font-jakarta duration-300 ease-out active:scale-95 cursor-pointer select-none";
 
   const variants = {
-    primary: "w-full h-12 px-5 sm:px-6 rounded-[40px] text-button font-medium bg-black text-white hover:bg-zinc-900",
-    outline: "w-full h-12 px-5 sm:px-6 rounded-[40px] text-button font-medium bg-white text-secondary border border-zinc-200 hover:bg-slate-50",
-    secondary: "w-full h-12 px-5 sm:px-6 rounded-[40px] text-button font-medium bg-slate-50 text-secondary border border-slate-200 hover:bg-slate-100",
-    slate: "h-9 px-4 rounded-full text-button font-medium bg-slate-400 text-white hover:bg-slate-500 gap-2",
-    small: "h-8 md:h-9 px-4 rounded-full text-label font-semibold bg-slate-100 text-secondary border border-slate-200 hover:bg-slate-200",
+    primary: "w-full h-12 px-5 sm:px-6 rounded-xl text-button font-medium bg-black text-white hover:bg-zinc-900",
+    outline: "w-full h-12 px-5 sm:px-6 rounded-xl text-button font-medium bg-white text-secondary border border-zinc-200 hover:bg-slate-50",
+    secondary: "w-full h-12 px-5 sm:px-6 rounded-xl text-button font-medium bg-slate-50 text-secondary border border-slate-200 hover:bg-slate-100",
+    slate: "h-9 px-4 rounded-lg text-button font-medium bg-slate-400 text-white hover:bg-slate-500 gap-2",
+    small: "h-8 md:h-9 px-4 rounded-lg text-label font-semibold bg-slate-100 text-secondary border border-slate-200 hover:bg-slate-200",
     back: "flex items-center gap-1.5 group w-fit !bg-transparent !border-none !p-0"
   };
 

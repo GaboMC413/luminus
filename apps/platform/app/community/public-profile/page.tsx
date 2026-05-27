@@ -19,7 +19,7 @@ export default function NancyNunezProfile() {
  
   return (
     <main className="flex-1 w-full flex flex-col items-center pt-8 pb-12 bg-[#F8FAFC]">
-      <div className="w-full max-w-[440px] bg-white rounded-[40px] border border-slate-200 overflow-hidden shadow-premium transition-all">
+      <div className="w-full max-w-[440px] bg-white rounded-2xl border border-slate-200 overflow-hidden transition-all">
         <div className="w-full h-12 px-6 flex items-center justify-between border-b border-slate-50">
            <button onClick={() => router.back()} className="text-slate-400 hover:text-black transition-colors border-none bg-transparent cursor-pointer flex items-center justify-center">
               <span className="material-symbols-outlined text-[20px]">arrow_back</span>
@@ -33,7 +33,7 @@ export default function NancyNunezProfile() {
         <div className="w-full flex-1 overflow-y-auto px-5 pb-10 pt-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <div className="flex flex-col gap-8">
             <div className="flex flex-col items-center gap-5">
-              <div className="w-32 h-32 rounded-[32px] overflow-hidden bg-slate-50 border-4 border-white relative ring-1 ring-black/5">
+              <div className="w-32 h-32 rounded-2xl overflow-hidden bg-slate-50 border-4 border-white relative ring-1 ring-black/5">
                 <img 
                   src={profile.avatar} 
                   alt={profile.first_name} 
@@ -61,7 +61,7 @@ export default function NancyNunezProfile() {
               </p>
             </div>
  
-            <div className="bg-white rounded-[24px] p-6 flex flex-col gap-4 border border-slate-100 mx-2 shadow-sm">
+            <div className="bg-white rounded-2xl p-6 flex flex-col gap-4 border border-slate-100 mx-2">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-outlined text-black text-[20px]">sparkles</span>
                 <h3 className="text-slate-400 text-[11px] font-bold uppercase tracking-widest font-jakarta">Mis Intereses</h3>
@@ -73,7 +73,7 @@ export default function NancyNunezProfile() {
               </div>
             </div>
  
-            <div className="bg-white rounded-[24px] p-6 flex flex-col gap-6 border border-slate-100 mx-2 shadow-sm">
+            <div className="bg-white rounded-2xl p-6 flex flex-col gap-6 border border-slate-100 mx-2">
               <DetailItem 
                 label="Comunidad" 
                 value="Explorador Activo" 
@@ -97,14 +97,14 @@ export default function NancyNunezProfile() {
             <div className="flex flex-col gap-3 px-2">
               <button 
                 onClick={() => router.push(`/messages?id=1`)}
-                className="w-full py-4 bg-black text-white rounded-full text-[15px] font-bold hover:bg-zinc-800 transition flex items-center justify-center gap-2 border-none cursor-pointer font-jakarta"
+                className="w-full py-4 bg-black text-white rounded-xl text-[15px] font-bold hover:bg-zinc-800 transition flex items-center justify-center gap-2 border-none cursor-pointer font-jakarta"
               >
                 <span className="material-symbols-outlined text-[20px]">mail</span>
                 Enviar Mensaje
               </button>
               <button 
                 onClick={() => alert("Solicitud de conexión enviada")}
-                className="w-full py-4 bg-white border border-slate-200 text-slate-600 rounded-full text-[15px] font-bold hover:bg-slate-50 hover:text-black hover:border-slate-300 transition flex items-center justify-center gap-2 cursor-pointer font-jakarta"
+                className="w-full py-4 bg-white border border-slate-200 text-slate-600 rounded-xl text-[15px] font-bold hover:bg-slate-50 hover:text-black hover:border-slate-300 transition flex items-center justify-center gap-2 cursor-pointer font-jakarta"
               >
                 <span className="material-symbols-outlined text-[20px]">person_add</span>
                 Conectar

@@ -68,7 +68,7 @@ export function PhoneInput({
           if (!disabled) setShowPhoneDropdown(!showPhoneDropdown);
         }}
       >
-        <span className={`${phoneCountry.dial === '+00' ? 'text-slate-400' : 'text-black'} text-body text-secondary mr-2`}>
+        <span className={`${phoneCountry.dial === '+00' ? '!text-slate-400' : 'text-black'} text-body text-secondary mr-2`}>
           {phoneCountry.dial}
         </span>
         {!disabled && (
@@ -79,7 +79,7 @@ export function PhoneInput({
       </div>
 
       {showPhoneDropdown && (
-        <div className="absolute top-[calc(100%+8px)] left-0 w-[240px] bg-white rounded-3xl py-2 z-[100] border border-slate-200 shadow-xl overflow-y-auto max-h-[240px] custom-scrollbar animate-in fade-in duration-200">
+        <div className="absolute top-[calc(100%+8px)] left-0 w-[240px] bg-white rounded-2xl py-2 z-[100] border border-slate-200 overflow-y-auto max-h-[240px] custom-scrollbar animate-in fade-in duration-200">
           {dropdownCountries.map((c) => (
             <div
               key={c.code}

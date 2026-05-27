@@ -12,6 +12,32 @@ import { AsYouType, CountryCode } from 'libphonenumber-js';
 
 const NEUTRAL_COUNTRY = { code: 'XX', dial: '+00', name: 'Seleccionar país', priority: false };
 
+const MONTHS = [
+  { label: 'Enero', value: '01' },
+  { label: 'Febrero', value: '02' },
+  { label: 'Marzo', value: '03' },
+  { label: 'Abril', value: '04' },
+  { label: 'Mayo', value: '05' },
+  { label: 'Junio', value: '06' },
+  { label: 'Julio', value: '07' },
+  { label: 'Agosto', value: '08' },
+  { label: 'Septiembre', value: '09' },
+  { label: 'Octubre', value: '10' },
+  { label: 'Noviembre', value: '11' },
+  { label: 'Diciembre', value: '12' },
+];
+
+const DAYS = Array.from({ length: 31 }, (_, i) => {
+  const d = (i + 1).toString().padStart(2, '0');
+  return { label: d, value: d };
+});
+
+const currentYearNum = new Date().getFullYear();
+const YEARS = Array.from({ length: currentYearNum - 1900 + 1 }, (_, i) => {
+  const y = (currentYearNum - i).toString();
+  return { label: y, value: y };
+});
+
 const isValidBirthdate = (val: string): boolean => {
   const clean = val.replace(/\s+/g, '');
   const parts = clean.split('/').map(p => parseInt(p.trim())).filter(p => !isNaN(p));
@@ -73,10 +99,7 @@ export function PersonalData({
   const [birthMonth, setBirthMonth] = useState("");
   const [birthYear, setBirthYear] = useState("");
 
-  // Refs for auto-focusing & auto-tabbing
-  const dayRef = useRef<HTMLInputElement>(null);
-  const monthRef = useRef<HTMLInputElement>(null);
-  const yearRef = useRef<HTMLInputElement>(null);
+
 
   // Initialize birthdate splits from parent state on mount
   React.useEffect(() => {
@@ -274,63 +297,46 @@ export function PersonalData({
         <div className="flex flex-col justify-start items-start gap-6">
           <div className="w-full flex flex-col justify-start items-start gap-2">
             <label className="text-label ml-1">Fecha de Nacimiento</label>
-            <div className="flex gap-2 items-center w-full">
-              <InputField
-                ref={dayRef}
-                type="text"
-                placeholder="DD"
-                value={birthDay}
-                onChange={(e) => {
-                  const v = e.target.value.replace(/\D/g, '').slice(0, 2);
-                  setBirthDay(v);
-                  updateParentBirthdate(v, birthMonth, birthYear);
-                  if (errorField === 'birthdate') setErrorField(null);
-                  if (v.length === 2) monthRef.current?.focus();
-                }}
-                className={`text-center !w-16 bg-white text-black ${errorField === 'birthdate' ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : ''}`}
-                variant="bordered"
-              />
-              <span className="text-slate-400">/</span>
-              <InputField
-                ref={monthRef}
-                type="text"
-                placeholder="MM"
-                value={birthMonth}
-                onChange={(e) => {
-                  const v = e.target.value.replace(/\D/g, '').slice(0, 2);
-                  setBirthMonth(v);
-                  updateParentBirthdate(birthDay, v, birthYear);
-                  if (errorField === 'birthdate') setErrorField(null);
-                  if (v.length === 2) yearRef.current?.focus();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Backspace' && !birthMonth) {
-                    dayRef.current?.focus();
-                  }
-                }}
-                className={`text-center !w-16 bg-white text-black ${errorField === 'birthdate' ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : ''}`}
-                variant="bordered"
-              />
-              <span className="text-slate-400">/</span>
-              <InputField
-                ref={yearRef}
-                type="text"
-                placeholder="AAAA"
-                value={birthYear}
-                onChange={(e) => {
-                  const v = e.target.value.replace(/\D/g, '').slice(0, 4);
-                  setBirthYear(v);
-                  updateParentBirthdate(birthDay, birthMonth, v);
-                  if (errorField === 'birthdate') setErrorField(null);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Backspace' && !birthYear) {
-                    monthRef.current?.focus();
-                  }
-                }}
-                className={`text-center flex-1 bg-white text-black ${errorField === 'birthdate' ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : ''}`}
-                variant="bordered"
-              />
+            <div className="flex gap-3 items-center w-full">
+              <div className="flex-1">
+                <SelectInput
+                  value={birthMonth}
+                  options={MONTHS}
+                  onSelect={(val) => {
+                    setBirthMonth(val);
+                    updateParentBirthdate(birthDay, val, birthYear);
+                    if (errorField === 'birthdate') setErrorField(null);
+                  }}
+                  placeholder="Mes"
+                  error={errorField === 'birthdate'}
+                />
+              </div>
+              <div className="flex-1">
+                <SelectInput
+                  value={birthDay}
+                  options={DAYS}
+                  onSelect={(val) => {
+                    setBirthDay(val);
+                    updateParentBirthdate(val, birthMonth, birthYear);
+                    if (errorField === 'birthdate') setErrorField(null);
+                  }}
+                  placeholder="Día"
+                  error={errorField === 'birthdate'}
+                />
+              </div>
+              <div className="flex-1">
+                <SelectInput
+                  value={birthYear}
+                  options={YEARS}
+                  onSelect={(val) => {
+                    setBirthYear(val);
+                    updateParentBirthdate(birthDay, birthMonth, val);
+                    if (errorField === 'birthdate') setErrorField(null);
+                  }}
+                  placeholder="Año"
+                  error={errorField === 'birthdate'}
+                />
+              </div>
             </div>
             {errorField === 'birthdate' && <p className="text-[#FF3D3D] text-[12px] font-bold">Fecha inválida o incompleta</p>}
           </div>

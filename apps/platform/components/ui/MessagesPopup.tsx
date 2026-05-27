@@ -111,7 +111,7 @@ export function MessagesPopup({ isOpen, onClose, messages, onMarkRead }: Message
   return (
     <div
       style={{ width: '480px' }}
-      className="absolute right-0 mt-2 bg-white border border-slate-200 rounded-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right shadow-xl"
+      className="absolute right-0 mt-2 bg-white border border-slate-200 rounded-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right"
     >
       {/* Header */}
       <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-white gap-4">

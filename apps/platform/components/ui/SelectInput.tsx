@@ -217,7 +217,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
           ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
         `}
       >
-        <span className={`${!value ? 'text-slate-400' : 'text-black'} text-body truncate select-none`}>
+        <span className={`${!value ? '!text-slate-400' : 'text-black'} text-body truncate select-none`}>
           {currentOptionLabel || placeholder}
         </span>
         {!disabled && (

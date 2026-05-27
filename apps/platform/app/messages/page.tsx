@@ -188,7 +188,7 @@ function MessagesContent() {
                   </button>
 
                   {isChatMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] shadow-xl animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                    <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                       <button
                         onClick={() => setIsChatMenuOpen(false)}
                         className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"

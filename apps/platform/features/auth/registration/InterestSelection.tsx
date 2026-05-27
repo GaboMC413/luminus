@@ -42,7 +42,7 @@ export function InterestSelection({
     }
 
     setIsSaving(true);
-    
+
     // Simulate local saving
     setTimeout(() => {
       setIsSaving(false);
@@ -106,8 +106,13 @@ export function InterestSelection({
       </div>
 
       <div className="w-full flex flex-col items-end gap-3 shrink-0 mt-4">
-        <Button variant="primary" className="w-full md:w-96 !rounded-[40px]" disabled={isSaving} onClick={handleContinue}>
-          {isSaving ? "Guardando..." : "Continuar →"}
+        <Button
+          variant="primary"
+          className="w-full"
+          disabled={isSaving}
+          onClick={handleContinue}
+        >
+          {isSaving ? 'Guardando...' : 'Continuar →'}
         </Button>
         {showError && <p className="text-[#FF3D3D] text-[12px] font-bold pr-4">Por favor, selecciona al menos un interés.</p>}
       </div>

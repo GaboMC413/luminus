@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation";
 export default function SignUpView() {
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Navigation & Form State
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
@@ -70,7 +70,7 @@ export default function SignUpView() {
       setLoading(false);
       localStorage.setItem("luminus_registered_email", email);
       localStorage.setItem("luminus_registered_password", password);
-      
+
       // Move directly to Step 2: PersonalData!
       setStep(2);
     }, 800);
@@ -80,132 +80,217 @@ export default function SignUpView() {
 
   if (step === 1) {
     return (
-      <div className="w-full min-h-dvh luminus-gradient flex flex-col font-sans overflow-x-hidden bg-black">
-        
-        {/* 1. Top Logo */}
-        <Link href="/" className="w-full shrink-0 flex justify-center pt-10 md:pt-12 cursor-pointer hover:opacity-80 transition-opacity">
-          <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[20px]" />
-        </Link>
+      <div className="w-full min-h-dvh flex flex-col md:flex-row font-sans overflow-x-hidden md:overflow-hidden bg-slate-50 text-slate-900">
 
-        {/* 2. Form Content */}
-        <div className="flex-1 flex flex-col items-center justify-center px-8">
-          <div className="w-full max-w-[380px] flex flex-col gap-8 md:gap-6 py-2">
-            <div className="flex flex-col gap-4 md:gap-3 w-full text-center">
-              <h1 className="text-page-title text-primary !text-white">Regístrate Gratis</h1>
-              <div className="flex flex-col gap-2">
-                <h2 className="text-[16px] font-bold text-white leading-tight tracking-[-0.03em]">Acceso completo por 3 meses</h2>
-                <p className="text-[16px] font-normal leading-relaxed text-white tracking-[-0.03em]">Conoce a la comunidad, descubre expertos y conversa con quien quieras sin ningún costo.</p>
+        {/* 1. Left Branding/Marketing Pane (Desktop only - 42% width) */}
+        <div className="hidden md:flex md:w-[42%] lg:w-[40%] xl:w-[45%] luminus-gradient flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden border-r border-slate-200/10 animate-in slide-in-from-left duration-500">
+          {/* Subtle overlay for enhanced visual depth */}
+          <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col h-full gap-8 justify-between">
+            {/* Logo */}
+            <Link href="/" className="w-fit cursor-pointer hover:opacity-80 transition-opacity">
+              <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px]" />
+            </Link>
+
+            {/* Marketing Copy & Short Experience Cards */}
+            <div className="flex flex-col gap-6 w-full my-auto">
+              <h1 className="text-3xl lg:text-4xl font-bold leading-tight tracking-[-0.03em] text-white">
+                Regístrate en LUMINUS
+              </h1>
+
+              <div className="flex flex-col gap-6 w-full mt-2">
+                {/* Bullet 1 */}
+                <div className="flex gap-4 items-start">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/15 flex items-center justify-center mt-0.5 border border-white/10">
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <h3 className="text-white font-bold text-[16px]">Conexiones de bienestar</h3>
+                    <p className="text-white/90 text-[16px]">Conecta con quienes compartes intereses, búsquedas y formas de vivir el bienestar.</p>
+                  </div>
+                </div>
+
+                {/* Bullet 2 */}
+                <div className="flex gap-4 items-start">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/15 flex items-center justify-center mt-0.5 border border-white/10">
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <h3 className="text-white font-bold text-[16px]">Expertos confiables</h3>
+                    <p className="text-white/90 text-[16px]">Descubre profesionales que pueden acompañarte en distintas áreas de tu desarrollo.</p>
+                  </div>
+                </div>
+
+                {/* Bullet 3 */}
+                <div className="flex gap-4 items-start">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/15 flex items-center justify-center mt-0.5 border border-white/10">
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <h3 className="text-white font-bold text-[16px]">Recursos para crecer</h3>
+                    <p className="text-white/90 text-[16px]">Accede a contenidos, conversaciones y experiencias diseñadas para acompañar tu proceso.</p>
+                  </div>
+                </div>
+
+                {/* Bullet 4 */}
+                <div className="flex gap-4 items-start">
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/15 flex items-center justify-center mt-0.5 border border-white/10">
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <h3 className="text-white font-bold text-[16px]">Guía personalizada</h3>
+                    <p className="text-white/90 text-[16px]">Encuentra orientación para avanzar con más claridad, equilibrio y dirección.</p>
+                  </div>
+                </div>
+
               </div>
             </div>
-
-            <form 
-              onSubmit={(e) => { 
-                e.preventDefault(); 
-                handleSignUp(); 
-              }} 
-              className="flex flex-col w-full gap-3"
-            >
-              <InputField
-                type="email"
-                placeholder="Correo electrónico"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (message.type === 'error') setMessage({ text: "", type: "" });
-                }}
-                variant="clean"
-                className={`!bg-white ${message.type === 'error' && !email ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
-              />
-
-              <InputField
-                type="password"
-                placeholder="Contraseña"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  if (message.type === 'error') setMessage({ text: "", type: "" });
-                }}
-                showPassword={showPassword}
-                onTogglePassword={() => setShowPassword(!showPassword)}
-                variant="clean"
-                className={`!bg-white ${message.type === 'error' && (!password || password !== repeatPassword) ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
-              />
-
-              {/* Password Requirements Checklist - Stacked Layout */}
-              <div className="flex flex-col gap-1.5 px-5 sm:px-6 mb-2">
-                <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
-                  <p className={`text-[12px] sm:text-[13px] font-normal drop-shadow-sm tracking-[-0.03em] ${password.length >= 8 ? 'text-green-300' : 'text-white/70'}`}>
-                    Mínimo 8 caracteres
-                  </p>
-                  {password.length >= 8 && (
-                    <span className="text-green-300 text-[14px] sm:text-[16px] font-bold">✓</span>
-                  )}
-                </div>
-                <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
-                  <p className={`text-[12px] sm:text-[13px] font-normal drop-shadow-sm tracking-[-0.03em] ${/\d/.test(password) ? 'text-green-300' : 'text-white/70'}`}>
-                    Incluir al menos un número
-                  </p>
-                  {/\d/.test(password) && (
-                    <span className="text-green-300 text-[14px] sm:text-[16px] font-bold">✓</span>
-                  )}
-                </div>
-              </div>
-
-              <InputField
-                type="password"
-                placeholder="Repetir contraseña"
-                value={repeatPassword}
-                onChange={(e) => {
-                  setRepeatPassword(e.target.value);
-                  if (message.type === 'error') setMessage({ text: "", type: "" });
-                }} 
-                showPassword={showPassword}
-                onTogglePassword={() => setShowPassword(!showPassword)}
-                variant="clean"
-                className={`!bg-white ${message.type === 'error' && (!repeatPassword || password !== repeatPassword) ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
-              />
-
-              {message.text && (
-                <p className={`text-left px-5 sm:px-6 mt-2 text-[13px] font-bold drop-shadow-sm ${message.type === 'error' ? 'text-white' : 'text-green-300'} tracking-[-0.03em]`}>
-                  {message.text}
-                </p>
-              )}
-
-              <div className="flex flex-col gap-4 mt-2">
-                <Button 
-                  type="submit" 
-                  variant="primary" 
-                  disabled={loading}
-                >
-                  {loading ? "Cargando..." : "Regístrate en LUMINUS"}
-                </Button>
-                <p className="text-[11px] text-white text-center leading-tight">
-                  Al registrarte en LUMINUS estás aceptando nuestros{" "}
-                  <Link href="#" onClick={(e) => { e.preventDefault(); alert("Términos: Be kind y cultiva el bienestar."); }} className="underline font-medium hover:text-white cursor-pointer">
-                    Términos y Condiciones
-                  </Link>{" "}
-                  y nuestra{" "}
-                  <Link href="#" onClick={(e) => { e.preventDefault(); alert("Privacidad: Tus datos están 100% seguros con nosotros."); }} className="underline font-medium hover:text-white cursor-pointer">
-                    Política de Privacidad
-                  </Link>.
-                </p>
-              </div>
-            </form>
-            
-            <div className="flex flex-col items-center mt-6">
-              <button 
-                onClick={() => router.push("/auth/signin")} 
-                className="text-white text-[14px] underline opacity-90 hover:opacity-100 cursor-pointer bg-transparent border-none outline-none"
-              >
-                ¿Ya tienes cuenta? Ingresa
-              </button>
-            </div>
+            {/* Sidebar Footer */}
+            <p className="text-label !text-white/70 uppercase tracking-wider font-sans">
+              LUMINUS LATAM © 2026
+            </p>
           </div>
         </div>
 
-        {/* 3. Footer */}
-        <div className="w-full shrink-0 h-[64px] flex flex-col justify-center border-t border-white/10 mt-auto">
-          <p className="text-[9px] text-white text-center uppercase tracking-wide">LUMINUS LATAM © 2026</p>
+        {/* 2. Right Form Pane - No shadows, no borders, plain elements on slate-50 */}
+        <div className="flex-1 flex flex-col bg-slate-50 justify-between min-h-dvh md:min-h-0 overflow-y-auto">
+
+          {/* Mobile Header: Logo (only visible on mobile) */}
+          <div className="md:hidden w-full h-14 luminus-gradient flex items-center justify-center shrink-0 z-10">
+            <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
+              <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[20px]" />
+            </Link>
+          </div>
+
+          {/* Central Content Area (Plain, no card, no shadow, no border!) */}
+          <div className="flex-1 flex items-center justify-center px-6 py-12 md:py-16">
+            <div className="w-full max-w-[344px] md:max-w-[380px] flex flex-col gap-8">
+
+              <div className="flex flex-col gap-1 w-full text-center md:text-left">
+                <p className="text-black text-xl font-semibold leading-normal">
+                  Crea tu cuenta con acceso completo sin costo por tres meses
+                </p>
+              </div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSignUp();
+                }}
+                className="flex flex-col w-full gap-3.5"
+              >
+                <InputField
+                  type="email"
+                  placeholder="Correo electrónico"
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (message.type === 'error') setMessage({ text: "", type: "" });
+                  }}
+                  variant="clean"
+                  className={`!bg-white border border-zinc-200/80 focus:border-slate-800 ${message.type === 'error' && !email ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
+                />
+
+                <InputField
+                  type="password"
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (message.type === 'error') setMessage({ text: "", type: "" });
+                  }}
+                  showPassword={showPassword}
+                  onTogglePassword={() => setShowPassword(!showPassword)}
+                  variant="clean"
+                  className={`!bg-white border border-zinc-200/80 focus:border-slate-800 ${message.type === 'error' && (!password || password !== repeatPassword) ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
+                />
+
+                {/* Password Requirements Checklist - Stacked Layout */}
+                <div className="flex flex-col gap-1.5 px-5 sm:px-6 mb-2">
+                  <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
+                    <p className={`text-xs sm:text-sm font-normal tracking-tight ${password.length >= 12 ? 'text-green-600' : 'text-slate-500'}`}>
+                      Mínimo 12 caracteres
+                    </p>
+                    {password.length >= 12 && (
+                      <span className="text-green-600 text-sm sm:text-base font-bold">✓</span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
+                    <p className={`text-xs sm:text-sm font-normal tracking-tight ${/[A-Za-z]/.test(password) && /\d/.test(password) ? 'text-green-600' : 'text-slate-500'}`}>
+                      Incluir al menos una letra y un número
+                    </p>
+                    {/[A-Za-z]/.test(password) && /\d/.test(password) && (
+                      <span className="text-green-600 text-sm sm:text-base font-bold">✓</span>
+                    )}
+                  </div>
+                </div>
+
+                <InputField
+                  type="password"
+                  placeholder="Repetir contraseña"
+                  value={repeatPassword}
+                  onChange={(e) => {
+                    setRepeatPassword(e.target.value);
+                    if (message.type === 'error') setMessage({ text: "", type: "" });
+                  }}
+                  showPassword={showPassword}
+                  onTogglePassword={() => setShowPassword(!showPassword)}
+                  variant="clean"
+                  className={`!bg-white border border-zinc-200/80 focus:border-slate-800 ${message.type === 'error' && (!repeatPassword || password !== repeatPassword) ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
+                />
+
+                {message.text && (
+                  <p className={`text-left px-5 sm:px-6 mt-2 text-xs sm:text-sm font-bold ${message.type === 'error' ? 'text-red-500' : 'text-green-600'} tracking-tight`}>
+                    {message.text}
+                  </p>
+                )}
+
+                <div className="flex flex-col gap-4 mt-2">
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={loading}
+                  >
+                    {loading ? "Cargando..." : "Regístrate en LUMINUS"}
+                  </Button>
+                  <p className="text-[11px] text-slate-400 text-center leading-tight">
+                    Al registrarte en LUMINUS estás aceptando nuestros{" "}
+                    <Link href="#" onClick={(e) => { e.preventDefault(); alert("Términos: Be kind y cultiva el bienestar."); }} className="underline font-medium hover:text-slate-800 cursor-pointer text-slate-500">
+                      Términos y Condiciones
+                    </Link>{" "}
+                    y nuestra{" "}
+                    <Link href="#" onClick={(e) => { e.preventDefault(); alert("Privacidad: Tus datos están 100% seguros con nosotros."); }} className="underline font-medium hover:text-slate-800 cursor-pointer text-slate-500">
+                      Política de Privacidad
+                    </Link>.
+                  </p>
+                </div>
+              </form>
+
+              <div className="flex flex-col items-center mt-2">
+                <button
+                  onClick={() => router.push("/auth/signin")}
+                  className="text-slate-500 hover:text-slate-900 text-body-secondary cursor-pointer bg-transparent border-none outline-none"
+                >
+                  ¿Ya tienes cuenta? <span className="underline font-semibold text-slate-900">Ingresa</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer (Mobile only) */}
+          <div className="md:hidden w-full shrink-0 h-[64px] flex flex-col justify-center border-t border-slate-200 mt-auto bg-white">
+            <p className="text-[10px] text-slate-400 text-center uppercase tracking-wide">LUMINUS LATAM © 2026</p>
+          </div>
+
         </div>
 
       </div>
@@ -252,12 +337,12 @@ export default function SignUpView() {
                 onUpdate={(newData) => setProfileData(prev => ({ ...prev, ...newData }))}
               />
             ) : (
-              <PlanSelection 
+              <PlanSelection
                 onNext={() => {
                   alert("¡Bienvenido a LUMINUS! Onboarding completado con éxito.");
                   router.push('/');
-                }} 
-                onBack={() => setStep(3)} 
+                }}
+                onBack={() => setStep(3)}
               />
             )}
           </div>

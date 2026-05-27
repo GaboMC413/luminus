@@ -111,7 +111,7 @@ function PlatformContent() {
           
           {/* Desktop Search Section */}
           <div className="hidden md:flex flex-col sticky top-0 z-40 bg-[#F8FAFC] pb-4 transition-all duration-300 ease-in-out">
-            <div className="h-12 pl-4 pr-6 bg-white rounded-[40px] border border-zinc-200 flex items-center gap-3 focus-within:border-black focus-within:ring-1 focus-within:ring-black group transition-all shadow-sm">
+            <div className="h-12 pl-4 pr-6 bg-white rounded-xl border border-zinc-200 flex items-center gap-3 focus-within:border-black focus-within:ring-1 focus-within:ring-black group transition-all">
               <span className="material-symbols-outlined text-[22px] text-slate-400 group-focus-within:text-black">search</span>
               <input
                 type="text"
@@ -123,7 +123,7 @@ function PlatformContent() {
             </div>
 
             {suggestions.length > 0 && (
-              <div className="absolute top-[52px] left-0 w-full bg-white border border-slate-200 rounded-2xl z-50 overflow-hidden flex flex-col shadow-lg px-[2px]">
+              <div className="absolute top-[52px] left-0 w-full bg-white border border-slate-200 rounded-2xl z-50 overflow-hidden flex flex-col px-[2px]">
                 {suggestions.map((suggestion, idx) => (
                   <button
                     key={idx}
@@ -153,7 +153,7 @@ function PlatformContent() {
             {/* Mobile Search Bar */}
             <div className="md:hidden w-full sticky top-0 z-40 bg-[#F8FAFC]/90 backdrop-blur-md pb-4">
               <div className="w-full flex flex-col gap-3 relative">
-                <div className="w-full h-12 pl-3 pr-4 bg-white rounded-[40px] border border-zinc-200 flex items-center gap-2 focus-within:border-black focus-within:ring-1 focus-within:ring-black group transition-all shadow-sm">
+                <div className="w-full h-12 pl-3 pr-4 bg-white rounded-xl border border-zinc-200 flex items-center gap-2 focus-within:border-black focus-within:ring-1 focus-within:ring-black group transition-all">
                   <span className="material-symbols-outlined text-[18px] text-slate-400 group-focus-within:text-black shrink-0">search</span>
                   <input
                     type="text"
@@ -168,7 +168,7 @@ function PlatformContent() {
                 <div className="relative w-full">
                   <button 
                     onClick={() => setIsMobileCategoriesOpen(!isMobileCategoriesOpen)}
-                    className={`h-10 w-full px-4 bg-white rounded-full flex items-center justify-between border ${isMobileCategoriesOpen ? 'border-black ring-1 ring-black' : 'border-zinc-200'} shadow-sm cursor-pointer`}
+                    className={`h-10 w-full px-4 bg-white rounded-xl flex items-center justify-between border ${isMobileCategoriesOpen ? 'border-black ring-1 ring-black' : 'border-zinc-200'} cursor-pointer`}
                   >
                     <span className={`text-[13px] truncate ${isMobileCategoriesOpen ? 'text-black font-semibold' : 'text-slate-500'}`}>
                       {selectedCategory === "Todas las categorías" ? "Categorías" : selectedCategory}
@@ -177,7 +177,7 @@ function PlatformContent() {
                   </button>
 
                   {isMobileCategoriesOpen && (
-                    <div className="absolute top-[46px] left-0 w-full bg-white border border-slate-200 rounded-3xl z-50 overflow-hidden py-3 shadow-lg max-h-[300px] overflow-y-auto custom-scrollbar">
+                    <div className="absolute top-[46px] left-0 w-full bg-white border border-slate-200 rounded-2xl z-50 overflow-hidden py-3 max-h-[300px] overflow-y-auto custom-scrollbar">
                       {[
                         { name: "Todas las categorías", icon: "all_inclusive", color: "#000000" },
                         { name: "Crecimiento Personal", icon: "psychiatry", color: "#22C55E" },
