@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/InputField";
 import { useRouter } from "next/navigation";
@@ -13,6 +13,10 @@ export default function SignInView() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -69,10 +73,10 @@ export default function SignInView() {
       </div>
 
       {/* 2. Right Form Pane - No shadows, no borders, plain elements on slate-50 */}
-      <div className="flex-1 flex flex-col bg-slate-50 lg:min-h-0 lg:overflow-y-auto">
+      <div className="flex-1 flex flex-col bg-slate-50 lg:min-h-0 lg:overflow-y-auto pt-14 lg:pt-0">
 
         {/* Mobile Header: Logo (only visible on mobile) */}
-        <div className="lg:hidden w-full h-14 luminus-gradient flex items-center justify-center shrink-0 z-10">
+        <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-gradient flex items-center justify-center shrink-0 z-50">
           <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
             <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[20px]" />
           </Link>

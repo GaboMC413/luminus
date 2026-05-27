@@ -39,10 +39,15 @@ export default function SignUpView() {
 
   // Reset scroll on step change
   useEffect(() => {
+    window.scrollTo(0, 0);
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo(0, 0);
     }
   }, [step]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleSignUp = async () => {
     if (!email || !password || !repeatPassword) {
@@ -162,10 +167,10 @@ export default function SignUpView() {
         </div>
 
         {/* 2. Right Form Pane - No shadows, no borders, plain elements on slate-50 */}
-        <div className="flex-1 flex flex-col bg-slate-50 lg:min-h-0 lg:overflow-y-auto">
+        <div className="flex-1 flex flex-col bg-slate-50 lg:min-h-0 lg:overflow-y-auto pt-14 lg:pt-0">
 
           {/* Mobile Header: Logo (only visible on mobile) */}
-          <div className="lg:hidden w-full h-14 luminus-gradient flex items-center justify-center shrink-0 z-10">
+          <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-gradient flex items-center justify-center shrink-0 z-50">
             <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
               <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[20px]" />
             </Link>
@@ -302,7 +307,7 @@ export default function SignUpView() {
     <div className="w-full min-h-dvh lg:h-dvh bg-slate-50 flex flex-col lg:flex-row font-sans overflow-y-auto lg:overflow-hidden">
 
       {/* LATERAL SIDEBAR */}
-      <div className="w-full h-14 lg:h-full lg:w-80 luminus-gradient shrink-0 flex lg:flex-col items-center justify-center lg:justify-start lg:pt-12 z-10 transition-all duration-500">
+      <div className="fixed top-0 left-0 right-0 lg:relative w-full h-14 lg:h-full lg:w-80 luminus-gradient shrink-0 flex lg:flex-col items-center justify-center lg:justify-start lg:pt-12 z-50 transition-all duration-500">
         <Link href="/" className="flex flex-col items-center w-full px-8 cursor-pointer hover:opacity-80 transition-opacity">
           <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[20px]" />
         </Link>
@@ -318,7 +323,7 @@ export default function SignUpView() {
       {/* Main Content Area */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 flex flex-col lg:overflow-y-auto"
+        className="flex-1 flex flex-col lg:overflow-y-auto pt-14 lg:pt-0"
       >
         <div className="flex-1 flex flex-col items-center pt-8 md:pt-12 pb-10 md:pb-20 px-6 md:px-12">
           {/* Constrain width to 665px */}
