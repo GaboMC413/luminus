@@ -125,7 +125,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
         width: coords.width,
         zIndex: 10000,
       }}
-      className="bg-white rounded-[12px] outline outline-1 outline-zinc-200 overflow-y-auto max-h-[240px] custom-scrollbar animate-in fade-in duration-200"
+      className="bg-white rounded-[12px] outline outline-1 outline-zinc-200 overflow-y-auto max-h-[160px] custom-scrollbar animate-in fade-in duration-200"
     >
       {options.map((option, index) => {
         const optLabel = typeof option === 'string' ? option : option.label;
