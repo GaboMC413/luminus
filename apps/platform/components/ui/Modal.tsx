@@ -33,8 +33,8 @@ export function Modal({ isOpen, onClose, title, children, footer, maxWidth = '52
         style={{ maxWidth }}
       >
         {/* Header */}
-        <div className="flex justify-between items-center px-8 py-5 shrink-0 border-b border-slate-50">
-          <h3 className="font-sans font-bold text-black text-[14px]">
+        <div className="flex justify-between items-center px-5 py-4 md:px-8 md:py-5 shrink-0 border-b border-slate-50">
+          <h3 className="font-sans font-bold text-black text-[13px] md:text-[14px]">
             {title}
           </h3>
           <button
@@ -49,13 +49,13 @@ export function Modal({ isOpen, onClose, title, children, footer, maxWidth = '52
         </div>
 
         {/* Content */}
-        <div className="p-8 py-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
+        <div className="p-5 py-5 md:p-8 md:py-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
           {children}
         </div>
 
         {/* Footer */}
         {footer && (
-          <div className="px-8 py-6 flex gap-4 mt-auto shrink-0 border-t border-slate-50 relative z-10 bg-white">
+          <div className="px-5 pt-4 pb-5 md:px-8 md:py-6 flex flex-col-reverse md:flex-row gap-2.5 md:gap-4 mt-auto shrink-0 border-t border-slate-50 relative z-10 bg-white">
             {footer}
           </div>
         )}

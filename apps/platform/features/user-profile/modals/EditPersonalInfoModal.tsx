@@ -165,19 +165,19 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
       maxWidth="720px"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} className="flex-1 !h-11 !text-[13px] !font-normal">
+          <Button variant="secondary" onClick={onClose} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !rounded-[10px] md:!rounded-[12px]">
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} className="flex-1 !h-11 !text-[13px] !font-normal !bg-black !text-white hover:!bg-slate-800">
+          <Button onClick={handleSubmit} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !bg-black !text-white hover:!bg-slate-800 !rounded-[10px] md:!rounded-[12px]">
             Guardar cambios
           </Button>
         </>
       }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <div className="grid grid-cols-2 gap-x-8 gap-y-5">
-          <div className="flex flex-col gap-2">
-            <label className="text-label ml-1">Nombre</label>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 md:gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-3.5 md:gap-y-5">
+          <div className="flex flex-col gap-1.5 md:gap-2">
+            <label className="text-label text-[11px] md:text-xs ml-1">Nombre</label>
             <InputField
               name="first_name"
               value={formData.first_name}
@@ -186,8 +186,8 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
               variant="bordered"
             />
           </div>
-          <div className="flex flex-col gap-2">
-            <label className="text-label ml-1">Apellido</label>
+          <div className="flex flex-col gap-1.5 md:gap-2">
+            <label className="text-label text-[11px] md:text-xs ml-1">Apellido</label>
             <InputField
               name="last_name"
               value={formData.last_name}
@@ -198,8 +198,8 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <label className="text-label ml-1">Profesión</label>
+        <div className="flex flex-col gap-1.5 md:gap-2">
+          <label className="text-label text-[11px] md:text-xs ml-1">Profesión</label>
           <InputField
             ref={professionRef}
             name="profession"
@@ -221,10 +221,10 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
           autoFocus={initialFocusField === 'city'}
         />
 
-        <div className="grid grid-cols-2 gap-x-8 gap-y-5">
-          <div className="flex flex-col gap-2">
-            <label className="text-label ml-1">Fecha de Nacimiento</label>
-            <div className="flex gap-3 items-center w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-3.5 md:gap-y-5">
+          <div className="flex flex-col gap-1.5 md:gap-2">
+            <label className="text-label text-[11px] md:text-xs ml-1">Fecha de Nacimiento</label>
+            <div className="flex gap-2 md:gap-3 items-center w-full">
               <div className="flex-1 min-w-0">
                 <SelectInput
                   ref={dayRef}

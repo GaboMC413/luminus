@@ -82,7 +82,7 @@
 
   /* PREMIUM FLAT FORM INPUTS (No shadows, rounded-xl) */
   .input-text-field, .reg-input-clean, .reg-input-bordered {
-    @apply w-full h-12 px-4 bg-white border border-zinc-200/80 rounded-xl text-base text-zinc-900 placeholder-zinc-400 focus-within:border-slate-800 outline-none transition-all duration-300;
+    @apply w-full h-11 md:h-12 px-4 bg-white border border-zinc-200/80 rounded-xl text-[13px] md:text-base text-zinc-900 placeholder-zinc-400 focus-within:border-slate-800 outline-none transition-all duration-300;
   }
 
   /* PREMIUM FLAT BUTTONS (No shadows, rounded-xl) */

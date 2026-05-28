@@ -62,9 +62,9 @@ export function ProfileButton({ icon, label, showDot, className = "", ...props }
     return (
       <button
         {...props}
-        className={`w-9 h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-black hover:bg-slate-100 transition-all duration-300 cursor-pointer shadow-none ${className}`}
+        className={`w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-black hover:bg-slate-100 transition-all duration-300 cursor-pointer shadow-none ${className}`}
       >
-        <span className="material-symbols-rounded text-[18px] shrink-0">{icon}</span>
+        <span className="material-symbols-rounded text-[16px] md:text-[18px] shrink-0">{icon}</span>
       </button>
     );
   }
@@ -72,12 +72,12 @@ export function ProfileButton({ icon, label, showDot, className = "", ...props }
   return (
     <button
       {...props}
-      className={`h-11 ${label ? 'px-4 min-w-[120px]' : 'w-11'} bg-[#F8FAFC] hover:bg-black border border-slate-200/60 hover:border-black text-slate-700 hover:text-white rounded-[12px] text-[14px] font-semibold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-none ${className}`}
+      className={`h-10 md:h-11 ${label ? 'px-3 md:px-4 min-w-[100px] md:min-w-[120px]' : 'w-10 md:w-11'} bg-[#F8FAFC] hover:bg-black border border-slate-200/60 hover:border-black text-slate-700 hover:text-white rounded-[10px] md:rounded-[12px] text-[13px] md:text-[14px] font-semibold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-none ${className}`}
     >
       {showDot && (
         <div className="w-3 h-3 rounded-full bg-[#FF4B4B] border-2 border-white shrink-0 shadow-sm" />
       )}
-      <span className="material-symbols-rounded text-[22px] shrink-0">{icon}</span>
+      <span className="material-symbols-rounded text-[18px] md:text-[22px] shrink-0">{icon}</span>
       {label && <span className="truncate">{label}</span>}
     </button>
   );
@@ -94,11 +94,11 @@ export function EmptyProfileButton({ label, icon, className = "", ...props }: Em
   return (
     <button
       {...props}
-      className={`relative flex items-center justify-start h-8 px-2 bg-white hover:bg-slate-50 text-slate-400 text-[12px] font-bold rounded-[12px] transition-all w-fit gap-2 ${className}`}
+      className={`relative flex items-center justify-start h-7 md:h-8 px-2 bg-white hover:bg-slate-50 text-slate-400 text-[11px] md:text-[12px] font-bold rounded-[10px] md:rounded-[12px] transition-all w-fit gap-2 ${className}`}
     >
       <span className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 z-10 w-3 h-3 bg-[#FF4B4B] rounded-full border-2 border-white"></span>
       {icon && (
-        <span className="material-symbols-rounded text-[12px] shrink-0">{icon}</span>
+        <span className="material-symbols-rounded text-[10px] md:text-[12px] shrink-0">{icon}</span>
       )}
       {label}
     </button>

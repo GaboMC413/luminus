@@ -55,21 +55,20 @@ export function ProfileSidebar({
   const fullName = `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
 
   return (
-    <div className="bg-white rounded-[24px] border border-slate-200 flex flex-col items-center shadow-none overflow-hidden relative group">
+    <div className="bg-white rounded-[24px] border border-slate-200 flex flex-col items-start md:items-center shadow-none overflow-hidden relative group">
       {/* Local Cover - Mobile Only */}
-      <div className={`md:hidden w-full h-[160px] relative shrink-0 ${!coverUrl || coverUrl.includes("empty") ? 'luminus-gradient' : ''}`}>
+      <div className={`md:hidden w-full h-[130px] md:h-[160px] relative shrink-0 ${!coverUrl || coverUrl.includes("empty") ? 'luminus-gradient' : ''}`}>
         {coverUrl && !coverUrl.includes("empty") && (
           <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
         )}
         <ProfileButton
           onClick={onShowCoverModal}
           icon="photo_camera"
-          label={coverUrl && !coverUrl.includes("empty") ? "Cambiar portada" : "Seleccionar portada"}
-          className="absolute bottom-3 right-3 h-10 px-3 z-10"
+          className="absolute bottom-3 right-3 z-10"
         />
       </div>
 
-      <div className="w-40 h-40 md:w-48 md:h-48 rounded-[16px] overflow-hidden -mt-[120px] md:mt-6 relative shrink-0 group border-4 border-white bg-white">
+      <div className="w-32 h-32 md:w-48 md:h-48 rounded-[16px] overflow-hidden -mt-[96px] md:mt-6 ml-4 md:ml-0 relative shrink-0 group border-4 border-white bg-white">
         {profile.profile_picture_url ? (
           <img
             src={profile.profile_picture_url}
@@ -78,7 +77,7 @@ export function ProfileSidebar({
           />
         ) : (
           <div className="w-full h-full border border-zinc-200 rounded-[12px] bg-slate-50 flex items-center justify-center">
-            <span className="material-symbols-outlined text-zinc-200 select-none flex items-center justify-center" style={{ fontSize: '104px', width: '104px', height: '104px' }}>
+            <span className="material-symbols-outlined text-zinc-200 select-none flex items-center justify-center text-[72px] md:text-[104px]" style={{ width: '100%', height: '100%' }}>
               person
             </span>
           </div>
@@ -90,13 +89,13 @@ export function ProfileSidebar({
         />
       </div>
 
-      <div className="w-full p-5 pt-6 flex flex-col items-center gap-6">
-        <div className="text-center flex flex-col gap-1.5">
-          <h2 className="text-profile-name font-jakarta text-slate-900">
+      <div className="w-full p-4 pt-5 md:p-5 md:pt-6 flex flex-col items-start md:items-center gap-4 md:gap-6">
+        <div className="text-left md:text-center flex flex-col items-start md:items-center gap-1 md:gap-1.5 w-full">
+          <h2 className="text-xl md:text-3xl font-bold tracking-tight text-slate-900 leading-snug text-left md:text-center font-jakarta">
             {fullName || "Tu Nombre"}
           </h2>
           {hasLocation ? (
-            <p className="text-body font-medium text-slate-400">
+            <p className="text-sm md:text-base font-medium text-slate-400 text-left md:text-center leading-relaxed">
               {profile.city?.split(',')[0] || ""}{profile.city && profile.country ? ", " : ""}{profile.country || ""}
             </p>
           ) : (
@@ -111,7 +110,7 @@ export function ProfileSidebar({
 
         <div className="w-full h-px bg-slate-100" />
 
-        <div className="w-full flex flex-col gap-6 px-1">
+        <div className="w-full flex flex-col gap-4 md:gap-6 px-1">
           <DetailItem label="Profesión" value={profile.profession} icon="work" onClick={() => onEditProfile("profession")} />
           <DetailItem label="Nacimiento" value={formatDisplayDate(profile.birthdate)} icon="cake" onClick={() => onEditProfile("birthdate")} />
           <DetailItem label="Género" value={profile.gender} icon={getGenderIcon(profile.gender)} onClick={() => onEditProfile("gender")} />
@@ -127,7 +126,7 @@ export function ProfileSidebar({
             className="w-full"
           />
 
-          <Link href="/user-profile/settings" className="w-full">
+          <Link href="/user-profile/settings" className="w-full hidden md:block">
             <ProfileButton
               onClick={() => { }}
               icon="settings"
@@ -136,7 +135,7 @@ export function ProfileSidebar({
             />
           </Link>
 
-          <Link href="/user-profile/settings?tab=password" className="w-full">
+          <Link href="/user-profile/settings?tab=password" className="w-full hidden md:block">
             <ProfileButton
               onClick={() => { }}
               icon="lock"
@@ -146,7 +145,7 @@ export function ProfileSidebar({
           </Link>
         </div>
       </div>
-    </div >
+    </div>
   );
 }
 
@@ -166,7 +165,7 @@ function DetailItem({ label, value, icon, onClick }: { label: string; value: str
             icon="add"
           />
         ) : (
-          <span className="text-body text-primary truncate">{value}</span>
+          <span className="text-sm md:text-base text-primary truncate leading-relaxed">{value}</span>
         )}
       </div>
     </div>

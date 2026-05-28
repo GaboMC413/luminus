@@ -44,7 +44,7 @@ export function EditPromptsModal({ isOpen, onClose, onSave, initialPrompts, init
     <>
       {activeStep === 'list' && (
         <>
-          <Button variant="secondary" onClick={onClose} className="flex-1 !h-11 !text-[13px] !font-normal">
+          <Button variant="secondary" onClick={onClose} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !rounded-[10px] md:!rounded-[12px]">
             Cancelar
           </Button>
           <Button
@@ -52,23 +52,23 @@ export function EditPromptsModal({ isOpen, onClose, onSave, initialPrompts, init
               onSave(selectedPrompts);
               onClose();
             }}
-            className="flex-1 !h-11 !text-[13px] !font-normal !bg-black !text-white hover:!bg-slate-800"
+            className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !bg-black !text-white hover:!bg-slate-800 !rounded-[10px] md:!rounded-[12px]"
           >
             Guardar cambios
           </Button>
         </>
       )}
       {activeStep === 'select' && (
-        <Button variant="secondary" onClick={() => setActiveStep('list')} className="w-full !h-11 !text-[13px] !font-normal">
+        <Button variant="secondary" onClick={() => setActiveStep('list')} className="w-full !h-11 !text-[13px] !font-normal !rounded-[10px] md:!rounded-[12px]">
           Volver
         </Button>
       )}
       {activeStep === 'edit' && (
         <>
-          <Button variant="secondary" onClick={() => setActiveStep('select')} className="flex-1 !h-11 !text-[13px] !font-normal">
+          <Button variant="secondary" onClick={() => setActiveStep('select')} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !rounded-[10px] md:!rounded-[12px]">
             Volver
           </Button>
-          <Button onClick={handleSaveTemp} className="flex-1 !h-11 !text-[13px] !font-normal !bg-black !text-white">
+          <Button onClick={handleSaveTemp} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !bg-black !text-white !rounded-[10px] md:!rounded-[12px]">
             Aceptar
           </Button>
         </>
@@ -84,17 +84,17 @@ export function EditPromptsModal({ isOpen, onClose, onSave, initialPrompts, init
       maxWidth="720px"
       footer={modalFooter}
     >
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 md:gap-4">
         {activeStep === 'list' && (
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 md:gap-4">
+            <div className="flex flex-col gap-2.5 md:gap-3">
               {selectedPrompts.map((p, i) => {
                 const cleanQ = p.question.trim().replace(/[…\. ]+$/, '');
                 const cleanA = p.answer.charAt(0).toLowerCase() + p.answer.slice(1);
 
                 return (
-                  <div key={i} className="p-3 rounded-[12px] bg-slate-50 flex flex-col justify-center relative min-h-[80px]">
-                    <p className="text-body text-secondary italic pr-16 leading-relaxed">
+                  <div key={i} className="p-2.5 md:p-3 rounded-[10px] md:rounded-[12px] bg-slate-50 flex flex-col justify-center relative min-h-[70px] md:min-h-[80px]">
+                    <p className="text-sm md:text-base text-secondary italic pr-12 md:pr-16 leading-relaxed">
                       "<span className="text-secondary">{cleanQ}</span> {cleanA}"
                     </p>
                     <button
@@ -127,7 +127,7 @@ export function EditPromptsModal({ isOpen, onClose, onSave, initialPrompts, init
                 <button
                   key={cat.id}
                   onClick={() => handleSelectCategory(cat)}
-                  className="reg-input-bordered !text-secondary !font-normal !justify-start !px-6 hover:bg-slate-50 transition-colors"
+                  className="reg-input-bordered !text-secondary !font-normal !justify-start !px-4 md:!px-6 hover:bg-slate-50 transition-colors !h-10 md:!h-12 !text-[13px] md:!text-[14px]"
                 >
                   {cat.question}
                 </button>
@@ -135,16 +135,16 @@ export function EditPromptsModal({ isOpen, onClose, onSave, initialPrompts, init
             ) : (
               <div className="py-12 text-center flex flex-col items-center gap-3">
                 <span className="material-symbols-rounded text-[40px] text-slate-200">check_circle</span>
-                <p className="text-body text-muted">Has completado todas las reflexiones disponibles.</p>
+                <p className="text-sm md:text-base text-muted">Has completado todas las reflexiones disponibles.</p>
               </div>
             )}
           </div>
         )}
 
         {activeStep === 'edit' && tempPrompt && (
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-3">
-              <p className="text-body text-secondary italic px-1">
+          <div className="flex flex-col gap-4 md:gap-6">
+            <div className="flex flex-col gap-2.5 md:gap-3">
+              <p className="text-sm md:text-base text-secondary italic px-1 leading-relaxed">
                 {tempPrompt.question}
               </p>
 
@@ -178,7 +178,7 @@ export function EditPromptsModal({ isOpen, onClose, onSave, initialPrompts, init
                     type="text"
                     value={tempPrompt.answer}
                     onChange={(e) => setTempPrompt({ ...tempPrompt, answer: e.target.value })}
-                    className="reg-input-bordered !h-12"
+                    className="reg-input-bordered !h-10 md:!h-12 !text-[13px] md:!text-[14px]"
                     placeholder="Escribe aquí tu reflexión..."
                     autoFocus
                   />

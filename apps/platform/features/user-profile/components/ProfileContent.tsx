@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { ProfileButton } from "@/components/ui/Button";
 import { PhotoEditor } from "@/features/auth/registration/PhotoEditor";
 import { Prompt } from "./ProfilePrompts";
 
@@ -204,7 +206,7 @@ export function ProfileContent() {
   if (!profile) return null;
 
   return (
-    <div className="w-full flex flex-col pb-12 md:pb-0 relative">
+    <div className="w-full flex flex-col relative">
 
       <ProfileHeaderCover
         coverUrl={coverUrl}
@@ -259,7 +261,12 @@ export function ProfileContent() {
 
                 {/* Mobile Only Membership */}
                 <div className="md:hidden flex flex-col gap-2">
-                  <ProfileMembershipCard plan={profile.selected_plan} createdAt={profile.created_at} />
+                  <ProfileMembershipCard
+                    plan={profile.selected_plan}
+                    createdAt={profile.created_at}
+                    showSettingsButtons={true}
+                  />
+
                   <div className="w-full flex justify-center pt-2">
                     <button
                       onClick={handleSignOut}

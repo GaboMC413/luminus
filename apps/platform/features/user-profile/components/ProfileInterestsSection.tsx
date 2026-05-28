@@ -13,14 +13,14 @@ export function ProfileInterestsSection({ interests, otherInterests, onEdit }: P
   const hasInterests = (interests && interests.length > 0) || (otherInterests && otherInterests.trim().length > 0);
 
   return (
-    <div className="bg-white rounded-[24px] p-5 md:p-6 flex flex-col gap-2 md:gap-6 border border-slate-200 shadow-none relative group">
+    <div className="bg-white rounded-[24px] p-4 md:p-6 flex flex-col gap-2 md:gap-6 border border-slate-200 shadow-none relative group">
       <ProfileButton
         onClick={onEdit}
         icon="edit"
         className="absolute top-4 right-4 z-20"
       />
       <div className="flex items-center gap-1">
-        <h3 className="text-label text-[0.8125rem] uppercase font-semibold ml-1">Intereses</h3>
+        <h3 className="text-label text-[0.75rem] md:text-[0.8125rem] uppercase font-semibold ml-1">Intereses</h3>
       </div>
 
       {hasInterests ? (
@@ -36,7 +36,7 @@ export function ProfileInterestsSection({ interests, otherInterests, onEdit }: P
         </div>
       ) : (
         <div className="flex flex-col items-start gap-4">
-          <p className="text-body text-slate-400 font-medium italic tracking-tight">
+          <p className="text-sm md:text-base text-slate-400 font-medium italic tracking-tight leading-relaxed">
             No has seleccionado tus intereses todavía
           </p>
           <EmptyProfileButton 

@@ -32,21 +32,21 @@ export function CoverSelectorModal({ isOpen, onClose, onSelect, currentCover }: 
       maxWidth="720px"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} className="flex-1 !h-11 !text-[13px] !font-normal !normal-case !tracking-normal">
+          <Button variant="secondary" onClick={onClose} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !normal-case !tracking-normal !rounded-[10px] md:!rounded-[12px]">
             Cancelar
           </Button>
-          <Button onClick={handleSave} className="flex-1 !h-11 !text-[13px] !font-normal !bg-black !text-white hover:!bg-slate-800">
+          <Button onClick={handleSave} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !bg-black !text-white hover:!bg-slate-800 !rounded-[10px] md:!rounded-[12px]">
             Guardar cambios
           </Button>
         </>
       }
     >
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-3 md:gap-4">
         {covers.map((url) => (
           <div
             key={url}
             onClick={() => setSelectedCover(url)}
-            className={`relative aspect-[16/7] rounded-xl overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-black group ${selectedCover === url ? 'ring-2 ring-black shadow-none' : 'border border-slate-100'}`}
+            className={`relative aspect-[4/3] md:aspect-[16/7] rounded-xl overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-black group ${selectedCover === url ? 'ring-2 ring-black shadow-none' : 'border border-slate-100'}`}
           >
             <img src={url} alt="Cover option" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
             {selectedCover === url && (
