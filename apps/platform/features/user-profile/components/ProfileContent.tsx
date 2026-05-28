@@ -213,13 +213,13 @@ export function ProfileContent() {
         onChangeCover={() => setShowCoverModal(true)}
       />
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 pb-4">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pb-4">
         <div className="w-full max-w-6xl mx-auto">
-          <div className="w-full h-full bg-transparent pt-2 md:pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-10 gap-2 md:gap-8 items-start">
+          <div className="w-full h-full bg-transparent pt-2 lg:pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 lg:gap-8 items-start">
 
               {/* LEFT COLUMN */}
-              <div className="md:col-span-3 flex flex-col gap-2 md:gap-6 mt-2 md:-mt-[224px]">
+              <div className="md:col-span-4 flex flex-col gap-2 lg:gap-6 mt-2 md:-mt-[136px] lg:-mt-[224px]">
                 <ProfileSidebar
                   profile={profile}
                   onEditPhoto={() => fileInputRef.current?.click()}
@@ -229,7 +229,7 @@ export function ProfileContent() {
                   coverUrl={coverUrl}
                 />
 
-                <div className="hidden md:flex flex-col gap-6">
+                <div className="hidden md:flex flex-col gap-4 lg:gap-6">
                   <ProfileMembershipCard plan={profile.selected_plan} createdAt={profile.created_at} />
                   <button
                     onClick={handleSignOut}
@@ -242,7 +242,7 @@ export function ProfileContent() {
               </div>
 
               {/* RIGHT COLUMN */}
-              <div className="md:col-span-7 flex flex-col gap-2 md:gap-6">
+              <div className="md:col-span-8 flex flex-col gap-2 lg:gap-6">
                 <ProfileAboutSection
                   bio={profile.bio}
                   onEdit={() => setShowEditAbout(true)}

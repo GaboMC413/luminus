@@ -130,25 +130,25 @@ export function PlatformNavbar() {
   return (
     <>
       {/* Desktop Header */}
-      <header className="fixed top-0 left-0 w-full bg-white border-b border-slate-200 z-50 h-[64px] md:h-[80px] px-6 md:px-8 flex items-center justify-between">
+      <header className="fixed top-0 left-0 w-full bg-white border-b border-slate-200 z-50 h-[64px] lg:h-[80px] px-6 lg:px-8 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <Link href="/">
             <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[20px] cursor-pointer" />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1">
             {NAV_ITEMS.map((item) => {
               const isActive = activeTab === item.id;
               return (
                 <Link
                   key={item.id}
                   href={item.path}
-                  className={`group h-[48px] px-3 md:px-[12px] rounded-xl flex items-center gap-2.5 transition-colors duration-200 ${isActive
+                  className={`group h-[48px] px-3 lg:px-[12px] rounded-xl flex items-center gap-2.5 transition-colors duration-200 ${isActive
                     ? "text-black bg-slate-50/50"
                     : "text-slate-400 hover:text-black"
                     }`}
                 >
-                  <div className="relative w-[18px] h-[18px] md:w-[24px] md:h-[24px] shrink-0">
+                  <div className="relative w-[18px] h-[18px] lg:w-[24px] lg:h-[24px] shrink-0">
                     {/* Inactive Icon Layer */}
                     <div
                       style={{
@@ -175,7 +175,7 @@ export function PlatformNavbar() {
           </nav>
         </div>
 
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-2 lg:gap-4">
           <div className="relative" ref={messagesRef}>
             <button
               onClick={() => setIsMessagesOpen(!isMessagesOpen)}
@@ -237,20 +237,20 @@ export function PlatformNavbar() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-              className={`group flex items-center gap-2.5 p-1 md:pr-2 rounded-xl transition-all ${isProfileDropdownOpen ? "bg-slate-50" : "hover:bg-slate-50"}`}
+              className={`group flex items-center gap-2.5 p-1 lg:pr-2 rounded-xl transition-all ${isProfileDropdownOpen ? "bg-slate-50" : "hover:bg-slate-50"}`}
             >
               {profileAvatar ? (
                 <img
                   src={profileAvatar}
                   alt="Perfil"
-                  className="w-8 h-8 md:w-9 md:h-9 rounded-[8px] object-cover"
+                  className="w-8 h-8 lg:w-9 lg:h-9 rounded-[8px] object-cover"
                 />
               ) : (
-                <div className="w-8 h-8 md:w-9 md:h-9 rounded-[8px] bg-slate-100 flex items-center justify-center">
+                <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-[8px] bg-slate-100 flex items-center justify-center">
                   <span className="material-symbols-outlined text-slate-400 text-[20px]">person</span>
                 </div>
               )}
-              <span className={`hidden md:block text-[14px] font-semibold ${isProfileDropdownOpen ? "text-black" : "text-slate-400 group-hover:text-black"}`}>
+              <span className={`hidden lg:block text-[14px] font-semibold ${isProfileDropdownOpen ? "text-black" : "text-slate-400 group-hover:text-black"}`}>
                 {profileName}
               </span>
             </button>
@@ -288,8 +288,8 @@ export function PlatformNavbar() {
       </header>
 
       {/* Mobile Nav - Fixed Bottom */}
-      <div className="md:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 z-50">
-        <div className="h-[64px] px-6 flex justify-between items-center pb-[env(safe-area-inset-bottom)]">
+      <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 z-50">
+        <div className="max-w-md mx-auto h-[64px] px-6 flex justify-between items-center pb-[env(safe-area-inset-bottom)]">
           {NAV_ITEMS.map((tab) => {
             const isActive = activeTab === tab.id;
 

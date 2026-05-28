@@ -44,7 +44,7 @@ export default function ExpertsLayout({
   return (
     <div className="w-full min-h-screen bg-slate-50 text-wellness-slate-900 font-sans flex flex-col antialiased">
       <PlatformNavbar />
-      <main className="flex-1 w-full flex flex-col pt-[64px] pb-[64px] md:pt-[80px] md:pb-0">
+      <main className="flex-1 w-full flex flex-col pt-[64px] lg:pt-[80px]">
         {children}
       </main>
       <PlatformFooter />

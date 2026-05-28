@@ -68,7 +68,7 @@ export function ProfileSidebar({
         />
       </div>
 
-      <div className="w-32 h-32 md:w-48 md:h-48 rounded-[16px] overflow-hidden -mt-[96px] md:mt-6 ml-4 md:ml-0 relative shrink-0 group border-4 border-white bg-white">
+      <div className="w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 rounded-[16px] overflow-hidden -mt-[96px] md:mt-6 ml-4 md:ml-0 relative shrink-0 group border-4 border-white bg-white">
         {profile.profile_picture_url ? (
           <img
             src={profile.profile_picture_url}
@@ -77,7 +77,7 @@ export function ProfileSidebar({
           />
         ) : (
           <div className="w-full h-full border border-zinc-200 rounded-[12px] bg-slate-50 flex items-center justify-center">
-            <span className="material-symbols-outlined text-zinc-200 select-none flex items-center justify-center text-[72px] md:text-[104px]" style={{ width: '100%', height: '100%' }}>
+            <span className="material-symbols-outlined text-zinc-200 select-none flex items-center justify-center text-[72px] md:text-[88px] lg:text-[104px]" style={{ width: '100%', height: '100%' }}>
               person
             </span>
           </div>
@@ -89,13 +89,13 @@ export function ProfileSidebar({
         />
       </div>
 
-      <div className="w-full p-4 pt-5 md:p-5 md:pt-6 flex flex-col items-start md:items-center gap-4 md:gap-6">
-        <div className="text-left md:text-center flex flex-col items-start md:items-center gap-1 md:gap-1.5 w-full">
-          <h2 className="text-xl md:text-3xl font-bold tracking-tight text-slate-900 leading-snug text-left md:text-center font-jakarta">
+      <div className="w-full p-4 pt-5 lg:p-5 lg:pt-6 flex flex-col items-start md:items-center gap-4 lg:gap-6">
+        <div className="text-left md:text-center flex flex-col items-start md:items-center gap-1 lg:gap-1.5 w-full">
+          <h2 className="text-xl lg:text-3xl font-bold tracking-tight text-slate-900 leading-snug text-left md:text-center font-jakarta">
             {fullName || "Tu Nombre"}
           </h2>
           {hasLocation ? (
-            <p className="text-sm md:text-base font-medium text-slate-400 text-left md:text-center leading-relaxed">
+            <p className="text-sm lg:text-base font-medium text-slate-400 text-left md:text-center leading-relaxed">
               {profile.city?.split(',')[0] || ""}{profile.city && profile.country ? ", " : ""}{profile.country || ""}
             </p>
           ) : (
@@ -110,7 +110,7 @@ export function ProfileSidebar({
 
         <div className="w-full h-px bg-slate-100" />
 
-        <div className="w-full flex flex-col gap-4 md:gap-6 px-1">
+        <div className="w-full flex flex-col gap-4 lg:gap-6 px-1">
           <DetailItem label="Profesión" value={profile.profession} icon="work" onClick={() => onEditProfile("profession")} />
           <DetailItem label="Nacimiento" value={formatDisplayDate(profile.birthdate)} icon="cake" onClick={() => onEditProfile("birthdate")} />
           <DetailItem label="Género" value={profile.gender} icon={getGenderIcon(profile.gender)} onClick={() => onEditProfile("gender")} />
@@ -165,7 +165,7 @@ function DetailItem({ label, value, icon, onClick }: { label: string; value: str
             icon="add"
           />
         ) : (
-          <span className="text-sm md:text-base text-primary truncate leading-relaxed">{value}</span>
+          <span className="text-sm lg:text-base text-primary truncate leading-relaxed">{value}</span>
         )}
       </div>
     </div>

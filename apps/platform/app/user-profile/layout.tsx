@@ -60,7 +60,7 @@ export default function UserProfileLayout({
       <PlatformNavbar />
 
       {/* 2. PAGE CONTENT */}
-      <main className="flex-1 w-full flex flex-col pt-[64px] md:pt-[116px] lg:pt-[80px]">
+      <main className="flex-1 w-full flex flex-col pt-[64px] lg:pt-[80px]">
         {children}
       </main>
 

@@ -11,7 +11,7 @@ export function ProfileHeaderCover({ coverUrl, onChangeCover }: ProfileHeaderCov
  const hasCover = coverUrl && coverUrl !== "" && !coverUrl.includes("empty");
 
  return (
-  <div className={`hidden md:block w-full h-[240px] overflow-hidden relative shrink-0 group ${!hasCover ? 'luminus-gradient' : 'bg-slate-200'}`}>
+  <div className={`hidden md:block w-full md:h-[180px] lg:h-[240px] overflow-hidden relative shrink-0 group ${!hasCover ? 'luminus-gradient' : 'bg-slate-200'}`}>
    {hasCover && (
     <img
      src={coverUrl}

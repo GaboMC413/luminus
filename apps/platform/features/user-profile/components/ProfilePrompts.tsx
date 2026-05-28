@@ -125,16 +125,16 @@ export function PromptsDisplay({ prompts, onEdit }: { prompts: Prompt[]; onEdit?
   const hasPrompts = prompts && prompts.length > 0;
 
   return (
-    <div className={`bg-white rounded-[24px] p-4 md:p-6 flex flex-col gap-4 md:gap-5 border border-slate-200 shadow-none transition-all ${!hasPrompts ? 'bg-slate-50/50 border-slate-100' : ''}`}>
+    <div className={`bg-white rounded-[24px] p-4 lg:p-6 flex flex-col gap-4 lg:gap-5 border border-slate-200 shadow-none transition-all ${!hasPrompts ? 'bg-slate-50/50 border-slate-100' : ''}`}>
       <div className="flex items-center gap-2.5">
-        <h3 className="text-label text-[0.75rem] md:text-[0.8125rem] uppercase font-semibold ml-1">Reflexiones</h3>
+        <h3 className="text-label text-[0.75rem] lg:text-[0.8125rem] uppercase font-semibold ml-1">Reflexiones</h3>
       </div>
 
       {hasPrompts ? (
         <div className="flex flex-col gap-2">
           {prompts.map((prompt, index) => (
             <div key={index} className="flex flex-col">
-              <p className="text-sm md:text-base text-slate-600 italic leading-relaxed">
+              <p className="text-sm lg:text-base text-slate-600 italic leading-relaxed">
                 "<span className="text-slate-600">
                   {prompt.question.replace(/[…\. ]+$/, '')}
                 </span>{" "}
@@ -146,7 +146,7 @@ export function PromptsDisplay({ prompts, onEdit }: { prompts: Prompt[]; onEdit?
         </div>
       ) : (
         <div className="flex flex-col items-start gap-4">
-          <p className="text-sm md:text-base text-slate-400 font-medium italic tracking-tight leading-relaxed">
+          <p className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight leading-relaxed">
             Agregá reflexiones para que otros te conozcan mejor
           </p>
           <EmptyProfileButton
