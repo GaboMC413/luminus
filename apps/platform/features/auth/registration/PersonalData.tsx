@@ -209,7 +209,13 @@ export function PersonalData({
   };
 
   return (
-    <div className="w-full h-full flex flex-col justify-start items-start gap-8 animate-in fade-in duration-300">
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleContinue();
+      }}
+      className="w-full h-full flex flex-col justify-start items-start gap-8 animate-in fade-in duration-300"
+    >
 
       {/* Title Section */}
       <div className="w-full flex flex-col justify-start items-start gap-2">
@@ -238,6 +244,7 @@ export function PersonalData({
           <input type="file" accept="image/png, image/jpeg, image/webp, .png, .jpg, .jpeg, .webp" className="hidden" ref={fileInputRef} onChange={handleFileChange} disabled={uploading} />
 
           <Button
+            type="button"
             variant="slate"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
@@ -413,10 +420,10 @@ export function PersonalData({
 
       <div className="w-full flex justify-end mt-4">
         <Button
+          type="submit"
           variant="primary"
           className="w-full"
           disabled={isSaving}
-          onClick={handleContinue}
         >
           {isSaving ? 'Guardando...' : 'Continuar →'}
         </Button>
@@ -429,6 +436,6 @@ export function PersonalData({
           onCancel={handleCropCancel}
         />
       )}
-    </div>
+    </form>
   );
 }

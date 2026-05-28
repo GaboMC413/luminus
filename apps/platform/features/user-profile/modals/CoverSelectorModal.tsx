@@ -13,7 +13,7 @@ interface CoverSelectorModalProps {
 
 export function CoverSelectorModal({ isOpen, onClose, onSelect, currentCover }: CoverSelectorModalProps) {
   const [selectedCover, setSelectedCover] = useState(currentCover);
-  const covers = Array.from({ length: 8 }, (_, i) => `/covers/cover-${i + 1}.png`);
+  const covers = Array.from({ length: 9 }, (_, i) => `/covers/cover-${i + 1}.png`);
 
   useEffect(() => {
     if (isOpen) setSelectedCover(currentCover);

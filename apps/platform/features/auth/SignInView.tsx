@@ -50,21 +50,21 @@ export default function SignInView() {
 
   };
   return (
-    <div className="w-full h-dvh flex flex-col lg:flex-row font-sans overflow-hidden bg-slate-50 text-slate-900">
+    <div className="w-full h-screen flex flex-col lg:flex-row font-sans overflow-hidden bg-slate-50 text-slate-900">
 
       {/* 1. Left Branding/Marketing Pane (Desktop only - 42% width) */}
-      <div className="hidden lg:flex lg:w-[42%] lg:w-[40%] xl:w-[45%] luminus-gradient flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden border-r border-slate-200/10 animate-in slide-in-from-left duration-500">
+      <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] luminus-gradient flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden border-r border-slate-200/10 animate-in slide-in-from-left duration-500">
         {/* Subtle overlay for enhanced visual depth */}
         <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] pointer-events-none" />
 
-        <div className="relative z-10 flex flex-col h-full justify-between">
+        <div className="relative z-10 flex flex-col h-full">
           {/* Logo */}
           <Link href="/" className="w-fit cursor-pointer hover:opacity-80 transition-opacity">
             <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px]" />
           </Link>
 
           {/* Marketing Copy */}
-          <div className="flex flex-col gap-6 max-w-md my-auto">
+          <div className="flex flex-col gap-6 max-w-md mt-20">
             <h1 className="text-3xl lg:text-4xl font-bold text-white leading-tight tracking-[-0.03em]">
               Ingresa a LUMINUS
             </h1>
@@ -74,7 +74,7 @@ export default function SignInView() {
           </div>
 
           {/* Sidebar Footer */}
-          <p className="text-label !text-white/70 uppercase tracking-wider font-sans">
+          <p className="text-label !text-white/70 uppercase tracking-wider font-sans mt-auto">
             LUMINUS LATAM © 2026
           </p>
         </div>

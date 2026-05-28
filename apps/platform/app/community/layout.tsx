@@ -1,9 +1,10 @@
 "use client";
- 
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PlatformNavbar } from "@/components/ui/PlatformNavbar";
- 
+import { PlatformFooter } from "@/components/ui/PlatformFooter";
+
 export default function CommunityLayout({
   children,
 }: {
@@ -11,7 +12,7 @@ export default function CommunityLayout({
 }) {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
- 
+
   useEffect(() => {
     async function checkSession() {
       const response = await fetch("/api/auth/me", {
@@ -28,7 +29,7 @@ export default function CommunityLayout({
 
     checkSession();
   }, [router]);
- 
+
   if (!isMounted) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-black">
@@ -39,13 +40,14 @@ export default function CommunityLayout({
       </div>
     );
   }
- 
+
   return (
-    <div className="w-full min-h-screen bg-[#F8FAFC] text-slate-900 font-sans flex flex-col antialiased">
+    <div className="w-full min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col antialiased">
       <PlatformNavbar />
       <main className="flex-1 w-full flex flex-col pt-[64px] pb-[64px] md:pt-[80px] md:pb-0 overflow-hidden">
         {children}
       </main>
+      <PlatformFooter />
     </div>
   );
 }

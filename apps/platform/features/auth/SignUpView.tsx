@@ -47,7 +47,7 @@ export default function SignUpView() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    
+
     // Clear old profile test session keys on signup mount to ensure pristine state
     const profileKeys = [
       "luminus_profile_firstName",
@@ -118,21 +118,21 @@ export default function SignUpView() {
 
   if (step === 1) {
     return (
-      <div className="w-full h-dvh flex flex-col lg:flex-row font-sans overflow-hidden bg-slate-50 text-slate-900">
+      <div className="w-full h-screen flex flex-col lg:flex-row font-sans overflow-hidden bg-slate-50 text-slate-900">
 
         {/* 1. Left Branding/Marketing Pane (Desktop only - 42% width) */}
-        <div className="hidden lg:flex lg:w-[42%] lg:w-[40%] xl:w-[45%] luminus-gradient flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden border-r border-slate-200/10 animate-in slide-in-from-left duration-500">
+        <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] luminus-gradient flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden border-r border-slate-200/10 animate-in slide-in-from-left duration-500">
           {/* Subtle overlay for enhanced visual depth */}
           <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] pointer-events-none" />
 
-          <div className="relative z-10 flex flex-col h-full gap-8 justify-between">
+          <div className="relative z-10 flex flex-col h-full">
             {/* Logo */}
             <Link href="/" className="w-fit cursor-pointer hover:opacity-80 transition-opacity">
               <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px]" />
             </Link>
 
             {/* Marketing Copy & Short Experience Cards */}
-            <div className="flex flex-col gap-6 w-full my-auto">
+            <div className="flex flex-col gap-6 w-full mt-20">
               <h1 className="text-3xl lg:text-4xl font-bold leading-tight tracking-[-0.03em] text-white">
                 Regístrate en LUMINUS
               </h1>
@@ -193,7 +193,7 @@ export default function SignUpView() {
               </div>
             </div>
             {/* Sidebar Footer */}
-            <p className="text-label !text-white/70 uppercase tracking-wider font-sans">
+            <p className="text-label !text-white/70 uppercase tracking-wider font-sans mt-auto">
               LUMINUS LATAM © 2026
             </p>
           </div>
@@ -337,7 +337,7 @@ export default function SignUpView() {
 
   // Registration Flow (Step 2+)
   return (
-    <div className="w-full h-dvh bg-slate-50 flex flex-col lg:flex-row font-sans overflow-hidden">
+    <div className="w-full h-screen bg-slate-50 flex flex-col lg:flex-row font-sans overflow-hidden">
 
       {/* LATERAL SIDEBAR */}
       <div className="fixed top-0 left-0 right-0 lg:relative w-full h-14 lg:h-full lg:w-80 luminus-gradient shrink-0 flex lg:flex-col items-center justify-center lg:justify-start lg:pt-12 z-50 transition-all duration-500">

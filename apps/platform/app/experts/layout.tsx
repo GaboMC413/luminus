@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PlatformNavbar } from "@/components/ui/PlatformNavbar";
+import { PlatformFooter } from "@/components/ui/PlatformFooter";
 
 export default function ExpertsLayout({
   children,
@@ -41,16 +42,12 @@ export default function ExpertsLayout({
   }
 
   return (
-    <div className="w-full min-h-screen bg-[#FAF9F6] text-wellness-slate-900 font-sans flex flex-col antialiased">
+    <div className="w-full min-h-screen bg-slate-50 text-wellness-slate-900 font-sans flex flex-col antialiased">
       <PlatformNavbar />
       <main className="flex-1 w-full flex flex-col pt-[64px] pb-[64px] md:pt-[80px] md:pb-0">
         {children}
       </main>
-      <footer className="w-full py-8 border-t border-zinc-200/60 bg-white shrink-0">
-        <p className="text-[10px] text-slate-400 text-center uppercase tracking-widest font-semibold">
-          LUMINUS LATAM © 2026 • Espacio de Profesionales & Bienestar
-        </p>
-      </footer>
+      <PlatformFooter />
     </div>
   );
 }

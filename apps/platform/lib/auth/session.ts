@@ -16,11 +16,15 @@ function getSessionSecret() {
   const secret = process.env.AUTH_SESSION_SECRET;
 
   if (!secret || secret.length < 32) {
+    if (process.env.NODE_ENV !== "production") {
+      return "local-development-fallback-session-secret-32-chars-long";
+    }
     throw new Error("AUTH_SESSION_SECRET must be at least 32 characters long.");
   }
 
   return secret;
 }
+
 
 function base64UrlEncode(value: string | Buffer) {
   return Buffer.from(value).toString("base64url");
