@@ -52,7 +52,7 @@ export async function POST(request: Request) {
       ? data.otherInterests.trim()
       : undefined;
 
-  const profile = await prisma.$transaction(async (tx) => {
+  const profile = await prisma.$transaction(async (tx: any) => {
     const savedProfile = await tx.userProfile.upsert({
       where: { userId: session.userId },
       create: {
@@ -107,7 +107,7 @@ export async function POST(request: Request) {
 
         if (interestRows.length > 0) {
           await tx.userInterest.createMany({
-            data: interestRows.map((interest) => ({
+            data: interestRows.map((interest: any) => ({
               userId: session.userId,
               interestId: interest.id,
               source: "onboarding",

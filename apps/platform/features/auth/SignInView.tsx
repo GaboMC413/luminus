@@ -50,7 +50,7 @@ export default function SignInView() {
 
   };
   return (
-    <div className="w-full min-h-dvh flex flex-col lg:flex-row font-sans overflow-y-auto lg:overflow-hidden lg:h-dvh bg-slate-50 text-slate-900">
+    <div className="w-full h-dvh flex flex-col lg:flex-row font-sans overflow-hidden bg-slate-50 text-slate-900">
 
       {/* 1. Left Branding/Marketing Pane (Desktop only - 42% width) */}
       <div className="hidden lg:flex lg:w-[42%] lg:w-[40%] xl:w-[45%] luminus-gradient flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden border-r border-slate-200/10 animate-in slide-in-from-left duration-500">
@@ -81,7 +81,7 @@ export default function SignInView() {
       </div>
 
       {/* 2. Right Form Pane - No shadows, no borders, plain elements on slate-50 */}
-      <div className="flex-1 flex flex-col bg-slate-50 lg:min-h-0 lg:overflow-y-auto pt-14 lg:pt-0">
+      <div className="flex-1 flex flex-col bg-slate-50 min-h-0 overflow-y-auto pt-14 lg:pt-0">
 
         {/* Mobile Header: Logo (only visible on mobile) */}
         <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-gradient flex items-center justify-center shrink-0 z-50">
