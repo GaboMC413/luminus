@@ -46,8 +46,8 @@ export function ProfileSidebar({
   };
 
   const getGenderIcon = (gender: string) => {
-    if (gender === 'Masculino') return 'male';
-    if (gender === 'Femenino') return 'female';
+    if (gender === 'Masculino' || gender === 'Hombre') return 'male';
+    if (gender === 'Femenino' || gender === 'Mujer') return 'female';
     return 'wc';
   };
 

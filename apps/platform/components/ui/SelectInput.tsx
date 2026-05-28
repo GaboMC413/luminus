@@ -13,6 +13,7 @@ interface SelectInputProps {
   className?: string;
   error?: boolean;
   disabled?: boolean;
+  disabledOpacity?: boolean;
   autoFocus?: boolean;
 }
 
@@ -26,6 +27,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
   className = '',
   error = false,
   disabled = false,
+  disabledOpacity = true,
   autoFocus
 }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -241,7 +243,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
           ${variantClass} px-5 flex items-center cursor-pointer transition-all duration-300 group outline-none w-full min-w-0
           ${error ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : 'focus:border-black focus:ring-1 focus:ring-black'}
           ${isOpen ? 'border-black' : ''}
-          ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+          ${disabled ? `${disabledOpacity ? 'opacity-50' : ''} cursor-not-allowed` : ''}
         `}
       >
         <span className={`${!value ? '!text-slate-400' : 'text-black'} text-body truncate select-none min-w-0 flex-1`}>

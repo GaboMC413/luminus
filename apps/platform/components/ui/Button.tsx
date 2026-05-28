@@ -58,10 +58,21 @@ interface ProfileButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 // Used for edit actions, section triggers, and icon-based buttons with a premium aesthetic.
 // Features a glassmorphism style (slate-50 background, backdrop-blur).
 export function ProfileButton({ icon, label, showDot, className = "", ...props }: ProfileButtonProps) {
+  if (!label && icon !== "photo_camera") {
+    return (
+      <button
+        {...props}
+        className={`w-9 h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-black hover:bg-slate-100 transition-all duration-300 cursor-pointer shadow-none ${className}`}
+      >
+        <span className="material-symbols-rounded text-[18px] shrink-0">{icon}</span>
+      </button>
+    );
+  }
+
   return (
     <button
       {...props}
-      className={`h-11 ${label ? 'px-4 min-w-[120px]' : 'w-11'} bg-white hover:bg-slate-50 text-slate-400 hover:text-black rounded-[12px] text-[14px] font-semibold transition-all flex items-center justify-center gap-2 border-none cursor-pointer shadow-none ${className}`}
+      className={`h-11 ${label ? 'px-4 min-w-[120px]' : 'w-11'} bg-[#F8FAFC] hover:bg-black border border-slate-200/60 hover:border-black text-slate-700 hover:text-white rounded-[12px] text-[14px] font-semibold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-none ${className}`}
     >
       {showDot && (
         <div className="w-3 h-3 rounded-full bg-[#FF4B4B] border-2 border-white shrink-0 shadow-sm" />

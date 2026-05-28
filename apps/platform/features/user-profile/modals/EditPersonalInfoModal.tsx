@@ -270,8 +270,8 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
             label="Género"
             value={formData.gender}
             options={[
-              { label: 'Masculino', value: 'Masculino' },
-              { label: 'Femenino', value: 'Femenino' },
+              { label: 'Mujer', value: 'Mujer' },
+              { label: 'Hombre', value: 'Hombre' },
               { label: 'No binario', value: 'No binario' },
               { label: 'Prefiero no decirlo', value: 'Prefiero no decirlo' }
             ]}

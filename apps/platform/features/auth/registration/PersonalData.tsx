@@ -305,7 +305,7 @@ export function PersonalData({
             <SelectInput
               label="Género"
               value={gender}
-              options={['Femenino', 'Masculino', 'No binario', 'Prefiero no decirlo']}
+              options={['Mujer', 'Hombre', 'No binario', 'Prefiero no decirlo']}
               onSelect={(val) => {
                 setGender(val);
                 if (errorField === 'gender') setErrorField(null);
