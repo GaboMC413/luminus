@@ -11,7 +11,7 @@ export const expertsContent = {
     title: (
       <>
         Lleva tu conocimiento a una{" "}
-        <span className="bg-luminus-lime text-black px-3 py-1 border-2 border-black inline-block rounded-2xl transform -rotate-1 shadow-bold-sm mt-1 sm:mt-0">
+        <span className="text-luminus-blue">
           red de bienestar
         </span>
       </>

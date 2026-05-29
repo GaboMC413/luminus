@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, Home, Briefcase, Globe, MessageSquare, ArrowRight } from "lucide-react";
+import { Menu, X, Home, Briefcase, Globe, MessageSquare, ArrowRight, Building } from "lucide-react";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,7 +27,8 @@ export default function Navbar() {
   const navLinks = [
     { href: "/", label: "Inicio", icon: <Home className="h-5 w-5 text-luminus-blue" /> },
     { href: "/expertos", label: "Para expertos", icon: <Briefcase className="h-5 w-5 text-luminus-orange" /> },
-    { href: "/sobre-nosotros", label: "Sobre nosotros", icon: <Globe className="h-5 w-5 text-luminus-lime" /> },
+    { href: "/empresas-aliadas", label: "Empresas", icon: <Building className="h-5 w-5 text-luminus-lime" /> },
+    { href: "/sobre-nosotros", label: "Sobre nosotros", icon: <Globe className="h-5 w-5 text-luminus-blue" /> },
     { href: "/contacto", label: "Contactarnos", icon: <MessageSquare className="h-5 w-5 text-luminus-pink" /> },
   ];
 

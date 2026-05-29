@@ -31,7 +31,11 @@ export function PricingSection({
         subtitle={subtitle}
       />
 
-      <div className="mx-auto grid max-w-sm grid-cols-1 gap-8 md:max-w-4xl md:grid-cols-2 md:gap-8 lg:gap-12 items-stretch">
+      <div className={`mx-auto grid gap-8 items-stretch ${
+        plans.length === 3
+          ? "max-w-sm grid-cols-1 md:max-w-7xl md:grid-cols-3"
+          : "max-w-sm grid-cols-1 md:max-w-4xl md:grid-cols-2 lg:gap-12"
+      }`}>
         {plans.map((plan, idx) => (
           <PricingCard key={idx} {...plan} />
         ))}

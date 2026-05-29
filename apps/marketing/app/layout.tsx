@@ -46,6 +46,9 @@ export default function RootLayout({
                 <Link href="/expertos" className="hover:text-luminus-blue transition-colors">
                   Para expertos
                 </Link>
+                <Link href="/empresas-aliadas" className="hover:text-luminus-blue transition-colors">
+                  Empresas Aliadas
+                </Link>
                 <Link href="/sobre-nosotros" className="hover:text-luminus-blue transition-colors">
                   Sobre nosotros
                 </Link>
