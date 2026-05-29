@@ -11,7 +11,7 @@ export default function PrivacyPage() {
           <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[18px] md:h-[20px]" />
         </Link>
         <Link 
-          href="https://app.luminuslatam.com/auth/signup" 
+          href="https://app.luminuslatam.com/auth/registrarse" 
           className="group flex items-center gap-2 text-[14px] font-medium border border-black px-4 md:px-6 py-2 rounded-full hover:bg-black hover:text-white transition-all"
         >
           <span className="hidden md:inline">Volver al registro</span>

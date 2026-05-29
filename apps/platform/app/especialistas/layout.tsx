@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { PlatformNavbar } from "@/components/ui/PlatformNavbar";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
 
-export default function ExpertsLayout({
+export default function EspecialistasLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -20,7 +20,7 @@ export default function ExpertsLayout({
       });
 
       if (!response.ok) {
-        router.push("/auth/signin");
+        router.push("/auth/iniciar-sesion");
         return;
       }
 

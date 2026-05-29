@@ -37,7 +37,7 @@ export function ProfileMembershipCard({ plan, createdAt, showSettingsButtons = f
 
       <div className="w-full h-px bg-slate-50" />
 
-      <Link href="/user-profile/settings?tab=membership" className="w-full">
+      <Link href="/perfil-usuario/configuracion?tab=membership" className="w-full">
         <ProfileButton
           onClick={() => { }}
           icon="autorenew"
@@ -48,7 +48,7 @@ export function ProfileMembershipCard({ plan, createdAt, showSettingsButtons = f
 
       {showSettingsButtons && (
         <div className="flex flex-col gap-2 w-full">
-          <Link href="/user-profile/settings" className="w-full">
+          <Link href="/perfil-usuario/configuracion" className="w-full">
             <ProfileButton
               onClick={() => { }}
               icon="settings"
@@ -57,7 +57,7 @@ export function ProfileMembershipCard({ plan, createdAt, showSettingsButtons = f
             />
           </Link>
 
-          <Link href="/user-profile/settings?tab=password" className="w-full">
+          <Link href="/perfil-usuario/configuracion?tab=password" className="w-full">
             <ProfileButton
               onClick={() => { }}
               icon="lock"

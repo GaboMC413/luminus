@@ -12,7 +12,7 @@ export default function PlatformHomePage() {
         credentials: "include",
       });
 
-      router.push(response.ok ? "/community" : "/auth/signin");
+      router.push(response.ok ? "/comunidad" : "/auth/iniciar-sesion");
     }
 
     checkSession();

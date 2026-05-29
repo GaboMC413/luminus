@@ -6,7 +6,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "LUMINUS Latam | Conecta con tu bienestar",
-  description: "Una red de bienestar, conexión, expertos, espacios de aprendizaje y acompañamiento con IA diseñada para guiarte en tu camino.",
+  description: "Una red de bienestar, conexión, especialistas, espacios de aprendizaje y acompañamiento con IA diseñada para guiarte en tu camino.",
 };
 
 export default function RootLayout({
@@ -43,8 +43,8 @@ export default function RootLayout({
                 <Link href="/" className="hover:text-luminus-blue transition-colors">
                   Inicio
                 </Link>
-                <Link href="/expertos" className="hover:text-luminus-blue transition-colors">
-                  Para expertos
+                <Link href="/especialistas" className="hover:text-luminus-blue transition-colors">
+                  Para especialistas
                 </Link>
                 <Link href="/empresas-aliadas" className="hover:text-luminus-blue transition-colors">
                   Empresas Aliadas
@@ -61,10 +61,10 @@ export default function RootLayout({
             <div className="flex flex-col md:flex-row items-center justify-between border-t border-slate-200 pt-8 gap-4 text-xs text-slate-500 font-medium">
               <p>&copy; {new Date().getFullYear()} LUMINUS Latam. Todos los derechos reservados.</p>
               <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center">
-                <Link href="/legal/terms" className="hover:text-black transition-colors">
+                <Link href="/legal/terminos" className="hover:text-black transition-colors">
                   Términos y Condiciones
                 </Link>
-                <Link href="/legal/privacy" className="hover:text-black transition-colors">
+                <Link href="/legal/privacidad" className="hover:text-black transition-colors">
                   Política de Privacidad
                 </Link>
                 <Link href="/legal/cookies" className="hover:text-black transition-colors">

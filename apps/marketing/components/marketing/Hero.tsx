@@ -61,7 +61,7 @@ export function Hero({
               {title}
             </h1>
 
-            <p className="text-lg sm:text-xl leading-relaxed text-black font-bold mb-8 max-w-2xl">
+            <p className="text-lg sm:text-xl leading-relaxed text-black font-bold mb-8 max-w-2xl whitespace-pre-line">
               {subtitle}
             </p>
 

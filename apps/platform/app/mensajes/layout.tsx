@@ -19,7 +19,7 @@ export default function MessagesLayout({
       });
 
       if (!response.ok) {
-        router.push("/auth/signin");
+        router.push("/auth/iniciar-sesion");
         return;
       }
 

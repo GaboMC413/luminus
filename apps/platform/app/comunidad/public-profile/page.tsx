@@ -96,7 +96,7 @@ export default function NancyNunezProfile() {
  
             <div className="flex flex-col gap-3 px-2">
               <button 
-                onClick={() => router.push(`/messages?id=1`)}
+                onClick={() => router.push(`/mensajes?id=1`)}
                 className="w-full py-4 bg-black text-white rounded-xl text-[15px] font-bold hover:bg-zinc-800 transition flex items-center justify-center gap-2 border-none cursor-pointer font-jakarta"
               >
                 <span className="material-symbols-outlined text-[20px]">mail</span>

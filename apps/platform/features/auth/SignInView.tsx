@@ -41,7 +41,7 @@ export default function SignInView() {
         return;
       }
 
-      router.push("/community");
+      router.push("/comunidad");
     } catch {
       setMessage({ text: "No pudimos conectar con el servidor.", type: "error" });
     } finally {
@@ -69,7 +69,7 @@ export default function SignInView() {
               Ingresa a LUMINUS
             </h1>
             <p className="text-xl text-white/90 leading-relaxed font-normal tracking-[-0.02em]">
-              Un espacio para conectar con personas, expertos y recursos que te ayudan a avanzar con más claridad, bienestar y propósito.
+              Un espacio para conectar con personas, especialistas y recursos que te ayudan a avanzar con más claridad, bienestar y propósito.
             </p>
           </div>
 
@@ -165,7 +165,7 @@ export default function SignInView() {
 
             <div className="flex flex-col items-center mt-2">
               <button
-                onClick={() => router.push("/auth/signup")}
+                onClick={() => router.push("/auth/registrarse")}
                 className="text-slate-500 hover:text-slate-900 text-body-small cursor-pointer bg-transparent border-none outline-none"
               >
                 ¿Primera vez en LUMINUS? <span className="underline font-semibold text-slate-900">Regístrate gratis</span>

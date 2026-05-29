@@ -7,10 +7,10 @@ import { NotificationPopup } from "./NotificationPopup";
 import { MessagesPopup } from "./MessagesPopup";
 
 const NAV_ITEMS = [
-  { id: "community", label: "Comunidad", path: "/community", icon: "/Icons/NavBar/comunity inactive.svg", activeIcon: "/Icons/NavBar/community active.svg" },
-  { id: "experts", label: "Expertos", path: "/experts", icon: "/Icons/NavBar/expert inactive.svg", activeIcon: "/Icons/NavBar/expert active.svg" },
+  { id: "comunidad", label: "Comunidad", path: "/comunidad", icon: "/Icons/NavBar/comunity inactive.svg", activeIcon: "/Icons/NavBar/community active.svg" },
+  { id: "especialistas", label: "Especialistas", path: "/especialistas", icon: "/Icons/NavBar/expert inactive.svg", activeIcon: "/Icons/NavBar/expert active.svg" },
   { id: "espacios", label: "Espacios", path: "/espacios", icon: "/Icons/NavBar/espacios inactive.svg", activeIcon: "/Icons/NavBar/espacios active.svg" },
-  { id: "map", label: "Mapa", path: "/map", icon: "/Icons/NavBar/map inactive.svg", activeIcon: "/Icons/NavBar/map active.svg" },
+  { id: "mapa", label: "Mapa", path: "/mapa", icon: "/Icons/NavBar/map inactive.svg", activeIcon: "/Icons/NavBar/map active.svg" },
   { id: "faro", label: "Faro", path: "/faro", icon: "/Icons/NavBar/faro inactive.svg", activeIcon: "/Icons/NavBar/faro active.svg" },
 ];
 
@@ -76,12 +76,12 @@ export function PlatformNavbar() {
 
   // Determine active tab based on pathname
   const getActiveTab = () => {
-    if (pathname.includes("/community")) return "community";
-    if (pathname.includes("/experts")) return "experts";
+    if (pathname.includes("/comunidad")) return "comunidad";
+    if (pathname.includes("/especialistas")) return "especialistas";
     if (pathname.includes("/espacios")) return "espacios";
-    if (pathname.includes("/map")) return "map";
+    if (pathname.includes("/mapa")) return "mapa";
     if (pathname.includes("/faro")) return "faro";
-    if (pathname.includes("/user-profile")) return "user-profile";
+    if (pathname.includes("/perfil-usuario")) return "perfil-usuario";
     return "";
   };
 
@@ -124,7 +124,7 @@ export function PlatformNavbar() {
       method: "POST",
       credentials: "include",
     });
-    router.push("/auth/signin");
+    router.push("/auth/iniciar-sesion");
   };
 
   return (
@@ -258,7 +258,7 @@ export function PlatformNavbar() {
             {isProfileDropdownOpen && (
               <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                 <Link
-                  href="/user-profile"
+                  href="/perfil-usuario"
                   onClick={() => setIsProfileDropdownOpen(false)}
                   className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[14px] hover:bg-slate-50 transition-colors"
                 >
@@ -266,7 +266,7 @@ export function PlatformNavbar() {
                   <span className="font-semibold text-slate-400 group-hover:text-black">Ver mi perfil</span>
                 </Link>
                 <Link
-                  href="/user-profile/settings"
+                  href="/perfil-usuario/configuracion"
                   onClick={() => setIsProfileDropdownOpen(false)}
                   className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[14px] hover:bg-slate-50 transition-colors"
                 >

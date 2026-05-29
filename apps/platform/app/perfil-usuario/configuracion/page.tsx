@@ -66,7 +66,7 @@ function SettingsContent() {
       });
 
       if (!response.ok) {
-        router.push("/auth/signin");
+        router.push("/auth/iniciar-sesion");
         return;
       }
 
@@ -151,7 +151,7 @@ function SettingsContent() {
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
             <Link
-              href="/user-profile"
+              href="/perfil-usuario"
               className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900"
               title="Volver al perfil"
             >

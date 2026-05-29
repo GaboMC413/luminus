@@ -126,7 +126,7 @@ export function ProfileSidebar({
             className="w-full"
           />
 
-          <Link href="/user-profile/settings" className="w-full hidden md:block">
+          <Link href="/perfil-usuario/configuracion" className="w-full hidden md:block">
             <ProfileButton
               onClick={() => { }}
               icon="settings"
@@ -135,7 +135,7 @@ export function ProfileSidebar({
             />
           </Link>
 
-          <Link href="/user-profile/settings?tab=password" className="w-full hidden md:block">
+          <Link href="/perfil-usuario/configuracion?tab=password" className="w-full hidden md:block">
             <ProfileButton
               onClick={() => { }}
               icon="lock"

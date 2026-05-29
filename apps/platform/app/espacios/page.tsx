@@ -25,7 +25,7 @@ export default function EspaciosPage() {
       </div>
       <h1 className="text-[32px] font-jakarta font-bold text-slate-900 mb-4">Espacios LUMINUS</h1>
       <p className="text-slate-500 max-w-[500px] mb-8">
-        Próximamente podrás acceder a Espacios, lugares diseñados para que los expertos compartan contenido relevante e invitaciones a eventos exclusivos, funcionando como un foro dinámico de encuentro y aprendizaje.
+        Próximamente podrás acceder a Espacios, lugares diseñados para que los especialistas compartan contenido relevante e invitaciones a eventos exclusivos, funcionando como un foro dinámico de encuentro y aprendizaje.
       </p>
       <Button variant="primary"
         onClick={() => router.push("/community")}

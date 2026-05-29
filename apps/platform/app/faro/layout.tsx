@@ -20,7 +20,7 @@ export default function FaroLayout({
       });
 
       if (!response.ok) {
-        router.push("/auth/signin");
+        router.push("/auth/iniciar-sesion");
         return;
       }
 

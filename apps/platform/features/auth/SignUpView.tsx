@@ -159,7 +159,7 @@ export default function SignUpView() {
                     </svg>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <h3 className="text-white font-bold text-[16px]">Expertos confiables</h3>
+                    <h3 className="text-white font-bold text-[16px]">Especialistas confiables</h3>
                     <p className="text-white/90 text-[16px]">Descubre profesionales que pueden acompañarte en distintas áreas de tu desarrollo.</p>
                   </div>
                 </div>
@@ -315,7 +315,7 @@ export default function SignUpView() {
 
               <div className="flex flex-col items-center mt-2">
                 <button
-                  onClick={() => router.push("/auth/signin")}
+                  onClick={() => router.push("/auth/iniciar-sesion")}
                   className="text-slate-500 hover:text-slate-900 text-body-secondary cursor-pointer bg-transparent border-none outline-none"
                 >
                   ¿Ya tienes cuenta? <span className="underline font-semibold text-slate-900">Ingresa</span>

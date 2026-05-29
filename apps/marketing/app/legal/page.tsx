@@ -6,14 +6,20 @@ export default function LegalPage() {
   const legalDocs = [
     {
       title: "Términos y Condiciones",
-      description: "Regula el uso de la plataforma, el registro, la propiedad intelectual y la relación con los expertos de bienestar.",
-      href: "/legal/terms",
+      description: "Regula el uso de la plataforma, el registro, la propiedad intelectual y la relación con los especialistas de bienestar.",
+      href: "/legal/terminos",
       icon: "gavel",
+    },
+    {
+      title: "Condiciones para Especialistas",
+      description: "Regula la postulación, admisión y participación de los especialistas dentro de la red LUMINUS.",
+      href: "/legal/condiciones-especialistas",
+      icon: "assignment_ind",
     },
     {
       title: "Política de Privacidad",
       description: "Explica detalladamente cómo recopilamos, utilizamos, protegemos y gestionamos tus datos personales dentro de LUMINUS.",
-      href: "/legal/privacy",
+      href: "/legal/privacidad",
       icon: "shield_person",
     },
     {
@@ -32,7 +38,7 @@ export default function LegalPage() {
           <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[18px] md:h-[20px]" />
         </Link>
         <Link 
-          href="https://app.luminuslatam.com/auth/signup" 
+          href="https://app.luminuslatam.com/auth/registrarse" 
           className="group flex items-center gap-2 text-[14px] font-medium border border-black px-4 md:px-6 py-2 rounded-full hover:bg-black hover:text-white transition-all"
         >
           <span className="hidden md:inline">Volver al registro</span>
@@ -52,7 +58,7 @@ export default function LegalPage() {
         </div>
 
         {/* Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
           {legalDocs.map((doc) => (
             <Link 
               key={doc.title}

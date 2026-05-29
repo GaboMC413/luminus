@@ -26,9 +26,9 @@ export default function Navbar() {
 
   const navLinks = [
     { href: "/", label: "Inicio", icon: <Home className="h-5 w-5 text-luminus-blue" /> },
-    { href: "/expertos", label: "Para expertos", icon: <Briefcase className="h-5 w-5 text-luminus-orange" /> },
-    { href: "/empresas-aliadas", label: "Empresas", icon: <Building className="h-5 w-5 text-luminus-lime" /> },
-    { href: "/sobre-nosotros", label: "Sobre nosotros", icon: <Globe className="h-5 w-5 text-luminus-blue" /> },
+    { href: "/especialistas", label: "Especialistas LUMINUS", icon: <Briefcase className="h-5 w-5 text-luminus-orange" /> },
+    { href: "/empresas-aliadas", label: "Empresas Aliadas", icon: <Building className="h-5 w-5 text-luminus-lime" /> },
+    { href: "/sobre-nosotros", label: "Sobre Nosotros", icon: <Globe className="h-5 w-5 text-luminus-blue" /> },
     { href: "/contacto", label: "Contactarnos", icon: <MessageSquare className="h-5 w-5 text-luminus-pink" /> },
   ];
 
@@ -63,13 +63,13 @@ export default function Navbar() {
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-4">
           <a
-            href="https://app.luminuslatam.com/signin"
+            href="https://app.luminuslatam.com/auth/iniciar-sesion"
             className="text-sm font-bold text-black hover:text-luminus-orange transition-colors px-3 py-2"
           >
             Ingresar
           </a>
           <a
-            href="https://app.luminuslatam.com/signup"
+            href="https://app.luminuslatam.com/auth/registrarse"
             className="inline-flex items-center justify-center rounded-full bg-black border-2 border-black px-5 py-2.5 text-sm font-bold text-white shadow-bold-sm hover:shadow-none hover:bg-luminus-orange hover:text-black hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-150"
           >
             Crear cuenta
@@ -94,8 +94,8 @@ export default function Navbar() {
         <div className="fixed inset-0 z-50 bg-white flex flex-col h-screen w-screen md:hidden overflow-y-auto animate-fadeIn">
           {/* Header row at the top inside mobile menu */}
           <div className="flex items-center justify-between px-6 py-4 border-b-2 border-black bg-white">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               onClick={() => setIsOpen(false)}
               className="group flex items-center gap-3 transition-transform duration-205 hover:scale-[1.01]"
             >
@@ -141,14 +141,14 @@ export default function Navbar() {
             {/* Action Buttons */}
             <div className="flex flex-col gap-4 mt-auto pb-6">
               <a
-                href="https://app.luminuslatam.com/signin"
+                href="https://app.luminuslatam.com/auth/iniciar-sesion"
                 onClick={() => setIsOpen(false)}
                 className="inline-flex items-center justify-center rounded-full border-2 border-black bg-white py-4 px-6 text-base font-bold text-black shadow-bold hover:shadow-none hover:bg-luminus-pink hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-150"
               >
                 Ingresar a mi cuenta
               </a>
               <a
-                href="https://app.luminuslatam.com/signup"
+                href="https://app.luminuslatam.com/auth/registrarse"
                 onClick={() => setIsOpen(false)}
                 className="inline-flex items-center justify-center rounded-full bg-black border-2 border-black py-4 px-6 text-base font-bold text-white shadow-bold hover:shadow-none hover:bg-luminus-orange hover:text-black hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-150"
               >

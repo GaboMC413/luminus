@@ -10,14 +10,14 @@ export const metadata: Metadata = {
     default: "LUMINUS | Bienestar, Conexiones y Crecimiento Personal LATAM",
     template: "%s | LUMINUS"
   },
-  description: "Un espacio profesional de bienestar y crecimiento en Latinoamérica. Conecta con personas afines, obtén asesoramiento de expertos y alinea tu vida personal y laboral con propósito.",
+  description: "Un espacio profesional de bienestar y crecimiento en Latinoamérica. Conecta con personas afines, obtén asesoramiento de especialistas y alinea tu vida personal y laboral con propósito.",
   keywords: [
     "bienestar", 
     "crecimiento personal", 
     "conexiones significativas", 
     "salud mental", 
     "coaching", 
-    "expertos bienestar", 
+    "especialistas bienestar", 
     "bienestar corporativo",
     "equilibrio de vida",
     "comunidad bienestar Latinoamérica"
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   manifest: "/site.webmanifest",
   openGraph: {
     title: "LUMINUS | Bienestar, Conexiones y Crecimiento Personal LATAM",
-    description: "Conecta con personas y expertos que te ayudan a cultivar bienestar, equilibrio y dirección en tu desarrollo y crecimiento personal.",
+    description: "Conecta con personas y especialistas que te ayudan a cultivar bienestar, equilibrio y dirección en tu desarrollo y crecimiento personal.",
     url: "https://luminus.lat",
     siteName: "LUMINUS",
     locale: "es_LA",
@@ -46,7 +46,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "LUMINUS | Bienestar, Conexiones y Crecimiento Personal LATAM",
-    description: "Tu espacio ético y profesional de bienestar en Latinoamérica. Conexiones significativas, expertos y crecimiento personal.",
+    description: "Tu espacio ético y profesional de bienestar en Latinoamérica. Conexiones significativas, especialistas y crecimiento personal.",
   },
 };
 

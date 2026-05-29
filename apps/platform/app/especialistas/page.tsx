@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 
-export default function ExpertsPage() {
+export default function EspecialistasPage() {
   const router = useRouter();
 
   return (
@@ -23,9 +23,9 @@ export default function ExpertsPage() {
           className="w-10 h-10 bg-black"
         />
       </div>
-      <h1 className="text-[32px] font-jakarta font-bold text-slate-900 mb-4">Expertos LUMINUS</h1>
+      <h1 className="text-[32px] font-jakarta font-bold text-slate-900 mb-4">Especialistas LUMINUS</h1>
       <p className="text-slate-500 max-w-[500px] mb-8">
-        Próximamente podrás descubrir a expertos de distintas áreas del bienestar, conocer su enfoque y conectar con las personas indicadas para acompañar tu camino de manera más consciente, personalizada y significativa.
+        Próximamente podrás descubrir a especialistas de distintas áreas del bienestar, conocer su enfoque y conectar con las personas indicadas para acompañar tu camino de manera más consciente, personalizada y significativa.
       </p>
       <Button variant="primary"
         onClick={() => router.push("/community")}

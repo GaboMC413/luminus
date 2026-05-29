@@ -17,7 +17,7 @@ export function UserCard({ user }: UserCardProps) {
   const handleViewProfile = () => {
     // Special case for Nancy Núñez as currently implemented in the platform
     if (user.name === "Nancy Núñez") {
-      router.push("/community/public-profile");
+      router.push("/comunidad/public-profile");
     }
   };
 

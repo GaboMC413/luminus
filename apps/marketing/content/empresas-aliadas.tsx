@@ -31,7 +31,7 @@ export const empresasAliadasContent = {
       </>
     ),
     image: {
-      src: "/hero-illustration.png", // Reusing the same illustration or suitable asset path
+      src: "/hero-illustration.png",
       alt: "LUMINUS Living Network for Corporate Wellness",
     },
     bgGlow: "from-luminus-orange/5 via-luminus-lime/5",
@@ -45,8 +45,8 @@ export const empresasAliadasContent = {
     subtitle: "Imaginamos un futuro donde cualquier persona pueda descubrir y acceder fácilmente a lo que necesita para su bienestar.",
     items: [
       {
-        title: "Expertos",
-        description: "Profesionales de distintas disciplinas validados y al alcance de todos.",
+        title: "Especialistas",
+        description: "Especialistas de distintas disciplinas validados y al alcance de todos.",
         icon: <Users className="h-6 w-6 text-black" />,
         accentBgClass: "bg-luminus-orange",
       },
@@ -80,7 +80,7 @@ export const empresasAliadasContent = {
   latamVision: {
     title: "Una visión para América Latina",
     description: "La región enfrenta desafíos cada vez más complejos relacionados con la salud mental, el estrés, la soledad, la incertidumbre y la falta de acceso a espacios de crecimiento personal.",
-    highlight: "Creemos que existe una oportunidad única para construir una red que conecte a miles de personas con expertos, recursos, espacios y experiencias que puedan mejorar su calidad de vida.",
+    highlight: "Creemos que existe una oportunidad única para construir una red que conecte a miles de personas con especialistas, recursos, espacios y experiencias que puedan mejorar su calidad de vida.",
     cardTitle: "Plataforma de Referencia",
     cardIcon: <Target className="h-6 w-6" />,
     bullets: [
@@ -125,7 +125,7 @@ export const empresasAliadasContent = {
     description: "El apoyo de nuestras Empresas Aliadas contribuye directamente a acelerar el crecimiento de una red centrada en el bienestar y el desarrollo humano en América Latina.",
     items: [
       "Desarrollar nuevas funcionalidades y herramientas digitales en la plataforma.",
-      "Incorporar expertos, profesionales certificados y recursos de calidad para la comunidad.",
+      "Incorporar especialistas, profesionales certificados y recursos de calidad para la comunidad.",
       "Crear contenido abierto, educativo y accesible para todos los sectores.",
       "Impulsar nuevas experiencias presenciales, talleres e iniciativas locales.",
       "Expandir el alcance geográfico de LUMINUS a lo largo de América Latina."
@@ -178,7 +178,7 @@ export const empresasAliadasContent = {
 
   transparency: {
     title: "Independencia y transparencia",
-    description: "La confianza de nuestra comunidad es nuestro activo más importante. Por esa razón, el apoyo de una organización no implica influencia sobre nuestros contenidos, expertos, recomendaciones, decisiones estratégicas o información privada de los usuarios.",
+    description: "La confianza de nuestra comunidad es nuestro activo más importante. Por esa razón, el apoyo de una organización no implica influencia sobre nuestros contenidos, especialistas, recomendaciones, decisiones estratégicas o información privada de los usuarios.",
     highlight: "LUMINUS mantiene su independencia para proteger la integridad del proyecto y la confianza de las personas que forman parte de la red."
   },
 
@@ -238,7 +238,7 @@ export const empresasAliadasContent = {
           "Presencia premium en eventos oficiales LUMINUS",
           "Co-creación de iniciativas ESG a medida",
           "Acceso prioritario a analíticas agregadas de bienestar regional",
-          "Talleres de bienestar in-company dictados por expertos LUMINUS",
+          "Talleres de bienestar in-company dictados por especialistas LUMINUS",
         ],
       },
     ]

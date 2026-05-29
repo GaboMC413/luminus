@@ -1,5 +1,5 @@
 import React from "react";
-import { Users, UserCheck, Compass, MapPin, Sparkles, AlertTriangle, XCircle, Eye, Heart, Link2, ShieldCheck, HeartHandshake, Milestone, Cpu, CheckCircle, Info, Globe } from "lucide-react";
+import { Users, UserCheck, Compass, MapPin, Sparkles, AlertTriangle, Eye, Heart, Link2, ShieldCheck, HeartHandshake, Milestone, Cpu, Globe } from "lucide-react";
 
 export const aboutContent = {
   hero: {
@@ -16,10 +16,10 @@ export const aboutContent = {
         </span>
       </>
     ),
-    subtitle: "LUMINUS nace para reunir personas, expertos, espacios y herramientas que ayuden a vivir con más equilibrio, claridad y propósito.",
+    subtitle: "LUMINUS nace para reunir personas, especialistas, espacios y herramientas que ayuden a vivir con más equilibrio, claridad y propósito.",
     primaryCta: {
       text: "Crear mi cuenta",
-      link: "https://app.luminuslatam.com/signup",
+      link: "https://app.luminuslatam.com/auth/registrarse",
     },
     secondaryCta: {
       text: "Conocer qué construimos",
@@ -37,7 +37,7 @@ export const aboutContent = {
   problem: {
     title: "El bienestar hoy está demasiado fragmentado",
     description: "Muchas personas buscan sentirse mejor, vivir con más equilibrio o encontrar acompañamiento, pero suelen hacerlo de forma dispersa: contenidos aislados, profesionales difíciles de encontrar, experiencias desconectadas y poca claridad sobre por dónde empezar.",
-    highlight: "LUMINUS surge para ordenar ese camino y acercar, en un mismo lugar, personas, expertos, espacios y herramientas que puedan ayudar a cada usuario a avanzar con más dirección.",
+    highlight: "LUMINUS surge para ordenar ese camino y acercar, en un mismo lugar, personas, especialistas, espacios y herramientas que puedan ayudar a cada usuario a avanzar con más dirección.",
     cardTitle: "Los 4 grandes vacíos en el camino",
     cardIcon: <AlertTriangle className="h-6 w-6" />,
     bullets: [
@@ -50,7 +50,7 @@ export const aboutContent = {
   response: {
     badge: "Nuestra Respuesta",
     title: "Estamos construyendo una red de bienestar más humana y accesible",
-    subtitle: "LUMINUS conecta comunidad, expertos, espacios, mapa y herramientas digitales para que cada persona pueda explorar su camino de bienestar con mayor claridad.",
+    subtitle: "LUMINUS conecta comunidad, especialistas, espacios, mapa y herramientas digitales para que cada persona pueda explorar su camino de bienestar con mayor claridad.",
     items: [
       {
         title: "Comunidad",
@@ -60,8 +60,8 @@ export const aboutContent = {
         accentBgClass: "bg-luminus-blue",
       },
       {
-        title: "Expertos",
-        description: "Una red de profesionales del bienestar donde las personas podrán conocer enfoques, servicios, recursos y formas de acompañamiento profesional.",
+        title: "Especialistas",
+        description: "Una red de especialistas del bienestar donde las personas podrán conocer enfoques, servicios, recursos y formas de acompañamiento profesional.",
         isComingSoon: true,
         icon: <UserCheck className="h-6 w-6 text-black" />,
         accentBgClass: "bg-luminus-orange",
@@ -75,7 +75,7 @@ export const aboutContent = {
       },
       {
         title: "Mapa LUMINUS",
-        description: "Una forma de descubrir personas, clínicas, consultorios y profesionales del bienestar de la red en distintas ciudades de LATAM.",
+        description: "Una forma de descubrir personas, clínicas, consultorios y especialistas del bienestar de la red en distintas ciudades de LATAM.",
         isComingSoon: true,
         icon: <MapPin className="h-6 w-6 text-black" />,
         accentBgClass: "bg-luminus-pink",
@@ -101,7 +101,7 @@ export const aboutContent = {
       },
       {
         title: "Nuestra visión",
-        description: "Construir la red de bienestar más humana y relevante de LATAM, integrando personas, expertos, espacios y tecnología para acompañar procesos reales de transformación personal.",
+        description: "Construir la red de bienestar más humana y relevante de LATAM, integrando personas, especialistas, espacios y tecnología para acompañar procesos reales de transformación personal.",
         icon: <Eye className="h-6 w-6 text-black" />,
         accentBgClass: "bg-luminus-orange",
       },
@@ -158,12 +158,12 @@ export const aboutContent = {
   platform: {
     badge: "Nuestra Plataforma",
     title: "Una plataforma para quienes buscan algo más que información",
-    description: "LUMINUS está naciendo como un espacio para conectar, descubrir y avanzar. Una plataforma donde las personas puedan encontrar comunidad, expertos, recursos, espacios y herramientas que acompañen su proceso de bienestar de forma más consciente y significativa.",
+    description: "LUMINUS está naciendo como un espacio para conectar, descubrir y avanzar. Una plataforma donde las personas puedan encontrar comunidad, especialistas, recursos, espacios y herramientas que acompañen su proceso de bienestar de forma más consciente y significativa.",
     disclaimer: "* Algunas funcionalidades estarán disponibles próximamente. Esta página comunica nuestra visión y dirección de bienestar sin comprometer que todo está activo hoy.",
     cardTitle: "Módulos de la Red",
     modules: [
       "Comunidad LUMINUS",
-      "Expertos del bienestar",
+      "Especialistas del bienestar",
       "Espacios LUMINUS",
       "Mapa LUMINUS",
       "Faro LUMINUS",
@@ -175,7 +175,7 @@ export const aboutContent = {
     title: "Sé parte de esta nueva forma de vivir el bienestar",
     subtitle: "Crea tu cuenta hoy y da el primer paso en la comunidad LUMINUS.",
     ctaText: "Crear mi cuenta",
-    ctaLink: "https://app.luminuslatam.com/signup",
+    ctaLink: "https://app.luminuslatam.com/auth/registrarse",
     microcopy: "3 meses de acceso sin costo. Sin pago inicial.",
     bgGlow: "from-luminus-pink/5 via-luminus-lime/5",
     cardBg: "bg-luminus-lime/15",
