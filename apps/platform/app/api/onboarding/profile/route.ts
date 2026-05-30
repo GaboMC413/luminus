@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { getCurrentSession } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
@@ -53,6 +52,7 @@ export async function POST(request: Request) {
       : undefined;
 
   try {
+    const { prisma } = await import("@/lib/db");
     const profile = await prisma.$transaction(async (tx: any) => {
       const savedProfile = await tx.userProfile.upsert({
         where: { userId: session.userId },
@@ -124,6 +124,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ profile });
   } catch (error) {
+    console.error("Onboarding database flow failed.", error);
     console.warn("Database not available, using mock onboarding profile bypass.");
     const mockProfile = {
       userId: session.userId,

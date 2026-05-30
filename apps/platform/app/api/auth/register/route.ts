@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "crypto";
-import { prisma } from "@/lib/db";
 import { hashPassword } from "@/lib/auth/password";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { serializeUser, validateAuthInput } from "@/lib/auth/validation";
@@ -16,6 +15,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    const { prisma } = await import("@/lib/db");
     const existingUser = await prisma.user.findUnique({
       where: { email: validation.email },
       select: { id: true },
@@ -51,6 +51,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ user: serializeUser(user) }, { status: 201 });
   } catch (error) {
+    console.error("Registration database flow failed.", error);
     console.warn("Database not available, using mock user registration bypass.");
     const mockUserId = "c0000000-0000-0000-0000-000000000001";
     const token = createSessionToken({

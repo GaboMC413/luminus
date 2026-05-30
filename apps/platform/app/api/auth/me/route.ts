@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { getCurrentSession } from "@/lib/auth/session";
 import { serializeUser } from "@/lib/auth/validation";
 
@@ -13,6 +12,7 @@ export async function GET() {
   }
 
   try {
+    const { prisma } = await import("@/lib/db");
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
       include: { profile: true },
@@ -24,6 +24,7 @@ export async function GET() {
 
     return NextResponse.json({ user: serializeUser(user) });
   } catch (error) {
+    console.error("Session database flow failed.", error);
     console.warn("Database not available, using mock user session bypass.");
     return NextResponse.json({
       user: {
