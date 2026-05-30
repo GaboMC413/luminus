@@ -13,12 +13,18 @@ function getBucketConfig() {
   const bucket = process.env.S3_AVATAR_BUCKET;
   const region = process.env.S3_AVATAR_REGION ?? process.env.AWS_REGION ?? "us-east-1";
   const publicBaseUrl = process.env.S3_AVATAR_PUBLIC_BASE_URL;
+  const accessKeyId = process.env.S3_AVATAR_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.S3_AVATAR_SECRET_ACCESS_KEY;
 
   if (!bucket) {
     throw new Error("S3_AVATAR_BUCKET is not configured.");
   }
 
-  return { bucket, region, publicBaseUrl };
+  if (!accessKeyId || !secretAccessKey) {
+    throw new Error("S3 avatar upload credentials are not configured.");
+  }
+
+  return { bucket, region, publicBaseUrl, accessKeyId, secretAccessKey };
 }
 
 function extensionForContentType(contentType: string) {
@@ -50,9 +56,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "La imagen debe pesar menos de 3 MB." }, { status: 400 });
   }
 
-  const { bucket, region, publicBaseUrl } = getBucketConfig();
+  const { bucket, region, publicBaseUrl, accessKeyId, secretAccessKey } = getBucketConfig();
   const key = `avatars/${session.userId}/${randomUUID()}.${extensionForContentType(contentType)}`;
-  const s3 = new S3Client({ region });
+  const s3 = new S3Client({
+    region,
+    credentials: {
+      accessKeyId,
+      secretAccessKey,
+    },
+  });
   const command = new PutObjectCommand({
     Bucket: bucket,
     Key: key,

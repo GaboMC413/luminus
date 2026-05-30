@@ -12,6 +12,8 @@ AUTH_SESSION_SECRET="use-a-long-random-secret-with-at-least-32-characters"
 S3_AVATAR_BUCKET="luminus-dev-avatars"
 S3_AVATAR_REGION="us-east-1"
 S3_AVATAR_PUBLIC_BASE_URL="https://luminus-dev-avatars.s3.us-east-1.amazonaws.com"
+S3_AVATAR_ACCESS_KEY_ID="IAM_ACCESS_KEY_ID"
+S3_AVATAR_SECRET_ACCESS_KEY="IAM_SECRET_ACCESS_KEY"
 ```
 
 Use `apps/platform/.env.example` as the template.
@@ -43,5 +45,7 @@ Create an S3 bucket for avatars and configure:
 - CORS: allow `PUT` from local dev and the Amplify domain.
 - Public read, or a CloudFront distribution exposed through `S3_AVATAR_PUBLIC_BASE_URL`.
 - IAM permission for the Amplify app/runtime to run `s3:PutObject` on `avatars/*`.
+- Amplify environment variables must use the `S3_AVATAR_*` credential names because `AWS_*`
+  prefixes are reserved by Amplify.
 
 The app stores the resulting public URL in `user_profiles.avatar_url`.
