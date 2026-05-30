@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 import { COUNTRIES as ALL_COUNTRIES } from '@/utils/countries';
 import { AsYouType, CountryCode } from 'libphonenumber-js';
+import { uploadAvatar } from '@/lib/uploadAvatar';
 
 const NEUTRAL_COUNTRY = { code: 'XX', dial: '+00', name: 'Seleccionar país', priority: false };
 
@@ -154,13 +155,13 @@ export function PersonalData({
       setUploading(true);
       setIsCropping(false);
 
-      // Perform a simulated upload generating a local object URL
-      const localUrl = URL.createObjectURL(croppedImage);
-      setAvatarUrl(localUrl);
+      const { publicUrl } = await uploadAvatar(croppedImage);
+      setAvatarUrl(publicUrl);
       if (errorField === 'photo') setErrorField(null);
       setTempImage(null);
     } catch (error) {
       console.error('Error processing image:', error);
+      alert('No pudimos subir tu foto. Intenta nuevamente.');
     } finally {
       setUploading(false);
     }

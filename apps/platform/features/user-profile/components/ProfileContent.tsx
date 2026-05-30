@@ -21,6 +21,7 @@ import { ProfileAboutSection } from "./ProfileAboutSection";
 import { ProfileInterestsSection } from "./ProfileInterestsSection";
 import { ProfileMembershipCard } from "./ProfileMembershipCard";
 import { ProfileCompletionCard } from "./ProfileCompletionCard";
+import { uploadAvatar } from "@/lib/uploadAvatar";
 
 export interface Profile {
   first_name: string;
@@ -59,6 +60,7 @@ export function ProfileContent() {
   // Image editing states
   const [isCropping, setIsCropping] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -135,12 +137,26 @@ export function ProfileContent() {
     setTempImage(null);
   };
 
-  const handleCropSave = (croppedImage: Blob) => {
-    const localUrl = URL.createObjectURL(croppedImage);
-    setProfile(prev => prev ? { ...prev, profile_picture_url: localUrl } : null);
-    localStorage.setItem("luminus_profile_avatar", localUrl);
-    setIsCropping(false);
-    setTempImage(null);
+  const handleCropSave = async (croppedImage: Blob) => {
+    try {
+      setIsUploadingAvatar(true);
+      const { publicUrl } = await uploadAvatar(croppedImage);
+      await fetch("/api/onboarding/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ avatarUrl: publicUrl }),
+      });
+      setProfile(prev => prev ? { ...prev, profile_picture_url: publicUrl } : null);
+      localStorage.setItem("luminus_profile_avatar", publicUrl);
+      setIsCropping(false);
+      setTempImage(null);
+    } catch (error) {
+      console.error("Error uploading avatar:", error);
+      alert("No pudimos subir tu foto. Intenta nuevamente.");
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   };
 
   const handleSavePersonal = (newData: any) => {
