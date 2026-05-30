@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, Home, Briefcase, Globe, MessageSquare, ArrowRight, Building } from "lucide-react";
+import { Menu, X, Home, Briefcase, Globe, MessageSquare, ArrowRight, Building, Calendar } from "lucide-react";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,11 +25,11 @@ export default function Navbar() {
   }, [isOpen]);
 
   const navLinks = [
-    { href: "/", label: "Inicio", icon: <Home className="h-5 w-5 text-luminus-blue" /> },
     { href: "/especialistas", label: "Especialistas LUMINUS", icon: <Briefcase className="h-5 w-5 text-luminus-orange" /> },
     { href: "/empresas-aliadas", label: "Empresas Aliadas", icon: <Building className="h-5 w-5 text-luminus-lime" /> },
+    { href: "/eventos", label: "Eventos y Actividades", icon: <Calendar className="h-5 w-5 text-luminus-pink" /> },
     { href: "/sobre-nosotros", label: "Sobre Nosotros", icon: <Globe className="h-5 w-5 text-luminus-blue" /> },
-    { href: "/contacto", label: "Contactarnos", icon: <MessageSquare className="h-5 w-5 text-luminus-pink" /> },
+    { href: "/contacto", label: "Contactar", icon: <MessageSquare className="h-5 w-5 text-luminus-pink" /> },
   ];
 
   return (
