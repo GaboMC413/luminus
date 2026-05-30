@@ -13,13 +13,13 @@ export function Card({
 }: CardProps) {
   const hoverClasses = {
     none: "",
-    lift: "hover:shadow-bold hover:-translate-x-0.5 hover:-translate-y-0.5",
-    "lift-lg": "hover:shadow-bold-lg hover:-translate-x-1 hover:-translate-y-1",
+    lift: "hover:shadow-medium hover:-translate-y-1 hover:border-slate-200",
+    "lift-lg": "hover:shadow-medium hover:-translate-y-1.5 hover:border-slate-300",
   };
 
   return (
     <div
-      className={`relative rounded-[2.5rem] border-2 border-black bg-white p-8 transition-all duration-150 ${hoverClasses[hoverEffect]} ${className}`}
+      className={`relative rounded-3xl border border-slate-200/80 bg-white/80 p-8 shadow-soft backdrop-blur-sm transition-all duration-300 ${hoverClasses[hoverEffect]} ${className}`}
       {...props}
     >
       {children}

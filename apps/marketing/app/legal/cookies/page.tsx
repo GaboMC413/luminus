@@ -1,6 +1,10 @@
-"use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Política de Cookies | LUMINUS Latam",
+  description: "Detalla el uso de cookies y tecnologías de seguimiento destinadas a optimizar y personalizar tu experiencia de navegación.",
+};
 
 export default function CookiesPage() {
   return (

@@ -8,8 +8,8 @@ import { CTASection } from "../../components/marketing/CTASection";
 import { aboutContent } from "../../content/about";
 
 export const metadata: Metadata = {
-  title: "LUMINUS Latam | Sobre Nosotros",
-  description: "Conoce el origen, misión, visión y los principios que definen a LUMINUS: una red de bienestar humana, conectada y consciente en América Latina.",
+  title: "Sobre Nosotros | LUMINUS Latam",
+  description: "Conoce nuestra historia, visión y los principios fundamentales de LUMINUS: una plataforma que integra comunidad, especialistas y tecnología consciente en América Latina.",
 };
 
 export default function SobreNosotrosPage() {
@@ -19,19 +19,22 @@ export default function SobreNosotrosPage() {
       <Hero {...aboutContent.hero} />
 
       {/* 2. Sección: Por qué existe LUMINUS */}
-      <ProblemSection {...aboutContent.problem} />
+      <ProblemSection id="porque-existe" {...aboutContent.problem} />
 
       {/* 3. Sección: Nuestra respuesta */}
-      <FeatureGrid {...aboutContent.response} />
+      <FeatureGrid id="respuesta-luminus" {...aboutContent.response} />
 
       {/* 4. Sección: Misión, visión y propósito */}
-      <FeatureGrid {...aboutContent.mission} />
+      <FeatureGrid id="mision-y-vision" {...aboutContent.mission} />
 
       {/* 5. Sección: Principios */}
-      <FeatureGrid {...aboutContent.principles} />
+      <FeatureGrid id="principios" {...aboutContent.principles} />
 
       {/* 6. Sección: Qué estamos construyendo */}
-      <PlatformSection {...aboutContent.platform} />
+      <PlatformSection id="plataforma" {...aboutContent.platform} />
+
+      {/* 7. Sección: Etapa actual */}
+      <PlatformSection id="etapa-actual" {...aboutContent.currentStage} />
 
       {/* 7. Sección final CTA */}
       <CTASection {...aboutContent.finalCta} />

@@ -1,6 +1,10 @@
-"use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Términos y Condiciones | LUMINUS Latam",
+  description: "Regula el uso de la plataforma LUMINUS, el registro, la propiedad intelectual y la relación con los especialistas de bienestar.",
+};
 
 export default function TermsPage() {
   return (

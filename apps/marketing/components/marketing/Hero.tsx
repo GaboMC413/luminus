@@ -38,30 +38,27 @@ export function Hero({
   secondaryCta,
   microcopy,
   image,
-  bgGlow = "from-luminus-pink/10 via-luminus-lime/10",
-  imageBg = "shadow-bold-pink",
+  bgGlow = "",
+  imageBg = "",
   borderBottom = false,
 }: HeroProps) {
   return (
-    <section className={`relative overflow-hidden bg-white py-20 lg:py-32 ${borderBottom ? "border-b-2 border-black" : ""}`}>
-      {/* Playful background glows */}
-      <div className={`absolute left-1/2 top-0 -z-10 h-[600px] w-[1000px] -translate-x-1/2 [mask-image:radial-gradient(closest-side,white,transparent)] bg-radial to-transparent ${bgGlow}`} />
-
+    <section className={`relative overflow-hidden luminus-hero-gradient py-24 lg:py-36 ${borderBottom ? "border-b border-slate-100" : ""}`}>
       <div className="mx-auto max-w-7xl px-6">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-center">
           {/* Text Content */}
-          <div className="lg:col-span-7 flex flex-col justify-center text-left lg:pr-8">
+          <div className="lg:col-span-7 flex flex-col justify-center text-left lg:pr-8 animate-fadeIn">
             {badge && (
-              <Badge variant={badge.variant} icon={badge.icon} className="mb-6">
+              <Badge variant={badge.variant || "lime"} icon={badge.icon} className="mb-6">
                 {badge.text}
               </Badge>
             )}
 
-            <h1 className="font-display text-4xl font-black tracking-tight text-black sm:text-6xl lg:text-6xl leading-[1.05] mb-6">
+            <h1 className="font-display text-4xl font-bold tracking-tight text-slate-900 sm:text-6xl lg:text-7xl leading-[1.08] mb-6">
               {title}
             </h1>
 
-            <p className="text-lg sm:text-xl leading-relaxed text-black font-bold mb-8 max-w-2xl whitespace-pre-line">
+            <p className="text-lg sm:text-xl leading-relaxed text-slate-600 font-medium mb-8 max-w-2xl whitespace-pre-line">
               {subtitle}
             </p>
 
@@ -83,29 +80,30 @@ export function Hero({
             )}
 
             {microcopy && (
-              <p className="text-xs text-slate-500 font-semibold pl-1">
+              <p className="text-xs text-slate-400 font-medium pl-1">
                 {microcopy}
               </p>
             )}
           </div>
 
-          {/* Hero Illustration */}
-          {image && (
-            <div className="lg:col-span-5 relative flex justify-center lg:justify-end">
-              <div className={`relative w-full max-w-[420px] aspect-square rounded-[2.5rem] p-3 border-2 border-black bg-white transition-transform duration-300 hover:rotate-1 ${imageBg}`}>
-                <div className="relative w-full h-full rounded-[2rem] overflow-hidden bg-white border-2 border-black flex items-center justify-center">
-                  <Image
-                    src={image.src}
-                    alt={image.alt}
-                    width={500}
-                    height={500}
-                    className="object-cover w-full h-full transition-transform duration-700 hover:scale-105"
-                    priority
-                  />
-                </div>
+          {/* Hero Illustration - Editorial Photo Placeholder */}
+          <div className="lg:col-span-5 relative flex justify-center lg:justify-end animate-fadeIn">
+            {/* Ambient light halo behind the image */}
+            <div className="absolute -inset-4 -z-10 rounded-full bg-radial from-luminus-pink/20 to-transparent blur-2xl opacity-60" />
+            
+            <div className="relative w-full max-w-[420px] aspect-[4/5] rounded-3xl p-3 bg-white/70 border border-slate-200/60 shadow-soft backdrop-blur-sm transition-all duration-500 hover:shadow-medium">
+              <div className="relative w-full h-full rounded-2xl overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center">
+                <Image
+                  src="/luminus_photo_placeholder.png"
+                  alt={image?.alt || "LUMINUS Bienestar"}
+                  width={500}
+                  height={625}
+                  className="object-cover w-full h-full transition-transform duration-700 hover:scale-105"
+                  priority
+                />
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     </section>

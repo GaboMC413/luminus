@@ -25,7 +25,7 @@ export function Section({
   return (
     <section
       className={`relative overflow-hidden py-24 ${bgClasses[bg]} ${
-        borderBottom ? "border-b-2 border-black" : ""
+        borderBottom ? "border-b border-slate-100" : ""
       } ${className}`}
       {...props}
     >

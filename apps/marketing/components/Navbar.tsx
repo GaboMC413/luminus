@@ -33,7 +33,7 @@ export default function Navbar() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b-2 border-black bg-white/95 transition-colors duration-300">
+    <header className="sticky top-0 z-50 w-full border-b border-slate-100 bg-white/80 backdrop-blur-md transition-colors duration-300">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
         {/* Brand Logo */}
         <Link href="/" className="group flex items-center gap-3 transition-transform duration-205 hover:scale-[1.01]">
@@ -53,7 +53,7 @@ export default function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm font-bold text-black hover:text-luminus-blue transition-colors"
+              className="text-sm font-semibold text-slate-600 hover:text-black transition-colors"
             >
               {link.label}
             </Link>
@@ -64,13 +64,13 @@ export default function Navbar() {
         <div className="hidden md:flex items-center gap-4">
           <a
             href="https://app.luminuslatam.com/auth/iniciar-sesion"
-            className="text-sm font-bold text-black hover:text-luminus-orange transition-colors px-3 py-2"
+            className="text-sm font-semibold text-slate-600 hover:text-black transition-colors px-3 py-2"
           >
             Ingresar
           </a>
           <a
             href="https://app.luminuslatam.com/auth/registrarse"
-            className="inline-flex items-center justify-center rounded-full bg-black border-2 border-black px-5 py-2.5 text-sm font-bold text-white shadow-bold-sm hover:shadow-none hover:bg-luminus-orange hover:text-black hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-150"
+            className="inline-flex items-center justify-center rounded-full bg-black px-5 py-2 text-sm font-semibold text-white hover:bg-neutral-900 transition-all duration-200 shadow-soft hover:shadow-medium"
           >
             Crear cuenta
           </a>
@@ -81,7 +81,7 @@ export default function Navbar() {
           <button
             onClick={toggleMenu}
             aria-label="Toggle navigation menu"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black bg-white text-black shadow-bold-sm hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-150 focus:outline-none"
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-black hover:bg-slate-50 transition-all duration-150 focus:outline-none"
           >
             <X className={`h-6 w-6 stroke-[2.5] ${isOpen ? "block" : "hidden"}`} />
             <Menu className={`h-6 w-6 stroke-[2.5] ${isOpen ? "hidden" : "block"}`} />
@@ -93,7 +93,7 @@ export default function Navbar() {
       {isOpen && (
         <div className="fixed inset-0 z-50 bg-white flex flex-col h-screen w-screen md:hidden overflow-y-auto animate-fadeIn">
           {/* Header row at the top inside mobile menu */}
-          <div className="flex items-center justify-between px-6 py-4 border-b-2 border-black bg-white">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white">
             <Link
               href="/"
               onClick={() => setIsOpen(false)}
@@ -111,7 +111,7 @@ export default function Navbar() {
             <button
               onClick={() => setIsOpen(false)}
               aria-label="Close navigation menu"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-black bg-white text-black shadow-bold-sm hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-150 focus:outline-none"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-black hover:bg-slate-50 transition-all focus:outline-none"
             >
               <X className="h-6 w-6 stroke-[2.5]" />
             </button>
@@ -126,12 +126,12 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-4 p-4 rounded-[2rem] border-2 border-black bg-slate-50 hover:bg-luminus-lime/10 shadow-bold transition-all duration-150"
+                  className="flex items-center gap-4 p-3 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-all duration-200"
                 >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border-2 border-black bg-white shadow-bold-sm">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-soft">
                     {link.icon}
                   </div>
-                  <span className="font-display text-xl font-black text-black">
+                  <span className="font-display text-lg font-semibold text-slate-800">
                     {link.label}
                   </span>
                 </Link>
@@ -143,14 +143,14 @@ export default function Navbar() {
               <a
                 href="https://app.luminuslatam.com/auth/iniciar-sesion"
                 onClick={() => setIsOpen(false)}
-                className="inline-flex items-center justify-center rounded-full border-2 border-black bg-white py-4 px-6 text-base font-bold text-black shadow-bold hover:shadow-none hover:bg-luminus-pink hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-150"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white py-3.5 px-6 text-base font-semibold text-slate-700 hover:bg-slate-50 transition-all duration-200"
               >
                 Ingresar a mi cuenta
               </a>
               <a
                 href="https://app.luminuslatam.com/auth/registrarse"
                 onClick={() => setIsOpen(false)}
-                className="inline-flex items-center justify-center rounded-full bg-black border-2 border-black py-4 px-6 text-base font-bold text-white shadow-bold hover:shadow-none hover:bg-luminus-orange hover:text-black hover:translate-x-0.5 hover:translate-y-0.5 transition-all duration-150"
+                className="inline-flex items-center justify-center rounded-full bg-black py-3.5 px-6 text-base font-semibold text-white hover:bg-neutral-900 transition-all duration-200"
               >
                 Registrarse / Crear cuenta
                 <ArrowRight className="ml-2 h-4 w-4" />

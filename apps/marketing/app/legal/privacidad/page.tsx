@@ -1,6 +1,10 @@
-"use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Política de Privacidad | LUMINUS Latam",
+  description: "Explica detalladamente cómo recopilamos, utilizamos, protegemos y gestionamos tus datos personales dentro de LUMINUS.",
+};
 
 export default function PrivacyPage() {
   return (

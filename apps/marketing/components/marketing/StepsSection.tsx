@@ -33,44 +33,53 @@ export function StepsSection({
   return (
     <Section id={id} borderBottom>
       {/* Decorative background glows */}
-      <div className="absolute left-0 bottom-0 w-80 h-80 bg-luminus-pink/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute left-0 bottom-0 w-80 h-80 bg-[#FFE0FC]/10 rounded-full blur-3xl pointer-events-none" />
 
       <SectionHeader title={title} subtitle={subtitle} />
 
       {/* Steps Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-        {steps.map((step, idx) => (
-          <div 
-            key={idx}
-            className={`relative flex flex-col justify-between rounded-[2.5rem] border-2 border-black bg-white p-8 ${step.shadowColor} hover:shadow-bold hover:-translate-x-0.5 hover:-translate-y-0.5 transition-all duration-150 group`}
-          >
-            {/* Number indicator */}
-            <div className="flex items-baseline justify-between mb-8">
-              <span className={`font-display text-6xl font-black tracking-tight ${step.numColor} transition-transform duration-200 group-hover:scale-110`}>
-                {step.num}
-              </span>
-              <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-black border-2 border-black shadow-bold-sm ${step.badgeBg}`}>
-                Paso {idx + 1}
-              </span>
-            </div>
+        {steps.map((step, idx) => {
+          // Determine brand colors based on input data
+          let accentClass = "border-t-4 border-slate-900";
+          if (step.numColor.includes("blue")) accentClass = "border-t-4 border-[#0450FB]";
+          else if (step.numColor.includes("lime")) accentClass = "border-t-4 border-[#D4E600]";
+          else if (step.numColor.includes("orange")) accentClass = "border-t-4 border-[#FF7700]";
+          else if (step.numColor.includes("pink")) accentClass = "border-t-4 border-[#FF80FC]";
 
-            <div>
-              {/* Title */}
-              <h3 className="font-display text-2xl font-black text-black mb-3">
-                {step.title}
-              </h3>
-              {/* Description */}
-              <p className="text-sm text-slate-700 font-semibold leading-relaxed">
-                {step.description}
-              </p>
+          return (
+            <div 
+              key={idx}
+              className={`relative flex flex-col justify-between rounded-3xl border border-slate-200/80 bg-white/80 p-8 shadow-soft hover:shadow-medium hover:-translate-y-1 transition-all duration-300 group ${accentClass}`}
+            >
+              {/* Number indicator */}
+              <div className="flex items-baseline justify-between mb-8">
+                <span className={`font-display text-5xl font-bold tracking-tight text-slate-300 transition-transform duration-300 group-hover:scale-105`}>
+                  {step.num}
+                </span>
+                <span className="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold border bg-slate-50/50 text-slate-500 border-slate-200/60">
+                  Paso {idx + 1}
+                </span>
+              </div>
+
+              <div>
+                {/* Title */}
+                <h3 className="font-display text-xl font-bold text-slate-900 mb-3">
+                  {step.title}
+                </h3>
+                {/* Description */}
+                <p className="text-sm text-slate-600 font-medium leading-relaxed">
+                  {step.description}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Action Button */}
       {ctaText && ctaLink && (
-        <div className="flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center justify-center animate-fadeIn">
           <Button variant="primary" href={ctaLink}>
             {ctaText}
             <ArrowRight className="ml-2 h-5 w-5" />

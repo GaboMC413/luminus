@@ -1,7 +1,11 @@
-"use client";
-
 import React from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Condiciones para Especialistas | LUMINUS Latam",
+  description: "Regula la postulación, admisión, participación y permanencia de los especialistas dentro de la red LUMINUS.",
+};
 
 export default function CondicionesEspecialistasPage() {
   return (

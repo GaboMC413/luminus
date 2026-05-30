@@ -1,6 +1,10 @@
-"use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Centro Legal | LUMINUS Latam",
+  description: "Documentos oficiales, políticas de privacidad, términos de servicio y lineamientos de la plataforma LUMINUS.",
+};
 
 export default function LegalPage() {
   const legalDocs = [

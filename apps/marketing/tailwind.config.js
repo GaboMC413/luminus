@@ -9,20 +9,24 @@ module.exports = {
       colors: {
         luminus: {
           blue: {
+            pastel: '#DCE6FF',
             DEFAULT: '#0450FB',
-            soft: '#EFF6FF',
+            deep: '#002C9E',
           },
           lime: {
+            pastel: '#F4F8B8',
             DEFAULT: '#D4E600',
-            soft: '#F7FEE7',
+            deep: '#7A8500',
           },
           orange: {
+            pastel: '#FFE0C2',
             DEFAULT: '#FF7700',
-            soft: '#FFF7ED',
+            deep: '#B84A00',
           },
           pink: {
+            pastel: '#FFE0FC',
             DEFAULT: '#FF80FC',
-            soft: '#FDF2F8',
+            deep: '#B832B4',
           },
           white: '#FFFFFF',
           black: '#000000',
