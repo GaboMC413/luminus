@@ -17,7 +17,7 @@ export default function Home() {
   return (
     <>
       {/* 1. Hero Section */}
-      <Hero {...homeContent.hero} />
+      <Hero {...homeContent.hero} gradientClass="hero-home-gradient" />
 
       {/* 2. Sección: Qué puedes hacer dentro de LUMINUS */}
       <FeatureGrid id="que-hacer" {...homeContent.features} />
@@ -32,7 +32,7 @@ export default function Home() {
       <TrustSection id="confianza" {...homeContent.trust} />
 
       {/* 6. CTA final */}
-      <CTASection {...homeContent.finalCta} />
+      <CTASection {...homeContent.finalCta} cardBg="dark" />
     </>
   );
 }

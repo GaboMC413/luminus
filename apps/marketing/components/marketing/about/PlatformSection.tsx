@@ -25,7 +25,7 @@ export function PlatformSection({
   return (
     <Section id={id} borderBottom>
       {/* Decorative backdrop glow */}
-      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-80 h-80 bg-[#FFE0FC]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-96 h-96 bg-[#FFE0FC]/22 rounded-full blur-3xl pointer-events-none" />
 
       <div className="mx-auto max-w-4xl">
         <div className="card rounded-3xl border border-slate-200/80 bg-white/80 p-8 md:p-12 shadow-soft hover:shadow-medium transition-all duration-300">

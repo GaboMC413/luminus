@@ -27,7 +27,7 @@ export function ProblemSection({
   return (
     <Section id={id} borderBottom>
       {/* Ambient background blur */}
-      <div className="absolute right-10 top-10 w-72 h-72 bg-[#FFE0C2]/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute right-10 top-10 w-96 h-96 bg-[#FFE0C2]/25 rounded-full blur-3xl pointer-events-none" />
 
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-start">
         

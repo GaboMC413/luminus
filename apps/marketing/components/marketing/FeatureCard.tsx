@@ -24,18 +24,23 @@ export function FeatureCard({
   accentBgClass = "bg-luminus-blue text-white",
   layout = "vertical",
 }: FeatureCardProps) {
-  // Determine top accent border class
-  let accentBorderClass = "border-t-4 border-slate-900";
-  if (accentBgClass.includes("blue")) accentBorderClass = "border-t-4 border-[#0450FB]";
-  else if (accentBgClass.includes("lime")) accentBorderClass = "border-t-4 border-[#D4E600]";
-  else if (accentBgClass.includes("orange")) accentBorderClass = "border-t-4 border-[#FF7700]";
-  else if (accentBgClass.includes("pink")) accentBorderClass = "border-t-4 border-[#FF80FC]";
+  // Determine card styling based on brand accent color (rich pastels + subtle borders)
+  let customCardClass = "border-t-4 border-slate-900 bg-white/80";
+  if (accentBgClass.includes("blue")) {
+    customCardClass = "border-t-4 border-[#0450FB] bg-[#DCE6FF]/25 border-x-[#0450FB]/10 border-b-[#0450FB]/10 hover:bg-[#DCE6FF]/35 hover:border-x-[#0450FB]/35 hover:border-b-[#0450FB]/35";
+  } else if (accentBgClass.includes("lime")) {
+    customCardClass = "border-t-4 border-[#D4E600] bg-[#F4F8B8]/25 border-x-[#D4E600]/15 border-b-[#D4E600]/15 hover:bg-[#F4F8B8]/35 hover:border-x-[#D4E600]/35 hover:border-b-[#D4E600]/35";
+  } else if (accentBgClass.includes("orange")) {
+    customCardClass = "border-t-4 border-[#FF7700] bg-[#FFE0C2]/25 border-x-[#FF7700]/10 border-b-[#FF7700]/10 hover:bg-[#FFE0C2]/35 hover:border-x-[#FF7700]/35 hover:border-b-[#FF7700]/35";
+  } else if (accentBgClass.includes("pink")) {
+    customCardClass = "border-t-4 border-[#FF80FC] bg-[#FFE0FC]/25 border-x-[#FF80FC]/10 border-b-[#FF80FC]/10 hover:bg-[#FFE0FC]/35 hover:border-x-[#FF80FC]/35 hover:border-b-[#FF80FC]/35";
+  }
 
   if (layout === "horizontal") {
     return (
       <Card
         hoverEffect={isComingSoon ? "lift" : "lift-lg"}
-        className={`group flex items-start gap-4 p-6 ${accentBorderClass}`}
+        className={`group flex items-start gap-4 p-6 ${customCardClass}`}
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-slate-50/80 text-slate-700 shadow-soft">
           {icon}
@@ -55,7 +60,7 @@ export function FeatureCard({
   return (
     <Card
       hoverEffect={isComingSoon ? "lift" : "lift-lg"}
-      className={`group flex flex-col justify-between ${accentBorderClass}`}
+      className={`group flex flex-col justify-between ${customCardClass}`}
     >
       <div>
         {/* Header containing Icon and optional Coming Soon Badge */}

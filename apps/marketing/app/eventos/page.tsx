@@ -31,11 +31,11 @@ export default function EventosPage() {
   return (
     <>
       {/* 1. Hero Section */}
-      <Hero {...eventosContent.hero} />
+      <Hero {...eventosContent.hero} gradientClass="hero-events-gradient" />
 
       {/* 2. Sección: Una forma más cercana de explorar el bienestar */}
       <Section id="explorar-bienestar" borderBottom bg="slate-50">
-        <div className="absolute left-10 top-10 w-72 h-72 bg-[#F4F8B8]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute left-10 top-10 w-96 h-96 bg-[#F4F8B8]/22 rounded-full blur-3xl pointer-events-none" />
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-center">
           {/* Left Column: Title & Badge */}
           <div className="lg:col-span-5 text-left flex flex-col items-start animate-fadeIn">
@@ -127,7 +127,7 @@ export default function EventosPage() {
 
       {/* 4. Sección: Próximos eventos (Con Simulación e Integración a Luma) */}
       <Section id="proximos-eventos" borderBottom bg="white">
-        <div className="absolute right-10 top-1/4 w-80 h-80 bg-[#FFE0FC]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute right-10 top-1/4 w-96 h-96 bg-[#FFE0FC]/18 rounded-full blur-3xl pointer-events-none" />
         
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-stretch">
           {/* Left Column: Luma Redirect Explanation */}

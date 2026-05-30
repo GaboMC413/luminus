@@ -77,32 +77,73 @@ body {
 /* Gradients and Light Effects */
 .luminus-hero-gradient {
   background:
-    radial-gradient(circle at 18% 0%, rgba(255, 119, 0, 0.15), transparent 32%),
-    radial-gradient(circle at 42% 0%, rgba(255, 128, 252, 0.18), transparent 34%),
-    radial-gradient(circle at 64% 0%, rgba(4, 80, 251, 0.12), transparent 34%),
-    radial-gradient(circle at 86% 0%, rgba(212, 230, 0, 0.15), transparent 32%),
-    #FFFFFF;
+    radial-gradient(circle at 15% 10%, rgba(255, 119, 0, 0.22), transparent 45%),
+    radial-gradient(circle at 40% -5%, rgba(255, 128, 252, 0.25), transparent 48%),
+    radial-gradient(circle at 65% -10%, rgba(4, 80, 251, 0.20), transparent 50%),
+    radial-gradient(circle at 85% 10%, rgba(212, 230, 0, 0.25), transparent 45%),
+    linear-gradient(to bottom, #FFFFFF 0%, #F8FAFC 100%);
+}
+
+/* Page-Specific Custom Hero Gradients (Spectrum Editorial) */
+.hero-home-gradient {
+  background:
+    radial-gradient(circle at 15% 10%, rgba(4, 80, 251, 0.24), transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(255, 128, 252, 0.26), transparent 50%),
+    radial-gradient(circle at 50% -5%, rgba(212, 230, 0, 0.16), transparent 45%),
+    linear-gradient(to bottom, #FFFFFF 0%, #F8FAFC 100%);
+}
+
+.hero-about-gradient {
+  background:
+    radial-gradient(circle at 15% 10%, rgba(212, 230, 0, 0.26), transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(4, 80, 251, 0.22), transparent 50%),
+    radial-gradient(circle at 50% -5%, rgba(255, 128, 252, 0.18), transparent 45%),
+    linear-gradient(to bottom, #FFFFFF 0%, #F8FAFC 100%);
+}
+
+.hero-specialists-gradient {
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255, 119, 0, 0.26), transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(4, 80, 251, 0.22), transparent 50%),
+    radial-gradient(circle at 50% -5%, rgba(255, 128, 252, 0.20), transparent 45%),
+    linear-gradient(to bottom, #FFFFFF 0%, #F8FAFC 100%);
+}
+
+.hero-companies-gradient {
+  background:
+    radial-gradient(circle at 15% 10%, rgba(212, 230, 0, 0.26), transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(255, 119, 0, 0.22), transparent 50%),
+    radial-gradient(circle at 50% -5%, rgba(4, 80, 251, 0.20), transparent 45%),
+    linear-gradient(to bottom, #FFFFFF 0%, #F8FAFC 100%);
+}
+
+.hero-events-gradient {
+  background:
+    radial-gradient(circle at 15% 10%, rgba(255, 128, 252, 0.28), transparent 50%),
+    radial-gradient(circle at 85% 20%, rgba(255, 119, 0, 0.24), transparent 50%),
+    radial-gradient(circle at 50% -5%, rgba(212, 230, 0, 0.20), transparent 45%),
+    linear-gradient(to bottom, #FFFFFF 0%, #F8FAFC 100%);
 }
 
 .luminus-soft-gradient {
   background:
-    radial-gradient(circle at 20% 10%, rgba(255, 128, 252, 0.08), transparent 28%),
-    radial-gradient(circle at 80% 0%, rgba(212, 230, 0, 0.10), transparent 30%),
-    radial-gradient(circle at 50% 0%, rgba(4, 80, 251, 0.06), transparent 34%),
+    radial-gradient(circle at 20% 10%, rgba(255, 128, 252, 0.12), transparent 35%),
+    radial-gradient(circle at 80% 0%, rgba(212, 230, 0, 0.14), transparent 35%),
+    radial-gradient(circle at 50% 0%, rgba(4, 80, 251, 0.10), transparent 40%),
     #FFFFFF;
 }
 
 .luminus-card-glow {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.90), rgba(255, 255, 255, 0.97)),
-    radial-gradient(circle at 0% 0%, rgba(255, 128, 252, 0.08), transparent 34%),
-    radial-gradient(circle at 100% 0%, rgba(212, 230, 0, 0.07), transparent 34%);
+    radial-gradient(circle at 0% 0%, rgba(255, 128, 252, 0.12), transparent 35%),
+    radial-gradient(circle at 100% 0%, rgba(212, 230, 0, 0.11), transparent 35%);
 }
 
 .highlight-module {
   background:
-    radial-gradient(circle at 20% 0%, rgba(255, 128, 252, 0.10), transparent 30%),
-    radial-gradient(circle at 80% 0%, rgba(212, 230, 0, 0.09), transparent 32%),
+    radial-gradient(circle at 20% 0%, rgba(255, 128, 252, 0.14), transparent 35%),
+    radial-gradient(circle at 80% 0%, rgba(212, 230, 0, 0.12), transparent 35%),
     #FFFFFF;
   border: 1px solid var(--border-soft);
   border-radius: var(--radius-xl);
@@ -136,8 +177,11 @@ body {
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-medium);
-  border-color: var(--border-medium);
+  box-shadow: 
+    0 24px 60px rgba(15, 23, 42, 0.05),
+    0 10px 30px rgba(4, 80, 251, 0.03),
+    0 15px 40px rgba(255, 128, 252, 0.03);
+  border-color: rgba(255, 128, 252, 0.22);
 }
 
 /* Photo Placeholder */

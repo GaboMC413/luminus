@@ -28,6 +28,7 @@ export interface HeroProps {
   bgGlow?: string;
   imageBg?: string;
   borderBottom?: boolean;
+  gradientClass?: string;
 }
 
 export function Hero({
@@ -41,9 +42,10 @@ export function Hero({
   bgGlow = "",
   imageBg = "",
   borderBottom = false,
+  gradientClass,
 }: HeroProps) {
   return (
-    <section className={`relative overflow-hidden luminus-hero-gradient py-24 lg:py-36 ${borderBottom ? "border-b border-slate-100" : ""}`}>
+    <section className={`relative overflow-hidden ${gradientClass || "luminus-hero-gradient"} py-24 lg:py-36 ${borderBottom ? "border-b border-slate-100" : ""}`}>
       <div className="mx-auto max-w-7xl px-6">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-center">
           {/* Text Content */}

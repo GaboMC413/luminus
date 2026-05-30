@@ -20,7 +20,7 @@ export default function EmpresasAliadasPage() {
   return (
     <>
       {/* 1. Hero Section */}
-      <Hero {...empresasAliadasContent.hero} />
+      <Hero {...empresasAliadasContent.hero} gradientClass="hero-companies-gradient" />
 
       {/* 2. Sección: Estamos construyendo mucho más que una plataforma */}
       <div id="construyendo-plataforma">
@@ -35,7 +35,7 @@ export default function EmpresasAliadasPage() {
 
       {/* 3. Sección: Una visión para América Latina */}
       <Section borderBottom bg="white">
-        <div className="absolute right-10 top-10 w-72 h-72 bg-[#FFE0C2]/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute right-10 top-10 w-96 h-96 bg-[#FFE0C2]/25 rounded-full blur-3xl pointer-events-none" />
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-start">
           {/* Left Column: Narrative texts */}
           <div className="lg:col-span-7 text-left flex flex-col items-start animate-fadeIn">
@@ -189,7 +189,7 @@ export default function EmpresasAliadasPage() {
       </div>
 
       {/* 9. Sección final CTA */}
-      <CTASection {...empresasAliadasContent.finalCta} />
+      <CTASection {...empresasAliadasContent.finalCta} cardBg="dark" />
     </>
   );
 }

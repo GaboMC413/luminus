@@ -20,14 +20,14 @@ export default function EspecialistasPage() {
   return (
     <>
       {/* 1. Hero Section */}
-      <Hero {...especialistasContent.hero} />
+      <Hero {...especialistasContent.hero} gradientClass="hero-specialists-gradient" />
 
       {/* 2. Sección: Por qué formar parte de LUMINUS (Benefits) */}
       <BenefitsGrid {...especialistasContent.benefits} />
 
       {/* 3. Sección: Dos formas de participar como especialista */}
       <Section id="participar-especialista" borderBottom bg="slate-50">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[300px] bg-radial from-[#FFE0FC]/10 to-transparent rounded-full blur-3xl pointer-events-none opacity-40" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-radial from-[#FFE0FC]/22 to-transparent rounded-full blur-3xl pointer-events-none opacity-60" />
 
         <div className="text-center max-w-3xl mx-auto mb-16">
           <Badge variant="orange" className="mb-4">Participación</Badge>
@@ -123,7 +123,7 @@ export default function EspecialistasPage() {
 
       {/* 4. Sección: Sesiones introductorias de 15 minutos */}
       <Section id="sesiones-introductorias" borderBottom bg="white">
-        <div className="absolute right-10 top-10 w-72 h-72 bg-[#F4F8B8]/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute right-10 top-10 w-96 h-96 bg-[#F4F8B8]/22 rounded-full blur-3xl pointer-events-none" />
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-center">
           {/* Left Column: Copy */}
           <div className="lg:col-span-7 text-left flex flex-col items-start">
@@ -255,7 +255,7 @@ export default function EspecialistasPage() {
 
       {/* 6. Sección: Una primera conversación puede abrir una relación profesional */}
       <Section borderBottom bg="white" className="relative py-28 text-center overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[300px] bg-radial from-[#FFE0C2]/10 to-transparent rounded-full blur-3xl pointer-events-none opacity-40" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-radial from-[#FFE0C2]/22 to-transparent rounded-full blur-3xl pointer-events-none opacity-60" />
         <Container>
           <div className="max-w-4xl mx-auto">
             <h2 className="font-display text-3xl md:text-5xl font-bold leading-tight text-slate-900 mb-6">

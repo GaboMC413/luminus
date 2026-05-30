@@ -16,7 +16,7 @@ export default function SobreNosotrosPage() {
   return (
     <>
       {/* 1. Hero Section */}
-      <Hero {...aboutContent.hero} />
+      <Hero {...aboutContent.hero} gradientClass="hero-about-gradient" />
 
       {/* 2. Sección: Por qué existe LUMINUS */}
       <ProblemSection id="porque-existe" {...aboutContent.problem} />
@@ -37,7 +37,7 @@ export default function SobreNosotrosPage() {
       <PlatformSection id="etapa-actual" {...aboutContent.currentStage} />
 
       {/* 7. Sección final CTA */}
-      <CTASection {...aboutContent.finalCta} />
+      <CTASection {...aboutContent.finalCta} cardBg="dark" />
     </>
   );
 }
