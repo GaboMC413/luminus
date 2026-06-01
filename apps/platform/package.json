@@ -8,6 +8,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
+    "db:seed:interests": "node prisma/seed-interests.cjs",
     "db:studio": "prisma studio",
     "start": "next start",
     "lint": "next lint"

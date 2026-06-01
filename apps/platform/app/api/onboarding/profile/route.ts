@@ -20,6 +20,15 @@ function parseBirthdate(value: unknown) {
   return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
+function slugify(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export async function POST(request: Request) {
   const session = getCurrentSession();
 
@@ -46,6 +55,7 @@ export async function POST(request: Request) {
   const interests = shouldUpdateInterests
     ? (data.interests as unknown[]).filter((interest): interest is string => typeof interest === "string")
     : [];
+  const interestSlugs = Array.from(new Set(interests.map(slugify).filter(Boolean)));
   const otherInterests =
     typeof data.otherInterests === "string" && data.otherInterests.trim()
       ? data.otherInterests.trim()
@@ -95,11 +105,11 @@ export async function POST(request: Request) {
           },
         });
 
-        if (interests.length > 0) {
+        if (interestSlugs.length > 0) {
           const interestRows = await tx.interest.findMany({
             where: {
-              name: {
-                in: interests,
+              slug: {
+                in: interestSlugs,
               },
               isActive: true,
             },
