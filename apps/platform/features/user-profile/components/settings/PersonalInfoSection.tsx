@@ -49,7 +49,7 @@ export function PersonalInfoSection({
         description="Aquí puedes gestionar tus datos personales."
       />
       <div className="flex flex-col gap-6 w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <EditableField
             id="first_name"
             label="Nombre"
@@ -80,7 +80,7 @@ export function PersonalInfoSection({
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <EditableField
             id="profession"
             label="Profesión"
@@ -116,7 +116,7 @@ export function PersonalInfoSection({
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <EditableField
             id="gender"
             label="Género"

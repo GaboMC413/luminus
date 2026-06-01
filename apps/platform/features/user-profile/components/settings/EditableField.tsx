@@ -156,7 +156,7 @@ export function EditableField({
     <div className={`flex flex-col gap-2 w-full max-w-lg relative ${className}`}>
       <label className="text-label ml-1">{label}</label>
       <div className="flex items-center gap-2">
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-0">
           {isSelect ? (
             <SelectInput
               value={currentValue}
@@ -164,7 +164,7 @@ export function EditableField({
               onSelect={(val) => isEditing && setCurrentValue(val)}
               disabled={!isEditing}
               disabledOpacity={false}
-              className={`${!isEditing ? "[&_.reg-input-bordered]:bg-slate-50 [&_.reg-input-bordered]:!border-none pointer-events-none" : "[&_.reg-input-bordered]:bg-white [&_.reg-input-bordered]:border-black"}`}
+              className={`${!isEditing ? "[&_.reg-input-bordered]:bg-slate-50 [&_.reg-input-bordered]:!border-none [&_.reg-input-bordered_span]:!text-slate-500 pointer-events-none" : "[&_.reg-input-bordered]:bg-white [&_.reg-input-bordered]:border-black [&_.reg-input-bordered_span]:!text-black"}`}
             />
           ) : isLocation ? (
             <LocationInput
@@ -176,7 +176,7 @@ export function EditableField({
                 }
               }}
               disabled={!isEditing}
-              className={`${!isEditing ? "[&_.reg-input-bordered]:bg-slate-50 [&_.reg-input-bordered]:!border-none pointer-events-none" : "[&_.reg-input-bordered]:bg-white [&_.reg-input-bordered]:border-black"}`}
+              className={`${!isEditing ? "[&_.reg-input-bordered]:bg-slate-50 [&_.reg-input-bordered]:!border-none [&_input]:!text-slate-500 pointer-events-none" : "[&_.reg-input-bordered]:bg-white [&_.reg-input-bordered]:border-black [&_input]:!text-black"}`}
             />
           ) : isPhone ? (
             <PhoneInput
@@ -187,7 +187,7 @@ export function EditableField({
               }}
               onChange={(val) => isEditing && setCurrentValue(val)}
               disabled={!isEditing}
-              className={`${!isEditing ? "!bg-slate-50 !border-none text-slate-900 pointer-events-none" : "bg-white border-black text-black"}`}
+              className={`${!isEditing ? "!bg-slate-50 !border-none [&_span]:!text-slate-500 [&_input]:!text-slate-500 pointer-events-none" : "bg-white border-black text-black [&_span]:!text-zinc-900 [&_input]:!text-zinc-900"}`}
             />
           ) : isDate && isEditing ? (
             <div className="flex flex-col gap-2 w-full">
@@ -241,7 +241,7 @@ export function EditableField({
                 setCurrentValue(e.target.value);
               }}
               variant="bordered"
-              className={`${!isEditing ? "!bg-slate-50 !border-none text-slate-900" : "bg-white border-black text-black"}`}
+              className={`${!isEditing ? "!bg-slate-50 !border-none !text-slate-500" : "bg-white border-black text-black"}`}
             />
           )}
         </div>

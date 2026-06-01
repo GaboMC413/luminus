@@ -28,7 +28,7 @@ export default function RootLayout({
         <Navbar />
 
         {/* Main Content Area */}
-        <main className="min-h-screen">
+        <main className="min-h-screen pt-[53px] sm:pt-[57px]">
           {children}
         </main>
         {/* Premium Footer */}

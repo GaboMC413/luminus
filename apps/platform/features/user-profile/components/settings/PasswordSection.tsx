@@ -73,7 +73,7 @@ export function PasswordSection({
         description="Desde aquí puedes cambiar tu contraseña."
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
         {!isEditing ? (
           <div className="flex flex-col gap-2 w-full max-w-lg relative">
             <label className="text-label ml-1">Cambiar contraseña</label>

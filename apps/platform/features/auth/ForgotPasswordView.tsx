@@ -148,7 +148,7 @@ export default function ForgotPasswordView() {
   };
 
   return (
-    <div className="w-full min-h-screen lg:h-screen flex flex-col lg:flex-row font-sans bg-slate-50 text-slate-900 lg:overflow-hidden">
+    <div className="w-full h-[100dvh] flex flex-col lg:flex-row font-sans overflow-hidden bg-slate-50 text-slate-900">
       
       {/* 1. Left Branding/Marketing Pane (Desktop only) */}
       <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] luminus-gradient flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden border-r border-slate-200/10 animate-in slide-in-from-left duration-500">
@@ -175,7 +175,7 @@ export default function ForgotPasswordView() {
       </div>
 
       {/* 2. Right Form Pane */}
-      <div className="flex-1 flex flex-col bg-slate-50 min-h-0 lg:h-full lg:overflow-y-auto pt-14 lg:pt-0 animate-in fade-in duration-300">
+      <div className="flex-1 flex flex-col bg-slate-50 min-h-0 h-full overflow-y-auto pt-14 lg:pt-0 animate-in fade-in duration-300">
         
         {/* Mobile Header: Logo */}
         <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-gradient flex items-center justify-center shrink-0 z-50">
@@ -353,10 +353,6 @@ export default function ForgotPasswordView() {
           </div>
         </div>
 
-        {/* Footer (Mobile/Tablet only) */}
-        <div className="lg:hidden w-full shrink-0 h-14 flex flex-col justify-center mt-auto">
-          <p className="text-[9px] text-slate-400 text-center uppercase tracking-wide">LUMINUS LATAM © 2026</p>
-        </div>
 
       </div>
     </div>

@@ -118,7 +118,7 @@ export default function SignUpView() {
 
   if (step === 1) {
     return (
-      <div className="w-full min-h-screen lg:h-screen flex flex-col lg:flex-row font-sans bg-slate-50 text-slate-900 lg:overflow-hidden">
+      <div className="w-full h-[100dvh] flex flex-col lg:flex-row font-sans overflow-hidden bg-slate-50 text-slate-900">
 
         {/* 1. Left Branding/Marketing Pane (Desktop only - 42% width) */}
         <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] luminus-gradient flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden border-r border-slate-200/10 animate-in slide-in-from-left duration-500">
@@ -200,7 +200,7 @@ export default function SignUpView() {
         </div>
 
         {/* 2. Right Form Pane - No shadows, no borders, plain elements on slate-50 */}
-        <div className="flex-1 flex flex-col bg-slate-50 min-h-0 lg:h-full lg:overflow-y-auto pt-14 lg:pt-0">
+        <div className="flex-1 flex flex-col bg-slate-50 min-h-0 h-full overflow-y-auto pt-14 lg:pt-0">
 
           {/* Mobile Header: Logo (only visible on mobile) */}
           <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-gradient flex items-center justify-center shrink-0 z-50">
@@ -324,10 +324,6 @@ export default function SignUpView() {
             </div>
           </div>
 
-          {/* Footer (Mobile only) */}
-          <div className="lg:hidden w-full shrink-0 h-14 flex flex-col justify-center mt-auto">
-            <p className="text-[10px] text-slate-400 text-center uppercase tracking-wide">LUMINUS LATAM © 2026</p>
-          </div>
 
         </div>
 
@@ -337,7 +333,7 @@ export default function SignUpView() {
 
   // Registration Flow (Step 2+)
   return (
-    <div className="w-full min-h-screen lg:h-screen bg-slate-50 flex flex-col lg:flex-row font-sans lg:overflow-hidden">
+    <div className="w-full h-[100dvh] bg-slate-50 flex flex-col lg:flex-row font-sans overflow-hidden">
 
       {/* LATERAL SIDEBAR */}
       <div className="fixed top-0 left-0 right-0 lg:relative w-full h-14 lg:h-full lg:w-80 luminus-gradient shrink-0 flex lg:flex-col items-center justify-center lg:justify-start lg:pt-12 z-50 transition-all duration-500">
@@ -356,7 +352,7 @@ export default function SignUpView() {
       {/* Main Content Area */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 flex flex-col min-h-0 lg:h-full lg:overflow-y-auto pt-14 lg:pt-0"
+        className="flex-1 flex flex-col min-h-0 h-full overflow-y-auto pt-14 lg:pt-0"
       >
         <div className="flex-1 flex flex-col items-center pt-8 md:pt-12 pb-10 md:pb-20 px-6 md:px-12">
           {/* Constrain width to 665px */}

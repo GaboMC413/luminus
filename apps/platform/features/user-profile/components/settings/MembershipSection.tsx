@@ -36,7 +36,7 @@ export function MembershipSection({ createdAt, showSuccess }: MembershipSectionP
 
       <div className="flex flex-col gap-8">
         {/* Active Plan Card */}
-        <div className="w-full bg-black rounded-2xl p-8 md:p-10 text-white relative overflow-hidden">
+        <div className="w-full bg-black rounded-2xl p-5 md:p-10 text-white relative overflow-hidden">
           <div className="relative z-10 flex flex-col gap-6">
             <div className="flex flex-col gap-2">
               <span className="bg-white/20 px-3 py-1 rounded-full text-caption !text-white tracking-wider w-fit">Plan Actual</span>
@@ -54,7 +54,7 @@ export function MembershipSection({ createdAt, showSuccess }: MembershipSectionP
         </div>
 
         {/* Info Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left Card */}
           <div className="bg-white p-6 rounded-2xl border border-zinc-200/40 flex flex-col gap-4">
             <div className="flex items-center gap-3">

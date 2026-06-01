@@ -240,13 +240,13 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
           }
         }}
         className={`
-          ${variantClass} px-5 flex items-center cursor-pointer transition-all duration-300 group outline-none w-full min-w-0
+          ${variantClass} px-4 flex items-center cursor-pointer transition-all duration-300 group outline-none w-full min-w-0
           ${error ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : 'focus:border-black focus:ring-1 focus:ring-black'}
           ${isOpen ? 'border-black' : ''}
           ${disabled ? `${disabledOpacity ? 'opacity-50' : ''} cursor-not-allowed` : ''}
         `}
       >
-        <span className={`${!value ? '!text-slate-400' : 'text-black'} text-body truncate select-none min-w-0 flex-1`}>
+        <span className={`${!value ? '!text-slate-400' : 'text-zinc-900'} text-[13px] md:text-base font-normal truncate select-none min-w-0 flex-1`}>
           {currentOptionLabel || placeholder}
         </span>
         {!disabled && (

@@ -32,6 +32,7 @@ function SettingsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("personal");
+  const [mobileView, setMobileView] = useState<'menu' | 'content'>('menu');
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [attentionCounter, setAttentionCounter] = useState(0);
 
@@ -127,6 +128,7 @@ function SettingsContent() {
     const tab = searchParams.get("tab");
     if (tab && ["personal", "email", "phone", "password", "membership"].includes(tab)) {
       setActiveTab(tab);
+      setMobileView('content');
     }
   }, [searchParams]);
 
@@ -145,30 +147,63 @@ function SettingsContent() {
 
   return (
     <div className="flex-1 w-full flex flex-col bg-[#F8FAFC]">
-      <div className="flex-1 w-full max-w-7xl mx-auto px-6 md:px-8 py-4 md:py-8">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 py-4 md:py-8">
         <div className="w-full max-w-6xl mx-auto">
 
           {/* Header */}
-          <div className="flex items-center gap-3 mb-6">
-            <Link
-              href="/perfil-usuario"
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900"
-              title="Volver al perfil"
-            >
-              <span className="material-symbols-rounded text-[20px]">arrow_back</span>
-            </Link>
-            <h1 className="text-xl text-black font-semibold">Configuración de la cuenta</h1>
+          <div className="flex items-center gap-3 mb-4 md:mb-6">
+            {/* On mobile, if we are in content view, clicking back goes to the menu view */}
+            <div className="md:hidden">
+              {mobileView === 'content' ? (
+                <button
+                  onClick={() => setMobileView('menu')}
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-400 hover:text-slate-900 cursor-pointer"
+                  title="Volver a ajustes"
+                >
+                  <span className="material-symbols-rounded text-[20px]">arrow_back</span>
+                </button>
+              ) : (
+                <Link
+                  href="/perfil-usuario"
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-400 hover:text-slate-900"
+                  title="Volver al perfil"
+                >
+                  <span className="material-symbols-rounded text-[20px]">arrow_back</span>
+                </Link>
+              )}
+            </div>
+
+            {/* On tablet/desktop, always show the link back to perfil-usuario */}
+            <div className="hidden md:block">
+              <Link
+                href="/perfil-usuario"
+                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900"
+                title="Volver al perfil"
+              >
+                <span className="material-symbols-rounded text-[20px]">arrow_back</span>
+              </Link>
+            </div>
+
+            <h1 className="text-xl text-black font-semibold">
+              <span className="md:inline hidden">Configuración de la cuenta</span>
+              <span className="md:hidden">
+                {mobileView === 'menu' ? 'Configuración de la cuenta' : tabs.find(t => t.id === activeTab)?.label}
+              </span>
+            </h1>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 lg:gap-8 items-start">
 
             {/* Sidebar Navigation */}
-            <div className="md:col-span-4 lg:col-span-3 flex flex-col gap-1 bg-white rounded-2xl border border-zinc-200/40 p-2">
+            <div className={`md:col-span-4 lg:col-span-3 gap-1 bg-white rounded-2xl border border-zinc-200/40 p-2 ${mobileView === 'menu' ? 'flex flex-col' : 'hidden md:flex md:flex-col'}`}>
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 text-[14px] font-semibold group ${activeTab === tab.id
+                  onClick={() => {
+                    setActiveTab(tab.id);
+                    setMobileView('content');
+                  }}
+                  className={`flex items-center text-left gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 text-[14px] font-semibold group ${activeTab === tab.id
                     ? "bg-black text-white"
                     : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
                     }`}
@@ -182,8 +217,8 @@ function SettingsContent() {
             </div>
 
             {/* Content Area */}
-            <div className="md:col-span-8 lg:col-span-9 flex flex-col gap-6">
-              <div className="bg-white rounded-2xl border border-zinc-200/40 p-6 md:p-10 shadow-none min-h-[400px]">
+            <div className={`md:col-span-8 lg:col-span-9 gap-6 ${mobileView === 'content' ? 'flex flex-col' : 'hidden md:flex md:flex-col'}`}>
+              <div className="bg-white rounded-2xl border border-zinc-200/40 p-5 md:p-10 shadow-none min-h-[400px]">
                 {activeTab === "personal" && (
                   <PersonalInfoSection
                     firstName={firstName}

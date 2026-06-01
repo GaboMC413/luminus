@@ -29,7 +29,7 @@ export function PhoneSection({
         title="Celular"
         description="Configura tu número de teléfono para contacto directo."
       />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
         <EditableField
           id="phone"
           label="Número de celular"
