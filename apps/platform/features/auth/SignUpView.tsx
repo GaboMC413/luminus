@@ -7,6 +7,7 @@ import { PersonalData } from "./registration/PersonalData";
 import { InterestSelection } from "./registration/InterestSelection";
 import { PlanSelection } from "./registration/PlanSelection";
 import Link from "next/link";
+import { PlatformFooter } from "@/components/ui/PlatformFooter";
 import { useRouter } from "next/navigation";
 
 export default function SignUpView() {
@@ -118,7 +119,7 @@ export default function SignUpView() {
 
   if (step === 1) {
     return (
-      <div className="w-full h-[100dvh] flex flex-col lg:flex-row font-sans overflow-hidden bg-slate-50 text-slate-900">
+      <div className="auth-fixed-page flex flex-col lg:flex-row font-sans bg-slate-50 text-slate-900">
 
         {/* 1. Left Branding/Marketing Pane (Desktop only - 42% width) */}
         <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] luminus-gradient flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden border-r border-slate-200/10 animate-in slide-in-from-left duration-500">
@@ -200,7 +201,7 @@ export default function SignUpView() {
         </div>
 
         {/* 2. Right Form Pane - No shadows, no borders, plain elements on slate-50 */}
-        <div className="flex-1 flex flex-col bg-slate-50 min-h-0 h-full overflow-y-auto pt-14 lg:pt-0">
+        <div className="flex-1 flex flex-col bg-slate-50 min-h-0 h-full overflow-hidden pt-14 lg:pt-0">
 
           {/* Mobile Header: Logo (only visible on mobile) */}
           <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-gradient flex items-center justify-center shrink-0 z-50">
@@ -324,6 +325,9 @@ export default function SignUpView() {
             </div>
           </div>
 
+          {/* Auth Page Footer */}
+          <PlatformFooter className="bg-transparent border-t-0 py-4 shrink-0 lg:hidden" />
+
 
         </div>
 
@@ -333,7 +337,7 @@ export default function SignUpView() {
 
   // Registration Flow (Step 2+)
   return (
-    <div className="w-full h-[100dvh] bg-slate-50 flex flex-col lg:flex-row font-sans overflow-hidden">
+    <div className="auth-fixed-page bg-slate-50 flex flex-col lg:flex-row font-sans">
 
       {/* LATERAL SIDEBAR */}
       <div className="fixed top-0 left-0 right-0 lg:relative w-full h-14 lg:h-full lg:w-80 luminus-gradient shrink-0 flex lg:flex-col items-center justify-center lg:justify-start lg:pt-12 z-50 transition-all duration-500">
@@ -381,6 +385,9 @@ export default function SignUpView() {
             )}
           </div>
         </div>
+
+        {/* Onboarding Page Footer */}
+        <PlatformFooter className="bg-transparent border-t-0 py-4 shrink-0 lg:hidden" />
       </div>
 
     </div>

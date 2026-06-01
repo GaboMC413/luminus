@@ -2,8 +2,15 @@
 @config "../tailwind.config.js";
 
 @layer base {
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    min-height: 100%;
+  }
+
   body {
-    @apply bg-slate-50 text-slate-900 min-h-screen font-sans antialiased overflow-x-hidden;
+    @apply bg-slate-50 text-slate-900 font-sans antialiased overflow-x-hidden;
   }
   
   ::selection {
@@ -31,6 +38,16 @@
 }
 
 @layer utilities {
+  /* FIXED FULL VIEWPORT AUTH CONTAINER */
+  .auth-fixed-page {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
   /* TRANSITION UTILITY */
   .transition-premium {
     @apply transition-all duration-300 ease-out;

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/InputField";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { PlatformFooter } from "@/components/ui/PlatformFooter";
 
 export default function ForgotPasswordView() {
   const router = useRouter();
@@ -148,7 +149,7 @@ export default function ForgotPasswordView() {
   };
 
   return (
-    <div className="w-full h-[100dvh] flex flex-col lg:flex-row font-sans overflow-hidden bg-slate-50 text-slate-900">
+    <div className="auth-fixed-page flex flex-col lg:flex-row font-sans bg-slate-50 text-slate-900">
       
       {/* 1. Left Branding/Marketing Pane (Desktop only) */}
       <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] luminus-gradient flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden border-r border-slate-200/10 animate-in slide-in-from-left duration-500">
@@ -175,7 +176,7 @@ export default function ForgotPasswordView() {
       </div>
 
       {/* 2. Right Form Pane */}
-      <div className="flex-1 flex flex-col bg-slate-50 min-h-0 h-full overflow-y-auto pt-14 lg:pt-0 animate-in fade-in duration-300">
+      <div className="flex-1 flex flex-col bg-slate-50 min-h-0 h-full overflow-hidden pt-14 lg:pt-0 animate-in fade-in duration-300">
         
         {/* Mobile Header: Logo */}
         <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-gradient flex items-center justify-center shrink-0 z-50">
@@ -352,6 +353,9 @@ export default function ForgotPasswordView() {
             )}
           </div>
         </div>
+
+        {/* Auth Page Footer */}
+        <PlatformFooter className="bg-transparent border-t-0 py-4 shrink-0 lg:hidden" />
 
 
       </div>
