@@ -118,7 +118,7 @@ export default function SignUpView() {
 
   if (step === 1) {
     return (
-      <div className="w-full h-screen flex flex-col lg:flex-row font-sans overflow-hidden bg-slate-50 text-slate-900">
+      <div className="w-full min-h-screen lg:h-screen flex flex-col lg:flex-row font-sans bg-slate-50 text-slate-900 lg:overflow-hidden">
 
         {/* 1. Left Branding/Marketing Pane (Desktop only - 42% width) */}
         <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] luminus-gradient flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden border-r border-slate-200/10 animate-in slide-in-from-left duration-500">
@@ -200,7 +200,7 @@ export default function SignUpView() {
         </div>
 
         {/* 2. Right Form Pane - No shadows, no borders, plain elements on slate-50 */}
-        <div className="flex-1 flex flex-col bg-slate-50 min-h-0 overflow-y-auto pt-14 lg:pt-0">
+        <div className="flex-1 flex flex-col bg-slate-50 min-h-0 lg:h-full lg:overflow-y-auto pt-14 lg:pt-0">
 
           {/* Mobile Header: Logo (only visible on mobile) */}
           <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-gradient flex items-center justify-center shrink-0 z-50">
@@ -337,7 +337,7 @@ export default function SignUpView() {
 
   // Registration Flow (Step 2+)
   return (
-    <div className="w-full h-screen bg-slate-50 flex flex-col lg:flex-row font-sans overflow-hidden">
+    <div className="w-full min-h-screen lg:h-screen bg-slate-50 flex flex-col lg:flex-row font-sans lg:overflow-hidden">
 
       {/* LATERAL SIDEBAR */}
       <div className="fixed top-0 left-0 right-0 lg:relative w-full h-14 lg:h-full lg:w-80 luminus-gradient shrink-0 flex lg:flex-col items-center justify-center lg:justify-start lg:pt-12 z-50 transition-all duration-500">
@@ -356,7 +356,7 @@ export default function SignUpView() {
       {/* Main Content Area */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 flex flex-col min-h-0 overflow-y-auto pt-14 lg:pt-0"
+        className="flex-1 flex flex-col min-h-0 lg:h-full lg:overflow-y-auto pt-14 lg:pt-0"
       >
         <div className="flex-1 flex flex-col items-center pt-8 md:pt-12 pb-10 md:pb-20 px-6 md:px-12">
           {/* Constrain width to 665px */}
@@ -377,8 +377,7 @@ export default function SignUpView() {
             ) : (
               <PlanSelection
                 onNext={() => {
-                  alert("¡Bienvenido a LUMINUS! Onboarding completado con éxito.");
-                  router.push('/');
+                  router.push('/perfil-usuario');
                 }}
                 onBack={() => setStep(3)}
                 data={profileData}

@@ -99,6 +99,11 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
       updateCoords();
       window.addEventListener('scroll', updateCoords, true);
       window.addEventListener('resize', updateCoords);
+      
+      // Auto-scroll so dropdown suggestions are fully visible above mobile keyboard
+      setTimeout(() => {
+        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     } else {
       setCoords(null);
     }
@@ -196,9 +201,14 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
         }}
         onFocus={() => {
           window.dispatchEvent(new CustomEvent('luminus-select-open', { detail: { id: instanceIdRef.current } }));
+          // First quick scroll attempt (for fast devices/browsers)
           setTimeout(() => {
             containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }, 150);
+          // Second delayed scroll attempt (once soft keyboard is fully open and viewport resized)
+          setTimeout(() => {
+            containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 450);
         }}
         onKeyDown={(e) => {
           if (status !== "OK" || suggestions.length === 0) return;

@@ -117,7 +117,7 @@ export function ProfileContent() {
       method: "POST",
       credentials: "include",
     });
-    router.push("/auth/signin");
+    router.push("/auth/iniciar-sesion");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
