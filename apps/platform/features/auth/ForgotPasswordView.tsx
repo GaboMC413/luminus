@@ -66,7 +66,12 @@ export default function ForgotPasswordView() {
       setView('code');
       setTimer(180); // Reset timer
       setCanResend(false);
-      setMessage({ text: "Código enviado. Si estás en modo de prueba, el código es: " + data.code, type: "success" });
+      setMessage({
+        text: data.code
+          ? `Código enviado. Código de prueba: ${data.code}`
+          : "Si existe una cuenta con ese correo, enviaremos un código de recuperación.",
+        type: "success"
+      });
     } catch {
       setMessage({ text: "No pudimos conectar con el servidor.", type: "error" });
     } finally {
