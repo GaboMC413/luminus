@@ -11,6 +11,7 @@ export interface PhoneSectionProps {
   setEditingFieldId: (id: string | null) => void;
   attentionCounter: number;
   setAttentionCounter: (val: number | ((prev: number) => number)) => void;
+  onProfileSave?: (payload: Record<string, unknown>) => Promise<unknown>;
 }
 
 export function PhoneSection({
@@ -21,7 +22,8 @@ export function PhoneSection({
   editingFieldId,
   setEditingFieldId,
   attentionCounter,
-  setAttentionCounter
+  setAttentionCounter,
+  onProfileSave
 }: PhoneSectionProps) {
   return (
     <div className="w-full flex flex-col">
@@ -38,9 +40,10 @@ export function PhoneSection({
           isPhone
           phoneCountry={phoneCountry}
           onCountryChange={(matched) => setPhoneCountry(matched)}
-          onSave={(val) => {
+          onSave={async (val) => {
             setPhone(val);
             const fullPhone = `${phoneCountry.dial} ${val}`.trim();
+            await onProfileSave?.({ phone_number: fullPhone });
             localStorage.setItem("luminus_profile_phone", fullPhone);
           }}
           editingFieldId={editingFieldId}

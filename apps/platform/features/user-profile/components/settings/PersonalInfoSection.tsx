@@ -21,6 +21,7 @@ export interface PersonalInfoSectionProps {
   setEditingFieldId: (id: string | null) => void;
   attentionCounter: number;
   setAttentionCounter: (val: number | ((prev: number) => number)) => void;
+  onProfileSave?: (payload: Record<string, unknown>) => Promise<unknown>;
 }
 
 export function PersonalInfoSection({
@@ -41,7 +42,8 @@ export function PersonalInfoSection({
   editingFieldId,
   setEditingFieldId,
   attentionCounter,
-  setAttentionCounter
+  setAttentionCounter,
+  onProfileSave
 }: PersonalInfoSectionProps) {
   return (
     <div className="w-full flex flex-col">
@@ -54,7 +56,8 @@ export function PersonalInfoSection({
             id="first_name"
             label="Nombre"
             value={firstName}
-            onSave={(val) => {
+            onSave={async (val) => {
+              await onProfileSave?.({ first_name: val });
               setFirstName(val);
               localStorage.setItem("luminus_profile_firstName", val);
             }}
@@ -68,7 +71,8 @@ export function PersonalInfoSection({
             id="last_name"
             label="Apellido"
             value={lastName}
-            onSave={(val) => {
+            onSave={async (val) => {
+              await onProfileSave?.({ last_name: val });
               setLastName(val);
               localStorage.setItem("luminus_profile_lastName", val);
             }}
@@ -85,7 +89,8 @@ export function PersonalInfoSection({
             id="profession"
             label="Profesión"
             value={profession}
-            onSave={(val) => {
+            onSave={async (val) => {
+              await onProfileSave?.({ profession: val });
               setProfession(val);
               localStorage.setItem("luminus_profile_profession", val);
             }}
@@ -101,7 +106,8 @@ export function PersonalInfoSection({
             label="Ciudad"
             value={city}
             isLocation
-            onSave={(cityVal, countryVal) => {
+            onSave={async (cityVal, countryVal) => {
+              await onProfileSave?.({ city: cityVal, country: countryVal });
               setCity(cityVal);
               localStorage.setItem("luminus_profile_city", cityVal);
               if (countryVal) {
@@ -123,7 +129,8 @@ export function PersonalInfoSection({
             value={gender}
             isSelect
             options={["Mujer", "Hombre", "No binario", "Prefiero no decirlo"]}
-            onSave={(val) => {
+            onSave={async (val) => {
+              await onProfileSave?.({ gender: val });
               setGender(val);
               localStorage.setItem("luminus_profile_gender", val);
             }}
@@ -137,7 +144,8 @@ export function PersonalInfoSection({
             label="Fecha de nacimiento"
             value={birthdate}
             isDate
-            onSave={(val) => {
+            onSave={async (val) => {
+              await onProfileSave?.({ birthdate: val });
               setBirthdate(val);
               // convert DD / MM / YYYY back to YYYY-MM-DD
               const parts = val.split(" / ");

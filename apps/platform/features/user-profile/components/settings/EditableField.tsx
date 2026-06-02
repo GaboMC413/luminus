@@ -19,7 +19,7 @@ export interface EditableFieldProps {
   onCountryChange?: (country: any) => void;
   options?: string[];
   className?: string;
-  onSave?: (newValue: string, extraValue?: string) => void;
+  onSave?: (newValue: string, extraValue?: string) => void | Promise<void>;
   editingFieldId: string | null;
   setEditingFieldId: (id: string | null) => void;
   attentionCounter: number;
@@ -105,7 +105,7 @@ export function EditableField({
     setEditingFieldId(id);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (isDate) {
       // Pad single digits
       const paddedDay = birthDay.length === 1 ? '0' + birthDay : birthDay;
@@ -125,9 +125,9 @@ export function EditableField({
         }
       }
 
-      onSave?.(normalized, extraValue);
+      await onSave?.(normalized, extraValue);
     } else {
-      onSave?.(currentValue, extraValue);
+      await onSave?.(currentValue, extraValue);
     }
     setDateError("");
     setEditingFieldId(null);

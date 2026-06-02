@@ -37,6 +37,7 @@ model User {
   updatedAt     DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   profile       UserProfile?
   interests     UserInterest[]
+  profilePrompts UserProfilePrompt[]
 
   @@map("users")
 }
@@ -47,6 +48,8 @@ model UserProfile {
   firstName     String?   @map("first_name") @db.VarChar
   lastName      String?   @map("last_name") @db.VarChar
   avatarUrl     String?   @map("avatar_url") @db.VarChar
+  coverUrl      String?   @map("cover_url") @db.VarChar
+  profession    String?   @db.VarChar
   city          String?   @db.VarChar
   country       String?   @db.VarChar
   phoneNumber   String?   @map("phone_number") @db.VarChar
@@ -102,4 +105,18 @@ model UserInterest {
 
   @@id([userId, interestId])
   @@map("user_interests")
+}
+
+model UserProfilePrompt {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  question  String
+  answer    String
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_profile_prompts")
 }

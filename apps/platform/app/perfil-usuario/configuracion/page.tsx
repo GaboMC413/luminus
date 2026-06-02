@@ -62,7 +62,7 @@ function SettingsContent() {
   // Load profile data from the active session and temporary local profile state.
   useEffect(() => {
     async function loadProfile() {
-      const response = await fetch("/api/auth/me", {
+      const response = await fetch("/api/profile", {
         credentials: "include",
       });
 
@@ -72,57 +72,49 @@ function SettingsContent() {
       }
 
       const data = await response.json();
-      setEmail(data.user?.email ?? "");
+      const profile = data.profile ?? {};
+      setEmail(data.email ?? "");
+      setFirstName(profile.first_name ?? "");
+      setLastName(profile.last_name ?? "");
+      setProfession(profile.profession ?? "");
+      setCity(profile.city ?? "");
+      setCountry(profile.country ?? "");
+      setGender(profile.gender ?? "");
+
+      if (profile.birthdate) {
+        const parts = String(profile.birthdate).split("-");
+        setBirthdate(parts.length === 3 ? `${parts[2]} / ${parts[1]} / ${parts[0]}` : profile.birthdate);
+      }
+
+      const savedPhone = profile.phone_number ?? "";
+      const matched = COUNTRIES.find(c => savedPhone.startsWith(c.dial));
+      if (matched) {
+        setPhoneCountry(matched);
+        setPhone(savedPhone.slice(matched.dial.length).trim());
+      } else {
+        setPhone(savedPhone);
+      }
+      setCreatedAt(profile.created_at || new Date().toISOString());
     }
 
     loadProfile();
 
-    setFirstName(localStorage.getItem("luminus_profile_firstName") || "");
-    setLastName(localStorage.getItem("luminus_profile_lastName") || "");
-    setProfession(localStorage.getItem("luminus_profile_profession") || "");
-
-    const storedCity = localStorage.getItem("luminus_profile_city") || "";
-    setCity(storedCity);
-
-    const storedCountry = localStorage.getItem("luminus_profile_country") || "";
-    setCountry(storedCountry);
-
-    setGender(localStorage.getItem("luminus_profile_gender") || "");
-
-    const storedBirthdate = localStorage.getItem("luminus_profile_birthdate") || "";
-    if (storedBirthdate && storedBirthdate.includes("-")) {
-      const parts = storedBirthdate.split("-");
-      if (parts.length === 3) {
-        setBirthdate(`${parts[2]} / ${parts[1]} / ${parts[0]}`);
-      } else {
-        setBirthdate(storedBirthdate);
-      }
-    } else {
-      setBirthdate(storedBirthdate);
-    }
-
-    const storedPhone = localStorage.getItem("luminus_profile_phone") || "";
-    if (storedPhone) {
-      const matched = COUNTRIES.find(c => storedPhone.startsWith(c.dial));
-      if (matched) {
-        setPhoneCountry(matched);
-        const rawNumber = storedPhone.slice(matched.dial.length).trim();
-        setPhone(rawNumber);
-      } else {
-        setPhone(storedPhone);
-      }
-    } else {
-      setPhone("");
-    }
-
-    let storedCreatedAt = localStorage.getItem("luminus_user_createdAt");
-    if (!storedCreatedAt) {
-      storedCreatedAt = new Date().toISOString();
-      localStorage.setItem("luminus_user_createdAt", storedCreatedAt);
-    }
-    setCreatedAt(storedCreatedAt);
-
   }, [router]);
+
+  const saveProfile = async (payload: Record<string, unknown>) => {
+    const response = await fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error("Could not save profile.");
+    }
+
+    return response.json();
+  };
 
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -239,6 +231,7 @@ function SettingsContent() {
                     setEditingFieldId={setEditingFieldId}
                     attentionCounter={attentionCounter}
                     setAttentionCounter={setAttentionCounter}
+                    onProfileSave={saveProfile}
                   />
                 )}
                 {activeTab === "email" && (
@@ -262,6 +255,7 @@ function SettingsContent() {
                     setEditingFieldId={setEditingFieldId}
                     attentionCounter={attentionCounter}
                     setAttentionCounter={setAttentionCounter}
+                    onProfileSave={saveProfile}
                   />
                 )}
                 {activeTab === "password" && (

@@ -39,6 +39,25 @@ export interface Profile {
   created_at: string;
   bio?: string;
   other_interests?: string;
+  cover_url?: string;
+}
+
+function syncProfileToLocalStorage(profile: Profile, email?: string) {
+  localStorage.setItem("luminus_profile_firstName", profile.first_name || "");
+  localStorage.setItem("luminus_profile_lastName", profile.last_name || "");
+  localStorage.setItem("luminus_profile_city", profile.city || "");
+  localStorage.setItem("luminus_profile_country", profile.country || "");
+  localStorage.setItem("luminus_profile_gender", profile.gender || "");
+  localStorage.setItem("luminus_profile_birthdate", profile.birthdate || "");
+  localStorage.setItem("luminus_profile_phone", profile.phone_number || "");
+  localStorage.setItem("luminus_profile_profession", profile.profession || "");
+  localStorage.setItem("luminus_profile_avatar", profile.profile_picture_url || "");
+  localStorage.setItem("luminus_profile_interests", JSON.stringify(profile.interests || []));
+  localStorage.setItem("luminus_profile_otherInterests", profile.other_interests || "");
+  localStorage.setItem("luminus_profile_bio", profile.bio || "");
+  localStorage.setItem("luminus_profile_prompts", JSON.stringify(profile.prompts || []));
+  localStorage.setItem("luminus_profile_cover", profile.cover_url || "");
+  if (email) localStorage.setItem("luminus_user_email", email);
 }
 
 export function ProfileContent() {
@@ -64,53 +83,32 @@ export function ProfileContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Load from local storage or fallback to mock data
-    const storedFirstName = localStorage.getItem("luminus_profile_firstName") || "";
-    const storedLastName = localStorage.getItem("luminus_profile_lastName") || "";
-    const storedCity = localStorage.getItem("luminus_profile_city") || "";
-    const storedCountry = localStorage.getItem("luminus_profile_country") || "";
-    const storedPhone = localStorage.getItem("luminus_profile_phone") || "";
-    const storedGender = localStorage.getItem("luminus_profile_gender") || "";
-    const storedBirthdate = localStorage.getItem("luminus_profile_birthdate") || "";
-    const storedAvatar = localStorage.getItem("luminus_profile_avatar") || "";
-    const storedProfession = localStorage.getItem("luminus_profile_profession") || "";
+    async function loadProfile() {
+      try {
+        const response = await fetch("/api/profile", {
+          credentials: "include",
+        });
 
-    let storedInterests: string[] = [];
-    try {
-      const parsed = localStorage.getItem("luminus_profile_interests");
-      if (parsed) storedInterests = JSON.parse(parsed);
-    } catch (e) { }
+        if (!response.ok) {
+          router.push("/auth/iniciar-sesion");
+          return;
+        }
 
-    const storedOtherInterests = localStorage.getItem("luminus_profile_otherInterests") || "";
-    const storedBio = localStorage.getItem("luminus_profile_bio") || "";
+        const data = await response.json();
+        const loadedProfile = data.profile as Profile;
+        setProfile(loadedProfile);
+        setCoverUrl(loadedProfile.cover_url || "");
+        setEmail(data.email || "");
+        syncProfileToLocalStorage(loadedProfile, data.email);
+      } catch (error) {
+        console.error("Error loading profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
 
-    let storedPrompts: Prompt[] = [];
-    try {
-      const parsedPrompts = localStorage.getItem("luminus_profile_prompts");
-      if (parsedPrompts) storedPrompts = JSON.parse(parsedPrompts);
-    } catch (e) { }
-
-    setProfile({
-      first_name: storedFirstName,
-      last_name: storedLastName,
-      city: storedCity,
-      country: storedCountry,
-      profession: storedProfession,
-      interests: storedInterests,
-      prompts: storedPrompts,
-      profile_picture_url: storedAvatar,
-      gender: storedGender,
-      birthdate: storedBirthdate,
-      phone_number: storedPhone,
-      selected_plan: "Mensual",
-      created_at: new Date().toISOString(),
-      bio: storedBio,
-      other_interests: storedOtherInterests
-    });
-    setCoverUrl(localStorage.getItem("luminus_profile_cover") || "");
-    setEmail(localStorage.getItem("luminus_user_email") || "");
-    setLoading(false);
-  }, []);
+    loadProfile();
+  }, [router]);
 
   const handleSignOut = async () => {
     await fetch("/api/auth/logout", {
@@ -118,6 +116,26 @@ export function ProfileContent() {
       credentials: "include",
     });
     router.push("/auth/iniciar-sesion");
+  };
+
+  const patchProfile = async (payload: Record<string, unknown>) => {
+    const response = await fetch("/api/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error("Could not save profile.");
+    }
+
+    const data = await response.json();
+    const savedProfile = data.profile as Profile;
+    setProfile(savedProfile);
+    setCoverUrl(savedProfile.cover_url || "");
+    syncProfileToLocalStorage(savedProfile, data.email);
+    return savedProfile;
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,8 +165,7 @@ export function ProfileContent() {
         credentials: "include",
         body: JSON.stringify({ avatarUrl: publicUrl }),
       });
-      setProfile(prev => prev ? { ...prev, profile_picture_url: publicUrl } : null);
-      localStorage.setItem("luminus_profile_avatar", publicUrl);
+      await patchProfile({ avatarUrl: publicUrl });
       setIsCropping(false);
       setTempImage(null);
     } catch (error) {
@@ -159,23 +176,15 @@ export function ProfileContent() {
     }
   };
 
-  const handleSavePersonal = (newData: any) => {
-    setProfile(prev => {
-      if (!prev) return null;
-      const updated = { ...prev, ...newData };
-      // Synchronize to localStorage so onboarding is fully reactive
-      localStorage.setItem("luminus_profile_firstName", updated.first_name);
-      localStorage.setItem("luminus_profile_lastName", updated.last_name);
-      localStorage.setItem("luminus_profile_city", updated.city);
-      localStorage.setItem("luminus_profile_country", updated.country);
-      localStorage.setItem("luminus_profile_gender", updated.gender);
-      localStorage.setItem("luminus_profile_birthdate", updated.birthdate);
-      localStorage.setItem("luminus_profile_phone", updated.phone_number);
-      localStorage.setItem("luminus_profile_profession", updated.profession);
-      return updated;
-    });
-    setShowEditPersonal(false);
-    setFocusedField(null);
+  const handleSavePersonal = async (newData: any) => {
+    try {
+      await patchProfile(newData);
+      setShowEditPersonal(false);
+      setFocusedField(null);
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      alert("No pudimos guardar tus datos. Intenta nuevamente.");
+    }
   };
 
   const handleOpenEditPersonal = (field?: string) => {
@@ -183,24 +192,35 @@ export function ProfileContent() {
     setShowEditPersonal(true);
   };
 
-  const handleSaveAbout = (bio: string) => {
-    setProfile(prev => prev ? { ...prev, bio } : null);
-    localStorage.setItem("luminus_profile_bio", bio);
-    setShowEditAbout(false);
+  const handleSaveAbout = async (bio: string) => {
+    try {
+      await patchProfile({ bio });
+      setShowEditAbout(false);
+    } catch (error) {
+      console.error("Error saving bio:", error);
+      alert("No pudimos guardar tu bio. Intenta nuevamente.");
+    }
   };
 
-  const handleSaveInterests = (interests: string[], other_interests: string) => {
-    setProfile(prev => prev ? { ...prev, interests, other_interests } : null);
-    localStorage.setItem("luminus_profile_interests", JSON.stringify(interests));
-    localStorage.setItem("luminus_profile_otherInterests", other_interests);
-    setShowEditInterests(false);
+  const handleSaveInterests = async (interests: string[], other_interests: string) => {
+    try {
+      await patchProfile({ interests, other_interests });
+      setShowEditInterests(false);
+    } catch (error) {
+      console.error("Error saving interests:", error);
+      alert("No pudimos guardar tus intereses. Intenta nuevamente.");
+    }
   };
 
-  const handleSavePrompts = (prompts: Prompt[]) => {
-    setProfile(prev => prev ? { ...prev, prompts } : null);
-    localStorage.setItem("luminus_profile_prompts", JSON.stringify(prompts));
-    setShowEditPrompts(false);
-    setPromptsStep('list');
+  const handleSavePrompts = async (prompts: Prompt[]) => {
+    try {
+      await patchProfile({ prompts });
+      setShowEditPrompts(false);
+      setPromptsStep('list');
+    } catch (error) {
+      console.error("Error saving prompts:", error);
+      alert("No pudimos guardar tus reflexiones. Intenta nuevamente.");
+    }
   };
 
   const handleOpenPrompts = (step: 'list' | 'select' = 'list') => {
@@ -324,6 +344,10 @@ export function ProfileContent() {
         onSelect={(url) => {
           setCoverUrl(url);
           localStorage.setItem("luminus_profile_cover", url);
+          patchProfile({ coverUrl: url }).catch((error) => {
+            console.error("Error saving cover:", error);
+            alert("No pudimos guardar tu portada. Intenta nuevamente.");
+          });
           setShowCoverModal(false);
         }}
       />
