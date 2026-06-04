@@ -5,6 +5,7 @@ import {
   hashRecoveryCode,
   isRecoveryDebugEnabled,
 } from "@/lib/auth/recoveryTokens";
+import { sendPasswordResetEmail } from "@/lib/email/passwordResetEmail";
 
 export const runtime = "nodejs";
 
@@ -53,6 +54,8 @@ export async function POST(request: Request) {
     if (isRecoveryDebugEnabled()) {
       console.log(`[RECOVERY CODE FOR ${email}]: ${code}`);
     }
+
+    await sendPasswordResetEmail(email, code);
 
     return NextResponse.json({
       success: true,
