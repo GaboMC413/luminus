@@ -1,55 +1,60 @@
 "use client";
 
-import React, { useState, useEffect, Suspense, useRef } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import Link from "next/link";
+import React, { useEffect, Suspense, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
-const INITIAL_CONVERSATIONS = [
-  {
-    id: 1,
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150",
-    name: "Elena Martínez",
-    lastMessage: "Hola Gabriel, vi que compartimos intereses en Biohacking y Longevidad...",
-    time: "Hace 5 min",
-    isOnline: true,
-    messages: [
-      { id: 1, text: "Hola Gabriel, vi que compartimos intereses en Biohacking y Longevidad. Me encantaría conversar sobre los suplementos que mencionaste en el último foro de la comunidad.", sender: "other", time: "11:20 AM" },
-      { id: 2, text: "¡Hola Elena! Qué gusto. Claro, los suplementos de longevidad son un tema fascinante. ¿Cuáles te interesaron más?", sender: "me", time: "11:25 AM" },
-      { id: 3, text: "Especialmente el protocolo de NMN y Resveratrol. He leído mucho pero no sé por dónde empezar.", sender: "other", time: "11:27 AM" }
-    ]
-  },
-  {
-    id: 2,
-    avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=150",
-    name: "Dr. Roberto Sánchez",
-    lastMessage: "He revisado tu pregunta sobre los ciclos de ayuno...",
-    time: "Hace 1 hora",
-    isOnline: false,
-    messages: [
-      { id: 1, text: "He revisado tu pregunta sobre los ciclos de ayuno intermitente. Mi recomendación es que empieces con un protocolo 16:8 durante las primeras dos semanas para evaluar cómo se adapta tu metabolismo.", sender: "other", time: "10:15 AM" }
-    ]
-  }
-];
+type Conversation = {
+  id: string;
+  participant: {
+    id: string;
+    name: string;
+    avatar_url: string;
+  };
+  last_message: {
+    id: string;
+    body: string;
+    sender_id: string;
+    created_at: string;
+  } | null;
+  updated_at: string;
+};
+
+type Message = {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
+};
+
+function isUuid(value: string | null) {
+  return Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value));
+}
+
+function formatTime(value?: string) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function fallbackAvatar(name: string) {
+  const initials = encodeURIComponent(name || "Usuario");
+  return `https://ui-avatars.com/api/?name=${initials}&background=e2e8f0&color=0f172a&size=128`;
+}
 
 function MessagesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const queryId = searchParams.get('id');
-  const [selectedId, setSelectedId] = useState(queryId ? parseInt(queryId, 10) : 1);
-  const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS);
-
-  useEffect(() => {
-    if (queryId) {
-      const id = parseInt(queryId, 10);
-      if (!isNaN(id)) {
-        setSelectedId(id);
-      }
-    }
-  }, [queryId]);
-
+  const recipientId = searchParams.get("id");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
   const [isChatMenuOpen, setIsChatMenuOpen] = useState(false);
   const chatMenuRef = useRef<HTMLDivElement>(null);
 
@@ -63,50 +68,143 @@ function MessagesContent() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSend = () => {
-    if (inputText.trim()) {
-      const newMsg = {
-        id: Date.now(),
-        text: inputText.trim(),
-        sender: "me",
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
+  useEffect(() => {
+    async function loadConversations() {
+      try {
+        setIsLoading(true);
+        setError(null);
 
-      setConversations(prev =>
-        prev.map(c => {
-          if (c.id === selectedId) {
-            return {
-              ...c,
-              lastMessage: newMsg.text,
-              time: "Ahora mismo",
-              messages: [...c.messages, newMsg]
-            };
+        if (isUuid(recipientId)) {
+          const response = await fetch("/api/messages/conversations", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ recipientId }),
+          });
+
+          if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.message || "No pudimos abrir la conversacion.");
           }
-          return c;
-        })
-      );
 
-      setInputText("");
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
+          const data = await response.json();
+          setSelectedId(data.conversation.id);
+        }
+
+        const response = await fetch("/api/messages/conversations", {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.message || "No pudimos cargar tus conversaciones.");
+        }
+
+        const data = await response.json();
+        const nextConversations = data.conversations || [];
+        setConversations(nextConversations);
+
+        if (!isUuid(recipientId) && nextConversations.length > 0) {
+          setSelectedId(nextConversations[0].id);
+        }
+      } catch (err: any) {
+        setError(err.message || "No pudimos cargar tus mensajes.");
+      } finally {
+        setIsLoading(false);
       }
+    }
+
+    loadConversations();
+  }, [recipientId]);
+
+  useEffect(() => {
+    if (!selectedId) {
+      setMessages([]);
+      return;
+    }
+
+    async function loadMessages() {
+      try {
+        setError(null);
+        const response = await fetch(`/api/messages/conversations/${selectedId}/messages`, {
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.message || "No pudimos cargar la conversacion.");
+        }
+
+        const data = await response.json();
+        setMessages(data.messages || []);
+      } catch (err: any) {
+        setError(err.message || "No pudimos cargar la conversacion.");
+      }
+    }
+
+    loadMessages();
+  }, [selectedId]);
+
+  const refreshConversations = async () => {
+    const response = await fetch("/api/messages/conversations", {
+      cache: "no-store",
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setConversations(data.conversations || []);
+    }
+  };
+
+  const handleSend = async () => {
+    const body = inputText.trim();
+    if (!body || !selectedId || isSending) return;
+
+    try {
+      setIsSending(true);
+      setError(null);
+      const response = await fetch(`/api/messages/conversations/${selectedId}/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ body }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "No pudimos enviar el mensaje.");
+      }
+
+      const data = await response.json();
+      setMessages((prev) => [...prev, data.message]);
+      setInputText("");
+      await refreshConversations();
+
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+      }
+    } catch (err: any) {
+      setError(err.message || "No pudimos enviar el mensaje.");
+    } finally {
+      setIsSending(false);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
-  const selectedConv = conversations.find(c => c.id === selectedId) || conversations[0];
+  const selectedConv = conversations.find((conversation) => conversation.id === selectedId) || null;
 
   return (
     <div className="flex-1 w-full flex flex-col bg-[#F8FAFC] h-[calc(100vh-80px)] overflow-hidden">
       <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-6 flex flex-col min-h-0">
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0">
-
           <div className="flex items-center gap-3 mb-3 shrink-0">
             <button
               onClick={() => router.back()}
@@ -118,9 +216,13 @@ function MessagesContent() {
             <h1 className="text-[24px] font-bold text-slate-900 font-jakarta tracking-tight">Mensajes</h1>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 min-h-0">
+          {error && (
+            <div className="mb-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-600">
+              {error}
+            </div>
+          )}
 
-            {/* Sidebar - Contacts (Left - 1/3) */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 min-h-0">
             <div className="md:col-span-4 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full min-h-0">
               <div className="p-2 border-b border-slate-100 shrink-0">
                 <div className="relative">
@@ -134,140 +236,149 @@ function MessagesContent() {
               </div>
 
               <div className="flex-1 overflow-y-auto custom-scrollbar p-2 flex flex-col gap-2">
-                {conversations.map((conv) => (
-                  <div
-                    key={conv.id}
-                    onClick={() => setSelectedId(conv.id)}
-                    className={`flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all duration-300 ${selectedId === conv.id
-                      ? 'bg-slate-100 text-black shadow-none'
-                      : 'hover:bg-slate-50 text-slate-600 hover:text-black'
+                {isLoading && (
+                  <div className="p-4 text-[13px] text-slate-400">Cargando conversaciones...</div>
+                )}
+
+                {!isLoading && conversations.length === 0 && (
+                  <div className="p-4 text-[13px] text-slate-400">Todavia no tienes conversaciones.</div>
+                )}
+
+                {conversations.map((conversation) => (
+                  <button
+                    key={conversation.id}
+                    onClick={() => setSelectedId(conversation.id)}
+                    className={`flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all duration-300 text-left border-none ${selectedId === conversation.id
+                      ? "bg-slate-100 text-black shadow-none"
+                      : "hover:bg-slate-50 text-slate-600 hover:text-black bg-transparent"
                       }`}
                   >
                     <div className="relative shrink-0">
-                      <img src={conv.avatar} alt={conv.name} className="w-11 h-11 rounded-xl object-cover" />
-                      {conv.isOnline && (
-                        <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
-                      )}
+                      <img
+                        src={conversation.participant.avatar_url || fallbackAvatar(conversation.participant.name)}
+                        alt={conversation.participant.name}
+                        className="w-11 h-11 rounded-xl object-cover"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center mb-0.5">
-                        <h3 className="text-[13px] font-bold truncate text-slate-900">{conv.name}</h3>
-                        <span className="text-[10px] text-slate-400 whitespace-nowrap">{conv.time}</span>
+                        <h3 className="text-[13px] font-bold truncate text-slate-900">{conversation.participant.name}</h3>
+                        <span className="text-[10px] text-slate-400 whitespace-nowrap">{formatTime(conversation.last_message?.created_at || conversation.updated_at)}</span>
                       </div>
-                      <p className="text-[12px] text-slate-500 truncate">{conv.lastMessage}</p>
+                      <p className="text-[12px] text-slate-500 truncate">{conversation.last_message?.body || "Conversacion iniciada"}</p>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Main Chat Area (Right - 2/3) */}
-            <div className="md:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full relative min-h-0">
-              {/* Chat Header */}
-              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white z-10 shrink-0">
-                <div className="flex items-center gap-3">
-                  <img src={selectedConv.avatar} alt={selectedConv.name} className="w-10 h-10 rounded-[10px] object-cover" />
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-[14px] font-bold text-slate-900 leading-none">{selectedConv.name}</h2>
-                    <button 
-                      onClick={() => alert(`Próximamente: Perfil de ${selectedConv.name}`)}
-                      className="h-7 px-3 flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 font-bold text-[11px] rounded-full transition-colors border-none cursor-pointer"
-                    >
-                      Ver perfil
-                    </button>
-                  </div>
-                </div>
-
-                {/* Chat Options Menu */}
-                <div className="relative" ref={chatMenuRef}>
-                  <button
-                    onClick={() => setIsChatMenuOpen(!isChatMenuOpen)}
-                    className={`flex items-center justify-center w-10 h-10 rounded-full transition-all border-none cursor-pointer bg-transparent ${isChatMenuOpen ? 'bg-slate-100' : 'hover:bg-slate-50'}`}
-                  >
-                    <span className="material-symbols-outlined text-slate-400 hover:text-black transition-colors">more_vert</span>
                   </button>
-
-                  {isChatMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                      <button
-                        onClick={() => setIsChatMenuOpen(false)}
-                        className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
-                      >
-                        <span className="material-symbols-outlined text-slate-400 group-hover:text-black">notifications_off</span>
-                        <span className="font-semibold text-slate-400 group-hover:text-black transition-colors">Silenciar</span>
-                      </button>
-                      <div className="h-[1px] bg-slate-100 w-full"></div>
-                      <button
-                        onClick={() => setIsChatMenuOpen(false)}
-                        className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
-                      >
-                        <span className="material-symbols-outlined text-slate-400 group-hover:text-[#FF4B4B]">block</span>
-                        <span className="font-semibold text-slate-400 group-hover:text-[#FF4B4B] transition-colors">Bloquear</span>
-                      </button>
-                      <button
-                        onClick={() => setIsChatMenuOpen(false)}
-                        className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
-                      >
-                        <span className="material-symbols-outlined text-slate-400 group-hover:text-[#FF4B4B]">delete</span>
-                        <span className="font-semibold text-slate-400 group-hover:text-[#FF4B4B] transition-colors">Eliminar chat</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Messages List */}
-              <div className="flex-1 overflow-y-auto p-4 custom-scrollbar flex flex-col gap-3 bg-white">
-                {selectedConv.messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex flex-col ${msg.sender === 'me' ? 'items-end' : 'items-start'}`}
-                  >
-                    <div
-                      className={`max-w-[70%] px-4 py-2.5 text-[13px] leading-relaxed ${msg.sender === 'me'
-                        ? 'bg-black text-white rounded-2xl rounded-tr-none font-medium'
-                        : 'bg-slate-100 border border-slate-100 text-slate-800 rounded-2xl rounded-tl-none'
-                        }`}
-                    >
-                      {msg.text}
-                    </div>
-                    <span className="mt-1 text-[10px] text-slate-400 px-1">
-                      {msg.time}
-                    </span>
-                  </div>
                 ))}
-              </div>
-
-              {/* Input Bar */}
-              <div className="p-4 bg-white shrink-0 border-t border-slate-100">
-                <div className="flex items-center w-full">
-                  <div className="flex-1 relative flex items-end">
-                    <textarea
-                      ref={textareaRef}
-                      value={inputText}
-                      onChange={(e) => setInputText(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Escribe un mensaje..."
-                      rows={1}
-                      className="w-full bg-slate-50 border-none rounded-[24px] py-3 pl-5 pr-14 text-[13px] focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-32 custom-scrollbar block text-slate-800"
-                      onInput={(e) => {
-                        const target = e.target as HTMLTextAreaElement;
-                        target.style.height = 'auto';
-                        target.style.height = `${target.scrollHeight}px`;
-                      }}
-                    />
-                    <button
-                      onClick={handleSend}
-                      className={`absolute right-1.5 bottom-1.5 w-9 h-9 rounded-full flex items-center justify-center transition-all border-none ${inputText.trim() ? 'bg-black text-white cursor-pointer' : 'bg-transparent text-slate-300 hover:bg-slate-200 cursor-not-allowed'}`}
-                      disabled={!inputText.trim()}
-                    >
-                      <span className="material-symbols-outlined text-[18px] ml-0.5">send</span>
-                    </button>
-                  </div>
-                </div>
               </div>
             </div>
 
+            <div className="md:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full relative min-h-0">
+              {selectedConv ? (
+                <>
+                  <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white z-10 shrink-0">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={selectedConv.participant.avatar_url || fallbackAvatar(selectedConv.participant.name)}
+                        alt={selectedConv.participant.name}
+                        className="w-10 h-10 rounded-[10px] object-cover"
+                      />
+                      <div className="flex items-center gap-3">
+                        <h2 className="text-[14px] font-bold text-slate-900 leading-none">{selectedConv.participant.name}</h2>
+                        <button
+                          onClick={() => router.push(`/comunidad/public-profile?id=${selectedConv.participant.id}`)}
+                          className="h-7 px-3 flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 font-bold text-[11px] rounded-full transition-colors border-none cursor-pointer"
+                        >
+                          Ver perfil
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="relative" ref={chatMenuRef}>
+                      <button
+                        onClick={() => setIsChatMenuOpen(!isChatMenuOpen)}
+                        className={`flex items-center justify-center w-10 h-10 rounded-full transition-all border-none cursor-pointer bg-transparent ${isChatMenuOpen ? "bg-slate-100" : "hover:bg-slate-50"}`}
+                      >
+                        <span className="material-symbols-outlined text-slate-400 hover:text-black transition-colors">more_vert</span>
+                      </button>
+
+                      {isChatMenuOpen && (
+                        <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                          <button
+                            onClick={() => setIsChatMenuOpen(false)}
+                            className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                          >
+                            <span className="material-symbols-outlined text-slate-400 group-hover:text-black">notifications_off</span>
+                            <span className="font-semibold text-slate-400 group-hover:text-black transition-colors">Silenciar</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto p-4 custom-scrollbar flex flex-col gap-3 bg-white">
+                    {messages.length === 0 && (
+                      <div className="m-auto text-center text-[13px] text-slate-400">
+                        Todavia no hay mensajes. Escribe el primero.
+                      </div>
+                    )}
+
+                    {messages.map((message) => {
+                      const isMine = message.sender_id !== selectedConv.participant.id;
+                      return (
+                        <div
+                          key={message.id}
+                          className={`flex flex-col ${isMine ? "items-end" : "items-start"}`}
+                        >
+                          <div
+                            className={`max-w-[70%] px-4 py-2.5 text-[13px] leading-relaxed ${isMine
+                              ? "bg-black text-white rounded-2xl rounded-tr-none font-medium"
+                              : "bg-slate-100 border border-slate-100 text-slate-800 rounded-2xl rounded-tl-none"
+                              }`}
+                          >
+                            {message.body}
+                          </div>
+                          <span className="mt-1 text-[10px] text-slate-400 px-1">
+                            {formatTime(message.created_at)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="p-4 bg-white shrink-0 border-t border-slate-100">
+                    <div className="flex items-center w-full">
+                      <div className="flex-1 relative flex items-end">
+                        <textarea
+                          ref={textareaRef}
+                          value={inputText}
+                          onChange={(e) => setInputText(e.target.value)}
+                          onKeyDown={handleKeyDown}
+                          placeholder="Escribe un mensaje..."
+                          rows={1}
+                          className="w-full bg-slate-50 border-none rounded-[24px] py-3 pl-5 pr-14 text-[13px] focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-32 custom-scrollbar block text-slate-800"
+                          onInput={(e) => {
+                            const target = e.target as HTMLTextAreaElement;
+                            target.style.height = "auto";
+                            target.style.height = `${target.scrollHeight}px`;
+                          }}
+                        />
+                        <button
+                          onClick={handleSend}
+                          className={`absolute right-1.5 bottom-1.5 w-9 h-9 rounded-full flex items-center justify-center transition-all border-none ${inputText.trim() && !isSending ? "bg-black text-white cursor-pointer" : "bg-transparent text-slate-300 hover:bg-slate-200 cursor-not-allowed"}`}
+                          disabled={!inputText.trim() || isSending}
+                        >
+                          <span className="material-symbols-outlined text-[18px] ml-0.5">send</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 flex items-center justify-center text-center text-[13px] text-slate-400 p-8">
+                  Selecciona una conversacion o abre un perfil para iniciar una.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
