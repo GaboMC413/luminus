@@ -6,11 +6,14 @@ import { Profile } from "./ProfileContent";
 
 interface ProfileSidebarProps {
   profile: Profile;
-  onEditPhoto: () => void;
-  onEditProfile: (field?: string) => void;
-  onSignOut: () => void;
-  onShowCoverModal: () => void;
+  onEditPhoto?: () => void;
+  onEditProfile?: (field?: string) => void;
+  onSignOut?: () => void;
+  onShowCoverModal?: () => void;
   coverUrl: string;
+  isPublic?: boolean;
+  onSendMessage?: () => void;
+  onConnect?: () => void;
 }
 
 export function ProfileSidebar({
@@ -18,7 +21,10 @@ export function ProfileSidebar({
   onEditPhoto,
   onEditProfile,
   onShowCoverModal,
-  coverUrl
+  coverUrl,
+  isPublic = false,
+  onSendMessage,
+  onConnect
 }: ProfileSidebarProps) {
 
   const toTitleCase = (str: string) => {
@@ -61,11 +67,13 @@ export function ProfileSidebar({
         {coverUrl && !coverUrl.includes("empty") && (
           <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
         )}
-        <ProfileButton
-          onClick={onShowCoverModal}
-          icon="photo_camera"
-          className="absolute bottom-3 right-3 z-10"
-        />
+        {!isPublic && onShowCoverModal && (
+          <ProfileButton
+            onClick={onShowCoverModal}
+            icon="photo_camera"
+            className="absolute bottom-3 right-3 z-10"
+          />
+        )}
       </div>
 
       <div className="w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 rounded-[16px] overflow-hidden -mt-[96px] md:mt-6 ml-4 md:ml-0 relative shrink-0 group border-4 border-white bg-white">
@@ -82,11 +90,13 @@ export function ProfileSidebar({
             </span>
           </div>
         )}
-        <ProfileButton
-          onClick={onEditPhoto}
-          icon="photo_camera"
-          className="absolute bottom-3 right-3 z-20"
-        />
+        {!isPublic && onEditPhoto && (
+          <ProfileButton
+            onClick={onEditPhoto}
+            icon="photo_camera"
+            className="absolute bottom-3 right-3 z-20"
+          />
+        )}
       </div>
 
       <div className="w-full p-4 pt-5 lg:p-5 lg:pt-6 flex flex-col items-start md:items-center gap-4 lg:gap-6">
@@ -99,58 +109,93 @@ export function ProfileSidebar({
               {profile.city?.split(',')[0] || ""}{profile.city && profile.country ? ", " : ""}{profile.country || ""}
             </p>
           ) : (
-            <EmptyProfileButton
-              onClick={() => onEditProfile("city")}
-              label="Añadir ciudad"
-              icon="add"
-              className="mt-1"
-            />
+            !isPublic && onEditProfile && (
+              <EmptyProfileButton
+                onClick={() => onEditProfile("city")}
+                label="Añadir ciudad"
+                icon="add"
+                className="mt-1"
+              />
+            )
           )}
         </div>
 
         <div className="w-full h-px bg-slate-100" />
 
         <div className="w-full flex flex-col gap-4 lg:gap-6 px-1">
-          <DetailItem label="Profesión" value={profile.profession} icon="work" onClick={() => onEditProfile("profession")} />
-          <DetailItem label="Nacimiento" value={formatDisplayDate(profile.birthdate)} icon="cake" onClick={() => onEditProfile("birthdate")} />
-          <DetailItem label="Género" value={profile.gender} icon={getGenderIcon(profile.gender)} onClick={() => onEditProfile("gender")} />
+          <DetailItem label="Profesión" value={profile.profession} icon="work" onClick={onEditProfile ? () => onEditProfile("profession") : undefined} isPublic={isPublic} />
+          <DetailItem label="Nacimiento" value={formatDisplayDate(profile.birthdate)} icon="cake" onClick={onEditProfile ? () => onEditProfile("birthdate") : undefined} isPublic={isPublic} />
+          <DetailItem label="Género" value={profile.gender} icon={getGenderIcon(profile.gender)} onClick={onEditProfile ? () => onEditProfile("gender") : undefined} isPublic={isPublic} />
         </div>
 
-        <div className="w-full h-px bg-slate-50" />
+        {(!isPublic || onSendMessage || onConnect) && (
+          <>
+            <div className="w-full h-px bg-slate-50" />
 
-        <div className="w-full flex flex-col gap-2">
-          <ProfileButton
-            onClick={() => onEditProfile()}
-            icon="edit"
-            label="Editar perfil"
-            className="w-full"
-          />
+            <div className="w-full flex flex-col gap-2">
+              {isPublic ? (
+                <>
+                  {onSendMessage && (
+                    <button
+                      onClick={onSendMessage}
+                      className="w-full py-3.5 bg-black text-white rounded-xl text-[14px] font-bold hover:bg-zinc-800 transition flex items-center justify-center gap-2 border-none cursor-pointer font-jakarta"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">mail</span>
+                      Enviar Mensaje
+                    </button>
+                  )}
+                  {onConnect && (
+                    <button
+                      onClick={onConnect}
+                      className="w-full py-3.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[14px] font-bold hover:bg-slate-50 hover:text-black hover:border-slate-300 transition flex items-center justify-center gap-2 cursor-pointer font-jakarta"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">person_add</span>
+                      Conectar
+                    </button>
+                  )}
+                </>
+              ) : (
+                <>
+                  {onEditProfile && (
+                    <ProfileButton
+                      onClick={() => onEditProfile()}
+                      icon="edit"
+                      label="Editar perfil"
+                      className="w-full"
+                    />
+                  )}
 
-          <Link href="/perfil-usuario/configuracion" className="w-full hidden md:block">
-            <ProfileButton
-              onClick={() => { }}
-              icon="settings"
-              label="Ajustes de la cuenta"
-              className="w-full"
-            />
-          </Link>
+                  <Link href="/perfil-usuario/configuracion" className="w-full hidden md:block">
+                    <ProfileButton
+                      onClick={() => { }}
+                      icon="settings"
+                      label="Ajustes de la cuenta"
+                      className="w-full"
+                    />
+                  </Link>
 
-          <Link href="/perfil-usuario/configuracion?tab=password" className="w-full hidden md:block">
-            <ProfileButton
-              onClick={() => { }}
-              icon="lock"
-              label="Cambiar contraseña"
-              className="w-full"
-            />
-          </Link>
-        </div>
+                  <Link href="/perfil-usuario/configuracion?tab=password" className="w-full hidden md:block">
+                    <ProfileButton
+                      onClick={() => { }}
+                      icon="lock"
+                      label="Cambiar contraseña"
+                      className="w-full"
+                    />
+                  </Link>
+                </>
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-function DetailItem({ label, value, icon, onClick }: { label: string; value: string; icon: string; onClick?: () => void }) {
+function DetailItem({ label, value, icon, onClick, isPublic = false }: { label: string; value: string; icon: string; onClick?: () => void; isPublic?: boolean }) {
   const isEmpty = !value || value === 'No definido' || value === 'Sin fecha de nacimiento';
+
+  if (isEmpty && isPublic) return null;
 
   return (
     <div className="flex items-center gap-4 relative">
@@ -159,11 +204,13 @@ function DetailItem({ label, value, icon, onClick }: { label: string; value: str
       </span>
       <div className="flex flex-col min-w-0 flex-1">
         {isEmpty ? (
-          <EmptyProfileButton
-            onClick={onClick}
-            label={`Añadir ${label.toLowerCase()}`}
-            icon="add"
-          />
+          onClick && (
+            <EmptyProfileButton
+              onClick={onClick}
+              label={`Añadir ${label.toLowerCase()}`}
+              icon="add"
+            />
+          )
         ) : (
           <span className="text-sm lg:text-base text-primary truncate leading-relaxed">{value}</span>
         )}

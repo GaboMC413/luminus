@@ -135,24 +135,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ profile });
   } catch (error) {
     console.error("Onboarding database flow failed.", error);
-    console.warn("Database not available, using mock onboarding profile bypass.");
-    const mockProfile = {
-      userId: session.userId,
-      fullName: fullName || "Nancy Núñez",
-      firstName: firstName || "Nancy",
-      lastName: lastName || "Núñez",
-      avatarUrl: typeof data.avatarUrl === "string" ? data.avatarUrl : null,
-      city: typeof data.city === "string" ? data.city : "Lima",
-      country: typeof data.country === "string" ? data.country : "Perú",
-      phoneNumber: phoneNumber || null,
-      gender: typeof data.gender === "string" ? data.gender : "Femenino",
-      birthdate: birthdate || null,
-      selectedPlan: typeof data.selectedPlan === "string" ? data.selectedPlan : "Mensual",
-      intention: otherInterests || null,
-      isOnboarded: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    return NextResponse.json({ profile: mockProfile });
+    const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
+    if (useMockData) {
+      console.warn("Database not available, using mock onboarding profile bypass.");
+      const mockProfile = {
+        userId: session.userId,
+        fullName: fullName || "Nancy Núñez",
+        firstName: firstName || "Nancy",
+        lastName: lastName || "Núñez",
+        avatarUrl: typeof data.avatarUrl === "string" ? data.avatarUrl : null,
+        city: typeof data.city === "string" ? data.city : "Lima",
+        country: typeof data.country === "string" ? data.country : "Perú",
+        phoneNumber: phoneNumber || null,
+        gender: typeof data.gender === "string" ? data.gender : "Femenino",
+        birthdate: birthdate || null,
+        selectedPlan: typeof data.selectedPlan === "string" ? data.selectedPlan : "Mensual",
+        intention: otherInterests || null,
+        isOnboarded: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      return NextResponse.json({ profile: mockProfile });
+    }
+    return NextResponse.json(
+      { message: "El servicio de base de datos no está disponible." },
+      { status: 500 }
+    );
   }
 }

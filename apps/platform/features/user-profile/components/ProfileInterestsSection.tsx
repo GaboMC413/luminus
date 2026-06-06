@@ -6,19 +6,22 @@ import { InterestPill } from "@/components/ui/InterestPill";
 interface ProfileInterestsSectionProps {
   interests: string[];
   otherInterests?: string;
-  onEdit: () => void;
+  onEdit?: () => void;
+  isPublic?: boolean;
 }
 
-export function ProfileInterestsSection({ interests, otherInterests, onEdit }: ProfileInterestsSectionProps) {
+export function ProfileInterestsSection({ interests, otherInterests, onEdit, isPublic = false }: ProfileInterestsSectionProps) {
   const hasInterests = (interests && interests.length > 0) || (otherInterests && otherInterests.trim().length > 0);
 
   return (
     <div className="bg-white rounded-[24px] p-4 lg:p-6 flex flex-col gap-2 lg:gap-6 border border-slate-200 shadow-none relative group">
-      <ProfileButton
-        onClick={onEdit}
-        icon="edit"
-        className="absolute top-4 right-4 z-20"
-      />
+      {!isPublic && onEdit && (
+        <ProfileButton
+          onClick={onEdit}
+          icon="edit"
+          className="absolute top-4 right-4 z-20"
+        />
+      )}
       <div className="flex items-center gap-1">
         <h3 className="text-label text-[0.75rem] lg:text-[0.8125rem] uppercase font-semibold ml-1">Intereses</h3>
       </div>
@@ -37,13 +40,15 @@ export function ProfileInterestsSection({ interests, otherInterests, onEdit }: P
       ) : (
         <div className="flex flex-col items-start gap-4">
           <p className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight leading-relaxed">
-            No has seleccionado tus intereses todavía
+            {isPublic ? "Este usuario aún no ha seleccionado intereses." : "No has seleccionado tus intereses todavía"}
           </p>
-          <EmptyProfileButton 
-            onClick={onEdit}
-            label="Selecciona tus intereses"
-            icon="add"
-          />
+          {!isPublic && onEdit && (
+            <EmptyProfileButton 
+              onClick={onEdit}
+              label="Selecciona tus intereses"
+              icon="add"
+            />
+          )}
         </div>
       )}
     </div>

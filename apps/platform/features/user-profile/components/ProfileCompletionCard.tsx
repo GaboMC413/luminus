@@ -5,18 +5,21 @@ import { PromptsDisplay, Prompt } from "./ProfilePrompts";
 
 interface ProfileCompletionCardProps {
   prompts: Prompt[];
-  onEditPrompts: (step?: 'list' | 'select') => void;
+  onEditPrompts?: (step?: 'list' | 'select') => void;
+  isPublic?: boolean;
 }
 
-export function ProfileCompletionCard({ prompts, onEditPrompts }: ProfileCompletionCardProps) {
+export function ProfileCompletionCard({ prompts, onEditPrompts, isPublic = false }: ProfileCompletionCardProps) {
   return (
     <div className="relative group">
-      <ProfileButton
-        onClick={() => onEditPrompts('list')}
-        icon="edit"
-        className="absolute top-4 right-4 z-20"
-      />
-      <PromptsDisplay prompts={prompts} onEdit={onEditPrompts} />
+      {!isPublic && onEditPrompts && (
+        <ProfileButton
+          onClick={() => onEditPrompts('list')}
+          icon="edit"
+          className="absolute top-4 right-4 z-20"
+        />
+      )}
+      <PromptsDisplay prompts={prompts} onEdit={onEditPrompts} isPublic={isPublic} />
     </div>
   );
 }

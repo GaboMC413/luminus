@@ -121,7 +121,7 @@ export const ALL_PROMPTS = [
   }
 ];
 
-export function PromptsDisplay({ prompts, onEdit }: { prompts: Prompt[]; onEdit?: (step?: 'list' | 'select') => void }) {
+export function PromptsDisplay({ prompts, onEdit, isPublic = false }: { prompts: Prompt[]; onEdit?: (step?: 'list' | 'select') => void; isPublic?: boolean }) {
   const hasPrompts = prompts && prompts.length > 0;
 
   return (
@@ -147,13 +147,15 @@ export function PromptsDisplay({ prompts, onEdit }: { prompts: Prompt[]; onEdit?
       ) : (
         <div className="flex flex-col items-start gap-4">
           <p className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight leading-relaxed">
-            Agregá reflexiones para que otros te conozcan mejor
+            {isPublic ? "Este usuario aún no ha agregado reflexiones." : "Agregá reflexiones para que otros te conozcan mejor"}
           </p>
-          <EmptyProfileButton
-            onClick={() => onEdit?.('select')}
-            label="Comparte tus reflexiones"
-            icon="add"
-          />
+          {!isPublic && onEdit && (
+            <EmptyProfileButton
+              onClick={() => onEdit?.('select')}
+              label="Comparte tus reflexiones"
+              icon="add"
+            />
+          )}
         </div>
       )}
     </div>

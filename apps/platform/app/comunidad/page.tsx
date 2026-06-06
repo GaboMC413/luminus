@@ -26,10 +26,35 @@ function PlatformContent() {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSearch, setShowSearch] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   const isSearching = searchQuery.length > 0;
   const effectiveShowSearch = showSearch || isSearching;
+
+  useEffect(() => {
+    async function loadUsers() {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await fetch("/api/comunidad");
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.message || `Error del servidor: ${res.status}`);
+        }
+        const data = await res.json();
+        setUsers(data.users || []);
+      } catch (err: any) {
+        console.error("Error al cargar usuarios de la comunidad:", err);
+        setError(err.message || "Error de conexión con el servidor");
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadUsers();
+  }, []);
 
   useEffect(() => {
     if (searchQuery.length < 2) {
@@ -75,11 +100,15 @@ function PlatformContent() {
   };
 
   // Filter users based on searchQuery AND selectedCategory
-  const filteredUsers = MOCK_USERS.filter(user => {
+  const filteredUsers = users.filter(user => {
+    const name = user.name || "";
+    const location = user.location || "";
+    const interests = user.interests || [];
+    
     const matchesSearch = !searchQuery || 
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.interests.some(interest => interest.toLowerCase().includes(searchQuery.toLowerCase()));
+      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      interests.some((interest: string) => interest.toLowerCase().includes(searchQuery.toLowerCase()));
 
     if (selectedCategory !== "Todas las categorías") {
       const CATEGORIES_MAPPING = {
@@ -92,7 +121,7 @@ function PlatformContent() {
         "Espiritualidad": ["Atención plena", "Meditación", "Conexión interior", "Espiritualidad", "Experiencias conscientes", "Naturaleza"]
       };
       const allowedInterests = (CATEGORIES_MAPPING as any)[selectedCategory] || [];
-      const matchesCategory = user.interests.some(interest => 
+      const matchesCategory = interests.some((interest: string) => 
         allowedInterests.some((ai: string) => ai.toLowerCase() === interest.toLowerCase())
       );
       return matchesSearch && matchesCategory;
@@ -100,6 +129,70 @@ function PlatformContent() {
 
     return matchesSearch;
   });
+
+  if (loading) {
+    return (
+      <div className="w-full h-screen bg-[#F8FAFC] flex flex-col items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black"></div>
+          <p className="text-[13px] text-slate-500 font-medium">Cargando comunidad...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex-1 w-full max-w-2xl mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[80vh]">
+        <div className="w-full bg-white rounded-3xl p-8 border border-red-100 shadow-sm flex flex-col items-center text-center gap-6">
+          <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center text-red-500">
+            <span className="material-symbols-outlined text-[32px]">database_off</span>
+          </div>
+          
+          <div className="flex flex-col gap-2">
+            <h2 className="text-[20px] font-bold text-slate-900 font-jakarta">
+              Error de Configuración de Base de Datos
+            </h2>
+            <p className="text-[14px] text-slate-500 max-w-md">
+              {error}
+            </p>
+          </div>
+
+          <div className="w-full bg-slate-50 rounded-2xl p-5 text-left border border-slate-100 flex flex-col gap-3 font-sans">
+            <h3 className="text-[13px] font-semibold text-slate-700 uppercase tracking-wider">
+              ¿Cómo solucionar esto localmente?
+            </h3>
+            <div className="flex flex-col gap-2 text-[13px] text-slate-600">
+              <p>
+                <strong>Opción A: Conectarse a la Base de Datos Dev (Recomendado)</strong>
+                <br />
+                Asegúrate de tener un archivo <code>apps/platform/.env.local</code> con la variable:
+                <code className="block bg-slate-100 px-3 py-1.5 rounded-lg mt-1 font-mono text-[12px] break-all border border-slate-200">
+                  DATABASE_URL="postgresql://luminus_admin:...@..."
+                </code>
+              </p>
+              <div className="h-px bg-slate-200/60 my-1" />
+              <p>
+                <strong>Opción B: Usar Datos de Prueba (Mock)</strong>
+                <br />
+                Si solo deseas trabajar en la interfaz sin base de datos, activa el modo mock en tu <code>.env.local</code>:
+                <code className="block bg-slate-100 px-3 py-1.5 rounded-lg mt-1 font-mono text-[12px] break-all border border-slate-200">
+                  NEXT_PUBLIC_USE_MOCK_DATA=true
+                </code>
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => window.location.reload()}
+            className="h-11 px-6 bg-black text-white rounded-xl text-[14px] font-bold hover:bg-zinc-800 transition duration-200 cursor-pointer"
+          >
+            Reintentar Conexión
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 w-full flex flex-col h-full md:overflow-hidden overflow-visible">

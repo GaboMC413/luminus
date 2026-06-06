@@ -1,4 +1,15 @@
 export async function uploadAvatar(blob: Blob) {
+  // Safe local-only frontend mock for avatar uploads.
+  // This avoids failing requests during local development when AWS/S3 credentials are not set up.
+  if (process.env.NEXT_PUBLIC_USE_MOCK_AVATAR_UPLOAD === "true") {
+    console.warn("Luminus: Using local mock avatar upload fallback.");
+    const mockUrl = URL.createObjectURL(blob);
+    return {
+      key: `mock-avatar-${Date.now()}`,
+      publicUrl: mockUrl,
+    };
+  }
+
   const contentType = blob.type || "image/webp";
   const response = await fetch("/api/uploads/avatar", {
     method: "POST",

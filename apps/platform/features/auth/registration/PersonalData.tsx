@@ -125,6 +125,13 @@ export function PersonalData({
     }
   }, []);
 
+  // Clear photo warning error declaratively when a photo has been uploaded
+  React.useEffect(() => {
+    if (avatarUrl && errorField === 'photo') {
+      setErrorField(null);
+    }
+  }, [avatarUrl, errorField]);
+
   const updateParentBirthdate = (day: string, month: string, year: string) => {
     let formatted = "";
     if (day || month || year) {
