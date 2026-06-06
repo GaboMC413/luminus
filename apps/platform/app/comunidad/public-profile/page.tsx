@@ -29,6 +29,7 @@ function PublicProfileContent() {
   const searchParams = useSearchParams();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [connectionLoading, setConnectionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -66,9 +67,56 @@ function PublicProfileContent() {
     router.push(`/mensajes?id=${id || "1"}`);
   };
 
-  const handleConnect = () => {
+  const handleConnect = async () => {
+    const id = searchParams.get("id");
+    if (!id || connectionLoading || profile?.connection_status) return;
+
+    try {
+      setConnectionLoading(true);
+      const response = await fetch("/api/connections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ recipientId: id }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.message || "No pudimos enviar la solicitud.");
+      }
+
+      setProfile((current: any) => ({
+        ...current,
+        connection_status: data.connection?.status || "pending",
+        connection_direction: data.connection?.direction || "outgoing",
+      }));
+    } catch (err: any) {
+      console.error("Error al enviar solicitud de conexión:", err);
+      alert(err.message || "No pudimos enviar la solicitud de conexión.");
+    } finally {
+      setConnectionLoading(false);
+    }
+  };
+
+  const handleShareProfile = async () => {
     const fullName = `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim();
-    alert(`¡Solicitud de conexión enviada a ${fullName || "este usuario"}!`);
+    const url = window.location.href;
+
+    try {
+      await navigator.clipboard.writeText(url);
+      alert(`Perfil de ${fullName || "este usuario"} copiado al portapapeles.`);
+    } catch {
+      alert(url);
+    }
+  };
+
+  const getConnectionButtonLabel = () => {
+    if (connectionLoading) return "Enviando...";
+    if (profile?.connection_status === "pending") {
+      return profile?.connection_direction === "incoming" ? "Solicitud recibida" : "Solicitud enviada";
+    }
+    if (profile?.connection_status === "accepted") return "Ya conectado";
+    return "Agregar a mi red";
   };
 
   if (loading) {
@@ -141,13 +189,14 @@ function PublicProfileContent() {
                   <Button
                     onClick={handleConnect}
                     variant="outline"
+                    disabled={connectionLoading || Boolean(profile?.connection_status)}
                     className="flex-1 flex items-center justify-center gap-2 font-bold"
                   >
                     <span className="material-symbols-outlined text-[20px]">person_add</span>
-                    Agregar a mi red
+                    {getConnectionButtonLabel()}
                   </Button>
                   <Button
-                    onClick={handleConnect}
+                    onClick={handleShareProfile}
                     variant="outline"
                     className="flex-1 flex items-center justify-center gap-2 font-bold"
                   >

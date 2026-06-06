@@ -122,6 +122,20 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: "Usuario no encontrado." }, { status: 404 });
     }
 
+    const connection = await prisma.userConnection.findFirst({
+      where: {
+        OR: [
+          { requesterId: session.userId, recipientId: id },
+          { requesterId: id, recipientId: session.userId },
+        ],
+      },
+      select: {
+        id: true,
+        requesterId: true,
+        status: true,
+      },
+    });
+
     const profile = (user.profile ?? {}) as any;
     const prompts = (user.profilePrompts ?? [])
       .sort((a: any, b: any) => a.sortOrder - b.sortOrder)
@@ -148,6 +162,8 @@ export async function GET(request: Request) {
         created_at: profile.createdAt?.toISOString?.() ?? user.createdAt?.toISOString?.() ?? "",
         bio: profile.bio ?? "",
         other_interests: profile.intention ?? "",
+        connection_status: connection?.status ?? null,
+        connection_direction: connection ? (connection.requesterId === session.userId ? "outgoing" : "incoming") : null,
       }
     });
   } catch (error) {
