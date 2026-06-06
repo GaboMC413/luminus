@@ -50,6 +50,7 @@ export async function GET() {
         location: `${profile.city || ""}, ${profile.country || ""}`.replace(/^,\s*|,\s*$/, "").trim() || "Ubicación no definida",
         avatar: profile.avatarUrl || "",
         interests: (user.interests ?? []).map((row: any) => row.interest.name),
+        profession: profile.profession || "",
       };
     });
 
@@ -65,6 +66,7 @@ export async function GET() {
         location: user.location,
         avatar: user.avatar,
         interests: user.interests,
+        profession: idx % 3 === 0 ? "Coach" : idx % 3 === 1 ? "Nutricionista" : "Instructor de Yoga",
       }));
       return NextResponse.json({ users: serializedMock });
     }

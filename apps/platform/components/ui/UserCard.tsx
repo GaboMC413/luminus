@@ -20,6 +20,13 @@ export function UserCard({ user }: UserCardProps) {
     router.push(`/comunidad/public-profile?id=${encodeURIComponent(user.id)}`);
   };
 
+  const formatLocation = (loc: string) => {
+    if (!loc) return "";
+    const parts = loc.split(',').map(p => p.trim()).filter(Boolean);
+    if (parts.length <= 2) return loc;
+    return `${parts[0]}, ${parts[parts.length - 1]}`;
+  };
+
   const hasAvatar = user.avatar && !imgError;
 
   return (
@@ -46,7 +53,7 @@ export function UserCard({ user }: UserCardProps) {
           {user.name}
         </h3>
         <p className="text-[11px] md:text-[13px] font-medium text-slate-400 font-sans tracking-wide">
-          {user.location}
+          {formatLocation(user.location)}
         </p>
       </div>
 

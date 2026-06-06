@@ -1,11 +1,22 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { InterestPill } from "@/components/ui/InterestPill";
 import { UserCard } from "@/components/ui/UserCard";
-import { MOCK_USERS, SEARCH_DATA } from "@/utils/constants";
+import { Button, ProfileButton } from "@/components/ui/Button";
+import { MOCK_USERS } from "@/utils/constants";
+
+const CATEGORIES_MAPPING = {
+  "Crecimiento Personal": ["Autocuidado", "Motivación", "Calma interior", "Propósito de vida", "Organización personal", "Toma de decisiones", "Rutinas saludables", "Hábitos conscientes", "Confianza personal", "Autoestima", "Acompañamiento personal", "Crecimiento Personal", "Autoconocimiento", "Aprendizaje continuo"],
+  "Bienestar Emocional": ["Gestión emocional", "Relaciones saludables", "Calma interior", "Bienestar emocional", "Equilibrio emocional", "Acompañamiento personal", "Comunicación consciente", "Autoestima"],
+  "Salud y Medicina": ["Salud integral", "Suplementación", "Salud hormonal", "Salud cardiovascular", "Prevención", "Longevidad", "Salud digestiva", "Bienestar físico", "Dolor crónico", "Manejo del dolor", "Recuperación", "Alergias", "Inmunidad", "Peso saludable", "Salud metabólica", "Salud sexual", "Fertilidad", "Embarazo"],
+  "Movimiento Físico": ["Yoga y Pilates", "Atención plena", "Meditación", "Postura y movilidad", "Fuerza", "Entrenamiento funcional", "Cuidado del cuerpo", "Masa muscular", "Resistencia", "Movimiento consciente", "Cardio"],
+  "Nutrición": ["Nutrición diaria", "Alimentación consciente", "Alimentación saludable", "Cocina práctica", "Suplementación", "Hidratación", "Salud digestiva", "Alimentación vegetal", "Vitaminas"],
+  "Estilo de Vida": ["Autocuidado", "Sustentabilidad", "Experiencias conscientes", "Naturaleza", "Calidad de vida", "Rutinas saludables", "Organización personal", "Sueño reparador", "Descanso", "Balance vida personal"],
+  "Espiritualidad": ["Atención plena", "Meditación", "Conexión interior", "Espiritualidad", "Experiencias conscientes", "Naturaleza"]
+};
 
 export default function PlatformPage() {
   return (
@@ -21,18 +32,166 @@ export default function PlatformPage() {
 
 function PlatformContent() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [isMobileCategoriesOpen, setIsMobileCategoriesOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("Todas las categorías");
+  const [appliedFilters, setAppliedFilters] = useState({
+    country: "",
+    city: "",
+    category: "Todas las categorías",
+    selectedInterests: [] as string[],
+  });
+  const [tempFilters, setTempFilters] = useState({
+    country: "",
+    city: "",
+    category: "Todas las categorías",
+    selectedInterests: [] as string[],
+  });
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSearch, setShowSearch] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
+  const [profileImgError, setProfileImgError] = useState(false);
   const router = useRouter();
+
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const filterButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        filterButtonRef.current &&
+        !filterButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowFilters(false);
+      }
+    }
+    if (showFilters) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showFilters]);
+
+  // Dynamically compile countries and cities from existing community users in database
+  const { countriesWithResults, citiesWithResults } = useMemo(() => {
+    const countriesSet = new Set<string>();
+    const citiesSet = new Set<string>();
+
+    users.forEach(user => {
+      if (!user.location || user.location === "Ubicación no definida") return;
+      const parts = user.location.split(',').map((p: string) => p.trim());
+      if (parts.length >= 2) {
+        citiesSet.add(parts[0]);
+        countriesSet.add(parts[parts.length - 1]);
+      } else if (parts.length === 1 && parts[0]) {
+        citiesSet.add(parts[0]);
+      }
+    });
+
+    return {
+      countriesWithResults: Array.from(countriesSet).sort(),
+      citiesWithResults: Array.from(citiesSet).sort(),
+    };
+  }, [users]);
+
+  // Dynamically filter cities list based on selected country
+  const availableCities = useMemo(() => {
+    if (!tempFilters.country) {
+      return citiesWithResults;
+    }
+    const filteredCities = new Set<string>();
+    users.forEach(user => {
+      if (!user.location || user.location === "Ubicación no definida") return;
+      const parts = user.location.split(',').map((p: string) => p.trim());
+      if (parts.length >= 2 && parts[parts.length - 1].toLowerCase() === tempFilters.country.toLowerCase()) {
+        filteredCities.add(parts[0]);
+      }
+    });
+    return Array.from(filteredCities).sort();
+  }, [tempFilters.country, citiesWithResults, users]);
+
+  // Dynamically compile categories and interests with results in the database
+  const { categoriesWithResults, interestsWithResults } = useMemo(() => {
+    const interestsSet = new Set<string>();
+    users.forEach(user => {
+      if (user.interests) {
+        user.interests.forEach((interest: string) => {
+          interestsSet.add(interest);
+        });
+      }
+    });
+    const activeInterests = Array.from(interestsSet);
+
+    const categoriesSet = new Set<string>();
+    Object.entries(CATEGORIES_MAPPING).forEach(([categoryName, categoryInterests]) => {
+      const hasAnyMatch = categoryInterests.some(ci => 
+        activeInterests.some(ai => ai.toLowerCase() === ci.toLowerCase())
+      );
+      if (hasAnyMatch) {
+        categoriesSet.add(categoryName);
+      }
+    });
+
+    return {
+      categoriesWithResults: Array.from(categoriesSet).sort(),
+      interestsWithResults: activeInterests.sort(),
+    };
+  }, [users]);
+
+  const hasActiveFilters = 
+    appliedFilters.country !== "" ||
+    appliedFilters.city !== "" ||
+    appliedFilters.category !== "Todas las categorías" ||
+    appliedFilters.selectedInterests.length > 0;
+
+  const handleToggleFilters = () => {
+    if (!showFilters) {
+      setTempFilters({ ...appliedFilters });
+      setShowFilters(true);
+    } else {
+      setShowFilters(false);
+    }
+  };
+
+  const handleApplyFilters = () => {
+    setAppliedFilters({ ...tempFilters });
+    setShowFilters(false);
+  };
+
+  const handleClearFilters = () => {
+    const cleared = {
+      country: "",
+      city: "",
+      category: "Todas las categorías",
+      selectedInterests: [],
+    };
+    setTempFilters(cleared);
+    setAppliedFilters(cleared);
+    setShowFilters(false);
+  };
 
   const isSearching = searchQuery.length > 0;
   const effectiveShowSearch = showSearch || isSearching;
+
+  useEffect(() => {
+    async function loadCurrentUser() {
+      try {
+        const res = await fetch("/api/profile");
+        if (res.ok) {
+          const data = await res.json();
+          setCurrentUserProfile(data.profile);
+        }
+      } catch (err) {
+        console.error("Error loading current user profile:", err);
+      }
+    }
+    loadCurrentUser();
+  }, []);
 
   useEffect(() => {
     async function loadUsers() {
@@ -66,22 +225,22 @@ function PlatformContent() {
     const matches: any[] = [];
 
     // 1. Filter Countries (Priority)
-    SEARCH_DATA.countries.forEach(country => {
+    countriesWithResults.forEach(country => {
       if (country.toLowerCase().includes(query)) matches.push({ type: 'País', value: country });
     });
 
     // 2. Filter Cities
-    SEARCH_DATA.cities.forEach(city => {
+    citiesWithResults.forEach(city => {
       if (city.toLowerCase().includes(query)) matches.push({ type: 'Ciudad', value: city });
     });
 
     // 3. Filter Interests
-    SEARCH_DATA.interests.forEach(interest => {
+    interestsWithResults.forEach(interest => {
       if (interest.toLowerCase().includes(query)) matches.push({ type: 'Interés', value: interest });
     });
 
     setSuggestions(matches.slice(0, 5));
-  }, [searchQuery]);
+  }, [searchQuery, countriesWithResults, citiesWithResults, interestsWithResults]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const currentScrollY = e.currentTarget.scrollTop;
@@ -99,35 +258,54 @@ function PlatformContent() {
     setLastScrollY(currentScrollY);
   };
 
-  // Filter users based on searchQuery AND selectedCategory
+  // Filter users based on searchQuery AND appliedFilters
   const filteredUsers = users.filter(user => {
     const name = user.name || "";
     const location = user.location || "";
     const interests = user.interests || [];
-    
-    const matchesSearch = !searchQuery || 
+
+    // 1. Top main search bar keyword match (matches name, location, or any interest)
+    const matchesSearch = !searchQuery ||
       name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       location.toLowerCase().includes(searchQuery.toLowerCase()) ||
       interests.some((interest: string) => interest.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    if (selectedCategory !== "Todas las categorías") {
-      const CATEGORIES_MAPPING = {
-        "Crecimiento Personal": ["Autocuidado", "Motivación", "Calma interior", "Propósito de vida", "Organización personal", "Toma de decisiones", "Rutinas saludables", "Hábitos conscientes", "Confianza personal", "Autoestima", "Acompañamiento personal"],
-        "Bienestar Emocional": ["Gestión emocional", "Relaciones saludables", "Calma interior", "Bienestar emocional", "Equilibrio emocional", "Acompañamiento personal", "Comunicación consciente", "Autoestima"],
-        "Salud y Medicina": ["Salud integral", "Suplementación", "Salud hormonal", "Salud cardiovascular", "Prevención", "Longevidad", "Salud digestiva"],
-        "Movimiento Físico": ["Yoga y Pilates", "Atención plena", "Meditación", "Postura y movilidad", "Fuerza", "Entrenamiento funcional"],
-        "Nutrición": ["Nutrición diaria", "Alimentación consciente", "Alimentación saludable", "Cocina práctica", "Suplementación", "Hidratación", "Salud digestiva"],
-        "Estilo de Vida": ["Autocuidado", "Sustentabilidad", "Experiencias conscientes", "Naturaleza", "Calidad de vida", "Rutinas saludables", "Organización personal", "Sueño reparador", "Descanso", "Balance vida personal"],
-        "Espiritualidad": ["Atención plena", "Meditación", "Conexión interior", "Espiritualidad", "Experiencias conscientes", "Naturaleza"]
-      };
-      const allowedInterests = (CATEGORIES_MAPPING as any)[selectedCategory] || [];
-      const matchesCategory = interests.some((interest: string) => 
-        allowedInterests.some((ai: string) => ai.toLowerCase() === interest.toLowerCase())
-      );
-      return matchesSearch && matchesCategory;
+    if (!matchesSearch) return false;
+
+
+    // 3. Advanced filters: Country
+    if (appliedFilters.country) {
+      const countryLower = appliedFilters.country.toLowerCase();
+      const parts = location.split(',').map((p: string) => p.trim().toLowerCase());
+      const hasCountry = parts.includes(countryLower) || location.toLowerCase().includes(countryLower);
+      if (!hasCountry) return false;
     }
 
-    return matchesSearch;
+    // 4. Advanced filters: City
+    if (appliedFilters.city) {
+      const cityLower = appliedFilters.city.split(',')[0].trim().toLowerCase();
+      const locationLower = location.toLowerCase();
+      if (!locationLower.includes(cityLower)) return false;
+    }
+
+    // 5. Advanced filters: Category
+    if (appliedFilters.category && appliedFilters.category !== "Todas las categorías") {
+      const allowedInterests = (CATEGORIES_MAPPING as any)[appliedFilters.category] || [];
+      const matchesCategory = interests.some((interest: string) =>
+        allowedInterests.some((ai: string) => ai.toLowerCase() === interest.toLowerCase())
+      );
+      if (!matchesCategory) return false;
+    }
+
+    // 7. Advanced filters: Selected specific interests (OR matching)
+    if (appliedFilters.selectedInterests && appliedFilters.selectedInterests.length > 0) {
+      const hasInterest = interests.some((interest: string) =>
+        appliedFilters.selectedInterests.some((selected: string) => selected.toLowerCase() === interest.toLowerCase())
+      );
+      if (!hasInterest) return false;
+    }
+
+    return true;
   });
 
   if (loading) {
@@ -144,11 +322,11 @@ function PlatformContent() {
   if (error) {
     return (
       <div className="flex-1 w-full max-w-2xl mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[80vh]">
-        <div className="w-full bg-white rounded-3xl p-8 border border-red-100 shadow-sm flex flex-col items-center text-center gap-6">
+        <div className="w-full bg-white rounded-3xl p-8 border border-red-100 shadow-none flex flex-col items-center text-center gap-6">
           <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center text-red-500">
             <span className="material-symbols-outlined text-[32px]">database_off</span>
           </div>
-          
+
           <div className="flex flex-col gap-2">
             <h2 className="text-[20px] font-bold text-slate-900 font-jakarta">
               Error de Configuración de Base de Datos
@@ -196,45 +374,336 @@ function PlatformContent() {
 
   return (
     <div className="flex-1 w-full flex flex-col h-full md:overflow-hidden overflow-visible">
-      
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row gap-8 h-full md:overflow-hidden overflow-visible py-6">
-        
-        {/* Main Feed Content (Left side - 3/4 on desktop) */}
-        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-          
-          {/* Desktop Search Section */}
-          <div className="hidden md:flex flex-col sticky top-0 z-40 bg-[#F8FAFC] pb-4 transition-all duration-300 ease-in-out">
-            <div className="h-12 pl-4 pr-6 bg-white rounded-xl border border-zinc-200 flex items-center gap-3 focus-within:border-black focus-within:ring-1 focus-within:ring-black group transition-all">
-              <span className="material-symbols-outlined text-[22px] text-slate-400 group-focus-within:text-black">search</span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar por ciudad, país o temas de interés"
-                className="flex-1 bg-transparent border-none text-[15px] font-normal text-slate-800 placeholder:text-slate-400 focus:outline-none"
-              />
+
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row gap-6 lg:gap-8 h-full md:overflow-hidden overflow-visible py-6">
+
+        {/* Left Column - LinkedIn User Card (1/4 size on desktop) */}
+        <div className="hidden md:flex w-[260px] lg:w-[290px] flex-col gap-3 shrink-0 h-fit">
+          {/* Card 1: Main Profile Card */}
+          <div className="bg-white rounded-[24px] border border-zinc-200 overflow-hidden flex flex-col shadow-none relative">
+            {/* 1. Cover photo */}
+            <div className="h-20 w-full relative bg-slate-100 shrink-0">
+              {currentUserProfile?.cover_url ? (
+                <img
+                  src={currentUserProfile.cover_url}
+                  alt="Cover"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-r from-violet-600 to-indigo-600 opacity-80" />
+              )}
             </div>
 
-            {suggestions.length > 0 && (
-              <div className="absolute top-[52px] left-0 w-full bg-white border border-slate-200 rounded-2xl z-50 overflow-hidden flex flex-col px-[2px]">
-                {suggestions.map((suggestion, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => {
-                      setSearchQuery(suggestion.value);
-                      setSuggestions([]);
-                    }}
-                    className="w-full px-6 py-3.5 text-left flex items-center gap-4 hover:bg-slate-50 border-b border-slate-50 last:border-none transition-colors border-none bg-transparent cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[20px] text-slate-400">
-                      {suggestion.type === 'Ciudad' ? 'location_on' : suggestion.type === 'País' ? 'public' : 'favorite'}
-                    </span>
-                    <div className="flex-1 flex flex-col overflow-hidden">
-                      <span className="text-[14px] font-medium text-black truncate">{suggestion.value}</span>
-                      <span className="text-[9px] text-slate-400 mt-0.5 uppercase tracking-widest font-bold truncate">{suggestion.type}</span>
+            {/* 2. Photo (square with rounded corners as the profile) */}
+            <div className="flex justify-center -mt-[60px] relative z-10">
+              <div className="w-[110px] h-[110px] rounded-[22px] overflow-hidden bg-white border-4 border-white shrink-0 flex items-center justify-center">
+                {currentUserProfile?.profile_picture_url && !profileImgError ? (
+                  <img
+                    src={currentUserProfile.profile_picture_url}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                    onError={() => setProfileImgError(true)}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-slate-50 flex items-center justify-center text-zinc-300">
+                    <span className="material-symbols-outlined text-[54px]">person</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Profile Details (3. Name, 4. City) */}
+            <div className="p-5 flex flex-col items-center text-center gap-4">
+              <div className="flex flex-col items-center gap-1.5 w-full">
+                {/* 3. Name */}
+                <h3 className="text-[16px] md:text-[18px] font-bold text-slate-900 leading-snug line-clamp-1 hover:underline cursor-pointer font-jakarta" onClick={() => router.push('/perfil-usuario')}>
+                  {currentUserProfile ? `${currentUserProfile.first_name || ""} ${currentUserProfile.last_name || ""}`.trim() || "Usuario sin nombre" : "Cargando..."}
+                </h3>
+                {/* 4. City */}
+                <p className="text-[12px] md:text-[13px] font-medium text-slate-400 font-sans tracking-wide">
+                  {currentUserProfile?.city ? `${currentUserProfile.city.split(',')[0]}, ${currentUserProfile.country || ""}`.replace(/^,\s*|,\s*$/, "") : "Ubicación no configurada"}
+                </p>
+              </div>
+
+              {/* 5. Button to see profile */}
+              <button
+                onClick={() => router.push('/perfil-usuario')}
+                className="w-full py-3 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-2 cursor-pointer border-none font-jakarta uppercase tracking-wider"
+              >
+                Ir a mi perfil
+              </button>
+            </div>
+          </div>
+
+          {/* Card 2: Mi red Card */}
+          <div className="bg-white rounded-[24px] border border-zinc-200 p-5 flex flex-col gap-4 shadow-none relative">
+            {/* Title */}
+            <div className="flex justify-between items-center">
+              <h4 className="text-[14px] font-bold text-slate-900 font-jakarta">Mi red</h4>
+            </div>
+
+            {/* Empty State */}
+            <div className="flex flex-col items-center text-center py-4 px-2 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200/80">
+              <span className="material-symbols-outlined text-slate-300 text-[24px] mb-1.5 select-none">
+                people_outline
+              </span>
+              <p className="text-[12px] text-slate-400 font-medium leading-normal max-w-[190px]">
+                Todavía no has añadido a nadie a tu red
+              </p>
+            </div>
+
+            {/* Button to Ver mi red */}
+            <button
+              onClick={() => router.push('/red')}
+              className="w-full py-3 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-2 cursor-pointer border-none font-jakarta uppercase tracking-wider"
+            >
+              Ver mi red
+            </button>
+          </div>
+        </div>
+
+        {/* Main Feed Content (Right side - 3/4 on desktop) */}
+        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+
+          {/* Search & Filter Section */}
+          <div className="flex flex-col sticky top-0 z-40 bg-[#F8FAFC] pb-4 transition-all duration-300 ease-in-out gap-3 w-full">
+            <div className="flex items-center gap-3 w-full relative">
+              <div className="flex-1 h-12 pl-4 pr-6 bg-white rounded-xl border border-zinc-200 flex items-center gap-3 focus-within:border-black focus-within:ring-1 focus-within:ring-black group transition-all relative">
+                <span className="material-symbols-outlined text-[22px] text-slate-400 group-focus-within:text-black">search</span>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar por ciudad, país o temas de interés"
+                  className="flex-1 bg-transparent border-none text-[15px] font-normal text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                />
+
+                {suggestions.length > 0 && (
+                  <div className="absolute top-[52px] left-0 w-full bg-white border border-slate-200 rounded-2xl z-50 overflow-hidden flex flex-col px-[2px]">
+                    {suggestions.map((suggestion, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setSearchQuery(suggestion.value);
+                          setSuggestions([]);
+                        }}
+                        className="w-full px-6 py-3.5 text-left flex items-center gap-4 hover:bg-slate-50 border-b border-slate-50 last:border-none transition-colors border-none bg-transparent cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-[20px] text-slate-400">
+                          {suggestion.type === 'Ciudad' ? 'location_on' : suggestion.type === 'País' ? 'public' : 'favorite'}
+                        </span>
+                        <div className="flex-1 flex flex-col overflow-hidden">
+                          <span className="text-[14px] font-medium text-black truncate">{suggestion.value}</span>
+                          <span className="text-[9px] text-slate-400 mt-0.5 uppercase tracking-widest font-bold truncate">{suggestion.type}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <ProfileButton
+                ref={filterButtonRef as any}
+                onClick={handleToggleFilters}
+                icon="manage_search"
+                label="Buscar por filtros"
+                className={`!h-12 !w-fit !min-w-0 px-5 !rounded-xl ${
+                  showFilters
+                    ? "!bg-black !border-black !text-white hover:!bg-zinc-900"
+                    : ""
+                }`}
+              />
+
+              {/* Filter Dropdown Popover */}
+              {showFilters && (
+                <div 
+                  ref={dropdownRef}
+                  className="absolute top-[56px] right-0 w-[calc(100vw-32px)] sm:w-[384px] max-w-sm bg-white border border-zinc-200 rounded-2xl shadow-none z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
+                >
+                  {/* Form fields */}
+                  <div className="p-5 flex flex-col gap-5 overflow-y-auto max-h-[385px] custom-scrollbar">
+                    
+                    {/* Country & City Dropdowns - Stacked in Column */}
+                    <div className="flex flex-col gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-label ml-1 font-jakarta">País</label>
+                        <div className="relative flex items-center">
+                          <select
+                            value={tempFilters.country}
+                            onChange={(e) => setTempFilters({ ...tempFilters, country: e.target.value, city: "" })}
+                            className="w-full h-11 pl-3 pr-8 bg-white border border-zinc-200/80 rounded-xl text-[13px] md:text-base text-zinc-900 focus:outline-none focus:border-slate-800 transition-all duration-300 appearance-none cursor-pointer"
+                          >
+                            <option value="">Cualquier país</option>
+                            {countriesWithResults.map(country => (
+                              <option key={country} value={country}>{country}</option>
+                            ))}
+                          </select>
+                          <span className="material-symbols-outlined text-[16px] text-slate-400 absolute right-2 pointer-events-none">expand_more</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-label ml-1 font-jakarta">Ciudad</label>
+                        <div className="relative flex items-center">
+                          <select
+                            value={tempFilters.city}
+                            onChange={(e) => setTempFilters({ ...tempFilters, city: e.target.value })}
+                            className="w-full h-11 pl-3 pr-8 bg-white border border-zinc-200/80 rounded-xl text-[13px] md:text-base text-zinc-900 focus:outline-none focus:border-slate-800 transition-all duration-300 appearance-none cursor-pointer"
+                          >
+                            <option value="">Cualquier ciudad</option>
+                            {availableCities.map(city => (
+                              <option key={city} value={city}>{city}</option>
+                            ))}
+                          </select>
+                          <span className="material-symbols-outlined text-[16px] text-slate-400 absolute right-2 pointer-events-none">expand_more</span>
+                        </div>
+                      </div>
                     </div>
-                  </button>
+
+                    {/* Dynamic specific interest checkboxes */}
+                    <div className="flex flex-col gap-2">
+                      <label className="text-label ml-1 font-jakarta">Intereses</label>
+                      <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto custom-scrollbar">
+                        {(() => {
+                          let availableInterests: string[] = [];
+                          if (tempFilters.category && tempFilters.category !== "Todas las categorías") {
+                            const categoryInterests = CATEGORIES_MAPPING[tempFilters.category as keyof typeof CATEGORIES_MAPPING] || [];
+                            availableInterests = categoryInterests.filter(interest => 
+                              interestsWithResults.some(active => active.toLowerCase() === interest.toLowerCase())
+                            );
+                          } else {
+                            availableInterests = interestsWithResults;
+                          }
+
+                          if (availableInterests.length === 0) {
+                            return (
+                              <p className="text-[11px] text-slate-400 py-2 w-full text-center">
+                                No hay temas de interés con resultados para esta selección.
+                              </p>
+                            );
+                          }
+
+                          return availableInterests.map(interest => {
+                            const isChecked = tempFilters.selectedInterests.includes(interest);
+                            return (
+                              <button
+                                key={interest}
+                                type="button"
+                                onClick={() => {
+                                  const nextSelected = isChecked
+                                    ? tempFilters.selectedInterests.filter(i => i !== interest)
+                                    : [...tempFilters.selectedInterests, interest];
+                                  setTempFilters({ ...tempFilters, selectedInterests: nextSelected });
+                                }}
+                                className={`px-4 py-2 rounded-full text-[13px] font-medium transition-premium border cursor-pointer select-none flex items-center gap-1.5 ${
+                                  isChecked
+                                    ? "bg-black text-white border-black"
+                                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:text-black"
+                                }`}
+                              >
+                                {isChecked && <span className="material-symbols-outlined text-[13px]">check</span>}
+                                {interest}
+                              </button>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Actions footer */}
+                  <div className="px-4 py-3 bg-slate-50 border-t border-zinc-200/40 flex items-center justify-between gap-3 shrink-0">
+                    <button
+                      type="button"
+                      onClick={handleClearFilters}
+                      className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-premium cursor-pointer border-none bg-transparent font-jakarta uppercase tracking-wider"
+                    >
+                      Limpiar
+                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowFilters(false)}
+                        className="h-9 px-4 bg-white hover:bg-slate-50 text-slate-950 font-medium text-xs rounded-xl border border-zinc-200 transition-premium active:scale-95 cursor-pointer select-none font-jakarta"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleApplyFilters}
+                        className="h-9 px-4 bg-black hover:bg-zinc-900 text-white font-medium text-xs rounded-xl transition-premium active:scale-95 cursor-pointer select-none border-none outline-none font-jakarta"
+                      >
+                        Aplicar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Active Filter Chips */}
+            {hasActiveFilters && (
+              <div className="flex flex-wrap gap-2 items-center pt-1 animate-in fade-in duration-200">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mr-1">Filtros activos:</span>
+
+                {appliedFilters.country && (
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200/50 text-[12px] font-bold text-slate-700">
+                    <span>País: {appliedFilters.country}</span>
+                    <button 
+                      onClick={() => setAppliedFilters({ ...appliedFilters, country: "", city: "" })}
+                      className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-slate-200 text-[12px] font-bold border-none bg-transparent cursor-pointer text-slate-500 hover:text-black ml-0.5"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+
+                {appliedFilters.city && (
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200/50 text-[12px] font-bold text-slate-700">
+                    <span>Ciudad: {appliedFilters.city.split(',')[0]}</span>
+                    <button 
+                      onClick={() => setAppliedFilters({ ...appliedFilters, city: "" })}
+                      className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-slate-200 text-[12px] font-bold border-none bg-transparent cursor-pointer text-slate-500 hover:text-black ml-0.5"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+
+                {appliedFilters.category && appliedFilters.category !== "Todas las categorías" && (
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200/50 text-[12px] font-bold text-slate-700">
+                    <span>Categoría: {appliedFilters.category}</span>
+                    <button 
+                      onClick={() => setAppliedFilters({ ...appliedFilters, category: "Todas las categorías", selectedInterests: [] })}
+                      className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-slate-200 text-[12px] font-bold border-none bg-transparent cursor-pointer text-slate-500 hover:text-black ml-0.5"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+
+                {appliedFilters.selectedInterests && appliedFilters.selectedInterests.map(interest => (
+                  <div key={interest} className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200/50 text-[12px] font-bold text-slate-700">
+                    <span>{interest}</span>
+                    <button 
+                      onClick={() => setAppliedFilters({ 
+                        ...appliedFilters, 
+                        selectedInterests: appliedFilters.selectedInterests.filter(i => i !== interest) 
+                      })}
+                      className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-slate-200 text-[12px] font-bold border-none bg-transparent cursor-pointer text-slate-500 hover:text-black ml-0.5"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 ))}
+
+                <button
+                  onClick={handleClearFilters}
+                  className="text-[12px] font-bold text-slate-500 hover:text-black transition-colors ml-1 cursor-pointer border-none bg-transparent underline"
+                >
+                  Limpiar todo
+                </button>
               </div>
             )}
           </div>
@@ -243,69 +712,6 @@ function PlatformContent() {
             onScroll={handleScroll}
             className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-12"
           >
-            {/* Mobile Search Bar */}
-            <div className="md:hidden w-full sticky top-0 z-40 bg-[#F8FAFC]/90 backdrop-blur-md pb-4">
-              <div className="w-full flex flex-col gap-3 relative">
-                <div className="w-full h-12 pl-3 pr-4 bg-white rounded-xl border border-zinc-200 flex items-center gap-2 focus-within:border-black focus-within:ring-1 focus-within:ring-black group transition-all">
-                  <span className="material-symbols-outlined text-[18px] text-slate-400 group-focus-within:text-black shrink-0">search</span>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onFocus={() => setIsMobileCategoriesOpen(false)}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Buscar por ciudad, país..."
-                    className="flex-1 min-w-0 bg-transparent border-none text-[14px] font-normal text-slate-800 placeholder:text-slate-400 focus:outline-none truncate"
-                  />
-                </div>
-
-                <div className="relative w-full">
-                  <button 
-                    onClick={() => setIsMobileCategoriesOpen(!isMobileCategoriesOpen)}
-                    className={`h-10 w-full px-4 bg-white rounded-xl flex items-center justify-between border ${isMobileCategoriesOpen ? 'border-black ring-1 ring-black' : 'border-zinc-200'} cursor-pointer`}
-                  >
-                    <span className={`text-[13px] truncate ${isMobileCategoriesOpen ? 'text-black font-semibold' : 'text-slate-500'}`}>
-                      {selectedCategory === "Todas las categorías" ? "Categorías" : selectedCategory}
-                    </span>
-                    <span className="material-symbols-rounded text-[18px] text-slate-400">expand_more</span>
-                  </button>
-
-                  {isMobileCategoriesOpen && (
-                    <div className="absolute top-[46px] left-0 w-full bg-white border border-slate-200 rounded-2xl z-50 overflow-hidden py-3 max-h-[300px] overflow-y-auto custom-scrollbar">
-                      {[
-                        { name: "Todas las categorías", icon: "all_inclusive", color: "#000000" },
-                        { name: "Crecimiento Personal", icon: "psychiatry", color: "#22C55E" },
-                        { name: "Bienestar Emocional", icon: "mood", color: "#E384FF" },
-                        { name: "Salud y Medicina", icon: "stethoscope", color: "#2D69FC" },
-                        { name: "Movimiento Físico", icon: "directions_run", color: "#FF4B26" },
-                        { name: "Nutrición", icon: "nutrition", color: "#84CC16" },
-                        { name: "Estilo de Vida", icon: "wb_sunny", color: "#F97316" },
-                        { name: "Espiritualidad", icon: "self_improvement", color: "#8B5CF6" }
-                      ].map((category) => {
-                        const isSelected = selectedCategory === category.name;
-                        return (
-                          <button
-                            key={category.name}
-                            onClick={() => {
-                              setSelectedCategory(category.name);
-                              setIsMobileCategoriesOpen(false);
-                            }}
-                            className={`w-full flex items-center gap-4 px-6 py-3 hover:bg-slate-50 text-left border-none bg-transparent cursor-pointer ${isSelected ? 'bg-slate-50/50' : ''}`}
-                          >
-                            <span className={`material-symbols-outlined text-[20px]`} style={isSelected ? { color: category.color } : { color: '#94A3B8' }}>
-                              {category.icon}
-                            </span>
-                            <span className={`text-[14px] ${isSelected ? 'font-bold' : 'text-slate-500'}`} style={isSelected ? { color: category.color } : {}}>
-                              {category.name}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
             {filteredUsers.length === 0 ? (
               <div className="w-full flex flex-col items-center justify-center p-12 text-center min-h-[300px]">
                 <span className="material-symbols-outlined text-[48px] text-slate-300 mb-2">person_search</span>
@@ -322,45 +728,8 @@ function PlatformContent() {
           </div>
         </div>
 
-        {/* Sidebar Navigation - Categories */}
-        <aside className="hidden md:flex w-[240px] flex-col gap-1 pt-2 pb-12 h-full shrink-0">
-          <div className="mb-4 px-2">
-            <h2 className="text-[12px] font-bold text-slate-400 uppercase tracking-widest">Categorías</h2>
-          </div>
-          {[
-            { name: "Todas las categorías", icon: "all_inclusive", color: "#000000" },
-            { name: "Crecimiento Personal", icon: "psychiatry", color: "#22C55E" },
-            { name: "Bienestar Emocional", icon: "mood", color: "#E384FF" },
-            { name: "Salud y Medicina", icon: "stethoscope", color: "#2D69FC" },
-            { name: "Movimiento Físico", icon: "directions_run", color: "#FF4B26" },
-            { name: "Nutrición", icon: "nutrition", color: "#84CC16" },
-            { name: "Estilo de Vida", icon: "wb_sunny", color: "#F97316" },
-            { name: "Espiritualidad", icon: "self_improvement", color: "#8B5CF6" }
-          ].map((category) => {
-            const isSelected = selectedCategory === category.name;
-            return (
-              <button
-                key={category.name}
-                onClick={() => setSelectedCategory(category.name)}
-                className={`flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-slate-100/80 transition group border-none bg-transparent cursor-pointer text-left w-full ${isSelected ? 'bg-slate-100 font-semibold' : ''}`}
-              >
-                <span
-                  className="material-symbols-outlined text-[20px]"
-                  style={{ color: isSelected ? category.color : '#94A3B8' }}
-                >
-                  {category.icon}
-                </span>
-                <span
-                  className="text-[14px]"
-                  style={{ color: isSelected ? category.color : '#64748B' }}
-                >
-                  {category.name}
-                </span>
-              </button>
-            );
-          })}
-        </aside>
       </div>
+
     </div>
   );
 }
