@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
+import React, { useState } from "react";
 
 interface NotificationItemProps {
   avatar?: string;
   icon?: string;
-  iconBgColor?: string;
   title: string;
   user: string;
   action: string;
@@ -16,15 +14,16 @@ interface NotificationItemProps {
   onClick: () => void;
 }
 
-function NotificationItem({ avatar, icon, iconBgColor, title, user, action, date, isUnread, buttonLabel, onClick }: NotificationItemProps) {
+function NotificationItem({ avatar, icon, title, user, action, date, isUnread, buttonLabel, onClick }: NotificationItemProps) {
   const [imageError, setImageError] = useState(false);
 
   return (
     <div
-      className={`group flex gap-4 p-4 transition-colors cursor-pointer relative ${isUnread ? 'bg-slate-100' : 'bg-white'} hover:bg-slate-50`}
+      onClick={onClick}
+      className={`group flex gap-4 p-4 transition-colors cursor-pointer relative ${isUnread ? "bg-slate-100" : "bg-white"} hover:bg-slate-50`}
     >
       <div className="relative shrink-0">
-        {(avatar && !imageError) ? (
+        {avatar && !imageError ? (
           <img
             src={avatar}
             alt={user}
@@ -36,8 +35,8 @@ function NotificationItem({ avatar, icon, iconBgColor, title, user, action, date
             <span
               className="material-symbols-rounded text-white transition-colors select-none"
               style={{
-                fontSize: '32px',
-                fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 1, 'opsz' 48"
+                fontSize: "32px",
+                fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 1, 'opsz' 48",
               }}
             >
               {icon}
@@ -60,15 +59,15 @@ function NotificationItem({ avatar, icon, iconBgColor, title, user, action, date
             <span className="text-[12px] font-medium text-slate-400">{title}</span>
             <div className="flex items-center gap-2">
               <span className="text-[12px] font-medium text-slate-400">{date}</span>
-              {isUnread && <div className="w-2 h-2 bg-[#FF4B4B] rounded-full"></div>}
+              {isUnread && <div className="w-2 h-2 bg-[#FF4B4B] rounded-full" />}
             </div>
           </div>
           <p
             className="text-[14px] leading-snug text-slate-600 group-hover:text-black transition-colors line-clamp-3 overflow-hidden"
             style={{
-              display: '-webkit-box',
-              WebkitBoxOrient: 'vertical',
-              WebkitLineClamp: 3
+              display: "-webkit-box",
+              WebkitBoxOrient: "vertical",
+              WebkitLineClamp: 3,
             }}
           >
             <span className="font-bold text-black">{user}: </span>
@@ -78,8 +77,8 @@ function NotificationItem({ avatar, icon, iconBgColor, title, user, action, date
 
         {buttonLabel && (
           <button
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={(event) => {
+              event.stopPropagation();
               onClick();
             }}
             className="w-fit h-8 px-4 bg-black hover:bg-slate-800 text-white text-[12px] font-bold rounded-full transition-all"
@@ -96,57 +95,53 @@ export interface NotificationPopupProps {
   isOpen: boolean;
   onClose: () => void;
   notifications: any[];
-  onMarkRead: (id: number) => void;
+  onMarkRead: (id: string) => void;
   onMarkAllRead: () => void;
 }
 
-export function NotificationPopup({ isOpen, onClose, notifications, onMarkRead }: NotificationPopupProps) {
+export function NotificationPopup({ isOpen, onClose, notifications, onMarkRead, onMarkAllRead }: NotificationPopupProps) {
   if (!isOpen) return null;
 
   return (
     <div
-      style={{ width: '480px' }}
+      style={{ width: "480px" }}
       className="absolute right-0 mt-2 bg-white border border-slate-200 rounded-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right"
     >
-      {/* Header */}
       <div className="px-6 py-5 border-b border-slate-100 bg-white">
         <h3 className="text-[15px] font-semibold text-black">Notificaciones</h3>
       </div>
 
-      {/* Content */}
       <div className="max-h-[380px] overflow-y-auto custom-scrollbar">
         {notifications.length === 0 ? (
           <div className="p-8 text-center text-slate-400 text-[14px]">No tienes notificaciones pendientes</div>
         ) : (
-          notifications.map((notif) => (
+          notifications.map((notification) => (
             <NotificationItem
-              key={notif.id}
-              avatar={notif.avatar}
-              icon={notif.icon}
-              iconBgColor={notif.iconBgColor}
-              title={notif.title}
-              user={notif.user}
-              action={notif.action}
-              date={notif.date}
-              isUnread={notif.isUnread}
-              buttonLabel={notif.buttonLabel}
-              onClick={() => onMarkRead(notif.id)}
+              key={notification.id}
+              avatar={notification.avatar}
+              icon={notification.icon}
+              title={notification.title}
+              user={notification.user}
+              action={notification.action}
+              date={notification.date}
+              isUnread={notification.isUnread}
+              buttonLabel={notification.buttonLabel}
+              onClick={() => onMarkRead(notification.id)}
             />
           ))
         )}
       </div>
 
-      {/* Footer */}
       <div className="border-t border-slate-100 bg-slate-50/50">
-        <span
+        <button
           onClick={() => {
-            alert("Próximamente: Historial de notificaciones");
+            onMarkAllRead();
             onClose();
           }}
-          className="flex px-6 py-5 text-[13px] font-semibold text-slate-500 hover:text-black transition-colors cursor-pointer"
+          className="flex w-full px-6 py-5 text-[13px] font-semibold text-slate-500 hover:text-black transition-colors cursor-pointer text-left bg-transparent border-none"
         >
-          Ver todas las notificaciones
-        </span>
+          Marcar todas como leidas
+        </button>
       </div>
     </div>
   );

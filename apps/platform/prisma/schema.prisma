@@ -39,6 +39,7 @@ model User {
   interests     UserInterest[]
   profilePrompts UserProfilePrompt[]
   passwordResetTokens PasswordResetToken[]
+  notifications Notification[]
 
   @@map("users")
 }
@@ -135,4 +136,22 @@ model PasswordResetToken {
 
   @@index([userId, expiresAt])
   @@map("password_reset_tokens")
+}
+
+model Notification {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  type      String    @default("system") @db.VarChar
+  title     String    @db.VarChar
+  actorName String?   @map("actor_name") @db.VarChar
+  actorAvatarUrl String? @map("actor_avatar_url") @db.VarChar
+  body      String
+  actionUrl String?   @map("action_url") @db.VarChar
+  readAt    DateTime? @map("read_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+  @@map("notifications")
 }
