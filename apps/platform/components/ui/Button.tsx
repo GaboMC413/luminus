@@ -57,11 +57,13 @@ interface ProfileButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 // --- PROFILE/ACTION BUTTON COMPONENT ---
 // Used for edit actions, section triggers, and icon-based buttons with a premium aesthetic.
 // Features a glassmorphism style (slate-50 background, backdrop-blur).
-export function ProfileButton({ icon, label, showDot, className = "", ...props }: ProfileButtonProps) {
+export const ProfileButton = React.forwardRef<HTMLButtonElement, ProfileButtonProps>(
+  function ProfileButton({ icon, label, showDot, className = "", ...props }, ref) {
   if (!label && icon !== "photo_camera") {
     return (
       <button
         {...props}
+        ref={ref}
         className={`w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-black hover:bg-slate-100 transition-all duration-300 cursor-pointer shadow-none ${className}`}
       >
         <span className="material-symbols-rounded text-[16px] md:text-[18px] shrink-0">{icon}</span>
@@ -72,6 +74,7 @@ export function ProfileButton({ icon, label, showDot, className = "", ...props }
   return (
     <button
       {...props}
+      ref={ref}
       className={`h-10 md:h-11 ${label ? 'px-3 md:px-4 min-w-[100px] md:min-w-[120px]' : 'w-10 md:w-11'} bg-[#F8FAFC] hover:bg-black border border-slate-200/60 hover:border-black text-slate-700 hover:text-white rounded-[10px] md:rounded-[12px] text-[13px] md:text-[14px] font-semibold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-none ${className}`}
     >
       {showDot && (
@@ -81,7 +84,8 @@ export function ProfileButton({ icon, label, showDot, className = "", ...props }
       {label && <span className="truncate">{label}</span>}
     </button>
   );
-}
+  }
+);
 
 // --- EMPTY PROFILE BUTTON COMPONENT ---
 // Used for empty state profile actions with a notification dot

@@ -39,6 +39,7 @@ model User {
   interests     UserInterest[]
   profilePrompts UserProfilePrompt[]
   passwordResetTokens PasswordResetToken[]
+  emailChangeTokens EmailChangeToken[]
 
   @@map("users")
 }
@@ -135,4 +136,21 @@ model PasswordResetToken {
 
   @@index([userId, expiresAt])
   @@map("password_reset_tokens")
+}
+
+model EmailChangeToken {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  email     String    @db.VarChar
+  codeHash  String    @map("code_hash") @db.VarChar
+  attempts  Int       @default(0) @db.SmallInt
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz
+  usedAt    DateTime? @map("used_at") @db.Timestamptz
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@index([email])
+  @@map("email_change_tokens")
 }

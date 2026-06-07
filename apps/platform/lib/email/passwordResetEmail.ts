@@ -69,3 +69,55 @@ export async function sendPasswordResetEmail(email: string, code: string) {
 
   await client.send(command);
 }
+
+export async function sendEmailChangeVerificationEmail(email: string, code: string) {
+  const fromEmail = process.env.SES_FROM_EMAIL;
+
+  if (!fromEmail) {
+    throw new Error("SES_FROM_EMAIL is missing.");
+  }
+
+  const client = getSesClient();
+  const command = new SendEmailCommand({
+    Source: `LUMINUS <${fromEmail}>`,
+    Destination: {
+      ToAddresses: [email],
+    },
+    Message: {
+      Subject: {
+        Charset: "UTF-8",
+        Data: "Codigo para confirmar tu email de LUMINUS",
+      },
+      Body: {
+        Text: {
+          Charset: "UTF-8",
+          Data: [
+            "Hola,",
+            "",
+            "Recibimos una solicitud para cambiar el email de tu cuenta LUMINUS.",
+            `Tu codigo de confirmacion es: ${code}`,
+            "",
+            "Este codigo vence en 15 minutos. Si no solicitaste este cambio, puedes ignorar este correo.",
+            "",
+            "LUMINUS",
+          ].join("\n"),
+        },
+        Html: {
+          Charset: "UTF-8",
+          Data: `
+            <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.5;">
+              <h2 style="margin: 0 0 16px;">Confirma tu nuevo email</h2>
+              <p>Recibimos una solicitud para cambiar el email de tu cuenta LUMINUS.</p>
+              <p style="font-size: 28px; font-weight: 700; letter-spacing: 4px; margin: 24px 0;">${code}</p>
+              <p>Este codigo vence en 15 minutos.</p>
+              <p>Si no solicitaste este cambio, puedes ignorar este correo.</p>
+              <p style="margin-top: 32px;">LUMINUS</p>
+            </div>
+          `,
+        },
+      },
+    },
+  });
+
+  await client.send(command);
+}

@@ -24,6 +24,7 @@ export function PasswordSection({
   const [repeatPassword, setRepeatPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [shouldAnimate, setShouldAnimate] = useState(false);
   const lastAttentionRef = useRef(attentionCounter);
 
@@ -37,7 +38,7 @@ export function PasswordSection({
     lastAttentionRef.current = attentionCounter;
   }, [attentionCounter, isEditing]);
 
-  const handlePasswordSave = () => {
+  const handlePasswordSave = async () => {
     if (newPassword.length < 12) {
       setPasswordError("La contraseña debe tener al menos 12 caracteres.");
       return;
@@ -51,11 +52,30 @@ export function PasswordSection({
       return;
     }
 
-    showSuccess("¡Contraseña guardada!", "Tu nueva contraseña ha sido guardada exitosamente.");
-    setNewPassword("");
-    setRepeatPassword("");
-    setPasswordError("");
-    setEditingFieldId(null);
+    try {
+      setLoading(true);
+      const response = await fetch("/api/account/password", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ newPassword }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.message || "No pudimos guardar la contraseña.");
+      }
+
+      showSuccess("¡Contraseña guardada!", "Tu nueva contraseña ha sido guardada exitosamente.");
+      setNewPassword("");
+      setRepeatPassword("");
+      setPasswordError("");
+      setEditingFieldId(null);
+    } catch (error) {
+      setPasswordError(error instanceof Error ? error.message : "No pudimos guardar la contraseña.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEditClick = () => {
@@ -172,10 +192,10 @@ export function PasswordSection({
               </button>
               <button
                 onClick={handlePasswordSave}
-                disabled={!newPassword || !repeatPassword}
+                disabled={loading || !newPassword || !repeatPassword}
                 className={`px-4 h-8 text-button font-bold bg-black text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 origin-center ${shouldAnimate ? "scale-110" : "scale-100"}`}
               >
-                Guardar
+                {loading ? "Guardando..." : "Guardar"}
               </button>
             </div>
           </div>
