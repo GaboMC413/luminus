@@ -12,7 +12,7 @@ export function ProfileAboutSection({ bio, onEdit, isPublic = false }: ProfileAb
   const hasBio = bio && bio.trim().length > 0;
 
   return (
-    <div className="bg-white rounded-[24px] p-4 lg:p-6 flex flex-col gap-4 lg:gap-5 border border-slate-200 shadow-none relative group">
+    <div className="bg-white rounded-2xl p-4 lg:p-6 flex flex-col gap-4 lg:gap-5 border border-slate-200 shadow-none relative group">
       {!isPublic && onEdit && (
         <ProfileButton
           onClick={onEdit}

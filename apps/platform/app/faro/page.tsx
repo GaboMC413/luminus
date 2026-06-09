@@ -8,7 +8,7 @@ export default function FaroPage() {
 
   return (
     <main className="flex-1 flex flex-col items-center justify-center p-8 text-center min-h-[50vh]">
-      <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mb-2 border border-slate-100">
+      <div className="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center mb-2 border border-slate-100">
         <div
           style={{
             maskImage: "url('/Icons/NavBar/faro active.svg')",
