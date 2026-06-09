@@ -14,7 +14,7 @@ export function ProfileInterestsSection({ interests, otherInterests, onEdit, isP
   const hasInterests = (interests && interests.length > 0) || (otherInterests && otherInterests.trim().length > 0);
 
   return (
-    <div className="bg-white rounded-[24px] p-4 lg:p-6 flex flex-col gap-2 lg:gap-6 border border-slate-200 shadow-none relative group">
+    <div className="bg-white rounded-2xl p-4 lg:p-6 flex flex-col gap-2 lg:gap-6 border border-slate-200 shadow-none relative group">
       {!isPublic && onEdit && (
         <ProfileButton
           onClick={onEdit}

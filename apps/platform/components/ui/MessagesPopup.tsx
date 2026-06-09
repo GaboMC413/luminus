@@ -56,26 +56,18 @@ function MessageItem({ avatar, icon, iconBgColor, title, user, action, date, isU
           </div>
         )}
       </div>
-      <div className="flex flex-col gap-2 min-w-0 flex-1">
-        <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 min-w-0 flex-1 justify-center">
+        <div className="flex flex-col gap-0.5">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[12px] font-medium text-slate-400">{title}</span>
-            <div className="flex items-center gap-2">
+            <span className="text-[14px] font-bold text-slate-900 truncate leading-tight">{user}</span>
+            <div className="flex items-center gap-2 shrink-0">
               <span className="text-[12px] font-medium text-slate-400">{date}</span>
               {isUnread && (
                 <div className="w-2 h-2 bg-[#FF4B4B] rounded-full"></div>
               )}
             </div>
           </div>
-          <p
-            className="text-[14px] leading-snug text-slate-600 group-hover:text-black transition-colors line-clamp-3 overflow-hidden"
-            style={{
-              display: '-webkit-box',
-              WebkitBoxOrient: 'vertical',
-              WebkitLineClamp: 3
-            }}
-          >
-            <span className="font-bold text-black">{user}: </span>
+          <p className="text-[13px] leading-snug text-slate-500 group-hover:text-slate-800 transition-colors truncate">
             {action}
           </p>
         </div>
@@ -86,7 +78,7 @@ function MessageItem({ avatar, icon, iconBgColor, title, user, action, date, isU
               e.stopPropagation();
               onClick();
             }}
-            className="w-fit h-8 px-4 bg-black hover:bg-slate-800 text-white text-[12px] font-bold rounded-full transition-all"
+            className="w-fit h-8 px-4 bg-black hover:bg-slate-800 text-white text-[12px] font-bold rounded-full transition-all mt-1"
           >
             {buttonLabel}
           </button>
@@ -104,7 +96,7 @@ export interface MessagesPopupProps {
   onMarkAllRead: () => void;
 }
 
-export function MessagesPopup({ isOpen, onClose, messages, onMarkRead }: MessagesPopupProps) {
+export function MessagesPopup({ isOpen, onClose, messages, onMarkRead, onMarkAllRead }: MessagesPopupProps) {
   const router = useRouter();
   if (!isOpen) return null;
 
@@ -136,7 +128,6 @@ export function MessagesPopup({ isOpen, onClose, messages, onMarkRead }: Message
               onClick={() => {
                 onMarkRead(msg.id);
                 onClose();
-                alert(`Próximamente: Chat privado con ${msg.user}`);
               }}
             />
           ))
@@ -147,7 +138,7 @@ export function MessagesPopup({ isOpen, onClose, messages, onMarkRead }: Message
       <div className="border-t border-slate-100 bg-slate-50/50">
         <span
           onClick={() => {
-            alert("Próximamente: Panel completo de mensajes");
+            onMarkAllRead();
             onClose();
           }}
           className="flex px-6 py-5 text-[13px] font-semibold text-slate-500 hover:text-black transition-colors cursor-pointer"

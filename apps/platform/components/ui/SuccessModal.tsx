@@ -34,7 +34,7 @@ export function SuccessModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="w-full max-w-[400px] bg-white rounded-[24px] p-8 flex flex-col items-center text-center shadow-none animate-in zoom-in-95 duration-200">
+      <div className="w-full max-w-[400px] bg-white rounded-2xl p-8 flex flex-col items-center text-center shadow-none animate-in zoom-in-95 duration-200">
         
         {/* Animated Check Circle */}
         <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mb-6 shrink-0 animate-bounce">
