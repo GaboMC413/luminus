@@ -24,6 +24,15 @@ enum UserStatus {
   @@map("user_status")
 }
 
+enum ConnectionStatus {
+  pending
+  accepted
+  declined
+  blocked
+
+  @@map("connection_status")
+}
+
 model User {
   id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   cognitoSub    String       @unique @map("cognito_sub")
@@ -39,7 +48,8 @@ model User {
   interests     UserInterest[]
   profilePrompts UserProfilePrompt[]
   passwordResetTokens PasswordResetToken[]
-  emailChangeTokens EmailChangeToken[]
+  sentConnections UserConnection[] @relation("SentConnections")
+  receivedConnections UserConnection[] @relation("ReceivedConnections")
 
   @@map("users")
 }
@@ -138,19 +148,18 @@ model PasswordResetToken {
   @@map("password_reset_tokens")
 }
 
-model EmailChangeToken {
-  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String    @map("user_id") @db.Uuid
-  email     String    @db.VarChar
-  codeHash  String    @map("code_hash") @db.VarChar
-  attempts  Int       @default(0) @db.SmallInt
-  expiresAt DateTime  @map("expires_at") @db.Timestamptz
-  usedAt    DateTime? @map("used_at") @db.Timestamptz
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+model UserConnection {
+  id          String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requesterId String           @map("requester_id") @db.Uuid
+  recipientId String           @map("recipient_id") @db.Uuid
+  status      ConnectionStatus @default(pending)
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  requester   User             @relation("SentConnections", fields: [requesterId], references: [id], onDelete: Cascade)
+  recipient   User             @relation("ReceivedConnections", fields: [recipientId], references: [id], onDelete: Cascade)
 
-  @@index([userId, expiresAt])
-  @@index([email])
-  @@map("email_change_tokens")
+  @@unique([requesterId, recipientId])
+  @@index([recipientId, status])
+  @@index([requesterId, status])
+  @@map("user_connections")
 }
