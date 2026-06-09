@@ -48,6 +48,22 @@ const NAV_ITEMS = [
 const INITIAL_NOTIFICATIONS: any[] = [];
 const INITIAL_MESSAGES: any[] = [];
 
+function formatNotificationDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const diffMs = Date.now() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / 60000);
+  if (diffMinutes < 1) return "Ahora";
+  if (diffMinutes < 60) return `Hace ${diffMinutes} min`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `Hace ${diffHours} h`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  return `Hace ${diffDays} d`;
+}
+
 export function PlatformNavbar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -106,6 +122,23 @@ export function PlatformNavbar() {
     loadSessionUser();
   }, []);
 
+  async function loadNotifications() {
+    const response = await fetch("/api/notifications", {
+      credentials: "include",
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      return;
+    }
+
+    const data = await response.json();
+    setNotifications((data.notifications || []).map((notification: any) => ({
+      ...notification,
+      date: formatNotificationDate(notification.date),
+    })));
+  }
+
   // Sync real chats with localStorage for dynamic notification count & list
   useEffect(() => {
     const loadChats = () => {
@@ -148,6 +181,10 @@ export function PlatformNavbar() {
     return () => window.removeEventListener("storage", loadChats);
   }, []);
 
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
   // Determine active tab based on pathname
   const getActiveTab = () => {
     if (pathname.includes("/comunidad")) return "comunidad";
@@ -177,12 +214,28 @@ export function PlatformNavbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const markNotificationRead = (id: number) => {
+  const markNotificationRead = async (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, isUnread: false } : n));
+    await fetch("/api/notifications", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ id }),
+    });
   };
 
-  const markAllNotificationsRead = () => {
+  const markAllNotificationsRead = async () => {
     setNotifications(prev => prev.map(n => ({ ...n, isUnread: false })));
+    await fetch("/api/notifications", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ markAll: true }),
+    });
   };
 
   const markMessageRead = (id: string | number) => {
@@ -299,7 +352,13 @@ export function PlatformNavbar() {
 
           <div className="relative" ref={notificationRef}>
             <button
-              onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+              onClick={() => {
+                const nextOpen = !isNotificationOpen;
+                setIsNotificationOpen(nextOpen);
+                if (nextOpen) {
+                  loadNotifications();
+                }
+              }}
               type="button"
               aria-label={`Notifications: ${unreadNotificationsCount} unread`}
               className={`relative flex h-12 w-12 items-center justify-center rounded-xl transition ${isNotificationOpen
