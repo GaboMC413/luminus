@@ -30,8 +30,8 @@ export function UserCard({ user }: UserCardProps) {
   const hasAvatar = user.avatar && !imgError;
 
   return (
-    <div className="bg-white rounded-[28px] p-4 flex flex-col items-center gap-3 border border-slate-200 transition-all group hover:border-slate-300 shadow-none">
-      <div className="w-[88px] h-[88px] md:w-[110px] md:h-[110px] rounded-3xl overflow-hidden bg-slate-50 shrink-0 border-4 border-white shadow-none group-hover:border-slate-200/50 transition-colors relative ring-1 ring-black/5 flex items-center justify-center">
+    <div className="bg-white rounded-2xl p-4 flex flex-col items-center gap-3 border border-slate-200 transition-all group hover:border-slate-300 shadow-none">
+      <div className="w-[88px] h-[88px] md:w-[110px] md:h-[110px] rounded-2xl overflow-hidden bg-slate-50 shrink-0 border-4 border-white shadow-none group-hover:border-slate-200/50 transition-colors relative ring-1 ring-black/5 flex items-center justify-center">
         {hasAvatar ? (
           <img 
             src={user.avatar} 

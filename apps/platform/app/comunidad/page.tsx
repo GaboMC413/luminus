@@ -6,7 +6,6 @@ import { Suspense } from "react";
 import { InterestPill } from "@/components/ui/InterestPill";
 import { UserCard } from "@/components/ui/UserCard";
 import { Button, ProfileButton } from "@/components/ui/Button";
-import { MOCK_USERS } from "@/utils/constants";
 
 const CATEGORIES_MAPPING = {
   "Crecimiento Personal": ["Autocuidado", "Motivación", "Calma interior", "Propósito de vida", "Organización personal", "Toma de decisiones", "Rutinas saludables", "Hábitos conscientes", "Confianza personal", "Autoestima", "Acompañamiento personal", "Crecimiento Personal", "Autoconocimiento", "Aprendizaje continuo"],
@@ -322,7 +321,7 @@ function PlatformContent() {
   if (error) {
     return (
       <div className="flex-1 w-full max-w-2xl mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[80vh]">
-        <div className="w-full bg-white rounded-3xl p-8 border border-red-100 shadow-none flex flex-col items-center text-center gap-6">
+        <div className="w-full bg-white rounded-2xl p-8 border border-red-100 shadow-none flex flex-col items-center text-center gap-6">
           <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center text-red-500">
             <span className="material-symbols-outlined text-[32px]">database_off</span>
           </div>
@@ -338,24 +337,13 @@ function PlatformContent() {
 
           <div className="w-full bg-slate-50 rounded-2xl p-5 text-left border border-slate-100 flex flex-col gap-3 font-sans">
             <h3 className="text-[13px] font-semibold text-slate-700 uppercase tracking-wider">
-              ¿Cómo solucionar esto localmente?
+              ¿Cómo solucionar esto?
             </h3>
             <div className="flex flex-col gap-2 text-[13px] text-slate-600">
               <p>
-                <strong>Opción A: Conectarse a la Base de Datos Dev (Recomendado)</strong>
-                <br />
-                Asegúrate de tener un archivo <code>apps/platform/.env.local</code> con la variable:
+                Asegúrate de tener configurado tu archivo de entorno <code>.env.local</code> en <code>apps/platform</code> con la variable de conexión de base de datos activa:
                 <code className="block bg-slate-100 px-3 py-1.5 rounded-lg mt-1 font-mono text-[12px] break-all border border-slate-200">
                   DATABASE_URL="postgresql://luminus_admin:...@..."
-                </code>
-              </p>
-              <div className="h-px bg-slate-200/60 my-1" />
-              <p>
-                <strong>Opción B: Usar Datos de Prueba (Mock)</strong>
-                <br />
-                Si solo deseas trabajar en la interfaz sin base de datos, activa el modo mock en tu <code>.env.local</code>:
-                <code className="block bg-slate-100 px-3 py-1.5 rounded-lg mt-1 font-mono text-[12px] break-all border border-slate-200">
-                  NEXT_PUBLIC_USE_MOCK_DATA=true
                 </code>
               </p>
             </div>
@@ -380,7 +368,7 @@ function PlatformContent() {
         {/* Left Column - LinkedIn User Card (1/4 size on desktop) */}
         <div className="hidden md:flex w-[260px] lg:w-[290px] flex-col gap-3 shrink-0 h-fit">
           {/* Card 1: Main Profile Card */}
-          <div className="bg-white rounded-[24px] border border-zinc-200 overflow-hidden flex flex-col shadow-none relative">
+          <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden flex flex-col shadow-none relative">
             {/* 1. Cover photo */}
             <div className="h-20 w-full relative bg-slate-100 shrink-0">
               {currentUserProfile?.cover_url ? (
@@ -436,7 +424,7 @@ function PlatformContent() {
           </div>
 
           {/* Card 2: Mi red Card */}
-          <div className="bg-white rounded-[24px] border border-zinc-200 p-5 flex flex-col gap-4 shadow-none relative">
+          <div className="bg-white rounded-2xl border border-zinc-200 p-5 flex flex-col gap-4 shadow-none relative">
             {/* Title */}
             <div className="flex justify-between items-center">
               <h4 className="text-[14px] font-bold text-slate-900 font-jakarta">Mi red</h4>

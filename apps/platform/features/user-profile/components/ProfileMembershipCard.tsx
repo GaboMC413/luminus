@@ -23,7 +23,7 @@ export function ProfileMembershipCard({ plan, createdAt, showSettingsButtons = f
   const trialEndDate = getTrialEndDate(createdAt);
 
   return (
-    <div className="bg-white rounded-[24px] p-4 md:p-5 border border-slate-200 flex flex-col gap-4 md:gap-5 shadow-none relative group">
+    <div className="bg-white rounded-2xl p-4 md:p-5 border border-slate-200 flex flex-col gap-4 md:gap-5 shadow-none relative group">
       <div className="w-full flex items-start gap-4">
         <div className="mt-1">
           <span className="material-symbols-rounded text-slate-400 text-[20px]">award_star</span>

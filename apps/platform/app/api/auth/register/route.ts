@@ -52,29 +52,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ user: serializeUser(user) }, { status: 201 });
   } catch (error) {
     console.error("Registration database flow failed.", error);
-    const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
-    if (useMockData) {
-      console.warn("Database not available, using mock user registration bypass.");
-      const mockUserId = "c0000000-0000-0000-0000-000000000001";
-      const token = createSessionToken({
-        userId: mockUserId,
-        email: validation.email,
-        role: "USER",
-      });
-      setSessionCookie(token);
-      return NextResponse.json({
-        user: {
-          id: mockUserId,
-          email: validation.email,
-          profile: {
-            fullName: "Nancy Núñez",
-            firstName: "Nancy",
-            lastName: "Núñez",
-            isOnboarded: false,
-          }
-        }
-      }, { status: 201 });
-    }
     return NextResponse.json(
       { message: "El servicio de base de datos no está disponible." },
       { status: 500 }

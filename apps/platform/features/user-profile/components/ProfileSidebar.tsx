@@ -61,7 +61,7 @@ export function ProfileSidebar({
   const fullName = `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
 
   return (
-    <div className="bg-white rounded-[24px] border border-slate-200 flex flex-col items-start md:items-center shadow-none overflow-hidden relative group">
+    <div className="bg-white rounded-2xl border border-slate-200 flex flex-col items-start md:items-center shadow-none overflow-hidden relative group">
       {/* Local Cover - Mobile Only */}
       <div className={`md:hidden w-full h-[130px] md:h-[160px] relative shrink-0 ${!coverUrl || coverUrl.includes("empty") ? 'luminus-gradient' : ''}`}>
         {coverUrl && !coverUrl.includes("empty") && (
