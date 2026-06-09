@@ -36,6 +36,7 @@ export function serializeUser(user: {
   id: string;
   email: string;
   emailVerified: boolean;
+  role?: "USER" | "ADMIN";
   profile?: {
     firstName: string | null;
     lastName: string | null;
@@ -47,7 +48,7 @@ export function serializeUser(user: {
     email: user.email,
     firstName: user.profile?.firstName ?? null,
     lastName: user.profile?.lastName ?? null,
-    role: "USER",
+    role: user.role ?? "USER",
     emailVerified: user.emailVerified,
     onboardingStatus: user.profile?.isOnboarded ? "COMPLETED" : "PENDING",
   };

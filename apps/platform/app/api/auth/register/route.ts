@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     const token = createSessionToken({
       userId: user.id,
       email: user.email,
-      role: "USER",
+      role: user.role,
     });
 
     setSessionCookie(token);

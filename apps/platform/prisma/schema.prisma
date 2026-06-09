@@ -24,6 +24,13 @@ enum UserStatus {
   @@map("user_status")
 }
 
+enum UserRole {
+  USER  @map("user")
+  ADMIN @map("admin")
+
+  @@map("user_role")
+}
+
 enum ConnectionStatus {
   pending
   accepted
@@ -40,6 +47,7 @@ model User {
   passwordHash  String?      @map("password_hash")
   emailVerified Boolean      @default(false) @map("email_verified")
   authProvider  AuthProvider @default(unknown) @map("auth_provider")
+  role          UserRole     @default(USER)
   status        UserStatus   @default(active)
   lastLoginAt   DateTime?    @map("last_login_at") @db.Timestamptz
   createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz

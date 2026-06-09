@@ -1,0 +1,31 @@
+import { redirect } from "next/navigation";
+import { getCurrentSession } from "@/lib/auth/session";
+import { listAdminUsers } from "@/lib/admin/users";
+import { AdminUsersClient } from "./AdminUsersClient";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export default async function AdminPage() {
+  const session = getCurrentSession();
+
+  if (!session) {
+    redirect("/auth/iniciar-sesion");
+  }
+
+  if (session.role !== "ADMIN") {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#F5F7FA] px-6 text-slate-950">
+        <section className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-8 text-center">
+          <h1 className="text-[24px] font-bold">Acceso restringido</h1>
+          <p className="mt-3 text-[14px] leading-6 text-slate-500">Tu usuario no tiene permisos de administrador.</p>
+        </section>
+      </main>
+    );
+  }
+
+  const { prisma } = await import("@/lib/db");
+  const users = await listAdminUsers(prisma);
+
+  return <AdminUsersClient initialUsers={users} />;
+}
