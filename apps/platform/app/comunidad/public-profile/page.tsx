@@ -8,6 +8,7 @@ import { ProfileSidebar } from "@/features/user-profile/components/ProfileSideba
 import { ProfileAboutSection } from "@/features/user-profile/components/ProfileAboutSection";
 import { ProfileInterestsSection } from "@/features/user-profile/components/ProfileInterestsSection";
 import { ProfileCompletionCard } from "@/features/user-profile/components/ProfileCompletionCard";
+import { ChatPopup } from "@/components/ui/ChatPopup";
 
 export default function PublicProfilePage() {
   return (
@@ -31,6 +32,7 @@ function PublicProfileContent() {
   const [loading, setLoading] = useState(true);
   const [connectionLoading, setConnectionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     const id = searchParams.get("id");
@@ -63,8 +65,7 @@ function PublicProfileContent() {
   }, [searchParams]);
 
   const handleSendMessage = () => {
-    const id = searchParams.get("id");
-    router.push(`/mensajes?id=${id || "1"}`);
+    setIsChatOpen(true);
   };
 
   const handleConnect = async () => {
@@ -133,7 +134,7 @@ function PublicProfileContent() {
   if (error || !profile) {
     return (
       <div className="w-full h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-3xl p-8 border border-red-100 shadow-sm flex flex-col items-center text-center gap-6">
+        <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-red-100 shadow-sm flex flex-col items-center text-center gap-6">
           <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center text-red-500">
             <span className="material-symbols-outlined text-[32px]">error</span>
           </div>
@@ -151,6 +152,8 @@ function PublicProfileContent() {
       </div>
     );
   }
+
+  const userId = searchParams.get("id") || "";
 
   return (
     <div className="w-full flex flex-col relative bg-slate-50 min-h-screen">
@@ -225,6 +228,15 @@ function PublicProfileContent() {
           </div>
         </div>
       </div>
+
+      {isChatOpen && (
+        <ChatPopup
+          userId={userId}
+          name={`${profile.first_name || ""} ${profile.last_name || ""}`.trim()}
+          avatar={profile.profile_picture_url}
+          onClose={() => setIsChatOpen(false)}
+        />
+      )}
     </div>
   );
 }

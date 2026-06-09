@@ -31,6 +31,7 @@ export function EmailSection({
   const [emailError, setEmailError] = useState("");
   const [codeError, setCodeError] = useState("");
   const [timeLeft, setTimeLeft] = useState(120);
+  const [loading, setLoading] = useState(false);
 
   const [shouldAnimate, setShouldAnimate] = useState(false);
   const lastAttentionRef = useRef(attentionCounter);
@@ -77,43 +78,79 @@ export function EmailSection({
     setCodeError("");
   };
 
-  const handleSendCode = () => {
+  const handleSendCode = async () => {
     if (!newEmail || !newEmail.includes("@")) {
       setEmailError("Por favor, ingresa un correo electrónico válido.");
       return;
     }
-    setEmailError("");
-    setStep("code");
-    setCode("");
-    setCodeError("");
+
+    try {
+      setLoading(true);
+      setEmailError("");
+      const response = await fetch("/api/account/email/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: newEmail }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.message || "No pudimos enviar el código.");
+      }
+
+      setStep("code");
+      setCode("");
+      setCodeError("");
+    } catch (error) {
+      setEmailError(error instanceof Error ? error.message : "No pudimos enviar el código.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (code.length < 6) {
       setCodeError("El código de verificación debe tener 6 dígitos.");
       return;
     }
 
-    // Success flow
-    setEmail(newEmail);
-    localStorage.setItem("luminus_user_email", newEmail);
-    showSuccess("¡Email actualizado!", "Tu dirección de correo ha sido actualizada exitosamente.");
+    try {
+      setLoading(true);
+      setCodeError("");
+      const response = await fetch("/api/account/email/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ email: newEmail, code }),
+      });
+      const data = await response.json().catch(() => ({}));
 
-    // Reset editing
-    setEditingFieldId(null);
-    setNewEmail("");
-    setCode("");
-    setEmailError("");
-    setCodeError("");
+      if (!response.ok) {
+        throw new Error(data.message || "No pudimos confirmar el código.");
+      }
+
+      setEmail(data.email || newEmail);
+      localStorage.setItem("luminus_user_email", data.email || newEmail);
+      showSuccess("¡Email actualizado!", "Tu dirección de correo ha sido actualizada exitosamente.");
+
+      setEditingFieldId(null);
+      setNewEmail("");
+      setCode("");
+      setEmailError("");
+      setCodeError("");
+    } catch (error) {
+      setCodeError(error instanceof Error ? error.message : "No pudimos confirmar el código.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleResendCode = () => {
+  const handleResendCode = async () => {
     if (timeLeft > 0) return;
 
-    // Reset timer
+    await handleSendCode();
     setTimeLeft(120);
-    setCode("");
-    setCodeError("");
   };
 
   const handleCancel = () => {
@@ -208,10 +245,10 @@ export function EmailSection({
                   </button>
                   <button
                     onClick={handleSendCode}
-                    disabled={!newEmail || !newEmail.includes("@")}
+                    disabled={loading || !newEmail || !newEmail.includes("@")}
                     className={`px-4 h-8 text-button font-bold bg-black text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 origin-center ${shouldAnimate ? "scale-110" : "scale-100"}`}
                   >
-                    Enviar código
+                    {loading ? "Enviando..." : "Enviar código"}
                   </button>
                 </div>
               </>
@@ -268,10 +305,10 @@ export function EmailSection({
                   </button>
                   <button
                     onClick={handleConfirm}
-                    disabled={code.length < 6}
+                    disabled={loading || code.length < 6}
                     className={`px-4 h-8 text-button font-bold bg-black text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 origin-center ${shouldAnimate ? "scale-110" : "scale-100"}`}
                   >
-                    Confirmar
+                    {loading ? "Confirmando..." : "Confirmar"}
                   </button>
                 </div>
               </>

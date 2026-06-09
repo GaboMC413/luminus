@@ -5,6 +5,37 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { NotificationPopup } from "./NotificationPopup";
 import { MessagesPopup } from "./MessagesPopup";
+import { ChatPopup } from "./ChatPopup";
+
+export function formatRelativeTime(timestamp: any): string {
+  if (!timestamp) return "Ahora";
+
+  const dateObj = new Date(timestamp);
+  if (isNaN(dateObj.getTime())) {
+    return "Ahora";
+  }
+
+  const diffMs = Date.now() - dateObj.getTime();
+  if (diffMs < 0) return "Ahora";
+
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return "Ahora";
+  if (diffMins < 60) return `${diffMins} min`;
+
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d`;
+
+  const diffWeeks = Math.floor(diffDays / 7);
+  if (diffWeeks < 4) return `${diffWeeks}w`;
+
+  const diffMonths = Math.floor(diffDays / 30);
+  if (diffMonths < 12) return `${diffMonths} mes${diffMonths > 1 ? "es" : ""}`;
+
+  return dateObj.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
 
 const NAV_ITEMS = [
   { id: "comunidad", label: "Comunidad", path: "/comunidad", icon: "/Icons/NavBar/comunity inactive.svg", activeIcon: "/Icons/NavBar/community active.svg" },
@@ -27,6 +58,7 @@ export function PlatformNavbar() {
 
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
+  const [activePopupChat, setActivePopupChat] = useState<{ userId: string; name: string; avatar: string } | null>(null);
 
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -74,6 +106,48 @@ export function PlatformNavbar() {
     loadSessionUser();
   }, []);
 
+  // Sync real chats with localStorage for dynamic notification count & list
+  useEffect(() => {
+    const loadChats = () => {
+      const localChats = localStorage.getItem("luminus_chats");
+      if (localChats) {
+        try {
+          const chats = JSON.parse(localChats);
+          if (Array.isArray(chats)) {
+            // Filter out historical mock users (IDs "1", "2", or "mock-user-") from navbar list
+            const realChats = chats.filter((c: any) => {
+              const idStr = String(c.id);
+              return idStr !== "1" && idStr !== "2" && !idStr.startsWith("mock-user-");
+            });
+
+            const popupMsgs = realChats.map((chat: any) => {
+              const lastMsgObj = chat.messages?.[chat.messages.length - 1];
+              const timestamp = lastMsgObj ? lastMsgObj.id : Date.now();
+              return {
+                id: chat.id,
+                avatar: chat.avatar,
+                title: "Mensaje nuevo",
+                user: chat.name,
+                action: chat.lastMessage || "Sin mensajes aún",
+                date: formatRelativeTime(timestamp),
+                isUnread: lastMsgObj ? lastMsgObj.sender !== "me" : false,
+              };
+            });
+            setMessages(popupMsgs);
+          }
+        } catch (err) {
+          console.error("Error loading navbar chats:", err);
+        }
+      } else {
+        setMessages([]);
+      }
+    };
+
+    loadChats();
+    window.addEventListener("storage", loadChats);
+    return () => window.removeEventListener("storage", loadChats);
+  }, []);
+
   // Determine active tab based on pathname
   const getActiveTab = () => {
     if (pathname.includes("/comunidad")) return "comunidad";
@@ -111,12 +185,30 @@ export function PlatformNavbar() {
     setNotifications(prev => prev.map(n => ({ ...n, isUnread: false })));
   };
 
-  const markMessageRead = (id: number) => {
-    setMessages(prev => prev.map(m => m.id === id ? { ...m, isUnread: false } : m));
+  const markMessageRead = (id: string | number) => {
+    // Open in bottom popup chat dynamically from the navbar
+    const localChats = localStorage.getItem("luminus_chats");
+    if (localChats) {
+      try {
+        const chats = JSON.parse(localChats);
+        const found = chats.find((c: any) => String(c.id) === String(id));
+        if (found) {
+          setActivePopupChat({
+            userId: String(found.id),
+            name: found.name,
+            avatar: found.avatar
+          });
+        }
+      } catch (err) {
+        console.error("Error parsing chats in markMessageRead:", err);
+      }
+    }
+    setIsMessagesOpen(false);
   };
 
   const markAllMessagesRead = () => {
-    setMessages(prev => prev.map(m => ({ ...m, isUnread: false })));
+    router.push(`/mensajes`);
+    setIsMessagesOpen(false);
   };
 
   const handleSignOut = async () => {
@@ -186,7 +278,7 @@ export function PlatformNavbar() {
                 : "bg-auto text-slate-400 hover:bg-slate-100 hover:text-black"
                 }`}
             >
-              <span className={isMessagesOpen ? "material-symbols-filled text-[22px]" : "material-symbols-outlined text-[22px]"}>
+              <span className={`material-symbols-rounded text-[22px] ${isMessagesOpen ? "material-icon-filled text-black" : ""}`}>
                 chat_bubble
               </span>
               {unreadMessagesCount > 0 && (
@@ -215,7 +307,7 @@ export function PlatformNavbar() {
                 : "bg-auto text-slate-400 hover:bg-slate-100 hover:text-black"
                 }`}
             >
-              <span className={isNotificationOpen ? "material-symbols-filled text-[22px]" : "material-symbols-outlined text-[22px]"}>
+              <span className={`material-symbols-rounded text-[22px] ${isNotificationOpen ? "material-icon-filled text-black" : ""}`}>
                 notifications
               </span>
               {unreadNotificationsCount > 0 && (
@@ -247,7 +339,7 @@ export function PlatformNavbar() {
                 />
               ) : (
                 <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-[8px] bg-slate-100 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-slate-400 text-[20px]">person</span>
+                  <span className="material-symbols-rounded text-slate-400 text-[20px]">person</span>
                 </div>
               )}
               <span className={`hidden lg:block text-[14px] font-semibold ${isProfileDropdownOpen ? "text-black" : "text-slate-400 group-hover:text-black"}`}>
@@ -262,7 +354,7 @@ export function PlatformNavbar() {
                   onClick={() => setIsProfileDropdownOpen(false)}
                   className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[14px] hover:bg-slate-50 transition-colors"
                 >
-                  <span className="material-symbols-outlined text-slate-400 group-hover:text-black">person</span>
+                  <span className="material-symbols-rounded text-slate-400 group-hover:text-black">person</span>
                   <span className="font-semibold text-slate-400 group-hover:text-black">Ver mi perfil</span>
                 </Link>
                 <Link
@@ -270,7 +362,7 @@ export function PlatformNavbar() {
                   onClick={() => setIsProfileDropdownOpen(false)}
                   className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[14px] hover:bg-slate-50 transition-colors"
                 >
-                  <span className="material-symbols-outlined text-slate-400 group-hover:text-black">settings</span>
+                  <span className="material-symbols-rounded text-slate-400 group-hover:text-black">settings</span>
                   <span className="font-semibold text-slate-400 group-hover:text-black">Ajustes de cuenta</span>
                 </Link>
                 <div className="h-[1px] bg-slate-100 w-full"></div>
@@ -278,7 +370,7 @@ export function PlatformNavbar() {
                   onClick={handleSignOut}
                   className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[14px] hover:bg-[#FF4B4B]/10 transition-colors text-left"
                 >
-                  <span className="material-symbols-outlined text-slate-400 group-hover:text-[#FF4B4B]">logout</span>
+                  <span className="material-symbols-rounded text-slate-400 group-hover:text-[#FF4B4B]">logout</span>
                   <span className="font-semibold text-slate-400 group-hover:text-[#FF4B4B]">Cerrar sesión</span>
                 </button>
               </div>
@@ -328,6 +420,15 @@ export function PlatformNavbar() {
         </div>
       </div>
       
+      {activePopupChat && (
+        <ChatPopup
+          userId={activePopupChat.userId}
+          name={activePopupChat.name}
+          avatar={activePopupChat.avatar}
+          onClose={() => setActivePopupChat(null)}
+        />
+      )}
+
       {/* Preload icons to avoid lag */}
       <div className="hidden" aria-hidden="true">
         {NAV_ITEMS.map((item) => (

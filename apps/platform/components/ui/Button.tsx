@@ -62,11 +62,16 @@ export const ProfileButton = React.forwardRef<HTMLButtonElement, ProfileButtonPr
   if (!label && icon !== "photo_camera") {
     return (
       <button
+        ref={ref}
         {...props}
         ref={ref}
         className={`w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-black hover:bg-slate-100 transition-all duration-300 cursor-pointer shadow-none ${className}`}
       >
-        <span className="material-symbols-rounded text-[16px] md:text-[18px] shrink-0">{icon}</span>
+        {showDot && (
+          <div className="w-3 h-3 rounded-full bg-[#FF4B4B] border-2 border-white shrink-0 shadow-sm" />
+        )}
+        <span className="material-symbols-rounded text-[18px] md:text-[22px] shrink-0">{icon}</span>
+        {label && <span className="truncate">{label}</span>}
       </button>
     );
   }

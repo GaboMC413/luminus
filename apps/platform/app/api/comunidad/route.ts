@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
-import { MOCK_USERS } from "@/utils/constants";
 
 export const runtime = "nodejs";
 
@@ -11,11 +10,9 @@ export async function GET() {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }
 
-  const useMockData = process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
-
-  if (!process.env.DATABASE_URL && !useMockData) {
+  if (!process.env.DATABASE_URL) {
     return NextResponse.json({ 
-      message: "DATABASE_URL is not configured and NEXT_PUBLIC_USE_MOCK_DATA is not enabled." 
+      message: "DATABASE_URL is not configured." 
     }, { status: 500 });
   }
 
@@ -57,19 +54,6 @@ export async function GET() {
     return NextResponse.json({ users: serialized });
   } catch (error) {
     console.error("Failed to fetch community users.", error);
-    
-    if (useMockData) {
-      console.warn("Database not available, falling back to MOCK_USERS (explicit bypass enabled).");
-      const serializedMock = MOCK_USERS.map((user, idx) => ({
-        id: `mock-user-${idx}`,
-        name: user.name,
-        location: user.location,
-        avatar: user.avatar,
-        interests: user.interests,
-        profession: idx % 3 === 0 ? "Coach" : idx % 3 === 1 ? "Nutricionista" : "Instructor de Yoga",
-      }));
-      return NextResponse.json({ users: serializedMock });
-    }
     
     return NextResponse.json({ 
       message: "No se pudieron cargar los usuarios de la comunidad. El servicio de base de datos no está disponible." 
