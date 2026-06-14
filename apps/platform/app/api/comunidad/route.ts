@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const session = getCurrentSession();
@@ -27,6 +28,9 @@ export async function GET() {
         profile: {
           isOnboarded: true,
         },
+      },
+      orderBy: {
+        createdAt: "desc",
       },
       include: {
         profile: true,
