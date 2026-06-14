@@ -569,21 +569,19 @@ function PlatformContent() {
                 />
               )}
 
-              {/* Filter Dropdown Popover / Mobile Bottom Sheet */}
+              {/* Filter Dropdown Popover / Mobile Full-Screen Sheet */}
               {showFilters && (
                 <div 
                   ref={dropdownRef}
                   className="
                     fixed md:absolute 
-                    bottom-0 md:bottom-auto 
-                    left-0 md:left-auto 
-                    right-0 
-                    md:top-[56px] 
+                    inset-0 md:inset-auto 
+                    md:top-[56px] md:right-0 
                     w-full md:w-[384px] 
-                    max-h-[85vh] md:max-h-none 
+                    h-full md:h-auto 
                     bg-white 
-                    rounded-t-3xl md:rounded-2xl 
-                    border-t md:border border-zinc-200 
+                    rounded-none md:rounded-2xl 
+                    border-none md:border border-zinc-200 
                     shadow-none 
                     z-[1000] md:z-50 
                     flex flex-col 
@@ -594,13 +592,20 @@ function PlatformContent() {
                     duration-300 md:duration-150
                   "
                 >
-                  {/* Close handle for mobile */}
-                  <div className="md:hidden flex justify-center py-3 shrink-0">
-                    <div className="w-12 h-1.5 bg-slate-200 rounded-full" />
+                  {/* Header for mobile */}
+                  <div className="md:hidden flex items-center justify-between px-5 py-4 border-b border-zinc-200/50 shrink-0">
+                    <span className="text-base font-bold text-black font-jakarta">Filtros</span>
+                    <button 
+                      type="button" 
+                      onClick={() => setShowFilters(false)}
+                      className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-black border-none cursor-pointer"
+                    >
+                      <span className="material-symbols-rounded text-[20px]">close</span>
+                    </button>
                   </div>
 
                   {/* Form fields */}
-                  <div className="p-5 flex flex-col gap-5 overflow-y-auto max-h-[60vh] md:max-h-none md:overflow-visible custom-scrollbar">
+                  <div className="p-5 flex flex-col gap-5 flex-1 overflow-y-auto md:flex-none md:max-h-none md:overflow-visible custom-scrollbar">
                     
                     {/* Country & City Dropdowns - Stacked in Column */}
                     <div className="flex flex-col gap-4">
@@ -626,7 +631,7 @@ function PlatformContent() {
                     {/* Dynamic specific interest checkboxes */}
                     <div className="flex flex-col gap-2">
                       <label className="text-label ml-1 font-jakarta">Intereses</label>
-                      <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto pr-1.5">
+                      <div className="flex flex-wrap gap-2 overflow-y-auto pr-1.5 md:max-h-[160px]">
                         {(() => {
                           let availableInterests: string[] = [];
                           if (tempFilters.category && tempFilters.category !== "Todas las categorías") {
