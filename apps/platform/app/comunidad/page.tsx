@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { InterestPill } from "@/components/ui/InterestPill";
@@ -31,6 +32,11 @@ export default function PlatformPage() {
 }
 
 function PlatformContent() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [appliedFilters, setAppliedFilters] = useState({
     country: "",
@@ -357,7 +363,6 @@ function PlatformContent() {
               </p>
             </div>
           </div>
-
           <button
             onClick={() => window.location.reload()}
             className="h-11 px-6 bg-black text-white rounded-xl text-[14px] font-bold hover:bg-zinc-800 transition duration-200 cursor-pointer"
@@ -368,6 +373,113 @@ function PlatformContent() {
       </div>
     );
   }
+
+  const renderFilterFields = (isMobile: boolean) => {
+    return (
+      <>
+        {/* Country & City Dropdowns - Stacked in Column */}
+        <div className="flex flex-col gap-4">
+          <SelectInput
+            label="País"
+            value={tempFilters.country}
+            options={[{ label: "Cualquier país", value: "" }, ...countriesWithResults.map(country => ({ label: country, value: country }))] }
+            onSelect={(val) => setTempFilters({ ...tempFilters, country: val, city: "" })}
+            placeholder="Cualquier país"
+            preventScrollOnOpen={isMobile}
+          />
+
+          <SelectInput
+            label="Ciudad"
+            value={tempFilters.city}
+            options={[{ label: "Cualquier ciudad", value: "" }, ...availableCities.map(city => ({ label: city, value: city }))] }
+            onSelect={(val) => setTempFilters({ ...tempFilters, city: val })}
+            placeholder="Cualquier ciudad"
+            preventScrollOnOpen={isMobile}
+          />
+        </div>
+
+        {/* Dynamic specific interest checkboxes */}
+        <div className="flex flex-col gap-2">
+          <label className="text-label ml-1 font-jakarta">Intereses</label>
+          <div className={`flex flex-wrap gap-2 ${isMobile ? "" : "max-h-[160px] overflow-y-auto pr-1.5"}`}>
+            {(() => {
+              let availableInterests: string[] = [];
+              if (tempFilters.category && tempFilters.category !== "Todas las categorías") {
+                const categoryInterests = CATEGORIES_MAPPING[tempFilters.category as keyof typeof CATEGORIES_MAPPING] || [];
+                availableInterests = categoryInterests.filter(interest => 
+                  interestsWithResults.some(active => active.toLowerCase() === interest.toLowerCase())
+                );
+              } else {
+                availableInterests = interestsWithResults;
+              }
+
+              if (availableInterests.length === 0) {
+                return (
+                  <p className="text-[11px] text-slate-400 py-2 w-full text-center">
+                    No hay temas de interés con resultados para esta selección.
+                  </p>
+                );
+              }
+
+              return availableInterests.map(interest => {
+                const isChecked = tempFilters.selectedInterests.includes(interest);
+                return (
+                  <button
+                    key={interest}
+                    type="button"
+                    onClick={() => {
+                      const nextSelected = isChecked
+                        ? tempFilters.selectedInterests.filter(i => i !== interest)
+                        : [...tempFilters.selectedInterests, interest];
+                      setTempFilters({ ...tempFilters, selectedInterests: nextSelected });
+                    }}
+                    className={`px-4 py-2 rounded-full text-[13px] font-medium transition-premium border cursor-pointer select-none flex items-center gap-1.5 ${
+                      isChecked
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:text-black"
+                    }`}
+                  >
+                    {isChecked && <span className="material-symbols-outlined text-[13px]">check</span>}
+                    {interest}
+                  </button>
+                );
+              });
+            })()}
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  const renderActionsFooter = () => {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={handleClearFilters}
+          className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-premium cursor-pointer border-none bg-transparent font-jakarta uppercase tracking-wider"
+        >
+          Limpiar
+        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowFilters(false)}
+            className="h-9 px-4 bg-white hover:bg-slate-50 text-slate-950 font-medium text-xs rounded-xl border border-zinc-200 transition-premium active:scale-95 cursor-pointer select-none font-jakarta"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleApplyFilters}
+            className="h-9 px-4 bg-black hover:bg-zinc-900 text-white font-medium text-xs rounded-xl transition-premium active:scale-95 cursor-pointer select-none border-none outline-none font-jakarta"
+          >
+            Aplicar
+          </button>
+        </div>
+      </>
+    );
+  };
 
   return (
     <div className="flex-1 w-full flex flex-col h-full md:overflow-hidden overflow-visible">
@@ -569,31 +681,57 @@ function PlatformContent() {
                 />
               )}
 
-              {/* Filter Dropdown Popover / Mobile Full-Screen Sheet */}
+              {/* Desktop: Popover Dropdown (inline relative to button) */}
               {showFilters && (
                 <div 
                   ref={dropdownRef}
                   className="
-                    fixed md:absolute 
-                    inset-0 md:inset-auto 
-                    md:top-[56px] md:right-0 
-                    w-full md:w-[384px] 
-                    h-full md:h-auto 
+                    hidden md:flex 
+                    absolute 
+                    top-[56px] right-0 
+                    w-[384px] 
                     bg-white 
-                    rounded-none md:rounded-2xl 
-                    border-none md:border border-zinc-200 
+                    rounded-2xl 
+                    border border-zinc-200 
                     shadow-none 
-                    z-[1000] md:z-50 
+                    z-50 
+                    flex-col 
+                    overflow-visible 
+                    animate-in 
+                    slide-in-from-top-2 
+                    fade-in 
+                    duration-150
+                  "
+                >
+                  <div className="p-5 flex flex-col gap-5">
+                    {renderFilterFields(false)}
+                  </div>
+                  <div className="px-4 py-3 bg-slate-50 border-t border-zinc-200/40 flex items-center justify-between gap-3 rounded-b-2xl">
+                    {renderActionsFooter()}
+                  </div>
+                </div>
+              )}
+
+              {/* Mobile: React Portal Full-Screen Modal */}
+              {showFilters && mounted && createPortal(
+                <div 
+                  ref={dropdownRef}
+                  className="
+                    md:hidden 
+                    fixed 
+                    inset-0 
+                    bg-white 
+                    z-[9999] 
                     flex flex-col 
                     overflow-hidden 
                     animate-in 
-                    slide-in-from-bottom md:slide-in-from-top-2 
+                    slide-in-from-bottom 
                     fade-in 
-                    duration-300 md:duration-150
+                    duration-300
                   "
                 >
                   {/* Header for mobile */}
-                  <div className="md:hidden flex items-center justify-between px-5 py-4 border-b border-zinc-200/50 shrink-0">
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200/50 shrink-0">
                     <span className="text-base font-bold text-black font-jakarta">Buscar por filtros</span>
                     <button 
                       type="button" 
@@ -605,108 +743,16 @@ function PlatformContent() {
                   </div>
 
                   {/* Form fields */}
-                  <div className="p-5 flex flex-col gap-5 flex-1 overflow-y-auto md:flex-none md:max-h-none md:overflow-visible custom-scrollbar">
-                    
-                    {/* Country & City Dropdowns - Stacked in Column */}
-                    <div className="flex flex-col gap-4">
-                      <SelectInput
-                        label="País"
-                        value={tempFilters.country}
-                        options={[{ label: "Cualquier país", value: "" }, ...countriesWithResults.map(country => ({ label: country, value: country }))] }
-                        onSelect={(val) => setTempFilters({ ...tempFilters, country: val, city: "" })}
-                        placeholder="Cualquier país"
-                        preventScrollOnOpen={true}
-                      />
-
-                      <SelectInput
-                        label="Ciudad"
-                        value={tempFilters.city}
-                        options={[{ label: "Cualquier ciudad", value: "" }, ...availableCities.map(city => ({ label: city, value: city }))] }
-                        onSelect={(val) => setTempFilters({ ...tempFilters, city: val })}
-                        placeholder="Cualquier ciudad"
-                        preventScrollOnOpen={true}
-                      />
-                    </div>
-
-                    {/* Dynamic specific interest checkboxes */}
-                    <div className="flex flex-col gap-2">
-                      <label className="text-label ml-1 font-jakarta">Intereses</label>
-                      <div className="flex flex-wrap gap-2 overflow-y-auto pr-1.5 md:max-h-[160px]">
-                        {(() => {
-                          let availableInterests: string[] = [];
-                          if (tempFilters.category && tempFilters.category !== "Todas las categorías") {
-                            const categoryInterests = CATEGORIES_MAPPING[tempFilters.category as keyof typeof CATEGORIES_MAPPING] || [];
-                            availableInterests = categoryInterests.filter(interest => 
-                              interestsWithResults.some(active => active.toLowerCase() === interest.toLowerCase())
-                            );
-                          } else {
-                            availableInterests = interestsWithResults;
-                          }
-
-                          if (availableInterests.length === 0) {
-                            return (
-                              <p className="text-[11px] text-slate-400 py-2 w-full text-center">
-                                No hay temas de interés con resultados para esta selección.
-                              </p>
-                            );
-                          }
-
-                          return availableInterests.map(interest => {
-                            const isChecked = tempFilters.selectedInterests.includes(interest);
-                            return (
-                              <button
-                                key={interest}
-                                type="button"
-                                onClick={() => {
-                                  const nextSelected = isChecked
-                                    ? tempFilters.selectedInterests.filter(i => i !== interest)
-                                    : [...tempFilters.selectedInterests, interest];
-                                  setTempFilters({ ...tempFilters, selectedInterests: nextSelected });
-                                }}
-                                className={`px-4 py-2 rounded-full text-[13px] font-medium transition-premium border cursor-pointer select-none flex items-center gap-1.5 ${
-                                  isChecked
-                                    ? "bg-black text-white border-black"
-                                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:text-black"
-                                }`}
-                              >
-                                {isChecked && <span className="material-symbols-outlined text-[13px]">check</span>}
-                                {interest}
-                              </button>
-                            );
-                          });
-                        })()}
-                      </div>
-                    </div>
-
+                  <div className="p-5 flex flex-col gap-5 flex-1 overflow-y-auto custom-scrollbar">
+                    {renderFilterFields(true)}
                   </div>
 
                   {/* Actions footer */}
-                  <div className="px-4 py-3 bg-slate-50 border-t border-zinc-200/40 flex items-center justify-between gap-3 shrink-0 pb-6 md:pb-3">
-                    <button
-                      type="button"
-                      onClick={handleClearFilters}
-                      className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-premium cursor-pointer border-none bg-transparent font-jakarta uppercase tracking-wider"
-                    >
-                      Limpiar
-                    </button>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowFilters(false)}
-                        className="h-9 px-4 bg-white hover:bg-slate-50 text-slate-950 font-medium text-xs rounded-xl border border-zinc-200 transition-premium active:scale-95 cursor-pointer select-none font-jakarta"
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleApplyFilters}
-                        className="h-9 px-4 bg-black hover:bg-zinc-900 text-white font-medium text-xs rounded-xl transition-premium active:scale-95 cursor-pointer select-none border-none outline-none font-jakarta"
-                      >
-                        Aplicar
-                      </button>
-                    </div>
+                  <div className="px-4 py-3 bg-slate-50 border-t border-zinc-200/40 flex items-center justify-between gap-3 shrink-0 pb-[calc(16px+env(safe-area-inset-bottom))]">
+                    {renderActionsFooter()}
                   </div>
-                </div>
+                </div>,
+                document.body
               )}
             </div>
 
