@@ -484,7 +484,7 @@ function PlatformContent() {
   return (
     <div className="flex-1 w-full flex flex-col h-full md:overflow-hidden overflow-visible">
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row gap-6 lg:gap-8 h-full md:overflow-hidden overflow-visible py-6">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row gap-6 lg:gap-8 h-full md:overflow-hidden overflow-visible py-4 md:py-6">
 
         {/* Left Column - LinkedIn User Card (1/4 size on desktop) */}
         <div className="hidden md:flex w-[260px] lg:w-[290px] flex-col gap-3 shrink-0 h-fit">
@@ -824,7 +824,7 @@ function PlatformContent() {
 
           <div
             onScroll={handleScroll}
-            className="flex-1 w-full overflow-y-auto custom-scrollbar pb-12"
+            className="flex-1 w-full overflow-y-auto custom-scrollbar pb-0 md:pb-12"
           >
             {filteredUsers.length === 0 ? (
               <div className="w-full flex flex-col items-center justify-center p-12 text-center min-h-[300px]">

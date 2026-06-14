@@ -123,9 +123,9 @@ export function ProfileSidebar({
         <div className="w-full h-px bg-slate-100" />
 
         <div className="w-full flex flex-col gap-4 lg:gap-6 px-1">
-          <DetailItem label="Profesión" value={profile.profession} icon="work" onClick={onEditProfile ? () => onEditProfile("profession") : undefined} isPublic={isPublic} />
-          <DetailItem label="Nacimiento" value={formatDisplayDate(profile.birthdate)} icon="cake" onClick={onEditProfile ? () => onEditProfile("birthdate") : undefined} isPublic={isPublic} />
-          <DetailItem label="Género" value={profile.gender} icon={getGenderIcon(profile.gender)} onClick={onEditProfile ? () => onEditProfile("gender") : undefined} isPublic={isPublic} />
+          <DetailItem label="Profesión" value={profile.profession} icon="work" onClick={onEditProfile ? () => onEditProfile("profession") : undefined} isPublic={isPublic} firstName={profile.first_name} />
+          <DetailItem label="Nacimiento" value={formatDisplayDate(profile.birthdate)} icon="cake" onClick={onEditProfile ? () => onEditProfile("birthdate") : undefined} isPublic={isPublic} firstName={profile.first_name} />
+          <DetailItem label="Género" value={profile.gender} icon={getGenderIcon(profile.gender)} onClick={onEditProfile ? () => onEditProfile("gender") : undefined} isPublic={isPublic} firstName={profile.first_name} />
         </div>
 
         {(!isPublic || onSendMessage || onConnect) && (
@@ -192,24 +192,32 @@ export function ProfileSidebar({
   );
 }
 
-function DetailItem({ label, value, icon, onClick, isPublic = false }: { label: string; value: string; icon: string; onClick?: () => void; isPublic?: boolean }) {
-  const isEmpty = !value || value === 'No definido' || value === 'Sin fecha de nacimiento';
+function DetailItem({ label, value, icon, onClick, isPublic = false, firstName }: { label: string; value: string; icon: string; onClick?: () => void; isPublic?: boolean; firstName?: string }) {
+  const isEmpty = !value || value === 'No definido' || value === 'Sin fecha de nacimiento' || value.trim().length === 0;
 
-  if (isEmpty && isPublic) return null;
+  if (isEmpty && isPublic && label !== "Profesión") return null;
+
+  const nameToUse = firstName ? firstName.trim() : "Este usuario";
 
   return (
-    <div className="flex items-center gap-4 relative">
+    <div className="flex items-center gap-4 relative w-full">
       <span className="material-symbols-rounded text-slate-400 text-[20px] shrink-0">
         {icon}
       </span>
       <div className="flex flex-col min-w-0 flex-1">
         {isEmpty ? (
-          onClick && (
-            <EmptyProfileButton
-              onClick={onClick}
-              label={`Añadir ${label.toLowerCase()}`}
-              icon="add"
-            />
+          isPublic ? (
+            <span className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight truncate leading-relaxed">
+              {nameToUse} no ha especificado su profesión
+            </span>
+          ) : (
+            onClick && (
+              <EmptyProfileButton
+                onClick={onClick}
+                label={`Añadir ${label.toLowerCase()}`}
+                icon="add"
+              />
+            )
           )
         ) : (
           <span className="text-sm lg:text-base text-primary truncate leading-relaxed">{value}</span>

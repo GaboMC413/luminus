@@ -27,11 +27,98 @@ interface ChatPopupProps {
   onClose: () => void;
 }
 
+function formatMessageBody(text: string): React.ReactNode[] {
+  if (!text) return [];
+
+  // Regex to match Markdown links: [Text](URL)
+  const markdownLinkRegex = /(\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g;
+  
+  const parts = text.split(markdownLinkRegex);
+
+  return parts.map((part, index) => {
+    // Check if the part matches the markdown link pattern
+    if (part.startsWith('[') && part.includes('](')) {
+      const match = part.match(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/);
+      if (match) {
+        const [, linkText, url] = match;
+        return (
+          <a
+            key={index}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:opacity-80 transition-opacity font-bold break-all"
+          >
+            {linkText}
+          </a>
+        );
+      }
+    }
+
+    // Otherwise, parse standard URLs, bold (*) and italics (_)
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const subParts = part.split(urlRegex);
+
+    return (
+      <React.Fragment key={index}>
+        {subParts.map((subPart, subIndex) => {
+          if (subPart.match(urlRegex)) {
+            return (
+              <a
+                key={subIndex}
+                href={subPart}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:opacity-80 transition-opacity font-bold break-all"
+              >
+                {subPart}
+              </a>
+            );
+          }
+
+          const boldRegex = /\*([^*]+)\*/g;
+          const boldParts = subPart.split(boldRegex);
+
+          return (
+            <React.Fragment key={subIndex}>
+              {boldParts.map((boldPart, boldIndex) => {
+                if (boldIndex % 2 === 1) {
+                  return <strong key={boldIndex} className="font-bold">{boldPart}</strong>;
+                }
+
+                const italicRegex = /_([^_]+)_/g;
+                const italicParts = boldPart.split(italicRegex);
+
+                return (
+                  <React.Fragment key={boldIndex}>
+                    {italicParts.map((italicPart, italicIndex) => {
+                      if (italicIndex % 2 === 1) {
+                        return <em key={italicIndex} className="italic">{italicPart}</em>;
+                      }
+                      return italicPart;
+                    })}
+                  </React.Fragment>
+                );
+              })}
+            </React.Fragment>
+          );
+        })}
+      </React.Fragment>
+    );
+  });
+}
+
+function isUuid(value: string | null) {
+  return Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value));
+}
+
 export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [dbConversationId, setDbConversationId] = useState<string | null>(null);
+  const [isDbChat, setIsDbChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -66,20 +153,67 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
     };
   }, []);
 
-  // Load conversation from localStorage on mount
+  // Load conversation on mount (hybrid db / localstorage support)
   useEffect(() => {
     if (!userId) return;
 
-    const localChats = localStorage.getItem("luminus_chats");
-    if (localChats) {
-      try {
-        const chats: Conversation[] = JSON.parse(localChats);
-        const currentChat = chats.find((c) => String(c.id) === String(userId));
-        if (currentChat) {
-          setMessages(currentChat.messages || []);
+    const isDb = isUuid(userId);
+    setIsDbChat(isDb);
+
+    if (isDb) {
+      const loadDbChat = async () => {
+        try {
+          const convRes = await fetch("/api/messages/conversations", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ recipientId: userId }),
+          });
+
+          if (!convRes.ok) {
+            console.error("Failed to load/create DB conversation");
+            return;
+          }
+
+          const convData = await convRes.json();
+          const convId = convData.conversation.id;
+          setDbConversationId(convId);
+
+          const msgRes = await fetch(`/api/messages/conversations/${convId}/messages`, {
+            cache: "no-store",
+          });
+
+          if (!msgRes.ok) {
+            console.error("Failed to fetch DB messages");
+            return;
+          }
+
+          const msgData = await msgRes.json();
+          const dbMsgs = (msgData.messages || []).map((m: any) => ({
+            id: m.id,
+            text: m.body,
+            sender: m.sender_id === userId ? "other" : "me",
+            time: new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          }));
+          setMessages(dbMsgs);
+        } catch (err) {
+          console.error("Error loading DB chat inside popup:", err);
         }
-      } catch (err) {
-        console.error("Error loading chat from localStorage:", err);
+      }
+      loadDbChat();
+    } else {
+      const localChats = localStorage.getItem("luminus_chats");
+      if (localChats) {
+        try {
+          const chats: Conversation[] = JSON.parse(localChats);
+          const currentChat = chats.find((c) => String(c.id) === String(userId));
+          if (currentChat) {
+            setMessages(currentChat.messages || []);
+          }
+        } catch (err) {
+          console.error("Error loading chat from localStorage:", err);
+        }
       }
     }
   }, [userId]);
@@ -94,62 +228,96 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
     textareaRef.current?.focus();
   }, []);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputText.trim()) return;
 
-    const newMessage: Message = {
-      id: Date.now(),
-      text: inputText.trim(),
-      sender: "me",
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
+    const bodyText = inputText.trim();
 
-    const updatedMessages = [...messages, newMessage];
-    setMessages(updatedMessages);
-    setInputText("");
-
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
-
-    // Save to localStorage
-    const localChats = localStorage.getItem("luminus_chats");
-    let chats: Conversation[] = [];
-
-    if (localChats) {
+    if (isDbChat && dbConversationId) {
       try {
-        chats = JSON.parse(localChats);
+        const response = await fetch(`/api/messages/conversations/${dbConversationId}/messages`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ body: bodyText }),
+        });
+
+        if (!response.ok) {
+          console.error("Failed to send DB message");
+          return;
+        }
+
+        const data = await response.json();
+        const newMessage: Message = {
+          id: data.message.id,
+          text: data.message.body,
+          sender: "me",
+          time: new Date(data.message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        };
+
+        setMessages((prev) => [...prev, newMessage]);
+        setInputText("");
+        if (textareaRef.current) {
+          textareaRef.current.style.height = "auto";
+        }
+        
+        window.dispatchEvent(new Event("storage"));
       } catch (err) {
-        console.error("Error parsing chats in save:", err);
+        console.error("Error sending DB message inside popup:", err);
       }
-    }
-
-    const chatIdx = chats.findIndex((c) => String(c.id) === String(userId));
-    const nowTime = "Ahora mismo";
-
-    if (chatIdx > -1) {
-      chats[chatIdx] = {
-        ...chats[chatIdx],
-        lastMessage: newMessage.text,
-        time: nowTime,
-        messages: updatedMessages,
-      };
     } else {
-      chats.push({
-        id: userId,
-        name,
-        avatar,
-        lastMessage: newMessage.text,
-        time: nowTime,
-        isOnline: true,
-        messages: updatedMessages,
-      });
+      const newMessage: Message = {
+        id: Date.now(),
+        text: bodyText,
+        sender: "me",
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+
+      const updatedMessages = [...messages, newMessage];
+      setMessages(updatedMessages);
+      setInputText("");
+
+      if (textareaRef.current) {
+        textareaRef.current.style.height = "auto";
+      }
+
+      const localChats = localStorage.getItem("luminus_chats");
+      let chats: Conversation[] = [];
+
+      if (localChats) {
+        try {
+          chats = JSON.parse(localChats);
+        } catch (err) {
+          console.error("Error parsing chats in save:", err);
+        }
+      }
+
+      const chatIdx = chats.findIndex((c) => String(c.id) === String(userId));
+      const nowTime = "Ahora mismo";
+
+      if (chatIdx > -1) {
+        chats[chatIdx] = {
+          ...chats[chatIdx],
+          lastMessage: newMessage.text,
+          time: nowTime,
+          messages: updatedMessages,
+        };
+      } else {
+        chats.push({
+          id: userId,
+          name,
+          avatar,
+          lastMessage: newMessage.text,
+          time: nowTime,
+          isOnline: true,
+          messages: updatedMessages,
+        });
+      }
+
+      localStorage.setItem("luminus_chats", JSON.stringify(chats));
+      window.dispatchEvent(new Event("storage"));
     }
-
-    localStorage.setItem("luminus_chats", JSON.stringify(chats));
-
-    // Dispatch a custom storage event so other open tabs/windows or components on the same page can sync if needed
-    window.dispatchEvent(new Event("storage"));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -178,10 +346,10 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
 
   return (
     <div
-      className="fixed inset-0 sm:inset-auto sm:bottom-0 sm:right-4 lg:right-12 z-50 w-full sm:w-[400px] h-full sm:h-[480px] bg-white border-none sm:border sm:border-slate-200 sm:border-b-0 rounded-none sm:rounded-t-2xl shadow-none flex flex-col transition-all duration-300 overflow-hidden"
+      className="fixed left-4 right-4 top-20 bottom-[calc(80px+env(safe-area-inset-bottom,0px))] sm:inset-auto sm:bottom-0 sm:right-4 lg:right-12 z-50 sm:z-40 sm:w-[400px] sm:h-[480px] bg-white border border-slate-200 rounded-2xl sm:rounded-none sm:rounded-t-2xl shadow-none flex flex-col transition-all duration-300 overflow-hidden"
     >
       {/* Header */}
-      <div className="h-[60px] px-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50 select-none">
+      <div className="h-[60px] px-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white select-none">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           {/* Mobile Back Button */}
           <button
@@ -199,7 +367,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
             <h4 className="text-sm font-bold text-slate-900 leading-none truncate max-w-[110px] sm:max-w-[130px]" title={name}>
               {name}
             </h4>
-            {userId && (
+            {userId && name !== "LUMINUS" && (
               <button
                 onClick={() => {
                   router.push(`/comunidad/public-profile?id=${userId}`);
@@ -215,43 +383,45 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
         {/* Action icons */}
         <div className="flex items-center gap-1.5">
           {/* Options Menu */}
-          <div className="relative flex items-center" ref={menuRef}>
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={`w-8 h-8 flex items-center justify-center rounded-full transition-all border-none cursor-pointer bg-transparent ${
-                isMenuOpen ? "bg-slate-200 text-black" : "hover:bg-slate-200 text-slate-500 hover:text-black"
-              }`}
-              title="Opciones"
-            >
-              <span className="material-symbols-outlined text-[20px]">more_vert</span>
-            </button>
+          {name !== "LUMINUS" && (
+            <div className="relative flex items-center" ref={menuRef}>
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className={`w-8 h-8 flex items-center justify-center rounded-full transition-all border-none cursor-pointer bg-transparent ${
+                  isMenuOpen ? "bg-slate-200 text-black" : "hover:bg-slate-200 text-slate-500 hover:text-black"
+                }`}
+                title="Opciones"
+              >
+                <span className="material-symbols-outlined text-[20px]">more_vert</span>
+              </button>
 
-            {isMenuOpen && (
-              <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] shadow-none animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
-                >
-                  <span className="material-symbols-outlined text-slate-400 group-hover:text-black text-[18px]">notifications_off</span>
-                  <span className="font-semibold text-slate-600 group-hover:text-black transition-colors">Silenciar chat</span>
-                </button>
-                <button
-                  onClick={handleDeleteChat}
-                  className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
-                >
-                  <span className="material-symbols-outlined text-slate-400 group-hover:text-[#FF4B4B] text-[18px]">delete</span>
-                  <span className="font-semibold text-slate-600 group-hover:text-[#FF4B4B] transition-colors">Eliminar chat</span>
-                </button>
-                <button
-                  onClick={() => setIsMenuOpen(false)}
-                  className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
-                >
-                  <span className="material-symbols-outlined text-slate-400 group-hover:text-[#FF4B4B] text-[18px]">block</span>
-                  <span className="font-semibold text-slate-600 group-hover:text-[#FF4B4B] transition-colors">Bloquear usuario</span>
-                </button>
-              </div>
-            )}
-          </div>
+              {isMenuOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] shadow-none animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                  <button
+                    onClick={() => setIsMenuOpen(false)}
+                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                  >
+                    <span className="material-symbols-outlined text-slate-400 group-hover:text-black text-[18px]">notifications_off</span>
+                    <span className="font-semibold text-slate-600 group-hover:text-black transition-colors">Silenciar chat</span>
+                  </button>
+                  <button
+                    onClick={handleDeleteChat}
+                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                  >
+                    <span className="material-symbols-outlined text-slate-400 group-hover:text-[#FF4B4B] text-[18px]">delete</span>
+                    <span className="font-semibold text-slate-600 group-hover:text-[#FF4B4B] transition-colors">Eliminar chat</span>
+                  </button>
+                  <button
+                    onClick={() => setIsMenuOpen(false)}
+                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                  >
+                    <span className="material-symbols-outlined text-slate-400 group-hover:text-[#FF4B4B] text-[18px]">block</span>
+                    <span className="font-semibold text-slate-600 group-hover:text-[#FF4B4B] transition-colors">Bloquear usuario</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           <button
             onClick={onClose}
@@ -291,7 +461,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                         : `bg-slate-100 text-slate-800 border border-slate-100 ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tl-none"}`
                     }`}
                   >
-                    <span className="block break-words">{msg.text}</span>
+                    <span className="block break-words whitespace-pre-wrap">{formatMessageBody(msg.text)}</span>
                     <span 
                       className={`absolute bottom-1 right-2.5 text-[9px] font-sans font-normal select-none pointer-events-none ${
                         msg.sender === "me" ? "text-white/60" : "text-slate-400"
@@ -310,32 +480,33 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
 
       {/* Input Footer */}
       <div className="p-3 bg-white border-t border-slate-100 shrink-0">
-        <div className="flex items-end gap-2.5">
-          <textarea
-            ref={textareaRef}
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Escribe un mensaje..."
-            rows={1}
-            className="flex-1 bg-slate-50 border-none rounded-[20px] py-3 px-5 text-sm focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-28 custom-scrollbar block text-slate-800"
-            onInput={(e) => {
-              const target = e.target as HTMLTextAreaElement;
-              target.style.height = "auto";
-              target.style.height = `${target.scrollHeight}px`;
-            }}
-          />
-          <button
-            onClick={handleSend}
-            disabled={!inputText.trim()}
-            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all border-none shadow-sm ${
-              inputText.trim()
-                ? "bg-black text-white cursor-pointer hover:bg-zinc-800 hover:scale-105 active:scale-95"
-                : "bg-slate-100 text-slate-400 cursor-not-allowed"
-            }`}
-          >
-            <span className="material-symbols-outlined text-[18px] ml-0.5">send</span>
-          </button>
+        <div className="flex items-center w-full">
+          <div className="flex-1 relative flex items-end">
+            <textarea
+              ref={textareaRef}
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Escribe un mensaje..."
+              rows={1}
+              className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-[14px] focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-28 custom-scrollbar block text-slate-800"
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = "auto";
+                target.style.height = `${target.scrollHeight}px`;
+              }}
+            />
+            <button
+              onClick={handleSend}
+              className={`absolute right-1.5 bottom-1.5 w-10 h-10 rounded-full flex items-center justify-center transition-all border-none ${
+                inputText.trim()
+                  ? "text-slate-800"
+                  : "text-slate-400"
+              } bg-slate-100 hover:bg-black hover:text-white cursor-pointer hover:scale-105 active:scale-95`}
+            >
+              <span className="material-symbols-outlined text-[18px] ml-0.5">send</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

@@ -141,7 +141,37 @@ export function PlatformNavbar() {
 
   // Sync real chats with localStorage for dynamic notification count & list
   useEffect(() => {
-    const loadChats = () => {
+    const loadChats = async () => {
+      // 1. Fetch conversations from database
+      let dbMessages: any[] = [];
+      try {
+        const response = await fetch("/api/messages/conversations", {
+          cache: "no-store",
+        });
+        if (response.ok) {
+          const data = await response.json();
+          dbMessages = (data.conversations || []).map((conv: any) => {
+            const lastMsg = conv.last_message;
+            const timestamp = lastMsg ? new Date(lastMsg.created_at).getTime() : new Date(conv.updated_at).getTime();
+            return {
+              id: conv.id,
+              avatar: conv.participant.avatar_url,
+              title: conv.is_unread ? "Mensaje nuevo" : "Mensaje",
+              user: conv.participant.name,
+              action: lastMsg?.body || "Sin mensajes aún",
+              date: formatRelativeTime(timestamp),
+              isUnread: conv.is_unread,
+              isDb: true,
+              participantId: conv.participant.id
+            };
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching database conversations in navbar:", err);
+      }
+
+      // 2. Fetch conversations from localStorage (for floating popup chats)
+      let localMessages: any[] = [];
       const localChats = localStorage.getItem("luminus_chats");
       if (localChats) {
         try {
@@ -153,7 +183,7 @@ export function PlatformNavbar() {
               return idStr !== "1" && idStr !== "2" && !idStr.startsWith("mock-user-");
             });
 
-            const popupMsgs = realChats.map((chat: any) => {
+            localMessages = realChats.map((chat: any) => {
               const lastMsgObj = chat.messages?.[chat.messages.length - 1];
               const timestamp = lastMsgObj ? lastMsgObj.id : Date.now();
               return {
@@ -166,24 +196,61 @@ export function PlatformNavbar() {
                 isUnread: lastMsgObj ? lastMsgObj.sender !== "me" : false,
               };
             });
-            setMessages(popupMsgs);
           }
         } catch (err) {
-          console.error("Error loading navbar chats:", err);
+          console.error("Error loading navbar chats from localStorage:", err);
         }
-      } else {
-        setMessages([]);
       }
+
+      // Combine both lists, avoiding duplicate users
+      const combined: any[] = [...dbMessages];
+      localMessages.forEach((localMsg) => {
+        const exists = combined.some((m) => 
+          (m.participantId && String(m.participantId) === String(localMsg.id)) ||
+          (String(m.id) === String(localMsg.id)) ||
+          (m.user.trim().toLowerCase() === localMsg.user.trim().toLowerCase())
+        );
+        if (!exists) {
+          combined.push(localMsg);
+        }
+      });
+
+      setMessages(combined);
     };
 
     loadChats();
     window.addEventListener("storage", loadChats);
-    return () => window.removeEventListener("storage", loadChats);
+    const interval = setInterval(loadChats, 10000);
+    return () => {
+      window.removeEventListener("storage", loadChats);
+      clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
     loadNotifications();
   }, []);
+
+  useEffect(() => {
+    const handleOpenChat = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail) {
+        if (window.innerWidth < 640) {
+          router.push(`/mensajes?id=${customEvent.detail.userId}&from=profile`);
+        } else {
+          setActivePopupChat(customEvent.detail);
+        }
+        setIsMessagesOpen(false);
+        setIsNotificationOpen(false);
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    window.addEventListener("luminus_open_chat", handleOpenChat);
+    return () => {
+      window.removeEventListener("luminus_open_chat", handleOpenChat);
+    };
+  }, [router]);
 
   // Determine active tab based on pathname
   const getActiveTab = () => {
@@ -239,21 +306,17 @@ export function PlatformNavbar() {
   };
 
   const markMessageRead = (id: string | number) => {
-    // Open in bottom popup chat dynamically from the navbar
-    const localChats = localStorage.getItem("luminus_chats");
-    if (localChats) {
-      try {
-        const chats = JSON.parse(localChats);
-        const found = chats.find((c: any) => String(c.id) === String(id));
-        if (found) {
-          setActivePopupChat({
-            userId: String(found.id),
-            name: found.name,
-            avatar: found.avatar
-          });
-        }
-      } catch (err) {
-        console.error("Error parsing chats in markMessageRead:", err);
+    const msgObj = messages.find((m) => String(m.id) === String(id));
+    if (msgObj) {
+      const participantId = msgObj.participantId ? String(msgObj.participantId) : String(msgObj.id);
+      if (window.innerWidth < 640) {
+        router.push(`/mensajes?id=${participantId}`);
+      } else {
+        setActivePopupChat({
+          userId: participantId,
+          name: msgObj.user,
+          avatar: msgObj.avatar
+        });
       }
     }
     setIsMessagesOpen(false);
@@ -408,7 +471,7 @@ export function PlatformNavbar() {
             </button>
 
             {isProfileDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+              <div className="fixed left-4 right-4 top-[72px] sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 w-auto sm:w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                 <Link
                   href="/perfil-usuario"
                   onClick={() => setIsProfileDropdownOpen(false)}

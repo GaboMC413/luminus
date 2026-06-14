@@ -14,6 +14,11 @@ function serializeConversation(conversation: any, currentUserId: string) {
   const fullName = profile.fullName || `${profile.firstName || ""} ${profile.lastName || ""}`.trim();
   const lastMessage = conversation.messages?.[0];
 
+  const currentParticipant = conversation.participants.find((p: any) => p.userId === currentUserId);
+  const isUnread = lastMessage && lastMessage.senderId !== currentUserId
+    ? (!currentParticipant?.lastReadAt || lastMessage.createdAt > currentParticipant.lastReadAt)
+    : false;
+
   return {
     id: conversation.id,
     participant: {
@@ -29,6 +34,7 @@ function serializeConversation(conversation: any, currentUserId: string) {
           created_at: lastMessage.createdAt.toISOString(),
         }
       : null,
+    is_unread: isUnread,
     updated_at: conversation.updatedAt.toISOString(),
   };
 }

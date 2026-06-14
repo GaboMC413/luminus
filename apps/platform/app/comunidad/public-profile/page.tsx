@@ -8,8 +8,6 @@ import { ProfileSidebar } from "@/features/user-profile/components/ProfileSideba
 import { ProfileAboutSection } from "@/features/user-profile/components/ProfileAboutSection";
 import { ProfileInterestsSection } from "@/features/user-profile/components/ProfileInterestsSection";
 import { ProfileCompletionCard } from "@/features/user-profile/components/ProfileCompletionCard";
-import { ChatPopup } from "@/components/ui/ChatPopup";
-
 export default function PublicProfilePage() {
   return (
     <Suspense fallback={
@@ -32,7 +30,6 @@ function PublicProfileContent() {
   const [loading, setLoading] = useState(true);
   const [connectionLoading, setConnectionLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isChatOpen, setIsChatOpen] = useState(false);
 
   useEffect(() => {
     const id = searchParams.get("id");
@@ -65,7 +62,14 @@ function PublicProfileContent() {
   }, [searchParams]);
 
   const handleSendMessage = () => {
-    setIsChatOpen(true);
+    const event = new CustomEvent("luminus_open_chat", {
+      detail: {
+        userId,
+        name: `${profile.first_name || ""} ${profile.last_name || ""}`.trim(),
+        avatar: profile.profile_picture_url
+      }
+    });
+    window.dispatchEvent(event);
   };
 
   const handleConnect = async () => {
@@ -231,20 +235,20 @@ function PublicProfileContent() {
   const userId = searchParams.get("id") || "";
 
   return (
-    <div className="w-full flex flex-col relative bg-slate-50 min-h-screen">
+    <div className="w-full flex flex-col relative bg-slate-50">
 
       <ProfileHeaderCover
         coverUrl={profile.cover_url}
         isPublic={true}
       />
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pb-12">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pb-4 lg:pb-12">
         <div className="w-full max-w-6xl mx-auto">
-          <div className="w-full h-full bg-transparent pt-2 lg:pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 lg:gap-8 items-start">
+          <div className="w-full h-full bg-transparent pt-4 lg:pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-4 lg:gap-8 items-start">
 
               {/* LEFT COLUMN */}
-              <div className="md:col-span-4 flex flex-col gap-2 lg:gap-6 mt-2 md:-mt-[136px] lg:-mt-[224px]">
+              <div className="md:col-span-4 flex flex-col gap-4 lg:gap-6 mt-0 md:-mt-[136px] lg:-mt-[224px]">
                 <ProfileSidebar
                   profile={profile}
                   coverUrl={profile.cover_url}
@@ -253,7 +257,7 @@ function PublicProfileContent() {
               </div>
 
               {/* RIGHT COLUMN */}
-              <div className="md:col-span-8 flex flex-col gap-2 lg:gap-6">
+              <div className="md:col-span-8 flex flex-col gap-4 lg:gap-6">
                 {/* Action Buttons */}
                 {/* Desktop view action buttons */}
                 <div className="hidden sm:flex flex-row gap-3 w-full">
@@ -316,32 +320,26 @@ function PublicProfileContent() {
                 <ProfileAboutSection
                   bio={profile.bio}
                   isPublic={true}
+                  firstName={profile.first_name}
                 />
 
                 <ProfileInterestsSection
                   interests={profile.interests}
                   otherInterests={profile.other_interests}
                   isPublic={true}
+                  firstName={profile.first_name}
                 />
 
                 <ProfileCompletionCard
                   prompts={profile.prompts}
                   isPublic={true}
+                  firstName={profile.first_name}
                 />
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {isChatOpen && (
-        <ChatPopup
-          userId={userId}
-          name={`${profile.first_name || ""} ${profile.last_name || ""}`.trim()}
-          avatar={profile.profile_picture_url}
-          onClose={() => setIsChatOpen(false)}
-        />
-      )}
     </div>
   );
 }

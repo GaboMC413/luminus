@@ -8,10 +8,12 @@ interface ProfileInterestsSectionProps {
   otherInterests?: string;
   onEdit?: () => void;
   isPublic?: boolean;
+  firstName?: string;
 }
 
-export function ProfileInterestsSection({ interests, otherInterests, onEdit, isPublic = false }: ProfileInterestsSectionProps) {
+export function ProfileInterestsSection({ interests, otherInterests, onEdit, isPublic = false, firstName }: ProfileInterestsSectionProps) {
   const hasInterests = (interests && interests.length > 0) || (otherInterests && otherInterests.trim().length > 0);
+  const nameToUse = firstName ? firstName.trim() : "Este usuario";
 
   return (
     <div className="bg-white rounded-2xl p-4 lg:p-6 flex flex-col gap-2 lg:gap-6 border border-slate-200 shadow-none relative group">
@@ -40,7 +42,7 @@ export function ProfileInterestsSection({ interests, otherInterests, onEdit, isP
       ) : (
         <div className="flex flex-col items-start gap-4">
           <p className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight leading-relaxed">
-            {isPublic ? "Este usuario aún no ha seleccionado intereses." : "No has seleccionado tus intereses todavía"}
+            {isPublic ? `${nameToUse} aún no ha seleccionado intereses.` : "No has seleccionado tus intereses todavía"}
           </p>
           {!isPublic && onEdit && (
             <EmptyProfileButton 
