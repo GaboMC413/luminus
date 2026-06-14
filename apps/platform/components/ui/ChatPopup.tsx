@@ -236,7 +236,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
       </div>
 
       {/* Message Body */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 custom-scrollbar flex flex-col gap-4 bg-white">
+      <div className="flex-1 overflow-y-auto p-3 custom-scrollbar flex flex-col gap-4 bg-white">
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-4 animate-in fade-in duration-300">
             <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 mb-4">
@@ -300,10 +300,10 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
           <button
             onClick={handleSend}
             disabled={!inputText.trim()}
-            className={`w-9.5 h-9.5 rounded-full flex items-center justify-center shrink-0 transition-all border-none ${
+            className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all border-none shadow-sm ${
               inputText.trim()
-                ? "bg-black text-white cursor-pointer hover:bg-zinc-800"
-                : "bg-transparent text-slate-300 cursor-not-allowed"
+                ? "bg-black text-white cursor-pointer hover:bg-zinc-800 hover:scale-105 active:scale-95"
+                : "bg-slate-100 text-slate-400 cursor-not-allowed"
             }`}
           >
             <span className="material-symbols-outlined text-[18px] ml-0.5">send</span>

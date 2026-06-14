@@ -352,7 +352,7 @@ function MessagesContent() {
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto px-4 py-3 custom-scrollbar flex flex-col gap-0.5 bg-white">
+                <div className="flex-1 overflow-y-auto p-3 custom-scrollbar flex flex-col gap-0.5 bg-white">
                   {messages.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                       <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 mb-3">
@@ -404,7 +404,7 @@ function MessagesContent() {
                         onKeyDown={handleKeyDown}
                         placeholder="Escribe un mensaje..."
                         rows={1}
-                        className="w-full bg-slate-50 border-none rounded-[24px] py-3 pl-5 pr-14 text-[14px] focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-32 custom-scrollbar block text-slate-800"
+                        className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-[14px] focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-32 custom-scrollbar block text-slate-800"
                         onInput={(event) => {
                           const target = event.target as HTMLTextAreaElement;
                           target.style.height = "auto";
@@ -413,7 +413,11 @@ function MessagesContent() {
                       />
                       <button
                         onClick={handleSend}
-                        className={`absolute right-1.5 bottom-1.5 w-9 h-9 rounded-full flex items-center justify-center transition-all border-none ${inputText.trim() && !isSending ? "bg-black text-white cursor-pointer" : "bg-transparent text-slate-300 hover:bg-slate-200 cursor-not-allowed"}`}
+                        className={`absolute right-1.5 bottom-1.5 w-10 h-10 rounded-full flex items-center justify-center transition-all border-none shadow-sm ${
+                          inputText.trim() && !isSending
+                            ? "bg-black text-white cursor-pointer hover:bg-zinc-800 hover:scale-105 active:scale-95"
+                            : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                        }`}
                         disabled={!inputText.trim() || isSending}
                       >
                         <span className="material-symbols-rounded text-[18px] ml-0.5">send</span>
