@@ -47,6 +47,25 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Prevent background page scrolling on mobile when full-screen chat is open
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 640) {
+        document.body.style.overflow = "hidden";
+      } else {
+        document.body.style.overflow = "";
+      }
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   // Load conversation from localStorage on mount
   useEffect(() => {
     if (!userId) return;
