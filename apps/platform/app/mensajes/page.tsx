@@ -352,7 +352,7 @@ function MessagesContent() {
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar flex flex-col gap-0.5 bg-white">
+                <div className="flex-1 overflow-y-auto px-4 py-3 custom-scrollbar flex flex-col gap-0.5 bg-white">
                   {messages.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                       <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 mb-3">
@@ -370,12 +370,12 @@ function MessagesContent() {
                       return (
                         <div
                           key={message.id}
-                          className={`flex flex-col ${isMine ? "items-end" : "items-start"} ${isConsecutive ? "mt-0.5" : "mt-3 first:mt-0"}`}
+                          className={`flex flex-col ${isMine ? "items-end" : "items-start"} ${isConsecutive ? "mt-0.5" : "mt-2 first:mt-0"}`}
                         >
                           <div
                             className={`max-w-[70%] pl-4 pr-12 pt-2.5 pb-3 text-[14px] leading-relaxed relative min-w-[75px] ${isMine
-                              ? `bg-black text-white font-medium ${isConsecutive ? "rounded-2xl" : "rounded-2xl rounded-tr-none"}`
-                              : `bg-slate-100 border border-slate-100 text-slate-800 ${isConsecutive ? "rounded-2xl" : "rounded-2xl rounded-tl-none"}`
+                              ? `bg-black text-white font-medium ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tr-none"}`
+                              : `bg-slate-100 border border-slate-100 text-slate-800 ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tl-none"}`
                               }`}
                           >
                             <span className="block break-words">{message.body}</span>
