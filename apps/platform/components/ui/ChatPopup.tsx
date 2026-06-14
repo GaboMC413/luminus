@@ -248,21 +248,33 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3.5">
-            {messages.map((msg) => (
-              <div key={msg.id} className={`flex flex-col ${msg.sender === "me" ? "items-end" : "items-start"}`}>
-                <div
-                  className={`max-w-[85%] px-4 py-2.5 text-sm leading-relaxed ${
-                    msg.sender === "me"
-                      ? "bg-black text-white rounded-2xl rounded-tr-none font-medium"
-                      : "bg-slate-100 text-slate-800 rounded-2xl rounded-tl-none border border-slate-100"
-                  }`}
+          <div className="flex flex-col gap-0.5">
+            {messages.map((msg, index) => {
+              const isConsecutive = index > 0 && messages[index - 1].sender === msg.sender;
+              return (
+                <div 
+                  key={msg.id} 
+                  className={`flex flex-col ${msg.sender === "me" ? "items-end" : "items-start"} ${isConsecutive ? "mt-0.5" : "mt-3 first:mt-0"}`}
                 >
-                  {msg.text}
+                  <div
+                    className={`max-w-[85%] pl-4 pr-12 pt-2.5 pb-3 text-sm leading-relaxed relative min-w-[75px] ${
+                      msg.sender === "me"
+                        ? `bg-black text-white font-medium ${isConsecutive ? "rounded-2xl" : "rounded-2xl rounded-tr-none"}`
+                        : `bg-slate-100 text-slate-800 border border-slate-100 ${isConsecutive ? "rounded-2xl" : "rounded-2xl rounded-tl-none"}`
+                    }`}
+                  >
+                    <span className="block break-words">{msg.text}</span>
+                    <span 
+                      className={`absolute bottom-1 right-2.5 text-[9px] font-sans font-normal select-none pointer-events-none ${
+                        msg.sender === "me" ? "text-white/60" : "text-slate-400"
+                      }`}
+                    >
+                      {msg.time}
+                    </span>
+                  </div>
                 </div>
-                <span className="mt-1 text-[10px] text-slate-400 px-1">{msg.time}</span>
-              </div>
-            ))}
+              );
+            })}
             <div ref={messagesEndRef} />
           </div>
         )}
