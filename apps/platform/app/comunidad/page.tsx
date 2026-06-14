@@ -578,7 +578,7 @@ function PlatformContent() {
           <div className="flex flex-col sticky top-0 z-40 bg-[#F8FAFC] pb-4 transition-all duration-300 ease-in-out gap-3 w-full">
             
             {/* Mobile Top User Info & Network Bar */}
-            <div className="flex md:hidden bg-white px-4 py-2.5 rounded-xl border border-zinc-200 items-center justify-between shadow-none w-full">
+            <div className="flex md:hidden bg-white p-2.5 rounded-xl border border-zinc-200 items-center justify-between shadow-none w-full">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
                   {currentUserProfile?.profile_picture_url && !profileImgError ? (
@@ -613,7 +613,7 @@ function PlatformContent() {
             </div>
 
             <div className="flex items-center gap-3 w-full relative">
-              <div className="flex-1 h-12 pl-4 pr-6 bg-white rounded-xl border border-zinc-200 flex items-center gap-3 focus-within:border-black focus-within:ring-1 focus-within:ring-black group transition-all relative">
+              <div className="flex-1 h-12 px-4 bg-white rounded-xl border border-zinc-200 flex items-center gap-3 focus-within:border-black focus-within:ring-1 focus-within:ring-black group transition-all relative">
                 <span className="material-symbols-outlined text-[22px] text-slate-400 group-focus-within:text-black">search</span>
                 <input
                   type="text"
@@ -657,7 +657,7 @@ function PlatformContent() {
                     : "bg-white border border-zinc-200 text-slate-700 hover:bg-slate-50"
                 }`}
               >
-                <span className="material-symbols-outlined text-[20px] md:text-[22px]">manage_search</span>
+                <span className="material-symbols-outlined text-[20px] md:text-[22px] flex items-center justify-center leading-none">manage_search</span>
                 <span>Buscar por filtros</span>
               </button>
 
@@ -670,7 +670,7 @@ function PlatformContent() {
                     : "bg-white border border-zinc-200 text-slate-700 hover:bg-slate-50"
                 }`}
               >
-                <span className="material-symbols-outlined text-[22px]">manage_search</span>
+                <span className="material-symbols-outlined text-[22px] flex items-center justify-center leading-none">manage_search</span>
               </button>
 
               {/* Filter Backdrop for mobile */}

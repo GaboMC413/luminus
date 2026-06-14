@@ -63,7 +63,7 @@ export function UserCard({ user }: UserCardProps) {
       <div className="w-full flex flex-col gap-1.5 mt-1 md:mt-2">
         {/* Render 2 interests on mobile, up to 3 on desktop */}
         <div className="flex md:hidden flex-col gap-1.5 w-full">
-          {user.interests.slice(0, 2).map((interest: string, i: number) => (
+          {user.interests.slice(0, 3).map((interest: string, i: number) => (
             <InterestPill key={i} interest={interest} className="!h-7 !px-2.5" />
           ))}
         </div>
