@@ -193,7 +193,7 @@ export function PersonalData({
     if (!lastName) { setErrorField('lastName'); return; }
     if (!gender) { setErrorField('gender'); return; }
     if (!finalBirthdate || !isValidBirthdate(finalBirthdate)) { setErrorField('birthdate'); return; }
-    if (!city) { setErrorField('city'); return; }
+    if (!city || !country) { setErrorField('city'); return; }
     if (!phone) { setErrorField('phone'); return; }
 
     setIsSaving(true);
@@ -402,7 +402,7 @@ export function PersonalData({
               }}
               className={errorField === 'city' ? '[&_input]:!border-[#FF3D3D] [&_input]:!ring-1 [&_input]:!ring-[#FF3D3D]' : ''}
             />
-            {errorField === 'city' && <p className="text-[#FF3D3D] text-[12px] font-bold">Selecciona ciudad</p>}
+            {errorField === 'city' && <p className="text-[#FF3D3D] text-[12px] font-bold">Selecciona una ciudad de la lista de sugerencias</p>}
           </div>
         </div>
 

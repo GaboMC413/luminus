@@ -78,6 +78,7 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
   const [birthMonth, setBirthMonth] = useState("");
   const [birthYear, setBirthYear] = useState("");
   const [dateError, setDateError] = useState("");
+  const [locationError, setLocationError] = useState("");
 
   // Refs for auto-focusing & auto-tabbing
   const professionRef = useRef<HTMLInputElement>(null);
@@ -103,6 +104,7 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
   useEffect(() => {
     if (!isOpen) {
       setDateError("");
+      setLocationError("");
     }
   }, [isOpen]);
 
@@ -142,6 +144,11 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
         setDateError("Fecha inválida");
         return;
       }
+    }
+
+    if (!formData.city || !formData.country) {
+      setLocationError("Selecciona una ciudad de la lista de sugerencias");
+      return;
     }
 
     // Convert birthdate splits back to YYYY-MM-DD for saving
@@ -211,15 +218,20 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
           />
         </div>
 
-        <LocationInput
-          ref={cityRef}
-          label="Ciudad"
-          defaultValue={formData.city}
-          onSelect={({ city, country }) => {
-            setFormData(prev => ({ ...prev, city, country }));
-          }}
-          autoFocus={initialFocusField === 'city'}
-        />
+        <div>
+          <LocationInput
+            ref={cityRef}
+            label="Ciudad"
+            defaultValue={formData.city}
+            onSelect={({ city, country }) => {
+              setFormData(prev => ({ ...prev, city, country }));
+              setLocationError("");
+            }}
+            autoFocus={initialFocusField === 'city'}
+            className={locationError ? '[&_input]:!border-[#FF3D3D] [&_input]:!ring-1 [&_input]:!ring-[#FF3D3D]' : ''}
+          />
+          {locationError && <p className="text-[#FF3D3D] text-[12px] font-bold mt-1 ml-1">{locationError}</p>}
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-3.5 md:gap-y-5">
           <div className="flex flex-col gap-1.5 md:gap-2">

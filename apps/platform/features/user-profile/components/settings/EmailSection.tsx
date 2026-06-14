@@ -184,7 +184,7 @@ export function EmailSection({
                   value={email}
                   disabled
                   variant="bordered"
-                  className="!bg-slate-50 !border-none text-slate-900"
+                  className="!bg-slate-50 !border-none !text-slate-500"
                 />
               </div>
               <button
@@ -205,7 +205,7 @@ export function EmailSection({
                 value={email}
                 disabled
                 variant="bordered"
-                className="!bg-slate-50 !border-none text-slate-900"
+                className="!bg-slate-50 !border-none !text-slate-500"
               />
             </div>
 

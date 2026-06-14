@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { COUNTRIES as ALL_COUNTRIES } from '@/utils/countries';
 import { AsYouType, CountryCode } from 'libphonenumber-js';
 
@@ -24,13 +25,32 @@ export function PhoneInput({
   error = false
 }: PhoneInputProps) {
   const [showPhoneDropdown, setShowPhoneDropdown] = useState(false);
+  const [coords, setCoords] = useState<{
+    top?: number;
+    bottom?: number;
+    left: number;
+    width: number;
+    maxHeight: number;
+  } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
   const instanceIdRef = useRef(Math.random().toString(36).substring(2, 9));
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node) &&
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setShowPhoneDropdown(false);
       }
     };
@@ -50,6 +70,61 @@ export function PhoneInput({
     return () => window.removeEventListener('luminus-select-open', handleOtherSelectOpen);
   }, []);
 
+  const updateCoords = () => {
+    if (containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      if (rect) {
+        const preferredMaxHeight = 240;
+        const spaceBelow = window.innerHeight - rect.bottom - 24; // 24px safe margin from viewport bottom
+        const spaceAbove = rect.top - 24; // 24px safe margin from viewport top
+
+        let top: number | undefined = undefined;
+        let bottom: number | undefined = undefined;
+        let maxHeight = preferredMaxHeight;
+
+        // If there's not enough space below, and more space above, open above
+        if (spaceBelow < preferredMaxHeight && spaceAbove > spaceBelow) {
+          bottom = window.innerHeight - rect.top + 4;
+          maxHeight = Math.min(preferredMaxHeight, spaceAbove);
+        } else {
+          top = rect.bottom + 4;
+          maxHeight = Math.min(preferredMaxHeight, spaceBelow);
+        }
+
+        // Fallback safety
+        maxHeight = Math.max(maxHeight, 100);
+
+        setCoords({
+          top,
+          bottom,
+          left: rect.left,
+          width: 240, // Phone dropdown is standard 240px wide
+          maxHeight
+        });
+      }
+    }
+  };
+
+  React.useLayoutEffect(() => {
+    if (showPhoneDropdown) {
+      updateCoords();
+      const handleScroll = (event: Event) => {
+        if (dropdownRef.current && dropdownRef.current.contains(event.target as Node)) {
+          return;
+        }
+        setShowPhoneDropdown(false);
+      };
+      window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', updateCoords);
+      return () => {
+        window.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('resize', updateCoords);
+      };
+    } else {
+      setCoords(null);
+    }
+  }, [showPhoneDropdown]);
+
   const handleNumberChange = (rawValue: string) => {
     let formatted = rawValue;
     if (phoneCountry.code !== 'XX') {
@@ -64,9 +139,39 @@ export function PhoneInput({
     setShowPhoneDropdown(false);
   };
 
-  // No-op - moved logic to top useEffect
-
   const dropdownCountries = ALL_COUNTRIES;
+
+  const phoneDropdown = coords && (
+    <div 
+      ref={dropdownRef}
+      data-select-portal="true"
+      style={{
+        position: 'fixed',
+        top: coords.top !== undefined ? `${coords.top}px` : 'auto',
+        bottom: coords.bottom !== undefined ? `${coords.bottom}px` : 'auto',
+        left: `${coords.left}px`,
+        width: `${coords.width}px`,
+        maxHeight: `${coords.maxHeight}px`,
+        zIndex: 10000,
+      }}
+      className="bg-white rounded-2xl py-2 border border-slate-200 overflow-y-auto overscroll-contain pr-1 animate-in fade-in duration-200"
+    >
+      {dropdownCountries.map((c) => (
+        <div
+          key={c.code}
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            handleCountrySelect(c);
+          }}
+          className="px-4 py-2 hover:bg-slate-50 cursor-pointer transition flex items-center group w-full truncate"
+        >
+          <span className={`text-body truncate whitespace-nowrap transition-colors ${phoneCountry.code === c.code ? 'font-semibold text-black' : 'text-slate-600 group-hover:text-black'}`}>
+            {c.name} ({c.dial})
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <div 
@@ -100,25 +205,6 @@ export function PhoneInput({
         )}
       </div>
 
-      {showPhoneDropdown && (
-        <div className="absolute top-[calc(100%+8px)] left-0 w-[240px] bg-white rounded-2xl py-2 z-[100] border border-slate-200 overflow-y-auto max-h-[240px] custom-scrollbar animate-in fade-in duration-200">
-          {dropdownCountries.map((c) => (
-            <div
-              key={c.code}
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                handleCountrySelect(c);
-              }}
-              className="px-4 py-2 hover:bg-slate-50 cursor-pointer transition flex items-center group w-full truncate"
-            >
-              <span className={`text-body truncate whitespace-nowrap transition-colors ${phoneCountry.code === c.code ? 'font-semibold text-black' : 'text-slate-600 group-hover:text-black'}`}>
-                {c.name} ({c.dial})
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
       <input
         type="tel"
         placeholder="Número de celular"
@@ -129,6 +215,8 @@ export function PhoneInput({
         enterKeyHint="done"
         autoComplete="tel"
       />
+
+      {showPhoneDropdown && mounted && coords && createPortal(phoneDropdown, document.body)}
     </div>
   );
 }

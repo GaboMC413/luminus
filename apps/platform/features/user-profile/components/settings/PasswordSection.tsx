@@ -103,7 +103,7 @@ export function PasswordSection({
                   value="••••••••"
                   disabled
                   variant="bordered"
-                  className="!bg-slate-50 !border-none text-slate-900"
+                  className="!bg-slate-50 !border-none !text-slate-500"
                 />
               </div>
               <button

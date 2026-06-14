@@ -61,11 +61,18 @@ function PlatformContent() {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+
+      // If clicking inside a SelectInput portal dropdown, don't close the filter popup
+      if (target.closest('[data-select-portal="true"]')) {
+        return;
+      }
+
       if (
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
+        !dropdownRef.current.contains(target) &&
         filterButtonRef.current &&
-        !filterButtonRef.current.contains(event.target as Node)
+        !filterButtonRef.current.contains(target)
       ) {
         setShowFilters(false);
       }
@@ -573,7 +580,7 @@ function PlatformContent() {
                     right-0 
                     md:top-[56px] 
                     w-full md:w-[384px] 
-                    max-h-[85vh] md:max-h-[500px] 
+                    max-h-[85vh] md:max-h-none 
                     bg-white 
                     rounded-t-3xl md:rounded-2xl 
                     border-t md:border border-zinc-200 
@@ -593,7 +600,7 @@ function PlatformContent() {
                   </div>
 
                   {/* Form fields */}
-                  <div className="p-5 flex flex-col gap-5 overflow-y-auto max-h-[385px] md:max-h-[385px] custom-scrollbar">
+                  <div className="p-5 flex flex-col gap-5 overflow-y-auto max-h-[60vh] md:max-h-none md:overflow-visible custom-scrollbar">
                     
                     {/* Country & City Dropdowns - Stacked in Column */}
                     <div className="flex flex-col gap-4">

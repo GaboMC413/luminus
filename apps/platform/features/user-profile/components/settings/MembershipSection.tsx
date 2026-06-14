@@ -79,6 +79,22 @@ export function MembershipSection({ createdAt, showSuccess }: MembershipSectionP
             </p>
           </div>
         </div>
+
+        {/* Cancel Subscription Section */}
+        <div className="w-full bg-slate-50 border border-zinc-200/40 rounded-2xl p-5 md:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <h4 className="text-sm font-bold text-slate-800">Cancelar suscripción</h4>
+            <p className="text-xs text-slate-500 leading-normal">
+              Si cancelas tu suscripción, perderás el acceso a la plataforma al finalizar tu periodo activo.
+            </p>
+          </div>
+          <button
+            onClick={() => showSuccess("Solicitud recibida", "Procesaremos la cancelación de tu suscripción próximamente.")}
+            className="w-full sm:w-auto h-10 px-5 rounded-xl text-button font-semibold bg-slate-100 border border-transparent text-slate-600 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all duration-300 active:scale-95 cursor-pointer select-none whitespace-nowrap text-sm flex items-center justify-center"
+          >
+            Cancelar suscripción
+          </button>
+        </div>
       </div>
     </div >
   );
