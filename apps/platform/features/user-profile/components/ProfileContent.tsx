@@ -249,13 +249,13 @@ export function ProfileContent() {
         onChangeCover={() => setShowCoverModal(true)}
       />
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pb-4">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pb-4 lg:pb-12">
         <div className="w-full max-w-6xl mx-auto">
-          <div className="w-full h-full bg-transparent pt-2 lg:pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 lg:gap-8 items-start">
+          <div className="w-full h-full bg-transparent pt-4 lg:pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-4 lg:gap-8 items-start">
 
               {/* LEFT COLUMN */}
-              <div className="md:col-span-4 flex flex-col gap-2 lg:gap-6 mt-2 md:-mt-[136px] lg:-mt-[224px]">
+              <div className="md:col-span-4 flex flex-col gap-4 lg:gap-6 mt-0 md:-mt-[136px] lg:-mt-[224px]">
                 <ProfileSidebar
                   profile={profile}
                   onEditPhoto={() => fileInputRef.current?.click()}
@@ -278,25 +278,28 @@ export function ProfileContent() {
               </div>
 
               {/* RIGHT COLUMN */}
-              <div className="md:col-span-8 flex flex-col gap-2 lg:gap-6">
+              <div className="md:col-span-8 flex flex-col gap-4 lg:gap-6">
                 <ProfileAboutSection
                   bio={profile.bio}
                   onEdit={() => setShowEditAbout(true)}
+                  firstName={profile.first_name}
                 />
 
                 <ProfileInterestsSection
                   interests={profile.interests}
                   otherInterests={profile.other_interests}
                   onEdit={() => setShowEditInterests(true)}
+                  firstName={profile.first_name}
                 />
 
                 <ProfileCompletionCard
                   prompts={profile.prompts}
                   onEditPrompts={handleOpenPrompts}
+                  firstName={profile.first_name}
                 />
 
                 {/* Mobile Only Membership */}
-                <div className="md:hidden flex flex-col gap-2">
+                <div className="md:hidden flex flex-col gap-4">
                   <ProfileMembershipCard
                     plan={profile.selected_plan}
                     createdAt={profile.created_at}

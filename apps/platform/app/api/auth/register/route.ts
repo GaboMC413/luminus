@@ -41,6 +41,14 @@ export async function POST(request: Request) {
       include: { profile: true },
     });
 
+    // Send welcome conversation message gracefully
+    try {
+      const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
+      await sendWelcomeMessage(prisma, user.id);
+    } catch (welcomeError) {
+      console.error("Welcome message setup failed, proceeding with registration.", welcomeError);
+    }
+
     const token = createSessionToken({
       userId: user.id,
       email: user.email,

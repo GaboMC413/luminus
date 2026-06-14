@@ -35,7 +35,7 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({
         {...props}
         ref={ref}
         type={inputType}
-        className={`${variantClass} ${alignmentClasses[textAlign]} ${className} ${isPassword && onTogglePassword ? 'pr-14' : ''} text-black placeholder:text-slate-400`}
+        className={`${variantClass} ${alignmentClasses[textAlign]} ${className} ${isPassword && onTogglePassword ? 'pr-14' : ''} text-black disabled:text-slate-500 placeholder:text-slate-400`}
       />
       {isPassword && onTogglePassword && (
         <button 

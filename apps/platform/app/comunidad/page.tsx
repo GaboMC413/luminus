@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { InterestPill } from "@/components/ui/InterestPill";
 import { UserCard } from "@/components/ui/UserCard";
 import { Button, ProfileButton } from "@/components/ui/Button";
+import { SelectInput } from "@/components/ui/SelectInput";
 
 const CATEGORIES_MAPPING = {
   "Crecimiento Personal": ["Autocuidado", "Motivación", "Calma interior", "Propósito de vida", "Organización personal", "Toma de decisiones", "Rutinas saludables", "Hábitos conscientes", "Confianza personal", "Autoestima", "Acompañamiento personal", "Crecimiento Personal", "Autoconocimiento", "Aprendizaje continuo"],
@@ -30,6 +32,11 @@ export default function PlatformPage() {
 }
 
 function PlatformContent() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [appliedFilters, setAppliedFilters] = useState({
     country: "",
@@ -60,11 +67,18 @@ function PlatformContent() {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
+      const target = event.target as HTMLElement;
+
+      // If clicking inside a SelectInput portal dropdown, don't close the filter popup
+      if (target.closest('[data-select-portal="true"]')) {
+        return;
+      }
+
       if (
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
+        !dropdownRef.current.contains(target) &&
         filterButtonRef.current &&
-        !filterButtonRef.current.contains(event.target as Node)
+        !filterButtonRef.current.contains(target)
       ) {
         setShowFilters(false);
       }
@@ -349,7 +363,6 @@ function PlatformContent() {
               </p>
             </div>
           </div>
-
           <button
             onClick={() => window.location.reload()}
             className="h-11 px-6 bg-black text-white rounded-xl text-[14px] font-bold hover:bg-zinc-800 transition duration-200 cursor-pointer"
@@ -361,10 +374,117 @@ function PlatformContent() {
     );
   }
 
+  const renderFilterFields = (isMobile: boolean) => {
+    return (
+      <>
+        {/* Country & City Dropdowns - Stacked in Column */}
+        <div className="flex flex-col gap-4">
+          <SelectInput
+            label="País"
+            value={tempFilters.country}
+            options={[{ label: "Cualquier país", value: "" }, ...countriesWithResults.map(country => ({ label: country, value: country }))] }
+            onSelect={(val) => setTempFilters({ ...tempFilters, country: val, city: "" })}
+            placeholder="Cualquier país"
+            preventScrollOnOpen={isMobile}
+          />
+
+          <SelectInput
+            label="Ciudad"
+            value={tempFilters.city}
+            options={[{ label: "Cualquier ciudad", value: "" }, ...availableCities.map(city => ({ label: city, value: city }))] }
+            onSelect={(val) => setTempFilters({ ...tempFilters, city: val })}
+            placeholder="Cualquier ciudad"
+            preventScrollOnOpen={isMobile}
+          />
+        </div>
+
+        {/* Dynamic specific interest checkboxes */}
+        <div className="flex flex-col gap-2">
+          <label className="text-label ml-1 font-jakarta">Intereses</label>
+          <div className={`flex flex-wrap gap-2 ${isMobile ? "" : "max-h-[160px] overflow-y-auto pr-1.5"}`}>
+            {(() => {
+              let availableInterests: string[] = [];
+              if (tempFilters.category && tempFilters.category !== "Todas las categorías") {
+                const categoryInterests = CATEGORIES_MAPPING[tempFilters.category as keyof typeof CATEGORIES_MAPPING] || [];
+                availableInterests = categoryInterests.filter(interest => 
+                  interestsWithResults.some(active => active.toLowerCase() === interest.toLowerCase())
+                );
+              } else {
+                availableInterests = interestsWithResults;
+              }
+
+              if (availableInterests.length === 0) {
+                return (
+                  <p className="text-[11px] text-slate-400 py-2 w-full text-center">
+                    No hay temas de interés con resultados para esta selección.
+                  </p>
+                );
+              }
+
+              return availableInterests.map(interest => {
+                const isChecked = tempFilters.selectedInterests.includes(interest);
+                return (
+                  <button
+                    key={interest}
+                    type="button"
+                    onClick={() => {
+                      const nextSelected = isChecked
+                        ? tempFilters.selectedInterests.filter(i => i !== interest)
+                        : [...tempFilters.selectedInterests, interest];
+                      setTempFilters({ ...tempFilters, selectedInterests: nextSelected });
+                    }}
+                    className={`px-4 py-2 rounded-full text-[13px] font-medium transition-premium border cursor-pointer select-none flex items-center gap-1.5 ${
+                      isChecked
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:text-black"
+                    }`}
+                  >
+                    {isChecked && <span className="material-symbols-outlined text-[13px]">check</span>}
+                    {interest}
+                  </button>
+                );
+              });
+            })()}
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  const renderActionsFooter = () => {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={handleClearFilters}
+          className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-premium cursor-pointer border-none bg-transparent font-jakarta uppercase tracking-wider"
+        >
+          Limpiar
+        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowFilters(false)}
+            className="h-9 px-4 bg-white hover:bg-slate-50 text-slate-950 font-medium text-xs rounded-xl border border-zinc-200 transition-premium active:scale-95 cursor-pointer select-none font-jakarta"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={handleApplyFilters}
+            className="h-9 px-4 bg-black hover:bg-zinc-900 text-white font-medium text-xs rounded-xl transition-premium active:scale-95 cursor-pointer select-none border-none outline-none font-jakarta"
+          >
+            Aplicar
+          </button>
+        </div>
+      </>
+    );
+  };
+
   return (
     <div className="flex-1 w-full flex flex-col h-full md:overflow-hidden overflow-visible">
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row gap-6 lg:gap-8 h-full md:overflow-hidden overflow-visible py-6">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row gap-6 lg:gap-8 h-full md:overflow-hidden overflow-visible py-4 md:py-6">
 
         {/* Left Column - LinkedIn User Card (1/4 size on desktop) */}
         <div className="hidden md:flex w-[260px] lg:w-[290px] flex-col gap-3 shrink-0 h-fit">
@@ -458,7 +578,7 @@ function PlatformContent() {
           <div className="flex flex-col sticky top-0 z-40 bg-[#F8FAFC] pb-4 transition-all duration-300 ease-in-out gap-3 w-full">
             
             {/* Mobile Top User Info & Network Bar */}
-            <div className="flex md:hidden bg-white px-4 py-2.5 rounded-xl border border-zinc-200 items-center justify-between shadow-none w-full">
+            <div className="flex md:hidden bg-white px-2.5 py-2.5 rounded-xl border border-zinc-200 items-center justify-between shadow-none w-full">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
                   {currentUserProfile?.profile_picture_url && !profileImgError ? (
@@ -493,7 +613,7 @@ function PlatformContent() {
             </div>
 
             <div className="flex items-center gap-3 w-full relative">
-              <div className="flex-1 h-12 pl-4 pr-6 bg-white rounded-xl border border-zinc-200 flex items-center gap-3 focus-within:border-black focus-within:ring-1 focus-within:ring-black group transition-all relative">
+              <div className="flex-1 h-12 px-3.5 bg-white rounded-xl border border-zinc-200 flex items-center gap-3 focus-within:border-black focus-within:ring-1 focus-within:ring-black group transition-all relative">
                 <span className="material-symbols-outlined text-[22px] text-slate-400 group-focus-within:text-black">search</span>
                 <input
                   type="text"
@@ -544,7 +664,7 @@ function PlatformContent() {
               {/* Mobile Filter Button (Icon-Only) */}
               <button
                 onClick={handleToggleFilters}
-                className={`flex md:hidden h-12 w-12 items-center justify-center shrink-0 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none ${
+                className={`flex md:hidden h-12 w-12 items-center justify-center p-0 shrink-0 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none ${
                   showFilters
                     ? "bg-black border border-black text-white hover:bg-zinc-900"
                     : "bg-white border border-zinc-200 text-slate-700 hover:bg-slate-50"
@@ -593,121 +713,12 @@ function PlatformContent() {
 
                   {/* Form fields */}
                   <div className="p-5 flex flex-col gap-5 overflow-y-auto max-h-[385px] md:max-h-[385px] custom-scrollbar">
-                    
-                    {/* Country & City Dropdowns - Stacked in Column */}
-                    <div className="flex flex-col gap-4">
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-label ml-1 font-jakarta">País</label>
-                        <div className="relative flex items-center">
-                          <select
-                            value={tempFilters.country}
-                            onChange={(e) => setTempFilters({ ...tempFilters, country: e.target.value, city: "" })}
-                            className="w-full h-11 pl-3 pr-8 bg-white border border-zinc-200/80 rounded-xl text-[13px] md:text-base text-zinc-900 focus:outline-none focus:border-slate-800 transition-all duration-300 appearance-none cursor-pointer"
-                          >
-                            <option value="">Cualquier país</option>
-                            {countriesWithResults.map(country => (
-                              <option key={country} value={country}>{country}</option>
-                            ))}
-                          </select>
-                          <span className="material-symbols-outlined text-[16px] text-slate-400 absolute right-2 pointer-events-none">expand_more</span>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-label ml-1 font-jakarta">Ciudad</label>
-                        <div className="relative flex items-center">
-                          <select
-                            value={tempFilters.city}
-                            onChange={(e) => setTempFilters({ ...tempFilters, city: e.target.value })}
-                            className="w-full h-11 pl-3 pr-8 bg-white border border-zinc-200/80 rounded-xl text-[13px] md:text-base text-zinc-900 focus:outline-none focus:border-slate-800 transition-all duration-300 appearance-none cursor-pointer"
-                          >
-                            <option value="">Cualquier ciudad</option>
-                            {availableCities.map(city => (
-                              <option key={city} value={city}>{city}</option>
-                            ))}
-                          </select>
-                          <span className="material-symbols-outlined text-[16px] text-slate-400 absolute right-2 pointer-events-none">expand_more</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Dynamic specific interest checkboxes */}
-                    <div className="flex flex-col gap-2">
-                      <label className="text-label ml-1 font-jakarta">Intereses</label>
-                      <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto custom-scrollbar">
-                        {(() => {
-                          let availableInterests: string[] = [];
-                          if (tempFilters.category && tempFilters.category !== "Todas las categorías") {
-                            const categoryInterests = CATEGORIES_MAPPING[tempFilters.category as keyof typeof CATEGORIES_MAPPING] || [];
-                            availableInterests = categoryInterests.filter(interest => 
-                              interestsWithResults.some(active => active.toLowerCase() === interest.toLowerCase())
-                            );
-                          } else {
-                            availableInterests = interestsWithResults;
-                          }
-
-                          if (availableInterests.length === 0) {
-                            return (
-                              <p className="text-[11px] text-slate-400 py-2 w-full text-center">
-                                No hay temas de interés con resultados para esta selección.
-                              </p>
-                            );
-                          }
-
-                          return availableInterests.map(interest => {
-                            const isChecked = tempFilters.selectedInterests.includes(interest);
-                            return (
-                              <button
-                                key={interest}
-                                type="button"
-                                onClick={() => {
-                                  const nextSelected = isChecked
-                                    ? tempFilters.selectedInterests.filter(i => i !== interest)
-                                    : [...tempFilters.selectedInterests, interest];
-                                  setTempFilters({ ...tempFilters, selectedInterests: nextSelected });
-                                }}
-                                className={`px-4 py-2 rounded-full text-[13px] font-medium transition-premium border cursor-pointer select-none flex items-center gap-1.5 ${
-                                  isChecked
-                                    ? "bg-black text-white border-black"
-                                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:text-black"
-                                }`}
-                              >
-                                {isChecked && <span className="material-symbols-outlined text-[13px]">check</span>}
-                                {interest}
-                              </button>
-                            );
-                          });
-                        })()}
-                      </div>
-                    </div>
-
+                    {renderFilterFields(false)}
                   </div>
 
                   {/* Actions footer */}
                   <div className="px-4 py-3 bg-slate-50 border-t border-zinc-200/40 flex items-center justify-between gap-3 shrink-0 pb-6 md:pb-3">
-                    <button
-                      type="button"
-                      onClick={handleClearFilters}
-                      className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-premium cursor-pointer border-none bg-transparent font-jakarta uppercase tracking-wider"
-                    >
-                      Limpiar
-                    </button>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setShowFilters(false)}
-                        className="h-9 px-4 bg-white hover:bg-slate-50 text-slate-950 font-medium text-xs rounded-xl border border-zinc-200 transition-premium active:scale-95 cursor-pointer select-none font-jakarta"
-                      >
-                        Cancelar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleApplyFilters}
-                        className="h-9 px-4 bg-black hover:bg-zinc-900 text-white font-medium text-xs rounded-xl transition-premium active:scale-95 cursor-pointer select-none border-none outline-none font-jakarta"
-                      >
-                        Aplicar
-                      </button>
-                    </div>
+                    {renderActionsFooter()}
                   </div>
                 </div>
               )}
@@ -781,7 +792,7 @@ function PlatformContent() {
 
           <div
             onScroll={handleScroll}
-            className="flex-1 w-full overflow-y-auto custom-scrollbar pb-12"
+            className="flex-1 w-full overflow-y-auto custom-scrollbar pb-0 md:pb-12"
           >
             {filteredUsers.length === 0 ? (
               <div className="w-full flex flex-col items-center justify-center p-12 text-center min-h-[300px]">

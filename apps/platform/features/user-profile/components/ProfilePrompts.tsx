@@ -121,8 +121,9 @@ export const ALL_PROMPTS = [
   }
 ];
 
-export function PromptsDisplay({ prompts, onEdit, isPublic = false }: { prompts: Prompt[]; onEdit?: (step?: 'list' | 'select') => void; isPublic?: boolean }) {
+export function PromptsDisplay({ prompts, onEdit, isPublic = false, firstName }: { prompts: Prompt[]; onEdit?: (step?: 'list' | 'select') => void; isPublic?: boolean; firstName?: string }) {
   const hasPrompts = prompts && prompts.length > 0;
+  const nameToUse = firstName ? firstName.trim() : "Este usuario";
 
   return (
     <div className={`bg-white rounded-2xl p-4 lg:p-6 flex flex-col gap-4 lg:gap-5 border border-slate-200 shadow-none transition-all ${!hasPrompts ? 'bg-slate-50/50 border-slate-100' : ''}`}>
@@ -147,7 +148,7 @@ export function PromptsDisplay({ prompts, onEdit, isPublic = false }: { prompts:
       ) : (
         <div className="flex flex-col items-start gap-4">
           <p className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight leading-relaxed">
-            {isPublic ? "Este usuario aún no ha agregado reflexiones." : "Agregá reflexiones para que otros te conozcan mejor"}
+            {isPublic ? `${nameToUse} aún no ha agregado reflexiones.` : "Agregá reflexiones para que otros te conozcan mejor"}
           </p>
           {!isPublic && onEdit && (
             <EmptyProfileButton

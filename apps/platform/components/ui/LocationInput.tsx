@@ -29,7 +29,13 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
   autoFocus
 }, ref) => {
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [coords, setCoords] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [coords, setCoords] = useState<{
+    top?: number;
+    bottom?: number;
+    left: number;
+    width: number;
+    maxHeight: number;
+  } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -47,6 +53,7 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
   });
 
   const instanceIdRef = useRef(Math.random().toString(36).substring(2, 9));
+  const lastResolvedValueRef = useRef(defaultValue);
 
   useEffect(() => {
     setMounted(true);
@@ -85,10 +92,32 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       if (rect) {
+        const preferredMaxHeight = 280;
+        const spaceBelow = window.innerHeight - rect.bottom - 24; // 24px safe margin from viewport bottom
+        const spaceAbove = rect.top - 24; // 24px safe margin from viewport top
+
+        let top: number | undefined = undefined;
+        let bottom: number | undefined = undefined;
+        let maxHeight = preferredMaxHeight;
+
+        // If there's not enough space below, and more space above, open above
+        if (spaceBelow < preferredMaxHeight && spaceAbove > spaceBelow) {
+          bottom = window.innerHeight - rect.top + 4;
+          maxHeight = Math.min(preferredMaxHeight, spaceAbove);
+        } else {
+          top = rect.bottom + 4;
+          maxHeight = Math.min(preferredMaxHeight, spaceBelow);
+        }
+
+        // Fallback safety
+        maxHeight = Math.max(maxHeight, 100);
+
         setCoords({
-          top: rect.bottom + 4,
+          top,
+          bottom,
           left: rect.left,
-          width: rect.width
+          width: rect.width,
+          maxHeight
         });
       }
     }
@@ -97,25 +126,33 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
   React.useLayoutEffect(() => {
     if (status === "OK") {
       updateCoords();
-      window.addEventListener('scroll', updateCoords, true);
+      const handleScroll = (event: Event) => {
+        if (dropdownRef.current && dropdownRef.current.contains(event.target as Node)) {
+          return;
+        }
+        clearSuggestions();
+      };
+      window.addEventListener('scroll', handleScroll, true);
       window.addEventListener('resize', updateCoords);
       
       // Auto-scroll so dropdown suggestions are fully visible above mobile keyboard
       setTimeout(() => {
         containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
+
+      return () => {
+        window.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('resize', updateCoords);
+      };
     } else {
       setCoords(null);
     }
-    return () => {
-      window.removeEventListener('scroll', updateCoords, true);
-      window.removeEventListener('resize', updateCoords);
-    };
   }, [status]);
 
   useEffect(() => {
     if (defaultValue !== value) {
       setValue(defaultValue, false);
+      lastResolvedValueRef.current = defaultValue;
     }
   }, [defaultValue]);
 
@@ -131,6 +168,7 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
 
     setValue(formatted, false);
     clearSuggestions();
+    lastResolvedValueRef.current = formatted;
 
     try {
       const results = await getGeocode({ address: description });
@@ -152,14 +190,17 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
   const suggestionsDropdown = coords && (
     <div 
       ref={dropdownRef}
+      data-select-portal="true"
       style={{ 
         position: 'fixed',
-        top: coords.top,
-        left: coords.left,
-        width: coords.width,
+        top: coords.top !== undefined ? `${coords.top}px` : 'auto',
+        bottom: coords.bottom !== undefined ? `${coords.bottom}px` : 'auto',
+        left: `${coords.left}px`,
+        width: `${coords.width}px`,
+        maxHeight: `${coords.maxHeight}px`,
         zIndex: 10000,
       }}
-      className="bg-white rounded-[12px] outline outline-1 outline-zinc-200 overflow-y-auto max-h-[280px] custom-scrollbar animate-in fade-in duration-200"
+      className="bg-white rounded-[12px] outline outline-1 outline-zinc-200 overflow-y-auto overscroll-contain pr-1 animate-in fade-in duration-200"
     >
       {suggestions.map(({ place_id, description, structured_formatting }, index) => (
         <div
@@ -219,9 +260,9 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
           } else if (e.key === 'ArrowUp') {
             e.preventDefault();
             setHighlightedIndex(prev => (prev - 1 + suggestions.length) % suggestions.length);
-          } else if (e.key === 'Enter' && highlightedIndex >= 0) {
+          } else if (e.key === 'Enter') {
             e.preventDefault();
-            const s = suggestions[highlightedIndex];
+            const s = highlightedIndex >= 0 ? suggestions[highlightedIndex] : suggestions[0];
             handleSelect(
               s.description,
               s.structured_formatting.main_text,

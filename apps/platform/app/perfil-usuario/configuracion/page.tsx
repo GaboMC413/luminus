@@ -36,6 +36,13 @@ function SettingsContent() {
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [attentionCounter, setAttentionCounter] = useState(0);
 
+  const handleDeleteAccount = () => {
+    showSuccess(
+      "Eliminar cuenta",
+      "La solicitud para eliminar tu cuenta ha sido recibida y se procesará próximamente."
+    );
+  };
+
   // Profile data states reactively synchronized to localStorage
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -149,7 +156,7 @@ function SettingsContent() {
               {mobileView === 'content' ? (
                 <button
                   onClick={() => setMobileView('menu')}
-                  className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-400 hover:text-slate-900 cursor-pointer"
+                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900 cursor-pointer"
                   title="Volver a ajustes"
                 >
                   <span className="material-symbols-rounded text-[20px]">arrow_back</span>
@@ -157,7 +164,7 @@ function SettingsContent() {
               ) : (
                 <Link
                   href="/perfil-usuario"
-                  className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-400 hover:text-slate-900"
+                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900"
                   title="Volver al perfil"
                 >
                   <span className="material-symbols-rounded text-[20px]">arrow_back</span>
@@ -187,25 +194,37 @@ function SettingsContent() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 lg:gap-8 items-start">
 
             {/* Sidebar Navigation */}
-            <div className={`md:col-span-4 lg:col-span-3 gap-1 bg-white rounded-2xl border border-zinc-200/40 p-2 ${mobileView === 'menu' ? 'flex flex-col' : 'hidden md:flex md:flex-col'}`}>
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setActiveTab(tab.id);
-                    setMobileView('content');
-                  }}
-                  className={`flex items-center text-left gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 text-[14px] font-semibold group ${activeTab === tab.id
-                    ? "bg-black text-white"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                    }`}
-                >
-                  <span className={`material-symbols-rounded text-[20px] transition-colors ${activeTab === tab.id ? "text-white" : "text-slate-400 group-hover:text-slate-900"}`}>
-                    {tab.icon}
-                  </span>
-                  {tab.label}
-                </button>
-              ))}
+            <div className={`md:col-span-4 lg:col-span-3 flex flex-col gap-3 ${mobileView === 'menu' ? 'flex' : 'hidden md:flex'}`}>
+              <div className="flex flex-col gap-1 bg-white rounded-2xl border border-zinc-200/40 p-2">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      setActiveTab(tab.id);
+                      setMobileView('content');
+                    }}
+                    className={`flex items-center text-left gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 text-[14px] font-semibold group ${activeTab === tab.id
+                      ? "bg-black text-white"
+                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                      }`}
+                  >
+                    <span className={`material-symbols-rounded text-[20px] transition-colors ${activeTab === tab.id ? "text-white" : "text-slate-400 group-hover:text-slate-900"}`}>
+                      {tab.icon}
+                    </span>
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={handleDeleteAccount}
+                className="w-full flex items-center text-left gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 text-[14px] font-semibold group bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-500 border border-transparent hover:border-red-200 cursor-pointer active:scale-95 select-none"
+              >
+                <span className="material-symbols-rounded text-[20px] text-slate-400 group-hover:text-red-500 transition-colors">
+                  delete
+                </span>
+                Eliminar cuenta
+              </button>
             </div>
 
             {/* Content Area */}

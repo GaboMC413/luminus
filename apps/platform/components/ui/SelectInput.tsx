@@ -15,6 +15,7 @@ interface SelectInputProps {
   disabled?: boolean;
   disabledOpacity?: boolean;
   autoFocus?: boolean;
+  preventScrollOnOpen?: boolean;
 }
 
 export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
@@ -28,11 +29,18 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
   error = false,
   disabled = false,
   disabledOpacity = true,
-  autoFocus
+  autoFocus,
+  preventScrollOnOpen = false
 }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [coords, setCoords] = useState<{ top: number; left: number; width: number } | null>(null);
+  const [coords, setCoords] = useState<{
+    top?: number;
+    bottom?: number;
+    left: number;
+    width: number;
+    maxHeight: number;
+  } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -62,21 +70,45 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
       });
       setHighlightedIndex(currentIdx >= 0 ? currentIdx : 0);
 
-      // Smooth scroll the select box higher in the viewport on mobile/devices when opened
-      setTimeout(() => {
-        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 150);
+      if (!preventScrollOnOpen) {
+        // Smooth scroll the select box higher in the viewport on mobile/devices when opened
+        setTimeout(() => {
+          containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
+      }
     }
-  }, [isOpen, value, options]);
+  }, [isOpen, value, options, preventScrollOnOpen]);
 
   const updateCoords = () => {
     if (containerRef.current) {
       const rect = containerRef.current.querySelector('.reg-input-clean, .reg-input-bordered')?.getBoundingClientRect();
       if (rect) {
+        const preferredMaxHeight = 260;
+        const spaceBelow = window.innerHeight - rect.bottom - 24; // 24px safe margin from viewport bottom
+        const spaceAbove = rect.top - 24; // 24px safe margin from viewport top
+
+        let top: number | undefined = undefined;
+        let bottom: number | undefined = undefined;
+        let maxHeight = preferredMaxHeight;
+
+        // If there's not enough space below, and more space above, open above
+        if (spaceBelow < preferredMaxHeight && spaceAbove > spaceBelow) {
+          bottom = window.innerHeight - rect.top + 4;
+          maxHeight = Math.min(preferredMaxHeight, spaceAbove);
+        } else {
+          top = rect.bottom + 4;
+          maxHeight = Math.min(preferredMaxHeight, spaceBelow);
+        }
+
+        // Fallback safety to guarantee dropdown is scrollable even in tight viewports
+        maxHeight = Math.max(maxHeight, 100);
+
         setCoords({
-          top: rect.bottom + 4,
+          top,
+          bottom,
           left: rect.left,
-          width: rect.width
+          width: rect.width,
+          maxHeight
         });
       }
     }
@@ -85,15 +117,21 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
   React.useLayoutEffect(() => {
     if (isOpen) {
       updateCoords();
-      window.addEventListener('scroll', updateCoords, true);
+      const handleScroll = (event: Event) => {
+        if (dropdownRef.current && dropdownRef.current.contains(event.target as Node)) {
+          return;
+        }
+        setIsOpen(false);
+      };
+      window.addEventListener('scroll', handleScroll, true);
       window.addEventListener('resize', updateCoords);
+      return () => {
+        window.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('resize', updateCoords);
+      };
     } else {
       setCoords(null);
     }
-    return () => {
-      window.removeEventListener('scroll', updateCoords, true);
-      window.removeEventListener('resize', updateCoords);
-    };
   }, [isOpen]);
 
   useEffect(() => {
@@ -120,14 +158,17 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
   const dropdownContent = coords && (
     <div
       ref={dropdownRef}
+      data-select-portal="true"
       style={{
         position: 'fixed',
-        top: coords.top,
-        left: coords.left,
-        width: coords.width,
+        top: coords.top !== undefined ? `${coords.top}px` : 'auto',
+        bottom: coords.bottom !== undefined ? `${coords.bottom}px` : 'auto',
+        left: `${coords.left}px`,
+        width: `${coords.width}px`,
+        maxHeight: `${coords.maxHeight}px`,
         zIndex: 10000,
       }}
-      className="bg-white rounded-[12px] outline outline-1 outline-zinc-200 overflow-y-auto max-h-[160px] custom-scrollbar animate-in fade-in duration-200"
+      className="bg-white rounded-[12px] outline outline-1 outline-zinc-200 overflow-y-auto overscroll-contain pr-1 animate-in fade-in duration-200"
     >
       {options.map((option, index) => {
         const optLabel = typeof option === 'string' ? option : option.label;

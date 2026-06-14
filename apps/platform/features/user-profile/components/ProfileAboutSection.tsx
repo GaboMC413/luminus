@@ -6,10 +6,12 @@ interface ProfileAboutSectionProps {
   bio?: string;
   onEdit?: () => void;
   isPublic?: boolean;
+  firstName?: string;
 }
 
-export function ProfileAboutSection({ bio, onEdit, isPublic = false }: ProfileAboutSectionProps) {
+export function ProfileAboutSection({ bio, onEdit, isPublic = false, firstName }: ProfileAboutSectionProps) {
   const hasBio = bio && bio.trim().length > 0;
+  const nameToUse = firstName ? firstName.trim() : "Este usuario";
 
   return (
     <div className="bg-white rounded-2xl p-4 lg:p-6 flex flex-col gap-4 lg:gap-5 border border-slate-200 shadow-none relative group">
@@ -31,7 +33,7 @@ export function ProfileAboutSection({ bio, onEdit, isPublic = false }: ProfileAb
       ) : (
         <div className="flex flex-col items-start gap-4">
           <p className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight leading-relaxed">
-            {isPublic ? "Este usuario aún no ha escrito sobre sí..." : "Aún no has escrito nada sobre ti..."}
+            {isPublic ? `${nameToUse} aún no ha escrito sobre sí...` : "Aún no has escrito nada sobre ti..."}
           </p>
           {!isPublic && onEdit && (
             <EmptyProfileButton

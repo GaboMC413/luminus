@@ -7,9 +7,10 @@ interface ProfileCompletionCardProps {
   prompts: Prompt[];
   onEditPrompts?: (step?: 'list' | 'select') => void;
   isPublic?: boolean;
+  firstName?: string;
 }
 
-export function ProfileCompletionCard({ prompts, onEditPrompts, isPublic = false }: ProfileCompletionCardProps) {
+export function ProfileCompletionCard({ prompts, onEditPrompts, isPublic = false, firstName }: ProfileCompletionCardProps) {
   return (
     <div className="relative group">
       {!isPublic && onEditPrompts && (
@@ -19,7 +20,7 @@ export function ProfileCompletionCard({ prompts, onEditPrompts, isPublic = false
           className="absolute top-4 right-4 z-20"
         />
       )}
-      <PromptsDisplay prompts={prompts} onEdit={onEditPrompts} isPublic={isPublic} />
+      <PromptsDisplay prompts={prompts} onEdit={onEditPrompts} isPublic={isPublic} firstName={firstName} />
     </div>
   );
 }

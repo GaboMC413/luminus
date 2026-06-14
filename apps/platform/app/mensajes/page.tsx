@@ -37,11 +37,100 @@ function fallbackAvatar(name: string) {
   return `https://ui-avatars.com/api/?name=${initials}&background=e2e8f0&color=0f172a&size=128`;
 }
 
+function formatShortTime(dateStr: string): string {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return "";
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatMessageBody(text: string): React.ReactNode[] {
+  if (!text) return [];
+
+  // Regex to match Markdown links: [Text](URL)
+  const markdownLinkRegex = /(\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g;
+  
+  const parts = text.split(markdownLinkRegex);
+
+  return parts.map((part, index) => {
+    // Check if the part matches the markdown link pattern
+    if (part.startsWith('[') && part.includes('](')) {
+      const match = part.match(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/);
+      if (match) {
+        const [, linkText, url] = match;
+        return (
+          <a
+            key={index}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:opacity-80 transition-opacity font-bold break-all"
+          >
+            {linkText}
+          </a>
+        );
+      }
+    }
+
+    // Otherwise, parse standard URLs, bold (*) and italics (_)
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const subParts = part.split(urlRegex);
+
+    return (
+      <React.Fragment key={index}>
+        {subParts.map((subPart, subIndex) => {
+          if (subPart.match(urlRegex)) {
+            return (
+              <a
+                key={subIndex}
+                href={subPart}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:opacity-80 transition-opacity font-bold break-all"
+              >
+                {subPart}
+              </a>
+            );
+          }
+
+          const boldRegex = /\*([^*]+)\*/g;
+          const boldParts = subPart.split(boldRegex);
+
+          return (
+            <React.Fragment key={subIndex}>
+              {boldParts.map((boldPart, boldIndex) => {
+                if (boldIndex % 2 === 1) {
+                  return <strong key={boldIndex} className="font-bold">{boldPart}</strong>;
+                }
+
+                const italicRegex = /_([^_]+)_/g;
+                const italicParts = boldPart.split(italicRegex);
+
+                return (
+                  <React.Fragment key={boldIndex}>
+                    {italicParts.map((italicPart, italicIndex) => {
+                      if (italicIndex % 2 === 1) {
+                        return <em key={italicIndex} className="italic">{italicPart}</em>;
+                      }
+                      return italicPart;
+                    })}
+                  </React.Fragment>
+                );
+              })}
+            </React.Fragment>
+          );
+        })}
+      </React.Fragment>
+    );
+  });
+}
+
 function MessagesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const recipientId = searchParams.get("id");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mobileView, setMobileView] = useState<'list' | 'chat'>(isUuid(recipientId) ? 'chat' : 'list');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
@@ -53,6 +142,12 @@ function MessagesContent() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [isChatMenuOpen, setIsChatMenuOpen] = useState(false);
   const chatMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isUuid(recipientId)) {
+      setMobileView('chat');
+    }
+  }, [recipientId]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -87,6 +182,7 @@ function MessagesContent() {
 
           const data = await response.json();
           setSelectedId(data.conversation.id);
+          setMobileView('chat');
         }
 
         const response = await fetch("/api/messages/conversations", {
@@ -208,18 +304,18 @@ function MessagesContent() {
   });
 
   return (
-    <div className="flex-1 w-full flex flex-col bg-[#F8FAFC] h-[calc(100vh-128px)] lg:h-[calc(100vh-80px)] overflow-hidden">
+    <div className="flex-1 w-full flex flex-col bg-[#F8FAFC] min-h-0 overflow-hidden">
       <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col min-h-0">
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0">
-          <div className="flex items-center gap-3 mb-3 shrink-0">
+          <div className={`items-center gap-3 mb-4 md:mb-6 shrink-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
             <button
               onClick={() => router.back()}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition-all text-slate-400 hover:text-black"
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900 cursor-pointer"
               title="Volver"
             >
-              <span className="material-symbols-rounded text-[24px]">arrow_back</span>
+              <span className="material-symbols-rounded text-[20px]">arrow_back</span>
             </button>
-            <h1 className="text-[24px] font-bold text-slate-900 font-jakarta tracking-tight">Mensajes</h1>
+            <h1 className="text-xl text-black font-semibold">Mensajes</h1>
           </div>
 
           {error && (
@@ -229,7 +325,7 @@ function MessagesContent() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 min-h-0">
-            <div className="md:col-span-4 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full min-h-0">
+            <div className={`md:col-span-4 flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full min-h-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
               <div className="p-3 border-b border-slate-100 shrink-0">
                 <div className="relative">
                   <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
@@ -249,18 +345,32 @@ function MessagesContent() {
                 )}
 
                 {!isLoading && filteredConversations.length === 0 && (
-                  <div className="flex-1 p-4 flex flex-col items-center justify-center text-center gap-2">
-                    <span className="material-symbols-rounded text-slate-300 text-[32px]">chat_bubble_outline</span>
-                    <p className="text-[13px] text-slate-400 font-medium leading-normal max-w-[180px]">
-                      No tienes conversaciones activas
-                    </p>
+                  <div className="flex-1 p-6 flex flex-col items-center justify-center text-center gap-4 bg-slate-50/50 rounded-2xl border border-slate-100 m-2">
+                    <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                      <span className="material-symbols-rounded text-[24px]">forum</span>
+                    </div>
+                    <div className="flex flex-col gap-1.5 max-w-[240px]">
+                      <h3 className="text-[15px] font-bold text-slate-900 leading-tight">¿Con quién te gustaría conectar hoy?</h3>
+                      <p className="text-[13px] text-slate-500 font-semibold leading-relaxed">
+                        Aún no tienes chats activos. Ve a la comunidad y contacta a tu primera persona.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => router.push("/comunidad")}
+                      className="h-10 px-6 bg-black hover:bg-zinc-800 text-white rounded-xl text-[13px] font-bold transition duration-200 cursor-pointer border-none shadow-sm flex items-center justify-center"
+                    >
+                      Ir a la comunidad
+                    </button>
                   </div>
                 )}
 
                 {filteredConversations.map((conversation) => (
                   <button
                     key={conversation.id}
-                    onClick={() => setSelectedId(conversation.id)}
+                    onClick={() => {
+                      setSelectedId(conversation.id);
+                      setMobileView('chat');
+                    }}
                     className={`flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all duration-300 text-left border-none ${selectedId === conversation.id
                       ? "bg-slate-100 text-black shadow-none"
                       : "hover:bg-slate-50 text-slate-600 hover:text-black bg-transparent"
@@ -287,8 +397,48 @@ function MessagesContent() {
               </div>
             </div>
 
-            {!selectedConv ? (
-              <div className="md:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full relative min-h-0 items-center justify-center p-8 text-center bg-slate-50/20">
+            {isLoading && isUuid(recipientId) ? (
+              <div className={`md:col-span-8 flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full relative min-h-0 ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
+                {/* Skeleton Header */}
+                <div className="p-3 border-b border-slate-100 flex items-center gap-3 bg-white shrink-0">
+                  <button
+                    onClick={() => {
+                      const from = searchParams.get("from");
+                      if (from === "profile" && recipientId) {
+                        router.push(`/comunidad/public-profile?id=${recipientId}`);
+                      } else {
+                        setMobileView('list');
+                      }
+                    }}
+                    className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer mr-1"
+                    title="Volver"
+                  >
+                    <span className="material-symbols-rounded text-[22px]">arrow_back</span>
+                  </button>
+                  <div className="w-10 h-10 rounded-[10px] bg-slate-100 animate-pulse shrink-0" />
+                  <div className="h-4 w-28 bg-slate-100 rounded animate-pulse" />
+                </div>
+
+                {/* Skeleton Body */}
+                <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-4 bg-white">
+                  <div className="flex flex-col items-start gap-1">
+                    <div className="w-[50%] h-10 bg-slate-50 rounded-xl rounded-tl-none animate-pulse" />
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="w-[40%] h-12 bg-slate-50 rounded-xl rounded-tr-none animate-pulse" />
+                  </div>
+                  <div className="flex flex-col items-start gap-1">
+                    <div className="w-[60%] h-10 bg-slate-50 rounded-xl rounded-tl-none animate-pulse" />
+                  </div>
+                </div>
+
+                {/* Skeleton Footer */}
+                <div className="p-3 border-t border-slate-100 bg-white shrink-0">
+                  <div className="h-12 w-full bg-slate-50 rounded-[24px] animate-pulse" />
+                </div>
+              </div>
+            ) : !selectedConv ? (
+              <div className="hidden md:flex md:col-span-8 flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full relative min-h-0 items-center justify-center p-8 text-center bg-slate-50/20">
                 <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 mb-4 border border-slate-100/50">
                   <span className="material-symbols-rounded text-[32px]">forum</span>
                 </div>
@@ -304,9 +454,25 @@ function MessagesContent() {
                 </button>
               </div>
             ) : (
-              <div className="md:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full relative min-h-0">
-                <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white z-10 shrink-0">
+              <div className={`md:col-span-8 flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full relative min-h-0 ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
+                <div className="p-3 border-b border-slate-100 flex items-center justify-between bg-white z-10 shrink-0">
                   <div className="flex items-center gap-3">
+                    {/* Mobile Back Button */}
+                    <button
+                      onClick={() => {
+                        const from = searchParams.get("from");
+                        if (from === "profile") {
+                          router.push(`/comunidad/public-profile?id=${selectedConv.participant.id}`);
+                        } else {
+                          setMobileView('list');
+                        }
+                      }}
+                      className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer mr-1"
+                      title="Volver"
+                    >
+                      <span className="material-symbols-rounded text-[22px]">arrow_back</span>
+                    </button>
+
                     <img
                       src={selectedConv.participant.avatar_url || fallbackAvatar(selectedConv.participant.name)}
                       alt={selectedConv.participant.name}
@@ -314,38 +480,42 @@ function MessagesContent() {
                     />
                     <div className="flex items-center gap-3">
                       <h2 className="text-[15px] font-bold text-slate-900 leading-none">{selectedConv.participant.name}</h2>
-                      <button
-                        onClick={() => router.push(`/comunidad/public-profile?id=${selectedConv.participant.id}`)}
-                        className="h-7 px-3 flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 font-bold text-[11px] rounded-full transition-colors border-none cursor-pointer"
-                      >
-                        Ver perfil
-                      </button>
+                      {selectedConv.participant.name !== "LUMINUS" && (
+                        <button
+                          onClick={() => router.push(`/comunidad/public-profile?id=${selectedConv.participant.id}`)}
+                          className="h-7 px-3 flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 font-bold text-[11px] rounded-full transition-colors border-none cursor-pointer"
+                        >
+                          Ver perfil
+                        </button>
+                      )}
                     </div>
                   </div>
 
-                  <div className="relative" ref={chatMenuRef}>
-                    <button
-                      onClick={() => setIsChatMenuOpen(!isChatMenuOpen)}
-                      className={`flex items-center justify-center w-10 h-10 rounded-full transition-all border-none cursor-pointer bg-transparent ${isChatMenuOpen ? "bg-slate-100" : "hover:bg-slate-50"}`}
-                    >
-                      <span className="material-symbols-rounded text-slate-400 hover:text-black transition-colors">more_vert</span>
-                    </button>
+                  {selectedConv.participant.name !== "LUMINUS" && (
+                    <div className="relative" ref={chatMenuRef}>
+                      <button
+                        onClick={() => setIsChatMenuOpen(!isChatMenuOpen)}
+                        className={`flex items-center justify-center w-10 h-10 rounded-full transition-all border-none cursor-pointer bg-transparent ${isChatMenuOpen ? "bg-slate-100" : "hover:bg-slate-50"}`}
+                      >
+                        <span className="material-symbols-rounded text-slate-400 hover:text-black transition-colors">more_vert</span>
+                      </button>
 
-                    {isChatMenuOpen && (
-                      <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                        <button
-                          onClick={() => setIsChatMenuOpen(false)}
-                          className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
-                        >
-                          <span className="material-symbols-rounded text-slate-400 group-hover:text-black">notifications_off</span>
-                          <span className="font-semibold text-slate-600 group-hover:text-black transition-colors">Silenciar chat</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                      {isChatMenuOpen && (
+                        <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                          <button
+                            onClick={() => setIsChatMenuOpen(false)}
+                            className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                          >
+                            <span className="material-symbols-rounded text-slate-400 group-hover:text-black">notifications_off</span>
+                            <span className="font-semibold text-slate-600 group-hover:text-black transition-colors">Silenciar chat</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar flex flex-col gap-3 bg-white">
+                <div className="flex-1 overflow-y-auto p-3 custom-scrollbar flex flex-col gap-0.5 bg-white">
                   {messages.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                       <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 mb-3">
@@ -357,24 +527,29 @@ function MessagesContent() {
                       </p>
                     </div>
                   ) : (
-                    messages.map((message) => {
+                    messages.map((message, index) => {
                       const isMine = message.sender_id !== selectedConv.participant.id;
+                      const isConsecutive = index > 0 && (messages[index - 1].sender_id !== selectedConv.participant.id) === isMine;
                       return (
                         <div
                           key={message.id}
-                          className={`flex flex-col ${isMine ? "items-end" : "items-start"}`}
+                          className={`flex flex-col ${isMine ? "items-end" : "items-start"} ${isConsecutive ? "mt-0.5" : "mt-2 first:mt-0"}`}
                         >
                           <div
-                            className={`max-w-[70%] px-4 py-2.5 text-[14px] leading-relaxed ${isMine
-                              ? "bg-black text-white rounded-2xl rounded-tr-none font-medium"
-                              : "bg-slate-100 border border-slate-100 text-slate-800 rounded-2xl rounded-tl-none"
+                            className={`max-w-[70%] pl-4 pr-12 pt-2.5 pb-3 text-[14px] leading-relaxed relative min-w-[75px] ${isMine
+                              ? `bg-black text-white font-medium ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tr-none"}`
+                              : `bg-slate-100 border border-slate-100 text-slate-800 ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tl-none"}`
                               }`}
                           >
-                            {message.body}
+                            <span className="block break-words whitespace-pre-wrap">{formatMessageBody(message.body)}</span>
+                            <span 
+                              className={`absolute bottom-1 right-2.5 text-[9px] font-sans font-normal select-none pointer-events-none ${
+                                isMine ? "text-white/60" : "text-slate-400"
+                              }`}
+                            >
+                              {formatShortTime(message.created_at)}
+                            </span>
                           </div>
-                          <span className="mt-1 text-[10px] text-slate-400 px-1">
-                            {formatRelativeTime(message.created_at)}
-                          </span>
                         </div>
                       );
                     })
@@ -382,7 +557,7 @@ function MessagesContent() {
                   <div ref={messagesEndRef} />
                 </div>
 
-                <div className="p-4 bg-white shrink-0 border-t border-slate-100">
+                <div className="p-3 bg-white shrink-0 border-t border-slate-100">
                   <div className="flex items-center w-full">
                     <div className="flex-1 relative flex items-end">
                       <textarea
@@ -392,7 +567,7 @@ function MessagesContent() {
                         onKeyDown={handleKeyDown}
                         placeholder="Escribe un mensaje..."
                         rows={1}
-                        className="w-full bg-slate-50 border-none rounded-[24px] py-3 pl-5 pr-14 text-[14px] focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-32 custom-scrollbar block text-slate-800"
+                        className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-[14px] focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-32 custom-scrollbar block text-slate-800"
                         onInput={(event) => {
                           const target = event.target as HTMLTextAreaElement;
                           target.style.height = "auto";
@@ -401,8 +576,12 @@ function MessagesContent() {
                       />
                       <button
                         onClick={handleSend}
-                        className={`absolute right-1.5 bottom-1.5 w-9 h-9 rounded-full flex items-center justify-center transition-all border-none ${inputText.trim() && !isSending ? "bg-black text-white cursor-pointer" : "bg-transparent text-slate-300 hover:bg-slate-200 cursor-not-allowed"}`}
-                        disabled={!inputText.trim() || isSending}
+                        className={`absolute right-1.5 bottom-1.5 w-10 h-10 rounded-full flex items-center justify-center transition-all border-none ${
+                          inputText.trim() && !isSending
+                            ? "text-slate-800"
+                            : "text-slate-400"
+                        } bg-slate-100 hover:bg-black hover:text-white cursor-pointer hover:scale-105 active:scale-95`}
+                        disabled={isSending}
                       >
                         <span className="material-symbols-rounded text-[18px] ml-0.5">send</span>
                       </button>
@@ -421,7 +600,7 @@ function MessagesContent() {
 export default function MessagesPage() {
   return (
     <Suspense fallback={
-      <div className="flex-1 w-full flex min-h-[calc(100vh-80px)] bg-[#F8FAFC] items-center justify-center">
+      <div className="flex-1 w-full flex h-full bg-[#F8FAFC] items-center justify-center">
         <div className="flex flex-col items-center gap-4 animate-pulse">
           <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px] invert brightness-0" />
           <p className="text-[11px] text-slate-400 uppercase tracking-widest font-semibold">Cargando mensajes...</p>

@@ -58,7 +58,7 @@ export function EditableField({
   const [birthDay, setBirthDay] = useState("");
   const [birthMonth, setBirthMonth] = useState("");
   const [birthYear, setBirthYear] = useState("");
-  const [dateError, setDateError] = useState("");
+  const [validationError, setValidationError] = useState("");
 
   // Sync state with incoming value
   useEffect(() => {
@@ -75,7 +75,7 @@ export function EditableField({
         setBirthMonth("");
         setBirthYear("");
       }
-      setDateError("");
+      setValidationError("");
     }
   }, [value, isDate]);
 
@@ -92,10 +92,10 @@ export function EditableField({
 
   // Reset errors when editing starts
   useEffect(() => {
-    if (isEditing && isDate) {
-      setDateError("");
+    if (isEditing) {
+      setValidationError("");
     }
-  }, [isEditing, isDate]);
+  }, [isEditing]);
 
   const handleEditClick = () => {
     if (isAnotherEditing) {
@@ -120,16 +120,20 @@ export function EditableField({
 
       if (birthDay || birthMonth || birthYear) {
         if (!isValidBirthdate(normalized)) {
-          setDateError("Fecha inválida");
+          setValidationError("Fecha inválida");
           return;
         }
       }
 
       await onSave?.(normalized, extraValue);
     } else {
+      if (isLocation && (!currentValue || !extraValue)) {
+        setValidationError("Selecciona una ciudad de la lista de sugerencias");
+        return;
+      }
       await onSave?.(currentValue, extraValue);
     }
-    setDateError("");
+    setValidationError("");
     setEditingFieldId(null);
   };
 
@@ -148,7 +152,7 @@ export function EditableField({
         setBirthYear("");
       }
     }
-    setDateError("");
+    setValidationError("");
     setEditingFieldId(null);
   };
 
@@ -167,17 +171,21 @@ export function EditableField({
               className={`${!isEditing ? "[&_.reg-input-bordered]:bg-slate-50 [&_.reg-input-bordered]:!border-none [&_.reg-input-bordered_span]:!text-slate-500 pointer-events-none" : "[&_.reg-input-bordered]:bg-white [&_.reg-input-bordered]:border-black [&_.reg-input-bordered_span]:!text-black"}`}
             />
           ) : isLocation ? (
-            <LocationInput
-              defaultValue={currentValue}
-              onSelect={({ city: selCity, country: selCountry }) => {
-                if (isEditing) {
-                  setCurrentValue(selCity);
-                  setExtraValue(selCountry);
-                }
-              }}
-              disabled={!isEditing}
-              className={`${!isEditing ? "[&_.reg-input-bordered]:bg-slate-50 [&_.reg-input-bordered]:!border-none [&_input]:!text-slate-500 pointer-events-none" : "[&_.reg-input-bordered]:bg-white [&_.reg-input-bordered]:border-black [&_input]:!text-black"}`}
-            />
+            <div className="flex flex-col gap-2 w-full">
+              <LocationInput
+                defaultValue={currentValue}
+                onSelect={({ city: selCity, country: selCountry }) => {
+                  if (isEditing) {
+                    setCurrentValue(selCity);
+                    setExtraValue(selCountry);
+                    setValidationError("");
+                  }
+                }}
+                disabled={!isEditing}
+                className={`${!isEditing ? "[&_.reg-input-bordered]:bg-slate-50 [&_.reg-input-bordered]:!border-none [&_input]:!text-slate-500 pointer-events-none" : `[&_.reg-input-bordered]:bg-white [&_.reg-input-bordered]:border-black [&_input]:!text-black ${validationError ? '[&_input]:!border-[#FF3D3D] [&_input]:!ring-1 [&_input]:!ring-[#FF3D3D]' : ''}`}`}
+              />
+              {validationError && <p className="text-[#FF3D3D] text-label font-bold mt-1 ml-1">{validationError}</p>}
+            </div>
           ) : isPhone ? (
             <PhoneInput
               value={currentValue}
@@ -198,10 +206,10 @@ export function EditableField({
                     options={DAYS}
                     onSelect={(val) => {
                       setBirthDay(val);
-                      setDateError("");
+                      setValidationError("");
                     }}
                     placeholder="Día"
-                    error={!!dateError}
+                    error={!!validationError}
                   />
                 </div>
                 <div className="flex-1">
@@ -210,10 +218,10 @@ export function EditableField({
                     options={MONTHS}
                     onSelect={(val) => {
                       setBirthMonth(val);
-                      setDateError("");
+                      setValidationError("");
                     }}
                     placeholder="Mes"
-                    error={!!dateError}
+                    error={!!validationError}
                   />
                 </div>
                 <div className="flex-1">
@@ -222,14 +230,14 @@ export function EditableField({
                     options={YEARS}
                     onSelect={(val) => {
                       setBirthYear(val);
-                      setDateError("");
+                      setValidationError("");
                     }}
                     placeholder="Año"
-                    error={!!dateError}
+                    error={!!validationError}
                   />
                 </div>
               </div>
-              {dateError && <p className="text-[#FF3D3D] text-label font-bold mt-1">{dateError}</p>}
+              {validationError && <p className="text-[#FF3D3D] text-label font-bold mt-1">{validationError}</p>}
             </div>
           ) : (
             <InputField
