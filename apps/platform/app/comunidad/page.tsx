@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { InterestPill } from "@/components/ui/InterestPill";
 import { UserCard } from "@/components/ui/UserCard";
 import { Button, ProfileButton } from "@/components/ui/Button";
+import { SelectInput } from "@/components/ui/SelectInput";
 
 const CATEGORIES_MAPPING = {
   "Crecimiento Personal": ["Autocuidado", "Motivación", "Calma interior", "Propósito de vida", "Organización personal", "Toma de decisiones", "Rutinas saludables", "Hábitos conscientes", "Confianza personal", "Autoestima", "Acompañamiento personal", "Crecimiento Personal", "Autoconocimiento", "Aprendizaje continuo"],
@@ -596,45 +597,29 @@ function PlatformContent() {
                     
                     {/* Country & City Dropdowns - Stacked in Column */}
                     <div className="flex flex-col gap-4">
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-label ml-1 font-jakarta">País</label>
-                        <div className="relative flex items-center">
-                          <select
-                            value={tempFilters.country}
-                            onChange={(e) => setTempFilters({ ...tempFilters, country: e.target.value, city: "" })}
-                            className="w-full h-11 pl-3 pr-8 bg-white border border-zinc-200/80 rounded-xl text-[13px] md:text-base text-zinc-900 focus:outline-none focus:border-slate-800 transition-all duration-300 appearance-none cursor-pointer"
-                          >
-                            <option value="">Cualquier país</option>
-                            {countriesWithResults.map(country => (
-                              <option key={country} value={country}>{country}</option>
-                            ))}
-                          </select>
-                          <span className="material-symbols-outlined text-[16px] text-slate-400 absolute right-2 pointer-events-none">expand_more</span>
-                        </div>
-                      </div>
+                      <SelectInput
+                        label="País"
+                        value={tempFilters.country}
+                        options={[{ label: "Cualquier país", value: "" }, ...countriesWithResults.map(country => ({ label: country, value: country }))] }
+                        onSelect={(val) => setTempFilters({ ...tempFilters, country: val, city: "" })}
+                        placeholder="Cualquier país"
+                        preventScrollOnOpen={true}
+                      />
 
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-label ml-1 font-jakarta">Ciudad</label>
-                        <div className="relative flex items-center">
-                          <select
-                            value={tempFilters.city}
-                            onChange={(e) => setTempFilters({ ...tempFilters, city: e.target.value })}
-                            className="w-full h-11 pl-3 pr-8 bg-white border border-zinc-200/80 rounded-xl text-[13px] md:text-base text-zinc-900 focus:outline-none focus:border-slate-800 transition-all duration-300 appearance-none cursor-pointer"
-                          >
-                            <option value="">Cualquier ciudad</option>
-                            {availableCities.map(city => (
-                              <option key={city} value={city}>{city}</option>
-                            ))}
-                          </select>
-                          <span className="material-symbols-outlined text-[16px] text-slate-400 absolute right-2 pointer-events-none">expand_more</span>
-                        </div>
-                      </div>
+                      <SelectInput
+                        label="Ciudad"
+                        value={tempFilters.city}
+                        options={[{ label: "Cualquier ciudad", value: "" }, ...availableCities.map(city => ({ label: city, value: city }))] }
+                        onSelect={(val) => setTempFilters({ ...tempFilters, city: val })}
+                        placeholder="Cualquier ciudad"
+                        preventScrollOnOpen={true}
+                      />
                     </div>
 
                     {/* Dynamic specific interest checkboxes */}
                     <div className="flex flex-col gap-2">
                       <label className="text-label ml-1 font-jakarta">Intereses</label>
-                      <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto custom-scrollbar">
+                      <div className="flex flex-wrap gap-2 max-h-[160px] overflow-y-auto pr-1.5">
                         {(() => {
                           let availableInterests: string[] = [];
                           if (tempFilters.category && tempFilters.category !== "Todas las categorías") {

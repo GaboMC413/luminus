@@ -15,6 +15,7 @@ interface SelectInputProps {
   disabled?: boolean;
   disabledOpacity?: boolean;
   autoFocus?: boolean;
+  preventScrollOnOpen?: boolean;
 }
 
 export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
@@ -28,7 +29,8 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
   error = false,
   disabled = false,
   disabledOpacity = true,
-  autoFocus
+  autoFocus,
+  preventScrollOnOpen = false
 }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -62,12 +64,14 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
       });
       setHighlightedIndex(currentIdx >= 0 ? currentIdx : 0);
 
-      // Smooth scroll the select box higher in the viewport on mobile/devices when opened
-      setTimeout(() => {
-        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 150);
+      if (!preventScrollOnOpen) {
+        // Smooth scroll the select box higher in the viewport on mobile/devices when opened
+        setTimeout(() => {
+          containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
+      }
     }
-  }, [isOpen, value, options]);
+  }, [isOpen, value, options, preventScrollOnOpen]);
 
   const updateCoords = () => {
     if (containerRef.current) {
@@ -127,7 +131,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
         width: coords.width,
         zIndex: 10000,
       }}
-      className="bg-white rounded-[12px] outline outline-1 outline-zinc-200 overflow-y-auto max-h-[160px] custom-scrollbar animate-in fade-in duration-200"
+      className="bg-white rounded-[12px] outline outline-1 outline-zinc-200 overflow-y-auto max-h-[160px] pr-1 animate-in fade-in duration-200"
     >
       {options.map((option, index) => {
         const optLabel = typeof option === 'string' ? option : option.label;
