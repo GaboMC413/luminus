@@ -574,7 +574,7 @@ function PlatformContent() {
                 <div 
                   ref={dropdownRef}
                   className="
-                    absolute 
+                    fixed md:absolute 
                     inset-0 md:inset-auto 
                     md:top-[56px] md:right-0 
                     w-full md:w-[384px] 
@@ -594,7 +594,7 @@ function PlatformContent() {
                 >
                   {/* Header for mobile */}
                   <div className="md:hidden flex items-center justify-between px-5 py-4 border-b border-zinc-200/50 shrink-0">
-                    <span className="text-base font-bold text-black font-jakarta">Filtros</span>
+                    <span className="text-base font-bold text-black font-jakarta">Buscar por filtros</span>
                     <button 
                       type="button" 
                       onClick={() => setShowFilters(false)}
