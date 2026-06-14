@@ -159,11 +159,20 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
 
   return (
     <div
-      className="fixed bottom-0 right-4 lg:right-12 z-50 w-[360px] md:w-[400px] bg-white border border-slate-200 border-b-0 rounded-t-2xl shadow-none flex flex-col transition-all duration-300 overflow-hidden h-[480px]"
+      className="fixed inset-0 sm:inset-auto sm:bottom-0 sm:right-4 lg:right-12 z-50 w-full sm:w-[400px] h-full sm:h-[480px] bg-white border-none sm:border sm:border-slate-200 sm:border-b-0 rounded-none sm:rounded-t-2xl shadow-none flex flex-col transition-all duration-300 overflow-hidden"
     >
       {/* Header */}
       <div className="h-[60px] px-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50 select-none">
         <div className="flex items-center gap-3 flex-1 min-w-0">
+          {/* Mobile Back Button */}
+          <button
+            onClick={onClose}
+            className="sm:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer mr-1"
+            title="Atrás"
+          >
+            <span className="material-symbols-outlined text-[22px]">arrow_back</span>
+          </button>
+
           <div className="relative shrink-0">
             <img src={avatar || "/logo-luminus-white.svg"} alt={name} className="w-9 h-9 rounded-[10px] object-cover" />
           </div>
@@ -227,7 +236,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
 
           <button
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer"
+            className="hidden sm:flex w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer"
             title="Cerrar chat"
           >
             <span className="material-symbols-outlined text-[20px]">close</span>
