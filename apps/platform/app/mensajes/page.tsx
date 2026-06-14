@@ -49,6 +49,7 @@ function MessagesContent() {
   const searchParams = useSearchParams();
   const recipientId = searchParams.get("id");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mobileView, setMobileView] = useState<'list' | 'chat'>('list');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
@@ -94,6 +95,7 @@ function MessagesContent() {
 
           const data = await response.json();
           setSelectedId(data.conversation.id);
+          setMobileView('chat');
         }
 
         const response = await fetch("/api/messages/conversations", {
@@ -218,13 +220,13 @@ function MessagesContent() {
     <div className="flex-1 w-full flex flex-col bg-[#F8FAFC] h-[calc(100vh-128px)] lg:h-[calc(100vh-80px)] overflow-hidden">
       <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col min-h-0">
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0">
-          <div className="flex items-center gap-3 mb-3 shrink-0">
+          <div className={`items-center gap-3 mb-3 shrink-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
             <button
               onClick={() => router.back()}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-100 transition-all text-slate-400 hover:text-black"
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-400 hover:text-slate-900 transition-all cursor-pointer hover:bg-slate-50"
               title="Volver"
             >
-              <span className="material-symbols-rounded text-[24px]">arrow_back</span>
+              <span className="material-symbols-rounded text-[20px]">arrow_back</span>
             </button>
             <h1 className="text-[24px] font-bold text-slate-900 font-jakarta tracking-tight">Mensajes</h1>
           </div>
@@ -236,7 +238,7 @@ function MessagesContent() {
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 min-h-0">
-            <div className="md:col-span-4 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full min-h-0">
+            <div className={`md:col-span-4 flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full min-h-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
               <div className="p-3 border-b border-slate-100 shrink-0">
                 <div className="relative">
                   <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
@@ -267,7 +269,10 @@ function MessagesContent() {
                 {filteredConversations.map((conversation) => (
                   <button
                     key={conversation.id}
-                    onClick={() => setSelectedId(conversation.id)}
+                    onClick={() => {
+                      setSelectedId(conversation.id);
+                      setMobileView('chat');
+                    }}
                     className={`flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer transition-all duration-300 text-left border-none ${selectedId === conversation.id
                       ? "bg-slate-100 text-black shadow-none"
                       : "hover:bg-slate-50 text-slate-600 hover:text-black bg-transparent"
@@ -295,7 +300,7 @@ function MessagesContent() {
             </div>
 
             {!selectedConv ? (
-              <div className="md:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full relative min-h-0 items-center justify-center p-8 text-center bg-slate-50/20">
+              <div className="hidden md:flex md:col-span-8 flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full relative min-h-0 items-center justify-center p-8 text-center bg-slate-50/20">
                 <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 mb-4 border border-slate-100/50">
                   <span className="material-symbols-rounded text-[32px]">forum</span>
                 </div>
@@ -311,9 +316,18 @@ function MessagesContent() {
                 </button>
               </div>
             ) : (
-              <div className="md:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full relative min-h-0">
+              <div className={`md:col-span-8 flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full relative min-h-0 ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
                 <div className="p-3 border-b border-slate-100 flex items-center justify-between bg-white z-10 shrink-0">
                   <div className="flex items-center gap-3">
+                    {/* Mobile Back Button */}
+                    <button
+                      onClick={() => setMobileView('list')}
+                      className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer mr-1"
+                      title="Volver"
+                    >
+                      <span className="material-symbols-rounded text-[22px]">arrow_back</span>
+                    </button>
+
                     <img
                       src={selectedConv.participant.avatar_url || fallbackAvatar(selectedConv.participant.name)}
                       alt={selectedConv.participant.name}
