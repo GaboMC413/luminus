@@ -104,7 +104,7 @@ export function NotificationPopup({ isOpen, onClose, notifications, onMarkRead, 
 
   return (
     <div
-      className="absolute right-0 mt-2 w-[calc(100vw-48px)] sm:w-[400px] md:w-[480px] bg-white border border-slate-200 rounded-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right shadow-xl"
+      className="fixed left-4 right-4 top-[72px] sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 w-auto sm:w-[400px] md:w-[480px] bg-white border border-slate-200 rounded-2xl z-[100] overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right shadow-xl"
     >
       <div className="px-6 py-5 border-b border-slate-100 bg-white">
         <h3 className="text-[15px] font-semibold text-black">Notificaciones</h3>
