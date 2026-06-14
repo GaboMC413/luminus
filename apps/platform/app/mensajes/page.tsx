@@ -312,7 +312,7 @@ function MessagesContent() {
               </div>
             ) : (
               <div className="md:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full relative min-h-0">
-                <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white z-10 shrink-0">
+                <div className="p-3 border-b border-slate-100 flex items-center justify-between bg-white z-10 shrink-0">
                   <div className="flex items-center gap-3">
                     <img
                       src={selectedConv.participant.avatar_url || fallbackAvatar(selectedConv.participant.name)}
@@ -394,7 +394,7 @@ function MessagesContent() {
                   <div ref={messagesEndRef} />
                 </div>
 
-                <div className="p-4 bg-white shrink-0 border-t border-slate-100">
+                <div className="p-3 bg-white shrink-0 border-t border-slate-100">
                   <div className="flex items-center w-full">
                     <div className="flex-1 relative flex items-end">
                       <textarea
