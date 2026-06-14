@@ -70,10 +70,76 @@ function PublicProfileContent() {
 
   const handleConnect = async () => {
     const id = searchParams.get("id");
-    if (!id || connectionLoading || profile?.connection_status) return;
+    if (!id || connectionLoading) return;
 
     try {
       setConnectionLoading(true);
+
+      // Scenario 1: Pending Incoming Request (Shows "Recibida")
+      if (profile?.connection_status === "pending" && profile?.connection_direction === "incoming") {
+        // Directly accept the connection (PUT)
+        const response = await fetch("/api/connections", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ recipientId: id }),
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data.message || "No pudimos aceptar la solicitud.");
+        }
+
+        setProfile((current: any) => ({
+          ...current,
+          connection_status: "accepted",
+        }));
+        return;
+      }
+
+      // Scenario 2: Pending Outgoing Request (Shows "Enviada" / "Solicitud enviada")
+      if (profile?.connection_status === "pending" && profile?.connection_direction === "outgoing") {
+        // Directly cancel/delete the connection request (DELETE)
+        const response = await fetch(`/api/connections?recipientId=${id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data.message || "No pudimos cancelar la solicitud.");
+        }
+
+        setProfile((current: any) => ({
+          ...current,
+          connection_status: null,
+          connection_direction: null,
+        }));
+        return;
+      }
+
+      // Scenario 3: Connected (Shows "Conectado" / "Ya conectado")
+      if (profile?.connection_status === "accepted") {
+        // Directly disconnect/remove from network (DELETE)
+        const response = await fetch(`/api/connections?recipientId=${id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data.message || "No pudimos eliminar de tu red.");
+        }
+
+        setProfile((current: any) => ({
+          ...current,
+          connection_status: null,
+          connection_direction: null,
+        }));
+        return;
+      }
+
+      // Scenario 4: No Connection (Shows "Agregar a mi red" / "Conectar")
       const response = await fetch("/api/connections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -92,8 +158,8 @@ function PublicProfileContent() {
         connection_direction: data.connection?.direction || "outgoing",
       }));
     } catch (err: any) {
-      console.error("Error al enviar solicitud de conexión:", err);
-      alert(err.message || "No pudimos enviar la solicitud de conexión.");
+      console.error("Error managing connection:", err);
+      alert(err.message || "No pudimos procesar la acción de la conexión.");
     } finally {
       setConnectionLoading(false);
     }
@@ -118,6 +184,15 @@ function PublicProfileContent() {
     }
     if (profile?.connection_status === "accepted") return "Ya conectado";
     return "Agregar a mi red";
+  };
+
+  const getConnectionButtonLabelMobile = () => {
+    if (connectionLoading) return "Enviando...";
+    if (profile?.connection_status === "pending") {
+      return profile?.connection_direction === "incoming" ? "Recibida" : "Enviada";
+    }
+    if (profile?.connection_status === "accepted") return "Conectado";
+    return "Conectar";
   };
 
   if (loading) {
@@ -180,11 +255,12 @@ function PublicProfileContent() {
               {/* RIGHT COLUMN */}
               <div className="md:col-span-8 flex flex-col gap-2 lg:gap-6">
                 {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 w-full">
+                {/* Desktop view action buttons */}
+                <div className="hidden sm:flex flex-row gap-3 w-full">
                   <Button
                     onClick={handleSendMessage}
                     variant="primary"
-                    className="flex-1 flex items-center justify-center gap-2 font-bold"
+                    className="flex-1 flex items-center justify-center gap-2 font-bold animate-none"
                   >
                     <span className="material-symbols-outlined text-[20px]">mail</span>
                     Enviar Mensaje
@@ -192,8 +268,8 @@ function PublicProfileContent() {
                   <Button
                     onClick={handleConnect}
                     variant="outline"
-                    disabled={connectionLoading || Boolean(profile?.connection_status)}
-                    className="flex-1 flex items-center justify-center gap-2 font-bold"
+                    disabled={connectionLoading}
+                    className="flex-1 flex items-center justify-center gap-2 font-bold animate-none"
                   >
                     <span className="material-symbols-outlined text-[20px]">person_add</span>
                     {getConnectionButtonLabel()}
@@ -201,11 +277,40 @@ function PublicProfileContent() {
                   <Button
                     onClick={handleShareProfile}
                     variant="outline"
-                    className="flex-1 flex items-center justify-center gap-2 font-bold"
+                    className="flex-1 flex items-center justify-center gap-2 font-bold animate-none"
                   >
                     <span className="material-symbols-outlined text-[20px]">share</span>
                     Compartir perfil
                   </Button>
+                </div>
+
+                {/* Mobile view action buttons (3 in a row, matching the size and colors of desktop buttons) */}
+                <div className="flex sm:hidden flex-row gap-2 w-full items-center">
+                  <Button
+                    onClick={handleSendMessage}
+                    variant="primary"
+                    className="flex-1 flex items-center justify-center gap-1.5 font-bold text-[13px] h-11 rounded-xl animate-none px-3"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">mail</span>
+                    <span className="truncate">Mensaje</span>
+                  </Button>
+                  <Button
+                    onClick={handleConnect}
+                    variant="outline"
+                    disabled={connectionLoading}
+                    className="flex-[1.2] flex items-center justify-center gap-1.5 font-bold text-[13px] h-11 rounded-xl animate-none px-2"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      {profile?.connection_status === "accepted" ? "group" : "person_add"}
+                    </span>
+                    <span className="truncate">{getConnectionButtonLabelMobile()}</span>
+                  </Button>
+                  <button
+                    onClick={handleShareProfile}
+                    className="w-11 h-11 bg-white border border-zinc-200 hover:bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none font-jakarta"
+                  >
+                    <span className="material-symbols-outlined text-[20px]">share</span>
+                  </button>
                 </div>
 
                 <ProfileAboutSection

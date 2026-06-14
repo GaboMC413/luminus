@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { PlatformNavbar } from "@/components/ui/PlatformNavbar";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
 
@@ -11,6 +11,7 @@ export default function EspecialistasLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -41,13 +42,15 @@ export default function EspecialistasLayout({
     );
   }
 
+  const isOnboarding = pathname.includes("/onboarding");
+
   return (
     <div className="w-full min-h-screen bg-slate-50 text-wellness-slate-900 font-sans flex flex-col antialiased">
-      <PlatformNavbar />
-      <main className="flex-1 w-full flex flex-col pt-[64px] lg:pt-[80px]">
+      {!isOnboarding && <PlatformNavbar />}
+      <main className={`flex-1 w-full flex flex-col ${isOnboarding ? "pt-0" : "pt-[64px] lg:pt-[80px]"}`}>
         {children}
       </main>
-      <PlatformFooter />
+      {!isOnboarding && <PlatformFooter />}
     </div>
   );
 }

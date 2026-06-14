@@ -133,3 +133,99 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "No pudimos enviar la solicitud de conexion." }, { status: 500 });
   }
 }
+
+export async function PUT(request: Request) {
+  const session = getCurrentSession();
+
+  if (!session) {
+    return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+  }
+
+  const body = await request.json().catch(() => null);
+  const requesterId = typeof body?.recipientId === "string" ? body.recipientId.trim() : "";
+
+  if (!requesterId || !isUuid(requesterId)) {
+    return NextResponse.json({ message: "Usuario origen invalido." }, { status: 400 });
+  }
+
+  try {
+    const { prisma } = await import("@/lib/db");
+    const connection = await prisma.userConnection.findFirst({
+      where: {
+        requesterId,
+        recipientId: session.userId,
+        status: "pending",
+      },
+    });
+
+    if (!connection) {
+      return NextResponse.json({ message: "No se encontró ninguna solicitud de conexión pendiente." }, { status: 404 });
+    }
+
+    const updated = await prisma.userConnection.update({
+      where: { id: connection.id },
+      data: { status: "accepted" },
+    });
+
+    return NextResponse.json({
+      success: true,
+      connection: {
+        id: updated.id,
+        status: updated.status,
+        direction: "incoming",
+      },
+      message: "Solicitud de conexión aceptada.",
+    });
+  } catch (error) {
+    console.error("Accept connection failed.", error);
+    return NextResponse.json({ message: "No pudimos aceptar la solicitud de conexión." }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  const session = getCurrentSession();
+
+  if (!session) {
+    return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  let targetId = searchParams.get("recipientId") || "";
+
+  if (!targetId) {
+    const body = await request.json().catch(() => null);
+    targetId = typeof body?.recipientId === "string" ? body.recipientId.trim() : "";
+  }
+
+  if (!targetId || !isUuid(targetId)) {
+    return NextResponse.json({ message: "Usuario de destino inválido." }, { status: 400 });
+  }
+
+  try {
+    const { prisma } = await import("@/lib/db");
+    const connection = await prisma.userConnection.findFirst({
+      where: {
+        OR: [
+          { requesterId: session.userId, recipientId: targetId },
+          { requesterId: targetId, recipientId: session.userId },
+        ],
+      },
+    });
+
+    if (!connection) {
+      return NextResponse.json({ message: "No existe ninguna conexión activa o pendiente." }, { status: 404 });
+    }
+
+    await prisma.userConnection.delete({
+      where: { id: connection.id },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Conexión eliminada/cancelada con éxito.",
+    });
+  } catch (error) {
+    console.error("Delete connection failed.", error);
+    return NextResponse.json({ message: "No pudimos eliminar la conexión." }, { status: 500 });
+  }
+}

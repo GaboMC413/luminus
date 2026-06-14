@@ -50,6 +50,7 @@ function PlatformContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [showNetworkDrawer, setShowNetworkDrawer] = useState(false);
   const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
   const [profileImgError, setProfileImgError] = useState(false);
   const router = useRouter();
@@ -455,6 +456,42 @@ function PlatformContent() {
 
           {/* Search & Filter Section */}
           <div className="flex flex-col sticky top-0 z-40 bg-[#F8FAFC] pb-4 transition-all duration-300 ease-in-out gap-3 w-full">
+            
+            {/* Mobile Top User Info & Network Bar */}
+            <div className="flex md:hidden bg-white px-4 py-2.5 rounded-xl border border-zinc-200 items-center justify-between shadow-none w-full">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                  {currentUserProfile?.profile_picture_url && !profileImgError ? (
+                    <img
+                      src={currentUserProfile.profile_picture_url}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                      onError={() => setProfileImgError(true)}
+                    />
+                  ) : (
+                    <span className="material-symbols-outlined text-slate-355 text-[18px] select-none">person</span>
+                  )}
+                </div>
+                <div className="flex flex-col items-start">
+                  <span className="text-[12px] font-bold text-slate-900 leading-none">
+                    {currentUserProfile ? `${currentUserProfile.first_name || ""} ${currentUserProfile.last_name || ""}`.trim() || "Mi Perfil" : "Cargando..."}
+                  </span>
+                  <button
+                    onClick={() => router.push('/perfil-usuario')}
+                    className="text-[10px] text-slate-400 hover:text-black font-semibold font-sans leading-none mt-1 underline border-none bg-transparent cursor-pointer p-0 text-left"
+                  >
+                    Ver mi perfil
+                  </button>
+                </div>
+              </div>
+              <button
+                onClick={() => router.push('/red')}
+                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-lg text-[10px] font-bold tracking-wider uppercase font-jakarta border-none cursor-pointer animate-none"
+              >
+                Ver mi red
+              </button>
+            </div>
+
             <div className="flex items-center gap-3 w-full relative">
               <div className="flex-1 h-12 pl-4 pr-6 bg-white rounded-xl border border-zinc-200 flex items-center gap-3 focus-within:border-black focus-within:ring-1 focus-within:ring-black group transition-all relative">
                 <span className="material-symbols-outlined text-[22px] text-slate-400 group-focus-within:text-black">search</span>
@@ -490,26 +527,72 @@ function PlatformContent() {
                 )}
               </div>
 
-              <ProfileButton
+              {/* Desktop Filter Button */}
+              <button
                 ref={filterButtonRef as any}
                 onClick={handleToggleFilters}
-                icon="manage_search"
-                label="Buscar por filtros"
-                className={`!h-12 !w-fit !min-w-0 px-5 !rounded-xl ${
+                className={`hidden md:flex h-12 w-fit min-w-0 px-5 items-center justify-center gap-2 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none text-[13px] md:text-[14px] font-semibold ${
                   showFilters
-                    ? "!bg-black !border-black !text-white hover:!bg-zinc-900"
-                    : ""
+                    ? "bg-black border border-black text-white hover:bg-zinc-900"
+                    : "bg-white border border-zinc-200 text-slate-700 hover:bg-slate-50"
                 }`}
-              />
+              >
+                <span className="material-symbols-outlined text-[20px] md:text-[22px]">manage_search</span>
+                <span>Buscar por filtros</span>
+              </button>
 
-              {/* Filter Dropdown Popover */}
+              {/* Mobile Filter Button (Icon-Only) */}
+              <button
+                onClick={handleToggleFilters}
+                className={`flex md:hidden h-12 w-12 items-center justify-center shrink-0 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none ${
+                  showFilters
+                    ? "bg-black border border-black text-white hover:bg-zinc-900"
+                    : "bg-white border border-zinc-200 text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                <span className="material-symbols-outlined text-[22px]">manage_search</span>
+              </button>
+
+              {/* Filter Backdrop for mobile */}
+              {showFilters && (
+                <div 
+                  className="block md:hidden fixed inset-0 bg-black/60 z-[999] animate-in fade-in duration-200"
+                  onClick={() => setShowFilters(false)}
+                />
+              )}
+
+              {/* Filter Dropdown Popover / Mobile Bottom Sheet */}
               {showFilters && (
                 <div 
                   ref={dropdownRef}
-                  className="absolute top-[56px] right-0 w-[calc(100vw-32px)] sm:w-[384px] max-w-sm bg-white border border-zinc-200 rounded-2xl shadow-none z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
+                  className="
+                    fixed md:absolute 
+                    bottom-0 md:bottom-auto 
+                    left-0 md:left-auto 
+                    right-0 
+                    md:top-[56px] 
+                    w-full md:w-[384px] 
+                    max-h-[85vh] md:max-h-[500px] 
+                    bg-white 
+                    rounded-t-3xl md:rounded-2xl 
+                    border-t md:border border-zinc-200 
+                    shadow-none 
+                    z-[1000] md:z-50 
+                    flex flex-col 
+                    overflow-hidden 
+                    animate-in 
+                    slide-in-from-bottom md:slide-in-from-top-2 
+                    fade-in 
+                    duration-300 md:duration-150
+                  "
                 >
+                  {/* Close handle for mobile */}
+                  <div className="md:hidden flex justify-center py-3 shrink-0">
+                    <div className="w-12 h-1.5 bg-slate-200 rounded-full" />
+                  </div>
+
                   {/* Form fields */}
-                  <div className="p-5 flex flex-col gap-5 overflow-y-auto max-h-[385px] custom-scrollbar">
+                  <div className="p-5 flex flex-col gap-5 overflow-y-auto max-h-[385px] md:max-h-[385px] custom-scrollbar">
                     
                     {/* Country & City Dropdowns - Stacked in Column */}
                     <div className="flex flex-col gap-4">
@@ -601,7 +684,7 @@ function PlatformContent() {
                   </div>
 
                   {/* Actions footer */}
-                  <div className="px-4 py-3 bg-slate-50 border-t border-zinc-200/40 flex items-center justify-between gap-3 shrink-0">
+                  <div className="px-4 py-3 bg-slate-50 border-t border-zinc-200/40 flex items-center justify-between gap-3 shrink-0 pb-6 md:pb-3">
                     <button
                       type="button"
                       onClick={handleClearFilters}
@@ -698,7 +781,7 @@ function PlatformContent() {
 
           <div
             onScroll={handleScroll}
-            className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-12"
+            className="flex-1 w-full overflow-y-auto custom-scrollbar pb-12"
           >
             {filteredUsers.length === 0 ? (
               <div className="w-full flex flex-col items-center justify-center p-12 text-center min-h-[300px]">
@@ -707,7 +790,7 @@ function PlatformContent() {
                 <p className="text-slate-400 text-[14px]">Prueba con otros términos de búsqueda o selecciona otra categoría.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 w-full">
                 {filteredUsers.map((user: any, idx: number) => (
                   <UserCard key={idx} user={user} />
                 ))}
@@ -718,6 +801,110 @@ function PlatformContent() {
 
       </div>
 
+      {/* Mobile Network Sheet Drawer */}
+      {showNetworkDrawer && (
+        <>
+          {/* Backdrop overlay */}
+          <div 
+            className="fixed inset-0 bg-black/60 z-[999] animate-in fade-in duration-200"
+            onClick={() => setShowNetworkDrawer(false)}
+          />
+          {/* Bottom Sheet */}
+          <div className="fixed bottom-0 left-0 right-0 w-full max-h-[85vh] bg-white rounded-t-3xl z-[1000] flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300 ease-out">
+            {/* Handle bar */}
+            <div className="flex justify-center py-3 shrink-0">
+              <div className="w-12 h-1.5 bg-slate-200 rounded-full" />
+            </div>
+            
+            {/* Header */}
+            <div className="px-5 pb-3 border-b border-slate-100 flex justify-between items-center shrink-0">
+              <h4 className="text-[16px] font-bold text-slate-900 font-jakarta">Mi Perfil y Red</h4>
+              <button 
+                onClick={() => setShowNetworkDrawer(false)}
+                className="p-1 hover:bg-slate-50 rounded-full transition-colors text-slate-400 bg-transparent border-none cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-5 flex flex-col gap-4 overflow-y-auto custom-scrollbar max-h-[70vh] pb-8">
+              {/* 1. Main Profile Card */}
+              <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden flex flex-col shadow-none relative">
+                <div className="h-20 w-full relative bg-slate-100 shrink-0">
+                  {currentUserProfile?.cover_url ? (
+                    <img
+                      src={currentUserProfile.cover_url}
+                      alt="Cover"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-r from-violet-600 to-indigo-600 opacity-80" />
+                  )}
+                </div>
+
+                <div className="flex justify-center -mt-[60px] relative z-10">
+                  <div className="w-[110px] h-[110px] rounded-[22px] overflow-hidden bg-white border-4 border-white shrink-0 flex items-center justify-center">
+                    {currentUserProfile?.profile_picture_url && !profileImgError ? (
+                      <img
+                        src={currentUserProfile.profile_picture_url}
+                        alt="Avatar"
+                        className="w-full h-full object-cover"
+                        onError={() => setProfileImgError(true)}
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-slate-50 flex items-center justify-center text-zinc-300">
+                        <span className="material-symbols-outlined text-[54px]">person</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-5 flex flex-col items-center text-center gap-4">
+                  <div className="flex flex-col items-center gap-1.5 w-full">
+                    <h3 className="text-[16px] font-bold text-slate-900 leading-snug line-clamp-1 hover:underline cursor-pointer font-jakarta" onClick={() => { setShowNetworkDrawer(false); router.push('/perfil-usuario'); }}>
+                      {currentUserProfile ? `${currentUserProfile.first_name || ""} ${currentUserProfile.last_name || ""}`.trim() || "Usuario sin nombre" : "Cargando..."}
+                    </h3>
+                    <p className="text-[12px] font-medium text-slate-400 font-sans tracking-wide">
+                      {currentUserProfile?.city ? `${currentUserProfile.city.split(',')[0]}, ${currentUserProfile.country || ""}`.replace(/^,\s*|,\s*$/, "") : "Ubicación no configurada"}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => { setShowNetworkDrawer(false); router.push('/perfil-usuario'); }}
+                    className="w-full py-3 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-2 cursor-pointer border-none font-jakarta uppercase tracking-wider"
+                  >
+                     Ir a mi perfil
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Mi red Card */}
+              <div className="bg-white rounded-2xl border border-zinc-200 p-5 flex flex-col gap-4 shadow-none relative">
+                <div className="flex justify-between items-center">
+                  <h4 className="text-[14px] font-bold text-slate-900 font-jakarta">Mi red</h4>
+                </div>
+
+                <div className="flex flex-col items-center text-center py-4 px-2 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200/80">
+                  <span className="material-symbols-outlined text-slate-300 text-[24px] mb-1.5 select-none">
+                    people_outline
+                  </span>
+                  <p className="text-[12px] text-slate-400 font-medium leading-normal max-w-[190px]">
+                    Todavía no has añadido a nadie a tu red
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => { setShowNetworkDrawer(false); router.push('/red'); }}
+                  className="w-full py-3 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-2 cursor-pointer border-none font-jakarta uppercase tracking-wider"
+                >
+                  Ver mi red
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
