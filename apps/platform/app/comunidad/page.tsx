@@ -574,7 +574,7 @@ function PlatformContent() {
                 <div 
                   ref={dropdownRef}
                   className="
-                    fixed md:absolute 
+                    absolute 
                     inset-0 md:inset-auto 
                     md:top-[56px] md:right-0 
                     w-full md:w-[384px] 
