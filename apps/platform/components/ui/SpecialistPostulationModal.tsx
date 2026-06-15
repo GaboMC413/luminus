@@ -109,7 +109,7 @@ export function SpecialistPostulationModal({
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ej. Licenciada en Psicología Clínica / Experto en Mindfulness"
+            placeholder="Ej. Licenciada en Psicología Clínica / Especialista en Mindfulness"
             required
           />
         </div>

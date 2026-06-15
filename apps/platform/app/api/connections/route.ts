@@ -119,6 +119,15 @@ export async function POST(request: Request) {
       },
     });
 
+    const newlyCompletedQuests = [];
+    try {
+      const { checkAndTriggerQuestCompletion } = await import("@/lib/onboarding");
+      const r = await checkAndTriggerQuestCompletion(session.userId, "connect");
+      if (r) newlyCompletedQuests.push(r);
+    } catch (questError) {
+      console.error("Failed to check onboarding connect quest completion:", questError);
+    }
+
     return NextResponse.json({
       success: true,
       connection: {
@@ -127,6 +136,7 @@ export async function POST(request: Request) {
         direction: "outgoing",
       },
       message: "Solicitud de conexion enviada.",
+      newlyCompletedQuests,
     });
   } catch (error) {
     console.error("Connection request failed.", error);
@@ -167,6 +177,15 @@ export async function PUT(request: Request) {
       data: { status: "accepted" },
     });
 
+    const newlyCompletedQuests = [];
+    try {
+      const { checkAndTriggerQuestCompletion } = await import("@/lib/onboarding");
+      const r = await checkAndTriggerQuestCompletion(session.userId, "connect");
+      if (r) newlyCompletedQuests.push(r);
+    } catch (questError) {
+      console.error("Failed to check onboarding connect quest completion:", questError);
+    }
+
     return NextResponse.json({
       success: true,
       connection: {
@@ -175,6 +194,7 @@ export async function PUT(request: Request) {
         direction: "incoming",
       },
       message: "Solicitud de conexión aceptada.",
+      newlyCompletedQuests,
     });
   } catch (error) {
     console.error("Accept connection failed.", error);

@@ -175,3 +175,21 @@ label,
 .custom-scrollbar::-webkit-scrollbar {
   display: none !important;  /* Chrome, Safari and Opera */
 }
+
+@keyframes pulse-glow {
+  0%, 100% {
+    transform: scale(1);
+    border-color: rgba(0, 0, 0, 0.3) !important;
+  }
+  50% {
+    transform: scale(1.04);
+    border-color: rgba(0, 0, 0, 1) !important;
+  }
+}
+
+.glow-highlight {
+  animation: pulse-glow 2.0s infinite ease-in-out !important;
+  border: 1.5px solid rgba(0, 0, 0, 0.3) !important;
+  background-color: rgba(0, 0, 0, 0.02) !important;
+  color: rgb(0, 0, 0) !important;
+}

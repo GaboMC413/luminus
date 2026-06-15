@@ -193,10 +193,10 @@ function PublicProfileContent() {
   const getConnectionButtonLabelMobile = () => {
     if (connectionLoading) return "Enviando...";
     if (profile?.connection_status === "pending") {
-      return profile?.connection_direction === "incoming" ? "Recibida" : "Enviada";
+      return profile?.connection_direction === "incoming" ? "Recibida" : "Solicitado";
     }
     if (profile?.connection_status === "accepted") return "Conectado";
-    return "Conectar";
+    return "Agregar";
   };
 
   if (loading) {
@@ -267,7 +267,7 @@ function PublicProfileContent() {
                     className="flex-1 flex items-center justify-center gap-2 font-bold animate-none"
                   >
                     <span className="material-symbols-outlined text-[20px]">mail</span>
-                    Enviar Mensaje
+                    Enviar mensaje
                   </Button>
                   <Button
                     onClick={handleConnect}

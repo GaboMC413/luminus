@@ -7,9 +7,10 @@ interface ProfileAboutSectionProps {
   onEdit?: () => void;
   isPublic?: boolean;
   firstName?: string;
+  highlight?: boolean;
 }
 
-export function ProfileAboutSection({ bio, onEdit, isPublic = false, firstName }: ProfileAboutSectionProps) {
+export function ProfileAboutSection({ bio, onEdit, isPublic = false, firstName, highlight = false }: ProfileAboutSectionProps) {
   const hasBio = bio && bio.trim().length > 0;
   const nameToUse = firstName ? firstName.trim() : "Este usuario";
 
@@ -17,9 +18,12 @@ export function ProfileAboutSection({ bio, onEdit, isPublic = false, firstName }
     <div className="bg-white rounded-2xl p-4 lg:p-6 flex flex-col gap-4 lg:gap-5 border border-slate-200 shadow-none relative group">
       {!isPublic && onEdit && (
         <ProfileButton
-          onClick={onEdit}
+          onClick={() => {
+            window.history.replaceState(null, "", window.location.pathname);
+            onEdit();
+          }}
           icon="edit"
-          className="absolute top-4 right-4 z-20"
+          className={`absolute top-4 right-4 z-20 ${highlight ? "glow-highlight" : ""}`}
         />
       )}
       <div className="flex items-center gap-1">
@@ -37,9 +41,13 @@ export function ProfileAboutSection({ bio, onEdit, isPublic = false, firstName }
           </p>
           {!isPublic && onEdit && (
             <EmptyProfileButton
-              onClick={onEdit}
+              onClick={() => {
+                window.history.replaceState(null, "", window.location.pathname);
+                onEdit();
+              }}
               label="Escribe sobre ti"
               icon="add"
+              className={highlight ? "glow-highlight" : ""}
             />
           )}
         </div>
