@@ -455,7 +455,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                   className={`flex flex-col ${msg.sender === "me" ? "items-end" : "items-start"} ${isConsecutive ? "mt-0.5" : "mt-2 first:mt-0"}`}
                 >
                   <div
-                    className={`max-w-[85%] pl-4 pr-12 pt-2.5 pb-3 text-sm leading-relaxed relative min-w-[75px] ${
+                    className={`max-w-[90%] pl-4 pr-12 pt-2.5 pb-3 text-sm leading-relaxed relative min-w-[75px] ${
                       msg.sender === "me"
                         ? `bg-black text-white font-medium ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tr-none"}`
                         : `bg-slate-100 text-slate-800 border border-slate-100 ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tl-none"}`

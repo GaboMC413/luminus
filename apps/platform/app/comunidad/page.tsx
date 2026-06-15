@@ -681,46 +681,78 @@ function PlatformContent() {
                 />
               )}
 
-              {/* Filter Dropdown Popover / Mobile Bottom Sheet */}
+              {/* Desktop: Popover Dropdown (inline relative to button) */}
               {showFilters && (
                 <div 
                   ref={dropdownRef}
                   className="
-                    fixed md:absolute 
-                    bottom-0 md:bottom-auto 
-                    left-0 md:left-auto 
-                    right-0 
-                    md:top-[56px] 
-                    w-full md:w-[384px] 
-                    max-h-[85vh] md:max-h-[500px] 
+                    hidden md:flex 
+                    absolute 
+                    top-[56px] right-0 
+                    w-[384px] 
                     bg-white 
-                    rounded-t-3xl md:rounded-2xl 
-                    border-t md:border border-zinc-200 
+                    rounded-2xl 
+                    border border-zinc-200 
                     shadow-none 
-                    z-[1000] md:z-50 
-                    flex flex-col 
-                    overflow-hidden 
+                    z-50 
+                    flex-col 
+                    overflow-visible 
                     animate-in 
-                    slide-in-from-bottom md:slide-in-from-top-2 
+                    slide-in-from-top-2 
                     fade-in 
-                    duration-300 md:duration-150
+                    duration-150
                   "
                 >
-                  {/* Close handle for mobile */}
-                  <div className="md:hidden flex justify-center py-3 shrink-0">
-                    <div className="w-12 h-1.5 bg-slate-200 rounded-full" />
-                  </div>
-
-                  {/* Form fields */}
-                  <div className="p-5 flex flex-col gap-5 overflow-y-auto max-h-[385px] md:max-h-[385px] custom-scrollbar">
+                  <div className="p-5 flex flex-col gap-5">
                     {renderFilterFields(false)}
                   </div>
-
-                  {/* Actions footer */}
-                  <div className="px-4 py-3 bg-slate-50 border-t border-zinc-200/40 flex items-center justify-between gap-3 shrink-0 pb-6 md:pb-3">
+                  <div className="px-4 py-3 bg-slate-50 border-t border-zinc-200/40 flex items-center justify-between gap-3 rounded-b-2xl">
                     {renderActionsFooter()}
                   </div>
                 </div>
+              )}
+
+              {/* Mobile: React Portal Full-Screen Modal */}
+              {showFilters && mounted && createPortal(
+                <div 
+                  ref={dropdownRef}
+                  className="
+                    md:hidden 
+                    fixed 
+                    inset-0 
+                    bg-white 
+                    z-[9999] 
+                    flex flex-col 
+                    overflow-hidden 
+                    animate-in 
+                    slide-in-from-bottom 
+                    fade-in 
+                    duration-300
+                  "
+                >
+                  {/* Header for mobile */}
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200/50 shrink-0">
+                    <span className="text-base font-bold text-black font-jakarta">Buscar por filtros</span>
+                    <button 
+                      type="button" 
+                      onClick={() => setShowFilters(false)}
+                      className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-black border-none cursor-pointer"
+                    >
+                      <span className="material-symbols-rounded text-[20px]">close</span>
+                    </button>
+                  </div>
+
+                  {/* Form fields */}
+                  <div className="p-5 flex flex-col gap-5 flex-1 overflow-y-auto custom-scrollbar">
+                    {renderFilterFields(true)}
+                  </div>
+
+                  {/* Actions footer */}
+                  <div className="px-4 py-3 bg-slate-50 border-t border-zinc-200/40 flex items-center justify-between gap-3 shrink-0 pb-[calc(16px+env(safe-area-inset-bottom))]">
+                    {renderActionsFooter()}
+                  </div>
+                </div>,
+                document.body
               )}
             </div>
 
