@@ -40,13 +40,18 @@ export default function SignInView() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("error") === "google") {
+      setMessage({
+        text: "No pudimos iniciar sesion con Google. Intenta nuevamente.",
+        type: "error",
+      });
+    }
   }, []);
 
   const handleGoogleSignIn = () => {
-    setMessage({
-      text: "El inicio de sesión con Google no está disponible en este momento.",
-      type: "error",
-    });
+    window.location.href = "/api/auth/google/start";
   };
 
   const handleSignIn = async () => {
