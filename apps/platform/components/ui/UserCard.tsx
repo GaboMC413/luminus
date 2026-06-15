@@ -61,24 +61,27 @@ export function UserCard({ user }: UserCardProps) {
       </div>
 
       <div className="w-full flex flex-col gap-1.5 mt-1 md:mt-2">
-        {/* Render 2 interests on mobile, up to 3 on desktop */}
+        {/* Render interests on mobile & desktop with sm size */}
         <div className="flex md:hidden flex-col gap-1.5 w-full">
           {user.interests.slice(0, 3).map((interest: string, i: number) => (
-            <InterestPill key={i} interest={interest} className="!h-7 !px-2.5" />
+            <InterestPill key={i} interest={interest} size="sm" />
           ))}
         </div>
         <div className="hidden md:flex flex-col gap-2 w-full">
           {user.interests.slice(0, 3).map((interest: string, i: number) => (
-            <InterestPill key={i} interest={interest} />
+            <InterestPill key={i} interest={interest} size="sm" />
           ))}
         </div>
       </div>
 
       <button
-        onClick={handleViewProfile}
-        className="mt-1 md:mt-2 text-slate-400 text-[10px] md:text-[12px] font-bold hover:text-black transition-all uppercase tracking-widest font-jakarta border-none bg-transparent cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleViewProfile();
+        }}
+        className="h-8 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition cursor-pointer font-jakarta uppercase tracking-wider flex items-center justify-center shrink-0 border-none outline-none mt-1 md:mt-2"
       >
-        Ver Perfil
+        Ver perfil
       </button>
     </div>
   );

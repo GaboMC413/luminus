@@ -27,7 +27,6 @@ function serializeNotification(notification: any) {
       interests: "format_quote",
       cover: "photo_prints",
       connect: "person_add",
-      follow: "heart_plus",
     };
     icon = questIcons[questId] || "auto_awesome";
   }
@@ -67,24 +66,26 @@ export async function GET() {
 
     const serialized: any[] = notifications.map(serializeNotification);
 
-    // Calculate onboarding quests progress and inject onboarding quests checklist if not completed
+    // Calculate onboarding quests progress and inject onboarding quests checklist (always visible, custom message when completed)
     const onboardingData = await getOnboardingQuests(session.userId);
-    if (onboardingData.progressPercentage < 100) {
-      const progressItem = {
-        id: "onboarding-progress",
-        type: "onboarding-progress",
-        title: "Tus Primeros Destellos",
-        user: "LUMINUS",
-        avatar: "/iso-logo-black.svg",
-        action: "Enciende tu luz. Completa estas 6 misiones iniciales para conectar y guiar tu camino de bienestar.",
-        action_url: "",
-        date: new Date().toISOString(),
-        isUnread: true,
-        quests: onboardingData.quests,
-        progressPercentage: onboardingData.progressPercentage,
-      };
-      serialized.unshift(progressItem);
-    }
+    const isCompleted = onboardingData.progressPercentage === 100;
+    
+    const progressItem = {
+      id: "onboarding-progress",
+      type: "onboarding-progress",
+      title: isCompleted ? "¡Destellos Completados!" : "Tus Primeros Destellos",
+      user: "LUMINUS",
+      avatar: "/iso-logo-black.svg",
+      action: isCompleted
+        ? "¡Felicitaciones! Has completado todas tus misiones iniciales de bienestar. Tu camino en LUMINUS está listo para brillar."
+        : "Enciende tu luz. Completa estas 5 misiones iniciales para conectar y guiar tu camino de bienestar.",
+      action_url: "",
+      date: new Date().toISOString(),
+      isUnread: !isCompleted,
+      quests: onboardingData.quests,
+      progressPercentage: onboardingData.progressPercentage,
+    };
+    serialized.unshift(progressItem);
 
     return NextResponse.json({
       notifications: serialized,

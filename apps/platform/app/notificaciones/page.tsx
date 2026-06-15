@@ -154,7 +154,7 @@ function NotificationsContent() {
           )}
 
           {/* Main Layout Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 min-h-0">
+          <div className="grid grid-cols-1 md:grid-cols-12 grid-rows-[auto_1fr] md:grid-rows-none gap-3 md:gap-6 flex-1 min-h-0">
             
             {/* Sidebar Column (Filters) */}
             <div className="md:col-span-4 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-fit md:h-full shrink-0">

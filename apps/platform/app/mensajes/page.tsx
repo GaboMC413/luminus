@@ -2,6 +2,7 @@
 
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { formatRelativeTime } from "@/components/ui/PlatformNavbar";
 
 type Conversation = {
@@ -512,12 +513,12 @@ function MessagesContent() {
                     <div className="flex items-center gap-3">
                       <h2 className="text-[15px] font-bold text-slate-900 leading-none">{selectedConv.participant.name}</h2>
                       {selectedConv.participant.name !== "LUMINUS" && (
-                        <button
-                          onClick={() => router.push(`/comunidad/public-profile?id=${selectedConv.participant.id}`)}
-                          className="h-7 px-3 flex items-center justify-center bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 font-bold text-[11px] rounded-full transition-colors border-none cursor-pointer"
+                        <Link
+                          href={`/comunidad/public-profile?id=${selectedConv.participant.id}`}
+                          className="h-8 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition cursor-pointer font-jakarta uppercase tracking-wider flex items-center justify-center shrink-0 text-decoration-none border-none outline-none"
                         >
                           Ver perfil
-                        </button>
+                        </Link>
                       )}
                     </div>
                   </div>

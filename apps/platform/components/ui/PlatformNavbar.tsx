@@ -548,7 +548,7 @@ export function PlatformNavbar() {
             </button>
 
             {isProfileDropdownOpen && (
-              <div className="fixed left-4 right-4 top-[72px] sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-2 w-auto sm:w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+              <div className="fixed right-6 top-[72px] sm:absolute sm:right-0 sm:top-auto sm:mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                 <Link
                   href="/perfil-usuario"
                   onClick={() => setIsProfileDropdownOpen(false)}

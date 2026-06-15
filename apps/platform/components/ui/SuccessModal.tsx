@@ -82,7 +82,7 @@ export function SuccessModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 sm:top-auto sm:left-auto sm:bottom-8 sm:right-8 sm:translate-x-0 sm:translate-y-0 z-[9999] w-[calc(100%-32px)] sm:w-[380px] bg-white rounded-2xl border border-slate-200 shadow-none flex flex-col overflow-hidden animate-in fade-in duration-300">
+    <div className="fixed bottom-28 left-1/2 -translate-x-1/2 sm:bottom-8 sm:right-8 sm:left-auto sm:translate-x-0 z-[9999] w-[calc(100%-32px)] sm:w-[380px] bg-white rounded-2xl border border-slate-200 shadow-none flex flex-col overflow-hidden animate-in fade-in duration-300">
       <style>{`
         @keyframes confetti-burst {
           0% {

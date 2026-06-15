@@ -34,11 +34,6 @@ const QUEST_CONFIG: Record<string, { label: string; actionUrl: string; icon: str
     actionUrl: "/comunidad",
     icon: "person_add",
   },
-  follow: {
-    label: "Sigue a un especialista",
-    actionUrl: "/especialistas",
-    icon: "heart_plus",
-  },
 };
 
 const CELEBRATION_COPY: Record<string, { title: string; body: string; actionUrl: string }> = {
@@ -67,11 +62,6 @@ const CELEBRATION_COPY: Record<string, { title: string; body: string; actionUrl:
     body: "¡Has creado tu primer vínculo! En LUMINUS, cada conexión fortalece nuestra red de apoyo. Conectar te permite intercambiar perspectivas, compartir bienestar y no caminar solo.",
     actionUrl: "/comunidad",
   },
-  follow: {
-    title: "¡Destello completado!",
-    body: "Comenzar a seguir a un especialista te permite recibir inspiración diaria y guías validadas por profesionales de la salud. Es clave para nutrir tus hábitos diarios con herramientas de autocuidado.",
-    actionUrl: "/especialistas",
-  },
 };
 
 export async function getOnboardingQuests(userId: string): Promise<{ quests: Quest[]; progressPercentage: number }> {
@@ -83,12 +73,6 @@ export async function getOnboardingQuests(userId: string): Promise<{ quests: Que
       profilePrompts: true,
       sentConnections: { take: 1 },
       receivedConnections: { take: 1 },
-      notifications: {
-        where: {
-          type: "quest_completed_follow",
-        },
-        take: 1,
-      },
     },
   });
 
@@ -105,7 +89,6 @@ export async function getOnboardingQuests(userId: string): Promise<{ quests: Que
     interests: user.profilePrompts.length > 0,
     cover: !!(profile?.coverUrl && profile.coverUrl.trim() !== ""),
     connect: user.sentConnections.length > 0 || user.receivedConnections.length > 0,
-    follow: user.notifications.length > 0,
   };
 
   const quests: Quest[] = Object.keys(QUEST_CONFIG).map((id) => ({
@@ -165,10 +148,6 @@ export async function checkAndTriggerQuestCompletion(
       break;
     case "connect":
       isCompleted = user.sentConnections.length > 0 || user.receivedConnections.length > 0;
-      break;
-    case "follow":
-      // Follow is manually triggered from client action, so we mark it true when triggered
-      isCompleted = true;
       break;
   }
 
