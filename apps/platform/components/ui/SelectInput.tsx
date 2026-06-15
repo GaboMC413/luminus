@@ -83,20 +83,21 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
     if (containerRef.current) {
       const rect = containerRef.current.querySelector('.reg-input-clean, .reg-input-bordered')?.getBoundingClientRect();
       if (rect) {
-        const preferredMaxHeight = 260;
-        const spaceBelow = window.innerHeight - rect.bottom - 24; // 24px safe margin from viewport bottom
-        const spaceAbove = rect.top - 24; // 24px safe margin from viewport top
+        const preferredMaxHeight = 340; // Approx 8-9 options
+        const spaceBelow = window.innerHeight - rect.bottom - 16; // 16px safe margin from viewport bottom
+        const spaceAbove = rect.top - 16; // 16px safe margin from viewport top
 
-        let top: number | undefined = undefined;
+        let top: number | undefined = rect.bottom + 4;
         let bottom: number | undefined = undefined;
         let maxHeight = preferredMaxHeight;
 
-        // If there's not enough space below, and more space above, open above
-        if (spaceBelow < preferredMaxHeight && spaceAbove > spaceBelow) {
+        // Last-resort fallback: only open upwards if space below is extremely tight (less than 120px)
+        // AND space above is larger than space below.
+        if (spaceBelow < 120 && spaceAbove > spaceBelow) {
+          top = undefined;
           bottom = window.innerHeight - rect.top + 4;
           maxHeight = Math.min(preferredMaxHeight, spaceAbove);
         } else {
-          top = rect.bottom + 4;
           maxHeight = Math.min(preferredMaxHeight, spaceBelow);
         }
 

@@ -296,6 +296,37 @@ function MessagesContent() {
     }
   };
 
+  const handleDeleteChat = () => {
+    if (selectedId) {
+      setConversations((prev) => prev.filter((c) => c.id !== selectedId));
+      setSelectedId(null);
+      setMobileView('list');
+      setIsChatMenuOpen(false);
+      router.push("/mensajes");
+    }
+  };
+
+  const handleBlockUser = async () => {
+    if (selectedConv && selectedId) {
+      try {
+        const participantId = selectedConv.participant.id;
+        const res = await fetch(`/api/connections?recipientId=${participantId}`, {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          setConversations((prev) => prev.filter((c) => c.id !== selectedId));
+          setSelectedId(null);
+          setMobileView('list');
+          router.push("/mensajes");
+        }
+      } catch (err) {
+        console.error("Failed to block user:", err);
+      } finally {
+        setIsChatMenuOpen(false);
+      }
+    }
+  };
+
   const selectedConv = conversations.find((conversation) => conversation.id === selectedId) || null;
   const filteredConversations = conversations.filter((conversation) => {
     const lastMessage = conversation.last_message?.body || "";
@@ -509,6 +540,20 @@ function MessagesContent() {
                             <span className="material-symbols-rounded text-slate-400 group-hover:text-black">notifications_off</span>
                             <span className="font-semibold text-slate-600 group-hover:text-black transition-colors">Silenciar chat</span>
                           </button>
+                          <button
+                            onClick={handleDeleteChat}
+                            className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                          >
+                            <span className="material-symbols-rounded text-slate-400 group-hover:text-[#FF4B4B]">delete</span>
+                            <span className="font-semibold text-slate-600 group-hover:text-[#FF4B4B] transition-colors">Eliminar chat</span>
+                          </button>
+                          <button
+                            onClick={handleBlockUser}
+                            className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                          >
+                            <span className="material-symbols-rounded text-slate-400 group-hover:text-[#FF4B4B]">block</span>
+                            <span className="font-semibold text-slate-600 group-hover:text-[#FF4B4B] transition-colors">Bloquear usuario</span>
+                          </button>
                         </div>
                       )}
                     </div>
@@ -536,7 +581,7 @@ function MessagesContent() {
                           className={`flex flex-col ${isMine ? "items-end" : "items-start"} ${isConsecutive ? "mt-0.5" : "mt-2 first:mt-0"}`}
                         >
                           <div
-                            className={`max-w-[70%] pl-4 pr-12 pt-2.5 pb-3 text-[14px] leading-relaxed relative min-w-[75px] ${isMine
+                            className={`max-w-[85%] pl-4 pr-12 pt-2.5 pb-3 text-[14px] leading-relaxed relative min-w-[75px] ${isMine
                               ? `bg-black text-white font-medium ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tr-none"}`
                               : `bg-slate-100 border border-slate-100 text-slate-800 ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tl-none"}`
                               }`}
