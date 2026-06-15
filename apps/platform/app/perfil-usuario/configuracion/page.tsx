@@ -156,7 +156,7 @@ function SettingsContent() {
               {mobileView === 'content' ? (
                 <button
                   onClick={() => setMobileView('menu')}
-                  className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-400 hover:text-slate-900 cursor-pointer"
+                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900 cursor-pointer"
                   title="Volver a ajustes"
                 >
                   <span className="material-symbols-rounded text-[20px]">arrow_back</span>
@@ -164,7 +164,7 @@ function SettingsContent() {
               ) : (
                 <Link
                   href="/perfil-usuario"
-                  className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-slate-200 text-slate-400 hover:text-slate-900"
+                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900"
                   title="Volver al perfil"
                 >
                   <span className="material-symbols-rounded text-[20px]">arrow_back</span>

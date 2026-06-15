@@ -484,7 +484,7 @@ function PlatformContent() {
   return (
     <div className="flex-1 w-full flex flex-col h-full md:overflow-hidden overflow-visible">
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row gap-6 lg:gap-8 h-full md:overflow-hidden overflow-visible py-6">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row gap-6 lg:gap-8 h-full md:overflow-hidden overflow-visible py-4 md:py-6">
 
         {/* Left Column - LinkedIn User Card (1/4 size on desktop) */}
         <div className="hidden md:flex w-[260px] lg:w-[290px] flex-col gap-3 shrink-0 h-fit">
@@ -578,7 +578,7 @@ function PlatformContent() {
           <div className="flex flex-col sticky top-0 z-40 bg-[#F8FAFC] pb-4 transition-all duration-300 ease-in-out gap-3 w-full">
             
             {/* Mobile Top User Info & Network Bar */}
-            <div className="flex md:hidden bg-white px-4 py-2.5 rounded-xl border border-zinc-200 items-center justify-between shadow-none w-full">
+            <div className="flex md:hidden bg-white px-2.5 py-2.5 rounded-xl border border-zinc-200 items-center justify-between shadow-none w-full">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
                   {currentUserProfile?.profile_picture_url && !profileImgError ? (
@@ -613,7 +613,7 @@ function PlatformContent() {
             </div>
 
             <div className="flex items-center gap-3 w-full relative">
-              <div className="flex-1 h-12 pl-4 pr-6 bg-white rounded-xl border border-zinc-200 flex items-center gap-3 focus-within:border-black focus-within:ring-1 focus-within:ring-black group transition-all relative">
+              <div className="flex-1 h-12 px-3.5 bg-white rounded-xl border border-zinc-200 flex items-center gap-3 focus-within:border-black focus-within:ring-1 focus-within:ring-black group transition-all relative">
                 <span className="material-symbols-outlined text-[22px] text-slate-400 group-focus-within:text-black">search</span>
                 <input
                   type="text"
@@ -664,7 +664,7 @@ function PlatformContent() {
               {/* Mobile Filter Button (Icon-Only) */}
               <button
                 onClick={handleToggleFilters}
-                className={`flex md:hidden h-12 w-12 items-center justify-center shrink-0 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none ${
+                className={`flex md:hidden h-12 w-12 items-center justify-center p-0 shrink-0 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none ${
                   showFilters
                     ? "bg-black border border-black text-white hover:bg-zinc-900"
                     : "bg-white border border-zinc-200 text-slate-700 hover:bg-slate-50"
@@ -824,7 +824,7 @@ function PlatformContent() {
 
           <div
             onScroll={handleScroll}
-            className="flex-1 w-full overflow-y-auto custom-scrollbar pb-12"
+            className="flex-1 w-full overflow-y-auto custom-scrollbar pb-0 md:pb-12"
           >
             {filteredUsers.length === 0 ? (
               <div className="w-full flex flex-col items-center justify-center p-12 text-center min-h-[300px]">
