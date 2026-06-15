@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button, ProfileButton } from "@/components/ui/Button";
 import { SuccessModal } from "@/components/ui/SuccessModal";
@@ -11,7 +11,34 @@ export default function EspecialistasPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [isPostulationOpen, setIsPostulationOpen] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isFollowingTest, setIsFollowingTest] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const followed = localStorage.getItem("luminus_followed_test_expert") === "true";
+    setIsFollowingTest(followed);
+  }, []);
+
+  const handleFollowTest = async () => {
+    try {
+      const response = await fetch("/api/onboarding/complete-follow", {
+        method: "POST",
+      });
+      if (response.ok) {
+        setIsFollowingTest(true);
+        localStorage.setItem("luminus_followed_test_expert", "true");
+        // Immediately notify the navigation bar to update notifications list
+        window.dispatchEvent(new Event("luminus_notifications_update"));
+      }
+    } catch (err) {
+      console.error("Failed to follow test expert:", err);
+    }
+  };
+
+  const handleUnfollowTest = () => {
+    setIsFollowingTest(false);
+    localStorage.removeItem("luminus_followed_test_expert");
+  };
 
   const handleToggleFilters = () => {
     setShowFilters(!showFilters);
@@ -35,15 +62,34 @@ export default function EspecialistasPage() {
               <h4 className="text-[14px] font-bold text-slate-900 font-jakarta">Especialistas seguidos</h4>
             </div>
 
-            {/* Empty State */}
-            <div className="flex flex-col items-center text-center py-4 px-2 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200/80">
-              <span className="material-symbols-outlined text-slate-300 text-[24px] mb-1.5 select-none">
-                favorite_outline
-              </span>
-              <p className="text-[11px] text-slate-400 font-medium leading-normal max-w-[190px]">
-                Aún no sigues a ningún especialista
-              </p>
-            </div>
+            {isFollowingTest ? (
+              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100 relative group/expert">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-650 to-indigo-600 flex items-center justify-center shrink-0 text-white font-bold text-[14px]">
+                  SM
+                </div>
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="text-[12px] font-bold text-slate-900 truncate leading-tight">Dr. Samuel Martínez</span>
+                  <span className="text-[10px] text-slate-400 font-medium truncate mt-0.5">Mindfulness & Psicología</span>
+                </div>
+                <button
+                  onClick={handleUnfollowTest}
+                  className="opacity-0 group-hover/expert:opacity-100 p-1 bg-white hover:bg-red-50 hover:text-red-500 rounded-full border border-slate-200 transition-all text-slate-450 absolute -top-1 -right-1 cursor-pointer flex items-center justify-center"
+                  title="Dejar de seguir"
+                >
+                  <span className="material-symbols-rounded text-[14px]">close</span>
+                </button>
+              </div>
+            ) : (
+              /* Empty State */
+              <div className="flex flex-col items-center text-center py-4 px-2 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200/80">
+                <span className="material-symbols-outlined text-slate-300 text-[24px] mb-1.5 select-none">
+                  favorite_outline
+                </span>
+                <p className="text-[11px] text-slate-400 font-medium leading-normal max-w-[190px]">
+                  Aún no sigues a ningún especialista
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Card 2: Upcoming Sessions */}
@@ -139,13 +185,25 @@ export default function EspecialistasPage() {
               <p className="text-slate-400 text-[14px] max-w-[420px] leading-relaxed mb-6 font-sans">
                 Esta sección está siendo diseñada para conectar con profesionales de distintas áreas del bienestar, permitiéndote agendar sesiones y realizar seguimientos personalizados.
               </p>
-              <Button
-                onClick={() => router.push("/comunidad")}
-                variant="outline"
-                className="!w-auto px-6 font-bold text-slate-700 border-slate-200 hover:bg-slate-50 !h-11 rounded-xl"
-              >
-                Volver a la Comunidad
-              </Button>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <Button
+                  onClick={() => router.push("/comunidad")}
+                  variant="outline"
+                  className="!w-auto px-6 font-bold text-slate-700 border-slate-200 hover:bg-slate-50 !h-11 rounded-xl"
+                >
+                  Volver a la Comunidad
+                </Button>
+                {!isFollowingTest && (
+                  <Button
+                    onClick={handleFollowTest}
+                    variant="primary"
+                    className="!w-auto px-6 bg-black text-white hover:bg-zinc-900 font-bold !h-11 rounded-xl flex items-center gap-2"
+                  >
+                    <span className="material-symbols-rounded text-[18px]">person_add</span>
+                    <span>Seguir Especialista de Prueba</span>
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </div>

@@ -121,7 +121,7 @@ export const ALL_PROMPTS = [
   }
 ];
 
-export function PromptsDisplay({ prompts, onEdit, isPublic = false, firstName }: { prompts: Prompt[]; onEdit?: (step?: 'list' | 'select') => void; isPublic?: boolean; firstName?: string }) {
+export function PromptsDisplay({ prompts, onEdit, isPublic = false, firstName, highlight = false }: { prompts: Prompt[]; onEdit?: (step?: 'list' | 'select') => void; isPublic?: boolean; firstName?: string; highlight?: boolean }) {
   const hasPrompts = prompts && prompts.length > 0;
   const nameToUse = firstName ? firstName.trim() : "Este usuario";
 
@@ -152,9 +152,13 @@ export function PromptsDisplay({ prompts, onEdit, isPublic = false, firstName }:
           </p>
           {!isPublic && onEdit && (
             <EmptyProfileButton
-              onClick={() => onEdit?.('select')}
+              onClick={() => {
+                window.history.replaceState(null, "", window.location.pathname);
+                onEdit?.('select');
+              }}
               label="Comparte tus reflexiones"
               icon="add"
+              className={highlight ? "glow-highlight" : ""}
             />
           )}
         </div>

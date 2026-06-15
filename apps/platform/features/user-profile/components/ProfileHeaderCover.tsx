@@ -6,9 +6,10 @@ interface ProfileHeaderCoverProps {
  coverUrl: string;
  onChangeCover?: () => void;
  isPublic?: boolean;
+ highlight?: boolean;
 }
 
-export function ProfileHeaderCover({ coverUrl, onChangeCover, isPublic = false }: ProfileHeaderCoverProps) {
+export function ProfileHeaderCover({ coverUrl, onChangeCover, isPublic = false, highlight = false }: ProfileHeaderCoverProps) {
  const hasCover = coverUrl && coverUrl !== "" && !coverUrl.includes("empty");
 
  return (
@@ -25,10 +26,13 @@ export function ProfileHeaderCover({ coverUrl, onChangeCover, isPublic = false }
      <div className="w-full max-w-7xl mx-auto px-2 md:px-8 h-full relative">
       <div className="w-full max-w-6xl mx-auto h-full relative">
        <ProfileButton
-        onClick={onChangeCover}
+        onClick={() => {
+          window.history.replaceState(null, "", window.location.pathname);
+          onChangeCover();
+        }}
         icon="photo_camera"
         label={hasCover ? "Cambiar portada" : "Seleccionar portada"}
-        className="absolute bottom-4 right-0 pointer-events-auto"
+        className={`absolute bottom-4 right-0 pointer-events-auto ${highlight ? "glow-highlight" : ""}`}
        />
       </div>
      </div>

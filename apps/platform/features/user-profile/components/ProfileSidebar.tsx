@@ -14,6 +14,7 @@ interface ProfileSidebarProps {
   isPublic?: boolean;
   onSendMessage?: () => void;
   onConnect?: () => void;
+  highlightField?: string;
 }
 
 export function ProfileSidebar({
@@ -24,7 +25,8 @@ export function ProfileSidebar({
   coverUrl,
   isPublic = false,
   onSendMessage,
-  onConnect
+  onConnect,
+  highlightField
 }: ProfileSidebarProps) {
 
   const toTitleCase = (str: string) => {
@@ -69,9 +71,12 @@ export function ProfileSidebar({
         )}
         {!isPublic && onShowCoverModal && (
           <ProfileButton
-            onClick={onShowCoverModal}
+            onClick={() => {
+              window.history.replaceState(null, "", window.location.pathname);
+              onShowCoverModal();
+            }}
             icon="photo_camera"
-            className="absolute bottom-3 right-3 z-10"
+            className={`absolute bottom-3 right-3 z-10 ${highlightField === "cover" ? "glow-highlight" : ""}`}
           />
         )}
       </div>
@@ -123,7 +128,7 @@ export function ProfileSidebar({
         <div className="w-full h-px bg-slate-100" />
 
         <div className="w-full flex flex-col gap-4 lg:gap-6 px-1">
-          <DetailItem label="Profesión" value={profile.profession} icon="work" onClick={onEditProfile ? () => onEditProfile("profession") : undefined} isPublic={isPublic} firstName={profile.first_name} />
+          <DetailItem label="Profesión" value={profile.profession} icon="work" onClick={onEditProfile ? () => onEditProfile("profession") : undefined} isPublic={isPublic} firstName={profile.first_name} highlightField={highlightField} />
           <DetailItem label="Nacimiento" value={formatDisplayDate(profile.birthdate)} icon="cake" onClick={onEditProfile ? () => onEditProfile("birthdate") : undefined} isPublic={isPublic} firstName={profile.first_name} />
           <DetailItem label="Género" value={profile.gender} icon={getGenderIcon(profile.gender)} onClick={onEditProfile ? () => onEditProfile("gender") : undefined} isPublic={isPublic} firstName={profile.first_name} />
         </div>
@@ -158,10 +163,13 @@ export function ProfileSidebar({
                 <>
                   {onEditProfile && (
                     <ProfileButton
-                      onClick={() => onEditProfile()}
+                      onClick={() => {
+                        window.history.replaceState(null, "", window.location.pathname);
+                        onEditProfile();
+                      }}
                       icon="edit"
                       label="Editar perfil"
-                      className="w-full"
+                      className={`w-full ${highlightField === "personal" ? "glow-highlight" : ""}`}
                     />
                   )}
 
@@ -192,12 +200,14 @@ export function ProfileSidebar({
   );
 }
 
-function DetailItem({ label, value, icon, onClick, isPublic = false, firstName }: { label: string; value: string; icon: string; onClick?: () => void; isPublic?: boolean; firstName?: string }) {
+function DetailItem({ label, value, icon, onClick, isPublic = false, firstName, highlightField }: { label: string; value: string; icon: string; onClick?: () => void; isPublic?: boolean; firstName?: string; highlightField?: string }) {
   const isEmpty = !value || value === 'No definido' || value === 'Sin fecha de nacimiento' || value.trim().length === 0;
 
   if (isEmpty && isPublic && label !== "Profesión") return null;
 
   const nameToUse = firstName ? firstName.trim() : "Este usuario";
+
+  const isHighlighted = highlightField === "personal" && label === "Profesión";
 
   return (
     <div className="flex items-center gap-4 relative w-full">
@@ -213,14 +223,18 @@ function DetailItem({ label, value, icon, onClick, isPublic = false, firstName }
           ) : (
             onClick && (
               <EmptyProfileButton
-                onClick={onClick}
+                onClick={() => {
+                  window.history.replaceState(null, "", window.location.pathname);
+                  onClick();
+                }}
                 label={`Añadir ${label.toLowerCase()}`}
                 icon="add"
+                className={isHighlighted ? "glow-highlight" : ""}
               />
             )
           )
         ) : (
-          <span className="text-sm lg:text-base text-primary truncate leading-relaxed">{value}</span>
+          <span className={`text-sm lg:text-base truncate leading-relaxed ${isHighlighted ? "glow-highlight px-2 py-0.5 rounded-lg border border-dashed border-slate-200 w-fit" : "text-primary"}`}>{value}</span>
         )}
       </div>
     </div>

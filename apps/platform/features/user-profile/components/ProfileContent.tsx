@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ProfileButton } from "@/components/ui/Button";
 import { PhotoEditor } from "@/features/auth/registration/PhotoEditor";
@@ -62,6 +62,7 @@ function syncProfileToLocalStorage(profile: Profile, email?: string) {
 
 export function ProfileContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [email, setEmail] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -109,6 +110,21 @@ export function ProfileContent() {
 
     loadProfile();
   }, [router]);
+
+  useEffect(() => {
+    if (!loading && profile) {
+      const editParam = searchParams.get("edit");
+      if (editParam) {
+        // Wait a frame for the DOM to render the .glow-highlight class, then scroll to it smoothly
+        setTimeout(() => {
+          const highlightedEl = document.querySelector(".glow-highlight");
+          if (highlightedEl) {
+            highlightedEl.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 300);
+      }
+    }
+  }, [loading, profile, searchParams]);
 
   const handleSignOut = async () => {
     await fetch("/api/auth/logout", {
@@ -241,12 +257,15 @@ export function ProfileContent() {
 
   if (!profile) return null;
 
+  const editParam = searchParams.get("edit") || undefined;
+
   return (
     <div className="w-full flex flex-col relative">
 
       <ProfileHeaderCover
         coverUrl={coverUrl}
         onChangeCover={() => setShowCoverModal(true)}
+        highlight={editParam === "cover"}
       />
 
       <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pb-4 lg:pb-12">
@@ -263,6 +282,7 @@ export function ProfileContent() {
                   onSignOut={handleSignOut}
                   onShowCoverModal={() => setShowCoverModal(true)}
                   coverUrl={coverUrl}
+                  highlightField={editParam}
                 />
 
                 <div className="hidden md:flex flex-col gap-4 lg:gap-6">
@@ -283,6 +303,7 @@ export function ProfileContent() {
                   bio={profile.bio}
                   onEdit={() => setShowEditAbout(true)}
                   firstName={profile.first_name}
+                  highlight={editParam === "bio"}
                 />
 
                 <ProfileInterestsSection
@@ -296,6 +317,7 @@ export function ProfileContent() {
                   prompts={profile.prompts}
                   onEditPrompts={handleOpenPrompts}
                   firstName={profile.first_name}
+                  highlight={editParam === "prompts"}
                 />
 
                 {/* Mobile Only Membership */}

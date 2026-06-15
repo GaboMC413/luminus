@@ -6,6 +6,7 @@ import Link from "next/link";
 import { NotificationPopup } from "./NotificationPopup";
 import { MessagesPopup } from "./MessagesPopup";
 import { ChatPopup } from "./ChatPopup";
+import { SuccessModal } from "./SuccessModal";
 
 export function formatRelativeTime(timestamp: any): string {
   if (!timestamp) return "Ahora";
@@ -80,11 +81,27 @@ export function PlatformNavbar() {
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isMessagesOpen, setIsMessagesOpen] = useState(false);
 
+  // States for onboarding achievement popup modal
+  const [completedQuest, setCompletedQuest] = useState<{ id: string; title: string; body: string } | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
 
-  const unreadNotificationsCount = notifications.filter(n => n.isUnread).length;
+  const onboardingNotification = notifications.find(n => n.type === "onboarding-progress");
+  const onboardingOutstandingCount = onboardingNotification
+    ? onboardingNotification.quests.filter((q: any) => !q.completed).length
+    : 0;
+
+  const otherUnreadCount = notifications
+    .filter(n => n.type !== "onboarding-progress" && !String(n.type).startsWith("quest_completed_") && n.isUnread)
+    .length;
+
+  const unreadNotificationsCount = onboardingOutstandingCount > 0
+    ? onboardingOutstandingCount + otherUnreadCount
+    : otherUnreadCount;
+
   const unreadMessagesCount = messages.filter(m => m.isUnread).length;
 
   useEffect(() => {
@@ -229,6 +246,57 @@ export function PlatformNavbar() {
 
   useEffect(() => {
     loadNotifications();
+    const handleUpdate = () => {
+      loadNotifications();
+    };
+    window.addEventListener("luminus_notifications_update", handleUpdate);
+    return () => {
+      window.removeEventListener("luminus_notifications_update", handleUpdate);
+    };
+  }, []);
+
+  // 1. Listen for custom quest completed event to display the success modal
+  useEffect(() => {
+    const handleQuestCompleted = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail) {
+        setCompletedQuest(customEvent.detail);
+        setShowSuccessModal(true);
+        // Reload notifications lists to update the bell count and checklist checklist state immediately
+        loadNotifications();
+      }
+    };
+    window.addEventListener("luminus_quest_completed", handleQuestCompleted);
+    return () => {
+      window.removeEventListener("luminus_quest_completed", handleQuestCompleted);
+    };
+  }, []);
+
+  // 2. Global fetch interceptor to automatically dispatch luminus_quest_completed
+  // when any API returns newlyCompletedQuests
+  useEffect(() => {
+    if (typeof window !== "undefined" && !(window as any).__luminus_fetch_intercepted) {
+      (window as any).__luminus_fetch_intercepted = true;
+      const originalFetch = window.fetch;
+      window.fetch = async function(...args) {
+        const response = await originalFetch(...args);
+        const url = typeof args[0] === 'string' ? args[0] : (args[0] as Request).url || '';
+        if (url.includes('/api/')) {
+          try {
+            const clone = response.clone();
+            const data = await clone.json();
+            if (data && data.newlyCompletedQuests && Array.isArray(data.newlyCompletedQuests)) {
+              data.newlyCompletedQuests.forEach((quest: any) => {
+                window.dispatchEvent(new CustomEvent("luminus_quest_completed", { detail: quest }));
+              });
+            }
+          } catch (e) {
+            // Ignore non-json or parsing errors
+          }
+        }
+        return response;
+      };
+    }
   }, []);
 
   useEffect(() => {
@@ -302,6 +370,14 @@ export function PlatformNavbar() {
       },
       credentials: "include",
       body: JSON.stringify({ markAll: true }),
+    });
+  };
+
+  const deleteNotification = async (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    await fetch(`/api/notifications?id=${id}`, {
+      method: "DELETE",
+      credentials: "include",
     });
   };
 
@@ -446,6 +522,7 @@ export function PlatformNavbar() {
               notifications={notifications}
               onMarkRead={markNotificationRead}
               onMarkAllRead={markAllNotificationsRead}
+              onDelete={deleteNotification}
             />
           </div>
 
@@ -551,6 +628,14 @@ export function PlatformNavbar() {
           onClose={() => setActivePopupChat(null)}
         />
       )}
+
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title={completedQuest?.title || ""}
+        message={completedQuest?.body || ""}
+        buttonText="Cerrar"
+      />
 
       {/* Preload icons to avoid lag */}
       <div className="hidden" aria-hidden="true">

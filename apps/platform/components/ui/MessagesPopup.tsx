@@ -114,7 +114,7 @@ export function MessagesPopup({ isOpen, onClose, messages, onMarkRead, onMarkAll
         {messages.length === 0 ? (
           <div className="p-8 text-center text-slate-400 text-[14px]">No tienes mensajes pendientes</div>
         ) : (
-          messages.map((msg) => (
+          messages.slice(0, 5).map((msg) => (
             <MessageItem
               key={msg.id}
               avatar={msg.avatar}
