@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { PlatformNavbar } from "@/components/ui/PlatformNavbar";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
 
-export default function MapLayout({
+export default function NetworkLayout({
   children,
 }: {
   children: React.ReactNode;

@@ -13,7 +13,7 @@ export function Button({ variant = 'primary', children, className = '', ...props
 
   const variants = {
     primary: "w-full h-11 md:h-12 px-5 sm:px-6 rounded-xl text-button font-medium bg-black text-white hover:bg-zinc-900",
-    outline: "w-full h-11 md:h-12 px-5 sm:px-6 rounded-xl text-button font-medium bg-white text-secondary border border-zinc-200 hover:bg-slate-50",
+    outline: "w-full h-11 md:h-12 px-5 sm:px-6 rounded-xl text-button font-medium bg-white text-secondary border border-slate-200 hover:bg-slate-50",
     secondary: "w-full h-11 md:h-12 px-5 sm:px-6 rounded-xl text-button font-medium bg-slate-50 text-secondary border border-slate-200 hover:bg-slate-100",
     slate: "h-9 px-4 rounded-lg text-button font-medium bg-slate-400 text-white hover:bg-slate-500 gap-2",
     small: "h-8 md:h-9 px-4 rounded-lg text-label font-semibold bg-slate-100 text-secondary border border-slate-200 hover:bg-slate-200",
@@ -79,7 +79,7 @@ export const ProfileButton = React.forwardRef<HTMLButtonElement, ProfileButtonPr
     <button
       ref={ref}
       {...props}
-      className={`h-10 md:h-11 ${label ? 'px-3 md:px-4 min-w-[100px] md:min-w-[120px]' : 'w-10 md:w-11'} bg-[#F8FAFC] hover:bg-black border border-slate-200/60 hover:border-black text-slate-700 hover:text-white rounded-[10px] md:rounded-[12px] text-[13px] md:text-[14px] font-semibold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-none ${className}`}
+      className={`h-10 md:h-11 ${label ? 'px-3 md:px-4 min-w-[100px] md:min-w-[120px]' : 'w-10 md:w-11'} bg-[#F8FAFC] hover:bg-black border border-slate-200 hover:border-black text-slate-700 hover:text-white rounded-lg text-[13px] md:text-[14px] font-semibold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-none ${className}`}
     >
       {showDot && (
         <div className="w-3 h-3 rounded-full bg-[#FF4B4B] border-2 border-white shrink-0 shadow-sm" />
@@ -102,7 +102,7 @@ export function EmptyProfileButton({ label, icon, className = "", ...props }: Em
   return (
     <button
       {...props}
-      className={`relative flex items-center justify-start h-7 md:h-8 px-2 bg-white hover:bg-slate-50 text-slate-400 text-[11px] md:text-[12px] font-bold rounded-[10px] md:rounded-[12px] transition-all w-fit gap-2 ${className}`}
+      className={`relative flex items-center justify-start h-7 md:h-8 px-2 bg-white hover:bg-slate-50 text-slate-400 text-[11px] md:text-[12px] font-bold rounded-lg transition-all w-fit gap-2 ${className}`}
     >
       <span className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 z-10 w-3 h-3 bg-[#FF4B4B] rounded-full border-2 border-white"></span>
       {icon && (

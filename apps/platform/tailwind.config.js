@@ -6,6 +6,10 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["var(--font-inter)", "Inter", "sans-serif"],
+        jakarta: ["var(--font-jakarta)", "Plus Jakarta Sans", "sans-serif"],
+      },
       colors: {
         wellness: {
           sand: {

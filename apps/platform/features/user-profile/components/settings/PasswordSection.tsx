@@ -142,7 +142,7 @@ export function PasswordSection({
                   Mínimo 12 caracteres
                 </p>
                 {newPassword.length >= 12 && (
-                  <span className="!text-green-600 text-sm font-bold">✓</span>
+                  <span className="!text-green-600 text-sm font-semibold">✓</span>
                 )}
               </div>
               <div className="flex items-center gap-2 h-5">
@@ -150,7 +150,7 @@ export function PasswordSection({
                   Incluir al menos una letra y un número
                 </p>
                 {/[A-Za-z]/.test(newPassword) && /\d/.test(newPassword) && (
-                  <span className="!text-green-600 text-sm font-bold">✓</span>
+                  <span className="!text-green-600 text-sm font-semibold">✓</span>
                 )}
               </div>
             </div>
@@ -173,7 +173,7 @@ export function PasswordSection({
             </div>
 
             {passwordError && (
-              <p className="text-[#FF3D3D] text-label font-bold mt-1 px-1">
+              <p className="text-[#FF3D3D] text-label font-semibold mt-1 px-1">
                 {passwordError}
               </p>
             )}
@@ -193,7 +193,7 @@ export function PasswordSection({
               <button
                 onClick={handlePasswordSave}
                 disabled={loading || !newPassword || !repeatPassword}
-                className={`px-4 h-8 text-button font-bold bg-black text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 origin-center ${shouldAnimate ? "scale-110" : "scale-100"}`}
+                className={`px-4 h-8 text-button font-semibold bg-black text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 origin-center ${shouldAnimate ? "scale-110" : "scale-100"}`}
               >
                 {loading ? "Guardando..." : "Guardar"}
               </button>

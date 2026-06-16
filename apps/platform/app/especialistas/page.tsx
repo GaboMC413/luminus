@@ -2,15 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button, ProfileButton } from "@/components/ui/Button";
-import { SuccessModal } from "@/components/ui/SuccessModal";
-import { SpecialistPostulationModal } from "@/components/ui/SpecialistPostulationModal";
+import { Button } from "@/components/ui/Button";
 
 export default function EspecialistasPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
-  const [isPostulationOpen, setIsPostulationOpen] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [isFollowingTest, setIsFollowingTest] = useState(false);
   const router = useRouter();
 
@@ -40,191 +34,124 @@ export default function EspecialistasPage() {
     localStorage.removeItem("luminus_followed_test_expert");
   };
 
-  const handleToggleFilters = () => {
-    setShowFilters(!showFilters);
-  };
-
-  const handlePostulationSuccess = () => {
-    setIsPostulationOpen(false);
-    setShowSuccess(true);
-  };
-
   return (
-    <div className="flex-1 w-full flex flex-col h-full md:overflow-hidden overflow-visible">
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row gap-6 lg:gap-8 h-full md:overflow-hidden overflow-visible py-6">
+    <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-12 md:py-6 flex flex-col gap-6">
+      {/* Upcoming Section: Compact, horizontal alert-style banner */}
+      <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
+        <div className="flex flex-col md:flex-row items-start gap-4 w-full md:w-auto">
+          {/* Icon container */}
+          <div className="w-12 h-12 md:w-20 md:h-20 bg-white border border-slate-200 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
+            <div
+              style={{
+                maskImage: "url('/Icons/NavBar/expert active.svg')",
+                WebkitMaskImage: "url('/Icons/NavBar/expert active.svg')",
+                maskSize: "contain",
+                WebkitMaskSize: "contain",
+                maskRepeat: "no-repeat",
+                WebkitMaskRepeat: "no-repeat",
+                maskPosition: "center",
+                WebkitMaskPosition: "center",
+              }}
+              className="w-6 h-6 md:w-10 md:h-10 bg-black"
+            />
+          </div>
+          <div className="flex flex-col text-left gap-1">
+            <span className="text-[10px] md:text-[11px] font-semibold tracking-widest text-slate-400 font-jakarta uppercase">
+              PRÓXIMAMENTE
+            </span>
+            <h4 className="text-[15px] md:text-[16px] font-bold text-slate-800 font-jakarta">
+              Especialistas LUMINUS
+            </h4>
+            <p className="text-slate-500 text-[13px] md:text-[13.5px] leading-relaxed max-w-[650px]">
+              Explora y conecta con profesionales del bienestar, agenda sesiones y realiza un seguimiento personalizado para tu proceso.
+            </p>
+          </div>
+        </div>
         
-        {/* Left Column (Sidebar) */}
-        <div className="flex w-full md:w-[260px] lg:w-[290px] flex-col gap-4 shrink-0 h-fit">
-          
-          {/* Card 1: Followed Specialists */}
-          <div className="bg-white rounded-2xl border border-zinc-200 p-5 flex flex-col gap-4 shadow-none relative">
-            <div className="flex justify-between items-center">
-              <h4 className="text-[14px] font-bold text-slate-900 font-jakarta">Especialistas seguidos</h4>
-            </div>
-
-            {isFollowingTest ? (
-              <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100 relative group/expert">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-650 to-indigo-600 flex items-center justify-center shrink-0 text-white font-bold text-[14px]">
-                  SM
-                </div>
-                <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-[12px] font-bold text-slate-900 truncate leading-tight">Dr. Samuel Martínez</span>
-                  <span className="text-[10px] text-slate-400 font-medium truncate mt-0.5">Mindfulness & Psicología</span>
-                </div>
-                <button
-                  onClick={handleUnfollowTest}
-                  className="opacity-0 group-hover/expert:opacity-100 p-1 bg-white hover:bg-red-50 hover:text-red-500 rounded-full border border-slate-200 transition-all text-slate-450 absolute -top-1 -right-1 cursor-pointer flex items-center justify-center"
-                  title="Dejar de seguir"
-                >
-                  <span className="material-symbols-rounded text-[14px]">close</span>
-                </button>
-              </div>
-            ) : (
-              /* Empty State */
-              <div className="flex flex-col items-center text-center py-4 px-2 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200/80">
-                <span className="material-symbols-outlined text-slate-300 text-[24px] mb-1.5 select-none">
-                  favorite_outline
-                </span>
-                <p className="text-[11px] text-slate-400 font-medium leading-normal max-w-[190px]">
-                  Aún no sigues a ningún especialista
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Card 2: Upcoming Sessions */}
-          <div className="bg-white rounded-2xl border border-zinc-200 p-5 flex flex-col gap-4 shadow-none relative">
-            <div className="flex justify-between items-center">
-              <h4 className="text-[14px] font-bold text-slate-900 font-jakarta">Próximas Sesiones</h4>
-            </div>
-
-            {/* Empty State */}
-            <div className="flex flex-col items-center text-center py-4 px-2 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200/80">
-              <span className="material-symbols-outlined text-slate-300 text-[24px] mb-1.5 select-none">
-                calendar_today
-              </span>
-              <p className="text-[11px] text-slate-400 font-medium leading-normal max-w-[190px]">
-                No tienes sesiones agendadas en tu agenda
-              </p>
-            </div>
-          </div>
-
-          {/* Action Button: Sumarte como Especialista */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+          {!isFollowingTest ? (
+            <Button
+              variant="primary"
+              onClick={handleFollowTest}
+              className="w-full md:!w-auto px-6 text-sm font-semibold shrink-0 bg-black text-white hover:bg-zinc-900 flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-rounded text-[18px]">favorite</span>
+              <span>Seguir especialista (Prueba)</span>
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={handleUnfollowTest}
+              className="w-full md:!w-auto px-6 text-sm font-semibold shrink-0 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-rounded text-[18px]">heart_broken</span>
+              <span>Siguiendo (Dejar de seguir)</span>
+            </Button>
+          )}
           <Button
-            onClick={() => router.push("/especialistas/onboarding")}
-            variant="primary"
-            className="w-full !h-12 bg-black text-white hover:bg-zinc-900 font-bold font-jakarta text-[13px] uppercase tracking-wider !rounded-xl"
+            variant="secondary"
+            onClick={() => router.push("/comunidad")}
+            className="w-full md:!w-auto px-6 text-sm font-semibold shrink-0 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700"
           >
-            Sumarte como Especialista
+            Volver a la Comunidad
           </Button>
         </div>
-
-        {/* Right / Main Feed Column */}
-        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-          
-          {/* Search & Filter Header Section */}
-          <div className="flex flex-col sticky top-0 z-40 bg-[#F8FAFC] pb-4 transition-all duration-300 ease-in-out gap-3 w-full">
-            <div className="flex items-center gap-3 w-full relative">
-              
-              {/* Search Bar */}
-              <div className="flex-1 h-12 pl-4 pr-6 bg-white rounded-xl border border-zinc-200 flex items-center gap-3 focus-within:border-black focus-within:ring-1 focus-within:ring-black group transition-all relative">
-                <span className="material-symbols-outlined text-[22px] text-slate-400 group-focus-within:text-black">search</span>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar especialistas por nombre o especialidad..."
-                  className="flex-1 bg-transparent border-none text-[15px] font-normal text-slate-800 placeholder:text-slate-400 focus:outline-none"
-                />
-              </div>
-
-              {/* Filter Button */}
-              <ProfileButton
-                onClick={handleToggleFilters}
-                icon="manage_search"
-                label="Buscar por filtros"
-                className={`!h-12 !w-fit !min-w-0 px-5 !rounded-xl ${
-                  showFilters
-                    ? "!bg-black !border-black !text-white hover:!bg-zinc-900"
-                    : ""
-                }`}
-              />
-
-              {/* Filter Dropdown Popover (Placeholder) */}
-              {showFilters && (
-                <div className="absolute top-[56px] right-0 w-[calc(100vw-32px)] sm:w-[384px] max-w-sm bg-white border border-zinc-200 rounded-2xl shadow-none z-50 flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-                  <div className="p-5 flex flex-col gap-4 text-center">
-                    <span className="material-symbols-outlined text-slate-300 text-[32px]">filter_list_off</span>
-                    <h5 className="font-jakarta font-bold text-[14px] text-slate-800">Filtros de búsqueda</h5>
-                    <p className="text-[12px] text-slate-400 leading-normal">
-                      Próximamente podrás filtrar los especialistas por modalidad de consulta, calificación y disponibilidad.
-                    </p>
-                  </div>
-                  <div className="px-4 py-3 bg-slate-50 border-t border-zinc-200/40 flex justify-end shrink-0">
-                    <button
-                      onClick={() => setShowFilters(false)}
-                      className="h-9 px-4 bg-black hover:bg-zinc-900 text-white font-medium text-xs rounded-xl transition-premium cursor-pointer select-none border-none outline-none font-jakarta"
-                    >
-                      Aceptar
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Specialists Grid Content Area (Empty / Under Development State) */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 pb-12">
-            <div className="w-full flex flex-col items-center justify-center p-12 text-center min-h-[350px] bg-white rounded-2xl border border-slate-200 shadow-none">
-              <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4 border border-slate-100">
-                <span className="material-symbols-outlined text-[32px] text-slate-400 select-none">
-                  groups
-                </span>
-              </div>
-              <h3 className="text-[20px] font-bold text-slate-800 font-jakarta mb-2">Especialistas LUMINUS</h3>
-              <p className="text-slate-400 text-[14px] max-w-[420px] leading-relaxed mb-6 font-sans">
-                Esta sección está siendo diseñada para conectar con profesionales de distintas áreas del bienestar, permitiéndote agendar sesiones y realizar seguimientos personalizados.
-              </p>
-              <div className="flex flex-wrap gap-3 justify-center">
-                <Button
-                  onClick={() => router.push("/comunidad")}
-                  variant="outline"
-                  className="!w-auto px-6 font-bold text-slate-700 border-slate-200 hover:bg-slate-50 !h-11 rounded-xl"
-                >
-                  Volver a la Comunidad
-                </Button>
-                {!isFollowingTest && (
-                  <Button
-                    onClick={handleFollowTest}
-                    variant="primary"
-                    className="!w-auto px-6 bg-black text-white hover:bg-zinc-900 font-bold !h-11 rounded-xl flex items-center gap-2"
-                  >
-                    <span className="material-symbols-rounded text-[18px]">person_add</span>
-                    <span>Seguir Especialista de Prueba</span>
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div>
 
-      {/* Postulation Form Modal */}
-      <SpecialistPostulationModal
-        isOpen={isPostulationOpen}
-        onClose={() => setIsPostulationOpen(false)}
-        onSuccess={handlePostulationSuccess}
-      />
+      {/* Benefits Banner for Specialists (Engaging, Colors, Clean, No shadows, Text and Image) */}
+      <div className="w-full bg-gradient-to-br from-wellness-sage-100/10 via-white to-wellness-clay-100/20 border border-slate-200 hover:border-wellness-sage-300/80 rounded-2xl p-6 flex flex-col md:flex-row gap-8 relative overflow-hidden items-center transition-all duration-500">
+        {/* Subtle decorative background glow (no shadows) */}
+        <div className="absolute right-0 top-0 w-64 h-64 bg-wellness-sage-200/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute left-0 bottom-0 w-64 h-64 bg-wellness-clay-200/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Success Modal */}
-      <SuccessModal
-        isOpen={showSuccess}
-        onClose={() => setShowSuccess(false)}
-        title="¡Postulación Enviada!"
-        message="Tu postulación para sumarte como especialista ha sido recibida correctamente. Nuestro equipo evaluará tu perfil a la brevedad."
-        buttonText="Entendido"
-      />
+        {/* Left Column: Image (Bigger layout) */}
+        <div className="w-full md:w-[420px] lg:w-[480px] shrink-0 relative z-10">
+          <img
+            src="/specialsitsLUMINUS.png"
+            alt="Especialistas LUMINUS"
+            className="w-full h-auto object-cover rounded-2xl border border-slate-200"
+          />
+        </div>
+
+        {/* Right Column: Content */}
+        <div className="flex-1 w-full flex flex-col gap-6 relative z-10">
+          <div className="flex flex-col gap-4">
+            <div className="inline-flex items-center rounded-full bg-wellness-sage-50 border border-wellness-sage-200/60 px-3 py-1.5 text-[11px] md:text-xs font-semibold text-wellness-sage-700 w-fit max-w-full break-words">
+              <span>Exclusivo para especialistas</span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold font-jakarta text-slate-900 tracking-tight leading-tight">
+              Haz visible tu forma de acompañar
+            </h2>
+            <p className="text-slate-600 text-[14px] leading-relaxed max-w-3xl font-normal">
+              LUMINUS reúne a personas que están explorando bienestar, cambio personal, salud integral y nuevas formas de vivir con más conciencia. Tu lugar como especialista no es solo aparecer en una lista, sino ayudar a que más personas encuentren orientación clara, humana y confiable.
+            </p>
+          </div>
+
+          {/* Small closing line */}
+          <p className="text-[13px] text-slate-500 font-medium font-jakarta italic pl-3 border-l-2 border-wellness-sage-400">
+            "Un espacio para mostrar quién eres, cómo trabajas y qué puedes aportar."
+          </p>
+
+          {/* Buttons Section */}
+          <div className="flex flex-col sm:flex-row items-center gap-6 pt-2">
+            <Button
+              variant="primary"
+              onClick={() => router.push("/especialistas/onboarding")}
+              className="w-full md:!w-auto px-6 font-semibold text-sm bg-black text-white hover:bg-zinc-900"
+            >
+              Postularme como Especialista
+            </Button>
+            <a
+              href="https://luminuslatam.com/especialistas"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[13px] font-semibold font-jakarta text-slate-500 hover:text-black transition-colors underline decoration-1 underline-offset-4"
+            >
+              Ver más acerca del programa
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -242,7 +242,7 @@ function PublicProfileContent() {
         isPublic={true}
       />
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pb-4 lg:pb-12">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pb-12">
         <div className="w-full max-w-6xl mx-auto">
           <div className="w-full h-full bg-transparent pt-4 lg:pt-6">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-4 lg:gap-8 items-start">
@@ -311,7 +311,7 @@ function PublicProfileContent() {
                   </Button>
                   <button
                     onClick={handleShareProfile}
-                    className="w-11 h-11 bg-white border border-zinc-200 hover:bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none font-jakarta"
+                    className="w-11 h-11 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none font-jakarta"
                   >
                     <span className="material-symbols-outlined text-[20px]">share</span>
                   </button>
