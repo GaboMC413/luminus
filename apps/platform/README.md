@@ -18,6 +18,8 @@ SES_REGION="us-east-1"
 SES_FROM_EMAIL="info@luminuslatam.com"
 SES_ACCESS_KEY_ID="IAM_ACCESS_KEY_ID"
 SES_SECRET_ACCESS_KEY="IAM_SECRET_ACCESS_KEY"
+GOOGLE_CLIENT_ID="GOOGLE_OAUTH_CLIENT_ID"
+GOOGLE_CLIENT_SECRET="GOOGLE_OAUTH_CLIENT_SECRET"
 ```
 
 Use `apps/platform/.env.example` as the template.
@@ -66,3 +68,22 @@ Configure SES in the same AWS region used by Amplify, verify `info@luminuslatam.
 - `SES_SECRET_ACCESS_KEY`
 
 Amplify environment variables must use the `SES_*` credential names because `AWS_*` prefixes are reserved by Amplify.
+
+## Google login
+
+Google OAuth uses the app's own auth session cookie after Google validates the user.
+
+Configure these environment variables in Amplify and locally:
+
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+
+Add each deployed environment callback URL to the Google OAuth client:
+
+- `http://localhost:3100/api/auth/google/callback`
+- `https://dev.app.luminuslatam.com/api/auth/google/callback`
+- `https://app.luminuslatam.com/api/auth/google/callback`
+
+If `admin.luminuslatam.com` uses the same login flow directly, add:
+
+- `https://admin.luminuslatam.com/api/auth/google/callback`

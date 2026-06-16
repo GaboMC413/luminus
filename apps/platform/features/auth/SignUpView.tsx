@@ -72,6 +72,11 @@ export default function SignUpView() {
   useEffect(() => {
     window.scrollTo(0, 0);
 
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("onboarding") === "1") {
+      setStep(2);
+    }
+
     // Clear old profile test session keys on signup mount to ensure pristine state
     const profileKeys = [
       "luminus_profile_firstName",
@@ -139,10 +144,7 @@ export default function SignUpView() {
   };
 
   const handleGoogleSignUp = () => {
-    setMessage({
-      text: "El registro con Google no está disponible en este momento.",
-      type: "error",
-    });
+    window.location.href = "/api/auth/google/start";
   };
 
   const isRegistration = step > 1;
