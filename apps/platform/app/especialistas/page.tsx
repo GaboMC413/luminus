@@ -1,10 +1,38 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 
 export default function EspecialistasPage() {
+  const [isFollowingTest, setIsFollowingTest] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const followed = localStorage.getItem("luminus_followed_test_expert") === "true";
+    setIsFollowingTest(followed);
+  }, []);
+
+  const handleFollowTest = async () => {
+    try {
+      const response = await fetch("/api/onboarding/complete-follow", {
+        method: "POST",
+      });
+      if (response.ok) {
+        setIsFollowingTest(true);
+        localStorage.setItem("luminus_followed_test_expert", "true");
+        // Immediately notify the navigation bar to update notifications list
+        window.dispatchEvent(new Event("luminus_notifications_update"));
+      }
+    } catch (err) {
+      console.error("Failed to follow test expert:", err);
+    }
+  };
+
+  const handleUnfollowTest = () => {
+    setIsFollowingTest(false);
+    localStorage.removeItem("luminus_followed_test_expert");
+  };
 
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-12 md:py-6 flex flex-col gap-6">
@@ -28,7 +56,7 @@ export default function EspecialistasPage() {
             />
           </div>
           <div className="flex flex-col text-left gap-1">
-            <span className="text-[10px] md:text-[11px] font-bold tracking-widest text-slate-400 font-jakarta uppercase">
+            <span className="text-[10px] md:text-[11px] font-semibold tracking-widest text-slate-400 font-jakarta uppercase">
               PRÓXIMAMENTE
             </span>
             <h4 className="text-[15px] md:text-[16px] font-bold text-slate-800 font-jakarta">
@@ -39,13 +67,35 @@ export default function EspecialistasPage() {
             </p>
           </div>
         </div>
-        <Button
-          variant="secondary"
-          onClick={() => router.push("/comunidad")}
-          className="w-full md:!w-auto px-6 text-sm font-bold shrink-0 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700"
-        >
-          Volver a la Comunidad
-        </Button>
+        
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
+          {!isFollowingTest ? (
+            <Button
+              variant="primary"
+              onClick={handleFollowTest}
+              className="w-full md:!w-auto px-6 text-sm font-semibold shrink-0 bg-black text-white hover:bg-zinc-900 flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-rounded text-[18px]">favorite</span>
+              <span>Seguir especialista (Prueba)</span>
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={handleUnfollowTest}
+              className="w-full md:!w-auto px-6 text-sm font-semibold shrink-0 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 flex items-center justify-center gap-2"
+            >
+              <span className="material-symbols-rounded text-[18px]">heart_broken</span>
+              <span>Siguiendo (Dejar de seguir)</span>
+            </Button>
+          )}
+          <Button
+            variant="secondary"
+            onClick={() => router.push("/comunidad")}
+            className="w-full md:!w-auto px-6 text-sm font-semibold shrink-0 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700"
+          >
+            Volver a la Comunidad
+          </Button>
+        </div>
       </div>
 
       {/* Benefits Banner for Specialists (Engaging, Colors, Clean, No shadows, Text and Image) */}
@@ -87,7 +137,7 @@ export default function EspecialistasPage() {
             <Button
               variant="primary"
               onClick={() => router.push("/especialistas/onboarding")}
-              className="w-full md:!w-auto px-6 font-bold text-sm bg-black text-white hover:bg-zinc-900"
+              className="w-full md:!w-auto px-6 font-semibold text-sm bg-black text-white hover:bg-zinc-900"
             >
               Postularme como Especialista
             </Button>
@@ -95,7 +145,7 @@ export default function EspecialistasPage() {
               href="https://luminuslatam.com/especialistas"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[13px] font-bold font-jakarta text-slate-500 hover:text-black transition-colors underline decoration-1 underline-offset-4"
+              className="text-[13px] font-semibold font-jakarta text-slate-500 hover:text-black transition-colors underline decoration-1 underline-offset-4"
             >
               Ver más acerca del programa
             </a>

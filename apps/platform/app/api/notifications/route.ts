@@ -27,6 +27,7 @@ function serializeNotification(notification: any) {
       interests: "format_quote",
       cover: "photo_prints",
       connect: "person_add",
+      follow: "heart_plus",
     };
     icon = questIcons[questId] || "auto_awesome";
   }
@@ -78,7 +79,7 @@ export async function GET() {
       avatar: "/iso-logo-black.svg",
       action: isCompleted
         ? "¡Felicitaciones! Has completado todas tus misiones iniciales de bienestar. Tu camino en LUMINUS está listo para brillar."
-        : "Enciende tu luz. Completa estas 5 misiones iniciales para conectar y guiar tu camino de bienestar.",
+        : "Enciende tu luz. Completa estas 6 misiones iniciales para conectar y guiar tu camino de bienestar.",
       action_url: "",
       date: new Date().toISOString(),
       isUnread: !isCompleted,

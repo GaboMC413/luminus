@@ -114,7 +114,7 @@ export function SuccessModal({
       <div className="p-6 flex flex-col items-start text-left relative">
         
         {/* Title */}
-        <h3 className="text-[15px] font-bold text-slate-900 mb-2">
+        <h3 className="text-[15px] font-semibold text-slate-900 mb-2">
           {title}
         </h3>
 
@@ -128,7 +128,7 @@ export function SuccessModal({
           <Button
             onClick={onClose}
             variant="primary"
-            className="!h-9 !text-[12px] !font-bold px-5 bg-black hover:bg-zinc-900 text-white rounded-xl !w-auto"
+            className="!h-9 !text-xs !font-semibold px-5 bg-black hover:bg-zinc-900 text-white rounded-xl !w-auto"
           >
             {buttonText}
           </Button>

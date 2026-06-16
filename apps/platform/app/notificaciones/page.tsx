@@ -132,8 +132,6 @@ function NotificationsContent() {
     });
   };
 
-
-
   const deleteNotification = async (id: string) => {
     // Optimistic UI update
     setNotifications((prev) => prev.filter((n) => n.id !== id));

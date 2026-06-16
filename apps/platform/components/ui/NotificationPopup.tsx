@@ -265,7 +265,7 @@ export function NotificationPopup({ isOpen, onClose, notifications, onMarkRead, 
           }}
           className="group w-full flex items-center justify-between px-6 py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors cursor-pointer bg-transparent border-none text-left"
         >
-          <span>Ver todos las notificaciones</span>
+          <span>Ver todas las notificaciones</span>
           <svg className="w-3.5 h-3.5 transition-colors shrink-0 select-none text-slate-400 group-hover:text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
           </svg>
