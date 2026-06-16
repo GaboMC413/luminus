@@ -42,7 +42,12 @@ export default function SignInView() {
     window.scrollTo(0, 0);
 
     const params = new URLSearchParams(window.location.search);
-    if (params.get("error") === "google") {
+    if (params.get("error") === "google_config") {
+      setMessage({
+        text: "Google todavia no esta configurado en este entorno.",
+        type: "error",
+      });
+    } else if (params.get("error") === "google") {
       setMessage({
         text: "No pudimos iniciar sesion con Google. Intenta nuevamente.",
         type: "error",

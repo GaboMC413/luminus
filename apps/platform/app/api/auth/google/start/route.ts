@@ -7,18 +7,15 @@ export const runtime = "nodejs";
 const GOOGLE_STATE_COOKIE = "luminus_google_oauth_state";
 const GOOGLE_SCOPES = ["openid", "email", "profile"];
 
-function getGoogleClientId() {
+export async function GET(request: Request) {
+  const url = new URL(request.url);
   const clientId = process.env.GOOGLE_CLIENT_ID;
 
   if (!clientId) {
-    throw new Error("GOOGLE_CLIENT_ID is not configured.");
+    console.error("Google OAuth start failed: GOOGLE_CLIENT_ID is not configured.");
+    return NextResponse.redirect(new URL("/auth/iniciar-sesion?error=google_config", url.origin));
   }
 
-  return clientId;
-}
-
-export async function GET(request: Request) {
-  const url = new URL(request.url);
   const origin = url.origin;
   const state = randomBytes(24).toString("base64url");
   const redirectUri = `${origin}/api/auth/google/callback`;
@@ -32,7 +29,7 @@ export async function GET(request: Request) {
   });
 
   const googleUrl = new URL("https://accounts.google.com/o/oauth2/v2/auth");
-  googleUrl.searchParams.set("client_id", getGoogleClientId());
+  googleUrl.searchParams.set("client_id", clientId);
   googleUrl.searchParams.set("redirect_uri", redirectUri);
   googleUrl.searchParams.set("response_type", "code");
   googleUrl.searchParams.set("scope", GOOGLE_SCOPES.join(" "));
