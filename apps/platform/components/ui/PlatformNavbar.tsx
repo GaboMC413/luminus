@@ -542,39 +542,39 @@ export function PlatformNavbar() {
                   <span className="material-symbols-rounded text-slate-400 text-[20px]">person</span>
                 </div>
               )}
-              <span className={`hidden lg:block text-[14px] font-semibold ${isProfileDropdownOpen ? "text-black" : "text-slate-400 group-hover:text-black"}`}>
+              <span className={`hidden lg:block text-sm font-semibold ${isProfileDropdownOpen ? "text-slate-900" : "text-slate-500 group-hover:text-slate-900"}`}>
                 {profileName}
               </span>
             </button>
 
-            {isProfileDropdownOpen && (
-              <div className="fixed right-6 top-[72px] sm:absolute sm:right-0 sm:top-auto sm:mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                <Link
-                  href="/perfil-usuario"
-                  onClick={() => setIsProfileDropdownOpen(false)}
-                  className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[14px] hover:bg-slate-50 transition-colors"
-                >
-                  <span className="material-symbols-rounded text-slate-400 group-hover:text-black">person</span>
-                  <span className="font-semibold text-slate-400 group-hover:text-black">Ver mi perfil</span>
-                </Link>
-                <Link
-                  href="/perfil-usuario/configuracion"
-                  onClick={() => setIsProfileDropdownOpen(false)}
-                  className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[14px] hover:bg-slate-50 transition-colors"
-                >
-                  <span className="material-symbols-rounded text-slate-400 group-hover:text-black">settings</span>
-                  <span className="font-semibold text-slate-400 group-hover:text-black">Ajustes de cuenta</span>
-                </Link>
-                <div className="h-[1px] bg-slate-100 w-full"></div>
-                <button
-                  onClick={handleSignOut}
-                  className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[14px] hover:bg-[#FF4B4B]/10 transition-colors text-left"
-                >
-                  <span className="material-symbols-rounded text-slate-400 group-hover:text-[#FF4B4B]">logout</span>
-                  <span className="font-semibold text-slate-400 group-hover:text-[#FF4B4B]">Cerrar sesión</span>
-                </button>
-              </div>
-            )}
+          {isProfileDropdownOpen && (
+            <div className="fixed right-6 top-[72px] sm:absolute sm:right-0 sm:top-auto sm:mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+              <Link
+                href="/perfil-usuario"
+                onClick={() => setIsProfileDropdownOpen(false)}
+                className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors"
+              >
+                <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900">person</span>
+                <span className="font-semibold text-slate-500 group-hover:text-slate-900">Ver mi perfil</span>
+              </Link>
+              <Link
+                href="/perfil-usuario/configuracion"
+                onClick={() => setIsProfileDropdownOpen(false)}
+                className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors"
+              >
+                <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900">settings</span>
+                <span className="font-semibold text-slate-500 group-hover:text-slate-900">Ajustes de cuenta</span>
+              </Link>
+              <div className="h-[1px] bg-slate-100 w-full"></div>
+              <button
+                onClick={handleSignOut}
+                className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors text-left"
+              >
+                <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B]">logout</span>
+                <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B]">Cerrar sesión</span>
+              </button>
+            </div>
+          )}
           </div>
         </div>
       </header>

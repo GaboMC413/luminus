@@ -7,12 +7,12 @@ export default function FaroPage() {
   const router = useRouter();
 
   return (
-    <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 pt-8 pb-28 md:py-8 flex flex-col items-center gap-8">
+    <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-12 md:py-6 flex flex-col gap-6">
       {/* Upcoming Section: Compact, horizontal alert-style banner */}
-      <div className="w-full bg-slate-50 border border-zinc-200/80 rounded-2xl p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
+      <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
         <div className="flex flex-col md:flex-row items-start gap-4 w-full md:w-auto">
           {/* Icon container */}
-          <div className="w-12 h-12 md:w-20 md:h-20 bg-white border border-zinc-200 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 md:w-20 md:h-20 bg-white border border-slate-200 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
             <div
               style={{
                 maskImage: "url('/Icons/NavBar/faro active.svg')",

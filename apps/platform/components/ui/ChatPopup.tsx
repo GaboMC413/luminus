@@ -48,7 +48,7 @@ function formatMessageBody(text: string): React.ReactNode[] {
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="underline hover:opacity-80 transition-opacity font-bold break-all"
+            className="underline hover:opacity-80 transition-opacity font-semibold break-all"
           >
             {linkText}
           </a>
@@ -70,7 +70,7 @@ function formatMessageBody(text: string): React.ReactNode[] {
                 href={subPart}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline hover:opacity-80 transition-opacity font-bold break-all"
+                className="underline hover:opacity-80 transition-opacity font-semibold break-all"
               >
                 {subPart}
               </a>
@@ -84,7 +84,7 @@ function formatMessageBody(text: string): React.ReactNode[] {
             <React.Fragment key={subIndex}>
               {boldParts.map((boldPart, boldIndex) => {
                 if (boldIndex % 2 === 1) {
-                  return <strong key={boldIndex} className="font-bold">{boldPart}</strong>;
+                  return <strong key={boldIndex} className="font-semibold">{boldPart}</strong>;
                 }
 
                 const italicRegex = /_([^_]+)_/g;
@@ -365,13 +365,13 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
             <img src={avatar || "/logo-luminus-white.svg"} alt={name} className="w-9 h-9 rounded-[10px] object-cover" />
           </div>
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <h4 className="text-sm font-bold text-slate-900 leading-none truncate max-w-[110px] sm:max-w-[130px]" title={name}>
+            <h4 className="text-sm font-semibold text-slate-900 leading-none truncate max-w-[110px] sm:max-w-[130px] font-jakarta" title={name}>
               {name}
             </h4>
             {userId && name !== "LUMINUS" && (
               <Link
                 href={`/comunidad/public-profile?id=${userId}`}
-                className="h-8 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition cursor-pointer font-jakarta uppercase tracking-wider flex items-center justify-center shrink-0 text-decoration-none border-none outline-none"
+                className="h-8 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer font-jakarta flex items-center justify-center shrink-0 text-decoration-none border-none outline-none"
               >
                 Ver perfil
               </Link>
@@ -439,7 +439,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
             <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 mb-4">
               <span className="material-symbols-outlined text-[28px]">chat_bubble_outline</span>
             </div>
-            <p className="text-sm font-bold text-slate-800 mb-1.5">¡Saluda a {name.split(" ")[0]}!</p>
+            <p className="text-sm font-semibold text-slate-800 mb-1.5">¡Saluda a {name.split(" ")[0]}!</p>
             <p className="text-xs text-slate-400 max-w-[220px] leading-relaxed">
               Envía un mensaje para comenzar la conversación.
             </p>

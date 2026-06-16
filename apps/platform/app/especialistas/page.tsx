@@ -7,12 +7,12 @@ export default function EspecialistasPage() {
   const router = useRouter();
 
   return (
-    <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 pt-8 pb-28 md:py-8 flex flex-col items-center gap-8">
+    <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-12 md:py-6 flex flex-col gap-6">
       {/* Upcoming Section: Compact, horizontal alert-style banner */}
-      <div className="w-full bg-slate-50 border border-zinc-200/80 rounded-2xl p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
+      <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
         <div className="flex flex-col md:flex-row items-start gap-4 w-full md:w-auto">
           {/* Icon container */}
-          <div className="w-12 h-12 md:w-20 md:h-20 bg-white border border-zinc-200 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 md:w-20 md:h-20 bg-white border border-slate-200 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
             <div
               style={{
                 maskImage: "url('/Icons/NavBar/expert active.svg')",
@@ -49,7 +49,7 @@ export default function EspecialistasPage() {
       </div>
 
       {/* Benefits Banner for Specialists (Engaging, Colors, Clean, No shadows, Text and Image) */}
-      <div className="w-full bg-gradient-to-br from-wellness-sage-100/10 via-white to-wellness-clay-100/20 border border-zinc-200 hover:border-wellness-sage-300/80 rounded-2xl p-6 flex flex-col md:flex-row gap-8 relative overflow-hidden items-center transition-all duration-500">
+      <div className="w-full bg-gradient-to-br from-wellness-sage-100/10 via-white to-wellness-clay-100/20 border border-slate-200 hover:border-wellness-sage-300/80 rounded-2xl p-6 flex flex-col md:flex-row gap-8 relative overflow-hidden items-center transition-all duration-500">
         {/* Subtle decorative background glow (no shadows) */}
         <div className="absolute right-0 top-0 w-64 h-64 bg-wellness-sage-200/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute left-0 bottom-0 w-64 h-64 bg-wellness-clay-200/10 rounded-full blur-3xl pointer-events-none" />
@@ -59,7 +59,7 @@ export default function EspecialistasPage() {
           <img
             src="/specialsitsLUMINUS.png"
             alt="Especialistas LUMINUS"
-            className="w-full h-auto object-cover rounded-2xl border border-zinc-200/60"
+            className="w-full h-auto object-cover rounded-2xl border border-slate-200"
           />
         </div>
 

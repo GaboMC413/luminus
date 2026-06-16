@@ -184,7 +184,7 @@ export function EditableField({
                 disabled={!isEditing}
                 className={`${!isEditing ? "[&_.reg-input-bordered]:bg-slate-50 [&_.reg-input-bordered]:!border-none [&_input]:!text-slate-500 pointer-events-none" : `[&_.reg-input-bordered]:bg-white [&_.reg-input-bordered]:border-black [&_input]:!text-black ${validationError ? '[&_input]:!border-[#FF3D3D] [&_input]:!ring-1 [&_input]:!ring-[#FF3D3D]' : ''}`}`}
               />
-              {validationError && <p className="text-[#FF3D3D] text-label font-bold mt-1 ml-1">{validationError}</p>}
+              {validationError && <p className="text-[#FF3D3D] text-label font-semibold mt-1 ml-1">{validationError}</p>}
             </div>
           ) : isPhone ? (
             <PhoneInput
@@ -237,7 +237,7 @@ export function EditableField({
                   />
                 </div>
               </div>
-              {validationError && <p className="text-[#FF3D3D] text-label font-bold mt-1">{validationError}</p>}
+              {validationError && <p className="text-[#FF3D3D] text-label font-semibold mt-1">{validationError}</p>}
             </div>
           ) : (
             <InputField
@@ -275,7 +275,7 @@ export function EditableField({
           </button>
           <button
             onClick={handleSave}
-            className={`px-4 h-8 text-button font-bold bg-black text-white rounded-lg hover:bg-slate-800 transition-all duration-300 origin-center ${shouldAnimate ? "scale-110" : "scale-100"}`}
+            className={`px-4 h-8 text-button font-semibold bg-black text-white rounded-lg hover:bg-slate-800 transition-all duration-300 origin-center ${shouldAnimate ? "scale-110" : "scale-100"}`}
           >
             Guardar
           </button>

@@ -34,7 +34,7 @@ export function UserCard({ user }: UserCardProps) {
       onClick={handleViewProfile}
       className="bg-white rounded-2xl p-3 md:p-4 flex flex-col items-center gap-2.5 md:gap-3 border border-slate-200 transition-all group hover:border-slate-300 shadow-none cursor-pointer"
     >
-      <div className="w-[76px] h-[76px] sm:w-[88px] sm:h-[88px] md:w-[110px] md:h-[110px] rounded-2xl overflow-hidden bg-slate-50 shrink-0 border-4 border-white shadow-none group-hover:border-slate-200/50 transition-colors relative ring-1 ring-black/5 flex items-center justify-center">
+      <div className="w-[76px] h-[76px] sm:w-[88px] sm:h-[88px] md:w-[110px] md:h-[110px] rounded-[10px] overflow-hidden bg-slate-50 shrink-0 border-4 border-white shadow-none group-hover:border-slate-200/50 transition-colors relative ring-1 ring-black/5 flex items-center justify-center">
         {hasAvatar ? (
           <img 
             src={user.avatar} 
@@ -52,10 +52,10 @@ export function UserCard({ user }: UserCardProps) {
       </div>
 
       <div className="flex flex-col items-center gap-0.5 md:gap-1 text-center">
-        <h3 className="text-[13px] md:text-[18px] font-bold text-slate-900 leading-tight line-clamp-1 font-jakarta px-1">
+        <h3 className="text-sm md:text-base font-semibold text-slate-900 leading-tight line-clamp-1 font-jakarta px-1">
           {user.name}
         </h3>
-        <p className="text-[10px] md:text-[13px] font-medium text-slate-400 font-sans tracking-wide">
+        <p className="text-xs md:text-sm font-medium text-slate-500 font-sans tracking-wide">
           {formatLocation(user.location)}
         </p>
       </div>
@@ -79,7 +79,7 @@ export function UserCard({ user }: UserCardProps) {
           e.stopPropagation();
           handleViewProfile();
         }}
-        className="h-8 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition cursor-pointer font-jakarta uppercase tracking-wider flex items-center justify-center shrink-0 border-none outline-none mt-1 md:mt-2"
+        className="text-xs font-semibold text-slate-500 hover:text-slate-900 hover:underline transition-colors mt-2 shrink-0 cursor-pointer bg-transparent border-none outline-none"
       >
         Ver perfil
       </button>

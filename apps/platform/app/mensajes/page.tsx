@@ -65,7 +65,7 @@ function formatMessageBody(text: string): React.ReactNode[] {
             href={url}
             target="_blank"
             rel="noopener noreferrer"
-            className="underline hover:opacity-80 transition-opacity font-bold break-all"
+            className="underline hover:opacity-80 transition-opacity font-semibold break-all"
           >
             {linkText}
           </a>
@@ -87,7 +87,7 @@ function formatMessageBody(text: string): React.ReactNode[] {
                 href={subPart}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="underline hover:opacity-80 transition-opacity font-bold break-all"
+                className="underline hover:opacity-80 transition-opacity font-semibold break-all"
               >
                 {subPart}
               </a>
@@ -101,7 +101,7 @@ function formatMessageBody(text: string): React.ReactNode[] {
             <React.Fragment key={subIndex}>
               {boldParts.map((boldPart, boldIndex) => {
                 if (boldIndex % 2 === 1) {
-                  return <strong key={boldIndex} className="font-bold">{boldPart}</strong>;
+                  return <strong key={boldIndex} className="font-semibold">{boldPart}</strong>;
                 }
 
                 const italicRegex = /_([^_]+)_/g;
@@ -336,9 +336,9 @@ function MessagesContent() {
   });
 
   return (
-    <div className="flex-1 w-full flex flex-col bg-[#F8FAFC] min-h-0 overflow-hidden">
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col min-h-0">
-        <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0">
+    <div className="flex-1 w-full flex flex-col bg-slate-50">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col">
+        <div className="w-full max-w-6xl mx-auto flex flex-col flex-1">
           <div className={`items-center gap-3 mb-4 md:mb-6 shrink-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
             <button
               onClick={() => router.back()}
@@ -347,7 +347,7 @@ function MessagesContent() {
             >
               <span className="material-symbols-rounded text-[20px]">arrow_back</span>
             </button>
-            <h1 className="text-xl text-black font-semibold">Mensajes</h1>
+            <h1 className="text-xl md:text-2xl text-slate-900 font-semibold font-jakarta">Mensajes</h1>
           </div>
 
           {error && (
@@ -356,7 +356,7 @@ function MessagesContent() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 min-h-0">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start content-start flex-1">
             <div className={`md:col-span-4 flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full min-h-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
               <div className="p-3 border-b border-slate-100 shrink-0">
                 <div className="relative">
@@ -366,7 +366,7 @@ function MessagesContent() {
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
                     placeholder="Buscar..."
-                    className="w-full bg-slate-50 border-none rounded-full py-2.5 pl-11 pr-4 text-[14px] focus:ring-1 focus:ring-slate-200 outline-none transition-all text-slate-800"
+                    className="w-full bg-slate-50 border-none rounded-full py-2.5 pl-11 pr-4 text-sm focus:ring-1 focus:ring-slate-200 outline-none transition-all text-slate-800"
                   />
                 </div>
               </div>
@@ -382,14 +382,14 @@ function MessagesContent() {
                       <span className="material-symbols-rounded text-[24px]">forum</span>
                     </div>
                     <div className="flex flex-col gap-1.5 max-w-[240px]">
-                      <h3 className="text-[15px] font-bold text-slate-900 leading-tight">¿Con quién te gustaría conectar hoy?</h3>
-                      <p className="text-[13px] text-slate-500 font-semibold leading-relaxed">
+                      <h3 className="text-sm font-semibold text-slate-900 leading-tight">¿Con quién te gustaría conectar hoy?</h3>
+                      <p className="text-sm text-slate-500 font-medium leading-relaxed">
                         Aún no tienes chats activos. Ve a la comunidad y contacta a tu primera persona.
                       </p>
                     </div>
                     <button
                       onClick={() => router.push("/comunidad")}
-                      className="h-10 px-6 bg-black hover:bg-zinc-800 text-white rounded-xl text-[13px] font-bold transition duration-200 cursor-pointer border-none shadow-sm flex items-center justify-center"
+                      className="h-10 px-6 bg-black hover:bg-zinc-800 text-white rounded-xl text-sm font-semibold transition duration-200 cursor-pointer border-none shadow-sm flex items-center justify-center"
                     >
                       Ir a la comunidad
                     </button>
@@ -417,12 +417,12 @@ function MessagesContent() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center mb-0.5">
-                        <h3 className="text-[14px] font-bold truncate text-slate-900">{conversation.participant.name}</h3>
-                        <span className="text-[10px] text-slate-400 whitespace-nowrap">
+                        <h3 className="text-sm font-semibold truncate text-slate-900">{conversation.participant.name}</h3>
+                        <span className="text-xs text-slate-400 whitespace-nowrap">
                           {formatRelativeTime(conversation.last_message?.created_at || conversation.updated_at)}
                         </span>
                       </div>
-                      <p className="text-[13px] text-slate-500 truncate">{conversation.last_message?.body || "Sin mensajes aun"}</p>
+                      <p className="text-sm text-slate-500 truncate">{conversation.last_message?.body || "Sin mensajes aun"}</p>
                     </div>
                   </button>
                 ))}
@@ -447,7 +447,7 @@ function MessagesContent() {
                   >
                     <span className="material-symbols-rounded text-[22px]">arrow_back</span>
                   </button>
-                  <div className="w-10 h-10 rounded-[10px] bg-slate-100 animate-pulse shrink-0" />
+                  <div className="w-11 h-11 rounded-[10px] bg-slate-100 animate-pulse shrink-0" />
                   <div className="h-4 w-28 bg-slate-100 rounded animate-pulse" />
                 </div>
 
@@ -474,13 +474,13 @@ function MessagesContent() {
                 <div className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 mb-4 border border-slate-100/50">
                   <span className="material-symbols-rounded text-[32px]">forum</span>
                 </div>
-                <h2 className="text-[20px] font-bold text-slate-900 font-jakarta mb-2">Tus Mensajes</h2>
-                <p className="text-[14px] text-slate-500 max-w-sm mb-6 leading-relaxed">
+                <h2 className="text-xl md:text-2xl font-semibold text-slate-900 font-jakarta mb-2">Tus Mensajes</h2>
+                <p className="text-sm text-slate-500 max-w-sm mb-6 leading-relaxed">
                   Conecta con personas en la comunidad para iniciar una conversacion y enviarles mensajes privados.
                 </p>
                 <button
                   onClick={() => router.push("/comunidad")}
-                  className="h-11 px-6 bg-black text-white rounded-xl text-[14px] font-bold hover:bg-zinc-800 transition duration-200"
+                  className="h-11 px-6 bg-black text-white rounded-xl text-sm font-semibold hover:bg-zinc-800 transition duration-200"
                 >
                   Explorar la Comunidad
                 </button>
@@ -508,14 +508,14 @@ function MessagesContent() {
                     <img
                       src={selectedConv.participant.avatar_url || fallbackAvatar(selectedConv.participant.name)}
                       alt={selectedConv.participant.name}
-                      className="w-10 h-10 rounded-[10px] object-cover"
+                      className="w-11 h-11 rounded-[10px] object-cover"
                     />
                     <div className="flex items-center gap-3">
-                      <h2 className="text-[15px] font-bold text-slate-900 leading-none">{selectedConv.participant.name}</h2>
+                      <h2 className="text-base font-semibold text-slate-900 leading-none">{selectedConv.participant.name}</h2>
                       {selectedConv.participant.name !== "LUMINUS" && (
                         <Link
                           href={`/comunidad/public-profile?id=${selectedConv.participant.id}`}
-                          className="h-8 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition cursor-pointer font-jakarta uppercase tracking-wider flex items-center justify-center shrink-0 text-decoration-none border-none outline-none"
+                          className="h-8 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer font-jakarta flex items-center justify-center shrink-0 text-decoration-none border-none outline-none"
                         >
                           Ver perfil
                         </Link>
@@ -536,21 +536,21 @@ function MessagesContent() {
                         <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                           <button
                             onClick={() => setIsChatMenuOpen(false)}
-                            className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                            className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                           >
                             <span className="material-symbols-rounded text-slate-400 group-hover:text-black">notifications_off</span>
                             <span className="font-semibold text-slate-600 group-hover:text-black transition-colors">Silenciar chat</span>
                           </button>
                           <button
                             onClick={handleDeleteChat}
-                            className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                            className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                           >
                             <span className="material-symbols-rounded text-slate-400 group-hover:text-[#FF4B4B]">delete</span>
                             <span className="font-semibold text-slate-600 group-hover:text-[#FF4B4B] transition-colors">Eliminar chat</span>
                           </button>
                           <button
                             onClick={handleBlockUser}
-                            className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                            className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                           >
                             <span className="material-symbols-rounded text-slate-400 group-hover:text-[#FF4B4B]">block</span>
                             <span className="font-semibold text-slate-600 group-hover:text-[#FF4B4B] transition-colors">Bloquear usuario</span>
@@ -567,8 +567,8 @@ function MessagesContent() {
                       <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 mb-3">
                         <span className="material-symbols-rounded text-[24px]">chat_bubble_outline</span>
                       </div>
-                      <p className="text-[15px] font-bold text-slate-800 mb-1">Saluda a {selectedConv.participant.name.split(" ")[0]}</p>
-                      <p className="text-[13px] text-slate-400 max-w-[220px] leading-relaxed">
+                      <p className="text-sm font-semibold text-slate-800 mb-1">Saluda a {selectedConv.participant.name.split(" ")[0]}</p>
+                      <p className="text-sm text-slate-400 max-w-[220px] leading-relaxed">
                         Envia un mensaje para comenzar la conversacion.
                       </p>
                     </div>
@@ -582,7 +582,7 @@ function MessagesContent() {
                           className={`flex flex-col ${isMine ? "items-end" : "items-start"} ${isConsecutive ? "mt-0.5" : "mt-2 first:mt-0"}`}
                         >
                           <div
-                            className={`max-w-[85%] pl-4 pr-12 pt-2.5 pb-3 text-[14px] leading-relaxed relative min-w-[75px] ${isMine
+                            className={`max-w-[85%] pl-4 pr-12 pt-2.5 pb-3 text-sm leading-relaxed relative min-w-[75px] ${isMine
                               ? `bg-black text-white font-medium ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tr-none"}`
                               : `bg-slate-100 border border-slate-100 text-slate-800 ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tl-none"}`
                               }`}
@@ -613,7 +613,7 @@ function MessagesContent() {
                         onKeyDown={handleKeyDown}
                         placeholder="Escribe un mensaje..."
                         rows={1}
-                        className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-[14px] focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-32 custom-scrollbar block text-slate-800"
+                        className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-sm focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-32 custom-scrollbar block text-slate-800"
                         onInput={(event) => {
                           const target = event.target as HTMLTextAreaElement;
                           target.style.height = "auto";
@@ -646,10 +646,10 @@ function MessagesContent() {
 export default function MessagesPage() {
   return (
     <Suspense fallback={
-      <div className="flex-1 w-full flex h-full bg-[#F8FAFC] items-center justify-center">
+      <div className="flex-1 w-full flex h-full bg-slate-50 items-center justify-center">
         <div className="flex flex-col items-center gap-4 animate-pulse">
           <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px] invert brightness-0" />
-          <p className="text-[11px] text-slate-400 uppercase tracking-widest font-semibold">Cargando mensajes...</p>
+          <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold">Cargando mensajes...</p>
         </div>
       </div>
     }>

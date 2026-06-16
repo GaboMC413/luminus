@@ -457,7 +457,7 @@ function PlatformContent() {
         <button
           type="button"
           onClick={handleClearFilters}
-          className="text-xs font-bold text-slate-400 hover:text-slate-900 transition-premium cursor-pointer border-none bg-transparent font-jakarta uppercase tracking-wider"
+          className="text-xs font-semibold text-slate-400 hover:text-slate-900 transition-premium cursor-pointer border-none bg-transparent font-jakarta"
         >
           Limpiar
         </button>
@@ -529,7 +529,7 @@ function PlatformContent() {
                   {currentUserProfile ? `${currentUserProfile.first_name || ""} ${currentUserProfile.last_name || ""}`.trim() || "Usuario sin nombre" : "Cargando..."}
                 </h3>
                 {/* 4. City */}
-                <p className="text-[12px] md:text-[13px] font-medium text-slate-400 font-sans tracking-wide">
+                <p className="text-xs md:text-sm font-medium text-slate-400 font-sans tracking-wide">
                   {currentUserProfile?.city ? `${currentUserProfile.city.split(',')[0]}, ${currentUserProfile.country || ""}`.replace(/^,\s*|,\s*$/, "") : "Ubicación no configurada"}
                 </p>
               </div>
@@ -537,7 +537,7 @@ function PlatformContent() {
               {/* 5. Button to see profile */}
               <button
                 onClick={() => router.push('/perfil-usuario')}
-                className="w-full py-3 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-2 cursor-pointer border-none font-jakarta uppercase tracking-wider"
+                className="w-full py-3 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer border-none font-jakarta"
               >
                 Ir a mi perfil
               </button>
@@ -545,10 +545,10 @@ function PlatformContent() {
           </div>
 
           {/* Card 2: Mi red Card */}
-          <div className="bg-white rounded-2xl border border-zinc-200 p-5 flex flex-col gap-4 shadow-none relative">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-4 shadow-none relative">
             {/* Title */}
             <div className="flex justify-between items-center">
-              <h4 className="text-[14px] font-bold text-slate-900 font-jakarta">Mi red</h4>
+              <h4 className="text-sm font-semibold text-slate-900 font-jakarta">Mi red</h4>
             </div>
 
             {/* Empty State */}
@@ -556,7 +556,7 @@ function PlatformContent() {
               <span className="material-symbols-outlined text-slate-300 text-[24px] mb-1.5 select-none">
                 people_outline
               </span>
-              <p className="text-[12px] text-slate-400 font-medium leading-normal max-w-[190px]">
+              <p className="text-xs text-slate-400 font-medium leading-normal max-w-[190px]">
                 Todavía no has añadido a nadie a tu red
               </p>
             </div>
@@ -564,7 +564,7 @@ function PlatformContent() {
             {/* Button to Ver mi red */}
             <button
               onClick={() => router.push('/red')}
-              className="w-full py-3 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-2 cursor-pointer border-none font-jakarta uppercase tracking-wider"
+              className="w-full py-3 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer border-none font-jakarta"
             >
               Ver mi red
             </button>
@@ -579,8 +579,8 @@ function PlatformContent() {
             
             {/* Mobile Top User Info & Network Bar */}
             <div className="flex md:hidden bg-white px-2.5 py-2.5 rounded-xl border border-zinc-200 items-center justify-between shadow-none w-full">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-[10px] overflow-hidden bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
                   {currentUserProfile?.profile_picture_url && !profileImgError ? (
                     <img
                       src={currentUserProfile.profile_picture_url}
@@ -589,16 +589,16 @@ function PlatformContent() {
                       onError={() => setProfileImgError(true)}
                     />
                   ) : (
-                    <span className="material-symbols-outlined text-slate-355 text-[18px] select-none">person</span>
+                    <span className="material-symbols-outlined text-slate-355 text-[22px] select-none">person</span>
                   )}
                 </div>
                 <div className="flex flex-col items-start">
-                  <span className="text-[12px] font-bold text-slate-900 leading-none">
+                  <span className="text-sm font-semibold text-slate-900 leading-none">
                     {currentUserProfile ? `${currentUserProfile.first_name || ""} ${currentUserProfile.last_name || ""}`.trim() || "Mi Perfil" : "Cargando..."}
                   </span>
                   <button
                     onClick={() => router.push('/perfil-usuario')}
-                    className="text-[10px] text-slate-400 hover:text-black font-semibold font-sans leading-none mt-1 underline border-none bg-transparent cursor-pointer p-0 text-left"
+                    className="text-xs font-medium text-slate-400 hover:text-slate-900 underline mt-1 border-none bg-transparent cursor-pointer p-0 text-left"
                   >
                     Ver mi perfil
                   </button>
@@ -606,7 +606,7 @@ function PlatformContent() {
               </div>
               <button
                 onClick={() => router.push('/red')}
-                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-lg text-[10px] font-bold tracking-wider uppercase font-jakarta border-none cursor-pointer animate-none"
+                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-lg text-xs font-semibold font-jakarta border-none cursor-pointer animate-none"
               >
                 Ver mi red
               </button>
@@ -620,7 +620,7 @@ function PlatformContent() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Buscar por ciudad, país o temas de interés"
-                  className="flex-1 bg-transparent border-none text-[15px] font-normal text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                  className="flex-1 bg-transparent border-none text-sm font-normal text-slate-800 placeholder:text-slate-400 focus:outline-none"
                 />
 
                 {suggestions.length > 0 && (
@@ -638,8 +638,8 @@ function PlatformContent() {
                           {suggestion.type === 'Ciudad' ? 'location_on' : suggestion.type === 'País' ? 'public' : 'favorite'}
                         </span>
                         <div className="flex-1 flex flex-col overflow-hidden">
-                          <span className="text-[14px] font-medium text-black truncate">{suggestion.value}</span>
-                          <span className="text-[9px] text-slate-400 mt-0.5 uppercase tracking-widest font-bold truncate">{suggestion.type}</span>
+                          <span className="text-sm font-medium text-slate-900 truncate">{suggestion.value}</span>
+                          <span className="text-[9px] text-slate-400 mt-0.5 uppercase tracking-widest font-semibold truncate">{suggestion.type}</span>
                         </div>
                       </button>
                     ))}
@@ -732,7 +732,7 @@ function PlatformContent() {
                 >
                   {/* Header for mobile */}
                   <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200/50 shrink-0">
-                    <span className="text-base font-bold text-black font-jakarta">Buscar por filtros</span>
+                    <span className="text-base font-semibold text-slate-900 font-jakarta">Buscar por filtros</span>
                     <button 
                       type="button" 
                       onClick={() => setShowFilters(false)}
@@ -759,14 +759,14 @@ function PlatformContent() {
             {/* Active Filter Chips */}
             {hasActiveFilters && (
               <div className="flex flex-wrap gap-2 items-center pt-1 animate-in fade-in duration-200">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mr-1">Filtros activos:</span>
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest mr-1">Filtros activos:</span>
 
                 {appliedFilters.country && (
-                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200/50 text-[12px] font-bold text-slate-700">
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200/50 text-xs font-semibold text-slate-700">
                     <span>País: {appliedFilters.country}</span>
                     <button 
                       onClick={() => setAppliedFilters({ ...appliedFilters, country: "", city: "" })}
-                      className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-slate-200 text-[12px] font-bold border-none bg-transparent cursor-pointer text-slate-500 hover:text-black ml-0.5"
+                      className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-slate-200 text-xs font-semibold border-none bg-transparent cursor-pointer text-slate-500 hover:text-black ml-0.5"
                     >
                       ✕
                     </button>
@@ -774,11 +774,11 @@ function PlatformContent() {
                 )}
 
                 {appliedFilters.city && (
-                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200/50 text-[12px] font-bold text-slate-700">
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200/50 text-xs font-semibold text-slate-700">
                     <span>Ciudad: {appliedFilters.city.split(',')[0]}</span>
                     <button 
                       onClick={() => setAppliedFilters({ ...appliedFilters, city: "" })}
-                      className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-slate-200 text-[12px] font-bold border-none bg-transparent cursor-pointer text-slate-500 hover:text-black ml-0.5"
+                      className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-slate-200 text-xs font-semibold border-none bg-transparent cursor-pointer text-slate-500 hover:text-black ml-0.5"
                     >
                       ✕
                     </button>
@@ -786,11 +786,11 @@ function PlatformContent() {
                 )}
 
                 {appliedFilters.category && appliedFilters.category !== "Todas las categorías" && (
-                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200/50 text-[12px] font-bold text-slate-700">
+                  <div className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200/50 text-xs font-semibold text-slate-700">
                     <span>Categoría: {appliedFilters.category}</span>
                     <button 
                       onClick={() => setAppliedFilters({ ...appliedFilters, category: "Todas las categorías", selectedInterests: [] })}
-                      className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-slate-200 text-[12px] font-bold border-none bg-transparent cursor-pointer text-slate-500 hover:text-black ml-0.5"
+                      className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-slate-200 text-xs font-semibold border-none bg-transparent cursor-pointer text-slate-500 hover:text-black ml-0.5"
                     >
                       ✕
                     </button>
@@ -798,14 +798,14 @@ function PlatformContent() {
                 )}
 
                 {appliedFilters.selectedInterests && appliedFilters.selectedInterests.map(interest => (
-                  <div key={interest} className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200/50 text-[12px] font-bold text-slate-700">
+                  <div key={interest} className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200/50 text-xs font-semibold text-slate-700">
                     <span>{interest}</span>
                     <button 
                       onClick={() => setAppliedFilters({ 
                         ...appliedFilters, 
                         selectedInterests: appliedFilters.selectedInterests.filter(i => i !== interest) 
                       })}
-                      className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-slate-200 text-[12px] font-bold border-none bg-transparent cursor-pointer text-slate-500 hover:text-black ml-0.5"
+                      className="w-4 h-4 rounded-full flex items-center justify-center hover:bg-slate-200 text-xs font-semibold border-none bg-transparent cursor-pointer text-slate-500 hover:text-black ml-0.5"
                     >
                       ✕
                     </button>
@@ -814,7 +814,7 @@ function PlatformContent() {
 
                 <button
                   onClick={handleClearFilters}
-                  className="text-[12px] font-bold text-slate-500 hover:text-black transition-colors ml-1 cursor-pointer border-none bg-transparent underline"
+                  className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors ml-1 cursor-pointer border-none bg-transparent underline"
                 >
                   Limpiar todo
                 </button>
@@ -829,8 +829,8 @@ function PlatformContent() {
             {filteredUsers.length === 0 ? (
               <div className="w-full flex flex-col items-center justify-center p-12 text-center min-h-[300px]">
                 <span className="material-symbols-outlined text-[48px] text-slate-300 mb-2">person_search</span>
-                <h3 className="text-[18px] font-bold text-slate-800 mb-1">No se encontraron resultados</h3>
-                <p className="text-slate-400 text-[14px]">Prueba con otros términos de búsqueda o selecciona otra categoría.</p>
+                <h3 className="text-base font-semibold text-slate-800 mb-1">No se encontraron resultados</h3>
+                <p className="text-slate-400 text-sm">Prueba con otros términos de búsqueda o selecciona otra categoría.</p>
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 w-full">
@@ -861,7 +861,7 @@ function PlatformContent() {
             
             {/* Header */}
             <div className="px-5 pb-3 border-b border-slate-100 flex justify-between items-center shrink-0">
-              <h4 className="text-[16px] font-bold text-slate-900 font-jakarta">Mi Perfil y Red</h4>
+              <h4 className="text-sm font-semibold text-slate-900 font-jakarta">Mi Perfil y Red</h4>
               <button 
                 onClick={() => setShowNetworkDrawer(false)}
                 className="p-1 hover:bg-slate-50 rounded-full transition-colors text-slate-400 bg-transparent border-none cursor-pointer"
@@ -905,17 +905,17 @@ function PlatformContent() {
 
                 <div className="p-5 flex flex-col items-center text-center gap-4">
                   <div className="flex flex-col items-center gap-1.5 w-full">
-                    <h3 className="text-[16px] font-bold text-slate-900 leading-snug line-clamp-1 hover:underline cursor-pointer font-jakarta" onClick={() => { setShowNetworkDrawer(false); router.push('/perfil-usuario'); }}>
+                    <h3 className="text-sm font-semibold text-slate-900 leading-snug line-clamp-1 hover:underline cursor-pointer font-jakarta" onClick={() => { setShowNetworkDrawer(false); router.push('/perfil-usuario'); }}>
                       {currentUserProfile ? `${currentUserProfile.first_name || ""} ${currentUserProfile.last_name || ""}`.trim() || "Usuario sin nombre" : "Cargando..."}
                     </h3>
-                    <p className="text-[12px] font-medium text-slate-400 font-sans tracking-wide">
+                    <p className="text-xs font-medium text-slate-400 font-sans tracking-wide">
                       {currentUserProfile?.city ? `${currentUserProfile.city.split(',')[0]}, ${currentUserProfile.country || ""}`.replace(/^,\s*|,\s*$/, "") : "Ubicación no configurada"}
                     </p>
                   </div>
 
                   <button
                     onClick={() => { setShowNetworkDrawer(false); router.push('/perfil-usuario'); }}
-                    className="w-full py-3 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-2 cursor-pointer border-none font-jakarta uppercase tracking-wider"
+                    className="w-full py-3 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer border-none font-jakarta uppercase tracking-wider"
                   >
                      Ir a mi perfil
                   </button>
@@ -923,23 +923,23 @@ function PlatformContent() {
               </div>
 
               {/* 2. Mi red Card */}
-              <div className="bg-white rounded-2xl border border-zinc-200 p-5 flex flex-col gap-4 shadow-none relative">
+              <div className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col gap-4 shadow-none relative">
                 <div className="flex justify-between items-center">
-                  <h4 className="text-[14px] font-bold text-slate-900 font-jakarta">Mi red</h4>
+                  <h4 className="text-sm font-semibold text-slate-900 font-jakarta">Mi red</h4>
                 </div>
 
                 <div className="flex flex-col items-center text-center py-4 px-2 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200/80">
                   <span className="material-symbols-outlined text-slate-300 text-[24px] mb-1.5 select-none">
                     people_outline
                   </span>
-                  <p className="text-[12px] text-slate-400 font-medium leading-normal max-w-[190px]">
+                  <p className="text-xs text-slate-400 font-medium leading-normal max-w-[190px]">
                     Todavía no has añadido a nadie a tu red
                   </p>
                 </div>
 
                 <button
                   onClick={() => { setShowNetworkDrawer(false); router.push('/red'); }}
-                  className="w-full py-3 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-[11px] font-bold transition flex items-center justify-center gap-2 cursor-pointer border-none font-jakarta uppercase tracking-wider"
+                  className="w-full py-3 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-2 cursor-pointer border-none font-jakarta uppercase tracking-wider"
                 >
                   Ver mi red
                 </button>

@@ -34,7 +34,7 @@ export function ProfileInterestsSection({ interests, otherInterests, onEdit, isP
             <InterestPill key={idx} interest={interest} />
           ))}
           {otherInterests && (
-            <div className="h-9 px-4 bg-slate-50 text-slate-400 border border-slate-100 rounded-[12px] text-[12px] lg:text-[14px] font-medium italic tracking-tight font-sans flex items-center shadow-none shrink-0 select-none">
+            <div className="h-9 px-4 bg-slate-50 text-slate-400 border border-slate-100 rounded-xl text-[12px] lg:text-[14px] font-medium italic tracking-tight font-sans flex items-center shadow-none shrink-0 select-none">
               + {otherInterests}
             </div>
           )}

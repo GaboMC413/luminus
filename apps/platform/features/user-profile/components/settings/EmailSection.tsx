@@ -230,12 +230,12 @@ export function EmailSection({
                     Enviaremos un código a este correo para confirmar el cambio.
                   </p>
                   {emailError && (
-                    <p className="text-[#FF3D3D] text-label font-bold mt-1 px-1">
+                    <p className="text-[#FF3D3D] text-label font-semibold mt-1 px-1">
                       {emailError}
                     </p>
                   )}
                 </div>
-
+ 
                 <div className="flex gap-2 justify-end mt-1">
                   <button
                     onClick={handleCancel}
@@ -246,7 +246,7 @@ export function EmailSection({
                   <button
                     onClick={handleSendCode}
                     disabled={loading || !newEmail || !newEmail.includes("@")}
-                    className={`px-4 h-8 text-button font-bold bg-black text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 origin-center ${shouldAnimate ? "scale-110" : "scale-100"}`}
+                    className={`px-4 h-8 text-button font-semibold bg-black text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 origin-center ${shouldAnimate ? "scale-110" : "scale-100"}`}
                   >
                     {loading ? "Enviando..." : "Enviar código"}
                   </button>
@@ -290,12 +290,12 @@ export function EmailSection({
                     )}
                   </p>
                   {codeError && (
-                    <p className="text-[#FF3D3D] text-label font-bold mt-1 px-1">
+                    <p className="text-[#FF3D3D] text-label font-semibold mt-1 px-1">
                       {codeError}
                     </p>
                   )}
                 </div>
-
+ 
                 <div className="flex gap-2 justify-end mt-2">
                   <button
                     onClick={handleCancel}
@@ -306,7 +306,7 @@ export function EmailSection({
                   <button
                     onClick={handleConfirm}
                     disabled={loading || code.length < 6}
-                    className={`px-4 h-8 text-button font-bold bg-black text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 origin-center ${shouldAnimate ? "scale-110" : "scale-100"}`}
+                    className={`px-4 h-8 text-button font-semibold bg-black text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 origin-center ${shouldAnimate ? "scale-110" : "scale-100"}`}
                   >
                     {loading ? "Confirmando..." : "Confirmar"}
                   </button>
