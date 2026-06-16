@@ -7,6 +7,10 @@ export const runtime = "nodejs";
 const GOOGLE_STATE_COOKIE = "luminus_google_oauth_state";
 const GOOGLE_SCOPES = ["openid", "email", "profile"];
 
+function getPublicOrigin(requestUrl: URL) {
+  return (process.env.AUTH_BASE_URL || requestUrl.origin).replace(/\/$/, "");
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -16,7 +20,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/auth/iniciar-sesion?error=google_config", url.origin));
   }
 
-  const origin = url.origin;
+  const origin = getPublicOrigin(url);
   const state = randomBytes(24).toString("base64url");
   const redirectUri = `${origin}/api/auth/google/callback`;
 

@@ -9,6 +9,7 @@ Required local env vars:
 ```bash
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/postgres?schema=public&sslmode=require"
 AUTH_SESSION_SECRET="use-a-long-random-secret-with-at-least-32-characters"
+AUTH_BASE_URL="http://localhost:3100"
 S3_AVATAR_BUCKET="luminus-dev-avatars"
 S3_AVATAR_REGION="us-east-1"
 S3_AVATAR_PUBLIC_BASE_URL="https://luminus-dev-avatars.s3.us-east-1.amazonaws.com"
@@ -77,6 +78,13 @@ Configure these environment variables in Amplify and locally:
 
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
+- `AUTH_BASE_URL`
+
+Set `AUTH_BASE_URL` to the public URL for each environment so Google receives the correct callback host:
+
+- Local: `http://localhost:3100`
+- Dev: `https://dev.app.luminuslatam.com`
+- Production: `https://app.luminuslatam.com`
 
 Add each deployed environment callback URL to the Google OAuth client:
 
