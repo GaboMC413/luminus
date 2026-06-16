@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 
-// Mock User Details for Verification/Bypass & View Profile Details Modal
 interface ProfileDetails {
   id: string;
   name: string;
@@ -23,97 +22,6 @@ interface ConnectionItem {
   direction: "incoming" | "outgoing";
   user: ProfileDetails;
 }
-
-const MOCK_PENDING_REQUESTS: ConnectionItem[] = [
-  {
-    id: "mock-conn-pending-1",
-    status: "pending",
-    direction: "incoming",
-    user: {
-      id: "mock-pending-1",
-      name: "Carlos Gómez",
-      avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
-      profession: "Instructor de Yoga",
-      location: "Bogotá, Colombia",
-      bio: "Apasionado por la meditación y el yoga. Ayudo a las personas a encontrar paz mental a través del movimiento consciente.",
-      interests: ["Yoga", "Meditación", "Mindfulness"],
-      prompts: [
-        { question: "Mi mantra diario es…", answer: "Respirar hondo, soltar el control y confiar en el presente." }
-      ]
-    }
-  },
-  {
-    id: "mock-conn-pending-2",
-    status: "pending",
-    direction: "incoming",
-    user: {
-      id: "mock-pending-2",
-      name: "María Rodríguez",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop",
-      profession: "Psicóloga Clínica",
-      location: "Ciudad de México, México",
-      bio: "Especialista en terapia cognitivo-conductual. Acompaño procesos de autoconocimiento y gestión del estrés.",
-      interests: ["Psicología", "Salud Mental", "Lectura"],
-      prompts: [
-        { question: "Para mí el bienestar es…", answer: "Un camino continuo de compasión hacia uno mismo y hacia los demás." }
-      ]
-    }
-  }
-];
-
-const MOCK_ACTIVE_CONNECTIONS: ConnectionItem[] = [
-  {
-    id: "mock-conn-active-1",
-    status: "accepted",
-    direction: "outgoing",
-    user: {
-      id: "mock-active-1",
-      name: "Sofía Silva",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop",
-      profession: "Nutricionista",
-      location: "Santiago, Chile",
-      bio: "Ayudo a las personas a construir una relación armoniosa y consciente con la comida.",
-      interests: ["Nutrición", "Cocina Saludable", "Senderismo"],
-      prompts: [
-        { question: "Mi hábito matutino favorito es…", answer: "Tomar un té herbal observando las plantas de mi terraza." }
-      ]
-    }
-  },
-  {
-    id: "mock-conn-active-2",
-    status: "accepted",
-    direction: "outgoing",
-    user: {
-      id: "mock-active-2",
-      name: "Diego Torres",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop",
-      profession: "Coach de Bienestar",
-      location: "Buenos Aires, Argentina",
-      bio: "Acompaño a profesionales a equilibrar su vida laboral con hábitos saludables y productivos.",
-      interests: ["Liderazgo", "Deporte", "Hábitos"],
-      prompts: [
-        { question: "El mejor consejo que he recibido es…", answer: "El 10% es lo que te ocurre, el 90% es cómo reaccionas." }
-      ]
-    }
-  },
-  {
-    id: "mock-conn-active-3",
-    status: "accepted",
-    direction: "incoming",
-    user: {
-      id: "mock-active-3",
-      name: "Elena Rostova",
-      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop",
-      profession: "Terapeuta Floral",
-      location: "Madrid, España",
-      bio: "Facilitadora en terapias complementarias y flores de Bach. Apasionada del bienestar holístico.",
-      interests: ["Flores de Bach", "Aromaterapia", "Medicina Holística"],
-      prompts: [
-        { question: "Lo que más valoro de las personas es…", answer: "La autenticidad y la empatía sincera." }
-      ]
-    }
-  }
-];
 
 function NetworkContent() {
   const router = useRouter();
@@ -139,26 +47,10 @@ function NetworkContent() {
       }
 
       const data = await response.json();
-      const dbConnections = data.connections || [];
-      
-      // Always merge mock data with DB connections so that mock data is visible for preview
-      const combined = [...dbConnections];
-      const allMock = [...MOCK_PENDING_REQUESTS, ...MOCK_ACTIVE_CONNECTIONS];
-      
-      allMock.forEach((mockItem) => {
-        const exists = combined.some(
-          (c) => c.user.id === mockItem.user.id || c.id === mockItem.id
-        );
-        if (!exists) {
-          combined.push(mockItem);
-        }
-      });
-
-      setConnections(combined);
+      setConnections(data.connections || []);
     } catch (err: any) {
       setError(err.message || "Error al conectar con el servidor.");
-      // Fallback in case of database unavailability
-      setConnections([...MOCK_PENDING_REQUESTS, ...MOCK_ACTIVE_CONNECTIONS]);
+      setConnections([]);
     } finally {
       setIsLoading(false);
     }
@@ -195,10 +87,6 @@ function NetworkContent() {
       )
     );
 
-    if (userId.startsWith("mock-")) {
-      return; // Mock bypass
-    }
-
     try {
       const response = await fetch("/api/connections", {
         method: "PUT",
@@ -219,10 +107,6 @@ function NetworkContent() {
   const handleDeleteConnection = async (userId: string) => {
     // Optimistic UI updates
     setConnections((prev) => prev.filter((c) => c.user.id !== userId));
-
-    if (userId.startsWith("mock-")) {
-      return; // Mock bypass
-    }
 
     try {
       const response = await fetch(`/api/connections?recipientId=${userId}`, {
