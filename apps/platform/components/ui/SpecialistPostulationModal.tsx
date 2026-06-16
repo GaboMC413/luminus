@@ -133,7 +133,7 @@ export function SpecialistPostulationModal({
             onChange={(e) => setBio(e.target.value)}
             placeholder="Describe tu metodología, enfoque de bienestar y cómo acompañas a tus consultantes..."
             rows={4}
-            className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-xl text-[14px] text-zinc-900 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all resize-none placeholder:text-slate-400 font-sans"
+            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-[14px] text-zinc-900 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all resize-none placeholder:text-slate-400 font-sans"
             required
           />
         </div>

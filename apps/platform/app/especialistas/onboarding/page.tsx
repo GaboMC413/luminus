@@ -214,6 +214,17 @@ export default function SpecialistOnboardingPage() {
         <div className="flex-1 flex flex-col items-center pt-8 md:pt-16 pb-12 md:pb-24 px-6 md:px-12">
           <div className="w-full max-w-[344px] md:max-w-[580px] flex flex-col">
             
+            {step < 6 && (
+              <div className="mb-6">
+                <Button
+                  onClick={() => router.push("/especialistas")}
+                  variant="back"
+                >
+                  Volver a la plataforma
+                </Button>
+              </div>
+            )}
+
             {/* Step 1: Welcome & Terms */}
             {step === 1 && (
               <div className="flex flex-col gap-6 animate-in fade-in duration-300">

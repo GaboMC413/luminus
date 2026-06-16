@@ -34,7 +34,7 @@ export function UserCard({ user }: UserCardProps) {
       onClick={handleViewProfile}
       className="bg-white rounded-2xl p-3 md:p-4 flex flex-col items-center gap-2.5 md:gap-3 border border-slate-200 transition-all group hover:border-slate-300 shadow-none cursor-pointer"
     >
-      <div className="w-[76px] h-[76px] sm:w-[88px] sm:h-[88px] md:w-[110px] md:h-[110px] rounded-2xl overflow-hidden bg-slate-50 shrink-0 border-4 border-white shadow-none group-hover:border-slate-200/50 transition-colors relative ring-1 ring-black/5 flex items-center justify-center">
+      <div className="w-[76px] h-[76px] sm:w-[88px] sm:h-[88px] md:w-[110px] md:h-[110px] rounded-[10px] overflow-hidden bg-slate-50 shrink-0 border-4 border-white shadow-none group-hover:border-slate-200/50 transition-colors relative ring-1 ring-black/5 flex items-center justify-center">
         {hasAvatar ? (
           <img 
             src={user.avatar} 
@@ -52,33 +52,36 @@ export function UserCard({ user }: UserCardProps) {
       </div>
 
       <div className="flex flex-col items-center gap-0.5 md:gap-1 text-center">
-        <h3 className="text-[13px] md:text-[18px] font-bold text-slate-900 leading-tight line-clamp-1 font-jakarta px-1">
+        <h3 className="text-sm md:text-base font-semibold text-slate-900 leading-tight line-clamp-1 font-jakarta px-1">
           {user.name}
         </h3>
-        <p className="text-[10px] md:text-[13px] font-medium text-slate-400 font-sans tracking-wide">
+        <p className="text-xs md:text-sm font-medium text-slate-500 font-sans tracking-wide">
           {formatLocation(user.location)}
         </p>
       </div>
 
       <div className="w-full flex flex-col gap-1.5 mt-1 md:mt-2">
-        {/* Render 2 interests on mobile, up to 3 on desktop */}
+        {/* Render interests on mobile & desktop with sm size */}
         <div className="flex md:hidden flex-col gap-1.5 w-full">
           {user.interests.slice(0, 3).map((interest: string, i: number) => (
-            <InterestPill key={i} interest={interest} className="!h-7 !px-2.5" />
+            <InterestPill key={i} interest={interest} size="sm" />
           ))}
         </div>
         <div className="hidden md:flex flex-col gap-2 w-full">
           {user.interests.slice(0, 3).map((interest: string, i: number) => (
-            <InterestPill key={i} interest={interest} />
+            <InterestPill key={i} interest={interest} size="sm" />
           ))}
         </div>
       </div>
 
       <button
-        onClick={handleViewProfile}
-        className="mt-1 md:mt-2 text-slate-400 text-[10px] md:text-[12px] font-bold hover:text-black transition-all uppercase tracking-widest font-jakarta border-none bg-transparent cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleViewProfile();
+        }}
+        className="text-xs font-semibold text-slate-500 hover:text-slate-900 hover:underline transition-colors mt-2 shrink-0 cursor-pointer bg-transparent border-none outline-none"
       >
-        Ver Perfil
+        Ver perfil
       </button>
     </div>
   );

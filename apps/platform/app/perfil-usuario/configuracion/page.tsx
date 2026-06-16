@@ -16,7 +16,7 @@ import { MembershipSection } from "@/features/user-profile/components/settings/M
 export default function SettingsPage() {
   return (
     <Suspense fallback={
-      <div className="w-full h-screen bg-[#FAF9F6] flex flex-col items-center justify-center">
+      <div className="w-full h-screen bg-slate-50 flex flex-col items-center justify-center">
         <div className="flex flex-col items-center gap-4 animate-pulse">
           <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px] invert brightness-0" />
           <p className="text-[11px] text-slate-400 uppercase tracking-widest font-semibold">Cargando configuración...</p>
@@ -145,7 +145,7 @@ function SettingsContent() {
   ];
 
   return (
-    <div className="flex-1 w-full flex flex-col bg-[#F8FAFC]">
+    <div className="flex-1 w-full flex flex-col bg-slate-50">
       <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 py-4 md:py-8">
         <div className="w-full max-w-6xl mx-auto">
 
@@ -183,7 +183,7 @@ function SettingsContent() {
               </Link>
             </div>
 
-            <h1 className="text-xl text-black font-semibold">
+            <h1 className="text-xl text-slate-900 font-semibold font-jakarta">
               <span className="md:inline hidden">Configuración de la cuenta</span>
               <span className="md:hidden">
                 {mobileView === 'menu' ? 'Configuración de la cuenta' : tabs.find(t => t.id === activeTab)?.label}
@@ -191,11 +191,11 @@ function SettingsContent() {
             </h1>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 lg:gap-8 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-8 items-start">
 
             {/* Sidebar Navigation */}
             <div className={`md:col-span-4 lg:col-span-3 flex flex-col gap-3 ${mobileView === 'menu' ? 'flex' : 'hidden md:flex'}`}>
-              <div className="flex flex-col gap-1 bg-white rounded-2xl border border-zinc-200/40 p-2">
+              <div className="flex flex-col gap-1 bg-white rounded-2xl border border-slate-200 p-2">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
@@ -229,7 +229,7 @@ function SettingsContent() {
 
             {/* Content Area */}
             <div className={`md:col-span-8 lg:col-span-9 gap-6 ${mobileView === 'content' ? 'flex flex-col' : 'hidden md:flex md:flex-col'}`}>
-              <div className="bg-white rounded-2xl border border-zinc-200/40 p-5 md:p-10 shadow-none min-h-[400px]">
+              <div className="bg-white rounded-2xl border border-slate-200 p-5 md:p-10 shadow-none min-h-[400px]">
                 {activeTab === "personal" && (
                   <PersonalInfoSection
                     firstName={firstName}

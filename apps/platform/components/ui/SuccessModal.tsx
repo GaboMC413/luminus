@@ -82,7 +82,7 @@ export function SuccessModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 sm:top-auto sm:left-auto sm:bottom-8 sm:right-8 sm:translate-x-0 sm:translate-y-0 z-[9999] w-[calc(100%-32px)] sm:w-[380px] bg-white rounded-2xl border border-slate-200 shadow-none flex flex-col overflow-hidden animate-in fade-in duration-300">
+    <div className="fixed bottom-28 left-1/2 -translate-x-1/2 sm:bottom-8 sm:right-8 sm:left-auto sm:translate-x-0 z-[9999] w-[calc(100%-32px)] sm:w-[380px] bg-white rounded-2xl border border-slate-200 shadow-none flex flex-col overflow-hidden animate-in fade-in duration-300">
       <style>{`
         @keyframes confetti-burst {
           0% {
@@ -114,7 +114,7 @@ export function SuccessModal({
       <div className="p-6 flex flex-col items-start text-left relative">
         
         {/* Title */}
-        <h3 className="text-[15px] font-bold text-slate-900 mb-2">
+        <h3 className="text-[15px] font-semibold text-slate-900 mb-2">
           {title}
         </h3>
 
@@ -128,7 +128,7 @@ export function SuccessModal({
           <Button
             onClick={onClose}
             variant="primary"
-            className="!h-9 !text-[12px] !font-bold px-5 bg-black hover:bg-zinc-900 text-white rounded-xl !w-auto"
+            className="!h-9 !text-xs !font-semibold px-5 bg-black hover:bg-zinc-900 text-white rounded-xl !w-auto"
           >
             {buttonText}
           </Button>

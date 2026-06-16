@@ -55,7 +55,7 @@ export default function UserProfileLayout({
   }
 
   return (
-    <div className="w-full min-h-screen bg-slate-50 text-wellness-slate-900 font-sans flex flex-col antialiased">
+    <div className="w-full min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col antialiased">
       {/* 1. PREMIUM HEADER */}
       <PlatformNavbar />
 

@@ -89,7 +89,7 @@ export function ProfileSidebar({
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full border border-zinc-200 rounded-[12px] bg-slate-50 flex items-center justify-center">
+          <div className="w-full h-full border border-slate-200 rounded-[16px] bg-slate-50 flex items-center justify-center">
             <span className="material-symbols-outlined text-zinc-200 select-none flex items-center justify-center text-[72px] md:text-[88px] lg:text-[104px]" style={{ width: '100%', height: '100%' }}>
               person
             </span>

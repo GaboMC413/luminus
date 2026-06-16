@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { formatRelativeTime } from "@/components/ui/PlatformNavbar";
 import { OnboardingProgressCard } from "@/components/ui/NotificationPopup";
@@ -36,6 +36,56 @@ function NotificationsContent() {
   const [activeFilter, setActiveFilter] = useState("todas");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
+
+  const checkScrollLimits = () => {
+    const el = scrollContainerRef.current;
+    if (el) {
+      setShowLeftArrow(el.scrollLeft > 5);
+      setShowRightArrow(el.scrollLeft < el.scrollWidth - el.clientWidth - 5);
+    }
+  };
+
+  const handleScrollLeft = () => {
+    const el = scrollContainerRef.current;
+    if (el) {
+      el.scrollBy({ left: -200, behavior: "smooth" });
+    }
+  };
+
+  const handleScrollRight = () => {
+    const el = scrollContainerRef.current;
+    if (el) {
+      el.scrollBy({ left: 200, behavior: "smooth" });
+    }
+  };
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    checkScrollLimits();
+
+    const ro = new ResizeObserver(() => {
+      checkScrollLimits();
+    });
+    ro.observe(el);
+
+    const t1 = setTimeout(checkScrollLimits, 100);
+    const t2 = setTimeout(checkScrollLimits, 500);
+
+    window.addEventListener("resize", checkScrollLimits);
+
+    return () => {
+      ro.disconnect();
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener("resize", checkScrollLimits);
+    };
+  }, [notifications]);
 
   const loadNotifications = async () => {
     try {
@@ -81,8 +131,6 @@ function NotificationsContent() {
       body: JSON.stringify({ id }),
     });
   };
-
-
 
   const deleteNotification = async (id: string) => {
     // Optimistic UI update
@@ -131,9 +179,9 @@ function NotificationsContent() {
   });
 
   return (
-    <div className="flex-1 w-full flex flex-col bg-[#F8FAFC] min-h-0 overflow-hidden">
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col min-h-0">
-        <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0">
+    <div className="flex-1 w-full flex flex-col bg-slate-50">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col">
+        <div className="w-full max-w-6xl mx-auto flex flex-col flex-1">
           
           {/* Header */}
           <div className="flex items-center gap-3 mb-4 md:mb-6 shrink-0">
@@ -144,7 +192,7 @@ function NotificationsContent() {
             >
               <span className="material-symbols-rounded text-[20px]">arrow_back</span>
             </button>
-            <h1 className="text-xl text-black font-semibold">Notificaciones</h1>
+            <h1 className="text-xl md:text-2xl text-slate-900 font-semibold font-jakarta">Notificaciones</h1>
           </div>
 
           {error && (
@@ -154,7 +202,7 @@ function NotificationsContent() {
           )}
 
           {/* Main Layout Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 flex-1 min-h-0">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-6 items-start content-start flex-1">
             
             {/* Sidebar Column (Filters) */}
             <div className="md:col-span-4 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-fit md:h-full shrink-0">
@@ -183,8 +231,8 @@ function NotificationsContent() {
                       onClick={() => setActiveFilter(f.id)}
                       className={`px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 text-left border-none ${
                         isActive
-                          ? "bg-slate-100 text-black shadow-none font-bold"
-                          : "hover:bg-slate-50 text-slate-500 hover:text-black bg-transparent font-medium"
+                          ? "bg-slate-100 text-slate-900 shadow-none font-semibold"
+                          : "hover:bg-slate-50 text-slate-500 hover:text-slate-900 bg-transparent font-medium"
                       }`}
                     >
                       <span className="text-[14px]">{f.label}</span>
@@ -193,29 +241,61 @@ function NotificationsContent() {
                 })}
               </div>
 
-              {/* Mobile Filters (Horizontal scrollable pills) */}
-              <div className="flex md:hidden overflow-x-auto gap-2 p-3 custom-scrollbar shrink-0 select-none">
-                {FILTERS.map((f) => {
-                  const isActive = activeFilter === f.id;
-                  return (
+              {/* Mobile Filters (Horizontal scrollable pills with interactive scroll buttons) */}
+              <div className="relative md:hidden w-full overflow-hidden">
+                <div 
+                  ref={scrollContainerRef}
+                  onScroll={checkScrollLimits}
+                  className="flex overflow-x-auto gap-2 py-3 px-4 custom-scrollbar shrink-0 select-none no-scrollbar"
+                >
+                  {FILTERS.map((f) => {
+                    const isActive = activeFilter === f.id;
+                    return (
+                      <button
+                        key={f.id}
+                        onClick={() => setActiveFilter(f.id)}
+                        className={`px-4 py-1.5 rounded-full cursor-pointer transition-all duration-300 border text-sm whitespace-nowrap outline-none ${
+                          isActive
+                            ? "bg-black text-white border-black font-semibold"
+                            : "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 font-semibold"
+                        }`}
+                      >
+                        {f.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {/* Left Scroll Button */}
+                {showLeftArrow && (
+                  <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white via-white/90 to-transparent flex items-center pl-1.5 z-20 pointer-events-none">
                     <button
-                      key={f.id}
-                      onClick={() => setActiveFilter(f.id)}
-                      className={`px-4 py-1.5 rounded-full cursor-pointer transition-all duration-300 border text-[13px] whitespace-nowrap outline-none ${
-                        isActive
-                          ? "bg-black text-white border-black font-bold"
-                          : "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100 font-semibold"
-                      }`}
+                      onClick={handleScrollLeft}
+                      className="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-md text-slate-500 hover:text-black transition-all cursor-pointer outline-none pointer-events-auto"
                     >
-                      {f.label}
+                      <span className="material-symbols-rounded text-[20px] select-none">
+                        chevron_left
+                      </span>
                     </button>
-                  );
-                })}
+                  </div>
+                )}
+                {/* Right Scroll Button */}
+                {showRightArrow && (
+                  <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white via-white/90 to-transparent flex items-center justify-end pr-1.5 z-20 pointer-events-none">
+                    <button
+                      onClick={handleScrollRight}
+                      className="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-md text-slate-500 hover:text-black transition-all cursor-pointer outline-none pointer-events-auto"
+                    >
+                      <span className="material-symbols-rounded text-[20px] select-none">
+                        chevron_right
+                      </span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* List Column */}
-            <div className="md:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full min-h-0">
+            <div className="md:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-fit md:h-full md:min-h-0">
               
               {/* List Header */}
               <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
@@ -227,9 +307,9 @@ function NotificationsContent() {
               {/* Scrollable Notifications List */}
               <div className="flex-1 overflow-y-auto custom-scrollbar bg-white divide-y divide-slate-100">
                 {isLoading ? (
-                  <div className="p-6 text-[14px] text-slate-400 text-center">Cargando notificaciones...</div>
+                  <div className="p-6 text-sm text-slate-400 text-center">Cargando notificaciones...</div>
                 ) : filteredNotifications.length === 0 ? (
-                  <div className="p-12 text-center text-slate-400 text-[14px] flex flex-col items-center gap-4">
+                  <div className="p-12 text-center text-slate-400 text-sm flex flex-col items-center gap-4">
                     <span className="material-symbols-rounded text-slate-300 text-[48px]">notifications_off</span>
                     <span>No se encontraron notificaciones en esta sección</span>
                   </div>
@@ -267,10 +347,10 @@ function NotificationsContent() {
                             <img
                               src={n.avatar}
                               alt={n.user}
-                              className="w-11 h-11 rounded-[8px] object-cover"
+                              className="w-11 h-11 rounded-[10px] object-cover"
                             />
                           ) : n.icon ? (
-                            <div className="w-11 h-11 rounded-[8px] flex items-center justify-center luminus-gradient">
+                            <div className="w-11 h-11 rounded-[10px] flex items-center justify-center luminus-gradient">
                               <span
                                 className="material-symbols-rounded text-white transition-colors select-none"
                                 style={{
@@ -282,7 +362,7 @@ function NotificationsContent() {
                               </span>
                             </div>
                           ) : (
-                            <div className="w-11 h-11 rounded-[8px] bg-slate-100 flex items-center justify-center">
+                            <div className="w-11 h-11 rounded-[10px] bg-slate-100 flex items-center justify-center">
                               <span
                                 className="material-symbols-rounded text-[28px] text-slate-400 select-none"
                                 style={{ fontVariationSettings: "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48" }}
@@ -296,9 +376,9 @@ function NotificationsContent() {
                         {/* Details */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 mb-1">
-                            <span className="text-[12px] font-bold text-slate-400 uppercase tracking-wider">{n.title}</span>
+                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{n.title}</span>
                             <div className="flex items-center gap-2">
-                              <span className="text-[12px] text-slate-400">{formatRelativeTime(n.date)}</span>
+                              <span className="text-xs text-slate-400">{formatRelativeTime(n.date)}</span>
                               {n.isUnread && <div className="w-2 h-2 bg-[#FF4B4B] rounded-full shrink-0" />}
                               <button
                                 onClick={(event) => {
@@ -314,9 +394,9 @@ function NotificationsContent() {
                               </button>
                             </div>
                           </div>
-                          <p className="text-[14px] leading-relaxed text-slate-600 group-hover:text-black transition-colors">
+                          <p className="text-sm leading-relaxed text-slate-600 group-hover:text-slate-900 transition-colors">
                             {n.user && n.user !== "LUMINUS" && (
-                              <span className="font-bold text-black">{n.user}: </span>
+                              <span className="font-semibold text-slate-900">{n.user}: </span>
                             )}
                             {n.action}
                           </p>
@@ -339,7 +419,7 @@ export default function NotificationsPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex-1 w-full flex h-full bg-[#F8FAFC] items-center justify-center">
+        <div className="flex-1 w-full flex h-full bg-slate-50 items-center justify-center">
           <div className="flex flex-col items-center gap-4 animate-pulse">
             <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px] invert brightness-0" />
             <p className="text-[11px] text-slate-400 uppercase tracking-widest font-semibold">Cargando notificaciones...</p>
