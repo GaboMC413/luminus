@@ -14,13 +14,14 @@ function getPublicOrigin(requestUrl: URL) {
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const origin = getPublicOrigin(url);
 
-  if (!clientId) {
-    console.error("Google OAuth start failed: GOOGLE_CLIENT_ID is not configured.");
-    return NextResponse.redirect(new URL("/auth/iniciar-sesion?error=google_config", url.origin));
+  if (!clientId || !clientSecret) {
+    console.error("Google OAuth start failed: Google credentials are not fully configured.");
+    return NextResponse.redirect(new URL("/auth/iniciar-sesion?error=google_config", origin));
   }
 
-  const origin = getPublicOrigin(url);
   const state = randomBytes(24).toString("base64url");
   const redirectUri = `${origin}/api/auth/google/callback`;
 
