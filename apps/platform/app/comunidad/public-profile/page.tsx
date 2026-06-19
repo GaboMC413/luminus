@@ -367,70 +367,43 @@ function PublicProfileContent() {
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
         title="Compartir perfil"
-        maxWidth="440px"
+        maxWidth="400px"
         backdropClassName="bg-transparent backdrop-blur-none"
         containerClassName="shadow-none border border-slate-200"
       >
-        <div className="flex flex-col gap-6">
-          {/* User profile preview */}
-          <div className="flex items-center gap-3.5 bg-slate-50 p-4 rounded-xl border border-slate-100">
-            <img
-              src={profile.profile_picture_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.first_name || "Usuario")}&background=e2e8f0&color=0f172a`}
-              alt={profile.first_name}
-              className="w-12 h-12 rounded-[10px] object-cover shrink-0"
-            />
-            <div className="flex flex-col min-w-0">
-              <span className="text-sm font-semibold text-slate-900 truncate">
-                {`${profile.first_name || ""} ${profile.last_name || ""}`.trim()}
-              </span>
-              <span className="text-xs text-slate-400 font-medium truncate mt-0.5">
-                {profile.profession || "Miembro de LUMINUS"}
-              </span>
-            </div>
-          </div>
-
+        <div className="flex flex-col gap-4">
           {/* Copy link section */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Enlace del perfil
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                readOnly
-                value={typeof window !== "undefined" ? window.location.href : ""}
-                className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-600 outline-none select-all"
-              />
-              <button
-                onClick={handleCopyLink}
-                className={`px-5 py-2.5 rounded-xl text-xs font-semibold border-none cursor-pointer transition-all duration-300 ${
-                  copied
-                    ? "bg-[#22C55E] text-white"
-                    : "bg-black text-white hover:bg-zinc-800"
-                }`}
-              >
-                {copied ? "¡Copiado!" : "Copiar"}
-              </button>
-            </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              readOnly
+              value={typeof window !== "undefined" ? window.location.href : ""}
+              className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-600 outline-none select-all"
+            />
+            <button
+              onClick={handleCopyLink}
+              className={`px-5 py-2.5 rounded-xl text-xs font-semibold border-none cursor-pointer transition-all duration-300 ${
+                copied
+                  ? "bg-[#22C55E] text-white"
+                  : "bg-black text-white hover:bg-zinc-800"
+              }`}
+            >
+              {copied ? "¡Copiado!" : "Copiar"}
+            </button>
           </div>
 
           {/* WhatsApp share shortcut */}
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Compartir en redes
-            </label>
-            <a
-              href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Mira el perfil de ${profile.first_name} en LUMINUS: ${typeof window !== "undefined" ? window.location.href : ""}`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 h-11 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors text-decoration-none text-slate-700 font-semibold font-jakarta"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-[#25D366]">
-                <path d="M12.012 2c-5.506 0-9.989 4.478-9.99 9.984a9.96 9.96 0 001.333 4.993L2 22l5.13-1.343a9.96 9.96 0 004.881 1.277h.005c5.505 0 9.989-4.478 9.99-9.985A9.98 9.98 0 0012.012 2zm5.72 14.175c-.253.71-1.464 1.385-2.018 1.442-.5.051-1.154.081-1.85-.14a11.19 11.19 0 01-4.787-2.99 12.35 12.35 0 01-2.484-3.834c-.407-.7-.037-1.08.312-1.432.148-.149.329-.364.493-.547.164-.183.218-.305.328-.508.11-.203.055-.386-.027-.569-.083-.183-.739-1.782-1.013-2.44-.267-.638-.539-.551-.739-.561l-.63-.012c-.554 0-1.455.207-1.996.8-.54.593-2.062 2.013-2.062 4.91 0 2.897 2.106 5.698 2.4 6.096.295.398 4.143 6.326 10.04 8.874 1.403.606 2.499.968 3.354 1.24 1.41.448 2.693.385 3.707.234 1.13-.17 2.484-.712 2.83-1.4.346-.688.346-1.28.243-1.4-.103-.12-.38-.203-.797-.406z"/>
-              </svg>
-              <span className="text-xs font-bold text-slate-600">Compartir por WhatsApp</span>
-            </a>
-          </div>
+          <a
+            href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Mira el perfil de ${profile.first_name} en LUMINUS: ${typeof window !== "undefined" ? window.location.href : ""}`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 h-11 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition-colors text-decoration-none text-slate-700 font-semibold font-jakarta"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-[#25D366]">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.454 5.709 1.455h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+            </svg>
+            <span className="text-xs font-bold text-slate-600">Compartir por WhatsApp</span>
+          </a>
         </div>
       </Modal>
     </div>
