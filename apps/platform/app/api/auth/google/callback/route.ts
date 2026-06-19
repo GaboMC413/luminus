@@ -127,6 +127,7 @@ export async function GET(request: Request) {
     }
 
     const existingUser = existingBySub || existingByEmail;
+    const isNewUser = !existingUser;
     const user = existingUser
       ? await prisma.user.update({
           where: { id: existingUser.id },
@@ -172,6 +173,16 @@ export async function GET(request: Request) {
           },
           include: { profile: true },
         });
+
+    if (isNewUser) {
+      // Send welcome conversation message gracefully
+      try {
+        const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
+        await sendWelcomeMessage(prisma, user.id);
+      } catch (welcomeError) {
+        console.error("Welcome message setup failed, proceeding with Google registration.", welcomeError);
+      }
+    }
 
     const token = createSessionToken({
       userId: user.id,

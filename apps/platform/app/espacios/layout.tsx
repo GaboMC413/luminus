@@ -1,7 +1,5 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { getCurrentSession } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 import { PlatformNavbar } from "@/components/ui/PlatformNavbar";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
 
@@ -10,35 +8,10 @@ export default function EspaciosLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const [isMounted, setIsMounted] = useState(false);
+  const session = getCurrentSession();
 
-  useEffect(() => {
-    async function checkSession() {
-      const response = await fetch("/api/auth/me", {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        router.push("/auth/iniciar-sesion");
-        return;
-      }
-
-      setIsMounted(true);
-    }
-
-    checkSession();
-  }, [router]);
-
-  if (!isMounted) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-black">
-        <div className="flex flex-col items-center gap-4 animate-pulse">
-          <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px]" />
-          <p className="text-[11px] text-white/40 uppercase tracking-widest font-semibold">Cargando...</p>
-        </div>
-      </div>
-    );
+  if (!session) {
+    redirect("/auth/iniciar-sesion");
   }
 
   return (
