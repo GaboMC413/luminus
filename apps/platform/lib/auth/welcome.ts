@@ -28,10 +28,18 @@ export async function sendWelcomeMessage(prisma: PrismaClient, newUserId: string
       },
     });
   } else {
-    // Sync the profile name and avatar image if the user already exists in DB
-    await prisma.userProfile.update({
+    // Sync the profile name and avatar image if the user already exists in DB safely using upsert
+    await prisma.userProfile.upsert({
       where: { userId: systemUser.id },
-      data: {
+      create: {
+        userId: systemUser.id,
+        fullName: "LUMINUS",
+        firstName: "LUMINUS",
+        lastName: "",
+        avatarUrl: "/Profile Image LUMINUS.png",
+        bio: "Cuenta oficial de bienvenida y soporte de LUMINUS.",
+      },
+      update: {
         fullName: "LUMINUS",
         firstName: "LUMINUS",
         lastName: "",
