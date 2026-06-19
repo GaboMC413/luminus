@@ -146,7 +146,7 @@ function SettingsContent() {
 
   return (
     <div className="flex-1 w-full flex flex-col bg-slate-50">
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 py-4 md:py-8">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pt-4 pb-6 md:py-8">
         <div className="w-full max-w-6xl mx-auto">
 
           {/* Header */}

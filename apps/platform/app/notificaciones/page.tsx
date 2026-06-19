@@ -158,7 +158,7 @@ function NotificationsContent() {
     if (activeFilter === "leidas") return n.type === "onboarding-progress" ? false : !n.isUnread;
     if (activeFilter === "no_leidas") return n.isUnread;
     if (activeFilter === "especialistas") {
-      return String(n.type).includes("follow") || n.type === "quest_completed_follow";
+      return String(n.type).includes("follow");
     }
     if (activeFilter === "comunidad") {
       return (
@@ -180,7 +180,7 @@ function NotificationsContent() {
 
   return (
     <div className="flex-1 w-full flex flex-col bg-slate-50">
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-6 md:py-6 flex flex-col">
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1">
           
           {/* Header */}

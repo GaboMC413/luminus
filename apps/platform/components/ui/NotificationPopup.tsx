@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 interface NotificationItemProps {
@@ -14,9 +14,10 @@ interface NotificationItemProps {
   buttonLabel?: string;
   onClick: () => void;
   onDelete?: () => void;
+  isExpanded?: boolean;
 }
 
-function NotificationItem({ avatar, icon, title, user, action, date, isUnread, buttonLabel, onClick, onDelete }: NotificationItemProps) {
+function NotificationItem({ avatar, icon, title, user, action, date, isUnread, buttonLabel, onClick, onDelete, isExpanded = false }: NotificationItemProps) {
   const [imageError, setImageError] = useState(false);
 
   return (
@@ -79,12 +80,16 @@ function NotificationItem({ avatar, icon, title, user, action, date, isUnread, b
             </div>
           </div>
           <p
-            className="text-sm leading-snug text-slate-600 group-hover:text-slate-900 transition-colors line-clamp-3 overflow-hidden"
-            style={{
-              display: "-webkit-box",
-              WebkitBoxOrient: "vertical",
-              WebkitLineClamp: 3,
-            }}
+            className={`text-sm leading-snug text-slate-600 group-hover:text-slate-900 transition-colors ${isExpanded ? "" : "line-clamp-3 overflow-hidden"}`}
+            style={
+              isExpanded
+                ? {}
+                : {
+                    display: "-webkit-box",
+                    WebkitBoxOrient: "vertical",
+                    WebkitLineClamp: 3,
+                  }
+            }
           >
             {user && user !== "LUMINUS" && <span className="font-semibold text-slate-900">{user}: </span>}
             {action}
@@ -203,6 +208,13 @@ export interface NotificationPopupProps {
 
 export function NotificationPopup({ isOpen, onClose, notifications, onMarkRead, onMarkAllRead, onDelete }: NotificationPopupProps) {
   const router = useRouter();
+  const [expandedNotificationId, setExpandedNotificationId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setExpandedNotificationId(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -249,7 +261,11 @@ export function NotificationPopup({ isOpen, onClose, notifications, onMarkRead, 
                 date={notification.date}
                 isUnread={notification.isUnread}
                 buttonLabel={notification.buttonLabel}
-                onClick={() => onMarkRead(notification.id)}
+                isExpanded={expandedNotificationId === notification.id}
+                onClick={() => {
+                  onMarkRead(notification.id);
+                  setExpandedNotificationId((prev) => (prev === notification.id ? null : notification.id));
+                }}
                 onDelete={notification.id !== "onboarding-progress" ? () => onDelete(notification.id) : undefined}
               />
             );
