@@ -276,14 +276,22 @@ export async function PATCH(request: Request) {
     const newlyCompletedQuests = [];
     try {
       const { checkAndTriggerQuestCompletion } = await import("@/lib/onboarding");
-      const r1 = await checkAndTriggerQuestCompletion(session.userId, "profession");
-      if (r1) newlyCompletedQuests.push(r1);
-      const r2 = await checkAndTriggerQuestCompletion(session.userId, "bio");
-      if (r2) newlyCompletedQuests.push(r2);
-      const r3 = await checkAndTriggerQuestCompletion(session.userId, "interests");
-      if (r3) newlyCompletedQuests.push(r3);
-      const r4 = await checkAndTriggerQuestCompletion(session.userId, "cover");
-      if (r4) newlyCompletedQuests.push(r4);
+      if (profession !== undefined) {
+        const r1 = await checkAndTriggerQuestCompletion(session.userId, "profession");
+        if (r1) newlyCompletedQuests.push(r1);
+      }
+      if (bio !== undefined) {
+        const r2 = await checkAndTriggerQuestCompletion(session.userId, "bio");
+        if (r2) newlyCompletedQuests.push(r2);
+      }
+      if (shouldUpdatePrompts) {
+        const r3 = await checkAndTriggerQuestCompletion(session.userId, "interests");
+        if (r3) newlyCompletedQuests.push(r3);
+      }
+      if (coverUrl !== undefined) {
+        const r4 = await checkAndTriggerQuestCompletion(session.userId, "cover");
+        if (r4) newlyCompletedQuests.push(r4);
+      }
     } catch (questError) {
       console.error("Failed to check onboarding quests completion status:", questError);
     }
