@@ -42,9 +42,20 @@ export default function FaroPage() {
         <Button
           variant="secondary"
           onClick={() => router.push("/comunidad")}
-          className="w-full md:!w-auto px-6 text-sm font-bold shrink-0 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700"
+          className="w-full md:!w-auto px-5 text-sm font-bold shrink-0 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 flex items-center justify-center gap-1.5 group"
         >
-          Volver a la Comunidad
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3"
+            className="text-slate-400 group-hover:text-slate-700 transition-colors"
+          >
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          <span>Volver a la Comunidad</span>
         </Button>
       </div>
     </div>

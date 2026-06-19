@@ -428,7 +428,7 @@ export default function SignUpView() {
             ) : (
               <PlanSelection
                 onNext={() => {
-                  router.push('/perfil-usuario');
+                  router.push('/comunidad');
                 }}
                 onBack={() => setStep(3)}
                 data={profileData}

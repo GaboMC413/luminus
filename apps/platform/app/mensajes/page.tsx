@@ -297,13 +297,28 @@ function MessagesContent() {
     }
   };
 
-  const handleDeleteChat = () => {
+  const handleDeleteChat = async () => {
     if (selectedId) {
-      setConversations((prev) => prev.filter((c) => c.id !== selectedId));
-      setSelectedId(null);
-      setMobileView('list');
-      setIsChatMenuOpen(false);
-      router.push("/mensajes");
+      try {
+        const response = await fetch(`/api/messages/conversations/${selectedId}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.message || "No pudimos eliminar la conversación.");
+        }
+
+        setConversations((prev) => prev.filter((c) => c.id !== selectedId));
+        setSelectedId(null);
+        setMobileView('list');
+        setIsChatMenuOpen(false);
+        router.push("/mensajes");
+        router.refresh();
+      } catch (err: any) {
+        console.error("Error deleting conversation:", err);
+        alert(err.message || "No pudimos eliminar el chat. Intenta nuevamente.");
+      }
     }
   };
 

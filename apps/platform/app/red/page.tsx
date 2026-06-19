@@ -204,7 +204,6 @@ function NetworkContent() {
                         onClick={() => router.push("/comunidad")}
                         className="mt-2 px-6 text-xs font-semibold bg-black text-white hover:bg-zinc-900 rounded-xl !w-auto h-10 flex items-center justify-center gap-2"
                       >
-                        <span className="material-symbols-rounded text-[18px]">explore</span>
                         <span>Ir a la Comunidad</span>
                       </Button>
                     )}

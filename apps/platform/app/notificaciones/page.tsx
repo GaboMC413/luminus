@@ -376,7 +376,7 @@ function NotificationsContent() {
                         {/* Details */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2 mb-1">
-                            <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{n.title}</span>
+                            <span className="text-xs font-medium text-slate-400">{n.title}</span>
                             <div className="flex items-center gap-2">
                               <span className="text-xs text-slate-400">{formatRelativeTime(n.date)}</span>
                               {n.isUnread && <div className="w-2 h-2 bg-[#FF4B4B] rounded-full shrink-0" />}

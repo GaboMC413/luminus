@@ -76,7 +76,7 @@ export function ProfileSidebar({
               onShowCoverModal();
             }}
             icon="photo_camera"
-            className={`absolute bottom-3 right-3 z-10 ${highlightField === "cover" ? "glow-highlight" : ""}`}
+            className={`absolute bottom-3 right-3 z-10 ${highlightField === "cover" ? "glow-highlight" : ""} ${coverUrl && !coverUrl.includes("empty") ? "opacity-50 hover:opacity-100 transition-opacity" : ""}`}
           />
         )}
       </div>
@@ -99,7 +99,7 @@ export function ProfileSidebar({
           <ProfileButton
             onClick={onEditPhoto}
             icon="photo_camera"
-            className="absolute bottom-3 right-3 z-20"
+            className={`absolute bottom-3 right-3 z-20 ${profile.profile_picture_url ? "opacity-50 hover:opacity-100 transition-opacity" : ""}`}
           />
         )}
       </div>

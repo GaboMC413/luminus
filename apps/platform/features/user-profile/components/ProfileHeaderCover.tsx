@@ -32,7 +32,7 @@ export function ProfileHeaderCover({ coverUrl, onChangeCover, isPublic = false, 
         }}
         icon="photo_camera"
         label={hasCover ? "Cambiar portada" : "Seleccionar portada"}
-        className={`absolute bottom-4 right-0 pointer-events-auto ${highlight ? "glow-highlight" : ""}`}
+        className={`absolute bottom-4 right-0 pointer-events-auto ${highlight ? "glow-highlight" : ""} ${hasCover ? "opacity-50 hover:opacity-100 transition-opacity" : ""}`}
        />
       </div>
      </div>

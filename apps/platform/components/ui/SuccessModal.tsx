@@ -87,7 +87,7 @@ export function SuccessModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-28 left-1/2 -translate-x-1/2 sm:bottom-8 sm:right-8 sm:left-auto sm:translate-x-0 z-[9999] w-[calc(100%-32px)] sm:w-[380px] bg-white rounded-2xl border border-slate-200 shadow-none flex flex-col overflow-hidden animate-in fade-in duration-300">
+    <div className="fixed bottom-28 left-1/2 -translate-x-1/2 sm:bottom-8 sm:right-8 sm:left-auto sm:translate-x-0 z-[9999] w-[calc(100%-32px)] sm:w-[380px] relative overflow-visible">
       <style>{`
         @keyframes confetti-burst {
           0% {
@@ -107,43 +107,66 @@ export function SuccessModal({
           animation-name: confetti-burst;
           animation-timing-function: cubic-bezier(0.15, 0.85, 0.35, 1);
         }
+        @keyframes luminus-glow {
+          0%, 100% {
+            transform: scale(0.98);
+            opacity: 0.45;
+            filter: blur(20px);
+          }
+          50% {
+            transform: scale(1.06);
+            opacity: 0.75;
+            filter: blur(28px);
+          }
+        }
+        .animate-luminus-glow {
+          animation: luminus-glow 3.5s ease-in-out infinite;
+        }
       `}</style>
 
-      {/* Confetti Celebration Burst */}
-      {celebrate && <ConfettiExplosion />}
+      {/* Glow/Shine Background Effect */}
+      {celebrate && (
+        <div className="absolute inset-0 z-0 rounded-2xl luminus-gradient animate-luminus-glow pointer-events-none" />
+      )}
 
-      {/* Top Gradient Banner Accent */}
-      {celebrate && <div className="w-full h-3.5 luminus-gradient shrink-0" />}
+      {/* Main Modal Card */}
+      <div className="relative z-10 w-full bg-white rounded-2xl border border-slate-200 shadow-none flex flex-col overflow-hidden animate-in fade-in duration-300">
+        {/* Confetti Celebration Burst */}
+        {celebrate && <ConfettiExplosion />}
 
-      {/* Content */}
-      <div className="p-6 flex flex-col items-start text-left relative">
-        
-        {/* Eyebrow */}
-        {eyebrow && (
-          <span className="text-[10.5px] font-bold tracking-widest text-slate-400 font-jakarta uppercase mb-1">
-            {eyebrow}
-          </span>
-        )}
+        {/* Top Gradient Banner Accent */}
+        {celebrate && <div className="w-full h-3.5 luminus-gradient shrink-0" />}
 
-        {/* Title */}
-        <h3 className="text-[15px] font-bold text-slate-900 mb-2 font-jakarta">
-          {title}
-        </h3>
+        {/* Content */}
+        <div className="p-6 flex flex-col items-start text-left relative">
+          
+          {/* Eyebrow */}
+          {eyebrow && (
+            <span className="text-[10.5px] font-bold tracking-widest text-slate-400 font-jakarta uppercase mb-1">
+              {eyebrow}
+            </span>
+          )}
 
-        {/* Message */}
-        <p className="text-[13px] text-slate-500 mb-6 leading-relaxed">
-          {message}
-        </p>
+          {/* Title */}
+          <h3 className="text-[15px] font-bold text-slate-900 mb-2 font-jakarta">
+            {title}
+          </h3>
 
-        {/* Action Button */}
-        <div className="w-full flex justify-end">
-          <Button
-            onClick={onClose}
-            variant="primary"
-            className="!h-9 !text-xs !font-semibold px-5 bg-black hover:bg-zinc-900 text-white rounded-xl !w-auto"
-          >
-            {buttonText}
-          </Button>
+          {/* Message */}
+          <p className="text-[13px] text-slate-500 mb-6 leading-relaxed">
+            {message}
+          </p>
+
+          {/* Action Button */}
+          <div className="w-full flex justify-end">
+            <Button
+              onClick={onClose}
+              variant="primary"
+              className="!h-9 !text-xs !font-semibold px-5 bg-black hover:bg-zinc-900 text-white rounded-xl !w-auto"
+            >
+              {buttonText}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
