@@ -33,8 +33,12 @@ function getGoogleClientConfig() {
   return { clientId, clientSecret };
 }
 
+function getPublicOrigin(requestUrl: URL) {
+  return (process.env.AUTH_BASE_URL || requestUrl.origin).replace(/\/$/, "");
+}
+
 function redirectTo(requestUrl: URL, path: string) {
-  return NextResponse.redirect(new URL(path, requestUrl.origin));
+  return NextResponse.redirect(new URL(path, getPublicOrigin(requestUrl)));
 }
 
 async function exchangeCodeForAccessToken(code: string, redirectUri: string) {
@@ -98,7 +102,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const redirectUri = `${requestUrl.origin}/api/auth/google/callback`;
+    const redirectUri = `${getPublicOrigin(requestUrl)}/api/auth/google/callback`;
     const accessToken = await exchangeCodeForAccessToken(code, redirectUri);
     const googleUser = await fetchGoogleUser(accessToken);
     const email = googleUser.email.trim().toLowerCase();
