@@ -351,10 +351,10 @@ function MessagesContent() {
   });
 
   return (
-    <div className="flex-1 w-full flex flex-col bg-slate-50">
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col">
-        <div className="w-full max-w-6xl mx-auto flex flex-col flex-1">
-          <div className={`items-center gap-3 mb-4 md:mb-6 shrink-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
+    <div className="w-full flex flex-col bg-slate-50 h-[calc(100dvh-128px-env(safe-area-inset-bottom,0px))] lg:h-[calc(100vh-80px)] overflow-hidden">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-0 md:px-6 py-0 md:py-6 flex flex-col min-h-0 overflow-hidden">
+        <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className={`items-center gap-3 mb-4 md:mb-6 px-4 md:px-0 shrink-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
             <button
               onClick={() => router.back()}
               className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900 cursor-pointer"
@@ -366,13 +366,13 @@ function MessagesContent() {
           </div>
 
           {error && (
-            <div className="mb-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-600">
+            <div className="mb-3 mx-4 md:mx-0 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-600">
               {error}
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start content-start flex-1">
-            <div className={`md:col-span-4 flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full min-h-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
+          <div className="flex flex-col md:grid md:grid-cols-12 gap-0 md:gap-6 items-stretch flex-1 min-h-0 overflow-hidden">
+            <div className={`md:col-span-4 flex-col bg-white rounded-none md:rounded-2xl border-0 md:border border-slate-200 overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
               <div className="p-3 border-b border-slate-100 shrink-0">
                 <div className="relative">
                   <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
@@ -386,7 +386,7 @@ function MessagesContent() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-2 flex flex-col gap-2">
+              <div className="flex-1 overflow-y-auto thin-scrollbar p-2 flex flex-col gap-2">
                 {isLoading && (
                   <div className="p-4 text-[13px] text-slate-400">Cargando conversaciones...</div>
                 )}
@@ -445,7 +445,7 @@ function MessagesContent() {
             </div>
 
             {isLoading && isUuid(recipientId) ? (
-              <div className={`md:col-span-8 flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full relative min-h-0 ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
+              <div className={`md:col-span-8 flex-col bg-white rounded-none md:rounded-2xl border-0 md:border border-slate-200 overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0 relative ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
                 {/* Skeleton Header */}
                 <div className="p-3 border-b border-slate-100 flex items-center gap-3 bg-white shrink-0">
                   <button
@@ -501,9 +501,9 @@ function MessagesContent() {
                 </button>
               </div>
             ) : (
-              <div className={`md:col-span-8 flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-full relative min-h-0 ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
-                <div className="p-3 border-b border-slate-100 flex items-center justify-between bg-white z-10 shrink-0">
-                  <div className="flex items-center gap-3">
+              <div className={`md:col-span-8 flex-col bg-white rounded-none md:rounded-2xl border-0 md:border border-slate-200 overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0 relative ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
+                <div className="p-3 border-b border-slate-100 flex items-center justify-between bg-white z-10 shrink-0 gap-4">
+                  <div className="flex items-center gap-3 min-w-0">
                     {/* Mobile Back Button */}
                     <button
                       onClick={() => {
@@ -514,7 +514,7 @@ function MessagesContent() {
                           setMobileView('list');
                         }
                       }}
-                      className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer mr-1"
+                      className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer mr-1 shrink-0"
                       title="Volver"
                     >
                       <span className="material-symbols-rounded text-[22px]">arrow_back</span>
@@ -523,10 +523,12 @@ function MessagesContent() {
                     <img
                       src={selectedConv.participant.avatar_url || fallbackAvatar(selectedConv.participant.name)}
                       alt={selectedConv.participant.name}
-                      className="w-11 h-11 rounded-[10px] object-cover"
+                      className="w-11 h-11 rounded-[10px] object-cover shrink-0"
                     />
-                    <div className="flex items-center gap-3">
-                      <h2 className="text-base font-semibold text-slate-900 leading-none">{selectedConv.participant.name}</h2>
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      <h2 className="text-base font-semibold text-slate-900 leading-none truncate" title={selectedConv.participant.name}>
+                        {selectedConv.participant.name}
+                      </h2>
                       {selectedConv.participant.name !== "LUMINUS" && (
                         <Link
                           href={`/comunidad/public-profile?id=${selectedConv.participant.id}`}
@@ -576,7 +578,7 @@ function MessagesContent() {
                   )}
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-3 custom-scrollbar flex flex-col gap-0.5 bg-white">
+                <div className="flex-1 overflow-y-auto p-3 thin-scrollbar flex flex-col gap-0.5 bg-white">
                   {messages.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                       <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 mb-3">
@@ -626,6 +628,11 @@ function MessagesContent() {
                         value={inputText}
                         onChange={(event) => setInputText(event.target.value)}
                         onKeyDown={handleKeyDown}
+                        onFocus={() => {
+                          setTimeout(() => {
+                            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+                          }, 100);
+                        }}
                         placeholder="Escribe un mensaje..."
                         rows={1}
                         className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-sm focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-32 custom-scrollbar block text-slate-800"
