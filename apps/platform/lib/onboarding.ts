@@ -30,47 +30,37 @@ const QUEST_CONFIG: Record<string, { label: string; actionUrl: string; icon: str
     icon: "photo_prints",
   },
   connect: {
-    label: "Agrega a alguien a tu red",
+    label: "Envía una solicitud de conexión",
     actionUrl: "/comunidad",
     icon: "person_add",
-  },
-  follow: {
-    label: "Sigue a un especialista",
-    actionUrl: "/especialistas",
-    icon: "heart_plus",
   },
 };
 
 const CELEBRATION_COPY: Record<string, { title: string; body: string; actionUrl: string }> = {
   profession: {
-    title: "¡Destello completado!",
+    title: "Has indicado tu profesión",
     body: "Definir tu profesión ayuda a que otros miembros conozcan tu experiencia y campo de especialidad. Es el punto de partida ideal para compartir conocimientos y entablar colaboraciones en la comunidad.",
     actionUrl: "/perfil-usuario",
   },
   bio: {
-    title: "¡Destello completado!",
+    title: "Has escrito tu biografía",
     body: "Tu biografía es tu voz en LUMINUS. Al contar quién eres, qué te apasiona y qué buscas, creas puentes de afinidad genuina para que otras personas inicien conversaciones significativas contigo.",
     actionUrl: "/perfil-usuario",
   },
   interests: {
-    title: "¡Destello completado!",
+    title: "Has compartido tus reflexiones",
     body: "Compartir tus reflexiones y valores ayuda a alinear tu energía con la de otros miembros. Permite que la comunidad conozca en qué crees y cómo pueden apoyarse mutuamente en su crecimiento.",
     actionUrl: "/perfil-usuario",
   },
   cover: {
-    title: "¡Destello completado!",
+    title: "Has personalizado tu foto de portada",
     body: "Personalizar tu portada define el ambiente y la energía de tu perfil. Un espacio visualmente acogedor y propio hace que tu presencia en LUMINUS se sienta verdaderamente tuya y acogedora.",
     actionUrl: "/perfil-usuario",
   },
   connect: {
-    title: "¡Destello completado!",
-    body: "¡Has creado tu primer vínculo! En LUMINUS, cada conexión fortalece nuestra red de apoyo. Conectar te permite intercambiar perspectivas, compartir bienestar y no caminar solo.",
+    title: "Has enviado tu primera solicitud",
+    body: "¡Has dado el primer paso para construir tu red! En LUMINUS, cada conexión fortalece nuestra red de apoyo. Conectar te permite intercambiar perspectivas, compartir bienestar y no caminar solo.",
     actionUrl: "/comunidad",
-  },
-  follow: {
-    title: "¡Destello completado!",
-    body: "Comenzar a seguir a un especialista te permite recibir inspiración diaria y guías validadas por profesionales de la salud. Es clave para nutrir tus hábitos diarios con herramientas de autocuidado.",
-    actionUrl: "/especialistas",
   },
 };
 
@@ -83,12 +73,6 @@ export async function getOnboardingQuests(userId: string): Promise<{ quests: Que
       profilePrompts: true,
       sentConnections: { take: 1 },
       receivedConnections: { take: 1 },
-      notifications: {
-        where: {
-          type: "quest_completed_follow",
-        },
-        take: 1,
-      },
     },
   });
 
@@ -105,7 +89,6 @@ export async function getOnboardingQuests(userId: string): Promise<{ quests: Que
     interests: user.profilePrompts.length > 0,
     cover: !!(profile?.coverUrl && profile.coverUrl.trim() !== ""),
     connect: user.sentConnections.length > 0 || user.receivedConnections.length > 0,
-    follow: user.notifications.length > 0,
   };
 
   const quests: Quest[] = Object.keys(QUEST_CONFIG).map((id) => ({
@@ -165,10 +148,6 @@ export async function checkAndTriggerQuestCompletion(
       break;
     case "connect":
       isCompleted = user.sentConnections.length > 0 || user.receivedConnections.length > 0;
-      break;
-    case "follow":
-      // Follow is manually triggered from client action, so we mark it true when triggered
-      isCompleted = true;
       break;
   }
 

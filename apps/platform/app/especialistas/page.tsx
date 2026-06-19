@@ -1,41 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 
 export default function EspecialistasPage() {
-  const [isFollowingTest, setIsFollowingTest] = useState(false);
   const router = useRouter();
 
-  useEffect(() => {
-    const followed = localStorage.getItem("luminus_followed_test_expert") === "true";
-    setIsFollowingTest(followed);
-  }, []);
-
-  const handleFollowTest = async () => {
-    try {
-      const response = await fetch("/api/onboarding/complete-follow", {
-        method: "POST",
-      });
-      if (response.ok) {
-        setIsFollowingTest(true);
-        localStorage.setItem("luminus_followed_test_expert", "true");
-        // Immediately notify the navigation bar to update notifications list
-        window.dispatchEvent(new Event("luminus_notifications_update"));
-      }
-    } catch (err) {
-      console.error("Failed to follow test expert:", err);
-    }
-  };
-
-  const handleUnfollowTest = () => {
-    setIsFollowingTest(false);
-    localStorage.removeItem("luminus_followed_test_expert");
-  };
-
   return (
-    <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-12 md:py-6 flex flex-col gap-6">
+    <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-6 md:py-6 flex flex-col gap-6">
       {/* Upcoming Section: Compact, horizontal alert-style banner */}
       <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
         <div className="flex flex-col md:flex-row items-start gap-4 w-full md:w-auto">
@@ -69,25 +41,6 @@ export default function EspecialistasPage() {
         </div>
         
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
-          {!isFollowingTest ? (
-            <Button
-              variant="primary"
-              onClick={handleFollowTest}
-              className="w-full md:!w-auto px-6 text-sm font-semibold shrink-0 bg-black text-white hover:bg-zinc-900 flex items-center justify-center gap-2"
-            >
-              <span className="material-symbols-rounded text-[18px]">favorite</span>
-              <span>Seguir especialista (Prueba)</span>
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              onClick={handleUnfollowTest}
-              className="w-full md:!w-auto px-6 text-sm font-semibold shrink-0 bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 flex items-center justify-center gap-2"
-            >
-              <span className="material-symbols-rounded text-[18px]">heart_broken</span>
-              <span>Siguiendo (Dejar de seguir)</span>
-            </Button>
-          )}
           <Button
             variant="secondary"
             onClick={() => router.push("/comunidad")}

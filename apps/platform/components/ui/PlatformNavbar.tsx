@@ -635,6 +635,8 @@ export function PlatformNavbar() {
         title={completedQuest?.title || ""}
         message={completedQuest?.body || ""}
         buttonText="Cerrar"
+        eyebrow="¡Destello completado!"
+        celebrate={true}
       />
 
       {/* Preload icons to avoid lag */}

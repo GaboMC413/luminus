@@ -268,7 +268,7 @@ export function ProfileContent() {
         highlight={editParam === "cover"}
       />
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pb-12">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pb-6 md:pb-12">
         <div className="w-full max-w-6xl mx-auto">
           <div className="w-full h-full bg-transparent pt-4 lg:pt-6">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-4 lg:gap-8 items-start">

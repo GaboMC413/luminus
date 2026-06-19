@@ -27,19 +27,30 @@ function serializeNotification(notification: any) {
       interests: "format_quote",
       cover: "photo_prints",
       connect: "person_add",
-      follow: "heart_plus",
     };
     icon = questIcons[questId] || "auto_awesome";
+
+    // Standardize title for older notifications to have the new quest-specific titles
+    if (title === "¡Destello completado!" || !title) {
+      const fallbackTitles: Record<string, string> = {
+        profession: "Has indicado tu profesión",
+        bio: "Has escrito tu biografía",
+        interests: "Has compartido tus reflexiones",
+        cover: "Has personalizado tu foto de portada",
+        connect: "Has enviado tu primera solicitud",
+      };
+      title = fallbackTitles[questId] || "Has completado un destello";
+    }
   }
 
   return {
     id: notification.id,
     type: notification.type,
-    title,
+    title: isQuestCompleted ? "¡Destello completado!" : title,
     user: notification.actorName || "LUMINUS",
     avatar: isQuestCompleted ? "" : (notification.actorAvatarUrl || ""),
     icon,
-    action: body,
+    action: isQuestCompleted ? `${title}. ${body}` : body,
     action_url: notification.actionUrl || "",
     date: notification.createdAt.toISOString(),
     isUnread: !notification.readAt,
@@ -79,7 +90,7 @@ export async function GET() {
       avatar: "/iso-logo-black.svg",
       action: isCompleted
         ? "¡Felicitaciones! Has completado todas tus misiones iniciales de bienestar. Tu camino en LUMINUS está listo para brillar."
-        : "Enciende tu luz. Completa estas 6 misiones iniciales para conectar y guiar tu camino de bienestar.",
+        : "Enciende tu luz. Completa estas 5 misiones iniciales para conectar y guiar tu camino de bienestar.",
       action_url: "",
       date: new Date().toISOString(),
       isUnread: !isCompleted,

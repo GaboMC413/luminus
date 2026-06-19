@@ -3,6 +3,7 @@
 import React, { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Button } from "@/components/ui/Button";
 
 
 interface ProfileDetails {
@@ -142,7 +143,7 @@ function NetworkContent() {
 
   return (
     <div className="flex-1 w-full flex flex-col bg-slate-50">
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-6 md:py-6 flex flex-col">
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1">
           
           {/* Header */}
@@ -167,7 +168,7 @@ function NetworkContent() {
           <div className="flex flex-col md:grid md:grid-cols-12 gap-4 md:gap-6 md:flex-1 items-start pb-0">
             
             {/* Left Column: Mi red / active connections */}
-            <div className={`order-2 md:order-1 ${pendingRequests.length > 0 ? "md:col-span-8" : "md:col-span-12"} flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-fit md:h-full md:min-h-0 shrink-0`}>
+            <div className={`order-2 md:order-1 w-full ${pendingRequests.length > 0 ? "md:col-span-8" : "md:col-span-12"} flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-fit md:h-full md:min-h-0 shrink-0`}>
               
               {/* Search Bar at Top of Active List */}
               <div className="p-3 border-b border-slate-100 shrink-0 bg-white">
@@ -190,13 +191,23 @@ function NetworkContent() {
                 {isLoading && connections.length === 0 ? (
                   <div className="p-6 text-sm text-slate-400 text-center">Cargando tu red...</div>
                 ) : filteredNetwork.length === 0 ? (
-                  <div className="p-12 text-center text-slate-400 text-sm flex flex-col items-center gap-3 py-16">
+                  <div className="p-12 text-center text-slate-400 text-sm flex flex-col items-center gap-4 py-16 max-w-md mx-auto w-full">
                     <span className="material-symbols-rounded text-slate-300 text-[40px] select-none">group_off</span>
-                    <span>
+                    <span className="leading-relaxed">
                       {searchQuery
                         ? "No se encontraron resultados para tu búsqueda"
-                        : "Todavía no has añadido a nadie a tu red"}
+                        : "Todavía no tienes a nadie en tu red, ve a comunidad y descubre personas para agregar."}
                     </span>
+                    {!searchQuery && (
+                      <Button
+                        variant="primary"
+                        onClick={() => router.push("/comunidad")}
+                        className="mt-2 px-6 text-xs font-semibold bg-black text-white hover:bg-zinc-900 rounded-xl !w-auto h-10 flex items-center justify-center gap-2"
+                      >
+                        <span className="material-symbols-rounded text-[18px]">explore</span>
+                        <span>Ir a la Comunidad</span>
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <>
@@ -285,7 +296,7 @@ function NetworkContent() {
 
             {/* Right Column: Solicitudes pendientes (col-span-4) */}
             {pendingRequests.length > 0 && (
-              <div className="order-1 md:order-2 md:col-span-4 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-fit md:h-full min-h-0 shrink-0">
+              <div className="order-1 md:order-2 w-full md:col-span-4 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-fit md:h-full min-h-0 shrink-0">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-slate-100 shrink-0 bg-white">
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
