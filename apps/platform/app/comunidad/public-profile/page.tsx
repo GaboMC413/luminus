@@ -404,6 +404,14 @@ function PublicProfileContent() {
             </svg>
             <span className="text-xs font-bold text-slate-600">Compartir por WhatsApp</span>
           </a>
+
+          {/* Close button */}
+          <button
+            onClick={() => setIsShareOpen(false)}
+            className="w-full h-11 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition duration-200 flex items-center justify-center cursor-pointer outline-none active:scale-95 font-jakarta"
+          >
+            Cerrar
+          </button>
         </div>
       </Modal>
     </div>
