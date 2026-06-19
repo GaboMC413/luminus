@@ -9,7 +9,10 @@ interface SuccessModalProps {
   title: string;
   message: string;
   buttonText?: string;
+  eyebrow?: string;
+  celebrate?: boolean;
 }
+
 
 interface ConfettiParticle {
   id: number;
@@ -77,7 +80,9 @@ export function SuccessModal({
   onClose,
   title,
   message,
-  buttonText = "Cerrar"
+  buttonText = "Cerrar",
+  eyebrow,
+  celebrate = false
 }: SuccessModalProps) {
   if (!isOpen) return null;
 
@@ -105,16 +110,23 @@ export function SuccessModal({
       `}</style>
 
       {/* Confetti Celebration Burst */}
-      <ConfettiExplosion />
+      {celebrate && <ConfettiExplosion />}
 
       {/* Top Gradient Banner Accent */}
-      <div className="w-full h-3.5 luminus-gradient shrink-0" />
+      {celebrate && <div className="w-full h-3.5 luminus-gradient shrink-0" />}
 
       {/* Content */}
       <div className="p-6 flex flex-col items-start text-left relative">
         
+        {/* Eyebrow */}
+        {eyebrow && (
+          <span className="text-[10.5px] font-bold tracking-widest text-slate-400 font-jakarta uppercase mb-1">
+            {eyebrow}
+          </span>
+        )}
+
         {/* Title */}
-        <h3 className="text-[15px] font-semibold text-slate-900 mb-2">
+        <h3 className="text-[15px] font-bold text-slate-900 mb-2 font-jakarta">
           {title}
         </h3>
 

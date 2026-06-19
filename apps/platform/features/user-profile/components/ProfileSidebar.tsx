@@ -81,7 +81,7 @@ export function ProfileSidebar({
         )}
       </div>
 
-      <div className="w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 rounded-[16px] overflow-hidden -mt-[96px] md:mt-6 ml-4 md:ml-0 relative shrink-0 group border-4 border-white bg-white">
+      <div className="w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 rounded-[26px] md:rounded-[32px] lg:rounded-[38px] overflow-hidden -mt-[96px] md:mt-6 ml-4 md:ml-0 relative shrink-0 group border-4 border-white bg-white">
         {profile.profile_picture_url ? (
           <img
             src={profile.profile_picture_url}
@@ -89,7 +89,7 @@ export function ProfileSidebar({
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full border border-slate-200 rounded-[16px] bg-slate-50 flex items-center justify-center">
+          <div className="w-full h-full border border-slate-200 rounded-[26px] md:rounded-[32px] lg:rounded-[38px] bg-slate-50 flex items-center justify-center">
             <span className="material-symbols-outlined text-zinc-200 select-none flex items-center justify-center text-[72px] md:text-[88px] lg:text-[104px]" style={{ width: '100%', height: '100%' }}>
               person
             </span>

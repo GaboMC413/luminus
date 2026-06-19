@@ -34,7 +34,7 @@ export function UserCard({ user }: UserCardProps) {
       onClick={handleViewProfile}
       className="bg-white rounded-2xl p-3 md:p-4 flex flex-col items-center gap-2.5 md:gap-3 border border-slate-200 transition-all group hover:border-slate-300 shadow-none cursor-pointer"
     >
-      <div className="w-[76px] h-[76px] sm:w-[88px] sm:h-[88px] md:w-[110px] md:h-[110px] rounded-[10px] overflow-hidden bg-slate-50 shrink-0 border-4 border-white shadow-none group-hover:border-slate-200/50 transition-colors relative ring-1 ring-black/5 flex items-center justify-center">
+      <div className="w-[76px] h-[76px] sm:w-[88px] sm:h-[88px] md:w-[110px] md:h-[110px] rounded-[16px] sm:rounded-[18px] md:rounded-[22px] overflow-hidden bg-slate-50 shrink-0 border-4 border-white shadow-none group-hover:border-slate-200/50 transition-colors relative ring-1 ring-black/5 flex items-center justify-center">
         {hasAvatar ? (
           <img 
             src={user.avatar} 
