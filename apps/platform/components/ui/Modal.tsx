@@ -9,9 +9,20 @@ interface ModalProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   maxWidth?: string;
+  backdropClassName?: string;
+  containerClassName?: string;
 }
 
-export function Modal({ isOpen, onClose, title, children, footer, maxWidth = '520px' }: ModalProps) {
+export function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  footer,
+  maxWidth = '520px',
+  backdropClassName,
+  containerClassName,
+}: ModalProps) {
   // Prevent scrolling when modal is open
   useEffect(() => {
     if (isOpen) {
@@ -27,9 +38,9 @@ export function Modal({ isOpen, onClose, title, children, footer, maxWidth = '52
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 overflow-y-auto custom-scrollbar animate-in fade-in duration-200">
+    <div className={`fixed inset-0 ${backdropClassName || "bg-black/60 backdrop-blur-sm"} z-[9999] flex items-center justify-center p-4 overflow-y-auto custom-scrollbar animate-in fade-in duration-200`}>
       <div
-        className="w-full bg-white rounded-[16px] overflow-hidden flex flex-col shadow-none animate-in zoom-in-95 duration-200"
+        className={`w-full bg-white rounded-[16px] overflow-hidden flex flex-col ${containerClassName || "shadow-none"} animate-in zoom-in-95 duration-200`}
         style={{ maxWidth }}
       >
         {/* Header */}
