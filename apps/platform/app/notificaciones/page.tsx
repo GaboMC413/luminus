@@ -180,11 +180,11 @@ function NotificationsContent() {
 
   return (
     <div className="w-full flex flex-col bg-slate-50 h-[calc(100dvh-128px-env(safe-area-inset-bottom,0px))] lg:h-auto overflow-hidden lg:overflow-visible">
-      <div className="flex-1 w-full max-w-7xl mx-auto px-0 md:px-6 py-0 md:py-6 flex flex-col min-h-0 overflow-hidden lg:overflow-visible">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col min-h-0 overflow-hidden lg:overflow-visible">
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden lg:overflow-visible">
           
           {/* Header */}
-          <div className="flex items-center gap-3 mb-4 md:mb-6 px-4 md:px-0 shrink-0">
+          <div className="flex items-center gap-3 mb-4 md:mb-6 shrink-0">
             <button
               onClick={() => router.back()}
               className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900 cursor-pointer"
@@ -196,16 +196,16 @@ function NotificationsContent() {
           </div>
 
           {error && (
-            <div className="mb-3 mx-4 md:mx-0 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-600 shrink-0">
+            <div className="mb-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-600 shrink-0">
               {error}
             </div>
           )}
 
           {/* Main Layout Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-0 md:gap-6 items-stretch flex-1 min-h-0 overflow-hidden lg:overflow-visible">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 items-stretch flex-1 min-h-0 overflow-hidden lg:overflow-visible">
             
             {/* Sidebar Column (Filters) */}
-            <div className="md:col-span-4 flex flex-col bg-white rounded-none md:rounded-2xl border-0 md:border border-slate-200 overflow-hidden h-fit md:h-full shrink-0">
+            <div className="md:col-span-4 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-fit md:h-full shrink-0">
               
               {/* Search Bar */}
               <div className="p-3 border-b border-slate-100 shrink-0">
@@ -295,7 +295,7 @@ function NotificationsContent() {
             </div>
 
             {/* List Column */}
-            <div className="md:col-span-8 flex flex-col bg-white rounded-none md:rounded-2xl border-0 md:border border-slate-200 overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0">
+            <div className="md:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0">
               
               {/* List Header */}
               <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">

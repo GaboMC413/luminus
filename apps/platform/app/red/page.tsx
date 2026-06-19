@@ -143,11 +143,11 @@ function NetworkContent() {
 
   return (
     <div className="w-full flex flex-col bg-slate-50 h-[calc(100dvh-128px-env(safe-area-inset-bottom,0px))] lg:h-auto overflow-hidden lg:overflow-visible">
-      <div className="flex-1 w-full max-w-7xl mx-auto px-0 md:px-6 py-0 md:py-6 flex flex-col min-h-0 overflow-hidden lg:overflow-visible">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-6 md:py-6 flex flex-col min-h-0 overflow-hidden lg:overflow-visible">
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden lg:overflow-visible">
           
           {/* Header */}
-          <div className="flex items-center gap-3 mb-4 md:mb-6 px-4 md:px-0 shrink-0">
+          <div className="flex items-center gap-3 mb-4 md:mb-6 shrink-0">
             <button
               onClick={() => router.back()}
               className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900 cursor-pointer"
@@ -159,16 +159,16 @@ function NetworkContent() {
           </div>
 
           {error && (
-            <div className="mb-3 mx-4 md:mx-0 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-600 shrink-0">
+            <div className="mb-3 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-600 shrink-0">
               {error}
             </div>
           )}
 
           {/* Main Layout Grid */}
-          <div className="flex flex-col md:grid md:grid-cols-12 gap-0 md:gap-6 flex-1 min-h-0 items-stretch md:items-start pb-0 overflow-hidden md:overflow-visible">
+          <div className="flex flex-col md:grid md:grid-cols-12 gap-4 md:gap-6 flex-1 min-h-0 items-stretch md:items-start pb-0 overflow-hidden md:overflow-visible">
             
             {/* Left Column: Mi red / active connections */}
-            <div className={`order-2 md:order-1 w-full ${pendingRequests.length > 0 ? "md:col-span-8" : "md:col-span-12"} flex flex-col bg-white rounded-none md:rounded-2xl border-0 md:border border-slate-200 overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0 shrink-0`}>
+            <div className={`order-2 md:order-1 w-full ${pendingRequests.length > 0 ? "md:col-span-8" : "md:col-span-12"} flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0 shrink-0`}>
               
               {/* Search Bar at Top of Active List */}
               <div className="p-3 border-b border-slate-100 shrink-0 bg-white">
@@ -295,7 +295,7 @@ function NetworkContent() {
 
             {/* Right Column: Solicitudes pendientes (col-span-4) */}
             {pendingRequests.length > 0 && (
-              <div className="order-1 md:order-2 w-full md:col-span-4 flex flex-col bg-white rounded-none md:rounded-2xl border-0 md:border border-slate-200 overflow-hidden h-fit md:h-full min-h-0 shrink-0">
+              <div className="order-1 md:order-2 w-full md:col-span-4 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-fit md:h-full min-h-0 shrink-0">
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-slate-100 shrink-0 bg-white">
                   <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
