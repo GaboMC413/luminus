@@ -142,9 +142,9 @@ function NetworkContent() {
   });
 
   return (
-    <div className="flex-1 w-full flex flex-col bg-slate-50">
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-6 md:py-6 flex flex-col">
-        <div className="w-full max-w-6xl mx-auto flex flex-col flex-1">
+    <div className="w-full flex flex-col bg-slate-50 h-[calc(100dvh-128px-env(safe-area-inset-bottom,0px))] lg:h-auto overflow-hidden lg:overflow-visible">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-6 md:py-6 flex flex-col min-h-0 overflow-hidden lg:overflow-visible">
+        <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden lg:overflow-visible">
           
           {/* Header */}
           <div className="flex items-center gap-3 mb-4 md:mb-6 shrink-0">
@@ -165,10 +165,10 @@ function NetworkContent() {
           )}
 
           {/* Main Layout Grid */}
-          <div className="flex flex-col md:grid md:grid-cols-12 gap-4 md:gap-6 md:flex-1 items-start pb-0">
+          <div className="flex flex-col md:grid md:grid-cols-12 gap-4 md:gap-6 flex-1 min-h-0 items-stretch md:items-start pb-0 overflow-hidden md:overflow-visible">
             
             {/* Left Column: Mi red / active connections */}
-            <div className={`order-2 md:order-1 w-full ${pendingRequests.length > 0 ? "md:col-span-8" : "md:col-span-12"} flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-fit md:h-full md:min-h-0 shrink-0`}>
+            <div className={`order-2 md:order-1 w-full ${pendingRequests.length > 0 ? "md:col-span-8" : "md:col-span-12"} flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0 shrink-0`}>
               
               {/* Search Bar at Top of Active List */}
               <div className="p-3 border-b border-slate-100 shrink-0 bg-white">
@@ -187,7 +187,7 @@ function NetworkContent() {
 
 
               {/* Scrollable Network List */}
-              <div className="w-full md:flex-1 md:overflow-y-auto md:custom-scrollbar divide-y divide-slate-100 bg-white">
+              <div className="w-full flex-1 overflow-y-auto thin-scrollbar divide-y divide-slate-100 bg-white">
                 {isLoading && connections.length === 0 ? (
                   <div className="p-6 text-sm text-slate-400 text-center">Cargando tu red...</div>
                 ) : filteredNetwork.length === 0 ? (
@@ -304,7 +304,7 @@ function NetworkContent() {
                 </div>
 
                 {/* Scrollable Requests List */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar divide-y divide-slate-100 md:max-h-full max-h-[300px]">
+                <div className="flex-1 overflow-y-auto thin-scrollbar divide-y divide-slate-100 md:max-h-full max-h-[300px]">
                   {isLoading && connections.length === 0 ? (
                     <div className="p-6 text-[14px] text-slate-400 text-center">Cargando solicitudes...</div>
                   ) : (

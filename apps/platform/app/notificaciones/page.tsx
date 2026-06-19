@@ -179,9 +179,9 @@ function NotificationsContent() {
   });
 
   return (
-    <div className="flex-1 w-full flex flex-col bg-slate-50">
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-6 md:py-6 flex flex-col">
-        <div className="w-full max-w-6xl mx-auto flex flex-col flex-1">
+    <div className="w-full flex flex-col bg-slate-50 h-[calc(100dvh-128px-env(safe-area-inset-bottom,0px))] lg:h-auto overflow-hidden lg:overflow-visible">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col min-h-0 overflow-hidden lg:overflow-visible">
+        <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden lg:overflow-visible">
           
           {/* Header */}
           <div className="flex items-center gap-3 mb-4 md:mb-6 shrink-0">
@@ -202,7 +202,7 @@ function NotificationsContent() {
           )}
 
           {/* Main Layout Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-6 items-start content-start flex-1">
+          <div className="flex flex-col md:grid md:grid-cols-12 gap-4 md:gap-6 items-stretch flex-1 min-h-0 overflow-hidden lg:overflow-visible">
             
             {/* Sidebar Column (Filters) */}
             <div className="md:col-span-4 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-fit md:h-full shrink-0">
@@ -222,7 +222,7 @@ function NotificationsContent() {
               </div>
 
               {/* Desktop Filters List */}
-              <div className="hidden md:flex flex-col gap-1 p-2 overflow-y-auto custom-scrollbar flex-1">
+              <div className="hidden md:flex flex-col gap-1 p-2 overflow-y-auto thin-scrollbar flex-1">
                 {FILTERS.map((f) => {
                   const isActive = activeFilter === f.id;
                   return (
@@ -295,7 +295,7 @@ function NotificationsContent() {
             </div>
 
             {/* List Column */}
-            <div className="md:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-fit md:h-full md:min-h-0">
+            <div className="md:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0">
               
               {/* List Header */}
               <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
@@ -305,7 +305,7 @@ function NotificationsContent() {
               </div>
 
               {/* Scrollable Notifications List */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar bg-white divide-y divide-slate-100">
+              <div className="flex-1 overflow-y-auto thin-scrollbar bg-white divide-y divide-slate-100">
                 {isLoading ? (
                   <div className="p-6 text-sm text-slate-400 text-center">Cargando notificaciones...</div>
                 ) : filteredNotifications.length === 0 ? (

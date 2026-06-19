@@ -77,6 +77,11 @@ export async function GET() {
             userId: session.userId,
           },
         },
+        messages: {
+          some: {
+            deletedAt: null,
+          },
+        },
       },
       include: conversationInclude,
       orderBy: {
