@@ -232,6 +232,7 @@ function MessagesContent() {
 
         const data = await response.json();
         setMessages(data.messages || []);
+        window.dispatchEvent(new Event("luminus_messages_update"));
       } catch (err: any) {
         setError(err.message || "No pudimos cargar la conversacion.");
       }
@@ -279,6 +280,7 @@ function MessagesContent() {
       setMessages((prev) => [...prev, data.message]);
       setInputText("");
       await refreshConversations();
+      window.dispatchEvent(new Event("luminus_messages_update"));
 
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
@@ -315,6 +317,7 @@ function MessagesContent() {
         setIsChatMenuOpen(false);
         router.push("/mensajes");
         router.refresh();
+        window.dispatchEvent(new Event("luminus_messages_update"));
       } catch (err: any) {
         console.error("Error deleting conversation:", err);
         alert(err.message || "No pudimos eliminar el chat. Intenta nuevamente.");

@@ -194,10 +194,12 @@ export function PlatformNavbar() {
         try {
           const chats = JSON.parse(localChats);
           if (Array.isArray(chats)) {
-            // Filter out historical mock users (IDs "1", "2", or "mock-user-") from navbar list
+            // Filter out historical mock users (IDs "1", "2", or "mock-user-") and empty chats from navbar list
             const realChats = chats.filter((c: any) => {
               const idStr = String(c.id);
-              return idStr !== "1" && idStr !== "2" && !idStr.startsWith("mock-user-");
+              const isMock = idStr === "1" || idStr === "2" || idStr.startsWith("mock-user-");
+              const hasMessages = c.messages && c.messages.length > 0;
+              return !isMock && hasMessages;
             });
 
             localMessages = realChats.map((chat: any) => {
@@ -237,9 +239,11 @@ export function PlatformNavbar() {
 
     loadChats();
     window.addEventListener("storage", loadChats);
+    window.addEventListener("luminus_messages_update", loadChats);
     const interval = setInterval(loadChats, 10000);
     return () => {
       window.removeEventListener("storage", loadChats);
+      window.removeEventListener("luminus_messages_update", loadChats);
       clearInterval(interval);
     };
   }, []);
