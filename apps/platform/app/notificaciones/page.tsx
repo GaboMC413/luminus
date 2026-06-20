@@ -179,7 +179,7 @@ function NotificationsContent() {
   });
 
   return (
-    <div className="w-full flex flex-col bg-slate-50 h-[calc(100dvh-128px-env(safe-area-inset-bottom,0px))] lg:h-auto overflow-hidden lg:overflow-visible">
+    <div className="w-full flex-1 flex flex-col bg-slate-50 min-h-0 lg:h-auto overflow-hidden lg:overflow-visible">
       <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col min-h-0 overflow-hidden lg:overflow-visible">
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden lg:overflow-visible">
           
