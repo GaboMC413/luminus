@@ -213,6 +213,14 @@ function MessagesContent() {
   }, [recipientId]);
 
   useEffect(() => {
+    const isChat = mobileView === 'chat';
+    window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: !isChat }));
+    return () => {
+      window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
+    };
+  }, [mobileView]);
+
+  useEffect(() => {
     if (!selectedId) {
       setMessages([]);
       return;

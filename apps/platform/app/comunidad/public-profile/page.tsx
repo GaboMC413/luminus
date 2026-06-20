@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { ProfileHeaderCover } from "@/features/user-profile/components/ProfileHeaderCover";
@@ -33,6 +33,20 @@ function PublicProfileContent() {
   const [error, setError] = useState<string | null>(null);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const connectionDropdownRef = useRef<HTMLDivElement>(null);
+  const [isConnectionDropdownOpen, setIsConnectionDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (connectionDropdownRef.current && !connectionDropdownRef.current.contains(event.target as Node)) {
+        setIsConnectionDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     const id = searchParams.get("id");
@@ -76,6 +90,7 @@ function PublicProfileContent() {
   };
 
   const handleConnect = async () => {
+    setIsConnectionDropdownOpen(false);
     const id = searchParams.get("id");
     if (!id || connectionLoading) return;
 
@@ -291,15 +306,50 @@ function PublicProfileContent() {
                     <span className="material-symbols-outlined text-[20px]">mail</span>
                     Enviar mensaje
                   </Button>
-                  <Button
-                    onClick={handleConnect}
-                    variant="outline"
-                    disabled={connectionLoading}
-                    className="flex-1 flex items-center justify-center gap-2 font-bold animate-none"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">person_add</span>
-                    {getConnectionButtonLabel()}
-                  </Button>
+
+                  {profile?.connection_status === "accepted" ? (
+                    <div className="flex-1 relative" ref={connectionDropdownRef}>
+                      <Button
+                        onClick={() => setIsConnectionDropdownOpen(!isConnectionDropdownOpen)}
+                        variant="outline"
+                        disabled={connectionLoading}
+                        className="w-full flex items-center justify-center gap-2 font-bold animate-none"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">person_add</span>
+                        {getConnectionButtonLabel()}
+                        <span className="material-symbols-rounded text-[18px]">expand_more</span>
+                      </Button>
+                      {isConnectionDropdownOpen && (
+                        <div className="absolute right-0 left-0 mt-2 bg-white border border-slate-200 rounded-xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top">
+                          <button
+                            onClick={handleConnect}
+                            className="group w-full flex items-center gap-2.5 px-4 py-3 text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left font-sans font-semibold text-slate-600 hover:text-[#FF4B4B]"
+                          >
+                            <span className="material-symbols-rounded text-[18px] text-slate-400 group-hover:text-[#FF4B4B]">delete</span>
+                            Eliminar de mi red
+                          </button>
+                          <button
+                            onClick={() => setIsConnectionDropdownOpen(false)}
+                            className="group w-full flex items-center gap-2.5 px-4 py-3 text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left font-sans font-semibold text-slate-600 hover:text-[#FF4B4B]"
+                          >
+                            <span className="material-symbols-rounded text-[18px] text-slate-400 group-hover:text-[#FF4B4B]">block</span>
+                            Bloquear
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={handleConnect}
+                      variant="outline"
+                      disabled={connectionLoading}
+                      className="flex-1 flex items-center justify-center gap-2 font-bold animate-none"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">person_add</span>
+                      {getConnectionButtonLabel()}
+                    </Button>
+                  )}
+
                   <Button
                     onClick={handleShareProfile}
                     variant="outline"
@@ -320,17 +370,52 @@ function PublicProfileContent() {
                     <span className="material-symbols-outlined text-[20px]">mail</span>
                     <span className="truncate">Mensaje</span>
                   </Button>
-                  <Button
-                    onClick={handleConnect}
-                    variant="outline"
-                    disabled={connectionLoading}
-                    className="flex-[1.2] flex items-center justify-center gap-1.5 font-bold text-[13px] h-11 rounded-xl animate-none px-2"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">
-                      {profile?.connection_status === "accepted" ? "group" : "person_add"}
-                    </span>
-                    <span className="truncate">{getConnectionButtonLabelMobile()}</span>
-                  </Button>
+
+                  {profile?.connection_status === "accepted" ? (
+                    <div className="flex-[1.2] relative" ref={connectionDropdownRef}>
+                      <Button
+                        onClick={() => setIsConnectionDropdownOpen(!isConnectionDropdownOpen)}
+                        variant="outline"
+                        disabled={connectionLoading}
+                        className="w-full flex items-center justify-center gap-1.5 font-bold text-[13px] h-11 rounded-xl animate-none px-2"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">group</span>
+                        <span className="truncate">{getConnectionButtonLabelMobile()}</span>
+                        <span className="material-symbols-rounded text-[16px] shrink-0">expand_more</span>
+                      </Button>
+                      {isConnectionDropdownOpen && (
+                        <div className="absolute right-0 left-0 mt-2 bg-white border border-slate-200 rounded-xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top">
+                          <button
+                            onClick={handleConnect}
+                            className="group w-full flex items-center gap-2 px-3 py-2.5 text-xs hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left font-sans font-semibold text-slate-600 hover:text-[#FF4B4B]"
+                          >
+                            <span className="material-symbols-rounded text-[16px] text-slate-400 group-hover:text-[#FF4B4B]">delete</span>
+                            Eliminar de mi red
+                          </button>
+                          <button
+                            onClick={() => setIsConnectionDropdownOpen(false)}
+                            className="group w-full flex items-center gap-2 px-3 py-2.5 text-xs hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left font-sans font-semibold text-slate-600 hover:text-[#FF4B4B]"
+                          >
+                            <span className="material-symbols-rounded text-[16px] text-slate-400 group-hover:text-[#FF4B4B]">block</span>
+                            Bloquear
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <Button
+                      onClick={handleConnect}
+                      variant="outline"
+                      disabled={connectionLoading}
+                      className="flex-[1.2] flex items-center justify-center gap-1.5 font-bold text-[13px] h-11 rounded-xl animate-none px-2"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">
+                        {profile?.connection_status === "accepted" ? "group" : "person_add"}
+                      </span>
+                      <span className="truncate">{getConnectionButtonLabelMobile()}</span>
+                    </Button>
+                  )}
+
                   <button
                     onClick={handleShareProfile}
                     className="w-11 h-11 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none font-jakarta"

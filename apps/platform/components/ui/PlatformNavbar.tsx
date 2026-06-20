@@ -104,6 +104,19 @@ export function PlatformNavbar() {
 
   const unreadMessagesCount = messages.filter(m => m.isUnread).length;
 
+  const [showMobileNavbar, setShowMobileNavbar] = useState(true);
+
+  useEffect(() => {
+    const handleToggle = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      setShowMobileNavbar(customEvent.detail);
+    };
+    window.addEventListener("luminus_toggle_mobile_navbar", handleToggle);
+    return () => {
+      window.removeEventListener("luminus_toggle_mobile_navbar", handleToggle);
+    };
+  }, []);
+
   useEffect(() => {
     // Load local storage details dynamically
     const storedFirst = localStorage.getItem("luminus_profile_firstName") || "";
@@ -584,45 +597,47 @@ export function PlatformNavbar() {
       </header>
 
       {/* Mobile Nav - Fixed Bottom */}
-      <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 z-50">
-        <div className="max-w-md mx-auto h-[64px] px-6 flex justify-between items-center pb-[env(safe-area-inset-bottom)]">
-          {NAV_ITEMS.map((tab) => {
-            const isActive = activeTab === tab.id;
+      {showMobileNavbar && (
+        <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 z-50 animate-in slide-in-from-bottom duration-200">
+          <div className="max-w-md mx-auto h-[64px] px-6 flex justify-between items-center pb-[env(safe-area-inset-bottom)]">
+            {NAV_ITEMS.map((tab) => {
+              const isActive = activeTab === tab.id;
 
-            return (
-              <Link
-                key={tab.id}
-                href={tab.path}
-                className={`flex flex-col items-center justify-center gap-0 flex-1 transition-colors duration-200 ${isActive ? "text-black" : "text-slate-400"}`}
-              >
-                <div className="flex items-center justify-center">
-                  <div className="relative w-[26px] h-[26px] shrink-0">
-                    {/* Inactive Icon Layer */}
-                    <div
-                      style={{
-                        maskImage: `url('${tab.icon}')`,
-                        WebkitMaskImage: `url('${tab.icon}')`
-                      }}
-                      className={`absolute inset-0 transition-opacity duration-200 [mask-size:contain] [mask-repeat:no-repeat] [mask-position:center] [webkit-mask-size:contain] [webkit-mask-repeat:no-repeat] [webkit-mask-position:center] ${isActive ? "opacity-0" : "opacity-100 bg-slate-400"}`}
-                    />
-                    {/* Active Icon Layer */}
-                    <div
-                      style={{
-                        maskImage: `url('${tab.activeIcon}')`,
-                        WebkitMaskImage: `url('${tab.activeIcon}')`
-                      }}
-                      className={`absolute inset-0 transition-opacity duration-200 [mask-size:contain] [mask-repeat:no-repeat] [mask-position:center] [webkit-mask-size:contain] [webkit-mask-repeat:no-repeat] [webkit-mask-position:center] ${isActive ? "opacity-100 bg-black" : "opacity-0"}`}
-                    />
+              return (
+                <Link
+                  key={tab.id}
+                  href={tab.path}
+                  className={`flex flex-col items-center justify-center gap-0 flex-1 transition-colors duration-200 ${isActive ? "text-black" : "text-slate-400"}`}
+                >
+                  <div className="flex items-center justify-center">
+                    <div className="relative w-[26px] h-[26px] shrink-0">
+                      {/* Inactive Icon Layer */}
+                      <div
+                        style={{
+                          maskImage: `url('${tab.icon}')`,
+                          WebkitMaskImage: `url('${tab.icon}')`
+                        }}
+                        className={`absolute inset-0 transition-opacity duration-200 [mask-size:contain] [mask-repeat:no-repeat] [mask-position:center] [webkit-mask-size:contain] [webkit-mask-repeat:no-repeat] [webkit-mask-position:center] ${isActive ? "opacity-0" : "opacity-100 bg-slate-400"}`}
+                      />
+                      {/* Active Icon Layer */}
+                      <div
+                        style={{
+                          maskImage: `url('${tab.activeIcon}')`,
+                          WebkitMaskImage: `url('${tab.activeIcon}')`
+                        }}
+                        className={`absolute inset-0 transition-opacity duration-200 [mask-size:contain] [mask-repeat:no-repeat] [mask-position:center] [webkit-mask-size:contain] [webkit-mask-repeat:no-repeat] [webkit-mask-position:center] ${isActive ? "opacity-100 bg-black" : "opacity-0"}`}
+                      />
+                    </div>
                   </div>
-                </div>
-                <span className={`text-[10px] font-medium tracking-tight ${isActive ? "opacity-100" : "opacity-70"}`}>
-                  {tab.label}
-                </span>
-              </Link>
-            );
-          })}
+                  <span className={`text-[10px] font-medium tracking-tight ${isActive ? "opacity-100" : "opacity-70"}`}>
+                    {tab.label}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
       
       {activePopupChat && (
         <ChatPopup
