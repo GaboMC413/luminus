@@ -213,3 +213,8 @@ label,
 .thin-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: rgba(15, 23, 42, 0.3);
 }
+
+/* Reset main padding-bottom when mobile navbar is hidden to prevent blank space above keyboard */
+body.mobile-navbar-hidden main {
+  padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+}

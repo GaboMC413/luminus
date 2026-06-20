@@ -110,10 +110,20 @@ export function PlatformNavbar() {
     const handleToggle = (e: Event) => {
       const customEvent = e as CustomEvent;
       setShowMobileNavbar(customEvent.detail);
+      if (typeof document !== "undefined") {
+        if (customEvent.detail) {
+          document.body.classList.remove("mobile-navbar-hidden");
+        } else {
+          document.body.classList.add("mobile-navbar-hidden");
+        }
+      }
     };
     window.addEventListener("luminus_toggle_mobile_navbar", handleToggle);
     return () => {
       window.removeEventListener("luminus_toggle_mobile_navbar", handleToggle);
+      if (typeof document !== "undefined") {
+        document.body.classList.remove("mobile-navbar-hidden");
+      }
     };
   }, []);
 

@@ -119,6 +119,30 @@ export async function POST(request: Request) {
       },
     });
 
+    // Create a connection request notification for the recipient user
+    try {
+      const requesterProfile = await prisma.userProfile.findUnique({
+        where: { userId: session.userId },
+        select: { firstName: true, lastName: true, fullName: true, avatarUrl: true },
+      });
+      const requesterName = requesterProfile?.fullName || `${requesterProfile?.firstName || ""} ${requesterProfile?.lastName || ""}`.trim() || "Un usuario";
+      const requesterAvatar = requesterProfile?.avatarUrl || "";
+
+      await prisma.notification.create({
+        data: {
+          userId: recipientId,
+          type: "connection_request",
+          title: "Nueva solicitud",
+          actorName: requesterName,
+          actorAvatarUrl: requesterAvatar,
+          body: "quiere agregarte a su red.",
+          actionUrl: `/comunidad/public-profile?id=${session.userId}`,
+        },
+      });
+    } catch (notifError) {
+      console.error("Failed to create connection request notification:", notifError);
+    }
+
     const newlyCompletedQuests = [];
     try {
       const { checkAndTriggerQuestCompletion } = await import("@/lib/onboarding");

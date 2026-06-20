@@ -133,6 +133,7 @@ function MessagesContent() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<'list' | 'chat'>(isUuid(recipientId) ? 'chat' : 'list');
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [newConversation, setNewConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -166,6 +167,7 @@ function MessagesContent() {
       try {
         setIsLoading(true);
         setError(null);
+        let activeConv: Conversation | null = null;
 
         if (isUuid(recipientId)) {
           const response = await fetch("/api/messages/conversations", {
@@ -182,8 +184,12 @@ function MessagesContent() {
           }
 
           const data = await response.json();
+          activeConv = data.conversation;
+          setNewConversation(data.conversation);
           setSelectedId(data.conversation.id);
           setMobileView('chat');
+        } else {
+          setNewConversation(null);
         }
 
         const response = await fetch("/api/messages/conversations", {
@@ -197,7 +203,15 @@ function MessagesContent() {
 
         const data = await response.json();
         const nextConversations = data.conversations || [];
-        setConversations(nextConversations);
+        
+        let updatedConversations = [...nextConversations];
+        if (activeConv) {
+          const exists = nextConversations.some((c: Conversation) => c.id === activeConv!.id);
+          if (!exists) {
+            updatedConversations = [activeConv, ...nextConversations];
+          }
+        }
+        setConversations(updatedConversations);
 
         if (!isUuid(recipientId) && nextConversations.length > 0) {
           setSelectedId(nextConversations[0].id);
@@ -213,12 +227,12 @@ function MessagesContent() {
   }, [recipientId]);
 
   useEffect(() => {
-    const isChat = mobileView === 'chat';
-    window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: !isChat }));
+    // Keep mobile navbar visible on messages page by default
+    window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
     return () => {
       window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
     };
-  }, [mobileView]);
+  }, []);
 
   useEffect(() => {
     if (!selectedId) {
@@ -260,7 +274,15 @@ function MessagesContent() {
 
     if (response.ok) {
       const data = await response.json();
-      setConversations(data.conversations || []);
+      const nextConversations = data.conversations || [];
+      let updatedConversations = [...nextConversations];
+      if (newConversation) {
+        const exists = nextConversations.some((c: Conversation) => c.id === newConversation.id);
+        if (!exists) {
+          updatedConversations = [newConversation, ...nextConversations];
+        }
+      }
+      setConversations(updatedConversations);
     }
   };
 
@@ -354,7 +376,7 @@ function MessagesContent() {
     }
   };
 
-  const selectedConv = conversations.find((conversation) => conversation.id === selectedId) || null;
+  const selectedConv = conversations.find((conversation) => conversation.id === selectedId) || newConversation;
   const filteredConversations = conversations.filter((conversation) => {
     const lastMessage = conversation.last_message?.body || "";
     const searchable = `${conversation.participant.name} ${lastMessage}`.toLowerCase();
@@ -461,6 +483,7 @@ function MessagesContent() {
                 <div className="p-3 border-b border-slate-100 flex items-center gap-3 bg-white shrink-0">
                   <button
                     onClick={() => {
+                      window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
                       const from = searchParams.get("from");
                       if (from === "profile" && recipientId) {
                         router.push(`/comunidad/public-profile?id=${recipientId}`);
@@ -518,6 +541,7 @@ function MessagesContent() {
                     {/* Mobile Back Button */}
                     <button
                       onClick={() => {
+                        window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
                         const from = searchParams.get("from");
                         if (from === "profile") {
                           router.push(`/comunidad/public-profile?id=${selectedConv.participant.id}`);
@@ -640,9 +664,13 @@ function MessagesContent() {
                         onChange={(event) => setInputText(event.target.value)}
                         onKeyDown={handleKeyDown}
                         onFocus={() => {
+                          window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: false }));
                           setTimeout(() => {
                             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
                           }, 100);
+                        }}
+                        onBlur={() => {
+                          window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
                         }}
                         placeholder="Escribe un mensaje..."
                         rows={1}
