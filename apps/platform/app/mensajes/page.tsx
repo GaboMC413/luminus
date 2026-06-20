@@ -213,6 +213,14 @@ function MessagesContent() {
   }, [recipientId]);
 
   useEffect(() => {
+    const isChat = mobileView === 'chat';
+    window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: !isChat }));
+    return () => {
+      window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
+    };
+  }, [mobileView]);
+
+  useEffect(() => {
     if (!selectedId) {
       setMessages([]);
       return;
@@ -354,7 +362,7 @@ function MessagesContent() {
   });
 
   return (
-    <div className="w-full flex flex-col bg-slate-50 h-[calc(100dvh-128px-env(safe-area-inset-bottom,0px))] lg:h-[calc(100vh-80px)] overflow-hidden">
+    <div className="w-full flex-1 flex flex-col bg-slate-50 min-h-0 lg:h-[calc(100vh-80px)] overflow-hidden">
       <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col min-h-0 overflow-hidden">
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden">
           <div className={`items-center gap-3 mb-4 md:mb-6 shrink-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
