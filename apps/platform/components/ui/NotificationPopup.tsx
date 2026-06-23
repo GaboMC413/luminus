@@ -91,7 +91,7 @@ function NotificationItem({ avatar, icon, title, user, action, date, isUnread, b
                   }
             }
           >
-            {user && user !== "LUMINUS" && <span className="font-semibold text-slate-900">{user}: </span>}
+            {user && user !== "LUMINUS" && <span className="font-semibold text-slate-900 group-hover:underline">{user}: </span>}
             {action}
           </p>
         </div>
@@ -264,7 +264,12 @@ export function NotificationPopup({ isOpen, onClose, notifications, onMarkRead, 
                 isExpanded={expandedNotificationId === notification.id}
                 onClick={() => {
                   onMarkRead(notification.id);
-                  setExpandedNotificationId((prev) => (prev === notification.id ? null : notification.id));
+                  if (notification.action_url) {
+                    onClose();
+                    router.push(notification.action_url);
+                  } else {
+                    setExpandedNotificationId((prev) => (prev === notification.id ? null : notification.id));
+                  }
                 }}
                 onDelete={notification.id !== "onboarding-progress" ? () => onDelete(notification.id) : undefined}
               />

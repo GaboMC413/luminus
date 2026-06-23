@@ -396,7 +396,7 @@ function NotificationsContent() {
                           </div>
                           <p className="text-sm leading-relaxed text-slate-600 group-hover:text-slate-900 transition-colors">
                             {n.user && n.user !== "LUMINUS" && (
-                              <span className="font-semibold text-slate-900">{n.user}: </span>
+                              <span className="font-semibold text-slate-900 group-hover:underline">{n.user}: </span>
                             )}
                             {n.action}
                           </p>
