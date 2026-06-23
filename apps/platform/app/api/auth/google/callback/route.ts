@@ -106,14 +106,28 @@ export async function GET(request: Request) {
     const accessToken = await exchangeCodeForAccessToken(code, redirectUri);
     const googleUser = await fetchGoogleUser(accessToken);
     const email = googleUser.email.trim().toLowerCase();
-    const googleSub = `google:${googleUser.sub}`;
+    const googleProviderSubject = googleUser.sub;
+    const legacyGoogleSub = `google:${googleProviderSubject}`;
     const firstName = googleUser.given_name || "";
     const lastName = googleUser.family_name || "";
     const fullName = `${firstName} ${lastName}`.trim() || googleUser.name || "";
 
     const { prisma } = await import("@/lib/db");
-    const existingBySub = await prisma.user.findUnique({
-      where: { cognitoSub: googleSub },
+    const existingByIdentity = await prisma.userIdentity.findUnique({
+      where: {
+        provider_providerSubject: {
+          provider: "google",
+          providerSubject: googleProviderSubject,
+        },
+      },
+      include: {
+        user: {
+          include: { profile: true },
+        },
+      },
+    });
+    const existingByLegacySub = await prisma.user.findUnique({
+      where: { cognitoSub: legacyGoogleSub },
       include: { profile: true },
     });
     const existingByEmail = await prisma.user.findUnique({
@@ -121,21 +135,41 @@ export async function GET(request: Request) {
       include: { profile: true },
     });
 
-    if (existingBySub && existingByEmail && existingBySub.id !== existingByEmail.id) {
+    const matchingUsers = [existingByIdentity?.user, existingByLegacySub, existingByEmail].filter(Boolean);
+    const matchingUserIds = new Set(matchingUsers.map((user) => user!.id));
+
+    if (matchingUserIds.size > 1) {
       console.error("Google OAuth account collision.", { email });
       return redirectTo(requestUrl, "/auth/iniciar-sesion?error=google");
     }
 
-    const existingUser = existingBySub || existingByEmail;
+    const existingUser = existingByIdentity?.user || existingByLegacySub || existingByEmail;
     const isNewUser = !existingUser;
     const user = existingUser
       ? await prisma.user.update({
           where: { id: existingUser.id },
           data: {
-            cognitoSub: googleSub,
-            authProvider: "google",
+            authProvider: existingUser.authProvider === "unknown" ? "google" : existingUser.authProvider,
             emailVerified: googleUser.email_verified ?? existingUser.emailVerified,
             lastLoginAt: new Date(),
+            identities: {
+              upsert: {
+                where: {
+                  provider_providerSubject: {
+                    provider: "google",
+                    providerSubject: googleProviderSubject,
+                  },
+                },
+                create: {
+                  provider: "google",
+                  providerSubject: googleProviderSubject,
+                  email,
+                },
+                update: {
+                  email,
+                },
+              },
+            },
             profile: {
               upsert: {
                 create: {
@@ -158,10 +192,17 @@ export async function GET(request: Request) {
       : await prisma.user.create({
           data: {
             email,
-            cognitoSub: googleSub,
+            cognitoSub: legacyGoogleSub,
             authProvider: "google",
             emailVerified: googleUser.email_verified ?? true,
             lastLoginAt: new Date(),
+            identities: {
+              create: {
+                provider: "google",
+                providerSubject: googleProviderSubject,
+                email,
+              },
+            },
             profile: {
               create: {
                 firstName,
