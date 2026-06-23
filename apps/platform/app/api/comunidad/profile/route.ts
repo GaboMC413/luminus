@@ -86,6 +86,7 @@ export async function GET(request: Request) {
         other_interests: profile.intention ?? "",
         connection_status: connection?.status ?? null,
         connection_direction: connection ? (connection.requesterId === session.userId ? "outgoing" : "incoming") : null,
+        is_own_profile: id === session.userId,
       }
     });
   } catch (error) {

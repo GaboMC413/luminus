@@ -142,6 +142,7 @@ function MessagesContent() {
   const [error, setError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const [isChatMenuOpen, setIsChatMenuOpen] = useState(false);
   const chatMenuRef = useRef<HTMLDivElement>(null);
 
@@ -266,6 +267,33 @@ function MessagesContent() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length, selectedId]);
+
+  // Keep chat scrolled to bottom when mobile keyboard opens/closes
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.visualViewport) return;
+
+    const scrollToBottom = () => {
+      if (chatContainerRef.current) {
+        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      }
+    };
+
+    const handleViewportResize = () => {
+      // When the visual viewport height shrinks, the keyboard likely opened
+      // Scroll the chat container to bottom after a short delay for layout to settle
+      requestAnimationFrame(() => {
+        scrollToBottom();
+      });
+    };
+
+    window.visualViewport.addEventListener("resize", handleViewportResize);
+    window.visualViewport.addEventListener("scroll", handleViewportResize);
+
+    return () => {
+      window.visualViewport?.removeEventListener("resize", handleViewportResize);
+      window.visualViewport?.removeEventListener("scroll", handleViewportResize);
+    };
+  }, [selectedId, mobileView]);
 
   const refreshConversations = async () => {
     const response = await fetch("/api/messages/conversations", {
@@ -613,7 +641,7 @@ function MessagesContent() {
                   )}
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-3 thin-scrollbar flex flex-col gap-0.5 bg-white">
+                <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3 thin-scrollbar flex flex-col gap-0.5 bg-white">
                   {messages.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                       <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 mb-3">
@@ -665,9 +693,16 @@ function MessagesContent() {
                         onKeyDown={handleKeyDown}
                         onFocus={() => {
                           window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: false }));
-                          setTimeout(() => {
+                          // Multiple attempts to scroll after keyboard animation
+                          const scrollToEnd = () => {
+                            if (chatContainerRef.current) {
+                              chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                            }
                             messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-                          }, 100);
+                          };
+                          setTimeout(scrollToEnd, 100);
+                          setTimeout(scrollToEnd, 300);
+                          setTimeout(scrollToEnd, 500);
                         }}
                         onBlur={() => {
                           window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
