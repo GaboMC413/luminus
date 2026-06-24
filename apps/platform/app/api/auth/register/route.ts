@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { randomUUID } from "crypto";
-import { hashPassword } from "@/lib/auth/password";
+import { getCognitoErrorMessage, getCognitoErrorStatus, signUpWithCognito } from "@/lib/auth/cognito-password";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { serializeUser, validateAuthInput } from "@/lib/auth/validation";
 
@@ -28,16 +27,17 @@ export async function POST(request: Request) {
       );
     }
 
+    const cognitoUser = await signUpWithCognito(validation.email, validation.password);
     const user = await prisma.user.create({
       data: {
         email: validation.email,
-        cognitoSub: `email:${randomUUID()}`,
+        cognitoSub: cognitoUser.userSub,
         authProvider: "email",
-        passwordHash: hashPassword(validation.password),
+        emailVerified: cognitoUser.userConfirmed,
         identities: {
           create: {
-            provider: "email",
-            providerSubject: validation.email,
+            provider: "cognito",
+            providerSubject: cognitoUser.userSub,
             email: validation.email,
           },
         },
@@ -48,7 +48,6 @@ export async function POST(request: Request) {
       include: { profile: true },
     });
 
-    // Send welcome conversation message gracefully
     try {
       const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
       await sendWelcomeMessage(prisma, user.id);
@@ -66,10 +65,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ user: serializeUser(user) }, { status: 201 });
   } catch (error) {
-    console.error("Registration database flow failed.", error);
+    console.error("Cognito registration flow failed.", error);
     return NextResponse.json(
-      { message: "El servicio de base de datos no está disponible." },
-      { status: 500 }
+      { message: getCognitoErrorMessage(error, "No pudimos crear tu cuenta en este momento.") },
+      { status: getCognitoErrorStatus(error) },
     );
   }
 }

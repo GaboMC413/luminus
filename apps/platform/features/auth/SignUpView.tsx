@@ -76,7 +76,6 @@ export default function SignUpView() {
     if (params.get("onboarding") === "1") {
       setStep(2);
     }
-
     // Clear old profile test session keys on signup mount to ensure pristine state
     const profileKeys = [
       "luminus_profile_firstName",
