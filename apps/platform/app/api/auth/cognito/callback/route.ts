@@ -4,33 +4,38 @@ import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
 
-const GOOGLE_STATE_COOKIE = "luminus_google_oauth_state";
+const COGNITO_STATE_COOKIE = "luminus_cognito_oauth_state";
 
-type GoogleTokenResponse = {
+type CognitoTokenResponse = {
   access_token?: string;
   error?: string;
   error_description?: string;
 };
 
-type GoogleUserInfo = {
+type CognitoUserInfo = {
   sub: string;
-  email: string;
-  email_verified?: boolean;
+  email?: string;
+  email_verified?: boolean | string;
   given_name?: string;
   family_name?: string;
   name?: string;
   picture?: string;
 };
 
-function getGoogleClientConfig() {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+function getCognitoClientConfig() {
+  const clientId = process.env.COGNITO_CLIENT_ID;
+  const clientSecret = process.env.COGNITO_CLIENT_SECRET;
+  const domain = process.env.COGNITO_DOMAIN?.trim().replace(/\/$/, "");
 
-  if (!clientId || !clientSecret) {
-    throw new Error("Google OAuth is not configured.");
+  if (!clientId || !domain) {
+    throw new Error("Cognito OAuth is not configured.");
   }
 
-  return { clientId, clientSecret };
+  const cognitoDomain = domain.startsWith("http://") || domain.startsWith("https://")
+    ? domain
+    : `https://${domain}`;
+
+  return { clientId, clientSecret, cognitoDomain };
 }
 
 function getPublicOrigin(requestUrl: URL) {
@@ -42,54 +47,66 @@ function redirectTo(requestUrl: URL, path: string) {
 }
 
 async function exchangeCodeForAccessToken(code: string, redirectUri: string) {
-  const { clientId, clientSecret } = getGoogleClientConfig();
-  const response = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      code,
-      client_id: clientId,
-      client_secret: clientSecret,
-      redirect_uri: redirectUri,
-      grant_type: "authorization_code",
-    }),
+  const { clientId, clientSecret, cognitoDomain } = getCognitoClientConfig();
+  const headers: Record<string, string> = {
+    "Content-Type": "application/x-www-form-urlencoded",
+  };
+  const body = new URLSearchParams({
+    code,
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    grant_type: "authorization_code",
   });
 
-  const data = (await response.json().catch(() => null)) as GoogleTokenResponse | null;
+  if (clientSecret) {
+    headers.Authorization = `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`;
+  }
+
+  const response = await fetch(new URL("/oauth2/token", cognitoDomain), {
+    method: "POST",
+    headers,
+    body,
+  });
+
+  const data = (await response.json().catch(() => null)) as CognitoTokenResponse | null;
 
   if (!response.ok || !data?.access_token) {
-    throw new Error(data?.error_description || data?.error || "Google token exchange failed.");
+    throw new Error(data?.error_description || data?.error || "Cognito token exchange failed.");
   }
 
   return data.access_token;
 }
 
-async function fetchGoogleUser(accessToken: string) {
-  const response = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
+async function fetchCognitoUser(accessToken: string) {
+  const { cognitoDomain } = getCognitoClientConfig();
+  const response = await fetch(new URL("/oauth2/userInfo", cognitoDomain), {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
     cache: "no-store",
   });
 
-  const data = (await response.json().catch(() => null)) as GoogleUserInfo | null;
+  const data = (await response.json().catch(() => null)) as CognitoUserInfo | null;
 
   if (!response.ok || !data?.sub || !data.email) {
-    throw new Error("Google user profile could not be fetched.");
+    throw new Error("Cognito user profile could not be fetched.");
   }
 
   return data;
+}
+
+function isEmailVerified(value: CognitoUserInfo["email_verified"]) {
+  return value === true || value === "true";
 }
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const state = requestUrl.searchParams.get("state");
-  const storedState = cookies().get(GOOGLE_STATE_COOKIE)?.value;
+  const error = requestUrl.searchParams.get("error");
+  const storedState = cookies().get(COGNITO_STATE_COOKIE)?.value;
 
-  cookies().set(GOOGLE_STATE_COOKIE, "", {
+  cookies().set(COGNITO_STATE_COOKIE, "", {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -97,27 +114,30 @@ export async function GET(request: Request) {
     maxAge: 0,
   });
 
+  if (error) {
+    return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito");
+  }
+
   if (!code || !state || !storedState || state !== storedState) {
-    return redirectTo(requestUrl, "/auth/iniciar-sesion?error=google");
+    return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito");
   }
 
   try {
-    const redirectUri = `${getPublicOrigin(requestUrl)}/api/auth/google/callback`;
+    const redirectUri = `${getPublicOrigin(requestUrl)}/api/auth/cognito/callback`;
     const accessToken = await exchangeCodeForAccessToken(code, redirectUri);
-    const googleUser = await fetchGoogleUser(accessToken);
-    const email = googleUser.email.trim().toLowerCase();
-    const googleProviderSubject = googleUser.sub;
-    const legacyGoogleSub = `google:${googleProviderSubject}`;
-    const firstName = googleUser.given_name || "";
-    const lastName = googleUser.family_name || "";
-    const fullName = `${firstName} ${lastName}`.trim() || googleUser.name || "";
+    const cognitoUser = await fetchCognitoUser(accessToken);
+    const email = cognitoUser.email!.trim().toLowerCase();
+    const cognitoSubject = cognitoUser.sub;
+    const firstName = cognitoUser.given_name || "";
+    const lastName = cognitoUser.family_name || "";
+    const fullName = `${firstName} ${lastName}`.trim() || cognitoUser.name || "";
 
     const { prisma } = await import("@/lib/db");
     const existingByIdentity = await prisma.userIdentity.findUnique({
       where: {
         provider_providerSubject: {
-          provider: "google",
-          providerSubject: googleProviderSubject,
+          provider: "cognito",
+          providerSubject: cognitoSubject,
         },
       },
       include: {
@@ -127,7 +147,7 @@ export async function GET(request: Request) {
       },
     });
     const existingByLegacySub = await prisma.user.findUnique({
-      where: { cognitoSub: legacyGoogleSub },
+      where: { cognitoSub: cognitoSubject },
       include: { profile: true },
     });
     const existingByEmail = await prisma.user.findUnique({
@@ -139,8 +159,8 @@ export async function GET(request: Request) {
     const matchingUserIds = new Set(matchingUsers.map((user) => user!.id));
 
     if (matchingUserIds.size > 1) {
-      console.error("Google OAuth account collision.", { email });
-      return redirectTo(requestUrl, "/auth/iniciar-sesion?error=google");
+      console.error("Cognito OAuth account collision.", { email });
+      return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito");
     }
 
     const existingUser = existingByIdentity?.user || existingByLegacySub || existingByEmail;
@@ -149,20 +169,20 @@ export async function GET(request: Request) {
       ? await prisma.user.update({
           where: { id: existingUser.id },
           data: {
-            authProvider: existingUser.authProvider === "unknown" ? "google" : existingUser.authProvider,
-            emailVerified: googleUser.email_verified ?? existingUser.emailVerified,
+            authProvider: existingUser.authProvider === "unknown" ? "email" : existingUser.authProvider,
+            emailVerified: isEmailVerified(cognitoUser.email_verified) || existingUser.emailVerified,
             lastLoginAt: new Date(),
             identities: {
               upsert: {
                 where: {
                   provider_providerSubject: {
-                    provider: "google",
-                    providerSubject: googleProviderSubject,
+                    provider: "cognito",
+                    providerSubject: cognitoSubject,
                   },
                 },
                 create: {
-                  provider: "google",
-                  providerSubject: googleProviderSubject,
+                  provider: "cognito",
+                  providerSubject: cognitoSubject,
                   email,
                 },
                 update: {
@@ -176,13 +196,13 @@ export async function GET(request: Request) {
                   firstName,
                   lastName,
                   fullName,
-                  avatarUrl: googleUser.picture || undefined,
+                  avatarUrl: cognitoUser.picture || undefined,
                 },
                 update: {
                   firstName: existingUser.profile?.firstName || firstName || undefined,
                   lastName: existingUser.profile?.lastName || lastName || undefined,
                   fullName: existingUser.profile?.fullName || fullName || undefined,
-                  avatarUrl: existingUser.profile?.avatarUrl || googleUser.picture || undefined,
+                  avatarUrl: existingUser.profile?.avatarUrl || cognitoUser.picture || undefined,
                 },
               },
             },
@@ -192,14 +212,14 @@ export async function GET(request: Request) {
       : await prisma.user.create({
           data: {
             email,
-            cognitoSub: legacyGoogleSub,
-            authProvider: "google",
-            emailVerified: googleUser.email_verified ?? true,
+            cognitoSub: cognitoSubject,
+            authProvider: "email",
+            emailVerified: isEmailVerified(cognitoUser.email_verified),
             lastLoginAt: new Date(),
             identities: {
               create: {
-                provider: "google",
-                providerSubject: googleProviderSubject,
+                provider: "cognito",
+                providerSubject: cognitoSubject,
                 email,
               },
             },
@@ -208,7 +228,7 @@ export async function GET(request: Request) {
                 firstName,
                 lastName,
                 fullName,
-                avatarUrl: googleUser.picture || undefined,
+                avatarUrl: cognitoUser.picture || undefined,
               },
             },
           },
@@ -216,12 +236,11 @@ export async function GET(request: Request) {
         });
 
     if (isNewUser) {
-      // Send welcome conversation message gracefully
       try {
         const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
         await sendWelcomeMessage(prisma, user.id);
       } catch (welcomeError) {
-        console.error("Welcome message setup failed, proceeding with Google registration.", welcomeError);
+        console.error("Welcome message setup failed, proceeding with Cognito registration.", welcomeError);
       }
     }
 
@@ -234,8 +253,8 @@ export async function GET(request: Request) {
     setSessionCookie(token);
 
     return redirectTo(requestUrl, user.profile?.isOnboarded ? "/comunidad" : "/auth/registrarse?onboarding=1");
-  } catch (error) {
-    console.error("Google OAuth callback failed.", error);
-    return redirectTo(requestUrl, "/auth/iniciar-sesion?error=google");
+  } catch (callbackError) {
+    console.error("Cognito OAuth callback failed.", callbackError);
+    return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito");
   }
 }

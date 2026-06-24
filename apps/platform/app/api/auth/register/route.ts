@@ -34,6 +34,13 @@ export async function POST(request: Request) {
         cognitoSub: `email:${randomUUID()}`,
         authProvider: "email",
         passwordHash: hashPassword(validation.password),
+        identities: {
+          create: {
+            provider: "email",
+            providerSubject: validation.email,
+            email: validation.email,
+          },
+        },
         profile: {
           create: {},
         },
