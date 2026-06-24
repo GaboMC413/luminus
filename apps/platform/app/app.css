@@ -228,3 +228,23 @@ body.mobile-viewport-height-override {
 body.mobile-viewport-height-override div.w-full.h-\[100svh\] {
   height: var(--visual-viewport-height, 100svh) !important;
 }
+
+@media (max-width: 1023px) {
+  body.in-mobile-chat-view header {
+    display: none !important;
+  }
+  body.in-mobile-chat-view main {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    height: var(--visual-viewport-height, 100svh) !important;
+    min-height: var(--visual-viewport-height, 100svh) !important;
+    max-height: var(--visual-viewport-height, 100svh) !important;
+    overflow: hidden !important;
+  }
+  body.in-mobile-chat-view {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+}

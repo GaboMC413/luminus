@@ -418,6 +418,30 @@ function MessagesContent() {
   }, []);
 
   useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    const updateBodyClass = () => {
+      const isMobileSize = window.innerWidth < 1024;
+      if (isMobileSize && mobileView === "chat") {
+        document.body.classList.add("in-mobile-chat-view");
+        window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: false }));
+      } else {
+        document.body.classList.remove("in-mobile-chat-view");
+        window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
+      }
+    };
+
+    updateBodyClass();
+    window.addEventListener("resize", updateBodyClass);
+
+    return () => {
+      window.removeEventListener("resize", updateBodyClass);
+      document.body.classList.remove("in-mobile-chat-view");
+      window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
+    };
+  }, [mobileView]);
+
+  useEffect(() => {
     if (typeof window === "undefined" || window.innerWidth >= 1024) return;
     const vv = window.visualViewport;
     if (!vv) return;
@@ -443,14 +467,20 @@ function MessagesContent() {
   }, []);
 
   const isMobile = isMounted && typeof window !== "undefined" && window.innerWidth < 1024;
-  const dynamicHeight = viewportHeight && isMobile ? `${viewportHeight - 64}px` : undefined;
+  const dynamicHeight = viewportHeight && isMobile
+    ? (mobileView === "chat" ? `${viewportHeight}px` : `${viewportHeight - 64}px`)
+    : undefined;
 
   return (
     <div 
       className="w-full flex-1 flex flex-col bg-slate-50 min-h-0 lg:h-[calc(100vh-80px)] overflow-hidden"
       style={{ height: dynamicHeight }}
     >
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col min-h-0 overflow-hidden">
+      <div className={`flex-1 w-full max-w-7xl mx-auto flex flex-col min-h-0 overflow-hidden ${
+        mobileView === "chat"
+          ? "px-0 py-0 md:px-6 md:py-6"
+          : "px-4 md:px-6 py-4 md:py-6"
+      }`}>
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden">
           <div className={`items-center gap-3 mb-4 md:mb-6 shrink-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
             <button
@@ -543,9 +573,15 @@ function MessagesContent() {
             </div>
 
             {isLoading && isUuid(recipientId) ? (
-              <div className={`md:col-span-8 flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0 relative ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
+              <div className={`flex-col bg-white overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0 relative md:col-span-8 md:rounded-2xl md:border md:border-slate-200 ${
+                mobileView === "chat"
+                  ? "rounded-none border-none"
+                  : "rounded-2xl border border-slate-200"
+              } ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
                 {/* Skeleton Header */}
-                <div className="p-3 border-b border-slate-100 flex items-center gap-3 bg-white shrink-0">
+                <div className={`border-b border-slate-100 flex items-center gap-3 bg-white shrink-0 ${
+                  mobileView === "chat" ? "py-2 px-3 md:p-3" : "p-3"
+                }`}>
                   <button
                     onClick={() => {
                       window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
@@ -561,7 +597,11 @@ function MessagesContent() {
                   >
                     <span className="material-symbols-rounded text-[22px]">arrow_back</span>
                   </button>
-                  <div className="w-11 h-11 rounded-[10px] bg-slate-100 animate-pulse shrink-0" />
+                  <div className={`bg-slate-100 animate-pulse shrink-0 ${
+                    mobileView === "chat"
+                      ? "w-8 h-8 rounded-lg md:w-11 md:h-11 md:rounded-[10px]"
+                      : "w-11 h-11 rounded-[10px]"
+                  }`} />
                   <div className="h-4 w-28 bg-slate-100 rounded animate-pulse" />
                 </div>
 
@@ -600,8 +640,14 @@ function MessagesContent() {
                 </button>
               </div>
             ) : (
-              <div className={`md:col-span-8 flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0 relative ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
-                <div className="p-3 border-b border-slate-100 flex items-center justify-between bg-white z-10 shrink-0 gap-4">
+              <div className={`flex-col bg-white overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0 relative md:col-span-8 md:rounded-2xl md:border md:border-slate-200 ${
+                mobileView === "chat"
+                  ? "rounded-none border-none"
+                  : "rounded-2xl border border-slate-200"
+              } ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
+                <div className={`border-b border-slate-100 flex items-center justify-between bg-white z-10 shrink-0 gap-4 ${
+                  mobileView === "chat" ? "py-2 px-3 md:p-3" : "p-3"
+                }`}>
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Mobile Back Button */}
                     <button
@@ -623,7 +669,11 @@ function MessagesContent() {
                     <img
                       src={selectedConv.participant.avatar_url || fallbackAvatar(selectedConv.participant.name)}
                       alt={selectedConv.participant.name}
-                      className="w-11 h-11 rounded-[10px] object-cover shrink-0"
+                      className={`object-cover shrink-0 ${
+                        mobileView === "chat"
+                          ? "w-8 h-8 rounded-lg md:w-11 md:h-11 md:rounded-[10px]"
+                          : "w-11 h-11 rounded-[10px]"
+                      }`}
                     />
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       <h2 className="text-base font-semibold text-slate-900 leading-none truncate" title={selectedConv.participant.name}>
@@ -729,7 +779,6 @@ function MessagesContent() {
                         onChange={(event) => setInputText(event.target.value)}
                         onKeyDown={handleKeyDown}
                         onFocus={() => {
-                          window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: false }));
                           // Multiple attempts to scroll after keyboard animation
                           const scrollToEnd = () => {
                             if (chatContainerRef.current) {
@@ -741,9 +790,7 @@ function MessagesContent() {
                           setTimeout(scrollToEnd, 300);
                           setTimeout(scrollToEnd, 500);
                         }}
-                        onBlur={() => {
-                          window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
-                        }}
+                        onBlur={() => {}}
                         placeholder="Escribe un mensaje..."
                         rows={1}
                         className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-sm focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-32 custom-scrollbar block text-slate-800"
