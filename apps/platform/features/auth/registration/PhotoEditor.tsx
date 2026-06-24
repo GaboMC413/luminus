@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import AvatarEditor from 'react-avatar-editor';
 import { Button } from '@/components/ui/Button';
 
@@ -13,6 +13,73 @@ interface PhotoEditorProps {
 export function PhotoEditor({ image, onSave, onCancel }: PhotoEditorProps) {
   const [zoom, setZoom] = useState(1);
   const editorRef = useRef<any>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // We keep a mutable ref for the current zoom to avoid stale closures in event listeners
+  const zoomRef = useRef(zoom);
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
+
+  const touchStartRef = useRef<{ distance: number; zoom: number } | null>(null);
+
+  useEffect(() => {
+    const el = wrapperRef.current;
+    if (!el) return;
+
+    const getDistance = (t1: Touch, t2: Touch) => {
+      const dx = t1.clientX - t2.clientX;
+      const dy = t1.clientY - t2.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dist = getDistance(e.touches[0], e.touches[1]);
+        touchStartRef.current = {
+          distance: dist,
+          zoom: zoomRef.current,
+        };
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && touchStartRef.current) {
+        e.preventDefault();
+        const dist = getDistance(e.touches[0], e.touches[1]);
+        const scale = dist / touchStartRef.current.distance;
+        let newZoom = touchStartRef.current.zoom * scale;
+        newZoom = Math.max(1, Math.min(newZoom, 3));
+        setZoom(newZoom);
+      }
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (e.touches.length < 2) {
+        touchStartRef.current = null;
+      }
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      let newZoom = zoomRef.current - e.deltaY * 0.002;
+      newZoom = Math.max(1, Math.min(newZoom, 3));
+      setZoom(newZoom);
+    };
+
+    el.addEventListener("touchstart", handleTouchStart, { passive: false });
+    el.addEventListener("touchmove", handleTouchMove, { passive: false });
+    el.addEventListener("touchend", handleTouchEnd, { passive: false });
+    el.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      el.removeEventListener("touchstart", handleTouchStart);
+      el.removeEventListener("touchmove", handleTouchMove);
+      el.removeEventListener("touchend", handleTouchEnd);
+      el.removeEventListener("wheel", handleWheel);
+    };
+  }, []);
 
   const handleSave = async () => {
     if (!editorRef.current) return;
@@ -49,7 +116,10 @@ export function PhotoEditor({ image, onSave, onCancel }: PhotoEditorProps) {
           </button>
         </div>
 
-        <div className="relative w-full aspect-square bg-[#f8fafc] overflow-hidden flex items-center justify-center">
+        <div 
+          ref={wrapperRef}
+          className="relative w-full aspect-square bg-[#f8fafc] overflow-hidden flex items-center justify-center cursor-grab active:cursor-grabbing"
+        >
           <AvatarEditor
             ref={editorRef}
             image={image}

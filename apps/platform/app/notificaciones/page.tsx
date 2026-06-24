@@ -111,6 +111,13 @@ function NotificationsContent() {
 
   useEffect(() => {
     loadNotifications();
+    const handleUpdate = () => {
+      loadNotifications();
+    };
+    window.addEventListener("luminus_notifications_update", handleUpdate);
+    return () => {
+      window.removeEventListener("luminus_notifications_update", handleUpdate);
+    };
   }, []);
 
   const markNotificationRead = async (id: string) => {
@@ -143,6 +150,56 @@ function NotificationsContent() {
       method: "DELETE",
       credentials: "include",
     });
+  };
+
+  const getRequesterIdFromUrl = (url?: string) => {
+    if (!url) return null;
+    const match = url.match(/[?&]id=([^&]+)/);
+    return match ? match[1] : null;
+  };
+
+  const handleAcceptPage = async (e: React.MouseEvent, actionUrl: string, notificationId: string) => {
+    e.stopPropagation();
+    const requesterId = getRequesterIdFromUrl(actionUrl);
+    if (!requesterId) return;
+
+    try {
+      const res = await fetch("/api/connections", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipientId: requesterId }),
+      });
+      if (res.ok) {
+        await fetch("/api/notifications", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: notificationId }),
+        });
+        window.dispatchEvent(new Event("luminus_notifications_update"));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeclinePage = async (e: React.MouseEvent, actionUrl: string, notificationId: string) => {
+    e.stopPropagation();
+    const requesterId = getRequesterIdFromUrl(actionUrl);
+    if (!requesterId) return;
+
+    try {
+      const res = await fetch(`/api/connections?recipientId=${requesterId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        await fetch(`/api/notifications?id=${notificationId}`, {
+          method: "DELETE",
+        });
+        window.dispatchEvent(new Event("luminus_notifications_update"));
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const filteredNotifications = notifications.filter((n) => {
@@ -400,6 +457,23 @@ function NotificationsContent() {
                             )}
                             {n.action}
                           </p>
+                          {n.type === "connection_request" && n.isUnread && (
+                            <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                onClick={(e) => handleAcceptPage(e, n.action_url, n.id)}
+                                className="h-8 px-4 bg-black hover:bg-zinc-800 text-white text-xs font-semibold rounded-xl transition duration-200 cursor-pointer border-none outline-none"
+                              >
+                                Aceptar
+                              </button>
+                              <button
+                                onClick={(e) => handleDeclinePage(e, n.action_url, n.id)}
+                                className="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 hover:bg-[#FF4B4B]/10 text-slate-550 hover:text-[#FF4B4B] hover:border-[#FF4B4B]/30 rounded-xl transition duration-200 cursor-pointer outline-none"
+                                title="Rechazar"
+                              >
+                                <span className="material-symbols-rounded text-[18px] select-none">close</span>
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );

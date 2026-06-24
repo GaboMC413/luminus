@@ -111,6 +111,7 @@ export function InterestSelection({
 
         <div className="flex flex-col gap-4 w-full mt-4">
           <h3 className="flex items-center gap-2 text-slate-400 text-[17px] font-bold font-sans">
+            <span className="material-symbols-outlined select-none text-[20px]">asterisk</span>
             ¿Algo más que te interese?
           </h3>
           <input

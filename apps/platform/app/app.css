@@ -218,3 +218,13 @@ label,
 body.mobile-navbar-hidden main {
   padding-bottom: env(safe-area-inset-bottom, 0px) !important;
 }
+
+/* Force layout height to visual viewport on mobile when keyboard is open */
+body.mobile-viewport-height-override {
+  height: var(--visual-viewport-height, 100svh) !important;
+  max-height: var(--visual-viewport-height, 100svh) !important;
+  overflow: hidden !important;
+}
+body.mobile-viewport-height-override div.w-full.h-\[100svh\] {
+  height: var(--visual-viewport-height, 100svh) !important;
+}

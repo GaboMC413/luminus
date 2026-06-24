@@ -14,7 +14,7 @@ export function PlanSelection({
 }) {
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSelectPlan = async (plan: 'Mensual' | 'Anual') => {
+  const handleStartTrial = async () => {
     setIsSaving(true);
 
     try {
@@ -24,7 +24,7 @@ export function PlanSelection({
         credentials: "include",
         body: JSON.stringify({
           ...data,
-          selectedPlan: plan,
+          selectedPlan: "Trial",
           isOnboarded: true,
         }),
       });
@@ -34,12 +34,12 @@ export function PlanSelection({
       }
 
       setIsSaving(false);
-      localStorage.setItem("luminus_profile_plan", plan);
+      localStorage.setItem("luminus_profile_plan", "Trial");
       localStorage.setItem("luminus_onboarding_completed", "true");
       if (onNext) onNext();
     } catch {
       setIsSaving(false);
-      alert("No pudimos guardar tu plan. Intenta nuevamente.");
+      alert("No pudimos iniciar tu prueba. Intenta nuevamente.");
     }
   };
 
@@ -49,61 +49,85 @@ export function PlanSelection({
       {/* Title & Back Section */}
       <div className="w-full flex flex-col justify-start items-start gap-2">
         {onBack && <Button variant="back" onClick={onBack} />}
-        <h1 className="text-page-title text-primary mt-2">Elige cómo continuar después de tus 3 meses de acceso total sin costo</h1>
-        <p className="text-body text-secondary">Desde hoy tendrás acceso completo sin pagar y sin ingresar datos de tarjeta. Al finalizar el período inicial de 3 meses de acceso total sin costo, podrás continuar con el plan que elijas o mantener tu cuenta de forma gratuita con acceso limitado.</p>
+        <h1 className="text-page-title text-primary mt-2">
+          Tu acceso completo comienza hoy
+        </h1>
+        <p className="text-body text-secondary">
+          Queremos que vivas la experiencia completa desde el primer día. Disfruta 3 meses de LUMINUS sin costo, sin datos de tarjeta, sin compromiso.
+        </p>
       </div>
 
-      {/* Cards container */}
-      <div className="flex flex-col md:flex-row gap-4 md:gap-6 w-full mt-2">
-
-        {/* Plan Mensual Card */}
-        <div className="flex-1 p-6 bg-white border border-zinc-200 rounded-2xl flex flex-col gap-8 transition-all hover:border-zinc-300">
-          <div className="flex flex-col gap-3">
-            <div className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.15em] font-sans mb-3">Plan mensual</div>
-            <div className="text-black text-[32px] font-bold leading-none font-sans">USD 5/mes</div>
-            <div className="text-black text-[17px] font-bold font-sans">Primeros 3 meses sin costo</div>
-            <p className="text-black text-[15px] leading-relaxed font-sans">Una opción flexible para continuar con acceso completo a LUMINUS mes a mes.</p>
+      {/* Value Proposition Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 w-full mt-2">
+        {/* Card 1 */}
+        <div className="p-5 bg-white border border-zinc-200/80 rounded-2xl flex flex-col gap-3 shadow-none">
+          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-800 shrink-0">
+            <span className="material-symbols-rounded text-[24px]">group</span>
           </div>
-          <div className="flex flex-col gap-8 mt-auto pt-8">
-            <div className="flex flex-col gap-6">
-              <Button variant="primary" onClick={() => handleSelectPlan('Mensual')} disabled={isSaving}>
-                {isSaving ? "Guardando..." : "Continuar con plan mensual"}
-              </Button>
-              <p className="text-zinc-500 text-[11px] leading-normal font-medium font-sans">
-                No se solicitará ningún pago ni dato de tarjeta hoy. Te avisaremos antes de que termine tu período sin costo para que puedas decidir si deseas continuar.
-              </p>
-            </div>
-          </div>
+          <h3 className="text-[15px] font-bold text-slate-900 leading-tight">
+            Conecta con personas como tú
+          </h3>
+          <p className="text-slate-500 text-[13px] leading-relaxed font-normal">
+            Encuentra una comunidad que comparte intereses, búsquedas y caminos de bienestar.
+          </p>
         </div>
 
-        {/* Plan Anual Card */}
-        <div className="flex-1 p-6 bg-white border border-zinc-200 rounded-2xl flex flex-col gap-8 transition-all hover:border-zinc-300">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-zinc-500 text-[11px] font-bold uppercase tracking-[0.15em] font-sans">Plan anual</div>
-              <div className="px-2.5 py-1 bg-black rounded-full">
-                <div className="text-white text-[10px] font-bold uppercase tracking-wider font-sans whitespace-nowrap">25% OFF · Ahorras USD 15</div>
-              </div>
-            </div>
-            <div className="text-black text-[32px] font-bold leading-none font-sans">USD 45/año</div>
-            <div className="text-black text-[17px] font-bold font-sans">Primeros 3 meses sin costo</div>
-            <p className="text-black text-[15px] leading-relaxed font-sans">La mejor alternativa para quienes buscan continuidad y un mejor valor anual.</p>
+        {/* Card 2 */}
+        <div className="p-5 bg-white border border-zinc-200/80 rounded-2xl flex flex-col gap-3 shadow-none">
+          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-800 shrink-0">
+            <span className="material-symbols-rounded text-[24px]">forum</span>
           </div>
-          <div className="flex flex-col gap-8 mt-auto pt-8">
-            <div className="flex flex-col gap-6">
-              <Button variant="primary" onClick={() => handleSelectPlan('Anual')} disabled={isSaving}>
-                {isSaving ? "Guardando..." : "Continuar con plan anual"}
-              </Button>
-              <p className="text-zinc-500 text-[11px] leading-normal font-medium font-sans">
-                No se solicitará ningún pago ni dato de tarjeta hoy. Te avisaremos antes de que termine tu período sin costo para que puedas decidir si deseas continuar.
-              </p>
-            </div>
+          <h3 className="text-[15px] font-bold text-slate-900 leading-tight">
+            Construye tu red privada
+          </h3>
+          <p className="text-slate-500 text-[13px] leading-relaxed font-normal">
+            Envía mensajes, crea conexiones y mantén conversaciones en un espacio cuidado.
+          </p>
+        </div>
+
+        {/* Card 3 */}
+        <div className="p-5 bg-white border border-zinc-200/80 rounded-2xl flex flex-col gap-3 shadow-none">
+          <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-800 shrink-0">
+            <span className="material-symbols-rounded text-[24px]">auto_awesome</span>
           </div>
+          <h3 className="text-[15px] font-bold text-slate-900 leading-tight">
+            Explora bienestar guiado
+          </h3>
+          <p className="text-slate-500 text-[13px] leading-relaxed font-normal">
+            Descubre especialistas, contenidos y herramientas para acompañar tu proceso.
+          </p>
         </div>
       </div>
 
-      {/* Explicación de por qué LUMINUS es de pago */}
-      <div className="w-full mt-6 pt-6 border-t border-zinc-200/80 flex flex-col gap-2 font-sans text-left">
+      {/* Pricing Transition Text */}
+      <div className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col gap-3 mt-2 text-left">
+        <p className="text-slate-700 text-[14px] leading-relaxed font-medium">
+          Cuando terminen tus 3 meses, tú decides cómo continuar. Puedes seguir con acceso gratuito limitado o mantener la experiencia completa con una suscripción.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 mt-1">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
+            <span className="text-[13px] font-semibold text-slate-800">Plan Mensual: <span className="font-bold">USD 5/mes</span></span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
+            <span className="text-[13px] font-semibold text-slate-800">Plan Anual: <span className="font-bold">USD 45/año</span> <span className="text-xs text-emerald-600 font-bold ml-1.5">(25% OFF)</span></span>
+          </div>
+        </div>
+      </div>
+
+      {/* Button & Next Actions */}
+      <div className="w-full flex flex-col gap-3 mt-2">
+        <Button variant="primary" className="w-full py-3 h-12 text-sm font-bold" onClick={handleStartTrial} disabled={isSaving}>
+          {isSaving ? "Iniciando prueba..." : "Entrar a LUMINUS"}
+        </Button>
+        <p className="text-zinc-400 text-[11px] leading-normal font-medium font-sans text-center">
+          No se realizará ningún cobro hoy. Te avisaremos con anticipación antes de que venza tu período de prueba.
+        </p>
+      </div>
+
+      {/* Why is LUMINUS paid disclaimer */}
+      <div className="w-full mt-4 pt-6 border-t border-zinc-200/80 flex flex-col gap-2 font-sans text-left">
         <h4 className="text-slate-900 font-bold text-[15px] leading-snug">
           ¿Por qué LUMINUS es de pago?
         </h4>
