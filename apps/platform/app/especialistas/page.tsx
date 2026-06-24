@@ -42,9 +42,9 @@ export default function EspecialistasPage() {
 
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
           <Button
-            variant="primary"
+            variant="secondary"
             onClick={() => router.push("/comunidad")}
-            className="w-full md:!w-auto px-5 h-10 md:h-11 text-sm font-semibold shrink-0 flex items-center justify-center gap-1.5 group cursor-pointer"
+            className="w-full md:!w-auto px-5 h-10 md:h-11 text-sm font-semibold shrink-0 flex items-center justify-center gap-1.5 group cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 border-none"
           >
             <svg
               width="16"
@@ -53,11 +53,11 @@ export default function EspecialistasPage() {
               fill="none"
               stroke="currentColor"
               strokeWidth="3"
-              className="text-white/80 group-hover:text-white transition-colors"
+              className="text-slate-500 group-hover:text-slate-800 transition-colors"
             >
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
-            <span>Volver a la Comunidad</span>
+            <span className="text-slate-600 group-hover:text-slate-800 transition-colors">Volver a la Comunidad</span>
           </Button>
         </div>
       </div>
@@ -80,9 +80,9 @@ export default function EspecialistasPage() {
         {/* Right Column: Content */}
         <div className="flex-1 w-full flex flex-col gap-6 relative z-10">
           <div className="flex flex-col gap-4">
-            <div className="inline-flex items-center rounded-full bg-wellness-sage-50 border border-wellness-sage-200/60 px-3 py-1.5 text-[11px] md:text-xs font-semibold text-wellness-sage-700 w-fit max-w-full break-words">
-              <span>¿Eres un especialista en binestar?</span>
-            </div>
+            <span className="text-slate-500 text-[14px] font-medium">
+              ¿Eres un especialista en bienestar?
+            </span>
             <h2 className="text-2xl md:text-3xl font-bold font-jakarta text-slate-900 tracking-tight leading-tight">
               Haz visible tu forma de acompañar
             </h2>
@@ -92,9 +92,12 @@ export default function EspecialistasPage() {
           </div>
 
           {/* Small closing line */}
-          <p className="text-[13px] text-slate-500 font-medium font-jakarta italic pl-3 border-l-2 border-wellness-sage-400">
-            "Un espacio para mostrar quién eres, cómo trabajas y qué puedes aportar."
-          </p>
+          <div className="flex gap-3 items-stretch">
+            <div className="w-[2px] rounded-full luminus-gradient shrink-0" />
+            <p className="text-[13px] text-slate-500 font-medium font-jakarta italic">
+              "Un espacio para mostrar quién eres, cómo trabajas y qué puedes aportar."
+            </p>
+          </div>
 
           {/* Buttons Section */}
           <div className="flex flex-col sm:flex-row items-center gap-6 pt-2">

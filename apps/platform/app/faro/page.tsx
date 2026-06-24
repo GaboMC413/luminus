@@ -7,17 +7,17 @@ export default function FaroPage() {
   const router = useRouter();
 
   return (
-    <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8 flex flex-col items-center justify-center">
+    <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8 flex flex-col items-center justify-center h-full min-h-0 overflow-hidden">
       {/* Unified Container: Feels like a single divided div */}
-      <div className="w-full max-w-5xl border border-slate-200/80 rounded-3xl overflow-hidden flex flex-col shadow-none">
+      <div className="w-full max-w-5xl border border-slate-200/80 rounded-3xl overflow-hidden flex flex-col shadow-none flex-1 h-full min-h-0">
         {/* Banner Image */}
         <div 
-          className="w-full aspect-[2.1/1] md:aspect-[2.39/1] min-h-[220px] md:min-h-[350px] bg-cover bg-center bg-no-repeat"
+          className="w-full bg-cover bg-center bg-no-repeat flex-1 min-h-0 md:aspect-[2.39/1] md:min-h-[350px] md:flex-initial"
           style={{ backgroundImage: "url('/Faro.png')" }}
         />
 
         {/* Info Card */}
-        <div className="w-full bg-white border-t border-slate-200/80 p-4 md:p-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-6 shadow-none">
+        <div className="w-full bg-white border-t border-slate-200/80 p-4 md:p-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-6 shadow-none shrink-0">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 w-full md:w-auto">
             {/* Icon container - same size as Specialists page */}
             <div className="w-12 h-12 md:w-20 md:h-20 bg-slate-50 border border-slate-200 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
@@ -48,9 +48,9 @@ export default function FaroPage() {
             </div>
           </div>
           <Button
-            variant="primary"
+            variant="secondary"
             onClick={() => router.push("/comunidad")}
-            className="w-full md:!w-auto px-5 h-10 md:h-11 text-sm font-semibold shrink-0 flex items-center justify-center gap-1.5 group cursor-pointer"
+            className="w-full md:!w-auto px-5 h-10 md:h-11 text-sm font-semibold shrink-0 flex items-center justify-center gap-1.5 group cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 border-none"
           >
             <svg
               width="16"
@@ -59,11 +59,11 @@ export default function FaroPage() {
               fill="none"
               stroke="currentColor"
               strokeWidth="3"
-              className="text-white/80 group-hover:text-white transition-colors"
+              className="text-slate-500 group-hover:text-slate-800 transition-colors"
             >
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
-            <span>Volver a la Comunidad</span>
+            <span className="text-slate-600 group-hover:text-slate-800 transition-colors">Volver a la Comunidad</span>
           </Button>
         </div>
       </div>

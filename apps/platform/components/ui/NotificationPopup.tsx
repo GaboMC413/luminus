@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 interface NotificationItemProps {
@@ -15,13 +15,15 @@ interface NotificationItemProps {
   isUnread: boolean;
   actionUrl?: string;
   buttonLabel?: string;
-  onClick: () => void;
+  onClick: (isTruncated: boolean) => void;
   onDelete?: () => void;
   isExpanded?: boolean;
 }
 
 function NotificationItem({ id, type, avatar, icon, title, user, action, date, isUnread, actionUrl, buttonLabel, onClick, onDelete, isExpanded = false }: NotificationItemProps) {
   const [imageError, setImageError] = useState(false);
+  const paragraphRef = useRef<HTMLParagraphElement>(null);
+  const [isTruncated, setIsTruncated] = useState(false);
 
   const getRequesterIdFromUrl = (url?: string) => {
     if (!url) return null;
@@ -73,9 +75,24 @@ function NotificationItem({ id, type, avatar, icon, title, user, action, date, i
     }
   };
 
+  useEffect(() => {
+    const checkTruncation = () => {
+      const el = paragraphRef.current;
+      if (el) {
+        setIsTruncated(el.scrollHeight > el.clientHeight);
+      }
+    };
+
+    if (!isExpanded) {
+      checkTruncation();
+      window.addEventListener("resize", checkTruncation);
+      return () => window.removeEventListener("resize", checkTruncation);
+    }
+  }, [action, isExpanded]);
+
   return (
     <div
-      onClick={onClick}
+      onClick={() => onClick(isTruncated)}
       className={`group flex items-start gap-4 py-3 px-6 transition-colors cursor-pointer relative ${isUnread ? "bg-slate-100" : "bg-white"} hover:bg-slate-50`}
     >
       <div className="relative shrink-0">
@@ -133,6 +150,7 @@ function NotificationItem({ id, type, avatar, icon, title, user, action, date, i
             </div>
           </div>
           <p
+            ref={paragraphRef}
             className={`text-sm leading-snug text-slate-600 group-hover:text-slate-900 transition-colors ${isExpanded ? "" : "line-clamp-3 overflow-hidden"}`}
             style={
               isExpanded
@@ -153,7 +171,7 @@ function NotificationItem({ id, type, avatar, icon, title, user, action, date, i
           <button
             onClick={(event) => {
               event.stopPropagation();
-              onClick();
+              onClick(false);
             }}
             className="w-fit h-8 px-4 bg-black hover:bg-slate-800 text-white text-xs font-semibold rounded-full transition-all"
           >
@@ -336,11 +354,15 @@ export function NotificationPopup({ isOpen, onClose, notifications, onMarkRead, 
                 actionUrl={notification.action_url}
                 buttonLabel={notification.buttonLabel}
                 isExpanded={expandedNotificationId === notification.id}
-                onClick={() => {
+                onClick={(isTruncated) => {
                   onMarkRead(notification.id);
                   if (notification.action_url) {
-                    onClose();
-                    router.push(notification.action_url);
+                    if (isTruncated && expandedNotificationId !== notification.id) {
+                      setExpandedNotificationId(notification.id);
+                    } else {
+                      onClose();
+                      router.push(notification.action_url);
+                    }
                   } else {
                     setExpandedNotificationId((prev) => (prev === notification.id ? null : notification.id));
                   }
