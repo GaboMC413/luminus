@@ -88,7 +88,7 @@ export function PlanSelection({
         {/* Card 3 */}
         <div className="p-5 bg-white border border-zinc-200/80 rounded-2xl flex flex-col gap-3 shadow-none">
           <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-800 shrink-0">
-            <span className="material-symbols-rounded text-[24px]">auto_awesome</span>
+            <span className="material-symbols-rounded text-[24px]">signpost</span>
           </div>
           <h3 className="text-[15px] font-bold text-slate-900 leading-tight">
             Explora bienestar guiado
@@ -119,7 +119,7 @@ export function PlanSelection({
       {/* Button & Next Actions */}
       <div className="w-full flex flex-col gap-3 mt-2">
         <Button variant="primary" className="w-full py-3 h-12 text-sm font-bold" onClick={handleStartTrial} disabled={isSaving}>
-          {isSaving ? "Iniciando prueba..." : "Entrar a LUMINUS"}
+          {isSaving ? "Ingresando..." : "Ir a LUMINUS"}
         </Button>
         <p className="text-zinc-400 text-[11px] leading-normal font-medium font-sans text-center">
           No se realizará ningún cobro hoy. Te avisaremos con anticipación antes de que venza tu período de prueba.
