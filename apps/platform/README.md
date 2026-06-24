@@ -22,6 +22,7 @@ SES_SECRET_ACCESS_KEY="IAM_SECRET_ACCESS_KEY"
 GOOGLE_CLIENT_ID="GOOGLE_OAUTH_CLIENT_ID"
 GOOGLE_CLIENT_SECRET="GOOGLE_OAUTH_CLIENT_SECRET"
 COGNITO_DOMAIN="your-domain.auth.us-east-1.amazoncognito.com"
+COGNITO_REGION="us-east-1"
 COGNITO_CLIENT_ID="COGNITO_APP_CLIENT_ID"
 COGNITO_CLIENT_SECRET="COGNITO_APP_CLIENT_SECRET"
 ```
@@ -101,17 +102,24 @@ If `admin.luminuslatam.com` uses the same login flow directly, add:
 
 ## Cognito login
 
-Cognito OAuth can run alongside the existing email/password and direct Google login while the migration is in progress.
-The app exchanges Cognito authorization codes server-side, links the Cognito `sub` through `user_identities`, and then creates the existing Luminus session cookie.
+Cognito is the password-auth backend for the existing Luminus email/password forms.
+The UI stays on the Luminus login and registration screens, while `/api/auth/register` creates the user in Cognito and `/api/auth/login` validates the password through Cognito before creating the existing Luminus session cookie.
+
+The Google button still uses the direct Google OAuth flow unless it is intentionally migrated to Cognito later.
 
 Configure these environment variables in Amplify and locally:
 
 - `COGNITO_DOMAIN`
+- `COGNITO_REGION`
 - `COGNITO_CLIENT_ID`
 - `COGNITO_CLIENT_SECRET`
 - `AUTH_BASE_URL`
 
-`COGNITO_DOMAIN` may be stored with or without `https://`.
+`COGNITO_DOMAIN` may be stored with or without `https://`. `COGNITO_CLIENT_SECRET` can be empty when the Cognito app client has no secret.
+
+The Cognito app client must allow `USER_PASSWORD_AUTH` for the email/password form backend to work.
+
+Cognito hosted UI callbacks can remain configured for future use:
 
 Add each deployed environment callback URL to the Cognito app client:
 

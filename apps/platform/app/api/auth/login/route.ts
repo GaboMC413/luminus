@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { verifyPassword } from "@/lib/auth/password";
+import { getCognitoErrorMessage, getCognitoErrorStatus, signInWithCognito } from "@/lib/auth/cognito-password";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { serializeUser, validateAuthInput } from "@/lib/auth/validation";
 
@@ -14,38 +14,95 @@ export async function POST(request: Request) {
   }
 
   try {
+    const cognitoSession = await signInWithCognito(validation.email, validation.password);
     const { prisma } = await import("@/lib/db");
-    const user = await prisma.user.findUnique({
-      where: { email: validation.email },
+
+    const existingByIdentity = await prisma.userIdentity.findUnique({
+      where: {
+        provider_providerSubject: {
+          provider: "cognito",
+          providerSubject: cognitoSession.profile.sub,
+        },
+      },
+      include: {
+        user: {
+          include: { profile: true },
+        },
+      },
+    });
+    const existingByEmail = await prisma.user.findUnique({
+      where: { email: cognitoSession.profile.email },
       include: { profile: true },
     });
+    const user = existingByIdentity?.user || existingByEmail;
 
-    if (!user?.passwordHash || !verifyPassword(validation.password, user.passwordHash)) {
+    if (!user) {
       return NextResponse.json(
-        { message: "Correo o contrasena incorrectos." },
-        { status: 401 },
+        { message: "No encontramos una cuenta LUMINUS asociada a este correo. Registrate gratis para continuar." },
+        { status: 404 },
       );
     }
 
-    await prisma.user.update({
+    const fullName = `${cognitoSession.profile.givenName} ${cognitoSession.profile.familyName}`.trim() || cognitoSession.profile.name;
+    const updatedUser = await prisma.user.update({
       where: { id: user.id },
-      data: { lastLoginAt: new Date() },
+      data: {
+        cognitoSub: user.cognitoSub.startsWith("email:") ? cognitoSession.profile.sub : user.cognitoSub,
+        emailVerified: cognitoSession.profile.emailVerified || user.emailVerified,
+        authProvider: user.authProvider === "unknown" ? "email" : user.authProvider,
+        lastLoginAt: new Date(),
+        identities: {
+          upsert: {
+            where: {
+              provider_providerSubject: {
+                provider: "cognito",
+                providerSubject: cognitoSession.profile.sub,
+              },
+            },
+            create: {
+              provider: "cognito",
+              providerSubject: cognitoSession.profile.sub,
+              email: cognitoSession.profile.email,
+            },
+            update: {
+              email: cognitoSession.profile.email,
+            },
+          },
+        },
+        profile: {
+          upsert: {
+            create: {
+              firstName: cognitoSession.profile.givenName,
+              lastName: cognitoSession.profile.familyName,
+              fullName,
+              avatarUrl: cognitoSession.profile.picture || undefined,
+            },
+            update: {
+              firstName: user.profile?.firstName || cognitoSession.profile.givenName || undefined,
+              lastName: user.profile?.lastName || cognitoSession.profile.familyName || undefined,
+              fullName: user.profile?.fullName || fullName || undefined,
+              avatarUrl: user.profile?.avatarUrl || cognitoSession.profile.picture || undefined,
+            },
+          },
+        },
+      },
+      include: { profile: true },
     });
 
     const token = createSessionToken({
-      userId: user.id,
-      email: user.email,
-      role: user.role,
+      userId: updatedUser.id,
+      email: updatedUser.email,
+      role: updatedUser.role,
     });
 
     setSessionCookie(token);
 
-    return NextResponse.json({ user: serializeUser(user) });
+    return NextResponse.json({ user: serializeUser(updatedUser) });
   } catch (error) {
-    console.error("Login database flow failed.", error);
+    console.error("Cognito login flow failed.", error);
     return NextResponse.json(
-      { message: "El servicio de base de datos no está disponible." },
-      { status: 500 }
+      { message: getCognitoErrorMessage(error, "No pudimos iniciar sesion en este momento.") },
+      { status: getCognitoErrorStatus(error) },
     );
   }
 }
