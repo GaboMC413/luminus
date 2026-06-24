@@ -21,6 +21,9 @@ SES_ACCESS_KEY_ID="IAM_ACCESS_KEY_ID"
 SES_SECRET_ACCESS_KEY="IAM_SECRET_ACCESS_KEY"
 GOOGLE_CLIENT_ID="GOOGLE_OAUTH_CLIENT_ID"
 GOOGLE_CLIENT_SECRET="GOOGLE_OAUTH_CLIENT_SECRET"
+COGNITO_DOMAIN="your-domain.auth.us-east-1.amazoncognito.com"
+COGNITO_CLIENT_ID="COGNITO_APP_CLIENT_ID"
+COGNITO_CLIENT_SECRET="COGNITO_APP_CLIENT_SECRET"
 ```
 
 Use `apps/platform/.env.example` as the template.
@@ -95,3 +98,27 @@ Add each deployed environment callback URL to the Google OAuth client:
 If `admin.luminuslatam.com` uses the same login flow directly, add:
 
 - `https://admin.luminuslatam.com/api/auth/google/callback`
+
+## Cognito login
+
+Cognito OAuth can run alongside the existing email/password and direct Google login while the migration is in progress.
+The app exchanges Cognito authorization codes server-side, links the Cognito `sub` through `user_identities`, and then creates the existing Luminus session cookie.
+
+Configure these environment variables in Amplify and locally:
+
+- `COGNITO_DOMAIN`
+- `COGNITO_CLIENT_ID`
+- `COGNITO_CLIENT_SECRET`
+- `AUTH_BASE_URL`
+
+`COGNITO_DOMAIN` may be stored with or without `https://`.
+
+Add each deployed environment callback URL to the Cognito app client:
+
+- `http://localhost:3100/api/auth/cognito/callback`
+- `https://dev.app.luminuslatam.com/api/auth/cognito/callback`
+- `https://app.luminuslatam.com/api/auth/cognito/callback`
+
+If `admin.luminuslatam.com` uses the same login flow directly, add:
+
+- `https://admin.luminuslatam.com/api/auth/cognito/callback`
