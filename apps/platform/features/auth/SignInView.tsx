@@ -52,22 +52,8 @@ export default function SignInView() {
         text: "No pudimos iniciar sesion con Google. Intenta nuevamente.",
         type: "error",
       });
-    } else if (params.get("error") === "cognito_config") {
-      setMessage({
-        text: "El acceso con LUMINUS ID todavia no esta configurado en este entorno.",
-        type: "error",
-      });
-    } else if (params.get("error") === "cognito") {
-      setMessage({
-        text: "No pudimos iniciar sesion con LUMINUS ID. Intenta nuevamente.",
-        type: "error",
-      });
     }
   }, []);
-
-  const handleCognitoSignIn = () => {
-    window.location.href = "/api/auth/cognito/start";
-  };
 
   const handleGoogleSignIn = () => {
     window.location.href = "/api/auth/google/start";
@@ -224,15 +210,6 @@ export default function SignInView() {
               <span className="flex-shrink mx-4 text-[13px] font-medium text-slate-400 font-sans">o</span>
               <div className="flex-grow border-t border-zinc-200/80"></div>
             </div>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCognitoSignIn}
-              className="flex items-center justify-center gap-2 hover:bg-zinc-50 border-zinc-200"
-            >
-              <span>Ingresar con LUMINUS ID</span>
-            </Button>
 
             {/* Google Sign In Button */}
             <Button

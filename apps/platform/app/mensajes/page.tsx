@@ -145,6 +145,8 @@ function MessagesContent() {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [isChatMenuOpen, setIsChatMenuOpen] = useState(false);
   const chatMenuRef = useRef<HTMLDivElement>(null);
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     if (isUuid(recipientId)) {
@@ -411,8 +413,43 @@ function MessagesContent() {
     return searchable.includes(searchQuery.toLowerCase());
   });
 
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || window.innerWidth >= 1024) return;
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const handleResize = () => {
+      const height = vv.height;
+      setViewportHeight(height);
+      document.body.style.setProperty("--visual-viewport-height", `${height}px`);
+      document.body.classList.add("mobile-viewport-height-override");
+    };
+
+    vv.addEventListener("resize", handleResize);
+    vv.addEventListener("scroll", handleResize);
+    
+    handleResize();
+
+    return () => {
+      vv.removeEventListener("resize", handleResize);
+      vv.removeEventListener("scroll", handleResize);
+      document.body.style.removeProperty("--visual-viewport-height");
+      document.body.classList.remove("mobile-viewport-height-override");
+    };
+  }, []);
+
+  const isMobile = isMounted && typeof window !== "undefined" && window.innerWidth < 1024;
+  const dynamicHeight = viewportHeight && isMobile ? `${viewportHeight - 64}px` : undefined;
+
   return (
-    <div className="w-full flex-1 flex flex-col bg-slate-50 min-h-0 lg:h-[calc(100vh-80px)] overflow-hidden">
+    <div 
+      className="w-full flex-1 flex flex-col bg-slate-50 min-h-0 lg:h-[calc(100vh-80px)] overflow-hidden"
+      style={{ height: dynamicHeight }}
+    >
       <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-4 md:py-6 flex flex-col min-h-0 overflow-hidden">
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden">
           <div className={`items-center gap-3 mb-4 md:mb-6 shrink-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>

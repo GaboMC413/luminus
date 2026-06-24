@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 interface NotificationItemProps {
+  id: string;
+  type: string;
   avatar?: string;
   icon?: string;
   title: string;
@@ -11,14 +13,65 @@ interface NotificationItemProps {
   action: string;
   date: string;
   isUnread: boolean;
+  actionUrl?: string;
   buttonLabel?: string;
   onClick: () => void;
   onDelete?: () => void;
   isExpanded?: boolean;
 }
 
-function NotificationItem({ avatar, icon, title, user, action, date, isUnread, buttonLabel, onClick, onDelete, isExpanded = false }: NotificationItemProps) {
+function NotificationItem({ id, type, avatar, icon, title, user, action, date, isUnread, actionUrl, buttonLabel, onClick, onDelete, isExpanded = false }: NotificationItemProps) {
   const [imageError, setImageError] = useState(false);
+
+  const getRequesterIdFromUrl = (url?: string) => {
+    if (!url) return null;
+    const match = url.match(/[?&]id=([^&]+)/);
+    return match ? match[1] : null;
+  };
+
+  const handleAccept = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const requesterId = getRequesterIdFromUrl(actionUrl);
+    if (!requesterId) return;
+
+    try {
+      const res = await fetch("/api/connections", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipientId: requesterId }),
+      });
+      if (res.ok) {
+        await fetch("/api/notifications", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        });
+        window.dispatchEvent(new Event("luminus_notifications_update"));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDecline = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const requesterId = getRequesterIdFromUrl(actionUrl);
+    if (!requesterId) return;
+
+    try {
+      const res = await fetch(`/api/connections?recipientId=${requesterId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        await fetch(`/api/notifications?id=${id}`, {
+          method: "DELETE",
+        });
+        window.dispatchEvent(new Event("luminus_notifications_update"));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div
@@ -106,6 +159,24 @@ function NotificationItem({ avatar, icon, title, user, action, date, isUnread, b
           >
             {buttonLabel}
           </button>
+        )}
+
+        {type === "connection_request" && isUnread && (
+          <div className="flex items-center gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={handleAccept}
+              className="h-8 px-4 bg-black hover:bg-zinc-800 text-white text-xs font-semibold rounded-xl transition duration-200 cursor-pointer border-none outline-none"
+            >
+              Aceptar
+            </button>
+            <button
+              onClick={handleDecline}
+              className="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 hover:bg-[#FF4B4B]/10 text-slate-550 hover:text-[#FF4B4B] hover:border-[#FF4B4B]/30 rounded-xl transition duration-200 cursor-pointer outline-none"
+              title="Rechazar"
+            >
+              <span className="material-symbols-rounded text-[18px] select-none">close</span>
+            </button>
+          </div>
         )}
       </div>
     </div>
@@ -253,6 +324,8 @@ export function NotificationPopup({ isOpen, onClose, notifications, onMarkRead, 
             return (
               <NotificationItem
                 key={notification.id}
+                id={notification.id}
+                type={notification.type}
                 avatar={notification.avatar}
                 icon={notification.icon}
                 title={notification.title}
@@ -260,6 +333,7 @@ export function NotificationPopup({ isOpen, onClose, notifications, onMarkRead, 
                 action={notification.action}
                 date={notification.date}
                 isUnread={notification.isUnread}
+                actionUrl={notification.action_url}
                 buttonLabel={notification.buttonLabel}
                 isExpanded={expandedNotificationId === notification.id}
                 onClick={() => {

@@ -76,17 +76,6 @@ export default function SignUpView() {
     if (params.get("onboarding") === "1") {
       setStep(2);
     }
-    if (params.get("error") === "cognito_config") {
-      setMessage({
-        text: "El acceso con LUMINUS ID todavia no esta configurado en este entorno.",
-        type: "error",
-      });
-    } else if (params.get("error") === "cognito") {
-      setMessage({
-        text: "No pudimos registrarte con LUMINUS ID. Intenta nuevamente.",
-        type: "error",
-      });
-    }
 
     // Clear old profile test session keys on signup mount to ensure pristine state
     const profileKeys = [
@@ -156,10 +145,6 @@ export default function SignUpView() {
 
   const handleGoogleSignUp = () => {
     window.location.href = "/api/auth/google/start";
-  };
-
-  const handleCognitoSignUp = () => {
-    window.location.href = "/api/auth/cognito/start";
   };
 
   const isRegistration = step > 1;
@@ -357,15 +342,6 @@ export default function SignUpView() {
                 <span className="flex-shrink mx-4 text-[13px] font-medium text-slate-400 font-sans">o</span>
                 <div className="flex-grow border-t border-zinc-200/80"></div>
               </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleCognitoSignUp}
-                className="flex items-center justify-center gap-2 hover:bg-zinc-50 border-zinc-200"
-              >
-                <span>Registrarse con LUMINUS ID</span>
-              </Button>
 
               {/* Google Sign Up Button */}
               <Button

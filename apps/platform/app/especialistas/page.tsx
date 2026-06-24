@@ -9,10 +9,10 @@ export default function EspecialistasPage() {
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-6 md:py-6 flex flex-col gap-6">
       {/* Upcoming Section: Compact, horizontal alert-style banner */}
-      <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-5 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
-        <div className="flex flex-col md:flex-row items-start gap-4 w-full md:w-auto">
+      <div className="w-full bg-white border border-slate-200/80 rounded-3xl p-4 md:p-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-6 shadow-none">
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 w-full md:w-auto">
           {/* Icon container */}
-          <div className="w-12 h-12 md:w-20 md:h-20 bg-white border border-slate-200 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
+          <div className="w-12 h-12 md:w-20 md:h-20 bg-slate-50 border border-slate-200 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
             <div
               style={{
                 maskImage: "url('/Icons/NavBar/expert active.svg')",
@@ -27,24 +27,24 @@ export default function EspecialistasPage() {
               className="w-6 h-6 md:w-10 md:h-10 bg-black"
             />
           </div>
-          <div className="flex flex-col text-left gap-1">
-            <span className="text-[10px] md:text-[11px] font-semibold tracking-widest text-slate-400 font-jakarta uppercase">
+          <div className="flex flex-col text-left gap-0.5 md:gap-1">
+            <span className="text-[9px] md:text-[11px] font-semibold tracking-widest text-slate-400 font-jakarta uppercase">
               PRÓXIMAMENTE
             </span>
             <h4 className="text-[15px] md:text-[16px] font-bold text-slate-800 font-jakarta">
               Especialistas LUMINUS
             </h4>
-            <p className="text-slate-500 text-[13px] md:text-[13.5px] leading-relaxed max-w-[650px]">
-              Explora y conecta con profesionales del bienestar, agenda sesiones y realiza un seguimiento personalizado para tu proceso.
+            <p className="text-slate-500 text-[12.5px] md:text-[13.5px] leading-relaxed max-w-[650px]">
+              Explora y conecta con profesionales del bienestar, agenda sesiones and realiza un seguimiento personalizado para tu proceso.
             </p>
           </div>
         </div>
-        
+
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
           <Button
-            variant="secondary"
+            variant="primary"
             onClick={() => router.push("/comunidad")}
-            className="w-full md:!w-auto px-5 text-sm font-semibold shrink-0 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 flex items-center justify-center gap-1.5 group"
+            className="w-full md:!w-auto px-5 h-10 md:h-11 text-sm font-semibold shrink-0 flex items-center justify-center gap-1.5 group cursor-pointer"
           >
             <svg
               width="16"
@@ -53,7 +53,7 @@ export default function EspecialistasPage() {
               fill="none"
               stroke="currentColor"
               strokeWidth="3"
-              className="text-slate-400 group-hover:text-slate-700 transition-colors"
+              className="text-white/80 group-hover:text-white transition-colors"
             >
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
@@ -81,7 +81,7 @@ export default function EspecialistasPage() {
         <div className="flex-1 w-full flex flex-col gap-6 relative z-10">
           <div className="flex flex-col gap-4">
             <div className="inline-flex items-center rounded-full bg-wellness-sage-50 border border-wellness-sage-200/60 px-3 py-1.5 text-[11px] md:text-xs font-semibold text-wellness-sage-700 w-fit max-w-full break-words">
-              <span>Exclusivo para especialistas</span>
+              <span>¿Eres un especialista en binestar?</span>
             </div>
             <h2 className="text-2xl md:text-3xl font-bold font-jakarta text-slate-900 tracking-tight leading-tight">
               Haz visible tu forma de acompañar
