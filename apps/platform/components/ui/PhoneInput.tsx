@@ -153,20 +153,12 @@ export function PhoneInput({
       (a, b) => b.dial.replace(/\D/g, '').length - a.dial.replace(/\D/g, '').length
     );
 
-    if (cleanRaw.startsWith('+') || /^\d{10,}/.test(digitsOnly)) {
+    if (cleanRaw.startsWith('+')) {
       for (const c of sortedCountries) {
         const dialDigits = c.dial.replace(/\D/g, '');
         
         // Match with leading +
-        if (cleanRaw.startsWith('+') && digitsOnly.startsWith(dialDigits)) {
-          selectedCountry = c;
-          onCountryChange(c);
-          processedValue = digitsOnly.slice(dialDigits.length);
-          break;
-        }
-        
-        // Match without leading +
-        if (!cleanRaw.startsWith('+') && digitsOnly.startsWith(dialDigits) && digitsOnly.length >= dialDigits.length + 7) {
+        if (digitsOnly.startsWith(dialDigits)) {
           selectedCountry = c;
           onCountryChange(c);
           processedValue = digitsOnly.slice(dialDigits.length);

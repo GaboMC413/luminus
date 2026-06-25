@@ -100,16 +100,31 @@ export function PlanSelection({
       </div>
 
       {/* Pricing Transition Text */}
-      <div className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col gap-3 mt-2 text-left">
-        <p className="text-slate-700 text-[14px] leading-relaxed font-medium">
-          Cuando terminen tus 3 meses, tú decides cómo continuar. Puedes seguir con acceso gratuito limitado o mantener la experiencia completa con una suscripción desde 5 USD mensuales.
-        </p>
-      </div>
+      <p className="text-slate-500 text-[13px] sm:text-[14px] leading-relaxed font-normal text-left mt-2 w-full">
+        Cuando terminen tus 3 meses, tú decides cómo continuar. Puedes seguir con acceso gratuito limitado o mantener la experiencia completa con una suscripción desde 5 USD mensuales.
+      </p>
 
       {/* Button & Next Actions */}
-      <div className="w-full flex flex-col gap-3 mt-2">
-        <Button variant="primary" className="w-full py-3 h-12 text-sm font-bold" onClick={handleStartTrial} disabled={isSaving}>
-          {isSaving ? "Ingresando..." : "Ir a LUMINUS"}
+      <div className="w-full flex flex-col gap-3 mt-4">
+        <Button variant="primary" className="w-full py-3 h-12 text-sm font-bold gap-2 group" onClick={handleStartTrial} disabled={isSaving}>
+          {isSaving ? (
+            "Ingresando..."
+          ) : (
+            <>
+              Ir a LUMINUS
+              <svg
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                className="transition-transform duration-200 group-hover:translate-x-0.5"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </>
+          )}
         </Button>
         <p className="text-zinc-400 text-[11px] leading-normal font-medium font-sans text-center">
           No se realizará ningún cobro hoy. Te avisaremos con anticipación antes de que venza tu período de prueba.
