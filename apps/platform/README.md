@@ -19,8 +19,6 @@ SES_REGION="us-east-1"
 SES_FROM_EMAIL="info@luminuslatam.com"
 SES_ACCESS_KEY_ID="IAM_ACCESS_KEY_ID"
 SES_SECRET_ACCESS_KEY="IAM_SECRET_ACCESS_KEY"
-GOOGLE_CLIENT_ID="GOOGLE_OAUTH_CLIENT_ID"
-GOOGLE_CLIENT_SECRET="GOOGLE_OAUTH_CLIENT_SECRET"
 COGNITO_DOMAIN="your-domain.auth.us-east-1.amazoncognito.com"
 COGNITO_REGION="us-east-1"
 COGNITO_CLIENT_ID="COGNITO_APP_CLIENT_ID"
@@ -74,38 +72,11 @@ Configure SES in the same AWS region used by Amplify, verify `info@luminuslatam.
 
 Amplify environment variables must use the `SES_*` credential names because `AWS_*` prefixes are reserved by Amplify.
 
-## Google login
-
-Google OAuth uses the app's own auth session cookie after Google validates the user.
-
-Configure these environment variables in Amplify and locally:
-
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
-- `AUTH_BASE_URL`
-
-Set `AUTH_BASE_URL` to the public URL for each environment so Google receives the correct callback host:
-
-- Local: `http://localhost:3100`
-- Dev: `https://dev.app.luminuslatam.com`
-- Production: `https://app.luminuslatam.com`
-
-Add each deployed environment callback URL to the Google OAuth client:
-
-- `http://localhost:3100/api/auth/google/callback`
-- `https://dev.app.luminuslatam.com/api/auth/google/callback`
-- `https://app.luminuslatam.com/api/auth/google/callback`
-
-If `admin.luminuslatam.com` uses the same login flow directly, add:
-
-- `https://admin.luminuslatam.com/api/auth/google/callback`
-
 ## Cognito login
 
-Cognito is the password-auth backend for the existing Luminus email/password forms.
+Cognito is the identity backend for Luminus auth.
 The UI stays on the Luminus login and registration screens, while `/api/auth/register` creates the user in Cognito and `/api/auth/login` validates the password through Cognito before creating the existing Luminus session cookie.
-
-The Google button still uses the direct Google OAuth flow unless it is intentionally migrated to Cognito later.
+Google sign-in and sign-up use Cognito Hosted UI with Google configured as a Cognito identity provider.
 
 Configure these environment variables in Amplify and locally:
 
@@ -118,8 +89,7 @@ Configure these environment variables in Amplify and locally:
 `COGNITO_DOMAIN` may be stored with or without `https://`. `COGNITO_CLIENT_SECRET` can be empty when the Cognito app client has no secret.
 
 The Cognito app client must allow `USER_PASSWORD_AUTH` for the email/password form backend to work.
-
-Cognito hosted UI callbacks can remain configured for future use:
+The Cognito Hosted UI app client must allow the `openid`, `email`, and `profile` scopes and have Google enabled as an identity provider.
 
 Add each deployed environment callback URL to the Cognito app client:
 

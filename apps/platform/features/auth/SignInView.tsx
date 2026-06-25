@@ -42,12 +42,12 @@ export default function SignInView() {
     window.scrollTo(0, 0);
 
     const params = new URLSearchParams(window.location.search);
-    if (params.get("error") === "google_config") {
+    if (params.get("error") === "google_config" || params.get("error") === "cognito_config") {
       setMessage({
         text: "Google todavia no esta configurado en este entorno.",
         type: "error",
       });
-    } else if (params.get("error") === "google") {
+    } else if (params.get("error") === "google" || params.get("error") === "cognito") {
       setMessage({
         text: "No pudimos iniciar sesion con Google. Intenta nuevamente.",
         type: "error",
@@ -56,7 +56,7 @@ export default function SignInView() {
   }, []);
 
   const handleGoogleSignIn = () => {
-    window.location.href = "/api/auth/google/start";
+    window.location.href = "/api/auth/cognito/start?provider=google";
   };
 
   const handleSignIn = async () => {
