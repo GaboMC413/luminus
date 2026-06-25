@@ -33,12 +33,15 @@ function PublicProfileContent() {
   const [error, setError] = useState<string | null>(null);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const connectionDropdownRef = useRef<HTMLDivElement>(null);
+  const connectionDropdownRefDesktop = useRef<HTMLDivElement>(null);
+  const connectionDropdownRefMobile = useRef<HTMLDivElement>(null);
   const [isConnectionDropdownOpen, setIsConnectionDropdownOpen] = useState(false);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (connectionDropdownRef.current && !connectionDropdownRef.current.contains(event.target as Node)) {
+      const clickedDesktop = connectionDropdownRefDesktop.current && connectionDropdownRefDesktop.current.contains(event.target as Node);
+      const clickedMobile = connectionDropdownRefMobile.current && connectionDropdownRefMobile.current.contains(event.target as Node);
+      if (!clickedDesktop && !clickedMobile) {
         setIsConnectionDropdownOpen(false);
       }
     }
@@ -216,6 +219,73 @@ function PublicProfileContent() {
     }
   };
 
+  const handleRemoveConnection = async (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setIsConnectionDropdownOpen(false);
+    const id = searchParams.get("id");
+    if (!id || connectionLoading) return;
+
+    try {
+      setConnectionLoading(true);
+      const response = await fetch(`/api/connections?recipientId=${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.message || "No pudimos eliminar de tu red.");
+      }
+
+      setProfile((current: any) => ({
+        ...current,
+        connection_status: null,
+        connection_direction: null,
+      }));
+    } catch (err: any) {
+      console.error("Error removing connection:", err);
+      alert(err.message || "No pudimos eliminar de tu red.");
+    } finally {
+      setConnectionLoading(false);
+    }
+  };
+
+  const handleBlockConnection = async (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setIsConnectionDropdownOpen(false);
+    const id = searchParams.get("id");
+    if (!id || connectionLoading) return;
+
+    const confirmBlock = window.confirm("¿Estás seguro de que quieres bloquear a este usuario?");
+    if (!confirmBlock) return;
+
+    try {
+      setConnectionLoading(true);
+      const response = await fetch("/api/connections", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ recipientId: id, action: "block" }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.message || "No pudimos bloquear al usuario.");
+      }
+
+      setProfile((current: any) => ({
+        ...current,
+        connection_status: "blocked",
+        connection_direction: null,
+      }));
+    } catch (err: any) {
+      console.error("Error blocking connection:", err);
+      alert(err.message || "No pudimos bloquear al usuario.");
+    } finally {
+      setConnectionLoading(false);
+    }
+  };
+
   const handleShareProfile = () => {
     setIsShareOpen(true);
   };
@@ -252,7 +322,8 @@ function PublicProfileContent() {
     if (profile?.connection_status === "pending") {
       return profile?.connection_direction === "incoming" ? "Aceptar" : "Solicitud enviada";
     }
-    if (profile?.connection_status === "accepted") return "Agregado";
+    if (profile?.connection_status === "accepted") return "En mi red";
+    if (profile?.connection_status === "blocked") return "Bloqueado";
     return "Agregar a mi red";
   };
 
@@ -261,7 +332,8 @@ function PublicProfileContent() {
     if (profile?.connection_status === "pending") {
       return profile?.connection_direction === "incoming" ? "Aceptar" : "Solicitado";
     }
-    if (profile?.connection_status === "accepted") return "Agregado";
+    if (profile?.connection_status === "accepted") return "En mi red";
+    if (profile?.connection_status === "blocked") return "Bloqueado";
     return "Agregar";
   };
 
@@ -343,14 +415,48 @@ function PublicProfileContent() {
                           </Button>
                           <Button
                             onClick={handleDeclineConnect}
-                            variant="outline"
                             disabled={connectionLoading}
+                            variant="outline"
                             className="flex-1 flex items-center justify-center gap-2 font-bold animate-none hover:bg-[#FF4B4B]/10 hover:text-[#FF4B4B] hover:border-[#FF4B4B]/30"
                           >
                             <span className="material-symbols-outlined text-[20px]">close</span>
                             Rechazar
                           </Button>
                         </>
+                      ) : profile?.connection_status === "accepted" ? (
+                        <div className="relative flex-1" ref={connectionDropdownRefDesktop}>
+                          <Button
+                            onClick={() => setIsConnectionDropdownOpen(!isConnectionDropdownOpen)}
+                            variant="outline"
+                            disabled={connectionLoading}
+                            className="w-full flex items-center justify-center gap-2 font-bold animate-none"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">group</span>
+                            En mi red
+                            <span className="material-symbols-outlined text-[16px] ml-0.5">
+                              {isConnectionDropdownOpen ? "keyboard_arrow_up" : "keyboard_arrow_down"}
+                            </span>
+                          </Button>
+                          
+                          {isConnectionDropdownOpen && (
+                            <div className="absolute top-full left-0 mt-1.5 w-full bg-white border border-slate-200 rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-1 duration-150 origin-top-left">
+                              <button
+                                onClick={handleRemoveConnection}
+                                className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                              >
+                                <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">person_remove</span>
+                                <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Eliminar</span>
+                              </button>
+                              <button
+                                onClick={handleBlockConnection}
+                                className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                              >
+                                <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">block</span>
+                                <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Bloquear</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <Button
                           onClick={handleConnect}
@@ -359,7 +465,7 @@ function PublicProfileContent() {
                           className="flex-1 flex items-center justify-center gap-2 font-bold animate-none"
                         >
                           <span className="material-symbols-outlined text-[20px]">
-                            {profile?.connection_status === "accepted" ? "group" : "person_add"}
+                            {profile?.connection_status === "blocked" ? "block" : "person_add"}
                           </span>
                           {getConnectionButtonLabel()}
                         </Button>
@@ -423,6 +529,40 @@ function PublicProfileContent() {
                             <span className="truncate">Rechazar</span>
                           </Button>
                         </>
+                      ) : profile?.connection_status === "accepted" ? (
+                        <div className="relative w-full" ref={connectionDropdownRefMobile}>
+                          <Button
+                            onClick={() => setIsConnectionDropdownOpen(!isConnectionDropdownOpen)}
+                            variant="outline"
+                            disabled={connectionLoading}
+                            className="w-full flex items-center justify-center gap-1.5 font-bold text-[13px] h-11 rounded-xl animate-none"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">group</span>
+                            <span>En mi red</span>
+                            <span className="material-symbols-outlined text-[16px] ml-0.5">
+                              {isConnectionDropdownOpen ? "keyboard_arrow_up" : "keyboard_arrow_down"}
+                            </span>
+                          </Button>
+                          
+                          {isConnectionDropdownOpen && (
+                            <div className="absolute top-full left-0 mt-1.5 w-full bg-white border border-slate-200 rounded-2xl overflow-hidden z-50 animate-in fade-in slide-in-from-top-1 duration-150 origin-top-left">
+                              <button
+                                onClick={handleRemoveConnection}
+                                className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                              >
+                                <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">person_remove</span>
+                                <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Eliminar</span>
+                              </button>
+                              <button
+                                onClick={handleBlockConnection}
+                                className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                              >
+                                <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">block</span>
+                                <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Bloquear</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       ) : (
                         <Button
                           onClick={handleConnect}
@@ -431,7 +571,7 @@ function PublicProfileContent() {
                           className="w-full flex items-center justify-center gap-1.5 font-bold text-[13px] h-11 rounded-xl animate-none"
                         >
                           <span className="material-symbols-outlined text-[20px]">
-                            {profile?.connection_status === "accepted" ? "group" : "person_add"}
+                            {profile?.connection_status === "blocked" ? "block" : "person_add"}
                           </span>
                           <span>{getConnectionButtonLabelMobile()}</span>
                         </Button>

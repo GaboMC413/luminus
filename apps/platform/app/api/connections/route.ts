@@ -210,6 +210,30 @@ export async function PUT(request: Request) {
       data: { status: "accepted" },
     });
 
+    // Create a connection accepted notification for the requester (original sender)
+    try {
+      const accepterProfile = await prisma.userProfile.findUnique({
+        where: { userId: session.userId },
+        select: { firstName: true, lastName: true, fullName: true, avatarUrl: true },
+      });
+      const accepterName = accepterProfile?.fullName || `${accepterProfile?.firstName || ""} ${accepterProfile?.lastName || ""}`.trim() || "Un usuario";
+      const accepterAvatar = accepterProfile?.avatarUrl || "";
+
+      await prisma.notification.create({
+        data: {
+          userId: requesterId,
+          type: "connection_accepted",
+          title: "Solicitud aceptada",
+          actorName: accepterName,
+          actorAvatarUrl: accepterAvatar,
+          body: "aceptó tu solicitud de conexión.",
+          actionUrl: `/comunidad/public-profile?id=${session.userId}`,
+        },
+      });
+    } catch (notifCreateError) {
+      console.error("Failed to create connection accepted notification:", notifCreateError);
+    }
+
     // Delete any pending connection_request notifications for this connection
     try {
       await prisma.notification.deleteMany({
@@ -324,5 +348,91 @@ export async function DELETE(request: Request) {
   } catch (error) {
     console.error("Delete connection failed.", error);
     return NextResponse.json({ message: "No pudimos eliminar la conexión." }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  const session = getCurrentSession();
+
+  if (!session) {
+    return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+  }
+
+  const body = await request.json().catch(() => null);
+  const targetId = typeof body?.recipientId === "string" ? body.recipientId.trim() : "";
+  const action = typeof body?.action === "string" ? body.action.trim() : "";
+
+  if (!targetId || !isUuid(targetId)) {
+    return NextResponse.json({ message: "Usuario de destino inválido." }, { status: 400 });
+  }
+
+  if (action !== "block") {
+    return NextResponse.json({ message: "Acción no soportada." }, { status: 400 });
+  }
+
+  try {
+    const { prisma } = await import("@/lib/db");
+    
+    // Find if a connection exists in any direction
+    const existing = await prisma.userConnection.findFirst({
+      where: {
+        OR: [
+          { requesterId: session.userId, recipientId: targetId },
+          { requesterId: targetId, recipientId: session.userId }
+        ]
+      }
+    });
+
+    let connection;
+    if (existing) {
+      // Update existing connection status to blocked
+      connection = await prisma.userConnection.update({
+        where: { id: existing.id },
+        data: { status: "blocked", requesterId: session.userId, recipientId: targetId }
+      });
+    } else {
+      // Create a new blocked connection
+      connection = await prisma.userConnection.create({
+        data: {
+          requesterId: session.userId,
+          recipientId: targetId,
+          status: "blocked"
+        }
+      });
+    }
+
+    // Delete any pending notifications between them
+    try {
+      await prisma.notification.deleteMany({
+        where: {
+          OR: [
+            {
+              userId: session.userId,
+              type: "connection_request",
+              actionUrl: `/comunidad/public-profile?id=${targetId}`
+            },
+            {
+              userId: targetId,
+              type: "connection_request",
+              actionUrl: `/comunidad/public-profile?id=${session.userId}`
+            }
+          ]
+        }
+      });
+    } catch (notifErr) {
+      console.error("Failed to delete notifications on block:", notifErr);
+    }
+
+    return NextResponse.json({
+      success: true,
+      connection: {
+        id: connection.id,
+        status: connection.status,
+      },
+      message: "Usuario bloqueado con éxito."
+    });
+  } catch (error) {
+    console.error("Block connection failed.", error);
+    return NextResponse.json({ message: "No pudimos bloquear la conexión." }, { status: 500 });
   }
 }

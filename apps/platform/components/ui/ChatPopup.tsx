@@ -493,24 +493,24 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                 <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] shadow-none animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                   <button
                     onClick={() => setIsMenuOpen(false)}
-                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                   >
-                    <span className="material-symbols-outlined text-slate-400 group-hover:text-black text-[18px]">notifications_off</span>
-                    <span className="font-semibold text-slate-600 group-hover:text-black transition-colors">Silenciar chat</span>
+                    <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900 text-[18px] transition-colors">notifications_off</span>
+                    <span className="font-semibold text-slate-500 group-hover:text-slate-900 transition-colors">Silenciar chat</span>
                   </button>
                   <button
                     onClick={handleDeleteChat}
-                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                   >
-                    <span className="material-symbols-outlined text-slate-400 group-hover:text-[#FF4B4B] text-[18px]">delete</span>
-                    <span className="font-semibold text-slate-600 group-hover:text-[#FF4B4B] transition-colors">Eliminar chat</span>
+                    <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">delete</span>
+                    <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Eliminar chat</span>
                   </button>
                   <button
                     onClick={() => setIsMenuOpen(false)}
-                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[13px] hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                   >
-                    <span className="material-symbols-outlined text-slate-400 group-hover:text-[#FF4B4B] text-[18px]">block</span>
-                    <span className="font-semibold text-slate-600 group-hover:text-[#FF4B4B] transition-colors">Bloquear usuario</span>
+                    <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">block</span>
+                    <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Bloquear usuario</span>
                   </button>
                 </div>
               )}
