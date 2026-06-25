@@ -8,7 +8,17 @@ import { SelectInput } from '@/components/ui/SelectInput';
 import { Button } from '@/components/ui/Button';
 import { PhoneInput } from '@/components/ui/PhoneInput';
 import { COUNTRIES as ALL_COUNTRIES } from '@/utils/countries';
-import { AsYouType, CountryCode } from 'libphonenumber-js';
+import { AsYouType, CountryCode, parsePhoneNumberFromString } from 'libphonenumber-js';
+
+const capitalizeName = (value: string) => {
+  return value
+    .split(' ')
+    .map(word => {
+      if (!word) return '';
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ');
+};
 import { uploadAvatar } from '@/lib/uploadAvatar';
 
 const NEUTRAL_COUNTRY = { code: 'XX', dial: '+00', name: 'Seleccionar país', priority: false };
@@ -207,7 +217,16 @@ export function PersonalData({
       localStorage.setItem("luminus_profile_lastName", lastName);
       localStorage.setItem("luminus_profile_city", city);
       localStorage.setItem("luminus_profile_country", country);
-      localStorage.setItem("luminus_profile_phone", `${phoneCountry.dial}${phone}`);
+      let finalPhoneToSave = `${phoneCountry.dial} ${phone}`;
+      try {
+        const parsed = parsePhoneNumberFromString(phone, phoneCountry.code as CountryCode);
+        if (parsed) {
+          finalPhoneToSave = parsed.formatInternational();
+        }
+      } catch (err) {
+        console.error('Error formatting phone for storage:', err);
+      }
+      localStorage.setItem("luminus_profile_phone", finalPhoneToSave);
       localStorage.setItem("luminus_profile_gender", gender);
       localStorage.setItem("luminus_profile_birthdate", `${fullYear}-${paddedMonth}-${paddedDay}`);
       localStorage.setItem("luminus_profile_avatar", avatarUrl || "");
@@ -275,7 +294,7 @@ export function PersonalData({
               placeholder="Nombre"
               value={firstName}
               onChange={(e) => {
-                setFirstName(e.target.value);
+                setFirstName(capitalizeName(e.target.value));
                 if (errorField === 'firstName') setErrorField(null);
               }}
               variant="bordered"
@@ -295,7 +314,7 @@ export function PersonalData({
               placeholder="Apellido"
               value={lastName}
               onChange={(e) => {
-                setLastName(e.target.value);
+                setLastName(capitalizeName(e.target.value));
                 if (errorField === 'lastName') setErrorField(null);
               }}
               variant="bordered"

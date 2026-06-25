@@ -111,8 +111,12 @@ export default function SignUpView() {
       setMessage({ text: "La contrasena debe tener al menos 12 caracteres.", type: "error" });
       return;
     }
-    if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
-      setMessage({ text: "La contrasena debe incluir al menos una letra y un numero.", type: "error" });
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
+      setMessage({ text: "La contrasena debe incluir letras mayúsculas y minúsculas.", type: "error" });
+      return;
+    }
+    if (!/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+      setMessage({ text: "La contrasena debe incluir al menos un número y un símbolo.", type: "error" });
       return;
     }
 
@@ -295,10 +299,18 @@ export default function SignUpView() {
                     )}
                   </div>
                   <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
-                    <p className={`text-xs sm:text-sm font-normal tracking-tight ${/[A-Za-z]/.test(password) && /\d/.test(password) ? 'text-green-600' : 'text-slate-500'}`}>
-                      Incluir al menos una letra y un número
+                    <p className={`text-xs sm:text-sm font-normal tracking-tight ${/[A-Z]/.test(password) && /[a-z]/.test(password) ? 'text-green-600' : 'text-slate-500'}`}>
+                      Mayúsculas y minúsculas
                     </p>
-                    {/[A-Za-z]/.test(password) && /\d/.test(password) && (
+                    {/[A-Z]/.test(password) && /[a-z]/.test(password) && (
+                      <span className="text-green-600 text-sm sm:text-base font-bold">✓</span>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
+                    <p className={`text-xs sm:text-sm font-normal tracking-tight ${/\d/.test(password) && /[^A-Za-z0-9]/.test(password) ? 'text-green-600' : 'text-slate-500'}`}>
+                      Al menos un número y un símbolo
+                    </p>
+                    {/\d/.test(password) && /[^A-Za-z0-9]/.test(password) && (
                       <span className="text-green-600 text-sm sm:text-base font-bold">✓</span>
                     )}
                   </div>

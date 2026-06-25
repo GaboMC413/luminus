@@ -102,18 +102,8 @@ export function PlanSelection({
       {/* Pricing Transition Text */}
       <div className="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col gap-3 mt-2 text-left">
         <p className="text-slate-700 text-[14px] leading-relaxed font-medium">
-          Cuando terminen tus 3 meses, tú decides cómo continuar. Puedes seguir con acceso gratuito limitado o mantener la experiencia completa con una suscripción.
+          Cuando terminen tus 3 meses, tú decides cómo continuar. Puedes seguir con acceso gratuito limitado o mantener la experiencia completa con una suscripción desde 5 USD mensuales.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 mt-1">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
-            <span className="text-[13px] font-semibold text-slate-800">Plan Mensual: <span className="font-bold">USD 5/mes</span></span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0" />
-            <span className="text-[13px] font-semibold text-slate-800">Plan Anual: <span className="font-bold">USD 45/año</span> <span className="text-xs text-emerald-600 font-bold ml-1.5">(25% OFF)</span></span>
-          </div>
-        </div>
       </div>
 
       {/* Button & Next Actions */}

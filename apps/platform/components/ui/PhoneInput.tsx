@@ -3,7 +3,22 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { COUNTRIES as ALL_COUNTRIES } from '@/utils/countries';
-import { AsYouType, CountryCode } from 'libphonenumber-js';
+import { AsYouType, CountryCode, getExampleNumber } from 'libphonenumber-js';
+import examples from 'libphonenumber-js/examples.mobile.json';
+
+const getCountryMaxLength = (countryCode: string): number => {
+  if (countryCode === 'XX') return 15;
+  try {
+    const example = getExampleNumber(countryCode as CountryCode, examples);
+    if (example) {
+      const nationalNumStr = example.formatNational().replace(/\D/g, '');
+      return nationalNumStr.length;
+    }
+  } catch (err) {
+    console.error('Error getting example number length:', err);
+  }
+  return 12; // fallback
+};
 
 interface PhoneInputProps {
   value: string;
@@ -127,10 +142,47 @@ export function PhoneInput({
   }, [showPhoneDropdown]);
 
   const handleNumberChange = (rawValue: string) => {
-    let formatted = rawValue;
-    if (phoneCountry.code !== 'XX') {
-      const formatter = new AsYouType(phoneCountry.code as CountryCode);
-      formatted = formatter.input(rawValue);
+    let processedValue = rawValue;
+    let selectedCountry = phoneCountry;
+
+    // Clean raw value
+    const cleanRaw = rawValue.trim();
+    const digitsOnly = cleanRaw.replace(/\D/g, '');
+
+    const sortedCountries = [...ALL_COUNTRIES].sort(
+      (a, b) => b.dial.replace(/\D/g, '').length - a.dial.replace(/\D/g, '').length
+    );
+
+    if (cleanRaw.startsWith('+') || /^\d{10,}/.test(digitsOnly)) {
+      for (const c of sortedCountries) {
+        const dialDigits = c.dial.replace(/\D/g, '');
+        
+        // Match with leading +
+        if (cleanRaw.startsWith('+') && digitsOnly.startsWith(dialDigits)) {
+          selectedCountry = c;
+          onCountryChange(c);
+          processedValue = digitsOnly.slice(dialDigits.length);
+          break;
+        }
+        
+        // Match without leading +
+        if (!cleanRaw.startsWith('+') && digitsOnly.startsWith(dialDigits) && digitsOnly.length >= dialDigits.length + 7) {
+          selectedCountry = c;
+          onCountryChange(c);
+          processedValue = digitsOnly.slice(dialDigits.length);
+          break;
+        }
+      }
+    }
+
+    const maxLength = getCountryMaxLength(selectedCountry.code);
+    const onlyDigits = processedValue.replace(/\D/g, '');
+    const truncatedDigits = onlyDigits.slice(0, maxLength);
+
+    let formatted = truncatedDigits;
+    if (selectedCountry.code !== 'XX') {
+      const formatter = new AsYouType(selectedCountry.code as CountryCode);
+      formatted = formatter.input(truncatedDigits);
     }
     onChange(formatted);
   };
@@ -138,6 +190,17 @@ export function PhoneInput({
   const handleCountrySelect = (c: any) => {
     onCountryChange(c);
     setShowPhoneDropdown(false);
+    
+    // Also re-format and truncate current value for the new country
+    const maxLength = getCountryMaxLength(c.code);
+    const currentVal = value || '';
+    const onlyDigits = currentVal.replace(/\D/g, '').slice(0, maxLength);
+    if (c.code !== 'XX') {
+      const formatter = new AsYouType(c.code as CountryCode);
+      onChange(formatter.input(onlyDigits));
+    } else {
+      onChange(onlyDigits);
+    }
   };
 
   const dropdownCountries = ALL_COUNTRIES;

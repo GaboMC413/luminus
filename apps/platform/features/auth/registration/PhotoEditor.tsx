@@ -106,6 +106,7 @@ export function PhotoEditor({ image, onSave, onCancel }: PhotoEditorProps) {
           </h3>
 
           <button
+            type="button"
             onClick={onCancel}
             className="p-1 hover:bg-slate-50 rounded-full transition-colors text-slate-300 cursor-pointer"
           >
@@ -163,6 +164,7 @@ export function PhotoEditor({ image, onSave, onCancel }: PhotoEditorProps) {
 
           <div className="flex gap-4 py-4">
             <Button
+              type="button"
               variant="outline"
               onClick={onCancel}
               className="flex-1 !h-11 !text-[13px] !font-normal !normal-case !tracking-normal"
@@ -170,6 +172,7 @@ export function PhotoEditor({ image, onSave, onCancel }: PhotoEditorProps) {
               Cancelar
             </Button>
             <Button
+              type="button"
               variant="primary"
               onClick={handleSave}
               className="flex-1 !h-11 !text-[13px] !font-normal"
