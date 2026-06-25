@@ -10,6 +10,17 @@ import Link from "next/link";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
 import { useRouter } from "next/navigation";
 
+const formatName = (str?: string) => {
+  if (!str) return "";
+  return str
+    .split(' ')
+    .map(word => {
+      if (!word) return '';
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ');
+};
+
 function GoogleIcon() {
   return (
     <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
@@ -97,6 +108,34 @@ export default function SignUpView() {
     ];
     profileKeys.forEach(key => localStorage.removeItem(key));
   }, []);
+
+  // Autofill Google profile data on onboarding step (step 2)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const isOnboarding = params.get("onboarding") === "1";
+
+    if (isOnboarding || step === 2) {
+      const fetchUserProfile = async () => {
+        try {
+          const res = await fetch("/api/profile");
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.profile) {
+              setProfileData(prev => ({
+                ...prev,
+                firstName: prev.firstName || formatName(data.profile.first_name) || "",
+                lastName: prev.lastName || formatName(data.profile.last_name) || "",
+                avatarUrl: prev.avatarUrl || data.profile.profile_picture_url || null,
+              }));
+            }
+          }
+        } catch (err) {
+          console.error("Failed to fetch profile for autofill:", err);
+        }
+      };
+      fetchUserProfile();
+    }
+  }, [step]);
 
   const handleSignUp = async () => {
     if (!email || !password || !repeatPassword) {
