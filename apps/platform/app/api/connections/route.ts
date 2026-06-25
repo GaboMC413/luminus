@@ -128,6 +128,15 @@ export async function POST(request: Request) {
       const requesterName = requesterProfile?.fullName || `${requesterProfile?.firstName || ""} ${requesterProfile?.lastName || ""}`.trim() || "Un usuario";
       const requesterAvatar = requesterProfile?.avatarUrl || "";
 
+      // Ensure we don't create multiple notifications for the same request
+      await prisma.notification.deleteMany({
+        where: {
+          userId: recipientId,
+          type: "connection_request",
+          actionUrl: `/comunidad/public-profile?id=${session.userId}`
+        }
+      });
+
       await prisma.notification.create({
         data: {
           userId: recipientId,
@@ -201,6 +210,28 @@ export async function PUT(request: Request) {
       data: { status: "accepted" },
     });
 
+    // Delete any pending connection_request notifications for this connection
+    try {
+      await prisma.notification.deleteMany({
+        where: {
+          OR: [
+            {
+              userId: session.userId,
+              type: "connection_request",
+              actionUrl: `/comunidad/public-profile?id=${requesterId}`
+            },
+            {
+              userId: requesterId,
+              type: "connection_request",
+              actionUrl: `/comunidad/public-profile?id=${session.userId}`
+            }
+          ]
+        }
+      });
+    } catch (notifDeleteError) {
+      console.error("Failed to delete notification on accept:", notifDeleteError);
+    }
+
     const newlyCompletedQuests = [];
     try {
       const { checkAndTriggerQuestCompletion } = await import("@/lib/onboarding");
@@ -263,6 +294,28 @@ export async function DELETE(request: Request) {
     await prisma.userConnection.delete({
       where: { id: connection.id },
     });
+
+    // Delete any pending connection_request notifications between these two users
+    try {
+      await prisma.notification.deleteMany({
+        where: {
+          OR: [
+            {
+              userId: connection.recipientId,
+              type: "connection_request",
+              actionUrl: `/comunidad/public-profile?id=${connection.requesterId}`
+            },
+            {
+              userId: connection.requesterId,
+              type: "connection_request",
+              actionUrl: `/comunidad/public-profile?id=${connection.recipientId}`
+            }
+          ]
+        }
+      });
+    } catch (notifDeleteError) {
+      console.error("Failed to delete connection request notifications:", notifDeleteError);
+    }
 
     return NextResponse.json({
       success: true,
