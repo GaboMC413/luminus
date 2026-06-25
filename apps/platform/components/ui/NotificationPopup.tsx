@@ -21,6 +21,7 @@ interface NotificationItemProps {
 }
 
 function NotificationItem({ id, type, avatar, icon, title, user, action, date, isUnread, actionUrl, buttonLabel, onClick, onDelete, isExpanded = false }: NotificationItemProps) {
+  const router = useRouter();
   const [imageError, setImageError] = useState(false);
   const paragraphRef = useRef<HTMLParagraphElement>(null);
   const [isTruncated, setIsTruncated] = useState(false);
@@ -187,13 +188,17 @@ function NotificationItem({ id, type, avatar, icon, title, user, action, date, i
             >
               Aceptar
             </button>
-            <button
-              onClick={handleDecline}
-              className="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 hover:bg-[#FF4B4B]/10 text-slate-550 hover:text-[#FF4B4B] hover:border-[#FF4B4B]/30 rounded-xl transition duration-200 cursor-pointer outline-none"
-              title="Rechazar"
-            >
-              <span className="material-symbols-rounded text-[18px] select-none">close</span>
-            </button>
+            {actionUrl && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(actionUrl);
+                }}
+                className="h-8 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition duration-200 cursor-pointer outline-none"
+              >
+                Ver perfil
+              </button>
+            )}
           </div>
         )}
       </div>
