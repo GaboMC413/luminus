@@ -69,9 +69,9 @@ export function PlatformNavbar() {
   const router = useRouter();
   const pathname = usePathname();
   
-  // Real-time local storage user profile sync
   const [profileName, setProfileName] = useState("");
   const [profileAvatar, setProfileAvatar] = useState("");
+  const [userRole, setUserRole] = useState<"USER" | "ADMIN">("USER");
 
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
@@ -142,6 +142,9 @@ export function PlatformNavbar() {
     const storedAvatar = localStorage.getItem("luminus_profile_avatar") || "";
     setProfileAvatar(storedAvatar);
 
+    const storedRole = (localStorage.getItem("luminus_user_role") as "USER" | "ADMIN") || "USER";
+    setUserRole(storedRole);
+
     async function loadSessionUser() {
       const response = await fetch("/api/auth/me", {
         credentials: "include",
@@ -152,10 +155,70 @@ export function PlatformNavbar() {
       }
 
       const data = await response.json();
-      const email = data.user?.email;
+      if (data.user) {
+        const u = data.user;
+        
+        const cachedUserId = localStorage.getItem("luminus_cached_user_id");
+        const cachedEmail = localStorage.getItem("luminus_user_email");
+        const isUserChanged = (cachedUserId && cachedUserId !== u.id) || (!cachedUserId && cachedEmail && cachedEmail !== u.email);
 
-      if (!fullName && email) {
-        setProfileName(email.split("@")[0]);
+        if (isUserChanged) {
+          const keysToRemove = [
+            "luminus_profile_firstName",
+            "luminus_profile_lastName",
+            "luminus_profile_city",
+            "luminus_profile_country",
+            "luminus_profile_gender",
+            "luminus_profile_birthdate",
+            "luminus_profile_phone",
+            "luminus_profile_profession",
+            "luminus_profile_avatar",
+            "luminus_profile_interests",
+            "luminus_profile_otherInterests",
+            "luminus_profile_bio",
+            "luminus_profile_prompts",
+            "luminus_profile_cover",
+            "luminus_user_email",
+            "luminus_user_role",
+            "luminus_profile_plan",
+            "luminus_onboarding_completed",
+            "luminus_chats",
+            "luminus_cached_user_id"
+          ];
+          keysToRemove.forEach(k => localStorage.removeItem(k));
+          
+          setProfileName("");
+          setProfileAvatar("");
+          setUserRole("USER");
+        }
+
+        localStorage.setItem("luminus_cached_user_id", u.id);
+
+        const firstName = u.firstName || "";
+        const lastName = u.lastName || "";
+        const syncedFullName = `${firstName} ${lastName}`.trim();
+
+        localStorage.setItem("luminus_profile_firstName", firstName);
+        localStorage.setItem("luminus_profile_lastName", lastName);
+
+        const avatar = u.avatarUrl || "";
+        localStorage.setItem("luminus_profile_avatar", avatar);
+
+        const role = u.role || "USER";
+        localStorage.setItem("luminus_user_role", role);
+
+        if (u.email) {
+          localStorage.setItem("luminus_user_email", u.email);
+        }
+
+        setUserRole(role);
+        setProfileAvatar(avatar);
+
+        if (syncedFullName) {
+          setProfileName(syncedFullName);
+        } else if (u.email) {
+          setProfileName(u.email.split("@")[0]);
+        }
       }
     }
 
@@ -435,6 +498,32 @@ export function PlatformNavbar() {
       method: "POST",
       credentials: "include",
     });
+
+    // Clear local storage profile details to prevent data bleed when switching users
+    const keysToRemove = [
+      "luminus_profile_firstName",
+      "luminus_profile_lastName",
+      "luminus_profile_city",
+      "luminus_profile_country",
+      "luminus_profile_gender",
+      "luminus_profile_birthdate",
+      "luminus_profile_phone",
+      "luminus_profile_profession",
+      "luminus_profile_avatar",
+      "luminus_profile_interests",
+      "luminus_profile_otherInterests",
+      "luminus_profile_bio",
+      "luminus_profile_prompts",
+      "luminus_profile_cover",
+      "luminus_user_email",
+      "luminus_user_role",
+      "luminus_profile_plan",
+      "luminus_onboarding_completed",
+      "luminus_chats",
+      "luminus_cached_user_id"
+    ];
+    keysToRemove.forEach(k => localStorage.removeItem(k));
+
     router.push("/auth/iniciar-sesion");
   };
 
@@ -592,6 +681,16 @@ export function PlatformNavbar() {
                 <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900">settings</span>
                 <span className="font-semibold text-slate-500 group-hover:text-slate-900">Ajustes de cuenta</span>
               </Link>
+              {userRole === "ADMIN" && (
+                <Link
+                  href="/admin"
+                  onClick={() => setIsProfileDropdownOpen(false)}
+                  className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors"
+                >
+                  <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900">admin_panel_settings</span>
+                  <span className="font-semibold text-slate-500 group-hover:text-slate-900">Administrador</span>
+                </Link>
+              )}
               <div className="h-[1px] bg-slate-100 w-full"></div>
               <button
                 onClick={handleSignOut}

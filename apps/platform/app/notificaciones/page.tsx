@@ -465,13 +465,17 @@ function NotificationsContent() {
                               >
                                 Aceptar
                               </button>
-                              <button
-                                onClick={(e) => handleDeclinePage(e, n.action_url, n.id)}
-                                className="w-8 h-8 flex items-center justify-center bg-white border border-slate-200 hover:bg-[#FF4B4B]/10 text-slate-550 hover:text-[#FF4B4B] hover:border-[#FF4B4B]/30 rounded-xl transition duration-200 cursor-pointer outline-none"
-                                title="Rechazar"
-                              >
-                                <span className="material-symbols-rounded text-[18px] select-none">close</span>
-                              </button>
+                              {n.action_url && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    router.push(n.action_url);
+                                  }}
+                                  className="h-8 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition duration-200 cursor-pointer outline-none"
+                                >
+                                  Ver perfil
+                                </button>
+                              )}
                             </div>
                           )}
                         </div>

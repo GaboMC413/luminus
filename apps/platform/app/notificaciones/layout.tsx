@@ -1,18 +1,14 @@
-import { getCurrentSession } from "@/lib/auth/session";
+import { assertOnboarded } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { PlatformNavbar } from "@/components/ui/PlatformNavbar";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
 
-export default function NotificationsLayout({
+export default async function NotificationsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = getCurrentSession();
-
-  if (!session) {
-    redirect("/auth/iniciar-sesion");
-  }
+  await assertOnboarded();
 
   return (
     <div className="w-full h-[100dvh] lg:h-auto lg:min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col antialiased overflow-hidden lg:overflow-visible">

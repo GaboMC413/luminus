@@ -1,18 +1,14 @@
-import { getCurrentSession } from "@/lib/auth/session";
+import { assertOnboarded } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { PlatformNavbar } from "@/components/ui/PlatformNavbar";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
 
-export default function FaroLayout({
+export default async function FaroLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = getCurrentSession();
-
-  if (!session) {
-    redirect("/auth/iniciar-sesion");
-  }
+  await assertOnboarded();
 
   return (
     <div className="w-full min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col antialiased">

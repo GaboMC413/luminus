@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { parsePhoneNumberFromString, CountryCode } from "libphonenumber-js";
 
 export const runtime = "nodejs";
 
@@ -46,10 +47,24 @@ export async function POST(request: Request) {
   const firstName = typeof data.firstName === "string" ? data.firstName.trim() : undefined;
   const lastName = typeof data.lastName === "string" ? data.lastName.trim() : undefined;
   const fullName = [firstName, lastName].filter(Boolean).join(" ") || undefined;
-  const phoneCountry = data.phoneCountry as { dial?: unknown } | undefined;
+  const phoneCountry = data.phoneCountry as { code?: unknown; dial?: unknown } | undefined;
   const phone = typeof data.phone === "string" ? data.phone.trim() : "";
-  const phoneNumber =
-    typeof phoneCountry?.dial === "string" && phone ? `${phoneCountry.dial}${phone}` : phone || undefined;
+  
+  let phoneNumber = phone || undefined;
+  if (typeof phoneCountry?.dial === "string" && phone) {
+    const rawFull = `${phoneCountry.dial}${phone}`;
+    try {
+      const countryCode = typeof phoneCountry.code === "string" ? phoneCountry.code as CountryCode : undefined;
+      const parsed = parsePhoneNumberFromString(rawFull, countryCode);
+      if (parsed) {
+        phoneNumber = parsed.formatInternational();
+      } else {
+        phoneNumber = rawFull;
+      }
+    } catch {
+      phoneNumber = rawFull;
+    }
+  }
   const birthdate = parseBirthdate(data.birthdateString);
   const shouldUpdateInterests = Array.isArray(data.interests);
   const interests = shouldUpdateInterests

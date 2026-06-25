@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { INTEREST_CATEGORIES } from '@/utils/constants';
 
@@ -22,6 +22,22 @@ export function InterestSelection({
 
   const [isSaving, setIsSaving] = useState(false);
   const [showError, setShowError] = useState(false);
+  const [categories, setCategories] = useState(INTEREST_CATEGORIES);
+
+  useEffect(() => {
+    const shuffle = <T,>(array: T[]): T[] => {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    };
+
+    // Shuffle only the categories
+    const shuffled = shuffle(INTEREST_CATEGORIES);
+    setCategories(shuffled);
+  }, []);
 
   const toggleInterest = (item: string) => {
     if (showError) setShowError(false);
@@ -82,7 +98,7 @@ export function InterestSelection({
 
       {/* Categories Area */}
       <div className="flex flex-col gap-8 w-full pr-2">
-        {INTEREST_CATEGORIES.map((category) => (
+        {categories.map((category) => (
           <div key={category.title} className="flex flex-col gap-4">
             <h3 className="flex items-center gap-2 text-[16px] md:text-[17px] font-bold font-sans animate-in fade-in duration-300" style={{ color: category.color }}>
               <span className="material-symbols-outlined select-none text-[20px]">{category.icon}</span>

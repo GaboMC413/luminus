@@ -135,6 +135,7 @@ function MessagesContent() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [newConversation, setNewConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [otherLastReadAt, setOtherLastReadAt] = useState<string | null>(null);
   const [inputText, setInputText] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -240,6 +241,7 @@ function MessagesContent() {
   useEffect(() => {
     if (!selectedId) {
       setMessages([]);
+      setOtherLastReadAt(null);
       return;
     }
 
@@ -257,6 +259,7 @@ function MessagesContent() {
 
         const data = await response.json();
         setMessages(data.messages || []);
+        setOtherLastReadAt(data.otherLastReadAt || null);
         window.dispatchEvent(new Event("luminus_messages_update"));
       } catch (err: any) {
         setError(err.message || "No pudimos cargar la conversacion.");
@@ -264,10 +267,16 @@ function MessagesContent() {
     }
 
     loadMessages();
+
+    // Poll for new messages/status every 5 seconds while chat is active
+    const pollInterval = setInterval(loadMessages, 5000);
+    return () => clearInterval(pollInterval);
   }, [selectedId]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
   }, [messages.length, selectedId]);
 
   // Keep chat scrolled to bottom when mobile keyboard opens/closes
@@ -450,7 +459,14 @@ function MessagesContent() {
       const height = vv.height;
       setViewportHeight(height);
       document.body.style.setProperty("--visual-viewport-height", `${height}px`);
+      document.documentElement.style.setProperty("--visual-viewport-height", `${height}px`);
       document.body.classList.add("mobile-viewport-height-override");
+      document.documentElement.classList.add("mobile-viewport-height-override");
+
+      // Reset scroll position to prevent browser scroll shifting when keyboard opens
+      window.scrollTo(0, 0);
+      document.body.scrollTop = 0;
+      document.documentElement.scrollTop = 0;
     };
 
     vv.addEventListener("resize", handleResize);
@@ -462,7 +478,9 @@ function MessagesContent() {
       vv.removeEventListener("resize", handleResize);
       vv.removeEventListener("scroll", handleResize);
       document.body.style.removeProperty("--visual-viewport-height");
+      document.documentElement.style.removeProperty("--visual-viewport-height");
       document.body.classList.remove("mobile-viewport-height-override");
+      document.documentElement.classList.remove("mobile-viewport-height-override");
     };
   }, []);
 
@@ -705,22 +723,22 @@ function MessagesContent() {
                             onClick={() => setIsChatMenuOpen(false)}
                             className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                           >
-                            <span className="material-symbols-rounded text-slate-400 group-hover:text-black">notifications_off</span>
-                            <span className="font-semibold text-slate-600 group-hover:text-black transition-colors">Silenciar chat</span>
+                            <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900 text-[18px] transition-colors">notifications_off</span>
+                            <span className="font-semibold text-slate-500 group-hover:text-slate-900 transition-colors">Silenciar chat</span>
                           </button>
                           <button
                             onClick={handleDeleteChat}
                             className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                           >
-                            <span className="material-symbols-rounded text-slate-400 group-hover:text-[#FF4B4B]">delete</span>
-                            <span className="font-semibold text-slate-600 group-hover:text-[#FF4B4B] transition-colors">Eliminar chat</span>
+                            <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">delete</span>
+                            <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Eliminar chat</span>
                           </button>
                           <button
                             onClick={handleBlockUser}
                             className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                           >
-                            <span className="material-symbols-rounded text-slate-400 group-hover:text-[#FF4B4B]">block</span>
-                            <span className="font-semibold text-slate-600 group-hover:text-[#FF4B4B] transition-colors">Bloquear usuario</span>
+                            <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">block</span>
+                            <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Bloquear usuario</span>
                           </button>
                         </div>
                       )}
@@ -743,6 +761,7 @@ function MessagesContent() {
                     messages.map((message, index) => {
                       const isMine = message.sender_id !== selectedConv.participant.id;
                       const isConsecutive = index > 0 && (messages[index - 1].sender_id !== selectedConv.participant.id) === isMine;
+                      const isLastMessage = index === messages.length - 1;
                       return (
                         <div
                           key={message.id}
@@ -763,6 +782,16 @@ function MessagesContent() {
                               {formatShortTime(message.created_at)}
                             </span>
                           </div>
+                          {isLastMessage && isMine && (
+                            <span className="text-[10px] text-slate-400 mt-1 mr-1 font-semibold select-none">
+                              {(() => {
+                                if (!otherLastReadAt) return "Enviado";
+                                const msgDate = new Date(message.created_at);
+                                const readDate = new Date(otherLastReadAt);
+                                return readDate >= msgDate ? "Visto" : "Enviado";
+                              })()}
+                            </span>
+                          )}
                         </div>
                       );
                     })
@@ -784,7 +813,6 @@ function MessagesContent() {
                             if (chatContainerRef.current) {
                               chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
                             }
-                            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
                           };
                           setTimeout(scrollToEnd, 100);
                           setTimeout(scrollToEnd, 300);
