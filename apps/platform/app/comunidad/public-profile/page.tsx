@@ -327,8 +327,45 @@ function PublicProfileContent() {
                 {/* Action Buttons */}
                 {/* Desktop view action buttons */}
                 <div className="hidden sm:flex flex-row gap-3 w-full">
-                  {!profile.is_own_profile && (
+                  {!profile.is_own_profile ? (
                     <>
+                      {/* Connection Actions (Agregar OR Aceptar + Rechazar) */}
+                      {profile?.connection_status === "pending" && profile?.connection_direction === "incoming" ? (
+                        <>
+                          <Button
+                            onClick={handleConnect}
+                            variant="outline"
+                            disabled={connectionLoading}
+                            className="flex-1 flex items-center justify-center gap-2 font-bold animate-none"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">check</span>
+                            Aceptar
+                          </Button>
+                          <Button
+                            onClick={handleDeclineConnect}
+                            variant="outline"
+                            disabled={connectionLoading}
+                            className="flex-1 flex items-center justify-center gap-2 font-bold animate-none hover:bg-[#FF4B4B]/10 hover:text-[#FF4B4B] hover:border-[#FF4B4B]/30"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">close</span>
+                            Rechazar
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          onClick={handleConnect}
+                          variant="outline"
+                          disabled={connectionLoading}
+                          className="flex-1 flex items-center justify-center gap-2 font-bold animate-none"
+                        >
+                          <span className="material-symbols-outlined text-[20px]">
+                            {profile?.connection_status === "accepted" ? "group" : "person_add"}
+                          </span>
+                          {getConnectionButtonLabel()}
+                        </Button>
+                      )}
+
+                      {/* Message Action */}
                       <Button
                         onClick={handleSendMessage}
                         variant="primary"
@@ -337,29 +374,10 @@ function PublicProfileContent() {
                         <span className="material-symbols-outlined text-[20px]">mail</span>
                         Enviar mensaje
                       </Button>
-                      <Button
-                        onClick={handleConnect}
-                        variant="outline"
-                        disabled={connectionLoading}
-                        className="flex-1 flex items-center justify-center gap-2 font-bold animate-none"
-                      >
-                        <span className="material-symbols-outlined text-[20px]">
-                          {profile?.connection_status === "pending" && profile?.connection_direction === "incoming" ? "check" : "person_add"}
-                        </span>
-                        {getConnectionButtonLabel()}
-                      </Button>
-                      {profile?.connection_status === "pending" && profile?.connection_direction === "incoming" && (
-                        <button
-                          onClick={handleDeclineConnect}
-                          disabled={connectionLoading}
-                          className="w-11 h-11 bg-white border border-slate-200 hover:bg-[#FF4B4B]/10 text-slate-500 hover:text-[#FF4B4B] hover:border-[#FF4B4B]/30 flex items-center justify-center shrink-0 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none font-jakarta"
-                          title="Rechazar solicitud"
-                        >
-                          <span className="material-symbols-outlined text-[20px]">close</span>
-                        </button>
-                      )}
                     </>
-                  )}
+                  ) : null}
+
+                  {/* Share Action */}
                   <Button
                     onClick={handleShareProfile}
                     variant="outline"
@@ -370,10 +388,47 @@ function PublicProfileContent() {
                   </Button>
                 </div>
 
-                {/* Mobile view action buttons (3 in a row, matching the size and colors of desktop buttons) */}
+                {/* Mobile view action buttons (matching the size and colors of desktop buttons) */}
                 <div className="flex sm:hidden flex-row gap-2 w-full items-center">
                   {!profile.is_own_profile ? (
                     <>
+                      {/* Connection Actions (Agregar OR Aceptar + Rechazar) */}
+                      {profile?.connection_status === "pending" && profile?.connection_direction === "incoming" ? (
+                        <>
+                          <Button
+                            onClick={handleConnect}
+                            variant="outline"
+                            disabled={connectionLoading}
+                            className="flex-1 flex items-center justify-center gap-1.5 font-bold text-[13px] h-11 rounded-xl animate-none px-2"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">check</span>
+                            <span className="truncate">Aceptar</span>
+                          </Button>
+                          <Button
+                            onClick={handleDeclineConnect}
+                            variant="outline"
+                            disabled={connectionLoading}
+                            className="flex-1 flex items-center justify-center gap-1.5 font-bold text-[13px] h-11 rounded-xl animate-none px-2 hover:bg-[#FF4B4B]/10 hover:text-[#FF4B4B] hover:border-[#FF4B4B]/30"
+                          >
+                            <span className="material-symbols-outlined text-[20px]">close</span>
+                            <span className="truncate">Rechazar</span>
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          onClick={handleConnect}
+                          variant="outline"
+                          disabled={connectionLoading}
+                          className="flex-[1.2] flex items-center justify-center gap-1.5 font-bold text-[13px] h-11 rounded-xl animate-none px-2"
+                        >
+                          <span className="material-symbols-outlined text-[20px]">
+                            {profile?.connection_status === "accepted" ? "group" : "person_add"}
+                          </span>
+                          <span className="truncate">{getConnectionButtonLabelMobile()}</span>
+                        </Button>
+                      )}
+
+                      {/* Message Action */}
                       <Button
                         onClick={handleSendMessage}
                         variant="primary"
@@ -382,32 +437,10 @@ function PublicProfileContent() {
                         <span className="material-symbols-outlined text-[20px]">mail</span>
                         <span className="truncate">Mensaje</span>
                       </Button>
-                      <Button
-                        onClick={handleConnect}
-                        variant="outline"
-                        disabled={connectionLoading}
-                        className="flex-[1.2] flex items-center justify-center gap-1.5 font-bold text-[13px] h-11 rounded-xl animate-none px-2"
-                      >
-                        <span className="material-symbols-outlined text-[20px]">
-                          {profile?.connection_status === "accepted"
-                            ? "group"
-                            : profile?.connection_status === "pending" && profile?.connection_direction === "incoming"
-                            ? "check"
-                            : "person_add"}
-                        </span>
-                        <span className="truncate">{getConnectionButtonLabelMobile()}</span>
-                      </Button>
-                      {profile?.connection_status === "pending" && profile?.connection_direction === "incoming" && (
-                        <button
-                          onClick={handleDeclineConnect}
-                          disabled={connectionLoading}
-                          className="w-11 h-11 bg-white border border-slate-200 hover:bg-[#FF4B4B]/10 text-slate-500 hover:text-[#FF4B4B] hover:border-[#FF4B4B]/30 flex items-center justify-center shrink-0 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none font-jakarta"
-                        >
-                          <span className="material-symbols-outlined text-[20px]">close</span>
-                        </button>
-                      )}
                     </>
                   ) : null}
+
+                  {/* Share Action */}
                   <button
                     onClick={handleShareProfile}
                     className="w-11 h-11 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none font-jakarta"
