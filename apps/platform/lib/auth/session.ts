@@ -1,5 +1,6 @@
 import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export const SESSION_COOKIE_NAME = "luminus_session";
 
@@ -106,4 +107,29 @@ export function clearSessionCookie() {
 
 export function getCurrentSession() {
   return readSessionToken(cookies().get(SESSION_COOKIE_NAME)?.value);
+}
+
+export async function assertOnboarded() {
+  const session = getCurrentSession();
+  if (!session) {
+    redirect("/auth/iniciar-sesion");
+  }
+
+  let isOnboarded = false;
+  try {
+    const { prisma } = await import("@/lib/db");
+    const profile = await prisma.userProfile.findUnique({
+      where: { userId: session.userId },
+      select: { isOnboarded: true },
+    });
+    isOnboarded = !!profile?.isOnboarded;
+  } catch (error) {
+    console.error("Database check failed in assertOnboarded:", error);
+  }
+
+  if (!isOnboarded) {
+    redirect("/auth/registrarse?onboarding=1");
+  }
+
+  return session;
 }
