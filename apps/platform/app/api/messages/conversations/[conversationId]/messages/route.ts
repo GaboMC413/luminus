@@ -74,8 +74,21 @@ export async function GET(_: Request, { params }: { params: { conversationId: st
       },
     });
 
+    const otherParticipant = await prisma.conversationParticipant.findFirst({
+      where: {
+        conversationId,
+        userId: {
+          not: session.userId,
+        },
+      },
+      select: {
+        lastReadAt: true,
+      },
+    });
+
     return NextResponse.json({
       messages: messages.map(serializeMessage),
+      otherLastReadAt: otherParticipant?.lastReadAt ? otherParticipant.lastReadAt.toISOString() : null,
     });
   } catch (error) {
     console.error("Failed to fetch messages.", error);

@@ -220,6 +220,7 @@ body.mobile-navbar-hidden main {
 }
 
 /* Force layout height to visual viewport on mobile when keyboard is open */
+html.mobile-viewport-height-override,
 body.mobile-viewport-height-override {
   height: var(--visual-viewport-height, 100svh) !important;
   max-height: var(--visual-viewport-height, 100svh) !important;
