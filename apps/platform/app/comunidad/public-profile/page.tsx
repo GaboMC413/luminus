@@ -326,7 +326,7 @@ function PublicProfileContent() {
               <div className="md:col-span-8 flex flex-col gap-4 lg:gap-6">
                 {/* Action Buttons */}
                 {/* Desktop view action buttons */}
-                <div className="hidden sm:flex flex-row gap-3 w-full">
+                <div className="hidden sm:flex flex-row gap-3 w-full items-center">
                   {!profile.is_own_profile ? (
                     <>
                       {/* Connection Actions (Agregar OR Aceptar + Rechazar) */}
@@ -374,25 +374,34 @@ function PublicProfileContent() {
                         <span className="material-symbols-outlined text-[20px]">mail</span>
                         Enviar mensaje
                       </Button>
-                    </>
-                  ) : null}
 
-                  {/* Share Action */}
-                  <Button
-                    onClick={handleShareProfile}
-                    variant="outline"
-                    className="flex-1 flex items-center justify-center gap-2 font-bold animate-none"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">share</span>
-                    Compartir perfil
-                  </Button>
+                      {/* Share Action (Icon only when viewing someone else's profile) */}
+                      <button
+                        onClick={handleShareProfile}
+                        className="w-11 h-11 md:w-12 md:h-12 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none font-jakarta"
+                        title="Compartir perfil"
+                      >
+                        <span className="material-symbols-outlined text-[20px]">share</span>
+                      </button>
+                    </>
+                  ) : (
+                    /* Share Action (Full button when viewing own profile) */
+                    <Button
+                      onClick={handleShareProfile}
+                      variant="outline"
+                      className="flex-1 flex items-center justify-center gap-2 font-bold animate-none"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">share</span>
+                      Compartir perfil
+                    </Button>
+                  )}
                 </div>
 
-                {/* Mobile view action buttons (matching the size and colors of desktop buttons) */}
-                <div className="flex sm:hidden flex-row gap-2 w-full items-center">
-                  {!profile.is_own_profile ? (
-                    <>
-                      {/* Connection Actions (Agregar OR Aceptar + Rechazar) */}
+                {/* Mobile view action buttons (2 lines layout) */}
+                <div className="flex sm:hidden flex-col gap-2.5 w-full">
+                  {/* Line 1: Connection Actions */}
+                  {!profile.is_own_profile && (
+                    <div className="flex flex-row gap-2 w-full">
                       {profile?.connection_status === "pending" && profile?.connection_direction === "incoming" ? (
                         <>
                           <Button
@@ -419,34 +428,40 @@ function PublicProfileContent() {
                           onClick={handleConnect}
                           variant="outline"
                           disabled={connectionLoading}
-                          className="flex-[1.2] flex items-center justify-center gap-1.5 font-bold text-[13px] h-11 rounded-xl animate-none px-2"
+                          className="w-full flex items-center justify-center gap-1.5 font-bold text-[13px] h-11 rounded-xl animate-none"
                         >
                           <span className="material-symbols-outlined text-[20px]">
                             {profile?.connection_status === "accepted" ? "group" : "person_add"}
                           </span>
-                          <span className="truncate">{getConnectionButtonLabelMobile()}</span>
+                          <span>{getConnectionButtonLabelMobile()}</span>
                         </Button>
                       )}
+                    </div>
+                  )}
 
-                      {/* Message Action */}
+                  {/* Line 2: Message & Share Actions */}
+                  <div className="flex flex-row gap-2 w-full items-center">
+                    {!profile.is_own_profile && (
                       <Button
                         onClick={handleSendMessage}
                         variant="primary"
                         className="flex-1 flex items-center justify-center gap-1.5 font-bold text-[13px] h-11 rounded-xl animate-none px-3"
                       >
                         <span className="material-symbols-outlined text-[20px]">mail</span>
-                        <span className="truncate">Mensaje</span>
+                        <span>Mensaje</span>
                       </Button>
-                    </>
-                  ) : null}
-
-                  {/* Share Action */}
-                  <button
-                    onClick={handleShareProfile}
-                    className="w-11 h-11 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none font-jakarta"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">share</span>
-                  </button>
+                    )}
+                    <button
+                      onClick={handleShareProfile}
+                      className={`h-11 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none font-jakarta ${
+                        profile.is_own_profile ? "w-full" : "w-11"
+                      }`}
+                      title="Compartir perfil"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">share</span>
+                      {profile.is_own_profile && <span className="ml-2 font-bold text-[13px]">Compartir perfil</span>}
+                    </button>
+                  </div>
                 </div>
 
                 <ProfileAboutSection
