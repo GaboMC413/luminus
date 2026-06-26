@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
+import { decodeCognitoIdToken } from "@/lib/auth/cognito-password";
 
 export const runtime = "nodejs";
 
@@ -8,8 +9,20 @@ const COGNITO_STATE_COOKIE = "luminus_cognito_oauth_state";
 
 type CognitoTokenResponse = {
   access_token?: string;
+  id_token?: string;
   error?: string;
   error_description?: string;
+};
+
+type CognitoStartState = {
+  state: string;
+  provider?: "Google";
+};
+
+type CognitoIdentityClaim = {
+  providerName?: string;
+  providerType?: string;
+  userId?: string;
 };
 
 type CognitoUserInfo = {
@@ -20,6 +33,17 @@ type CognitoUserInfo = {
   family_name?: string;
   name?: string;
   picture?: string;
+};
+
+type CognitoIdTokenClaims = {
+  sub?: string;
+  email?: string;
+  email_verified?: boolean | string;
+  given_name?: string;
+  family_name?: string;
+  name?: string;
+  picture?: string;
+  identities?: CognitoIdentityClaim[] | string;
 };
 
 function getCognitoClientConfig() {
@@ -70,11 +94,14 @@ async function exchangeCodeForAccessToken(code: string, redirectUri: string) {
 
   const data = (await response.json().catch(() => null)) as CognitoTokenResponse | null;
 
-  if (!response.ok || !data?.access_token) {
+  if (!response.ok || !data?.access_token || !data.id_token) {
     throw new Error(data?.error_description || data?.error || "Cognito token exchange failed.");
   }
 
-  return data.access_token;
+  return {
+    accessToken: data.access_token,
+    idToken: data.id_token,
+  };
 }
 
 async function fetchCognitoUser(accessToken: string) {
@@ -99,12 +126,62 @@ function isEmailVerified(value: CognitoUserInfo["email_verified"]) {
   return value === true || value === "true";
 }
 
+function readStoredState(value?: string): CognitoStartState | null {
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(value) as CognitoStartState;
+    return parsed?.state ? parsed : null;
+  } catch {
+    return { state: value };
+  }
+}
+
+function readIdentities(value: CognitoIdTokenClaims["identities"]) {
+  if (!value) {
+    return [];
+  }
+
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  try {
+    const parsed = JSON.parse(value) as CognitoIdentityClaim[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function getFederatedProvider(claims: CognitoIdTokenClaims, requestedProvider?: CognitoStartState["provider"]) {
+  const identities = readIdentities(claims.identities);
+  const identity = identities.find((entry) => entry.providerName || entry.providerType);
+  const providerName = identity?.providerName || identity?.providerType || requestedProvider;
+
+  if (providerName?.toLowerCase() === "google") {
+    return {
+      authProvider: "google" as const,
+      externalProvider: "google" as const,
+      externalProviderSubject: identity?.userId,
+    };
+  }
+
+  return {
+    authProvider: "email" as const,
+    externalProvider: null,
+    externalProviderSubject: null,
+  };
+}
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
   const state = requestUrl.searchParams.get("state");
   const error = requestUrl.searchParams.get("error");
-  const storedState = cookies().get(COGNITO_STATE_COOKIE)?.value;
+  const storedState = readStoredState(cookies().get(COGNITO_STATE_COOKIE)?.value);
 
   cookies().set(COGNITO_STATE_COOKIE, "", {
     httpOnly: true,
@@ -118,19 +195,26 @@ export async function GET(request: Request) {
     return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito");
   }
 
-  if (!code || !state || !storedState || state !== storedState) {
+  if (!code || !state || !storedState || state !== storedState.state) {
     return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito");
   }
 
   try {
     const redirectUri = `${getPublicOrigin(requestUrl)}/api/auth/cognito/callback`;
-    const accessToken = await exchangeCodeForAccessToken(code, redirectUri);
+    const { accessToken, idToken } = await exchangeCodeForAccessToken(code, redirectUri);
+    const tokenClaims = decodeCognitoIdToken(idToken) as CognitoIdTokenClaims;
+    const federatedProvider = getFederatedProvider(tokenClaims, storedState.provider);
     const cognitoUser = await fetchCognitoUser(accessToken);
-    const email = cognitoUser.email!.trim().toLowerCase();
-    const cognitoSubject = cognitoUser.sub;
-    const firstName = cognitoUser.given_name || "";
-    const lastName = cognitoUser.family_name || "";
-    const fullName = `${firstName} ${lastName}`.trim() || cognitoUser.name || "";
+    const email = (cognitoUser.email || tokenClaims.email || "").trim().toLowerCase();
+    const cognitoSubject = tokenClaims.sub || cognitoUser.sub;
+    const firstName = cognitoUser.given_name || tokenClaims.given_name || "";
+    const lastName = cognitoUser.family_name || tokenClaims.family_name || "";
+    const fullName = `${firstName} ${lastName}`.trim() || cognitoUser.name || tokenClaims.name || "";
+    const avatarUrl = cognitoUser.picture || tokenClaims.picture || undefined;
+
+    if (!email || !cognitoSubject) {
+      throw new Error("Cognito user profile is missing required identifiers.");
+    }
 
     const { prisma } = await import("@/lib/db");
     const existingByIdentity = await prisma.userIdentity.findUnique({
@@ -146,6 +230,21 @@ export async function GET(request: Request) {
         },
       },
     });
+    const existingByExternalIdentity = federatedProvider.externalProvider && federatedProvider.externalProviderSubject
+      ? await prisma.userIdentity.findUnique({
+          where: {
+            provider_providerSubject: {
+              provider: federatedProvider.externalProvider,
+              providerSubject: federatedProvider.externalProviderSubject,
+            },
+          },
+          include: {
+            user: {
+              include: { profile: true },
+            },
+          },
+        })
+      : null;
     const existingByLegacySub = await prisma.user.findUnique({
       where: { cognitoSub: cognitoSubject },
       include: { profile: true },
@@ -155,7 +254,7 @@ export async function GET(request: Request) {
       include: { profile: true },
     });
 
-    const matchingUsers = [existingByIdentity?.user, existingByLegacySub, existingByEmail].filter(Boolean);
+    const matchingUsers = [existingByIdentity?.user, existingByExternalIdentity?.user, existingByLegacySub, existingByEmail].filter(Boolean);
     const matchingUserIds = new Set(matchingUsers.map((user) => user!.id));
 
     if (matchingUserIds.size > 1) {
@@ -163,13 +262,16 @@ export async function GET(request: Request) {
       return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito");
     }
 
-    const existingUser = existingByIdentity?.user || existingByLegacySub || existingByEmail;
+    const existingUser = existingByIdentity?.user || existingByExternalIdentity?.user || existingByLegacySub || existingByEmail;
     const isNewUser = !existingUser;
     const user = existingUser
       ? await prisma.user.update({
           where: { id: existingUser.id },
           data: {
-            authProvider: existingUser.authProvider === "unknown" ? "email" : existingUser.authProvider,
+            cognitoSub: existingUser.cognitoSub || cognitoSubject,
+            authProvider: existingUser.authProvider === "unknown" || existingUser.authProvider === "email"
+              ? federatedProvider.authProvider
+              : existingUser.authProvider,
             emailVerified: isEmailVerified(cognitoUser.email_verified) || existingUser.emailVerified,
             lastLoginAt: new Date(),
             identities: {
@@ -196,13 +298,13 @@ export async function GET(request: Request) {
                   firstName,
                   lastName,
                   fullName,
-                  avatarUrl: cognitoUser.picture || undefined,
+                  avatarUrl,
                 },
                 update: {
                   firstName: existingUser.profile?.firstName || firstName || undefined,
                   lastName: existingUser.profile?.lastName || lastName || undefined,
                   fullName: existingUser.profile?.fullName || fullName || undefined,
-                  avatarUrl: existingUser.profile?.avatarUrl || cognitoUser.picture || undefined,
+                  avatarUrl: existingUser.profile?.avatarUrl || avatarUrl,
                 },
               },
             },
@@ -213,7 +315,7 @@ export async function GET(request: Request) {
           data: {
             email,
             cognitoSub: cognitoSubject,
-            authProvider: "email",
+            authProvider: federatedProvider.authProvider,
             emailVerified: isEmailVerified(cognitoUser.email_verified),
             lastLoginAt: new Date(),
             identities: {
@@ -228,12 +330,33 @@ export async function GET(request: Request) {
                 firstName,
                 lastName,
                 fullName,
-                avatarUrl: cognitoUser.picture || undefined,
+                avatarUrl,
               },
             },
           },
           include: { profile: true },
         });
+
+    if (federatedProvider.externalProvider && federatedProvider.externalProviderSubject) {
+      await prisma.userIdentity.upsert({
+        where: {
+          provider_providerSubject: {
+            provider: federatedProvider.externalProvider,
+            providerSubject: federatedProvider.externalProviderSubject,
+          },
+        },
+        create: {
+          userId: user.id,
+          provider: federatedProvider.externalProvider,
+          providerSubject: federatedProvider.externalProviderSubject,
+          email,
+        },
+        update: {
+          userId: user.id,
+          email,
+        },
+      });
+    }
 
     if (isNewUser) {
       try {

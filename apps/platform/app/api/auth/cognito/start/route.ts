@@ -7,6 +7,11 @@ export const runtime = "nodejs";
 const COGNITO_STATE_COOKIE = "luminus_cognito_oauth_state";
 const COGNITO_SCOPES = ["openid", "email", "profile"];
 
+type CognitoStartState = {
+  state: string;
+  provider?: "Google";
+};
+
 function getPublicOrigin(requestUrl: URL) {
   return (process.env.AUTH_BASE_URL || requestUrl.origin).replace(/\/$/, "");
 }
@@ -28,6 +33,8 @@ export async function GET(request: Request) {
   const clientId = process.env.COGNITO_CLIENT_ID;
   const cognitoDomain = getCognitoDomain();
   const origin = getPublicOrigin(url);
+  const providerParam = url.searchParams.get("provider")?.trim().toLowerCase();
+  const provider = providerParam === "google" ? "Google" : undefined;
 
   if (!clientId || !cognitoDomain) {
     console.error("Cognito OAuth start failed: Cognito domain or client id is not configured.");
@@ -35,9 +42,10 @@ export async function GET(request: Request) {
   }
 
   const state = randomBytes(24).toString("base64url");
+  const statePayload: CognitoStartState = { state, provider };
   const redirectUri = `${origin}/api/auth/cognito/callback`;
 
-  cookies().set(COGNITO_STATE_COOKIE, state, {
+  cookies().set(COGNITO_STATE_COOKIE, JSON.stringify(statePayload), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -51,6 +59,9 @@ export async function GET(request: Request) {
   cognitoUrl.searchParams.set("response_type", "code");
   cognitoUrl.searchParams.set("scope", COGNITO_SCOPES.join(" "));
   cognitoUrl.searchParams.set("state", state);
+  if (provider) {
+    cognitoUrl.searchParams.set("identity_provider", provider);
+  }
 
   return NextResponse.redirect(cognitoUrl);
 }

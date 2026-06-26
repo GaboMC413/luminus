@@ -186,7 +186,7 @@ export default function SignUpView() {
   };
 
   const handleGoogleSignUp = () => {
-    window.location.href = "/api/auth/google/start";
+    window.location.href = "/api/auth/cognito/start?provider=google";
   };
 
   const isRegistration = step > 1;
