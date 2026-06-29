@@ -264,6 +264,11 @@ export async function GET(request: Request) {
 
     const existingUser = existingByIdentity?.user || existingByExternalIdentity?.user || existingByLegacySub || existingByEmail;
     const isNewUser = !existingUser;
+
+    if (existingUser && existingUser.status !== "active") {
+      return redirectTo(requestUrl, "/auth/iniciar-sesion?error=account_disabled");
+    }
+
     const user = existingUser
       ? await prisma.user.update({
           where: { id: existingUser.id },

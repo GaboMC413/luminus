@@ -52,6 +52,11 @@ export default function SignInView() {
         text: "No pudimos iniciar sesion con Google. Intenta nuevamente.",
         type: "error",
       });
+    } else if (params.get("error") === "account_disabled") {
+      setMessage({
+        text: "Tu cuenta no esta activa. Contacta al equipo de LUMINUS para revisarla.",
+        type: "error",
+      });
     }
   }, []);
 

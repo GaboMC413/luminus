@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { listAdminUsers, normalizeAdminUserPatch, serializeAdminUser } from "@/lib/admin/users";
+import { syncCognitoUserStatus } from "@/lib/auth/cognito-admin";
 
 export const runtime = "nodejs";
 
@@ -64,6 +65,24 @@ export async function PATCH(request: Request) {
 
   try {
     const { prisma } = await import("@/lib/db");
+
+    if (parsed.userData.status) {
+      const existingUser = await prisma.user.findUnique({
+        where: { id: parsed.id },
+        include: {
+          identities: true,
+        },
+      });
+
+      if (!existingUser) {
+        return NextResponse.json({ message: "Usuario no encontrado." }, { status: 404 });
+      }
+
+      if (existingUser.status !== parsed.userData.status) {
+        await syncCognitoUserStatus(existingUser, parsed.userData.status);
+      }
+    }
+
     const user = await prisma.user.update({
       where: { id: parsed.id },
       data: {

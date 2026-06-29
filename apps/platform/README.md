@@ -23,6 +23,9 @@ COGNITO_DOMAIN="your-domain.auth.us-east-1.amazoncognito.com"
 COGNITO_REGION="us-east-1"
 COGNITO_CLIENT_ID="COGNITO_APP_CLIENT_ID"
 COGNITO_CLIENT_SECRET="COGNITO_APP_CLIENT_SECRET"
+COGNITO_USER_POOL_ID="COGNITO_USER_POOL_ID"
+COGNITO_ADMIN_ACCESS_KEY_ID="IAM_ACCESS_KEY_ID"
+COGNITO_ADMIN_SECRET_ACCESS_KEY="IAM_SECRET_ACCESS_KEY"
 ```
 
 Use `apps/platform/.env.example` as the template.
@@ -84,6 +87,9 @@ Configure these environment variables in Amplify and locally:
 - `COGNITO_REGION`
 - `COGNITO_CLIENT_ID`
 - `COGNITO_CLIENT_SECRET`
+- `COGNITO_USER_POOL_ID`
+- `COGNITO_ADMIN_ACCESS_KEY_ID`
+- `COGNITO_ADMIN_SECRET_ACCESS_KEY`
 - `AUTH_BASE_URL`
 
 `COGNITO_DOMAIN` may be stored with or without `https://`. `COGNITO_CLIENT_SECRET` can be empty when the Cognito app client has no secret.
@@ -100,3 +106,11 @@ Add each deployed environment callback URL to the Cognito app client:
 If `admin.luminuslatam.com` uses the same login flow directly, add:
 
 - `https://admin.luminuslatam.com/api/auth/cognito/callback`
+
+Admin user status changes are synchronized with Cognito:
+
+- `active` enables the Cognito user.
+- `disabled` disables the Cognito user.
+- `deleted` deletes the Cognito user and keeps the local Luminus record as `deleted` for audit/history.
+
+Use an IAM user or role with least-privilege permissions for `cognito-idp:AdminEnableUser`, `cognito-idp:AdminDisableUser`, and `cognito-idp:AdminDeleteUser` on the Luminus user pool. Amplify environment variables must use the `COGNITO_ADMIN_*` credential names because `AWS_*` prefixes are reserved by Amplify.
