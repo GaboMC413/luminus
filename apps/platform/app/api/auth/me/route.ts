@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCurrentSession } from "@/lib/auth/session";
+import { clearSessionCookie, getCurrentSession } from "@/lib/auth/session";
 import { serializeUser } from "@/lib/auth/validation";
 
 export const runtime = "nodejs";
@@ -19,6 +19,11 @@ export async function GET() {
     });
 
     if (!user) {
+      return NextResponse.json({ user: null }, { status: 401 });
+    }
+
+    if (user.status !== "active") {
+      clearSessionCookie();
       return NextResponse.json({ user: null }, { status: 401 });
     }
 

@@ -43,6 +43,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (user.status !== "active") {
+      return NextResponse.json(
+        { message: "Tu cuenta no esta activa. Contacta al equipo de LUMINUS para revisarla." },
+        { status: 403 },
+      );
+    }
+
     const fullName = `${cognitoSession.profile.givenName} ${cognitoSession.profile.familyName}`.trim() || cognitoSession.profile.name;
     const updatedUser = await prisma.user.update({
       where: { id: user.id },
