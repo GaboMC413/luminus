@@ -25,6 +25,28 @@ function requireAdmin() {
   return { ok: true as const, session };
 }
 
+function describeAdminUpdateError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return "No se pudo actualizar el usuario.";
+  }
+
+  if (error.message.includes("COGNITO_USER_POOL_ID")) {
+    return "Falta configurar COGNITO_USER_POOL_ID en el servidor.";
+  }
+
+  const errorName = error.name || "Error";
+
+  if (["AccessDeniedException", "NotAuthorizedException", "InvalidSignatureException"].includes(errorName)) {
+    return `Cognito rechazo la operacion: ${errorName}. Revisa credenciales IAM y permisos.`;
+  }
+
+  if (["ResourceNotFoundException", "UserNotFoundException"].includes(errorName)) {
+    return `Cognito no encontro el recurso o usuario: ${errorName}. Revisa User Pool ID y vinculo del usuario.`;
+  }
+
+  return `No se pudo actualizar el usuario. Detalle: ${errorName}.`;
+}
+
 export async function GET(request: Request) {
   const admin = requireAdmin();
 
@@ -114,6 +136,6 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ user: serializeAdminUser(user) });
   } catch (error) {
     console.error("Failed to update admin user.", error);
-    return NextResponse.json({ message: "No se pudo actualizar el usuario." }, { status: 500 });
+    return NextResponse.json({ message: describeAdminUpdateError(error) }, { status: 500 });
   }
 }
