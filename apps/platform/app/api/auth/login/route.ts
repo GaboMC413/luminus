@@ -19,7 +19,15 @@ export async function POST(request: Request) {
 
     const existingLocalUser = await prisma.user.findUnique({
       where: { email: normalizedEmail },
-      select: { status: true },
+      select: {
+        status: true,
+        cognitoSub: true,
+        identities: {
+          where: { provider: "cognito" },
+          select: { providerSubject: true },
+          take: 1,
+        },
+      },
     });
 
     if (existingLocalUser && existingLocalUser.status !== "active") {
@@ -29,7 +37,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const cognitoSession = await signInWithCognito(validation.email, validation.password);
+    const cognitoUsername = existingLocalUser?.identities[0]?.providerSubject || existingLocalUser?.cognitoSub;
+    const cognitoSession = await signInWithCognito(validation.email, validation.password, cognitoUsername);
 
     const existingByIdentity = await prisma.userIdentity.findUnique({
       where: {

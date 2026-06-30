@@ -137,20 +137,40 @@ export async function signUpWithCognito(email: string, password: string) {
   };
 }
 
-export async function signInWithCognito(email: string, password: string) {
+async function initiatePasswordAuth(username: string, password: string) {
   const { clientId, clientSecret } = getCognitoClientConfig();
-  const normalizedEmail = email.trim().toLowerCase();
-  const secretHash = getSecretHash(normalizedEmail, clientId, clientSecret);
+  const secretHash = getSecretHash(username, clientId, clientSecret);
 
-  const response = await cognitoRequest<CognitoAuthResponse>("InitiateAuth", {
+  return cognitoRequest<CognitoAuthResponse>("InitiateAuth", {
     AuthFlow: "USER_PASSWORD_AUTH",
     ClientId: clientId,
     AuthParameters: {
-      USERNAME: normalizedEmail,
+      USERNAME: username,
       PASSWORD: password,
       ...(secretHash ? { SECRET_HASH: secretHash } : {}),
     },
   });
+}
+
+function shouldRetryWithCognitoUsername(error: unknown) {
+  const code = (error as CognitoError).code;
+  return code === "NotAuthorizedException" || code === "UserNotFoundException";
+}
+
+export async function signInWithCognito(email: string, password: string, cognitoUsername?: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const fallbackUsername = cognitoUsername?.trim();
+  let response: CognitoAuthResponse;
+
+  try {
+    response = await initiatePasswordAuth(normalizedEmail, password);
+  } catch (error) {
+    if (!fallbackUsername || fallbackUsername === normalizedEmail || !shouldRetryWithCognitoUsername(error)) {
+      throw error;
+    }
+
+    response = await initiatePasswordAuth(fallbackUsername, password);
+  }
 
   if (response.ChallengeName) {
     throw makeCognitoError("Cognito requires an additional authentication challenge.", response.ChallengeName, 401);
