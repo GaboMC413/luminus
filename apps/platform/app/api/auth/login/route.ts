@@ -14,8 +14,22 @@ export async function POST(request: Request) {
   }
 
   try {
-    const cognitoSession = await signInWithCognito(validation.email, validation.password);
     const { prisma } = await import("@/lib/db");
+    const normalizedEmail = validation.email.trim().toLowerCase();
+
+    const existingLocalUser = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      select: { status: true },
+    });
+
+    if (existingLocalUser && existingLocalUser.status !== "active") {
+      return NextResponse.json(
+        { message: "Tu cuenta no esta activa. Contacta al equipo de LUMINUS para revisarla." },
+        { status: 403 },
+      );
+    }
+
+    const cognitoSession = await signInWithCognito(validation.email, validation.password);
 
     const existingByIdentity = await prisma.userIdentity.findUnique({
       where: {
