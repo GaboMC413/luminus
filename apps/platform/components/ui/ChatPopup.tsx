@@ -442,7 +442,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
       {/* Header */}
       <div
         onClick={handleHeaderClick}
-        className={`h-[60px] px-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white select-none transition-colors duration-200 ${
+        className={`h-[60px] px-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white select-none transition-colors duration-200 touch-none ${
           isMinimized ? "cursor-pointer hover:bg-slate-50" : ""
         }`}
       >
@@ -541,7 +541,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
       </div>
 
       {/* Message Body */}
-      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3 custom-scrollbar flex flex-col gap-4 bg-white">
+      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3 custom-scrollbar flex flex-col gap-4 bg-white overscroll-contain">
         {messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-4 animate-in fade-in duration-300">
             <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 mb-4">
@@ -599,7 +599,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
       </div>
 
       {/* Input Footer */}
-      <div className="p-3 bg-white border-t border-slate-100 shrink-0">
+      <div className="p-3 bg-white border-t border-slate-100 shrink-0 touch-none">
         <div className="flex items-center w-full">
           <div className="flex-1 relative flex items-end">
             <textarea
@@ -619,7 +619,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
               }}
               placeholder="Escribe un mensaje..."
               rows={1}
-              className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-[14px] focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-28 custom-scrollbar block text-slate-800"
+              className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-[14px] focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-28 custom-scrollbar block text-slate-800 touch-auto overscroll-contain"
               onInput={(e) => {
                 const target = e.target as HTMLTextAreaElement;
                 target.style.height = "auto";
@@ -632,7 +632,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                 inputText.trim()
                   ? "text-slate-800"
                   : "text-slate-400"
-              } bg-slate-100 hover:bg-black hover:text-white cursor-pointer hover:scale-105 active:scale-95`}
+              } bg-slate-100 hover:bg-black hover:text-white cursor-pointer hover:scale-105 active:scale-95 touch-manipulation`}
             >
               <span className="material-symbols-outlined text-[18px] ml-0.5">send</span>
             </button>
