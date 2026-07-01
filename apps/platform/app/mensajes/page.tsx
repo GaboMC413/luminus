@@ -597,7 +597,7 @@ function MessagesContent() {
                   : "rounded-2xl border border-slate-200"
               } ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
                 {/* Skeleton Header */}
-                <div className={`border-b border-slate-100 flex items-center gap-3 bg-white shrink-0 ${
+                <div className={`border-b border-slate-100 flex items-center gap-3 bg-white shrink-0 touch-none ${
                   mobileView === "chat" ? "py-2 px-3 md:p-3" : "p-3"
                 }`}>
                   <button
@@ -624,7 +624,7 @@ function MessagesContent() {
                 </div>
 
                 {/* Skeleton Body */}
-                <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-4 bg-white">
+                <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-4 bg-white overscroll-contain">
                   <div className="flex flex-col items-start gap-1">
                     <div className="w-[50%] h-10 bg-slate-50 rounded-xl rounded-tl-none animate-pulse" />
                   </div>
@@ -637,7 +637,7 @@ function MessagesContent() {
                 </div>
 
                 {/* Skeleton Footer */}
-                <div className="p-3 border-t border-slate-100 bg-white shrink-0">
+                <div className="p-3 border-t border-slate-100 bg-white shrink-0 touch-none">
                   <div className="h-12 w-full bg-slate-50 rounded-[24px] animate-pulse" />
                 </div>
               </div>
@@ -663,7 +663,7 @@ function MessagesContent() {
                   ? "rounded-none border-none"
                   : "rounded-2xl border border-slate-200"
               } ${mobileView === 'chat' ? 'flex' : 'hidden md:flex'}`}>
-                <div className={`border-b border-slate-100 flex items-center justify-between bg-white z-10 shrink-0 gap-4 ${
+                <div className={`border-b border-slate-100 flex items-center justify-between bg-white z-10 shrink-0 gap-4 touch-none ${
                   mobileView === "chat" ? "py-2 px-3 md:p-3" : "p-3"
                 }`}>
                   <div className="flex items-center gap-3 min-w-0">
@@ -746,7 +746,7 @@ function MessagesContent() {
                   )}
                 </div>
 
-                <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3 thin-scrollbar flex flex-col gap-0.5 bg-white">
+                <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3 thin-scrollbar flex flex-col gap-0.5 bg-white overscroll-contain">
                   {messages.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                       <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 mb-3">
@@ -799,7 +799,7 @@ function MessagesContent() {
                   <div ref={messagesEndRef} />
                 </div>
 
-                <div className="p-3 bg-white shrink-0 border-t border-slate-100">
+                <div className="p-3 bg-white shrink-0 border-t border-slate-100 touch-none">
                   <div className="flex items-center w-full">
                     <div className="flex-1 relative flex items-end">
                       <textarea
@@ -821,7 +821,7 @@ function MessagesContent() {
                         onBlur={() => {}}
                         placeholder="Escribe un mensaje..."
                         rows={1}
-                        className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-sm focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-32 custom-scrollbar block text-slate-800"
+                        className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-sm focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-32 custom-scrollbar block text-slate-800 touch-auto"
                         onInput={(event) => {
                           const target = event.target as HTMLTextAreaElement;
                           target.style.height = "auto";
@@ -834,7 +834,7 @@ function MessagesContent() {
                           inputText.trim() && !isSending
                             ? "text-slate-800"
                             : "text-slate-400"
-                        } bg-slate-100 hover:bg-black hover:text-white cursor-pointer hover:scale-105 active:scale-95`}
+                        } bg-slate-100 hover:bg-black hover:text-white cursor-pointer hover:scale-105 active:scale-95 touch-manipulation`}
                         disabled={isSending}
                       >
                         <span className="material-symbols-rounded text-[18px] ml-0.5">send</span>
