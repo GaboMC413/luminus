@@ -619,7 +619,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
               }}
               placeholder="Escribe un mensaje..."
               rows={1}
-              className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-[14px] focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-28 custom-scrollbar block text-slate-800 touch-auto"
+              className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-[14px] focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-28 custom-scrollbar block text-slate-800 touch-auto overscroll-contain"
               onInput={(e) => {
                 const target = e.target as HTMLTextAreaElement;
                 target.style.height = "auto";

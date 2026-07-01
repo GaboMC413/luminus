@@ -821,7 +821,7 @@ function MessagesContent() {
                         onBlur={() => {}}
                         placeholder="Escribe un mensaje..."
                         rows={1}
-                        className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-sm focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-32 custom-scrollbar block text-slate-800 touch-auto"
+                        className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-sm focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-32 custom-scrollbar block text-slate-800 touch-auto overscroll-contain"
                         onInput={(event) => {
                           const target = event.target as HTMLTextAreaElement;
                           target.style.height = "auto";
