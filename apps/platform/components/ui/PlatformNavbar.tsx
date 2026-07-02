@@ -375,19 +375,30 @@ export function PlatformNavbar() {
   const activeTab = getActiveTab();
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    setIsProfileDropdownOpen(false);
+    setIsNotificationOpen(false);
+    setIsMessagesOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: Event) => {
+      const target = event.target as Node;
+      if (dropdownRef.current && !dropdownRef.current.contains(target)) {
         setIsProfileDropdownOpen(false);
       }
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+      if (notificationRef.current && !notificationRef.current.contains(target)) {
         setIsNotificationOpen(false);
       }
-      if (messagesRef.current && !messagesRef.current.contains(event.target as Node)) {
+      if (messagesRef.current && !messagesRef.current.contains(target)) {
         setIsMessagesOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
   }, []);
 
   const markNotificationRead = async (id: string) => {
