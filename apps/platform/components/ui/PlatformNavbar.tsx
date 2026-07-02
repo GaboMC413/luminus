@@ -242,10 +242,10 @@ export function PlatformNavbar() {
     })));
   }
 
-  // Sync real chats with localStorage for dynamic notification count & list
+  // Sync real chats for dynamic notification count & list
   useEffect(() => {
     const loadChats = async () => {
-      // 1. Fetch conversations from database
+      // Fetch conversations from database
       let dbMessages: any[] = [];
       try {
         const response = await fetch("/api/messages/conversations", {
@@ -273,62 +273,13 @@ export function PlatformNavbar() {
         console.error("Error fetching database conversations in navbar:", err);
       }
 
-      // 2. Fetch conversations from localStorage (for floating popup chats)
-      let localMessages: any[] = [];
-      const localChats = localStorage.getItem("luminus_chats");
-      if (localChats) {
-        try {
-          const chats = JSON.parse(localChats);
-          if (Array.isArray(chats)) {
-            // Filter out historical mock users (IDs "1", "2", or "mock-user-") and empty chats from navbar list
-            const realChats = chats.filter((c: any) => {
-              const idStr = String(c.id);
-              const isMock = idStr === "1" || idStr === "2" || idStr.startsWith("mock-user-");
-              const hasMessages = c.messages && c.messages.length > 0;
-              return !isMock && hasMessages;
-            });
-
-            localMessages = realChats.map((chat: any) => {
-              const lastMsgObj = chat.messages?.[chat.messages.length - 1];
-              const timestamp = lastMsgObj ? lastMsgObj.id : Date.now();
-              return {
-                id: chat.id,
-                avatar: chat.avatar,
-                title: "Mensaje nuevo",
-                user: chat.name,
-                action: chat.lastMessage || "Sin mensajes aún",
-                date: formatRelativeTime(timestamp),
-                isUnread: lastMsgObj ? lastMsgObj.sender !== "me" : false,
-              };
-            });
-          }
-        } catch (err) {
-          console.error("Error loading navbar chats from localStorage:", err);
-        }
-      }
-
-      // Combine both lists, avoiding duplicate users
-      const combined: any[] = [...dbMessages];
-      localMessages.forEach((localMsg) => {
-        const exists = combined.some((m) => 
-          (m.participantId && String(m.participantId) === String(localMsg.id)) ||
-          (String(m.id) === String(localMsg.id)) ||
-          (m.user.trim().toLowerCase() === localMsg.user.trim().toLowerCase())
-        );
-        if (!exists) {
-          combined.push(localMsg);
-        }
-      });
-
-      setMessages(combined);
+      setMessages(dbMessages);
     };
 
     loadChats();
-    window.addEventListener("storage", loadChats);
     window.addEventListener("luminus_messages_update", loadChats);
-    const interval = setInterval(loadChats, 10000);
+    const interval = setInterval(loadChats, 30000);
     return () => {
-      window.removeEventListener("storage", loadChats);
       window.removeEventListener("luminus_messages_update", loadChats);
       clearInterval(interval);
     };

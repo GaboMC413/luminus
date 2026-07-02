@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { isUuid } from "@/utils/validation";
+import { isRateLimited, RATE_LIMITS } from "@/utils/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function isUuid(value: unknown) {
-  return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-}
 
 export async function DELETE(
   _: Request,
@@ -17,6 +15,16 @@ export async function DELETE(
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+  }
+
+  const rateLimitResult = isRateLimited(
+    session.userId,
+    "DELETE_CONVERSATION",
+    RATE_LIMITS.DELETE_CONVERSATION.limit,
+    RATE_LIMITS.DELETE_CONVERSATION.windowMs
+  );
+  if (rateLimitResult.success) {
+    return NextResponse.json({ message: "Demasiadas solicitudes. Intentalo de nuevo mas tarde." }, { status: 429 });
   }
 
   if (!isUuid(conversationId)) {
@@ -40,10 +48,16 @@ export async function DELETE(
       return NextResponse.json({ message: "Conversacion no encontrada." }, { status: 404 });
     }
 
-    // Delete the conversation (this will cascade delete all messages and participants)
-    await prisma.conversation.delete({
+    // Soft delete for the current user by updating their participant deletedAt timestamp
+    await prisma.conversationParticipant.update({
       where: {
-        id: conversationId,
+        conversationId_userId: {
+          conversationId,
+          userId: session.userId,
+        },
+      },
+      data: {
+        deletedAt: new Date(),
       },
     });
 

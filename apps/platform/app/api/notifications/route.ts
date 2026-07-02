@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { getOnboardingQuests } from "@/lib/onboarding";
+import { isUuid } from "@/utils/validation";
 
 export const runtime = "nodejs";
-
-function isUuid(value: unknown) {
-  return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-}
 
 function serializeNotification(notification: any) {
   let title = notification.title || "";

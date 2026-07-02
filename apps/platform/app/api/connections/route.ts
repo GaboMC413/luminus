@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { isUuid } from "@/utils/validation";
 
 export const runtime = "nodejs";
-
-function isUuid(value: string) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-}
 
 function serializeConnection(connection: any, currentUserId: string) {
   const otherUser =
@@ -100,6 +97,59 @@ export async function POST(request: Request) {
     });
 
     if (existingConnection) {
+      if (existingConnection.status === "declined") {
+        const updated = await prisma.userConnection.update({
+          where: { id: existingConnection.id },
+          data: {
+            requesterId: session.userId,
+            recipientId,
+            status: "pending",
+            updatedAt: new Date(),
+          },
+        });
+
+        try {
+          const requesterProfile = await prisma.userProfile.findUnique({
+            where: { userId: session.userId },
+            select: { firstName: true, lastName: true, fullName: true, avatarUrl: true },
+          });
+          const requesterName = requesterProfile?.fullName || `${requesterProfile?.firstName || ""} ${requesterProfile?.lastName || ""}`.trim() || "Un usuario";
+          const requesterAvatar = requesterProfile?.avatarUrl || "";
+
+          await prisma.notification.deleteMany({
+            where: {
+              userId: recipientId,
+              type: "connection_request",
+              actionUrl: `/comunidad/public-profile?id=${session.userId}`
+            }
+          });
+
+          await prisma.notification.create({
+            data: {
+              userId: recipientId,
+              type: "connection_request",
+              title: "Nueva solicitud",
+              actorName: requesterName,
+              actorAvatarUrl: requesterAvatar,
+              body: "quiere agregarte a su red.",
+              actionUrl: `/comunidad/public-profile?id=${session.userId}`,
+            },
+          });
+        } catch (notifError) {
+          console.error("Failed to create connection request notification:", notifError);
+        }
+
+        return NextResponse.json({
+          success: true,
+          connection: {
+            id: updated.id,
+            status: updated.status,
+            direction: "outgoing",
+          },
+          message: "Solicitud de conexion enviada.",
+        });
+      }
+
       return NextResponse.json({
         success: true,
         connection: {
@@ -315,9 +365,16 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ message: "No existe ninguna conexión activa o pendiente." }, { status: 404 });
     }
 
-    await prisma.userConnection.delete({
-      where: { id: connection.id },
-    });
+    if (connection.status === "pending") {
+      await prisma.userConnection.update({
+        where: { id: connection.id },
+        data: { status: "declined" },
+      });
+    } else {
+      await prisma.userConnection.delete({
+        where: { id: connection.id },
+      });
+    }
 
     // Delete any pending connection_request notifications between these two users
     try {

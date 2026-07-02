@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { isUuid } from "@/utils/validation";
+import { formatMessageBody, formatShortTime } from "@/utils/messages";
 
 interface Message {
   id: string | number;
@@ -29,91 +31,6 @@ interface ChatPopupProps {
   onClose: () => void;
 }
 
-function formatMessageBody(text: string): React.ReactNode[] {
-  if (!text) return [];
-
-  // Regex to match Markdown links: [Text](URL)
-  const markdownLinkRegex = /(\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g;
-  
-  const parts = text.split(markdownLinkRegex);
-
-  return parts.map((part, index) => {
-    // Check if the part matches the markdown link pattern
-    if (part.startsWith('[') && part.includes('](')) {
-      const match = part.match(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/);
-      if (match) {
-        const [, linkText, url] = match;
-        return (
-          <a
-            key={index}
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:opacity-80 transition-opacity font-semibold break-all"
-          >
-            {linkText}
-          </a>
-        );
-      }
-    }
-
-    // Otherwise, parse standard URLs, bold (*) and italics (_)
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const subParts = part.split(urlRegex);
-
-    return (
-      <React.Fragment key={index}>
-        {subParts.map((subPart, subIndex) => {
-          if (subPart.match(urlRegex)) {
-            return (
-              <a
-                key={subIndex}
-                href={subPart}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:opacity-80 transition-opacity font-semibold break-all"
-              >
-                {subPart}
-              </a>
-            );
-          }
-
-          const boldRegex = /\*([^*]+)\*/g;
-          const boldParts = subPart.split(boldRegex);
-
-          return (
-            <React.Fragment key={subIndex}>
-              {boldParts.map((boldPart, boldIndex) => {
-                if (boldIndex % 2 === 1) {
-                  return <strong key={boldIndex} className="font-semibold">{boldPart}</strong>;
-                }
-
-                const italicRegex = /_([^_]+)_/g;
-                const italicParts = boldPart.split(italicRegex);
-
-                return (
-                  <React.Fragment key={boldIndex}>
-                    {italicParts.map((italicPart, italicIndex) => {
-                      if (italicIndex % 2 === 1) {
-                        return <em key={italicIndex} className="italic">{italicPart}</em>;
-                      }
-                      return italicPart;
-                    })}
-                  </React.Fragment>
-                );
-              })}
-            </React.Fragment>
-          );
-        })}
-      </React.Fragment>
-    );
-  });
-}
-
-function isUuid(value: string | null) {
-  return Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value));
-}
-
 export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -122,7 +39,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [dbConversationId, setDbConversationId] = useState<string | null>(null);
-  const [isDbChat, setIsDbChat] = useState(false);
+  const [connection, setConnection] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -212,75 +129,60 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
     };
   }, []);
 
-  // Load conversation on mount (hybrid db / localstorage support)
+  // Load conversation on mount
   useEffect(() => {
-    if (!userId) return;
-
-    const isDb = isUuid(userId);
-    setIsDbChat(isDb);
+    setConnection(null);
+    if (!userId || !isUuid(userId)) return;
 
     let pollInterval: NodeJS.Timeout | null = null;
 
-    if (isDb) {
-      const loadDbChat = async () => {
-        try {
-          const convRes = await fetch("/api/messages/conversations", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ recipientId: userId }),
-          });
+    const loadDbChat = async () => {
+      try {
+        const convRes = await fetch("/api/messages/conversations", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-timezone-offset": new Date().getTimezoneOffset().toString(),
+          },
+          body: JSON.stringify({ recipientId: userId }),
+        });
 
-          if (!convRes.ok) {
-            console.error("Failed to load/create DB conversation");
-            return;
-          }
-
-          const convData = await convRes.json();
-          const convId = convData.conversation.id;
-          setDbConversationId(convId);
-
-          const msgRes = await fetch(`/api/messages/conversations/${convId}/messages`, {
-            cache: "no-store",
-          });
-
-          if (!msgRes.ok) {
-            console.error("Failed to fetch DB messages");
-            return;
-          }
-
-          const msgData = await msgRes.json();
-          setOtherLastReadAt(msgData.otherLastReadAt || null);
-          const dbMsgs = (msgData.messages || []).map((m: any) => ({
-            id: m.id,
-            text: m.body,
-            sender: m.sender_id === userId ? "other" : "me",
-            createdAt: m.created_at,
-            time: new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          }));
-          setMessages(dbMsgs);
-        } catch (err) {
-          console.error("Error loading DB chat inside popup:", err);
+        if (!convRes.ok) {
+          console.error("Failed to load/create DB conversation");
+          return;
         }
-      }
-      loadDbChat();
-      pollInterval = setInterval(loadDbChat, 5000);
-    } else {
-      setOtherLastReadAt(null);
-      const localChats = localStorage.getItem("luminus_chats");
-      if (localChats) {
-        try {
-          const chats: Conversation[] = JSON.parse(localChats);
-          const currentChat = chats.find((c) => String(c.id) === String(userId));
-          if (currentChat) {
-            setMessages(currentChat.messages || []);
-          }
-        } catch (err) {
-          console.error("Error loading chat from localStorage:", err);
+
+        const convData = await convRes.json();
+        const convId = convData.conversation.id;
+        setDbConversationId(convId);
+
+        const msgRes = await fetch(`/api/messages/conversations/${convId}/messages`, {
+          cache: "no-store",
+        });
+
+        if (!msgRes.ok) {
+          console.error("Failed to fetch DB messages");
+          return;
         }
+
+        const msgData = await msgRes.json();
+        setOtherLastReadAt(msgData.otherLastReadAt || null);
+        setConnection(msgData.connection || null);
+        const dbMsgs = (msgData.messages || []).map((m: any) => ({
+          id: m.id,
+          text: m.body,
+          sender: m.sender_id === userId ? "other" : "me",
+          createdAt: m.created_at,
+          time: formatShortTime(m.created_at),
+        }));
+        setMessages(dbMsgs);
+      } catch (err) {
+        console.error("Error loading DB chat inside popup:", err);
       }
-    }
+    };
+
+    loadDbChat();
+    pollInterval = setInterval(loadDbChat, 5000);
 
     return () => {
       if (pollInterval) {
@@ -302,95 +204,42 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
   }, []);
 
   const handleSend = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || !dbConversationId) return;
 
     const bodyText = inputText.trim();
 
-    if (isDbChat && dbConversationId) {
-      try {
-        const response = await fetch(`/api/messages/conversations/${dbConversationId}/messages`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ body: bodyText }),
-        });
+    try {
+      const response = await fetch(`/api/messages/conversations/${dbConversationId}/messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ body: bodyText }),
+      });
 
-        if (!response.ok) {
-          console.error("Failed to send DB message");
-          return;
-        }
-
-        const data = await response.json();
-        const newMessage: Message = {
-          id: data.message.id,
-          text: data.message.body,
-          sender: "me",
-          createdAt: data.message.created_at,
-          time: new Date(data.message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        };
-
-        setMessages((prev) => [...prev, newMessage]);
-        setInputText("");
-        if (textareaRef.current) {
-          textareaRef.current.style.height = "auto";
-        }
-        
-        window.dispatchEvent(new Event("storage"));
-      } catch (err) {
-        console.error("Error sending DB message inside popup:", err);
+      if (!response.ok) {
+        console.error("Failed to send DB message");
+        return;
       }
-    } else {
+
+      const data = await response.json();
       const newMessage: Message = {
-        id: Date.now(),
-        text: bodyText,
+        id: data.message.id,
+        text: data.message.body,
         sender: "me",
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        createdAt: data.message.created_at,
+        time: new Date(data.message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
 
-      const updatedMessages = [...messages, newMessage];
-      setMessages(updatedMessages);
+      setMessages((prev) => [...prev, newMessage]);
       setInputText("");
-
       if (textareaRef.current) {
         textareaRef.current.style.height = "auto";
       }
-
-      const localChats = localStorage.getItem("luminus_chats");
-      let chats: Conversation[] = [];
-
-      if (localChats) {
-        try {
-          chats = JSON.parse(localChats);
-        } catch (err) {
-          console.error("Error parsing chats in save:", err);
-        }
-      }
-
-      const chatIdx = chats.findIndex((c) => String(c.id) === String(userId));
-      const nowTime = "Ahora mismo";
-
-      if (chatIdx > -1) {
-        chats[chatIdx] = {
-          ...chats[chatIdx],
-          lastMessage: newMessage.text,
-          time: nowTime,
-          messages: updatedMessages,
-        };
-      } else {
-        chats.push({
-          id: userId,
-          name,
-          avatar,
-          lastMessage: newMessage.text,
-          time: nowTime,
-          isOnline: true,
-          messages: updatedMessages,
-        });
-      }
-
-      localStorage.setItem("luminus_chats", JSON.stringify(chats));
-      window.dispatchEvent(new Event("storage"));
+      
+      window.dispatchEvent(new Event("luminus_messages_update"));
+    } catch (err) {
+      console.error("Error sending DB message inside popup:", err);
     }
   };
 
@@ -401,21 +250,69 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
     }
   };
 
-  const handleDeleteChat = () => {
-    const localChats = localStorage.getItem("luminus_chats");
-    if (localChats) {
+  const handleDeleteChat = async () => {
+    if (dbConversationId) {
       try {
-        const chats: Conversation[] = JSON.parse(localChats);
-        const remaining = chats.filter((c) => String(c.id) !== String(userId));
-        localStorage.setItem("luminus_chats", JSON.stringify(remaining));
-        // Dispatch storage event
-        window.dispatchEvent(new Event("storage"));
+        await fetch(`/api/messages/conversations/${dbConversationId}`, {
+          method: "DELETE",
+        });
+        window.dispatchEvent(new Event("luminus_messages_update"));
       } catch (err) {
-        console.error("Error deleting chat from localStorage:", err);
+        console.error("Error deleting conversation:", err);
       }
     }
     setIsMenuOpen(false);
     onClose();
+  };
+
+  const handleAcceptConnection = async () => {
+    try {
+      const res = await fetch("/api/connections", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ recipientId: userId }),
+      });
+      if (res.ok) {
+        setConnection((prev: any) => prev ? { ...prev, status: "accepted" } : null);
+        window.dispatchEvent(new Event("luminus_messages_update"));
+      }
+    } catch (err) {
+      console.error("Failed to accept connection:", err);
+    }
+  };
+
+  const handleRejectConnection = async () => {
+    try {
+      await fetch(`/api/connections?recipientId=${userId}`, {
+        method: "DELETE",
+      });
+      setConnection((prev: any) => prev ? { ...prev, status: "declined" } : null);
+      window.dispatchEvent(new Event("luminus_messages_update"));
+    } catch (err) {
+      console.error("Failed to reject connection:", err);
+    }
+  };
+
+  const handleSendRequest = async () => {
+    try {
+      const res = await fetch("/api/connections", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-timezone-offset": new Date().getTimezoneOffset().toString(),
+        },
+        body: JSON.stringify({ recipientId: userId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setConnection(data.connection || null);
+        window.dispatchEvent(new Event("luminus_messages_update"));
+      }
+    } catch (err) {
+      console.error("Failed to send connection request:", err);
+    }
   };
 
   const handleHeaderClick = () => {
@@ -423,6 +320,10 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
       setIsMinimized(false);
     }
   };
+
+  const isPendingForMe = connection && connection.status === "pending" && connection.recipientId !== userId;
+  const isDeclinedByMe = connection && connection.status === "declined" && connection.recipientId !== userId;
+  const isDeclinedForMe = connection && connection.status === "declined" && connection.requesterId !== userId;
 
   const dynamicStyle = isMobile ? {
     top: isKeyboardOpen ? "12px" : "80px",
@@ -582,7 +483,6 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                   {isLastMessage && isMine && (
                     <span className="text-[10px] text-slate-400 mt-1 mr-1 font-semibold select-none">
                       {(() => {
-                        if (!isDbChat) return "Visto"; // Simulated seen status for mock offline chats
                         if (!otherLastReadAt || !msg.createdAt) return "Enviado";
                         const msgDate = new Date(msg.createdAt);
                         const readDate = new Date(otherLastReadAt);
@@ -600,44 +500,84 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
 
       {/* Input Footer */}
       <div className="p-3 bg-white border-t border-slate-100 shrink-0 touch-none">
-        <div className="flex items-center w-full">
-          <div className="flex-1 relative flex items-end">
-            <textarea
-              ref={textareaRef}
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onFocus={() => {
-                const scrollToEnd = () => {
-                  if (chatContainerRef.current) {
-                    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-                  }
-                };
-                setTimeout(scrollToEnd, 100);
-                setTimeout(scrollToEnd, 300);
-                setTimeout(scrollToEnd, 500);
-              }}
-              placeholder="Escribe un mensaje..."
-              rows={1}
-              className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-[14px] focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-28 custom-scrollbar block text-slate-800 touch-auto overscroll-contain"
-              onInput={(e) => {
-                const target = e.target as HTMLTextAreaElement;
-                target.style.height = "auto";
-                target.style.height = `${target.scrollHeight}px`;
-              }}
-            />
+        {isPendingForMe ? (
+          <div className="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-2xl gap-3 border border-slate-100">
+            <p className="text-xs font-medium text-slate-700 text-center">
+              {name} quiere conectar contigo. ¿Aceptas la solicitud para chatear?
+            </p>
+            <div className="flex gap-4 w-full max-w-xs">
+              <button
+                onClick={handleAcceptConnection}
+                className="flex-1 py-2 px-3 rounded-xl bg-black text-white hover:bg-slate-800 text-xs font-semibold transition-colors border-none cursor-pointer"
+              >
+                Aceptar
+              </button>
+              <button
+                onClick={handleRejectConnection}
+                className="flex-1 py-2 px-3 rounded-xl bg-slate-200 text-slate-800 hover:bg-slate-300 text-xs font-semibold transition-colors border-none cursor-pointer"
+              >
+                Rechazar
+              </button>
+            </div>
+          </div>
+        ) : isDeclinedByMe ? (
+          <div className="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-2xl gap-2 border border-slate-100">
+            <p className="text-xs font-medium text-slate-500 text-center">
+              Has rechazado esta solicitud de conexión.
+            </p>
             <button
-              onClick={handleSend}
-              className={`absolute right-1.5 bottom-1.5 w-10 h-10 rounded-full flex items-center justify-center transition-all border-none ${
-                inputText.trim()
-                  ? "text-slate-800"
-                  : "text-slate-400"
-              } bg-slate-100 hover:bg-black hover:text-white cursor-pointer hover:scale-105 active:scale-95 touch-manipulation`}
+              onClick={handleSendRequest}
+              className="py-1.5 px-4 rounded-xl bg-slate-900 text-white hover:bg-black text-[11px] font-semibold transition-colors border-none cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[18px] ml-0.5">send</span>
+              Enviar solicitud para conectar
             </button>
           </div>
-        </div>
+        ) : isDeclinedForMe ? (
+          <div className="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
+            <p className="text-xs font-medium text-slate-400 text-center">
+              La solicitud de conexión fue rechazada.
+            </p>
+          </div>
+        ) : (
+          <div className="flex items-center w-full">
+            <div className="flex-1 relative flex items-end">
+              <textarea
+                ref={textareaRef}
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onFocus={() => {
+                  const scrollToEnd = () => {
+                    if (chatContainerRef.current) {
+                      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                    }
+                  };
+                  setTimeout(scrollToEnd, 100);
+                  setTimeout(scrollToEnd, 300);
+                  setTimeout(scrollToEnd, 500);
+                }}
+                placeholder="Escribe un mensaje..."
+                rows={1}
+                className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-[14px] focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-28 custom-scrollbar block text-slate-800 touch-auto overscroll-contain"
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = "auto";
+                  target.style.height = `${target.scrollHeight}px`;
+                }}
+              />
+              <button
+                onClick={handleSend}
+                className={`absolute right-1.5 bottom-1.5 w-10 h-10 rounded-full flex items-center justify-center transition-all border-none ${
+                  inputText.trim()
+                    ? "text-slate-800"
+                    : "text-slate-400"
+                } bg-slate-100 hover:bg-black hover:text-white cursor-pointer hover:scale-105 active:scale-95 touch-manipulation`}
+              >
+                <span className="material-symbols-outlined text-[18px] ml-0.5">send</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

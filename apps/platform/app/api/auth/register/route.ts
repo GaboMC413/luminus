@@ -34,6 +34,7 @@ export async function POST(request: Request) {
         cognitoSub: cognitoUser.userSub,
         authProvider: "email",
         emailVerified: cognitoUser.userConfirmed,
+        trialExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 3 months trial
         identities: {
           create: {
             provider: "cognito",
