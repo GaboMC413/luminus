@@ -4,6 +4,8 @@ import React, { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { formatRelativeTime } from "@/components/ui/PlatformNavbar";
+import { isUuid } from "@/utils/validation";
+import { formatMessageBody, formatShortTime } from "@/utils/messages";
 
 type Conversation = {
   id: string;
@@ -29,101 +31,9 @@ type Message = {
   created_at: string;
 };
 
-function isUuid(value: string | null) {
-  return Boolean(value && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value));
-}
-
 function fallbackAvatar(name: string) {
   const initials = encodeURIComponent(name || "Usuario");
   return `https://ui-avatars.com/api/?name=${initials}&background=e2e8f0&color=0f172a&size=128`;
-}
-
-function formatShortTime(dateStr: string): string {
-  if (!dateStr) return "";
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return "";
-  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-}
-
-function formatMessageBody(text: string): React.ReactNode[] {
-  if (!text) return [];
-
-  // Regex to match Markdown links: [Text](URL)
-  const markdownLinkRegex = /(\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g;
-  
-  const parts = text.split(markdownLinkRegex);
-
-  return parts.map((part, index) => {
-    // Check if the part matches the markdown link pattern
-    if (part.startsWith('[') && part.includes('](')) {
-      const match = part.match(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/);
-      if (match) {
-        const [, linkText, url] = match;
-        return (
-          <a
-            key={index}
-            href={url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline hover:opacity-80 transition-opacity font-semibold break-all"
-          >
-            {linkText}
-          </a>
-        );
-      }
-    }
-
-    // Otherwise, parse standard URLs, bold (*) and italics (_)
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const subParts = part.split(urlRegex);
-
-    return (
-      <React.Fragment key={index}>
-        {subParts.map((subPart, subIndex) => {
-          if (subPart.match(urlRegex)) {
-            return (
-              <a
-                key={subIndex}
-                href={subPart}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:opacity-80 transition-opacity font-semibold break-all"
-              >
-                {subPart}
-              </a>
-            );
-          }
-
-          const boldRegex = /\*([^*]+)\*/g;
-          const boldParts = subPart.split(boldRegex);
-
-          return (
-            <React.Fragment key={subIndex}>
-              {boldParts.map((boldPart, boldIndex) => {
-                if (boldIndex % 2 === 1) {
-                  return <strong key={boldIndex} className="font-semibold">{boldPart}</strong>;
-                }
-
-                const italicRegex = /_([^_]+)_/g;
-                const italicParts = boldPart.split(italicRegex);
-
-                return (
-                  <React.Fragment key={boldIndex}>
-                    {italicParts.map((italicPart, italicIndex) => {
-                      if (italicIndex % 2 === 1) {
-                        return <em key={italicIndex} className="italic">{italicPart}</em>;
-                      }
-                      return italicPart;
-                    })}
-                  </React.Fragment>
-                );
-              })}
-            </React.Fragment>
-          );
-        })}
-      </React.Fragment>
-    );
-  });
 }
 
 function MessagesContent() {
@@ -137,6 +47,12 @@ function MessagesContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [otherLastReadAt, setOtherLastReadAt] = useState<string | null>(null);
   const [inputText, setInputText] = useState("");
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [connection, setConnection] = useState<any>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const shouldScrollToBottomRef = useRef(false);
+  const scrollPreserveRef = useRef<{ height: number; top: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
@@ -178,6 +94,7 @@ function MessagesContent() {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "x-timezone-offset": new Date().getTimezoneOffset().toString(),
             },
             body: JSON.stringify({ recipientId }),
           });
@@ -241,6 +158,9 @@ function MessagesContent() {
   useEffect(() => {
     if (!selectedId) {
       setMessages([]);
+      setNextCursor(null);
+      setHasMore(false);
+      setConnection(null);
       setOtherLastReadAt(null);
       return;
     }
@@ -258,7 +178,33 @@ function MessagesContent() {
         }
 
         const data = await response.json();
-        setMessages(data.messages || []);
+        const incomingMessages = data.messages || [];
+
+        setMessages((prev) => {
+          if (prev.length === 0 || prev[0].conversation_id !== selectedId) {
+            shouldScrollToBottomRef.current = true;
+            return incomingMessages;
+          }
+
+          const prevIds = new Set(prev.map((m) => m.id));
+          const newMessages = incomingMessages.filter((m: any) => !prevIds.has(m.id));
+
+          if (newMessages.length === 0) return prev;
+
+          const container = chatContainerRef.current;
+          const isNearBottom = container
+            ? container.scrollHeight - container.scrollTop - container.clientHeight < 100
+            : true;
+          if (isNearBottom) {
+            shouldScrollToBottomRef.current = true;
+          }
+
+          return [...prev, ...newMessages];
+        });
+
+        setNextCursor((prevCursor) => (prevCursor === null ? data.nextCursor : prevCursor));
+        setHasMore((prevHasMore) => (prevHasMore === false ? data.hasMore : prevHasMore));
+        setConnection((prevConn: any) => (prevConn === null ? data.connection : data.connection));
         setOtherLastReadAt(data.otherLastReadAt || null);
         window.dispatchEvent(new Event("luminus_messages_update"));
       } catch (err: any) {
@@ -268,16 +214,68 @@ function MessagesContent() {
 
     loadMessages();
 
-    // Poll for new messages/status every 5 seconds while chat is active
-    const pollInterval = setInterval(loadMessages, 5000);
-    return () => clearInterval(pollInterval);
+    // Poll for new messages/status every 10 seconds while chat is active
+    const pollInterval = setInterval(loadMessages, 10000);
+    return () => {
+      clearInterval(pollInterval);
+    };
   }, [selectedId]);
 
-  useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+  async function loadMoreMessages() {
+    if (isLoadingMore || !hasMore || !nextCursor || !selectedId) return;
+
+    try {
+      setIsLoadingMore(true);
+      if (chatContainerRef.current) {
+        scrollPreserveRef.current = {
+          height: chatContainerRef.current.scrollHeight,
+          top: chatContainerRef.current.scrollTop,
+        };
+      }
+
+      const response = await fetch(`/api/messages/conversations/${selectedId}/messages?cursor=${nextCursor}`, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "No pudimos cargar más mensajes.");
+      }
+
+      const data = await response.json();
+      const olderMessages = data.messages || [];
+
+      setMessages((prev) => [...olderMessages, ...prev]);
+      setNextCursor(data.nextCursor);
+      setHasMore(data.hasMore);
+    } catch (err: any) {
+      console.error("Error loading older messages:", err);
+    } finally {
+      setIsLoadingMore(false);
     }
-  }, [messages.length, selectedId]);
+  }
+
+  const handleScroll = () => {
+    const container = chatContainerRef.current;
+    if (!container) return;
+
+    // Trigger loading older messages when scrolled close to the top
+    if (container.scrollTop < 100 && hasMore && !isLoadingMore) {
+      loadMoreMessages();
+    }
+  };
+
+  useEffect(() => {
+    if (shouldScrollToBottomRef.current && chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      shouldScrollToBottomRef.current = false;
+    } else if (scrollPreserveRef.current && chatContainerRef.current) {
+      const { height, top } = scrollPreserveRef.current;
+      const newHeight = chatContainerRef.current.scrollHeight;
+      chatContainerRef.current.scrollTop = top + (newHeight - height);
+      scrollPreserveRef.current = null;
+    }
+  }, [messages]);
 
   // Keep chat scrolled to bottom when mobile keyboard opens/closes
   useEffect(() => {
@@ -346,6 +344,7 @@ function MessagesContent() {
       }
 
       const data = await response.json();
+      shouldScrollToBottomRef.current = true;
       setMessages((prev) => [...prev, data.message]);
       setInputText("");
       await refreshConversations();
@@ -365,6 +364,59 @@ function MessagesContent() {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       handleSend();
+    }
+  };
+
+  const handleAcceptConnection = async () => {
+    if (!selectedConv || !selectedConv.participant) return;
+    try {
+      const res = await fetch("/api/connections", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ recipientId: selectedConv.participant.id }),
+      });
+      if (res.ok) {
+        setConnection((prev: any) => prev ? { ...prev, status: "accepted" } : null);
+        window.dispatchEvent(new Event("luminus_messages_update"));
+      }
+    } catch (err) {
+      console.error("Failed to accept connection:", err);
+    }
+  };
+
+  const handleRejectConnection = async () => {
+    if (!selectedConv || !selectedConv.participant) return;
+    try {
+      await fetch(`/api/connections?recipientId=${selectedConv.participant.id}`, {
+        method: "DELETE",
+      });
+      setConnection((prev: any) => prev ? { ...prev, status: "declined" } : null);
+      window.dispatchEvent(new Event("luminus_messages_update"));
+    } catch (err) {
+      console.error("Failed to reject connection:", err);
+    }
+  };
+
+  const handleSendRequest = async () => {
+    if (!selectedConv || !selectedConv.participant) return;
+    try {
+      const res = await fetch("/api/connections", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-timezone-offset": new Date().getTimezoneOffset().toString(),
+        },
+        body: JSON.stringify({ recipientId: selectedConv.participant.id }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setConnection(data.connection || null);
+        window.dispatchEvent(new Event("luminus_messages_update"));
+      }
+    } catch (err) {
+      console.error("Failed to send connection request:", err);
     }
   };
 
@@ -483,6 +535,10 @@ function MessagesContent() {
       document.documentElement.classList.remove("mobile-viewport-height-override");
     };
   }, []);
+
+  const isPendingForMe = connection && connection.status === "pending" && connection.recipientId !== selectedConv?.participant?.id;
+  const isDeclinedByMe = connection && connection.status === "declined" && connection.recipientId !== selectedConv?.participant?.id;
+  const isDeclinedForMe = connection && connection.status === "declined" && connection.requesterId !== selectedConv?.participant?.id;
 
   const isMobile = isMounted && typeof window !== "undefined" && window.innerWidth < 1024;
   const dynamicHeight = viewportHeight && isMobile
@@ -746,7 +802,12 @@ function MessagesContent() {
                   )}
                 </div>
 
-                <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3 thin-scrollbar flex flex-col gap-0.5 bg-white overscroll-contain">
+                <div ref={chatContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-3 thin-scrollbar flex flex-col gap-0.5 bg-white overscroll-contain">
+                  {isLoadingMore && (
+                    <div className="flex justify-center py-2">
+                      <span className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></span>
+                    </div>
+                  )}
                   {messages.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                       <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 mb-3">
@@ -800,47 +861,87 @@ function MessagesContent() {
                 </div>
 
                 <div className="p-3 bg-white shrink-0 border-t border-slate-100 touch-none">
-                  <div className="flex items-center w-full">
-                    <div className="flex-1 relative flex items-end">
-                      <textarea
-                        ref={textareaRef}
-                        value={inputText}
-                        onChange={(event) => setInputText(event.target.value)}
-                        onKeyDown={handleKeyDown}
-                        onFocus={() => {
-                          // Multiple attempts to scroll after keyboard animation
-                          const scrollToEnd = () => {
-                            if (chatContainerRef.current) {
-                              chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
-                            }
-                          };
-                          setTimeout(scrollToEnd, 100);
-                          setTimeout(scrollToEnd, 300);
-                          setTimeout(scrollToEnd, 500);
-                        }}
-                        onBlur={() => {}}
-                        placeholder="Escribe un mensaje..."
-                        rows={1}
-                        className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-sm focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-32 custom-scrollbar block text-slate-800 touch-auto overscroll-contain"
-                        onInput={(event) => {
-                          const target = event.target as HTMLTextAreaElement;
-                          target.style.height = "auto";
-                          target.style.height = `${target.scrollHeight}px`;
-                        }}
-                      />
+                  {isPendingForMe ? (
+                    <div className="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-2xl gap-3 border border-slate-100">
+                      <p className="text-sm font-medium text-slate-700 text-center">
+                        {selectedConv.participant.name} quiere conectar contigo. ¿Aceptas la solicitud para chatear?
+                      </p>
+                      <div className="flex gap-4 w-full max-w-xs">
+                        <button
+                          onClick={handleAcceptConnection}
+                          className="flex-1 py-2 px-4 rounded-xl bg-black text-white hover:bg-slate-800 text-sm font-semibold transition-colors border-none cursor-pointer"
+                        >
+                          Aceptar
+                        </button>
+                        <button
+                          onClick={handleRejectConnection}
+                          className="flex-1 py-2 px-4 rounded-xl bg-slate-200 text-slate-800 hover:bg-slate-300 text-sm font-semibold transition-colors border-none cursor-pointer"
+                        >
+                          Rechazar
+                        </button>
+                      </div>
+                    </div>
+                  ) : isDeclinedByMe ? (
+                    <div className="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-2xl gap-2 border border-slate-100">
+                      <p className="text-sm font-medium text-slate-500 text-center">
+                        Has rechazado esta solicitud de conexión.
+                      </p>
                       <button
-                        onClick={handleSend}
-                        className={`absolute right-1.5 bottom-1.5 w-10 h-10 rounded-full flex items-center justify-center transition-all border-none ${
-                          inputText.trim() && !isSending
-                            ? "text-slate-800"
-                            : "text-slate-400"
-                        } bg-slate-100 hover:bg-black hover:text-white cursor-pointer hover:scale-105 active:scale-95 touch-manipulation`}
-                        disabled={isSending}
+                        onClick={handleSendRequest}
+                        className="py-1.5 px-4 rounded-xl bg-slate-900 text-white hover:bg-black text-xs font-semibold transition-colors border-none cursor-pointer"
                       >
-                        <span className="material-symbols-rounded text-[18px] ml-0.5">send</span>
+                        Enviar solicitud para conectar
                       </button>
                     </div>
-                  </div>
+                  ) : isDeclinedForMe ? (
+                    <div className="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                      <p className="text-sm font-medium text-slate-400 text-center">
+                        La solicitud de conexión fue rechazada.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex items-center w-full">
+                      <div className="flex-1 relative flex items-end">
+                        <textarea
+                          ref={textareaRef}
+                          value={inputText}
+                          onChange={(event) => setInputText(event.target.value)}
+                          onKeyDown={handleKeyDown}
+                          onFocus={() => {
+                            // Multiple attempts to scroll after keyboard animation
+                            const scrollToEnd = () => {
+                              if (chatContainerRef.current) {
+                                chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+                              }
+                            };
+                            setTimeout(scrollToEnd, 100);
+                            setTimeout(scrollToEnd, 300);
+                            setTimeout(scrollToEnd, 500);
+                          }}
+                          onBlur={() => {}}
+                          placeholder="Escribe un mensaje..."
+                          rows={1}
+                          className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-sm focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-32 custom-scrollbar block text-slate-800 touch-auto overscroll-contain"
+                          onInput={(event) => {
+                            const target = event.target as HTMLTextAreaElement;
+                            target.style.height = "auto";
+                            target.style.height = `${target.scrollHeight}px`;
+                          }}
+                        />
+                        <button
+                          onClick={handleSend}
+                          className={`absolute right-1.5 bottom-1.5 w-10 h-10 rounded-full flex items-center justify-center transition-all border-none ${
+                            inputText.trim() && !isSending
+                              ? "text-slate-800"
+                              : "text-slate-400"
+                          } bg-slate-100 hover:bg-black hover:text-white cursor-pointer hover:scale-105 active:scale-95 touch-manipulation`}
+                          disabled={isSending}
+                        >
+                          <span className="material-symbols-rounded text-[18px] ml-0.5">send</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

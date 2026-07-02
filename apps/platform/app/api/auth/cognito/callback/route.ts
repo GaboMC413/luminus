@@ -323,6 +323,7 @@ export async function GET(request: Request) {
             authProvider: federatedProvider.authProvider,
             emailVerified: isEmailVerified(cognitoUser.email_verified),
             lastLoginAt: new Date(),
+            trialExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 3 months trial
             identities: {
               create: {
                 provider: "cognito",

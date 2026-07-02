@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { isUuid } from "@/utils/validation";
+import { isRateLimited, RATE_LIMITS } from "@/utils/rateLimit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-function isUuid(value: unknown) {
-  return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-}
 
 function serializeConversation(conversation: any, currentUserId: string) {
   const otherParticipant = conversation.participants.find((participant: any) => participant.userId !== currentUserId);
@@ -68,6 +66,16 @@ export async function GET() {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }
 
+  const rateLimitResult = isRateLimited(
+    session.userId,
+    "GET_CONVERSATIONS",
+    RATE_LIMITS.GET_CONVERSATIONS.limit,
+    RATE_LIMITS.GET_CONVERSATIONS.windowMs
+  );
+  if (rateLimitResult.success) {
+    return NextResponse.json({ message: "Demasiadas solicitudes. Intentalo de nuevo mas tarde." }, { status: 429 });
+  }
+
   try {
     const { prisma } = await import("@/lib/db");
     const conversations = await prisma.conversation.findMany({
@@ -89,8 +97,17 @@ export async function GET() {
       },
     });
 
+    const activeConversations = conversations.filter((conversation: any) => {
+      const participant = conversation.participants.find((p: any) => p.userId === session.userId);
+      if (!participant) return false;
+      if (participant.deletedAt === null) return true;
+      const lastMessage = conversation.messages?.[0];
+      if (!lastMessage) return false;
+      return lastMessage.createdAt > participant.deletedAt;
+    });
+
     return NextResponse.json({
-      conversations: conversations.map((conversation: any) => serializeConversation(conversation, session.userId)),
+      conversations: activeConversations.map((conversation: any) => serializeConversation(conversation, session.userId)),
     });
   } catch (error) {
     console.error("Failed to fetch conversations.", error);
@@ -103,6 +120,16 @@ export async function POST(request: Request) {
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+  }
+
+  const rateLimitResult = isRateLimited(
+    session.userId,
+    "CREATE_CONVERSATION",
+    RATE_LIMITS.CREATE_CONVERSATION.limit,
+    RATE_LIMITS.CREATE_CONVERSATION.windowMs
+  );
+  if (rateLimitResult.success) {
+    return NextResponse.json({ message: "Demasiadas solicitudes. Intentalo de nuevo mas tarde." }, { status: 429 });
   }
 
   const body = await request.json().catch(() => null);
@@ -155,8 +182,83 @@ export async function POST(request: Request) {
       });
     }
 
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { tier: true, trialExpiresAt: true },
+    });
+
+    const isBasic = user && (user.tier === "BASIC" || (user.trialExpiresAt && user.trialExpiresAt > new Date()));
+
+    if (!isBasic) {
+      // FREE Tier Daily Limit: 1 new conversation per day in local time zone
+      const offsetHeader = request.headers.get("x-timezone-offset");
+      const offsetMinutes = offsetHeader ? parseInt(offsetHeader, 10) : 0;
+
+      const now = new Date();
+      // Adjust server time to client's local time
+      const localTime = new Date(now.getTime() - offsetMinutes * 60 * 1000);
+      localTime.setUTCHours(0, 0, 0, 0);
+      // Convert start of local day back to UTC
+      const startOfLocalDayInUtc = new Date(localTime.getTime() + offsetMinutes * 60 * 1000);
+
+      const dailyCount = await prisma.conversation.count({
+        where: {
+          initiatorId: session.userId,
+          createdAt: {
+            gte: startOfLocalDayInUtc,
+          },
+        },
+      });
+
+      if (dailyCount >= 1) {
+        return NextResponse.json(
+          { message: "Ya has iniciado una conversación hoy. Para conectar con más personas, sube de nivel tu plan." },
+          { status: 403 }
+        );
+      }
+    } else {
+      // BASIC Tier Hourly Limit: 10 new conversations per rolling hour
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+      const hourlyCount = await prisma.conversation.count({
+        where: {
+          initiatorId: session.userId,
+          createdAt: {
+            gte: oneHourAgo,
+          },
+        },
+      });
+
+      if (hourlyCount >= 10) {
+        const oldestInWindow = await prisma.conversation.findFirst({
+          where: {
+            initiatorId: session.userId,
+            createdAt: {
+              gte: oneHourAgo,
+            },
+          },
+          orderBy: {
+            createdAt: "asc" as const,
+          },
+          select: {
+            createdAt: true,
+          },
+        });
+
+        const resetTime = oldestInWindow
+          ? new Date(oldestInWindow.createdAt.getTime() + 60 * 60 * 1000)
+          : new Date(Date.now() + 60 * 60 * 1000);
+
+        const minutesRemaining = Math.max(Math.ceil((resetTime.getTime() - Date.now()) / 60000), 1);
+        return NextResponse.json(
+          { message: `Has alcanzado el máximo de conexiones permitido por la plataforma. Podrás volver a contactar en ${minutesRemaining} minutos.` },
+          { status: 403 }
+        );
+      }
+    }
+
     const conversation = await prisma.conversation.create({
       data: {
+        initiatorId: session.userId,
         participants: {
           create: [
             { userId: session.userId },
