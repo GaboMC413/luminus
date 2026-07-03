@@ -1,8 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Modal from "@/components/ui/Modal";
+import { SelectInput } from "@/components/ui/SelectInput";
 import { isUuid } from "@/utils/validation";
 import { formatMessageBody, formatShortTime } from "@/utils/messages";
 
@@ -40,6 +43,11 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
   const [isMinimized, setIsMinimized] = useState(false);
   const [dbConversationId, setDbConversationId] = useState<string | null>(null);
   const [connection, setConnection] = useState<any>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportDescription, setReportDescription] = useState("");
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -155,6 +163,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
         const convData = await convRes.json();
         const convId = convData.conversation.id;
         setDbConversationId(convId);
+        setIsMuted(convData.conversation.is_muted || false);
 
         const msgRes = await fetch(`/api/messages/conversations/${convId}/messages`, {
           cache: "no-store",
@@ -265,6 +274,84 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
     onClose();
   };
 
+  const handleBlockUser = async () => {
+    if (!userId) return;
+    try {
+      const res = await fetch(`/api/connections?recipientId=${userId}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        onClose(); // Close the floating chat popup immediately since the user is blocked
+      }
+    } catch (err) {
+      console.error("Failed to block user:", err);
+    } finally {
+      setIsMenuOpen(false);
+    }
+  };
+
+  const handleMuteChat = async () => {
+    if (!dbConversationId) return;
+    try {
+      const res = await fetch(`/api/messages/conversations/${dbConversationId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ action: isMuted ? "unmute" : "mute" }),
+      });
+      if (res.ok) {
+        setIsMuted(!isMuted);
+        window.dispatchEvent(new Event("luminus_messages_update"));
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.message || "No se pudo actualizar el estado de silencio del chat.");
+      }
+    } catch (err) {
+      console.error("Failed to mute user:", err);
+    } finally {
+      setIsMenuOpen(false);
+    }
+  };
+
+  const handleSubmitReport = async () => {
+    if (!userId) return;
+    if (!reportReason) {
+      alert("Por favor selecciona un motivo.");
+      return;
+    }
+
+    try {
+      setIsSubmittingReport(true);
+      const res = await fetch("/api/comunidad/report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          reportedId: userId,
+          reason: reportReason,
+          description: reportDescription,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        alert("El reporte ha sido enviado. Revisaremos el caso para mantener segura la comunidad.");
+        setIsReportModalOpen(false);
+        setReportReason("");
+        setReportDescription("");
+      } else {
+        alert(data.message || "No se pudo enviar el reporte.");
+      }
+    } catch (err) {
+      console.error("Error submitting report:", err);
+      alert("Error de conexión al enviar el reporte.");
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
   const handleAcceptConnection = async () => {
     try {
       const res = await fetch("/api/connections", {
@@ -361,8 +448,13 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
             <img src={avatar || "/logo-luminus-white.svg"} alt={name} className="w-9 h-9 rounded-[10px] object-cover" />
           </div>
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <h4 className="text-sm font-semibold text-slate-900 leading-none truncate max-w-[110px] sm:max-w-[130px] font-jakarta" title={name}>
-              {name}
+            <h4 className="text-sm font-semibold text-slate-900 leading-none truncate max-w-[110px] sm:max-w-[130px] font-jakarta flex items-center gap-1.5" title={name}>
+              <span>{name}</span>
+              {isMuted && (
+                <span className="material-symbols-rounded text-slate-400 text-[15px] shrink-0" title="Silenciado">
+                  notifications_off
+                </span>
+              )}
             </h4>
             {userId && name !== "LUMINUS" && (
               <Link
@@ -382,22 +474,24 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
             <div className="relative flex items-center" ref={menuRef}>
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className={`w-8 h-8 flex items-center justify-center rounded-full transition-all border-none cursor-pointer bg-transparent ${
-                  isMenuOpen ? "bg-slate-200 text-black" : "hover:bg-slate-200 text-slate-500 hover:text-black"
-                }`}
+                className={`flex items-center justify-center w-8 h-8 rounded-full transition-all border-none cursor-pointer bg-transparent ${isMenuOpen ? "bg-slate-100" : "hover:bg-slate-50"}`}
                 title="Opciones"
               >
-                <span className="material-symbols-outlined text-[20px]">more_vert</span>
+                <span className="material-symbols-rounded text-slate-400 hover:text-black transition-colors text-[20px]">more_vert</span>
               </button>
 
               {isMenuOpen && (
                 <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] shadow-none animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                   <button
-                    onClick={() => setIsMenuOpen(false)}
+                    onClick={handleMuteChat}
                     className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                   >
-                    <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900 text-[18px] transition-colors">notifications_off</span>
-                    <span className="font-semibold text-slate-500 group-hover:text-slate-900 transition-colors">Silenciar chat</span>
+                    <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900 text-[18px] transition-colors">
+                      {isMuted ? "notifications" : "notifications_off"}
+                    </span>
+                    <span className="font-semibold text-slate-500 group-hover:text-slate-900 transition-colors">
+                      {isMuted ? "Desactivar silencio" : "Silenciar chat"}
+                    </span>
                   </button>
                   <button
                     onClick={handleDeleteChat}
@@ -407,11 +501,21 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                     <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Eliminar chat</span>
                   </button>
                   <button
-                    onClick={() => setIsMenuOpen(false)}
+                    onClick={handleBlockUser}
                     className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                   >
                     <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">block</span>
                     <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Bloquear usuario</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      setIsReportModalOpen(true);
+                    }}
+                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                  >
+                    <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">report</span>
+                    <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Reportar usuario</span>
                   </button>
                 </div>
               )}
@@ -579,6 +683,78 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
           </div>
         )}
       </div>
+
+      <Modal
+        isOpen={isReportModalOpen}
+        onClose={() => {
+          setIsReportModalOpen(false);
+          setReportReason("");
+          setReportDescription("");
+        }}
+        title="Reportar usuario"
+        maxWidth="440px"
+        footer={
+          <>
+            <button
+              onClick={() => {
+                setIsReportModalOpen(false);
+                setReportReason("");
+                setReportDescription("");
+              }}
+              disabled={isSubmittingReport}
+              className="flex-1 h-11 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-sm font-bold transition duration-200 cursor-pointer border-none"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSubmitReport}
+              disabled={isSubmittingReport || !reportReason}
+              className={`flex-1 h-11 text-white rounded-xl text-sm font-bold transition duration-200 cursor-pointer border-none flex items-center justify-center gap-1.5 ${
+                isSubmittingReport || !reportReason
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : "bg-[#FF4B4B] hover:bg-[#E03A3A] hover:scale-[1.02] active:scale-[0.98]"
+              }`}
+            >
+              {isSubmittingReport ? (
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <span className="material-symbols-rounded text-[18px]">report</span>
+                  <span>Reportar</span>
+                </>
+              )}
+            </button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <SelectInput
+              label="Motivo del reporte *"
+              value={reportReason}
+              onSelect={(val) => setReportReason(val)}
+              placeholder="Selecciona una opción..."
+              options={[
+                "Comportamiento abusivo o acoso",
+                "Spam o contenido comercial no deseado",
+                "Contenido inapropiado u ofensivo",
+                "Suplantación de identidad",
+                "Otro",
+              ]}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-slate-600">Detalles adicionales (opcional)</label>
+            <textarea
+              value={reportDescription}
+              onChange={(e) => setReportDescription(e.target.value)}
+              placeholder="Proporciona más detalles si lo deseas..."
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-1 focus:ring-slate-300 outline-none resize-none h-24 text-slate-800 font-medium"
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

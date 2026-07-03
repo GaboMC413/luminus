@@ -37,7 +37,7 @@ export function ProfileAboutSection({ bio, onEdit, isPublic = false, firstName, 
       ) : (
         <div className="flex flex-col items-start gap-4">
           <p className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight leading-relaxed">
-            {isPublic ? `${nameToUse} aún no ha escrito sobre sí...` : "Aún no has escrito nada sobre ti..."}
+            {isPublic ? `${nameToUse} aún no ha escrito sobre sí.` : "Aún no has escrito nada sobre ti..."}
           </p>
           {!isPublic && onEdit && (
             <EmptyProfileButton

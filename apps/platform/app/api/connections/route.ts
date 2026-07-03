@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { isUuid } from "@/utils/validation";
+import { isRateLimited, RATE_LIMITS } from "@/utils/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -31,6 +32,16 @@ export async function GET() {
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+  }
+
+  const rateLimitResult = isRateLimited(
+    session.userId,
+    "GET_CONNECTIONS",
+    RATE_LIMITS.GET_CONNECTIONS.limit,
+    RATE_LIMITS.GET_CONNECTIONS.windowMs
+  );
+  if (rateLimitResult.success) {
+    return NextResponse.json({ message: "Demasiadas solicitudes. Inténtalo de nuevo más tarde." }, { status: 429 });
   }
 
   try {
@@ -65,6 +76,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }
 
+  const rateLimitResult = isRateLimited(
+    session.userId,
+    "SEND_CONNECTION",
+    RATE_LIMITS.SEND_CONNECTION.limit,
+    RATE_LIMITS.SEND_CONNECTION.windowMs
+  );
+  if (rateLimitResult.success) {
+    return NextResponse.json({ message: "Demasiadas solicitudes. Inténtalo de nuevo más tarde." }, { status: 429 });
+  }
+
   const body = await request.json().catch(() => null);
   const recipientId = typeof body?.recipientId === "string" ? body.recipientId.trim() : "";
 
@@ -97,7 +118,24 @@ export async function POST(request: Request) {
     });
 
     if (existingConnection) {
+      if (existingConnection.status === "blocked") {
+        if (existingConnection.requesterId !== session.userId) {
+          return NextResponse.json({ message: "No puedes enviar una solicitud a este usuario." }, { status: 403 });
+        }
+        return NextResponse.json({ message: "Debes desbloquear a este usuario primero." }, { status: 400 });
+      }
+
       if (existingConnection.status === "declined") {
+        const diffMs = Date.now() - new Date(existingConnection.updatedAt).getTime();
+        const cooldownMs = 24 * 60 * 60 * 1000;
+
+        if (diffMs < cooldownMs) {
+          const hoursLeft = Math.ceil((cooldownMs - diffMs) / (60 * 60 * 1000));
+          return NextResponse.json({
+            message: `Debes esperar ${hoursLeft} horas antes de enviar otra solicitud a este usuario.`
+          }, { status: 429 });
+        }
+
         const updated = await prisma.userConnection.update({
           where: { id: existingConnection.id },
           data: {
@@ -234,6 +272,16 @@ export async function PUT(request: Request) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }
 
+  const rateLimitResult = isRateLimited(
+    session.userId,
+    "ACCEPT_CONNECTION",
+    RATE_LIMITS.ACCEPT_CONNECTION.limit,
+    RATE_LIMITS.ACCEPT_CONNECTION.windowMs
+  );
+  if (rateLimitResult.success) {
+    return NextResponse.json({ message: "Demasiadas solicitudes. Inténtalo de nuevo más tarde." }, { status: 429 });
+  }
+
   const body = await request.json().catch(() => null);
   const requesterId = typeof body?.recipientId === "string" ? body.recipientId.trim() : "";
 
@@ -338,6 +386,16 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }
 
+  const rateLimitResult = isRateLimited(
+    session.userId,
+    "DELETE_CONNECTION",
+    RATE_LIMITS.DELETE_CONNECTION.limit,
+    RATE_LIMITS.DELETE_CONNECTION.windowMs
+  );
+  if (rateLimitResult.success) {
+    return NextResponse.json({ message: "Demasiadas solicitudes. Inténtalo de nuevo más tarde." }, { status: 429 });
+  }
+
   const { searchParams } = new URL(request.url);
   let targetId = searchParams.get("recipientId") || "";
 
@@ -415,6 +473,16 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }
 
+  const rateLimitResult = isRateLimited(
+    session.userId,
+    "BLOCK_CONNECTION",
+    RATE_LIMITS.BLOCK_CONNECTION.limit,
+    RATE_LIMITS.BLOCK_CONNECTION.windowMs
+  );
+  if (rateLimitResult.success) {
+    return NextResponse.json({ message: "Demasiadas solicitudes. Inténtalo de nuevo más tarde." }, { status: 429 });
+  }
+
   const body = await request.json().catch(() => null);
   const targetId = typeof body?.recipientId === "string" ? body.recipientId.trim() : "";
   const action = typeof body?.action === "string" ? body.action.trim() : "";
@@ -423,12 +491,35 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ message: "Usuario de destino inválido." }, { status: 400 });
   }
 
-  if (action !== "block") {
+  if (action !== "block" && action !== "unblock") {
     return NextResponse.json({ message: "Acción no soportada." }, { status: 400 });
   }
 
   try {
     const { prisma } = await import("@/lib/db");
+
+    if (action === "unblock") {
+      const blocked = await prisma.userConnection.findFirst({
+        where: {
+          requesterId: session.userId,
+          recipientId: targetId,
+          status: "blocked",
+        },
+      });
+
+      if (!blocked) {
+        return NextResponse.json({ message: "No existe ningún bloqueo activo con este usuario." }, { status: 404 });
+      }
+
+      await prisma.userConnection.delete({
+        where: { id: blocked.id },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: "Usuario desbloqueado con éxito.",
+      });
+    }
     
     // Find if a connection exists in any direction
     const existing = await prisma.userConnection.findFirst({

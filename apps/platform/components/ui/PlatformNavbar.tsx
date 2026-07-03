@@ -102,7 +102,7 @@ export function PlatformNavbar() {
     ? onboardingOutstandingCount + otherUnreadCount
     : otherUnreadCount;
 
-  const unreadMessagesCount = messages.filter(m => m.isUnread).length;
+  const unreadMessagesCount = messages.filter(m => m.isUnread && !m.isMuted).length;
 
   const [showMobileNavbar, setShowMobileNavbar] = useState(true);
 
@@ -264,6 +264,7 @@ export function PlatformNavbar() {
               action: lastMsg?.body || "Sin mensajes aún",
               date: formatRelativeTime(timestamp),
               isUnread: conv.is_unread,
+              isMuted: conv.is_muted,
               isDb: true,
               participantId: conv.participant.id
             };

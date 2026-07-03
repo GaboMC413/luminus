@@ -60,6 +60,16 @@ function PlatformContent() {
   const [showNetworkDrawer, setShowNetworkDrawer] = useState(false);
   const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
   const [profileImgError, setProfileImgError] = useState(false);
+  const [filterOptions, setFilterOptions] = useState({
+    countries: [] as string[],
+    cities: [] as string[],
+    interests: [] as string[],
+  });
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
+  const [fetchingMore, setFetchingMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
   const router = useRouter();
 
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -91,71 +101,24 @@ function PlatformContent() {
     };
   }, [showFilters]);
 
-  // Dynamically compile countries and cities from existing community users in database
-  const { countriesWithResults, citiesWithResults } = useMemo(() => {
-    const countriesSet = new Set<string>();
-    const citiesSet = new Set<string>();
+  const countriesWithResults = filterOptions.countries;
+  const citiesWithResults = filterOptions.cities;
+  const interestsWithResults = filterOptions.interests;
 
-    users.forEach(user => {
-      if (!user.location || user.location === "Ubicación no definida") return;
-      const parts = user.location.split(',').map((p: string) => p.trim());
-      if (parts.length >= 2) {
-        citiesSet.add(parts[0]);
-        countriesSet.add(parts[parts.length - 1]);
-      } else if (parts.length === 1 && parts[0]) {
-        citiesSet.add(parts[0]);
-      }
-    });
+  const availableCities = filterOptions.cities;
 
-    return {
-      countriesWithResults: Array.from(countriesSet).sort(),
-      citiesWithResults: Array.from(citiesSet).sort(),
-    };
-  }, [users]);
-
-  // Dynamically filter cities list based on selected country
-  const availableCities = useMemo(() => {
-    if (!tempFilters.country) {
-      return citiesWithResults;
-    }
-    const filteredCities = new Set<string>();
-    users.forEach(user => {
-      if (!user.location || user.location === "Ubicación no definida") return;
-      const parts = user.location.split(',').map((p: string) => p.trim());
-      if (parts.length >= 2 && parts[parts.length - 1].toLowerCase() === tempFilters.country.toLowerCase()) {
-        filteredCities.add(parts[0]);
-      }
-    });
-    return Array.from(filteredCities).sort();
-  }, [tempFilters.country, citiesWithResults, users]);
-
-  // Dynamically compile categories and interests with results in the database
-  const { categoriesWithResults, interestsWithResults } = useMemo(() => {
-    const interestsSet = new Set<string>();
-    users.forEach(user => {
-      if (user.interests) {
-        user.interests.forEach((interest: string) => {
-          interestsSet.add(interest);
-        });
-      }
-    });
-    const activeInterests = Array.from(interestsSet);
-
+  const categoriesWithResults = useMemo(() => {
     const categoriesSet = new Set<string>();
     Object.entries(CATEGORIES_MAPPING).forEach(([categoryName, categoryInterests]) => {
       const hasAnyMatch = categoryInterests.some(ci => 
-        activeInterests.some(ai => ai.toLowerCase() === ci.toLowerCase())
+        interestsWithResults.some(ai => ai.toLowerCase() === ci.toLowerCase())
       );
       if (hasAnyMatch) {
         categoriesSet.add(categoryName);
       }
     });
-
-    return {
-      categoriesWithResults: Array.from(categoriesSet).sort(),
-      interestsWithResults: activeInterests.sort(),
-    };
-  }, [users]);
+    return Array.from(categoriesSet).sort();
+  }, [interestsWithResults]);
 
   const hasActiveFilters = 
     appliedFilters.country !== "" ||
@@ -208,29 +171,79 @@ function PlatformContent() {
   }, []);
 
   useEffect(() => {
-    async function loadUsers() {
-      try {
-        setLoading(true);
-        setError(null);
-        const res = await fetch("/api/comunidad");
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.message || `Error del servidor: ${res.status}`);
-        }
-        const data = await res.json();
-        setUsers(data.users || []);
-      } catch (err: any) {
-        console.error("Error al cargar usuarios de la comunidad:", err);
-        setError(err.message || "Error de conexión con el servidor");
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadUsers();
-  }, []);
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
-    if (searchQuery.length < 2) {
+    async function loadFilters() {
+      try {
+        const countryParam = tempFilters.country || "";
+        const res = await fetch(`/api/comunidad/filters?country=${countryParam}`);
+        if (res.ok) {
+          const data = await res.json();
+          setFilterOptions(data);
+        }
+      } catch (err) {
+        console.error("Error loading filters:", err);
+      }
+    }
+    loadFilters();
+  }, [tempFilters.country]);
+
+  async function fetchUsers(cursorVal?: string | null) {
+    try {
+      if (!cursorVal) {
+        setLoading(true);
+      } else {
+        setFetchingMore(true);
+      }
+      setError(null);
+
+      const params = new URLSearchParams();
+      params.set("limit", "24");
+      if (cursorVal) params.set("cursor", cursorVal);
+      if (debouncedQuery) params.set("query", debouncedQuery);
+      if (appliedFilters.country) params.set("country", appliedFilters.country);
+      if (appliedFilters.city) params.set("city", appliedFilters.city);
+      if (appliedFilters.category && appliedFilters.category !== "Todas las categorías") {
+        params.set("category", appliedFilters.category);
+      }
+      if (appliedFilters.selectedInterests.length > 0) {
+        params.set("interests", appliedFilters.selectedInterests.join(","));
+      }
+
+      const res = await fetch(`/api/comunidad?${params.toString()}`);
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || `Error del servidor: ${res.status}`);
+      }
+      const data = await res.json();
+      
+      if (!cursorVal) {
+        setUsers(data.users || []);
+      } else {
+        setUsers((current) => [...current, ...(data.users || [])]);
+      }
+      setNextCursor(data.nextCursor);
+      setHasMore(data.hasMore);
+    } catch (err: any) {
+      console.error("Error al cargar usuarios de la comunidad:", err);
+      setError(err.message || "Error de conexión con el servidor");
+    } finally {
+      setLoading(false);
+      setFetchingMore(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchUsers(null);
+  }, [debouncedQuery, appliedFilters]);
+
+  useEffect(() => {
+    if (searchQuery.length < 2 || searchQuery === selectedSuggestion) {
       setSuggestions([]);
       return;
     }
@@ -272,55 +285,8 @@ function PlatformContent() {
     setLastScrollY(currentScrollY);
   };
 
-  // Filter users based on searchQuery AND appliedFilters
-  const filteredUsers = users.filter(user => {
-    const name = user.name || "";
-    const location = user.location || "";
-    const interests = user.interests || [];
-
-    // 1. Top main search bar keyword match (matches name, location, or any interest)
-    const matchesSearch = !searchQuery ||
-      name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      interests.some((interest: string) => interest.toLowerCase().includes(searchQuery.toLowerCase()));
-
-    if (!matchesSearch) return false;
-
-
-    // 3. Advanced filters: Country
-    if (appliedFilters.country) {
-      const countryLower = appliedFilters.country.toLowerCase();
-      const parts = location.split(',').map((p: string) => p.trim().toLowerCase());
-      const hasCountry = parts.includes(countryLower) || location.toLowerCase().includes(countryLower);
-      if (!hasCountry) return false;
-    }
-
-    // 4. Advanced filters: City
-    if (appliedFilters.city) {
-      const cityLower = appliedFilters.city.split(',')[0].trim().toLowerCase();
-      const locationLower = location.toLowerCase();
-      if (!locationLower.includes(cityLower)) return false;
-    }
-
-    // 5. Advanced filters: Category
-    if (appliedFilters.category && appliedFilters.category !== "Todas las categorías") {
-      const allowedInterests = (CATEGORIES_MAPPING as any)[appliedFilters.category] || [];
-      const matchesCategory = interests.some((interest: string) =>
-        allowedInterests.some((ai: string) => ai.toLowerCase() === interest.toLowerCase())
-      );
-      if (!matchesCategory) return false;
-    }
-
-    // 7. Advanced filters: Selected specific interests (OR matching)
-    if (appliedFilters.selectedInterests && appliedFilters.selectedInterests.length > 0) {
-      const hasInterest = interests.some((interest: string) =>
-        appliedFilters.selectedInterests.some((selected: string) => selected.toLowerCase() === interest.toLowerCase())
-      );
-      if (!hasInterest) return false;
-    }
-
-    return true;
-  });
+  // Users are already filtered and paginated on the backend
+  const filteredUsers = users;
 
   if (loading) {
     return (
@@ -618,9 +584,15 @@ function PlatformContent() {
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSearchQuery(val);
+                    if (val !== selectedSuggestion) {
+                      setSelectedSuggestion(null);
+                    }
+                  }}
                   placeholder="Buscar por ciudad, país o temas de interés"
-                  className="flex-1 bg-transparent border-none text-sm font-normal text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                  className="flex-1 bg-transparent border-none text-base sm:text-sm font-normal text-slate-800 placeholder:text-slate-400 focus:outline-none"
                 />
 
                 {suggestions.length > 0 && (
@@ -630,6 +602,7 @@ function PlatformContent() {
                         key={idx}
                         onClick={() => {
                           setSearchQuery(suggestion.value);
+                          setSelectedSuggestion(suggestion.value);
                           setSuggestions([]);
                         }}
                         className="w-full px-6 py-3.5 text-left flex items-center gap-4 hover:bg-slate-50 border-b border-slate-50 last:border-none transition-colors border-none bg-transparent cursor-pointer"
@@ -833,10 +806,24 @@ function PlatformContent() {
                 <p className="text-slate-400 text-sm">Prueba con otros términos de búsqueda o selecciona otra categoría.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 w-full">
-                {filteredUsers.map((user: any, idx: number) => (
-                  <UserCard key={idx} user={user} />
-                ))}
+              <div className="flex flex-col gap-6 w-full pb-8">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 w-full">
+                  {filteredUsers.map((user: any, idx: number) => (
+                    <UserCard key={idx} user={user} />
+                  ))}
+                </div>
+                {hasMore && (
+                  <div className="w-full flex justify-center py-4">
+                    <Button
+                      onClick={() => fetchUsers(nextCursor)}
+                      disabled={fetchingMore}
+                      variant="outline"
+                      className="px-6 h-11 font-bold text-sm"
+                    >
+                      {fetchingMore ? "Cargando..." : "Cargar más"}
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>

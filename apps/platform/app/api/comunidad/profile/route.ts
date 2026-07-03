@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { isUuid } from "@/utils/validation";
 
 export const runtime = "nodejs";
 
@@ -13,8 +14,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
 
-  if (!id) {
-    return NextResponse.json({ message: "ID de usuario requerido." }, { status: 400 });
+  if (!id || !isUuid(id)) {
+    return NextResponse.json({ message: "ID de usuario inválido." }, { status: 400 });
   }
 
   if (!process.env.DATABASE_URL) {
@@ -57,6 +58,10 @@ export async function GET(request: Request) {
         status: true,
       },
     });
+
+    if (connection && connection.status === "blocked" && connection.requesterId === id) {
+      return NextResponse.json({ message: "Este perfil no está disponible." }, { status: 403 });
+    }
 
     const profile = (user.profile ?? {}) as any;
     const prompts = (user.profilePrompts ?? [])

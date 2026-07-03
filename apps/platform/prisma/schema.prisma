@@ -81,6 +81,8 @@ model User {
   conversationParticipants ConversationParticipant[]
   sentMessages  Message[]
   notifications Notification[]
+  reportsSubmitted UserReport[] @relation("ReportsSubmitted")
+  reportsReceived  UserReport[] @relation("ReportsReceived")
 
   @@map("users")
 }
@@ -122,6 +124,9 @@ model UserProfile {
   updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([isOnboarded, country])
+  @@index([isOnboarded, city])
+  @@index([country])
   @@map("user_profiles")
 }
 
@@ -243,6 +248,8 @@ model UserConnection {
   @@unique([requesterId, recipientId])
   @@index([recipientId, status])
   @@index([requesterId, status])
+  @@index([requesterId, updatedAt])
+  @@index([recipientId, updatedAt])
   @@map("user_connections")
 }
 
@@ -264,6 +271,7 @@ model ConversationParticipant {
   lastReadAt     DateTime?    @map("last_read_at") @db.Timestamptz
   createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz
   deletedAt      DateTime?    @map("deleted_at") @db.Timestamptz
+  isMuted        Boolean      @default(false) @map("is_muted")
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -285,4 +293,21 @@ model Message {
   @@index([conversationId, createdAt, deletedAt])
   @@index([senderId])
   @@map("messages")
+}
+
+model UserReport {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reporterId  String   @map("reporter_id") @db.Uuid
+  reportedId  String   @map("reported_id") @db.Uuid
+  reason      String   @db.VarChar
+  description String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  reporter    User     @relation("ReportsSubmitted", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported    User     @relation("ReportsReceived", fields: [reportedId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId])
+  @@index([reportedId])
+  @@map("user_reports")
 }

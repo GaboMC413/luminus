@@ -13,6 +13,13 @@ export const RATE_LIMITS = {
   GET_MESSAGES: { limit: 30, windowMs: 60 * 1000 },
   GET_CONVERSATIONS: { limit: 30, windowMs: 60 * 1000 },
   DELETE_CONVERSATION: { limit: 5, windowMs: 60 * 1000 },
+
+  // Connection limits
+  SEND_CONNECTION: { limit: 10, windowMs: 60 * 1000 },
+  ACCEPT_CONNECTION: { limit: 20, windowMs: 60 * 1000 },
+  DELETE_CONNECTION: { limit: 20, windowMs: 60 * 1000 },
+  GET_CONNECTIONS: { limit: 30, windowMs: 60 * 1000 },
+  BLOCK_CONNECTION: { limit: 10, windowMs: 60 * 1000 },
 };
 
 export function isRateLimited(
