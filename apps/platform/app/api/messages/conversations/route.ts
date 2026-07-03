@@ -34,6 +34,7 @@ function serializeConversation(conversation: any, currentUserId: string) {
         }
       : null,
     is_unread: isUnread,
+    is_muted: currentParticipant?.isMuted || false,
     updated_at: conversation.updatedAt.toISOString(),
   };
 }
@@ -152,6 +153,20 @@ export async function POST(request: Request) {
 
     if (!recipient) {
       return NextResponse.json({ message: "Usuario destino no encontrado." }, { status: 404 });
+    }
+
+    const block = await prisma.userConnection.findFirst({
+      where: {
+        status: "blocked",
+        OR: [
+          { requesterId: session.userId, recipientId },
+          { requesterId: recipientId, recipientId: session.userId },
+        ],
+      },
+    });
+
+    if (block) {
+      return NextResponse.json({ message: "No puedes enviar mensajes a este usuario." }, { status: 403 });
     }
 
     const existingConversation = await prisma.conversation.findFirst({

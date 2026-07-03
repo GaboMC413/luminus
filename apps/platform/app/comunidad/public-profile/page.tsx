@@ -65,6 +65,11 @@ function PublicProfileContent() {
         setError(null);
         const res = await fetch(`/api/comunidad/profile?id=${id}`);
         if (!res.ok) {
+          if (res.status === 403) {
+            setError("restricted");
+            setLoading(false);
+            return;
+          }
           const errData = await res.json().catch(() => ({}));
           throw new Error(errData.message || `Error del servidor: ${res.status}`);
         }
@@ -99,6 +104,28 @@ function PublicProfileContent() {
 
     try {
       setConnectionLoading(true);
+
+      // Scenario 0: Blocked connection (Shows "Desbloquear")
+      if (profile?.connection_status === "blocked") {
+        const response = await fetch("/api/connections", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ recipientId: id, action: "unblock" }),
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data.message || "No pudimos desbloquear al usuario.");
+        }
+
+        setProfile((current: any) => ({
+          ...current,
+          connection_status: null,
+          connection_direction: null,
+        }));
+        return;
+      }
 
       // Scenario 1: Pending Incoming Request (Shows "Recibida")
       if (profile?.connection_status === "pending" && profile?.connection_direction === "incoming") {
@@ -323,7 +350,7 @@ function PublicProfileContent() {
       return profile?.connection_direction === "incoming" ? "Aceptar" : "Solicitud enviada";
     }
     if (profile?.connection_status === "accepted") return "En mi red";
-    if (profile?.connection_status === "blocked") return "Bloqueado";
+    if (profile?.connection_status === "blocked") return "Desbloquear";
     return "Agregar a mi red";
   };
 
@@ -333,7 +360,7 @@ function PublicProfileContent() {
       return profile?.connection_direction === "incoming" ? "Aceptar" : "Solicitado";
     }
     if (profile?.connection_status === "accepted") return "En mi red";
-    if (profile?.connection_status === "blocked") return "Bloqueado";
+    if (profile?.connection_status === "blocked") return "Desbloquear";
     return "Agregar";
   };
 
@@ -349,15 +376,22 @@ function PublicProfileContent() {
   }
 
   if (error || !profile) {
+    const isRestricted = error === "restricted";
     return (
       <div className="w-full h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
         <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-red-100 shadow-sm flex flex-col items-center text-center gap-6">
           <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center text-red-500">
-            <span className="material-symbols-outlined text-[32px]">error</span>
+            <span className="material-symbols-outlined text-[32px]">
+              {isRestricted ? "lock" : "error"}
+            </span>
           </div>
           <div className="flex flex-col gap-2">
-            <h2 className="text-[20px] font-bold text-slate-900 font-jakarta">Error al cargar perfil</h2>
-            <p className="text-[14px] text-slate-500">{error || "No se pudo encontrar el usuario especificado."}</p>
+            <h2 className="text-[20px] font-bold text-slate-900 font-jakarta">
+              {isRestricted ? "Perfil no disponible" : "Error al cargar perfil"}
+            </h2>
+            <p className="text-[14px] text-slate-500">
+              {isRestricted ? "Este perfil no está disponible." : (error || "No se pudo encontrar el usuario especificado.")}
+            </p>
           </div>
           <button
             onClick={() => router.push("/comunidad")}
@@ -471,15 +505,17 @@ function PublicProfileContent() {
                         </Button>
                       )}
 
-                      {/* Message Action */}
-                      <Button
-                        onClick={handleSendMessage}
-                        variant="primary"
-                        className="flex-1 flex items-center justify-center gap-2 font-bold animate-none"
-                      >
-                        <span className="material-symbols-outlined text-[20px]">mail</span>
-                        Enviar mensaje
-                      </Button>
+                       {/* Message Action */}
+                       {profile?.connection_status !== "blocked" && (
+                         <Button
+                           onClick={handleSendMessage}
+                           variant="primary"
+                           className="flex-1 flex items-center justify-center gap-2 font-bold animate-none"
+                         >
+                           <span className="material-symbols-outlined text-[20px]">mail</span>
+                           Enviar mensaje
+                         </Button>
+                       )}
 
                       {/* Share Action (Icon only when viewing someone else's profile) */}
                       <button
@@ -581,7 +617,7 @@ function PublicProfileContent() {
 
                   {/* Line 2: Message & Share Actions */}
                   <div className="flex flex-row gap-2 w-full items-center">
-                    {!profile.is_own_profile && (
+                    {!profile.is_own_profile && profile?.connection_status !== "blocked" && (
                       <Button
                         onClick={handleSendMessage}
                         variant="primary"
@@ -594,12 +630,12 @@ function PublicProfileContent() {
                     <button
                       onClick={handleShareProfile}
                       className={`h-11 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 flex items-center justify-center shrink-0 rounded-xl transition-all duration-300 outline-none active:scale-95 cursor-pointer shadow-none font-jakarta ${
-                        profile.is_own_profile ? "w-full" : "w-11"
+                        (profile.is_own_profile || profile?.connection_status === "blocked") ? "w-full" : "w-11"
                       }`}
                       title="Compartir perfil"
                     >
                       <span className="material-symbols-outlined text-[20px]">share</span>
-                      {profile.is_own_profile && <span className="ml-2 font-bold text-[13px]">Compartir perfil</span>}
+                      {(profile.is_own_profile || profile?.connection_status === "blocked") && <span className="ml-2 font-bold text-[13px]">Compartir perfil</span>}
                     </button>
                   </div>
                 </div>

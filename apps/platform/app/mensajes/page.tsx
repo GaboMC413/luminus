@@ -1,8 +1,11 @@
 "use client";
 
 import React, { Suspense, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Modal from "@/components/ui/Modal";
+import { SelectInput } from "@/components/ui/SelectInput";
 import { formatRelativeTime } from "@/components/ui/PlatformNavbar";
 import { isUuid } from "@/utils/validation";
 import { formatMessageBody, formatShortTime } from "@/utils/messages";
@@ -20,6 +23,8 @@ type Conversation = {
     sender_id: string;
     created_at: string;
   } | null;
+  is_unread?: boolean;
+  is_muted?: boolean;
   updated_at: string;
 };
 
@@ -61,6 +66,7 @@ function MessagesContent() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [isChatMenuOpen, setIsChatMenuOpen] = useState(false);
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const chatMenuRef = useRef<HTMLDivElement>(null);
   const [viewportHeight, setViewportHeight] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -467,6 +473,79 @@ function MessagesContent() {
     }
   };
 
+  const handleMuteChat = async () => {
+    if (selectedConv && selectedId) {
+      try {
+        const isMuted = selectedConv.is_muted || false;
+        const res = await fetch(`/api/messages/conversations/${selectedId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ action: isMuted ? "unmute" : "mute" }),
+        });
+        if (res.ok) {
+          setConversations((prev) =>
+            prev.map((c) => (c.id === selectedId ? { ...c, is_muted: !isMuted } : c))
+          );
+          if (newConversation && newConversation.id === selectedId) {
+            setNewConversation((prev: any) => prev ? { ...prev, is_muted: !isMuted } : null);
+          }
+          window.dispatchEvent(new Event("luminus_messages_update"));
+        } else {
+          const data = await res.json().catch(() => ({}));
+          alert(data.message || "No se pudo actualizar el estado de silencio del chat.");
+        }
+      } catch (err) {
+        console.error("Failed to mute user:", err);
+      } finally {
+        setIsChatMenuOpen(false);
+      }
+    }
+  };
+
+  const [reportReason, setReportReason] = useState("");
+  const [reportDescription, setReportDescription] = useState("");
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+
+  const handleSubmitReport = async () => {
+    if (!selectedConv?.participant?.id) return;
+    if (!reportReason) {
+      alert("Por favor selecciona un motivo.");
+      return;
+    }
+
+    try {
+      setIsSubmittingReport(true);
+      const res = await fetch("/api/comunidad/report", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          reportedId: selectedConv.participant.id,
+          reason: reportReason,
+          description: reportDescription,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        alert("El reporte ha sido enviado. Revisaremos el caso para mantener segura la comunidad.");
+        setIsReportModalOpen(false);
+        setReportReason("");
+        setReportDescription("");
+      } else {
+        alert(data.message || "No se pudo enviar el reporte.");
+      }
+    } catch (err) {
+      console.error("Error submitting report:", err);
+      alert("Error de conexión al enviar el reporte.");
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
   const selectedConv = conversations.find((conversation) => conversation.id === selectedId) || newConversation;
   const filteredConversations = conversations.filter((conversation) => {
     const lastMessage = conversation.last_message?.body || "";
@@ -639,7 +718,14 @@ function MessagesContent() {
                           {formatRelativeTime(conversation.last_message?.created_at || conversation.updated_at)}
                         </span>
                       </div>
-                      <p className="text-sm text-slate-500 truncate">{conversation.last_message?.body || "Sin mensajes aun"}</p>
+                      <div className="flex items-center justify-between gap-1.5 min-w-0">
+                        <p className="text-sm text-slate-500 truncate flex-1">{conversation.last_message?.body || "Sin mensajes aun"}</p>
+                        {conversation.is_muted && (
+                          <span className="material-symbols-rounded text-slate-400 text-[16px] shrink-0" title="Silenciado">
+                            notifications_off
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </button>
                 ))}
@@ -776,11 +862,15 @@ function MessagesContent() {
                       {isChatMenuOpen && (
                         <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                           <button
-                            onClick={() => setIsChatMenuOpen(false)}
+                            onClick={handleMuteChat}
                             className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                           >
-                            <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900 text-[18px] transition-colors">notifications_off</span>
-                            <span className="font-semibold text-slate-500 group-hover:text-slate-900 transition-colors">Silenciar chat</span>
+                            <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900 text-[18px] transition-colors">
+                              {selectedConv.is_muted ? "notifications" : "notifications_off"}
+                            </span>
+                            <span className="font-semibold text-slate-500 group-hover:text-slate-900 transition-colors">
+                              {selectedConv.is_muted ? "Desactivar silencio" : "Silenciar chat"}
+                            </span>
                           </button>
                           <button
                             onClick={handleDeleteChat}
@@ -795,6 +885,16 @@ function MessagesContent() {
                           >
                             <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">block</span>
                             <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Bloquear usuario</span>
+                          </button>
+                          <button
+                            onClick={() => {
+                              setIsChatMenuOpen(false);
+                              setIsReportModalOpen(true);
+                            }}
+                            className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                          >
+                            <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">report</span>
+                            <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Reportar usuario</span>
                           </button>
                         </div>
                       )}
@@ -948,6 +1048,78 @@ function MessagesContent() {
           </div>
         </div>
       </div>
+      
+      <Modal
+        isOpen={isReportModalOpen}
+        onClose={() => {
+          setIsReportModalOpen(false);
+          setReportReason("");
+          setReportDescription("");
+        }}
+        title="Reportar usuario"
+        maxWidth="440px"
+        footer={
+          <>
+            <button
+              onClick={() => {
+                setIsReportModalOpen(false);
+                setReportReason("");
+                setReportDescription("");
+              }}
+              disabled={isSubmittingReport}
+              className="flex-1 h-11 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-sm font-bold transition duration-200 cursor-pointer border-none"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSubmitReport}
+              disabled={isSubmittingReport || !reportReason}
+              className={`flex-1 h-11 text-white rounded-xl text-sm font-bold transition duration-200 cursor-pointer border-none flex items-center justify-center gap-1.5 ${
+                isSubmittingReport || !reportReason
+                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                  : "bg-[#FF4B4B] hover:bg-[#E03A3A] hover:scale-[1.02] active:scale-[0.98]"
+              }`}
+            >
+              {isSubmittingReport ? (
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <span className="material-symbols-rounded text-[18px]">report</span>
+                  <span>Reportar</span>
+                </>
+              )}
+            </button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <SelectInput
+              label="Motivo del reporte *"
+              value={reportReason}
+              onSelect={(val) => setReportReason(val)}
+              placeholder="Selecciona una opción..."
+              options={[
+                "Comportamiento abusivo o acoso",
+                "Spam o contenido comercial no deseado",
+                "Contenido inapropiado u ofensivo",
+                "Suplantación de identidad",
+                "Otro",
+              ]}
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-slate-600">Detalles adicionales (opcional)</label>
+            <textarea
+              value={reportDescription}
+              onChange={(e) => setReportDescription(e.target.value)}
+              placeholder="Proporciona más detalles si lo deseas..."
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-1 focus:ring-slate-300 outline-none resize-none h-24 text-slate-800 font-medium"
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }

@@ -195,6 +195,31 @@ export async function POST(request: Request, { params }: { params: { conversatio
       return NextResponse.json({ message: "Conversacion no encontrada." }, { status: 404 });
     }
 
+    const otherParticipants = await prisma.conversationParticipant.findMany({
+      where: {
+        conversationId,
+        userId: { not: session.userId },
+      },
+      select: { userId: true },
+    });
+
+    if (otherParticipants.length > 0) {
+      const otherUserIds = otherParticipants.map((p: any) => p.userId);
+      const block = await prisma.userConnection.findFirst({
+        where: {
+          status: "blocked",
+          OR: [
+            { requesterId: session.userId, recipientId: { in: otherUserIds } },
+            { requesterId: { in: otherUserIds }, recipientId: session.userId },
+          ],
+        },
+      });
+
+      if (block) {
+        return NextResponse.json({ message: "No puedes enviar mensajes a este usuario." }, { status: 403 });
+      }
+    }
+
     const message = await prisma.$transaction(async (tx: any) => {
       const created = await tx.message.create({
         data: {

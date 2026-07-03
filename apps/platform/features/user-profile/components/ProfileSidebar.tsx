@@ -218,7 +218,7 @@ function DetailItem({ label, value, icon, onClick, isPublic = false, firstName, 
         {isEmpty ? (
           isPublic ? (
             <span className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight truncate leading-relaxed">
-              {nameToUse} no ha especificado su profesión
+              {nameToUse} aún no ha agregado su profesión.
             </span>
           ) : (
             onClick && (
