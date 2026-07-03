@@ -66,6 +66,7 @@ function PlatformContent() {
     interests: [] as string[],
   });
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [fetchingMore, setFetchingMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
@@ -242,7 +243,7 @@ function PlatformContent() {
   }, [debouncedQuery, appliedFilters]);
 
   useEffect(() => {
-    if (searchQuery.length < 2) {
+    if (searchQuery.length < 2 || searchQuery === selectedSuggestion) {
       setSuggestions([]);
       return;
     }
@@ -583,9 +584,15 @@ function PlatformContent() {
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSearchQuery(val);
+                    if (val !== selectedSuggestion) {
+                      setSelectedSuggestion(null);
+                    }
+                  }}
                   placeholder="Buscar por ciudad, país o temas de interés"
-                  className="flex-1 bg-transparent border-none text-sm font-normal text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                  className="flex-1 bg-transparent border-none text-base sm:text-sm font-normal text-slate-800 placeholder:text-slate-400 focus:outline-none"
                 />
 
                 {suggestions.length > 0 && (
@@ -595,6 +602,7 @@ function PlatformContent() {
                         key={idx}
                         onClick={() => {
                           setSearchQuery(suggestion.value);
+                          setSelectedSuggestion(suggestion.value);
                           setSuggestions([]);
                         }}
                         className="w-full px-6 py-3.5 text-left flex items-center gap-4 hover:bg-slate-50 border-b border-slate-50 last:border-none transition-colors border-none bg-transparent cursor-pointer"
