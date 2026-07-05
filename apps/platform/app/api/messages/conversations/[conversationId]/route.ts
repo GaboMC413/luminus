@@ -61,6 +61,39 @@ export async function DELETE(
       },
     });
 
+    try {
+      const otherParticipant = await prisma.conversationParticipant.findFirst({
+        where: {
+          conversationId,
+          userId: { not: session.userId },
+        },
+        select: {
+          user: {
+            select: {
+              email: true,
+              profile: { select: { firstName: true, lastName: true, fullName: true } },
+            },
+          },
+        },
+      });
+
+      const otherUserName = otherParticipant?.user?.profile?.fullName || `${otherParticipant?.user?.profile?.firstName || ""} ${otherParticipant?.user?.profile?.lastName || ""}`.trim() || otherParticipant?.user?.email || "Usuario";
+      
+      await prisma.activityLog.create({
+        data: {
+          userId: session.userId,
+          action: "DELETE_CHAT",
+          details: JSON.stringify({
+            conversationId,
+            targetEmail: otherParticipant?.user?.email,
+            targetName: otherUserName,
+          }),
+        },
+      });
+    } catch (logErr) {
+      console.error("Failed to log DELETE_CHAT activity:", logErr);
+    }
+
     return NextResponse.json({ message: "Conversacion eliminada exitosamente." });
   } catch (error) {
     console.error("Failed to delete conversation.", error);
@@ -118,6 +151,42 @@ export async function PATCH(
         isMuted: action === "mute",
       },
     });
+
+    try {
+      const otherParticipant = await prisma.conversationParticipant.findFirst({
+        where: {
+          conversationId,
+          userId: { not: session.userId },
+        },
+        select: {
+          userId: true,
+          user: {
+            select: {
+              email: true,
+              profile: { select: { firstName: true, lastName: true, fullName: true } },
+            },
+          },
+        },
+      });
+
+      if (otherParticipant) {
+        const otherUserName = otherParticipant.user.profile?.fullName || `${otherParticipant.user.profile?.firstName || ""} ${otherParticipant.user.profile?.lastName || ""}`.trim() || otherParticipant.user.email || "Usuario";
+        await prisma.activityLog.create({
+          data: {
+            userId: session.userId,
+            action: action === "mute" ? "MUTE_USER" : "UNMUTE_USER",
+            details: JSON.stringify({
+              conversationId,
+              targetId: otherParticipant.userId,
+              targetEmail: otherParticipant.user.email,
+              targetName: otherUserName,
+            }),
+          },
+        });
+      }
+    } catch (logErr) {
+      console.error("Failed to log mute activity:", logErr);
+    }
 
     return NextResponse.json({ 
       success: true, 

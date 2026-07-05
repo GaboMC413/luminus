@@ -37,6 +37,7 @@ interface ChatPopupProps {
 export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(true);
   const [otherLastReadAt, setOtherLastReadAt] = useState<string | null>(null);
   const [inputText, setInputText] = useState("");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -140,9 +141,10 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
   // Load conversation on mount
   useEffect(() => {
     setConnection(null);
+    setDbConversationId(null);
+    setMessages([]);
+    setIsLoadingMessages(true);
     if (!userId || !isUuid(userId)) return;
-
-    let pollInterval: NodeJS.Timeout | null = null;
 
     const loadDbChat = async () => {
       try {
@@ -157,6 +159,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
 
         if (!convRes.ok) {
           console.error("Failed to load/create DB conversation");
+          setIsLoadingMessages(false);
           return;
         }
 
@@ -171,6 +174,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
 
         if (!msgRes.ok) {
           console.error("Failed to fetch DB messages");
+          setIsLoadingMessages(false);
           return;
         }
 
@@ -184,21 +188,66 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
           createdAt: m.created_at,
           time: formatShortTime(m.created_at),
         }));
-        setMessages(dbMsgs);
+        
+        // Sort chronologically ascending
+        const sortedMsgs = [...dbMsgs].sort(
+          (a, b) => new Date(a.createdAt || "").getTime() - new Date(b.createdAt || "").getTime()
+        );
+        setMessages(sortedMsgs);
       } catch (err) {
         console.error("Error loading DB chat inside popup:", err);
+      } finally {
+        setIsLoadingMessages(false);
       }
     };
 
     loadDbChat();
-    pollInterval = setInterval(loadDbChat, 5000);
+  }, [userId]);
 
-    return () => {
-      if (pollInterval) {
-        clearInterval(pollInterval);
+  // Poll for new messages while chat is active
+  useEffect(() => {
+    if (!dbConversationId || !userId) return;
+
+    const pollMessages = async () => {
+      try {
+        const msgRes = await fetch(`/api/messages/conversations/${dbConversationId}/messages`, {
+          cache: "no-store",
+        });
+
+        if (!msgRes.ok) {
+          console.error("Failed to poll DB messages");
+          return;
+        }
+
+        const msgData = await msgRes.json();
+        setOtherLastReadAt(msgData.otherLastReadAt || null);
+        setConnection(msgData.connection || null);
+        const dbMsgs = (msgData.messages || []).map((m: any) => ({
+          id: m.id,
+          text: m.body,
+          sender: m.sender_id === userId ? "other" : "me",
+          createdAt: m.created_at,
+          time: formatShortTime(m.created_at),
+        }));
+
+        setMessages((prev) => {
+          const dbMsgIds = new Set(dbMsgs.map((m: any) => String(m.id)));
+          // Keep local sent messages that are not yet returned by the DB poll
+          const localOnlyMessages = prev.filter((m) => !dbMsgIds.has(String(m.id)) && m.sender === "me");
+          const combined = [...dbMsgs, ...localOnlyMessages];
+          // Sort chronologically ascending
+          return combined.sort(
+            (a, b) => new Date(a.createdAt || "").getTime() - new Date(b.createdAt || "").getTime()
+          );
+        });
+      } catch (err) {
+        console.error("Error polling DB messages inside popup:", err);
       }
     };
-  }, [userId]);
+
+    const interval = setInterval(pollMessages, 5000);
+    return () => clearInterval(interval);
+  }, [dbConversationId, userId]);
 
   // Scroll to bottom when messages change or keyboard state changes
   useEffect(() => {
@@ -249,6 +298,22 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
       window.dispatchEvent(new Event("luminus_messages_update"));
     } catch (err) {
       console.error("Error sending DB message inside popup:", err);
+    } finally {
+      // Re-focus the input to keep the keyboard open on mobile
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 50);
+    }
+  };
+
+  const handleSendClick = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    handleSend();
+  };
+
+  const handleChatContainerClick = () => {
+    if (document.activeElement === textareaRef.current) {
+      textareaRef.current?.blur();
     }
   };
 
@@ -437,7 +502,13 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
         <div className="flex items-center gap-3 flex-1 min-w-0">
           {/* Mobile Back Button */}
           <button
-            onClick={onClose}
+            onClick={() => {
+              if (document.activeElement === textareaRef.current) {
+                textareaRef.current?.blur();
+                return;
+              }
+              onClose();
+            }}
             className="sm:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer mr-1"
             title="Atrás"
           >
@@ -546,8 +617,20 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
       </div>
 
       {/* Message Body */}
-      <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-3 custom-scrollbar flex flex-col gap-4 bg-white overscroll-contain">
-        {messages.length === 0 ? (
+      <div ref={chatContainerRef} onClick={handleChatContainerClick} className="flex-1 overflow-y-auto p-3 custom-scrollbar flex flex-col gap-4 bg-white overscroll-contain">
+        {isLoadingMessages ? (
+          <div className="flex-1 flex flex-col gap-4 bg-white justify-end p-2">
+            <div className="flex flex-col items-start gap-1">
+              <div className="w-[55%] h-10 bg-slate-100 rounded-xl rounded-tl-none animate-pulse" />
+            </div>
+            <div className="flex flex-col items-end gap-1">
+              <div className="w-[45%] h-12 bg-slate-100 rounded-xl rounded-tr-none animate-pulse" />
+            </div>
+            <div className="flex flex-col items-start gap-1">
+              <div className="w-[65%] h-10 bg-slate-100 rounded-xl rounded-tl-none animate-pulse" />
+            </div>
+          </div>
+        ) : messages.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-4 animate-in fade-in duration-300">
             <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 mb-4">
               <span className="material-symbols-outlined text-[28px]">chat_bubble_outline</span>
@@ -670,7 +753,9 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                 }}
               />
               <button
-                onClick={handleSend}
+                onMouseDown={(e) => e.preventDefault()}
+                onTouchStart={handleSendClick}
+                onClick={handleSendClick}
                 className={`absolute right-1.5 bottom-1.5 w-10 h-10 rounded-full flex items-center justify-center transition-all border-none ${
                   inputText.trim()
                     ? "text-slate-800"

@@ -29,5 +29,44 @@ export default async function AdminPage() {
   const users = await listAdminUsers(prisma);
   const chats = await listAdminChats(prisma);
 
-  return <AdminUsersClient initialUsers={users} initialChats={chats} />;
+  const logsRaw = await prisma.activityLog.findMany({
+    include: {
+      user: {
+        select: {
+          email: true,
+          profile: {
+            select: {
+              firstName: true,
+              lastName: true,
+              fullName: true,
+              avatarUrl: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 500,
+  });
+
+  const logs = logsRaw.map((log: any) => ({
+    id: log.id,
+    userId: log.userId,
+    action: log.action,
+    details: log.details,
+    createdAt: log.createdAt.toISOString(),
+    user: {
+      email: log.user.email,
+      profile: {
+        firstName: log.user.profile?.firstName || "",
+        lastName: log.user.profile?.lastName || "",
+        fullName: log.user.profile?.fullName || "",
+        avatarUrl: log.user.profile?.avatarUrl || "",
+      },
+    },
+  }));
+
+  return <AdminUsersClient initialUsers={users} initialChats={chats} initialLogs={logs} />;
 }

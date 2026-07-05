@@ -101,12 +101,24 @@ export async function POST(request: Request) {
     const { prisma } = await import("@/lib/db");
     const recipient = await prisma.user.findUnique({
       where: { id: recipientId },
-      select: { id: true, status: true },
+      select: {
+        id: true,
+        status: true,
+        email: true,
+        profile: { select: { firstName: true, lastName: true, fullName: true } },
+      },
     });
 
     if (!recipient || recipient.status !== "active") {
       return NextResponse.json({ message: "Usuario no encontrado." }, { status: 404 });
     }
+
+    const targetName = recipient.profile?.fullName || `${recipient.profile?.firstName || ""} ${recipient.profile?.lastName || ""}`.trim() || recipient.email || "Usuario";
+    const targetDetails = JSON.stringify({
+      recipientId,
+      recipientEmail: recipient.email,
+      recipientName: targetName,
+    });
 
     const existingConnection = await prisma.userConnection.findFirst({
       where: {
@@ -126,14 +138,22 @@ export async function POST(request: Request) {
       }
 
       if (existingConnection.status === "declined") {
-        const diffMs = Date.now() - new Date(existingConnection.updatedAt).getTime();
-        const cooldownMs = 24 * 60 * 60 * 1000;
+        const requester = await prisma.user.findUnique({
+          where: { id: session.userId },
+          select: { tier: true, trialExpiresAt: true },
+        });
+        const isPremium = requester && (requester.tier === "BASIC" || (requester.trialExpiresAt && new Date(requester.trialExpiresAt) > new Date()));
 
-        if (diffMs < cooldownMs) {
-          const hoursLeft = Math.ceil((cooldownMs - diffMs) / (60 * 60 * 1000));
-          return NextResponse.json({
-            message: `Debes esperar ${hoursLeft} horas antes de enviar otra solicitud a este usuario.`
-          }, { status: 429 });
+        if (!isPremium) {
+          const diffMs = Date.now() - new Date(existingConnection.updatedAt).getTime();
+          const cooldownMs = 24 * 60 * 60 * 1000;
+
+          if (diffMs < cooldownMs) {
+            const hoursLeft = Math.ceil((cooldownMs - diffMs) / (60 * 60 * 1000));
+            return NextResponse.json({
+              message: `Debes esperar ${hoursLeft} horas antes de enviar otra solicitud a este usuario.`
+            }, { status: 429 });
+          }
         }
 
         const updated = await prisma.userConnection.update({
@@ -145,6 +165,18 @@ export async function POST(request: Request) {
             updatedAt: new Date(),
           },
         });
+
+        try {
+          await prisma.activityLog.create({
+            data: {
+              userId: session.userId,
+              action: "REQUEST_CONNECTION",
+              details: targetDetails,
+            },
+          });
+        } catch (logError) {
+          console.error("Failed to log REQUEST_CONNECTION activity:", logError);
+        }
 
         try {
           const requesterProfile = await prisma.userProfile.findUnique({
@@ -206,6 +238,18 @@ export async function POST(request: Request) {
         status: "pending",
       },
     });
+
+    try {
+      await prisma.activityLog.create({
+        data: {
+          userId: session.userId,
+          action: "REQUEST_CONNECTION",
+          details: targetDetails,
+        },
+      });
+    } catch (logError) {
+      console.error("Failed to log REQUEST_CONNECTION activity:", logError);
+    }
 
     // Create a connection request notification for the recipient user
     try {
@@ -307,6 +351,29 @@ export async function PUT(request: Request) {
       where: { id: connection.id },
       data: { status: "accepted" },
     });
+
+    try {
+      const requesterUser = await prisma.user.findUnique({
+        where: { id: requesterId },
+        select: { email: true, profile: { select: { firstName: true, lastName: true, fullName: true } } },
+      });
+      if (requesterUser) {
+        const requesterName = requesterUser.profile?.fullName || `${requesterUser.profile?.firstName || ""} ${requesterUser.profile?.lastName || ""}`.trim() || requesterUser.email || "Usuario";
+        await prisma.activityLog.create({
+          data: {
+            userId: session.userId,
+            action: "ACCEPT_CONNECTION",
+            details: JSON.stringify({
+              requesterId,
+              requesterEmail: requesterUser.email,
+              requesterName,
+            }),
+          },
+        });
+      }
+    } catch (logError) {
+      console.error("Failed to log ACCEPT_CONNECTION activity:", logError);
+    }
 
     // Create a connection accepted notification for the requester (original sender)
     try {
@@ -428,10 +495,57 @@ export async function DELETE(request: Request) {
         where: { id: connection.id },
         data: { status: "declined" },
       });
+
+      try {
+        const isRecipient = connection.recipientId === session.userId;
+        const otherUserId = isRecipient ? connection.requesterId : connection.recipientId;
+        const otherUser = await prisma.user.findUnique({
+          where: { id: otherUserId },
+          select: { email: true, profile: { select: { firstName: true, lastName: true, fullName: true } } },
+        });
+        const otherUserName = otherUser?.profile?.fullName || `${otherUser?.profile?.firstName || ""} ${otherUser?.profile?.lastName || ""}`.trim() || otherUser?.email || "Usuario";
+        
+        await prisma.activityLog.create({
+          data: {
+            userId: session.userId,
+            action: isRecipient ? "NETWORK_REJECT" : "CANCEL_CONNECTION_REQUEST",
+            details: JSON.stringify({
+              targetId: otherUserId,
+              targetEmail: otherUser?.email,
+              targetName: otherUserName,
+            }),
+          },
+        });
+      } catch (logErr) {
+        console.error("Failed to log NETWORK_REJECT activity:", logErr);
+      }
     } else {
       await prisma.userConnection.delete({
         where: { id: connection.id },
       });
+
+      try {
+        const otherUserId = connection.requesterId === session.userId ? connection.recipientId : connection.requesterId;
+        const otherUser = await prisma.user.findUnique({
+          where: { id: otherUserId },
+          select: { email: true, profile: { select: { firstName: true, lastName: true, fullName: true } } },
+        });
+        const otherUserName = otherUser?.profile?.fullName || `${otherUser?.profile?.firstName || ""} ${otherUser?.profile?.lastName || ""}`.trim() || otherUser?.email || "Usuario";
+
+        await prisma.activityLog.create({
+          data: {
+            userId: session.userId,
+            action: "NETWORK_DELETION",
+            details: JSON.stringify({
+              targetId: otherUserId,
+              targetEmail: otherUser?.email,
+              targetName: otherUserName,
+            }),
+          },
+        });
+      } catch (logErr) {
+        console.error("Failed to log NETWORK_DELETION activity:", logErr);
+      }
     }
 
     // Delete any pending connection_request notifications between these two users
@@ -515,6 +629,27 @@ export async function PATCH(request: Request) {
         where: { id: blocked.id },
       });
 
+      try {
+        const otherUser = await prisma.user.findUnique({
+          where: { id: targetId },
+          select: { email: true, profile: { select: { firstName: true, lastName: true, fullName: true } } },
+        });
+        const otherUserName = otherUser?.profile?.fullName || `${otherUser?.profile?.firstName || ""} ${otherUser?.profile?.lastName || ""}`.trim() || otherUser?.email || "Usuario";
+        await prisma.activityLog.create({
+          data: {
+            userId: session.userId,
+            action: "UNBLOCK_USER",
+            details: JSON.stringify({
+              targetId,
+              targetEmail: otherUser?.email,
+              targetName: otherUserName,
+            }),
+          },
+        });
+      } catch (logErr) {
+        console.error("Failed to log UNBLOCK_USER activity:", logErr);
+      }
+
       return NextResponse.json({
         success: true,
         message: "Usuario desbloqueado con éxito.",
@@ -547,6 +682,27 @@ export async function PATCH(request: Request) {
           status: "blocked"
         }
       });
+    }
+
+    try {
+      const otherUser = await prisma.user.findUnique({
+        where: { id: targetId },
+        select: { email: true, profile: { select: { firstName: true, lastName: true, fullName: true } } },
+      });
+      const otherUserName = otherUser?.profile?.fullName || `${otherUser?.profile?.firstName || ""} ${otherUser?.profile?.lastName || ""}`.trim() || otherUser?.email || "Usuario";
+      await prisma.activityLog.create({
+        data: {
+          userId: session.userId,
+          action: "BLOCK_USER",
+          details: JSON.stringify({
+            targetId,
+            targetEmail: otherUser?.email,
+            targetName: otherUserName,
+          }),
+        },
+      });
+    } catch (logErr) {
+      console.error("Failed to log BLOCK_USER activity:", logErr);
     }
 
     // Delete any pending notifications between them

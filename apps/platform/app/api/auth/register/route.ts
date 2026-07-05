@@ -64,6 +64,18 @@ export async function POST(request: Request) {
 
     setSessionCookie(token);
 
+    try {
+      await prisma.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "USER_CREATED",
+          details: JSON.stringify({ email: user.email }),
+        },
+      });
+    } catch (logError) {
+      console.error("Failed to log USER_CREATED activity:", logError);
+    }
+
     return NextResponse.json({ user: serializeUser(user) }, { status: 201 });
   } catch (error) {
     console.error("Cognito registration flow failed.", error);

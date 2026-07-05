@@ -70,7 +70,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
       });
       setHighlightedIndex(currentIdx >= 0 ? currentIdx : 0);
 
-      if (!preventScrollOnOpen) {
+      if (!preventScrollOnOpen && typeof window !== 'undefined' && window.innerWidth < 768) {
         // Smooth scroll the select box higher in the viewport on mobile/devices when opened
         setTimeout(() => {
           containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });

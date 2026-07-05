@@ -137,9 +137,11 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
       window.addEventListener('resize', updateCoords);
       
       // Auto-scroll so dropdown suggestions are fully visible above mobile keyboard
-      setTimeout(() => {
-        containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
+      if (typeof window !== 'undefined' && window.innerWidth < 768) {
+        setTimeout(() => {
+          containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
 
       return () => {
         window.removeEventListener('scroll', handleScroll, true);
@@ -243,14 +245,16 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
         }}
         onFocus={() => {
           window.dispatchEvent(new CustomEvent('luminus-select-open', { detail: { id: instanceIdRef.current } }));
-          // First quick scroll attempt (for fast devices/browsers)
-          setTimeout(() => {
-            containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }, 150);
-          // Second delayed scroll attempt (once soft keyboard is fully open and viewport resized)
-          setTimeout(() => {
-            containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }, 450);
+          if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            // First quick scroll attempt (for fast devices/browsers)
+            setTimeout(() => {
+              containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 150);
+            // Second delayed scroll attempt (once soft keyboard is fully open and viewport resized)
+            setTimeout(() => {
+              containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 450);
+          }
         }}
         onKeyDown={(e) => {
           if (status !== "OK" || suggestions.length === 0) return;

@@ -244,9 +244,11 @@ export function PhoneInput({
             setShowPhoneDropdown(nextOpen);
             if (nextOpen) {
               window.dispatchEvent(new CustomEvent('luminus-select-open', { detail: { id: instanceIdRef.current } }));
-              setTimeout(() => {
-                containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }, 150);
+              if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                setTimeout(() => {
+                  containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 150);
+              }
             }
           }
         }}
