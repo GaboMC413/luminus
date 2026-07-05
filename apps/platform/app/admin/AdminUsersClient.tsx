@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/InputField";
+import { SelectInput } from "@/components/ui/SelectInput";
 
 type AdminUser = {
   id: string;
@@ -240,6 +241,18 @@ export function AdminUsersClient({
   const selectedSupportChat = supportChats.find((c) => c.id === selectedSupportChatId) ?? supportChats[0] ?? null;
 
   const [selectedId, setSelectedId] = useState(initialUsers[0]?.id ?? "");
+  const [selectedRole, setSelectedRole] = useState<string>("USER");
+  const [selectedStatus, setSelectedStatus] = useState<string>("active");
+
+  const selectedUser = users.find((user) => user.id === selectedId) ?? users[0] ?? null;
+
+  useEffect(() => {
+    if (selectedUser) {
+      setSelectedRole(selectedUser.role);
+      setSelectedStatus(selectedUser.status);
+    }
+  }, [selectedUser]);
+
   const [search, setSearch] = useState("");
   const [chatSearch, setChatSearch] = useState("");
   const [supportSearch, setSupportSearch] = useState("");
@@ -359,8 +372,6 @@ export function AdminUsersClient({
       return true;
     });
   }, [logs, logSearch, logAction, logDatePreset, logStartDate, logEndDate]);
-
-  const selectedUser = users.find((user) => user.id === selectedId) ?? users[0] ?? null;
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -596,81 +607,91 @@ export function AdminUsersClient({
                     className="flex flex-col gap-4 p-5"
                   >
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Rol
-                        <select name="role" defaultValue={selectedUser.role} className="h-10 rounded-lg border border-slate-200 px-3 text-[14px] font-medium text-slate-900 outline-none bg-white">
-                          <option value="USER">USER</option>
-                          <option value="ADMIN">ADMIN</option>
-                        </select>
-                      </label>
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Estado
-                        <select name="status" defaultValue={selectedUser.status} className="h-10 rounded-lg border border-slate-200 px-3 text-[14px] font-medium text-slate-900 outline-none bg-white">
-                          <option value="active">active</option>
-                          <option value="disabled">disabled</option>
-                          <option value="deleted">deleted</option>
-                        </select>
-                      </label>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Rol</span>
+                        <input type="hidden" name="role" value={selectedRole} />
+                        <SelectInput
+                          value={selectedRole}
+                          options={[
+                            { label: "USER", value: "USER" },
+                            { label: "ADMIN", value: "ADMIN" }
+                          ]}
+                          onSelect={(val) => setSelectedRole(val)}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Estado</span>
+                        <input type="hidden" name="status" value={selectedStatus} />
+                        <SelectInput
+                          value={selectedStatus}
+                          options={[
+                            { label: "active", value: "active" },
+                            { label: "disabled", value: "disabled" },
+                            { label: "deleted", value: "deleted" }
+                          ]}
+                          onSelect={(val) => setSelectedStatus(val)}
+                        />
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Nombre
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Nombre</span>
                         <InputField name="firstName" defaultValue={selectedUser.profile.firstName} className="h-10" />
-                      </label>
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Apellido
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Apellido</span>
                         <InputField name="lastName" defaultValue={selectedUser.profile.lastName} className="h-10" />
-                      </label>
+                      </div>
                     </div>
 
-                    <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                      Profesion
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[11px] font-bold uppercase text-slate-400">Profesion</span>
                       <InputField name="profession" defaultValue={selectedUser.profile.profession} className="h-10" />
-                    </label>
+                    </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Ciudad
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Ciudad</span>
                         <InputField name="city" defaultValue={selectedUser.profile.city} className="h-10" />
-                      </label>
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Pais
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Pais</span>
                         <InputField name="country" defaultValue={selectedUser.profile.country} className="h-10" />
-                      </label>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Celular
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Celular</span>
                         <InputField name="phoneNumber" defaultValue={selectedUser.profile.phoneNumber} className="h-10" />
-                      </label>
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Plan
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Plan</span>
                         <InputField name="selectedPlan" defaultValue={selectedUser.profile.selectedPlan} className="h-10" />
-                      </label>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Genero
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Genero</span>
                         <InputField name="gender" defaultValue={selectedUser.profile.gender} className="h-10" />
-                      </label>
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Nacimiento
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Nacimiento</span>
                         <InputField type="date" name="birthdate" defaultValue={selectedUser.profile.birthdate} className="h-10" />
-                      </label>
+                      </div>
                     </div>
 
-                    <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                      Intencion
-                      <textarea name="intention" defaultValue={selectedUser.profile.intention} rows={2} className="rounded-lg border border-slate-200 px-3 py-2 text-[14px] text-slate-900 outline-none resize-none" />
-                    </label>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[11px] font-bold uppercase text-slate-400">Intencion</span>
+                      <InputField name="intention" defaultValue={selectedUser.profile.intention} className="h-10" />
+                    </div>
 
-                    <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                      Bio
-                      <textarea name="bio" defaultValue={selectedUser.profile.bio} rows={3} className="rounded-lg border border-slate-200 px-3 py-2 text-[14px] text-slate-900 outline-none resize-none" />
-                    </label>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[11px] font-bold uppercase text-slate-400">Bio</span>
+                      <textarea name="bio" defaultValue={selectedUser.profile.bio} rows={3} className="rounded-lg border border-slate-200 px-3 py-2 text-[14px] text-slate-900 font-medium outline-none resize-none" />
+                    </div>
 
                     <label className="flex items-center gap-2.5 text-[13px] font-semibold text-slate-700 cursor-pointer">
                       <input type="checkbox" name="isOnboarded" defaultChecked={selectedUser.profile.isOnboarded} className="h-4.5 w-4.5 accent-black rounded cursor-pointer" />
@@ -688,6 +709,11 @@ export function AdminUsersClient({
                           ))
                         ) : (
                           <span className="text-[13px] text-slate-400">Sin intereses</span>
+                        )}
+                        {selectedUser.profile.intention && (
+                          <span className="rounded-full border border-zinc-950 bg-zinc-950 px-3 py-1 text-[12px] font-semibold text-white">
+                            {selectedUser.profile.intention}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -1051,45 +1077,45 @@ export function AdminUsersClient({
               {/* Action type */}
               <div className="flex flex-col gap-1.5 min-w-[180px]">
                 <span className="text-[11px] font-bold uppercase text-slate-400">Acción</span>
-                <select
+                <SelectInput
                   value={logAction}
-                  onChange={(e) => setLogAction(e.target.value)}
-                  className="h-10 rounded-lg border border-slate-200 px-3 text-[13px] outline-none bg-white font-semibold text-slate-800"
-                >
-                  <option value="all">Todas las acciones</option>
-                  <option value="USER_CREATED">Registro</option>
-                  <option value="LOGIN">Login</option>
-                  <option value="REQUEST_CONNECTION">Solicitó Conexión</option>
-                  <option value="ACCEPT_CONNECTION">Aceptó Conexión</option>
-                  <option value="FIRST_CONTACT">Primer Contacto</option>
-                  <option value="DELETE_CHAT">Eliminó Chat</option>
-                  <option value="MUTE_USER">Silenció</option>
-                  <option value="UNMUTE_USER">Reactivó Chat</option>
-                  <option value="BLOCK_USER">Bloqueó</option>
-                  <option value="UNBLOCK_USER">Desbloqueó</option>
-                  <option value="NETWORK_REJECT">Rechazó Red</option>
-                  <option value="CANCEL_CONNECTION_REQUEST">Canceló Solicitud</option>
-                  <option value="NETWORK_DELETION">Eliminó Red</option>
-                  <option value="UPDATE_PROFILE">Actualizó Perfil</option>
-                </select>
+                  options={[
+                    { label: "Todas las acciones", value: "all" },
+                    { label: "Registro", value: "USER_CREATED" },
+                    { label: "Login", value: "LOGIN" },
+                    { label: "Solicitó Conexión", value: "REQUEST_CONNECTION" },
+                    { label: "Aceptó Conexión", value: "ACCEPT_CONNECTION" },
+                    { label: "Primer Contacto", value: "FIRST_CONTACT" },
+                    { label: "Eliminó Chat", value: "DELETE_CHAT" },
+                    { label: "Silenció", value: "MUTE_USER" },
+                    { label: "Reactivó Chat", value: "UNMUTE_USER" },
+                    { label: "Bloqueó", value: "BLOCK_USER" },
+                    { label: "Desbloqueó", value: "UNBLOCK_USER" },
+                    { label: "Rechazó Red", value: "NETWORK_REJECT" },
+                    { label: "Canceló Solicitud", value: "CANCEL_CONNECTION_REQUEST" },
+                    { label: "Eliminó Red", value: "NETWORK_DELETION" },
+                    { label: "Actualizó Perfil", value: "UPDATE_PROFILE" },
+                  ]}
+                  onSelect={(val) => setLogAction(val)}
+                />
               </div>
 
               {/* Date Presets */}
               <div className="flex flex-col gap-1.5 min-w-[180px]">
                 <span className="text-[11px] font-bold uppercase text-slate-400">Tiempo</span>
-                <select
+                <SelectInput
                   value={logDatePreset}
-                  onChange={(e) => setLogDatePreset(e.target.value)}
-                  className="h-10 rounded-lg border border-slate-200 px-3 text-[13px] outline-none bg-white font-semibold text-slate-800"
-                >
-                  <option value="all">Todo el tiempo</option>
-                  <option value="week">Esta semana</option>
-                  <option value="month">Este mes</option>
-                  <option value="6months">Últimos 6 meses</option>
-                  <option value="year">Este año</option>
-                  <option value="quarter">Trimestre actual</option>
-                  <option value="custom">Fechas fijas / rango</option>
-                </select>
+                  options={[
+                    { label: "Todo el tiempo", value: "all" },
+                    { label: "Esta semana", value: "week" },
+                    { label: "Este mes", value: "month" },
+                    { label: "Últimos 6 meses", value: "6months" },
+                    { label: "Este año", value: "year" },
+                    { label: "Trimestre actual", value: "quarter" },
+                    { label: "Fechas fijas", value: "custom" },
+                  ]}
+                  onSelect={(val) => setLogDatePreset(val)}
+                />
               </div>
 
               {/* Custom Range start */}
