@@ -13,16 +13,11 @@ import { PhoneSection } from "@/features/user-profile/components/settings/PhoneS
 import { PasswordSection } from "@/features/user-profile/components/settings/PasswordSection";
 import { MembershipSection } from "@/features/user-profile/components/settings/MembershipSection";
 
+import { PageLoader } from "@/components/ui/PageLoader";
+
 export default function SettingsPage() {
   return (
-    <Suspense fallback={
-      <div className="w-full h-screen bg-slate-50 flex flex-col items-center justify-center">
-        <div className="flex flex-col items-center gap-4 animate-pulse">
-          <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px] invert brightness-0" />
-          <p className="text-[11px] text-slate-400 uppercase tracking-widest font-semibold">Cargando configuración...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<PageLoader />}>
       <SettingsContent />
     </Suspense>
   );

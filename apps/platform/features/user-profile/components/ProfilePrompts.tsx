@@ -147,19 +147,22 @@ export function PromptsDisplay({ prompts, onEdit, isPublic = false, firstName, h
         </div>
       ) : (
         <div className="flex flex-col items-start gap-4">
-          <p className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight leading-relaxed">
-            {isPublic ? `${nameToUse} aún no ha agregado reflexiones.` : "Agregá reflexiones para que otros te conozcan mejor"}
-          </p>
-          {!isPublic && onEdit && (
-            <EmptyProfileButton
-              onClick={() => {
-                window.history.replaceState(null, "", window.location.pathname);
-                onEdit?.('select');
-              }}
-              label="Comparte tus reflexiones"
-              icon="add"
-              className={highlight ? "glow-highlight" : ""}
-            />
+          {isPublic ? (
+            <p className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight leading-relaxed">
+              {nameToUse} aún no ha agregado reflexiones.
+            </p>
+          ) : (
+            onEdit && (
+              <EmptyProfileButton
+                onClick={() => {
+                  window.history.replaceState(null, "", window.location.pathname);
+                  onEdit?.('select');
+                }}
+                label="Comparte tus reflexiones"
+                icon="add"
+                className={highlight ? "glow-highlight" : ""}
+              />
+            )
           )}
         </div>
       )}

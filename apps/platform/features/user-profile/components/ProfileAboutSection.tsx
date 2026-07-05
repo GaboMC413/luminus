@@ -36,19 +36,22 @@ export function ProfileAboutSection({ bio, onEdit, isPublic = false, firstName, 
         </p>
       ) : (
         <div className="flex flex-col items-start gap-4">
-          <p className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight leading-relaxed">
-            {isPublic ? `${nameToUse} aún no ha escrito sobre sí.` : "Aún no has escrito nada sobre ti..."}
-          </p>
-          {!isPublic && onEdit && (
-            <EmptyProfileButton
-              onClick={() => {
-                window.history.replaceState(null, "", window.location.pathname);
-                onEdit();
-              }}
-              label="Escribe sobre ti"
-              icon="add"
-              className={highlight ? "glow-highlight" : ""}
-            />
+          {isPublic ? (
+            <p className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight leading-relaxed">
+              {nameToUse} aún no ha escrito sobre sí.
+            </p>
+          ) : (
+            onEdit && (
+              <EmptyProfileButton
+                onClick={() => {
+                  window.history.replaceState(null, "", window.location.pathname);
+                  onEdit();
+                }}
+                label="Escribe sobre ti"
+                icon="add"
+                className={highlight ? "glow-highlight" : ""}
+              />
+            )
           )}
         </div>
       )}

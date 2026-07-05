@@ -8,6 +8,7 @@ import { InterestPill } from "@/components/ui/InterestPill";
 import { UserCard } from "@/components/ui/UserCard";
 import { Button, ProfileButton } from "@/components/ui/Button";
 import { SelectInput } from "@/components/ui/SelectInput";
+import { PageLoader } from "@/components/ui/PageLoader";
 
 const CATEGORIES_MAPPING = {
   "Crecimiento Personal": ["Autocuidado", "Motivación", "Calma interior", "Propósito de vida", "Organización personal", "Toma de decisiones", "Rutinas saludables", "Hábitos conscientes", "Confianza personal", "Autoestima", "Acompañamiento personal", "Crecimiento Personal", "Autoconocimiento", "Aprendizaje continuo"],
@@ -21,11 +22,7 @@ const CATEGORIES_MAPPING = {
 
 export default function PlatformPage() {
   return (
-    <Suspense fallback={
-      <div className="w-full h-screen bg-[#F8FAFC] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black"></div>
-      </div>
-    }>
+    <Suspense fallback={<PageLoader className="h-screen" />}>
       <PlatformContent />
     </Suspense>
   );
@@ -65,14 +62,14 @@ function PlatformContent() {
     cities: [] as string[],
     interests: [] as string[],
   });
-  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [appliedSearchQuery, setAppliedSearchQuery] = useState("");
   const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
   const [fetchingMore, setFetchingMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
   const router = useRouter();
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const desktopDropdownRef = useRef<HTMLDivElement>(null);
   const filterButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -85,8 +82,8 @@ function PlatformContent() {
       }
 
       if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(target) &&
+        desktopDropdownRef.current &&
+        !desktopDropdownRef.current.contains(target) &&
         filterButtonRef.current &&
         !filterButtonRef.current.contains(target)
       ) {
@@ -171,13 +168,6 @@ function PlatformContent() {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  useEffect(() => {
     async function loadFilters() {
       try {
         const countryParam = tempFilters.country || "";
@@ -205,7 +195,7 @@ function PlatformContent() {
       const params = new URLSearchParams();
       params.set("limit", "24");
       if (cursorVal) params.set("cursor", cursorVal);
-      if (debouncedQuery) params.set("query", debouncedQuery);
+      if (appliedSearchQuery) params.set("query", appliedSearchQuery);
       if (appliedFilters.country) params.set("country", appliedFilters.country);
       if (appliedFilters.city) params.set("city", appliedFilters.city);
       if (appliedFilters.category && appliedFilters.category !== "Todas las categorías") {
@@ -240,7 +230,7 @@ function PlatformContent() {
 
   useEffect(() => {
     fetchUsers(null);
-  }, [debouncedQuery, appliedFilters]);
+  }, [appliedSearchQuery, appliedFilters]);
 
   useEffect(() => {
     if (searchQuery.length < 2 || searchQuery === selectedSuggestion) {
@@ -288,15 +278,8 @@ function PlatformContent() {
   // Users are already filtered and paginated on the backend
   const filteredUsers = users;
 
-  if (loading) {
-    return (
-      <div className="w-full h-screen bg-[#F8FAFC] flex flex-col items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black"></div>
-          <p className="text-[13px] text-slate-500 font-medium">Cargando comunidad...</p>
-        </div>
-      </div>
-    );
+  if (users.length === 0 && loading) {
+    return <PageLoader className="h-screen" />;
   }
 
   if (error) {
@@ -579,7 +562,7 @@ function PlatformContent() {
             </div>
 
             <div className="flex items-center gap-3 w-full relative">
-              <div className="flex-1 h-12 px-3.5 bg-white rounded-xl border border-zinc-200 flex items-center gap-3 focus-within:border-black focus-within:ring-1 focus-within:ring-black group transition-all relative">
+              <div className="flex-1 h-12 px-3.5 bg-white rounded-xl border border-zinc-200 flex items-center gap-3 focus-within:border-black group transition-all duration-300 relative">
                 <span className="material-symbols-outlined text-[22px] text-slate-400 group-focus-within:text-black">search</span>
                 <input
                   type="text"
@@ -591,9 +574,31 @@ function PlatformContent() {
                       setSelectedSuggestion(null);
                     }
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      setAppliedSearchQuery(searchQuery);
+                      setSuggestions([]);
+                    }
+                  }}
                   placeholder="Buscar por ciudad, país o temas de interés"
                   className="flex-1 bg-transparent border-none text-base sm:text-sm font-normal text-slate-800 placeholder:text-slate-400 focus:outline-none"
                 />
+
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setAppliedSearchQuery("");
+                      setSelectedSuggestion(null);
+                      setSuggestions([]);
+                    }}
+                    className="p-1 hover:bg-slate-100 rounded-full transition-colors border-none bg-transparent cursor-pointer text-slate-400 hover:text-slate-700 flex items-center justify-center -mr-1"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">close</span>
+                  </button>
+                )}
 
                 {suggestions.length > 0 && (
                   <div className="absolute top-[52px] left-0 w-full bg-white border border-slate-200 rounded-2xl z-50 overflow-hidden flex flex-col px-[2px]">
@@ -603,6 +608,7 @@ function PlatformContent() {
                         onClick={() => {
                           setSearchQuery(suggestion.value);
                           setSelectedSuggestion(suggestion.value);
+                          setAppliedSearchQuery(suggestion.value);
                           setSuggestions([]);
                         }}
                         className="w-full px-6 py-3.5 text-left flex items-center gap-4 hover:bg-slate-50 border-b border-slate-50 last:border-none transition-colors border-none bg-transparent cursor-pointer"
@@ -611,8 +617,8 @@ function PlatformContent() {
                           {suggestion.type === 'Ciudad' ? 'location_on' : suggestion.type === 'País' ? 'public' : 'favorite'}
                         </span>
                         <div className="flex-1 flex flex-col overflow-hidden">
-                          <span className="text-sm font-medium text-slate-900 truncate">{suggestion.value}</span>
-                          <span className="text-[9px] text-slate-400 mt-0.5 uppercase tracking-widest font-semibold truncate">{suggestion.type}</span>
+                           <span className="text-sm font-medium text-slate-900 truncate">{suggestion.value}</span>
+                           <span className="text-[9px] text-slate-400 mt-0.5 uppercase tracking-widest font-semibold truncate">{suggestion.type}</span>
                         </div>
                       </button>
                     ))}
@@ -657,29 +663,30 @@ function PlatformContent() {
               {/* Desktop: Popover Dropdown (inline relative to button) */}
               {showFilters && (
                 <div 
-                  ref={dropdownRef}
+                  ref={desktopDropdownRef}
                   className="
                     hidden md:flex 
                     absolute 
                     top-[56px] right-0 
                     w-[384px] 
+                    max-h-[420px]
                     bg-white 
                     rounded-2xl 
                     border border-zinc-200 
                     shadow-none 
                     z-50 
                     flex-col 
-                    overflow-visible 
+                    overflow-hidden 
                     animate-in 
                     slide-in-from-top-2 
                     fade-in 
                     duration-150
                   "
                 >
-                  <div className="p-5 flex flex-col gap-5">
+                  <div className="p-5 flex flex-col gap-5 flex-1 overflow-y-auto custom-scrollbar">
                     {renderFilterFields(false)}
                   </div>
-                  <div className="px-4 py-3 bg-slate-50 border-t border-zinc-200/40 flex items-center justify-between gap-3 rounded-b-2xl">
+                  <div className="px-4 py-3 bg-slate-50 border-t border-zinc-200/40 flex items-center justify-between gap-3 rounded-b-2xl shrink-0">
                     {renderActionsFooter()}
                   </div>
                 </div>
@@ -687,8 +694,7 @@ function PlatformContent() {
 
               {/* Mobile: React Portal Full-Screen Modal */}
               {showFilters && mounted && createPortal(
-                <div 
-                  ref={dropdownRef}
+                <div
                   className="
                     md:hidden 
                     fixed 
@@ -799,7 +805,21 @@ function PlatformContent() {
             onScroll={handleScroll}
             className="flex-1 w-full overflow-y-auto custom-scrollbar pb-0 md:pb-12"
           >
-            {filteredUsers.length === 0 ? (
+            {loading ? (
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 w-full">
+                {[...Array(8)].map((_, idx) => (
+                  <div key={idx} className="h-[320px] bg-white rounded-2xl border border-zinc-200/60 p-5 flex flex-col gap-4 animate-pulse">
+                    <div className="h-32 w-full bg-slate-100 rounded-xl" />
+                    <div className="h-4 w-3/4 bg-slate-100 rounded" />
+                    <div className="h-3 w-1/2 bg-slate-100 rounded" />
+                    <div className="mt-auto flex gap-2">
+                      <div className="h-8 w-1/3 bg-slate-100 rounded-lg" />
+                      <div className="h-8 w-1/3 bg-slate-100 rounded-lg" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : filteredUsers.length === 0 ? (
               <div className="w-full flex flex-col items-center justify-center p-12 text-center min-h-[300px]">
                 <span className="material-symbols-outlined text-[48px] text-slate-300 mb-2">person_search</span>
                 <h3 className="text-base font-semibold text-slate-800 mb-1">No se encontraron resultados</h3>

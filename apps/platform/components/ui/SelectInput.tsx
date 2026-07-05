@@ -118,7 +118,12 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
   React.useLayoutEffect(() => {
     if (isOpen) {
       updateCoords();
+      const openedAt = Date.now();
       const handleScroll = (event: Event) => {
+        // Ignore scroll events that happen within 500ms of opening (e.g. from smooth scrollIntoView)
+        if (Date.now() - openedAt < 500) {
+          return;
+        }
         if (dropdownRef.current && dropdownRef.current.contains(event.target as Node)) {
           return;
         }
@@ -160,6 +165,8 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
     <div
       ref={dropdownRef}
       data-select-portal="true"
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
       style={{
         position: 'fixed',
         top: coords.top !== undefined ? `${coords.top}px` : 'auto',

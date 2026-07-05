@@ -408,9 +408,9 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
     }
   };
 
-  const isPendingForMe = connection && connection.status === "pending" && connection.recipientId !== userId;
-  const isDeclinedByMe = connection && connection.status === "declined" && connection.recipientId !== userId;
-  const isDeclinedForMe = connection && connection.status === "declined" && connection.requesterId !== userId;
+  const isPendingForMe = false;
+  const isDeclinedByMe = false;
+  const isDeclinedForMe = false;
 
   const dynamicStyle = isMobile ? {
     top: isKeyboardOpen ? "12px" : "80px",

@@ -18,6 +18,7 @@ import { CoverSelectorModal } from "../modals/CoverSelectorModal";
 import { ProfileHeaderCover } from "./ProfileHeaderCover";
 import { ProfileSidebar } from "./ProfileSidebar";
 import { ProfileAboutSection } from "./ProfileAboutSection";
+import { PageLoader } from "@/components/ui/PageLoader";
 import { ProfileInterestsSection } from "./ProfileInterestsSection";
 import { ProfileMembershipCard } from "./ProfileMembershipCard";
 import { ProfileCompletionCard } from "./ProfileCompletionCard";
@@ -245,14 +246,7 @@ export function ProfileContent() {
   };
 
   if (loading) {
-    return (
-      <div className="w-full h-screen bg-slate-50 flex flex-col items-center justify-center">
-        <div className="flex flex-col items-center gap-4 animate-float">
-          <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px] opacity-80 invert brightness-0" />
-          <p className="text-[11px] text-slate-400 uppercase tracking-widest font-semibold animate-pulse-slow">Cargando perfil...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (!profile) return null;

@@ -8,6 +8,8 @@ import Modal from "@/components/ui/Modal";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { formatRelativeTime } from "@/components/ui/PlatformNavbar";
 import { isUuid } from "@/utils/validation";
+import { PageLoader } from "@/components/ui/PageLoader";
+import { DotSpinner } from "@/components/ui/DotSpinner";
 import { formatMessageBody, formatShortTime } from "@/utils/messages";
 
 type Conversation = {
@@ -615,9 +617,9 @@ function MessagesContent() {
     };
   }, []);
 
-  const isPendingForMe = connection && connection.status === "pending" && connection.recipientId !== selectedConv?.participant?.id;
-  const isDeclinedByMe = connection && connection.status === "declined" && connection.recipientId !== selectedConv?.participant?.id;
-  const isDeclinedForMe = connection && connection.status === "declined" && connection.requesterId !== selectedConv?.participant?.id;
+  const isPendingForMe = false;
+  const isDeclinedByMe = false;
+  const isDeclinedForMe = false;
 
   const isMobile = isMounted && typeof window !== "undefined" && window.innerWidth < 1024;
   const dynamicHeight = viewportHeight && isMobile
@@ -669,7 +671,7 @@ function MessagesContent() {
 
               <div className="flex-1 overflow-y-auto thin-scrollbar p-2 flex flex-col gap-2">
                 {isLoading && (
-                  <div className="p-4 text-[13px] text-slate-400">Cargando conversaciones...</div>
+                  <div className="p-8 flex justify-center items-center"><DotSpinner size={24} color="black" /></div>
                 )}
 
                 {!isLoading && filteredConversations.length === 0 && (
@@ -1126,14 +1128,7 @@ function MessagesContent() {
 
 export default function MessagesPage() {
   return (
-    <Suspense fallback={
-      <div className="flex-1 w-full flex h-full bg-slate-50 items-center justify-center">
-        <div className="flex flex-col items-center gap-4 animate-pulse">
-          <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px] invert brightness-0" />
-          <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold">Cargando mensajes...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<PageLoader />}>
       <MessagesContent />
     </Suspense>
   );
