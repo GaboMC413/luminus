@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/InputField";
+import { SelectInput } from "@/components/ui/SelectInput";
 
 type AdminUser = {
   id: string;
@@ -240,6 +241,18 @@ export function AdminUsersClient({
   const selectedSupportChat = supportChats.find((c) => c.id === selectedSupportChatId) ?? supportChats[0] ?? null;
 
   const [selectedId, setSelectedId] = useState(initialUsers[0]?.id ?? "");
+  const [selectedRole, setSelectedRole] = useState<string>("USER");
+  const [selectedStatus, setSelectedStatus] = useState<string>("active");
+
+  const selectedUser = users.find((user) => user.id === selectedId) ?? users[0] ?? null;
+
+  useEffect(() => {
+    if (selectedUser) {
+      setSelectedRole(selectedUser.role);
+      setSelectedStatus(selectedUser.status);
+    }
+  }, [selectedUser]);
+
   const [search, setSearch] = useState("");
   const [chatSearch, setChatSearch] = useState("");
   const [supportSearch, setSupportSearch] = useState("");
@@ -271,7 +284,7 @@ export function AdminUsersClient({
       }
 
       const data = await response.json();
-      
+
       setSupportChats((prevSupportChats) => {
         return prevSupportChats.map((chat) => {
           if (chat.id === selectedSupportChat.id) {
@@ -359,8 +372,6 @@ export function AdminUsersClient({
       return true;
     });
   }, [logs, logSearch, logAction, logDatePreset, logStartDate, logEndDate]);
-
-  const selectedUser = users.find((user) => user.id === selectedId) ?? users[0] ?? null;
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -459,44 +470,40 @@ export function AdminUsersClient({
         <nav className="p-4 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible">
           <button
             onClick={() => setActiveTab("usuarios")}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${
-              activeTab === "usuarios"
-                ? "bg-black text-white"
-                : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
-            }`}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "usuarios"
+              ? "bg-black text-white"
+              : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
+              }`}
           >
             <span className="material-symbols-rounded text-[20px]">group</span>
             <span>Usuarios</span>
           </button>
           <button
             onClick={() => setActiveTab("chats")}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${
-              activeTab === "chats"
-                ? "bg-black text-white"
-                : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
-            }`}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "chats"
+              ? "bg-black text-white"
+              : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
+              }`}
           >
             <span className="material-symbols-rounded text-[20px]">chat</span>
             <span>Registros de Chats</span>
           </button>
           <button
             onClick={() => setActiveTab("soporte")}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${
-              activeTab === "soporte"
-                ? "bg-black text-white"
-                : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
-            }`}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "soporte"
+              ? "bg-black text-white"
+              : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
+              }`}
           >
             <span className="material-symbols-rounded text-[20px]">support_agent</span>
-            <span>Soporte (Luminus)</span>
+            <span>Chats de LUMINUS</span>
           </button>
           <button
             onClick={() => setActiveTab("logs")}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${
-              activeTab === "logs"
-                ? "bg-black text-white"
-                : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
-            }`}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "logs"
+              ? "bg-black text-white"
+              : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
+              }`}
           >
             <span className="material-symbols-rounded text-[20px]">receipt_long</span>
             <span>Historial de Acciones</span>
@@ -596,81 +603,91 @@ export function AdminUsersClient({
                     className="flex flex-col gap-4 p-5"
                   >
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Rol
-                        <select name="role" defaultValue={selectedUser.role} className="h-10 rounded-lg border border-slate-200 px-3 text-[14px] font-medium text-slate-900 outline-none bg-white">
-                          <option value="USER">USER</option>
-                          <option value="ADMIN">ADMIN</option>
-                        </select>
-                      </label>
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Estado
-                        <select name="status" defaultValue={selectedUser.status} className="h-10 rounded-lg border border-slate-200 px-3 text-[14px] font-medium text-slate-900 outline-none bg-white">
-                          <option value="active">active</option>
-                          <option value="disabled">disabled</option>
-                          <option value="deleted">deleted</option>
-                        </select>
-                      </label>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Rol</span>
+                        <input type="hidden" name="role" value={selectedRole} />
+                        <SelectInput
+                          value={selectedRole}
+                          options={[
+                            { label: "USER", value: "USER" },
+                            { label: "ADMIN", value: "ADMIN" }
+                          ]}
+                          onSelect={(val) => setSelectedRole(val)}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Estado</span>
+                        <input type="hidden" name="status" value={selectedStatus} />
+                        <SelectInput
+                          value={selectedStatus}
+                          options={[
+                            { label: "active", value: "active" },
+                            { label: "disabled", value: "disabled" },
+                            { label: "deleted", value: "deleted" }
+                          ]}
+                          onSelect={(val) => setSelectedStatus(val)}
+                        />
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Nombre
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Nombre</span>
                         <InputField name="firstName" defaultValue={selectedUser.profile.firstName} className="h-10" />
-                      </label>
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Apellido
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Apellido</span>
                         <InputField name="lastName" defaultValue={selectedUser.profile.lastName} className="h-10" />
-                      </label>
+                      </div>
                     </div>
 
-                    <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                      Profesion
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[11px] font-bold uppercase text-slate-400">Profesion</span>
                       <InputField name="profession" defaultValue={selectedUser.profile.profession} className="h-10" />
-                    </label>
+                    </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Ciudad
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Ciudad</span>
                         <InputField name="city" defaultValue={selectedUser.profile.city} className="h-10" />
-                      </label>
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Pais
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Pais</span>
                         <InputField name="country" defaultValue={selectedUser.profile.country} className="h-10" />
-                      </label>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Celular
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Celular</span>
                         <InputField name="phoneNumber" defaultValue={selectedUser.profile.phoneNumber} className="h-10" />
-                      </label>
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Plan
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Plan</span>
                         <InputField name="selectedPlan" defaultValue={selectedUser.profile.selectedPlan} className="h-10" />
-                      </label>
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Genero
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Genero</span>
                         <InputField name="gender" defaultValue={selectedUser.profile.gender} className="h-10" />
-                      </label>
-                      <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                        Nacimiento
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Nacimiento</span>
                         <InputField type="date" name="birthdate" defaultValue={selectedUser.profile.birthdate} className="h-10" />
-                      </label>
+                      </div>
                     </div>
 
-                    <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                      Intencion
-                      <textarea name="intention" defaultValue={selectedUser.profile.intention} rows={2} className="rounded-lg border border-slate-200 px-3 py-2 text-[14px] text-slate-900 outline-none resize-none" />
-                    </label>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[11px] font-bold uppercase text-slate-400">Intencion</span>
+                      <InputField name="intention" defaultValue={selectedUser.profile.intention} className="h-10" />
+                    </div>
 
-                    <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase text-slate-500">
-                      Bio
-                      <textarea name="bio" defaultValue={selectedUser.profile.bio} rows={3} className="rounded-lg border border-slate-200 px-3 py-2 text-[14px] text-slate-900 outline-none resize-none" />
-                    </label>
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[11px] font-bold uppercase text-slate-400">Bio</span>
+                      <textarea name="bio" defaultValue={selectedUser.profile.bio} rows={3} className="rounded-lg border border-slate-200 px-3 py-2 text-[14px] text-slate-900 font-medium outline-none resize-none" />
+                    </div>
 
                     <label className="flex items-center gap-2.5 text-[13px] font-semibold text-slate-700 cursor-pointer">
                       <input type="checkbox" name="isOnboarded" defaultChecked={selectedUser.profile.isOnboarded} className="h-4.5 w-4.5 accent-black rounded cursor-pointer" />
@@ -688,6 +705,11 @@ export function AdminUsersClient({
                           ))
                         ) : (
                           <span className="text-[13px] text-slate-400">Sin intereses</span>
+                        )}
+                        {selectedUser.profile.intention && (
+                          <span className="rounded-full border border-zinc-950 bg-zinc-950 px-3 py-1 text-[12px] font-semibold text-white">
+                            {selectedUser.profile.intention}
+                          </span>
                         )}
                       </div>
                     </div>
@@ -809,38 +831,46 @@ export function AdminUsersClient({
                         <p className="text-sm font-medium">No hay mensajes en esta conversación.</p>
                       </div>
                     ) : (
-                      selectedChat.messages.map((msg) => {
+                      selectedChat.messages.map((msg, index) => {
                         const isUser1 = msg.senderId === selectedChat.user1?.id;
                         const senderName = isUser1 ? selectedChat.user1?.name : selectedChat.user2?.name;
                         const avatarUrl = isUser1 ? selectedChat.user1?.avatarUrl : selectedChat.user2?.avatarUrl;
+
+                        const isFirst = index === 0 || selectedChat.messages[index - 1].senderId !== msg.senderId;
+                        const isLast = index === selectedChat.messages.length - 1 || selectedChat.messages[index + 1].senderId !== msg.senderId;
 
                         return (
                           <div
                             key={msg.id}
                             className={`flex gap-3 max-w-[85%] ${isUser1 ? "mr-auto" : "ml-auto flex-row-reverse"}`}
                           >
-                            {avatarUrl ? (
-                              <img
-                                src={avatarUrl}
-                                alt=""
-                                className="h-8 w-8 rounded-lg object-cover shrink-0 mt-1"
-                              />
+                            {isFirst ? (
+                              avatarUrl ? (
+                                <img
+                                  src={avatarUrl}
+                                  alt=""
+                                  className="h-8 w-8 rounded-lg object-cover shrink-0 mt-1"
+                                />
+                              ) : (
+                                <div className="h-8 w-8 rounded-lg bg-slate-200 text-slate-600 font-bold flex items-center justify-center text-xs shrink-0 mt-1 uppercase">
+                                  {(senderName || "?").slice(0, 1).toUpperCase()}
+                                </div>
+                              )
                             ) : (
-                              <div className="h-8 w-8 rounded-lg bg-slate-200 text-slate-600 font-bold flex items-center justify-center text-xs shrink-0 mt-1 uppercase">
-                                {(senderName || "?").slice(0, 1).toUpperCase()}
-                              </div>
+                              <div className="h-8 w-8 shrink-0" />
                             )}
                             <div>
-                              <div className={`p-3 rounded-xl text-[13px] leading-relaxed ${
-                                isUser1
-                                  ? "bg-white text-slate-900 rounded-tl-none border border-slate-100"
-                                  : "bg-black text-white rounded-tr-none"
-                              }`}>
+                              <div className={`p-3 rounded-xl text-[13px] leading-relaxed ${isUser1
+                                ? "bg-white text-slate-900 rounded-tl-none border border-slate-100"
+                                : "bg-black text-white rounded-tr-none"
+                                }`}>
                                 {msg.body}
                               </div>
-                              <span className={`block text-[9px] text-slate-400 mt-1 font-medium ${isUser1 ? "text-left" : "text-right"}`}>
-                                {formatShortTime(msg.createdAt)}
-                              </span>
+                              {isLast && (
+                                <span className={`block text-[9px] text-slate-400 mt-1 font-medium ${isUser1 ? "text-left" : "text-right"}`}>
+                                  {formatShortTime(msg.createdAt)}
+                                </span>
+                              )}
                             </div>
                           </div>
                         );
@@ -943,38 +973,46 @@ export function AdminUsersClient({
                         <p className="text-sm font-medium">No hay mensajes en esta conversación.</p>
                       </div>
                     ) : (
-                      selectedSupportChat.messages.map((msg) => {
+                      selectedSupportChat.messages.map((msg, index) => {
                         const isSystem = msg.senderId === (selectedSupportChat.user1?.email === "info@luminuslatam.com" ? selectedSupportChat.user1?.id : selectedSupportChat.user2?.id);
                         const senderName = isSystem ? "LUMINUS" : (selectedSupportChat.user1?.email === "info@luminuslatam.com" ? selectedSupportChat.user2?.name : selectedSupportChat.user1?.name);
                         const avatarUrl = isSystem ? "/Profile Image LUMINUS.png" : (selectedSupportChat.user1?.email === "info@luminuslatam.com" ? selectedSupportChat.user2?.avatarUrl : selectedSupportChat.user1?.avatarUrl);
+
+                        const isFirst = index === 0 || selectedSupportChat.messages[index - 1].senderId !== msg.senderId;
+                        const isLast = index === selectedSupportChat.messages.length - 1 || selectedSupportChat.messages[index + 1].senderId !== msg.senderId;
 
                         return (
                           <div
                             key={msg.id}
                             className={`flex gap-3 max-w-[85%] ${isSystem ? "ml-auto flex-row-reverse" : "mr-auto"}`}
                           >
-                            {avatarUrl ? (
-                              <img
-                                src={avatarUrl}
-                                alt=""
-                                className="h-8 w-8 rounded-lg object-cover shrink-0 mt-1"
-                              />
+                            {isFirst ? (
+                              avatarUrl ? (
+                                <img
+                                  src={avatarUrl}
+                                  alt=""
+                                  className="h-8 w-8 rounded-lg object-cover shrink-0 mt-1"
+                                />
+                              ) : (
+                                <div className="h-8 w-8 rounded-lg bg-slate-200 text-slate-600 font-bold flex items-center justify-center text-xs shrink-0 mt-1 uppercase">
+                                  {(senderName || "?").slice(0, 1).toUpperCase()}
+                                </div>
+                              )
                             ) : (
-                              <div className="h-8 w-8 rounded-lg bg-slate-200 text-slate-600 font-bold flex items-center justify-center text-xs shrink-0 mt-1 uppercase">
-                                {(senderName || "?").slice(0, 1).toUpperCase()}
-                              </div>
+                              <div className="h-8 w-8 shrink-0" />
                             )}
                             <div>
-                              <div className={`p-3 rounded-xl text-[13px] leading-relaxed ${
-                                isSystem
-                                  ? "bg-black text-white rounded-tr-none"
-                                  : "bg-white text-slate-900 rounded-tl-none border border-slate-100"
-                              }`}>
+                              <div className={`p-3 rounded-xl text-[13px] leading-relaxed ${isSystem
+                                ? "bg-black text-white rounded-tr-none"
+                                : "bg-white text-slate-900 rounded-tl-none border border-slate-100"
+                                }`}>
                                 {msg.body}
                               </div>
-                              <span className={`block text-[9px] text-slate-400 mt-1 font-medium ${isSystem ? "text-right" : "text-left"}`}>
-                                {formatShortTime(msg.createdAt)}
-                              </span>
+                              {isLast && (
+                                <span className={`block text-[9px] text-slate-400 mt-1 font-medium ${isSystem ? "text-right" : "text-left"}`}>
+                                  {formatShortTime(msg.createdAt)}
+                                </span>
+                              )}
                             </div>
                           </div>
                         );
@@ -1033,45 +1071,45 @@ export function AdminUsersClient({
               {/* Action type */}
               <div className="flex flex-col gap-1.5 min-w-[180px]">
                 <span className="text-[11px] font-bold uppercase text-slate-400">Acción</span>
-                <select
+                <SelectInput
                   value={logAction}
-                  onChange={(e) => setLogAction(e.target.value)}
-                  className="h-10 rounded-lg border border-slate-200 px-3 text-[13px] outline-none bg-white font-semibold text-slate-800"
-                >
-                  <option value="all">Todas las acciones</option>
-                  <option value="USER_CREATED">Registro</option>
-                  <option value="LOGIN">Login</option>
-                  <option value="REQUEST_CONNECTION">Solicitó Conexión</option>
-                  <option value="ACCEPT_CONNECTION">Aceptó Conexión</option>
-                  <option value="FIRST_CONTACT">Primer Contacto</option>
-                  <option value="DELETE_CHAT">Eliminó Chat</option>
-                  <option value="MUTE_USER">Silenció</option>
-                  <option value="UNMUTE_USER">Reactivó Chat</option>
-                  <option value="BLOCK_USER">Bloqueó</option>
-                  <option value="UNBLOCK_USER">Desbloqueó</option>
-                  <option value="NETWORK_REJECT">Rechazó Red</option>
-                  <option value="CANCEL_CONNECTION_REQUEST">Canceló Solicitud</option>
-                  <option value="NETWORK_DELETION">Eliminó Red</option>
-                  <option value="UPDATE_PROFILE">Actualizó Perfil</option>
-                </select>
+                  options={[
+                    { label: "Todas las acciones", value: "all" },
+                    { label: "Registro", value: "USER_CREATED" },
+                    { label: "Login", value: "LOGIN" },
+                    { label: "Solicitó Conexión", value: "REQUEST_CONNECTION" },
+                    { label: "Aceptó Conexión", value: "ACCEPT_CONNECTION" },
+                    { label: "Primer Contacto", value: "FIRST_CONTACT" },
+                    { label: "Eliminó Chat", value: "DELETE_CHAT" },
+                    { label: "Silenció", value: "MUTE_USER" },
+                    { label: "Reactivó Chat", value: "UNMUTE_USER" },
+                    { label: "Bloqueó", value: "BLOCK_USER" },
+                    { label: "Desbloqueó", value: "UNBLOCK_USER" },
+                    { label: "Rechazó Red", value: "NETWORK_REJECT" },
+                    { label: "Canceló Solicitud", value: "CANCEL_CONNECTION_REQUEST" },
+                    { label: "Eliminó Red", value: "NETWORK_DELETION" },
+                    { label: "Actualizó Perfil", value: "UPDATE_PROFILE" },
+                  ]}
+                  onSelect={(val) => setLogAction(val)}
+                />
               </div>
 
               {/* Date Presets */}
               <div className="flex flex-col gap-1.5 min-w-[180px]">
                 <span className="text-[11px] font-bold uppercase text-slate-400">Tiempo</span>
-                <select
+                <SelectInput
                   value={logDatePreset}
-                  onChange={(e) => setLogDatePreset(e.target.value)}
-                  className="h-10 rounded-lg border border-slate-200 px-3 text-[13px] outline-none bg-white font-semibold text-slate-800"
-                >
-                  <option value="all">Todo el tiempo</option>
-                  <option value="week">Esta semana</option>
-                  <option value="month">Este mes</option>
-                  <option value="6months">Últimos 6 meses</option>
-                  <option value="year">Este año</option>
-                  <option value="quarter">Trimestre actual</option>
-                  <option value="custom">Fechas fijas / rango</option>
-                </select>
+                  options={[
+                    { label: "Todo el tiempo", value: "all" },
+                    { label: "Esta semana", value: "week" },
+                    { label: "Este mes", value: "month" },
+                    { label: "Últimos 6 meses", value: "6months" },
+                    { label: "Este año", value: "year" },
+                    { label: "Trimestre actual", value: "quarter" },
+                    { label: "Fechas fijas", value: "custom" },
+                  ]}
+                  onSelect={(val) => setLogDatePreset(val)}
+                />
               </div>
 
               {/* Custom Range start */}
