@@ -809,26 +809,33 @@ export function AdminUsersClient({
                         <p className="text-sm font-medium">No hay mensajes en esta conversación.</p>
                       </div>
                     ) : (
-                      selectedChat.messages.map((msg) => {
+                      selectedChat.messages.map((msg, index) => {
                         const isUser1 = msg.senderId === selectedChat.user1?.id;
                         const senderName = isUser1 ? selectedChat.user1?.name : selectedChat.user2?.name;
                         const avatarUrl = isUser1 ? selectedChat.user1?.avatarUrl : selectedChat.user2?.avatarUrl;
+
+                        const isFirst = index === 0 || selectedChat.messages[index - 1].senderId !== msg.senderId;
+                        const isLast = index === selectedChat.messages.length - 1 || selectedChat.messages[index + 1].senderId !== msg.senderId;
 
                         return (
                           <div
                             key={msg.id}
                             className={`flex gap-3 max-w-[85%] ${isUser1 ? "mr-auto" : "ml-auto flex-row-reverse"}`}
                           >
-                            {avatarUrl ? (
-                              <img
-                                src={avatarUrl}
-                                alt=""
-                                className="h-8 w-8 rounded-lg object-cover shrink-0 mt-1"
-                              />
+                            {isFirst ? (
+                              avatarUrl ? (
+                                <img
+                                  src={avatarUrl}
+                                  alt=""
+                                  className="h-8 w-8 rounded-lg object-cover shrink-0 mt-1"
+                                />
+                              ) : (
+                                <div className="h-8 w-8 rounded-lg bg-slate-200 text-slate-600 font-bold flex items-center justify-center text-xs shrink-0 mt-1 uppercase">
+                                  {(senderName || "?").slice(0, 1).toUpperCase()}
+                                </div>
+                              )
                             ) : (
-                              <div className="h-8 w-8 rounded-lg bg-slate-200 text-slate-600 font-bold flex items-center justify-center text-xs shrink-0 mt-1 uppercase">
-                                {(senderName || "?").slice(0, 1).toUpperCase()}
-                              </div>
+                              <div className="h-8 w-8 shrink-0" />
                             )}
                             <div>
                               <div className={`p-3 rounded-xl text-[13px] leading-relaxed ${
@@ -838,9 +845,11 @@ export function AdminUsersClient({
                               }`}>
                                 {msg.body}
                               </div>
-                              <span className={`block text-[9px] text-slate-400 mt-1 font-medium ${isUser1 ? "text-left" : "text-right"}`}>
-                                {formatShortTime(msg.createdAt)}
-                              </span>
+                              {isLast && (
+                                <span className={`block text-[9px] text-slate-400 mt-1 font-medium ${isUser1 ? "text-left" : "text-right"}`}>
+                                  {formatShortTime(msg.createdAt)}
+                                </span>
+                              )}
                             </div>
                           </div>
                         );
@@ -943,26 +952,33 @@ export function AdminUsersClient({
                         <p className="text-sm font-medium">No hay mensajes en esta conversación.</p>
                       </div>
                     ) : (
-                      selectedSupportChat.messages.map((msg) => {
+                      selectedSupportChat.messages.map((msg, index) => {
                         const isSystem = msg.senderId === (selectedSupportChat.user1?.email === "info@luminuslatam.com" ? selectedSupportChat.user1?.id : selectedSupportChat.user2?.id);
                         const senderName = isSystem ? "LUMINUS" : (selectedSupportChat.user1?.email === "info@luminuslatam.com" ? selectedSupportChat.user2?.name : selectedSupportChat.user1?.name);
                         const avatarUrl = isSystem ? "/Profile Image LUMINUS.png" : (selectedSupportChat.user1?.email === "info@luminuslatam.com" ? selectedSupportChat.user2?.avatarUrl : selectedSupportChat.user1?.avatarUrl);
+
+                        const isFirst = index === 0 || selectedSupportChat.messages[index - 1].senderId !== msg.senderId;
+                        const isLast = index === selectedSupportChat.messages.length - 1 || selectedSupportChat.messages[index + 1].senderId !== msg.senderId;
 
                         return (
                           <div
                             key={msg.id}
                             className={`flex gap-3 max-w-[85%] ${isSystem ? "ml-auto flex-row-reverse" : "mr-auto"}`}
                           >
-                            {avatarUrl ? (
-                              <img
-                                src={avatarUrl}
-                                alt=""
-                                className="h-8 w-8 rounded-lg object-cover shrink-0 mt-1"
-                              />
+                            {isFirst ? (
+                              avatarUrl ? (
+                                <img
+                                  src={avatarUrl}
+                                  alt=""
+                                  className="h-8 w-8 rounded-lg object-cover shrink-0 mt-1"
+                                />
+                              ) : (
+                                <div className="h-8 w-8 rounded-lg bg-slate-200 text-slate-600 font-bold flex items-center justify-center text-xs shrink-0 mt-1 uppercase">
+                                  {(senderName || "?").slice(0, 1).toUpperCase()}
+                                </div>
+                              )
                             ) : (
-                              <div className="h-8 w-8 rounded-lg bg-slate-200 text-slate-600 font-bold flex items-center justify-center text-xs shrink-0 mt-1 uppercase">
-                                {(senderName || "?").slice(0, 1).toUpperCase()}
-                              </div>
+                              <div className="h-8 w-8 shrink-0" />
                             )}
                             <div>
                               <div className={`p-3 rounded-xl text-[13px] leading-relaxed ${
@@ -972,9 +988,11 @@ export function AdminUsersClient({
                               }`}>
                                 {msg.body}
                               </div>
-                              <span className={`block text-[9px] text-slate-400 mt-1 font-medium ${isSystem ? "text-right" : "text-left"}`}>
-                                {formatShortTime(msg.createdAt)}
-                              </span>
+                              {isLast && (
+                                <span className={`block text-[9px] text-slate-400 mt-1 font-medium ${isSystem ? "text-right" : "text-left"}`}>
+                                  {formatShortTime(msg.createdAt)}
+                                </span>
+                              )}
                             </div>
                           </div>
                         );
