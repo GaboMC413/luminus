@@ -55,7 +55,7 @@ export function SpecialistPostulationModal({
     setCourses(updated);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!specialty || !title || !bio) {
       alert("Por favor completa los campos requeridos (Especialidad, Título y Biografía)");
@@ -63,9 +63,32 @@ export function SpecialistPostulationModal({
     }
 
     setSubmitting(true);
-    // Simulate API request to submit application
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      const payload = {
+        specialty,
+        title,
+        clinicName: clinicName || null,
+        bio,
+        linkedinUrl: linkedinUrl || null,
+        instagramUrl: instagramUrl || null,
+        websiteUrl: websiteUrl || null,
+        courses: courses.map(c => ({ name: c.title, url: c.url })),
+      };
+
+      const response = await fetch("/api/especialistas/postulate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        alert(data.message || "Error al enviar la postulación.");
+        return;
+      }
+
       // Reset form
       setSpecialty('');
       setTitle('');
@@ -76,7 +99,12 @@ export function SpecialistPostulationModal({
       setWebsiteUrl('');
       setCourses([]);
       onSuccess();
-    }, 1200);
+    } catch (err) {
+      console.error("Failed to submit postulation:", err);
+      alert("Error de conexión al enviar la postulación.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

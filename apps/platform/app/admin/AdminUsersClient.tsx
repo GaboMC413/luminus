@@ -84,6 +84,68 @@ type AdminLog = {
   };
 };
 
+type AdminSearch = {
+  id: string;
+  userId: string;
+  query: string;
+  createdAt: string;
+  user: {
+    email: string;
+    profile: {
+      firstName: string;
+      lastName: string;
+      fullName: string;
+      avatarUrl: string;
+    };
+  };
+};
+
+type AdminSpecialist = {
+  userId: string;
+  specialty: string;
+  title: string;
+  clinicName: string;
+  bio: string;
+  linkedinUrl: string;
+  instagramUrl: string;
+  websiteUrl: string;
+  courses: any;
+  createdAt: string;
+  user: {
+    email: string;
+    profile: {
+      firstName: string;
+      lastName: string;
+      fullName: string;
+      avatarUrl: string;
+    };
+  };
+};
+
+type AdminPostulation = {
+  id: string;
+  userId: string;
+  specialty: string;
+  title: string;
+  clinicName: string;
+  bio: string;
+  linkedinUrl: string;
+  instagramUrl: string;
+  websiteUrl: string;
+  courses: any;
+  status: string;
+  createdAt: string;
+  user: {
+    email: string;
+    profile: {
+      firstName: string;
+      lastName: string;
+      fullName: string;
+      avatarUrl: string;
+    };
+  };
+};
+
 function getPresetStartDate(preset: string) {
   const now = new Date();
   switch (preset) {
@@ -223,17 +285,28 @@ export function AdminUsersClient({
   initialChats = [],
   initialSupportChats = [],
   initialLogs = [],
+  initialSearches = [],
+  initialSpecialists = [],
+  initialPostulations = [],
 }: {
   initialUsers: AdminUser[];
   initialChats: AdminChat[];
   initialSupportChats: AdminChat[];
   initialLogs: AdminLog[];
+  initialSearches: AdminSearch[];
+  initialSpecialists: AdminSpecialist[];
+  initialPostulations: AdminPostulation[];
 }) {
   const [users, setUsers] = useState(initialUsers);
   const [chats, setChats] = useState(initialChats);
   const [supportChats, setSupportChats] = useState(initialSupportChats);
   const [logs, setLogs] = useState(initialLogs);
-  const [activeTab, setActiveTab] = useState<"usuarios" | "chats" | "logs" | "soporte">("usuarios");
+  const [searches, setSearches] = useState(initialSearches);
+  const [specialists, setSpecialists] = useState<AdminSpecialist[]>(initialSpecialists);
+  const [postulations, setPostulations] = useState<AdminPostulation[]>(initialPostulations);
+  const [activeTab, setActiveTab] = useState<"usuarios" | "chats" | "logs" | "soporte" | "busquedas" | "especialistas">("usuarios");
+  const [specialistSubTab, setSpecialistSubTab] = useState<"lista" | "postulaciones">("lista");
+
   const [selectedChatId, setSelectedChatId] = useState(initialChats[0]?.id ?? "");
   const selectedChat = chats.find((c) => c.id === selectedChatId) ?? chats[0] ?? null;
 
@@ -252,6 +325,113 @@ export function AdminUsersClient({
       setSelectedStatus(selectedUser.status);
     }
   }, [selectedUser]);
+
+  const [specialistSearch, setSpecialistSearch] = useState("");
+  const [isProcessingAction, setIsProcessingAction] = useState(false);
+
+  const filteredSpecialists = useMemo(() => {
+    const query = specialistSearch.trim().toLowerCase();
+    if (!query) return specialists;
+
+    return specialists.filter((spec) => {
+      const userName = (spec.user.profile.fullName || `${spec.user.profile.firstName} ${spec.user.profile.lastName}`).toLowerCase();
+      const userEmail = spec.user.email.toLowerCase();
+      const specialty = spec.specialty.toLowerCase();
+      const title = spec.title.toLowerCase();
+
+      return userName.includes(query) || userEmail.includes(query) || specialty.includes(query) || title.includes(query);
+    });
+  }, [specialistSearch, specialists]);
+
+  async function handlePostulationAction(id: string, action: "accept" | "decline") {
+    if (isProcessingAction) return;
+    setIsProcessingAction(true);
+    try {
+      const response = await fetch("/api/admin/especialistas/postulations", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id, action }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        alert(data.message || "Error al procesar la acción.");
+        return;
+      }
+
+      const acceptedPost = postulations.find(p => p.id === id);
+      if (acceptedPost) {
+        if (action === "accept") {
+          setSpecialists(prev => [
+            {
+              userId: acceptedPost.userId,
+              specialty: acceptedPost.specialty,
+              title: acceptedPost.title,
+              clinicName: acceptedPost.clinicName,
+              bio: acceptedPost.bio,
+              linkedinUrl: acceptedPost.linkedinUrl,
+              instagramUrl: acceptedPost.instagramUrl,
+              websiteUrl: acceptedPost.websiteUrl,
+              courses: acceptedPost.courses,
+              createdAt: new Date().toISOString(),
+              user: acceptedPost.user,
+            },
+            ...prev
+          ]);
+        }
+        setPostulations(prev => prev.filter(p => p.id !== id));
+      }
+    } catch (err) {
+      console.error("Failed to process postulation action:", err);
+      alert("Error de conexión.");
+    } finally {
+      setIsProcessingAction(false);
+    }
+  }
+
+  async function handleRemoveSpecialist(userId: string) {
+    if (isProcessingAction || !confirm("¿Estás seguro de que deseas remover a este especialista?")) return;
+    setIsProcessingAction(true);
+    try {
+      const response = await fetch("/api/admin/especialistas/postulations", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId, action: "remove" }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        alert(data.message || "Error al remover al especialista.");
+        return;
+      }
+
+      setSpecialists(prev => prev.filter(s => s.userId !== userId));
+    } catch (err) {
+      console.error("Failed to remove specialist:", err);
+      alert("Error de conexión.");
+    } finally {
+      setIsProcessingAction(false);
+    }
+  }
+
+  const [searchQueryFilter, setSearchQueryFilter] = useState("");
+
+  const filteredSearches = useMemo(() => {
+    const query = searchQueryFilter.trim().toLowerCase();
+    if (!query) return searches;
+
+    return searches.filter((searchLog) => {
+      const userName = (searchLog.user.profile.fullName || `${searchLog.user.profile.firstName} ${searchLog.user.profile.lastName}`).toLowerCase();
+      const userEmail = searchLog.user.email.toLowerCase();
+      const searchTerm = searchLog.query.toLowerCase();
+
+      return userName.includes(query) || userEmail.includes(query) || searchTerm.includes(query);
+    });
+  }, [searchQueryFilter, searches]);
 
   const [search, setSearch] = useState("");
   const [chatSearch, setChatSearch] = useState("");
@@ -430,7 +610,6 @@ export function AdminUsersClient({
       gender: String(formData.get("gender") || ""),
       birthdate: String(formData.get("birthdate") || ""),
       selectedPlan: String(formData.get("selectedPlan") || ""),
-      intention: String(formData.get("intention") || ""),
       bio: String(formData.get("bio") || ""),
       isOnboarded: formData.get("isOnboarded") === "on",
     };
@@ -507,6 +686,26 @@ export function AdminUsersClient({
           >
             <span className="material-symbols-rounded text-[20px]">receipt_long</span>
             <span>Historial de Acciones</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("busquedas")}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "busquedas"
+              ? "bg-black text-white"
+              : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
+              }`}
+          >
+            <span className="material-symbols-rounded text-[20px]">search</span>
+            <span>Búsquedas de Comunidad</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("especialistas")}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "especialistas"
+              ? "bg-black text-white"
+              : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
+              }`}
+          >
+            <span className="material-symbols-rounded text-[20px]">psychology</span>
+            <span>Especialistas</span>
           </button>
         </nav>
       </aside>
@@ -680,11 +879,6 @@ export function AdminUsersClient({
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <span className="text-[11px] font-bold uppercase text-slate-400">Intencion</span>
-                      <InputField name="intention" defaultValue={selectedUser.profile.intention} className="h-10" />
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
                       <span className="text-[11px] font-bold uppercase text-slate-400">Bio</span>
                       <textarea name="bio" defaultValue={selectedUser.profile.bio} rows={3} className="rounded-lg border border-slate-200 px-3 py-2 text-[14px] text-slate-900 font-medium outline-none resize-none" />
                     </div>
@@ -706,11 +900,7 @@ export function AdminUsersClient({
                         ) : (
                           <span className="text-[13px] text-slate-400">Sin intereses</span>
                         )}
-                        {selectedUser.profile.intention && (
-                          <span className="rounded-full border border-zinc-950 bg-zinc-950 px-3 py-1 text-[12px] font-semibold text-white">
-                            {selectedUser.profile.intention}
-                          </span>
-                        )}
+
                       </div>
                     </div>
 
@@ -754,7 +944,7 @@ export function AdminUsersClient({
                   <span>Usuario Contactado</span>
                   <span>Fecha</span>
                 </div>
-                <div className="max-h-[680px] overflow-y-auto">
+                <div className="max-h-[460px] overflow-y-auto">
                   {filteredChats.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                       <span className="material-symbols-rounded text-[48px] mb-3 text-slate-300">chat_bubble_outline</span>
@@ -814,7 +1004,7 @@ export function AdminUsersClient({
 
               {/* Right Column: selected chat messages thread */}
               {selectedChat ? (
-                <aside className="rounded-lg border border-slate-200 bg-white flex flex-col h-[740px] overflow-hidden shadow-none">
+                <aside className="rounded-lg border border-slate-200 bg-white flex flex-col h-[520px] overflow-hidden shadow-none">
                   {/* Header */}
                   <div className="border-b border-slate-200 px-5 py-4 shrink-0">
                     <h2 className="text-base font-bold text-slate-900 font-jakarta">Conversación</h2>
@@ -824,7 +1014,7 @@ export function AdminUsersClient({
                   </div>
 
                   {/* Message Thread */}
-                  <div className="flex-1 overflow-y-auto p-5 bg-slate-50 space-y-4 custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto p-5 bg-slate-50 space-y-2 custom-scrollbar">
                     {selectedChat.messages.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-full text-slate-400 py-12">
                         <span className="material-symbols-rounded text-[40px] mb-2 text-slate-300">chat_bubble_outline</span>
@@ -860,7 +1050,7 @@ export function AdminUsersClient({
                               <div className="h-8 w-8 shrink-0" />
                             )}
                             <div>
-                              <div className={`p-3 rounded-xl text-[13px] leading-relaxed ${isUser1
+                              <div className={`py-2 px-3 rounded-xl text-[13px] leading-relaxed ${isUser1
                                 ? "bg-white text-slate-900 rounded-tl-none border border-slate-100"
                                 : "bg-black text-white rounded-tr-none"
                                 }`}>
@@ -879,7 +1069,7 @@ export function AdminUsersClient({
                   </div>
                 </aside>
               ) : (
-                <div className="rounded-lg border border-slate-200 border-dashed bg-slate-50 flex items-center justify-center text-slate-400 p-8 text-center h-[740px] shadow-none">
+                <div className="rounded-lg border border-slate-200 border-dashed bg-slate-50 flex items-center justify-center text-slate-400 p-8 text-center h-[520px] shadow-none">
                   <p className="text-sm font-medium">Selecciona una conversación para ver los detalles.</p>
                 </div>
               )}
@@ -910,7 +1100,7 @@ export function AdminUsersClient({
                   <span>Usuario</span>
                   <span>Última Actividad</span>
                 </div>
-                <div className="max-h-[680px] overflow-y-auto">
+                <div className="max-h-[460px] overflow-y-auto">
                   {filteredSupportChats.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                       <span className="material-symbols-rounded text-[48px] mb-3 text-slate-300">support_agent</span>
@@ -956,7 +1146,7 @@ export function AdminUsersClient({
 
               {/* Right Column: messages and reply form */}
               {selectedSupportChat ? (
-                <aside className="rounded-lg border border-slate-200 bg-white flex flex-col h-[740px] overflow-hidden shadow-none">
+                <aside className="rounded-lg border border-slate-200 bg-white flex flex-col h-[520px] overflow-hidden shadow-none">
                   {/* Header */}
                   <div className="border-b border-slate-200 px-5 py-4 shrink-0">
                     <h2 className="text-base font-bold text-slate-900 font-jakarta">Conversación con Soporte</h2>
@@ -966,7 +1156,7 @@ export function AdminUsersClient({
                   </div>
 
                   {/* Message Thread */}
-                  <div className="flex-1 overflow-y-auto p-5 bg-slate-50 space-y-4 custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto p-5 bg-slate-50 space-y-2 custom-scrollbar">
                     {selectedSupportChat.messages.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-full text-slate-400 py-12">
                         <span className="material-symbols-rounded text-[40px] mb-2 text-slate-300">chat_bubble_outline</span>
@@ -1002,7 +1192,7 @@ export function AdminUsersClient({
                               <div className="h-8 w-8 shrink-0" />
                             )}
                             <div>
-                              <div className={`p-3 rounded-xl text-[13px] leading-relaxed ${isSystem
+                              <div className={`py-2 px-3 rounded-xl text-[13px] leading-relaxed ${isSystem
                                 ? "bg-black text-white rounded-tr-none"
                                 : "bg-white text-slate-900 rounded-tl-none border border-slate-100"
                                 }`}>
@@ -1039,13 +1229,13 @@ export function AdminUsersClient({
                   </form>
                 </aside>
               ) : (
-                <div className="rounded-lg border border-slate-200 border-dashed bg-slate-50 flex items-center justify-center text-slate-400 p-8 text-center h-[740px] shadow-none">
+                <div className="rounded-lg border border-slate-200 border-dashed bg-slate-50 flex items-center justify-center text-slate-400 p-8 text-center h-[520px] shadow-none">
                   <p className="text-sm font-medium">Selecciona una conversación de soporte para responder.</p>
                 </div>
               )}
             </section>
           </div>
-        ) : (
+        ) : activeTab === "logs" ? (
           /* Registros de Actividad Log Tab */
           <div className="mx-auto flex max-w-[1200px] flex-col gap-6 px-6 py-8 animate-in fade-in duration-200">
             <header className="flex flex-wrap items-center justify-between gap-4">
@@ -1207,6 +1397,354 @@ export function AdminUsersClient({
                 )}
               </div>
             </section>
+          </div>
+        ) : activeTab === "busquedas" ? (
+          /* Búsquedas de Comunidad Tab */
+          <div className="mx-auto flex max-w-[1200px] flex-col gap-6 px-6 py-8 animate-in fade-in duration-200">
+            <header className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h1 className="text-[28px] font-bold leading-tight font-jakarta">Búsquedas de Comunidad</h1>
+                <p className="mt-1 text-[14px] text-slate-500">{filteredSearches.length} búsquedas registradas</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <InputField
+                  value={searchQueryFilter}
+                  onChange={(event) => setSearchQueryFilter(event.target.value)}
+                  placeholder="Buscar por usuario o término"
+                  className="!w-[280px] !h-11"
+                />
+              </div>
+            </header>
+
+            {/* Table */}
+            <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-none">
+              <div className="grid grid-cols-[1.5fr_2fr_180px] border-b border-slate-200 bg-slate-50 px-6 py-3.5 text-[12px] font-bold uppercase text-slate-500">
+                <span>Usuario</span>
+                <span>Término Buscado</span>
+                <span>Fecha y Hora</span>
+              </div>
+              <div className="max-h-[680px] overflow-y-auto">
+                {filteredSearches.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                    <span className="material-symbols-rounded text-[48px] mb-3 text-slate-300">search</span>
+                    <p className="text-sm font-medium">No se encontraron registros de búsquedas.</p>
+                  </div>
+                ) : (
+                  filteredSearches.map((searchLog) => (
+                    <div
+                      key={searchLog.id}
+                      className="grid w-full grid-cols-[1.5fr_2fr_180px] items-center border-b border-slate-100 px-6 py-4 text-left text-[14px] transition hover:bg-slate-50/50 bg-white"
+                    >
+                      {/* User */}
+                      <span className="flex min-w-0 items-center gap-3">
+                        {searchLog.user.profile.avatarUrl ? (
+                          <img src={searchLog.user.profile.avatarUrl} alt="" className="h-9 w-9 rounded-lg object-cover shrink-0" />
+                        ) : (
+                          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-[13px] font-bold text-slate-500 uppercase shrink-0">
+                            {(searchLog.user.profile.fullName || searchLog.user.email).slice(0, 1).toUpperCase()}
+                          </span>
+                        )}
+                        <span className="min-w-0">
+                          <span className="block truncate font-semibold text-slate-900">
+                            {fieldValue(searchLog.user.profile.fullName || `${searchLog.user.profile.firstName} ${searchLog.user.profile.lastName}`)}
+                          </span>
+                          <span className="block truncate text-[12px] text-slate-500">{searchLog.user.email}</span>
+                        </span>
+                      </span>
+
+                      {/* Query */}
+                      <span className="text-slate-900 font-semibold bg-slate-50 rounded-xl px-4 py-2 w-fit border border-slate-200 inline-flex items-center gap-1.5 shadow-sm">
+                        <span className="material-symbols-rounded text-slate-400 text-sm select-none">search</span>
+                        {searchLog.query}
+                      </span>
+
+                      {/* Date */}
+                      <span className="text-slate-500 font-sans text-xs">
+                        {formatShortTime(searchLog.createdAt)}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+          </div>
+        ) : (
+          /* Especialistas & Postulaciones Tab */
+          <div className="mx-auto flex max-w-[1200px] flex-col gap-6 px-6 py-8 animate-in fade-in duration-200">
+            <header className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h1 className="text-[28px] font-bold leading-tight font-jakarta">
+                  {specialistSubTab === "lista" ? "Especialistas Activos" : "Postulaciones Pendientes"}
+                </h1>
+                <p className="mt-1 text-[14px] text-slate-500">
+                  {specialistSubTab === "lista"
+                    ? `${filteredSpecialists.length} especialistas registrados`
+                    : `${postulations.length} postulaciones pendientes`}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {/* Search only applies to active list */}
+                {specialistSubTab === "lista" && (
+                  <InputField
+                    value={specialistSearch}
+                    onChange={(event) => setSpecialistSearch(event.target.value)}
+                    placeholder="Buscar especialista..."
+                    className="!w-[280px] !h-11"
+                  />
+                )}
+
+                {/* Sub-tab Toggle Button */}
+                <Button
+                  onClick={() => setSpecialistSubTab(specialistSubTab === "lista" ? "postulaciones" : "lista")}
+                  variant={specialistSubTab === "lista" ? "outline" : "primary"}
+                  className="!h-11 font-jakarta font-bold !w-auto px-5"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="material-symbols-rounded text-[20px]">
+                      {specialistSubTab === "lista" ? "assignment" : "group"}
+                    </span>
+                    {specialistSubTab === "lista"
+                      ? `Postulaciones (${postulations.length})`
+                      : "Ver Especialistas"}
+                  </span>
+                </Button>
+              </div>
+            </header>
+
+            {specialistSubTab === "lista" ? (
+              /* Specialists List Subtab */
+              <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-none">
+                <div className="grid grid-cols-[1.5fr_2fr_1.2fr_180px_160px] border-b border-slate-200 bg-slate-50 px-6 py-3.5 text-[12px] font-bold uppercase text-slate-500">
+                  <span>Usuario</span>
+                  <span>Especialidad / Título</span>
+                  <span>Consultorio</span>
+                  <span>Redes</span>
+                  <span className="text-right">Acción</span>
+                </div>
+                <div className="max-h-[680px] overflow-y-auto">
+                  {filteredSpecialists.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                      <span className="material-symbols-rounded text-[48px] mb-3 text-slate-300">psychology</span>
+                      <p className="text-sm font-medium">No se encontraron especialistas.</p>
+                    </div>
+                  ) : (
+                    filteredSpecialists.map((spec) => (
+                      <div
+                        key={spec.userId}
+                        className="grid w-full grid-cols-[1.5fr_2fr_1.2fr_180px_160px] items-center border-b border-slate-100 px-6 py-4 text-left text-[14px] transition hover:bg-slate-50/50 bg-white"
+                      >
+                        {/* User info */}
+                        <span className="flex min-w-0 items-center gap-3">
+                          {spec.user.profile.avatarUrl ? (
+                            <img src={spec.user.profile.avatarUrl} alt="" className="h-9 w-9 rounded-lg object-cover shrink-0" />
+                          ) : (
+                            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-[13px] font-bold text-slate-500 uppercase shrink-0">
+                              {(spec.user.profile.fullName || spec.user.email).slice(0, 1).toUpperCase()}
+                            </span>
+                          )}
+                          <span className="min-w-0">
+                            <span className="block truncate font-semibold text-slate-900">
+                              {fieldValue(spec.user.profile.fullName || `${spec.user.profile.firstName} ${spec.user.profile.lastName}`)}
+                            </span>
+                            <span className="block truncate text-[12px] text-slate-500">{spec.user.email}</span>
+                          </span>
+                        </span>
+
+                        {/* Specialty / Title */}
+                        <span className="flex flex-col gap-0.5 pr-4">
+                          <span className="font-semibold text-slate-900">{spec.specialty}</span>
+                          <span className="text-[12px] text-slate-500 line-clamp-1">{spec.title}</span>
+                        </span>
+
+                        {/* Clinic */}
+                        <span className="text-slate-600 font-medium truncate pr-4">
+                          {fieldValue(spec.clinicName)}
+                        </span>
+
+                        {/* Social Links */}
+                        <span className="flex items-center gap-2">
+                          {spec.linkedinUrl ? (
+                            <a
+                              href={spec.linkedinUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#0077B5] hover:border-[#0077B5]/30 transition-colors"
+                              title="LinkedIn"
+                            >
+                              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                              </svg>
+                            </a>
+                          ) : null}
+                          {spec.instagramUrl ? (
+                            <a
+                              href={spec.instagramUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#E1306C] hover:border-[#E1306C]/30 transition-colors"
+                              title="Instagram"
+                            >
+                              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                                <path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8A3.6 3.6 0 0 0 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6A3.6 3.6 0 0 0 16.4 4H7.6m4.4 3.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9m0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5m4.7-.8a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                              </svg>
+                            </a>
+                          ) : null}
+                          {spec.websiteUrl ? (
+                            <a
+                              href={spec.websiteUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-black hover:border-black/30 transition-colors"
+                              title="Sitio Web"
+                            >
+                              <span className="material-symbols-rounded text-[18px]">language</span>
+                            </a>
+                          ) : null}
+                          {!spec.linkedinUrl && !spec.instagramUrl && !spec.websiteUrl && (
+                            <span className="text-slate-400 text-xs italic">-</span>
+                          )}
+                        </span>
+
+                        {/* Action */}
+                        <div className="text-right">
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSpecialist(spec.userId)}
+                            disabled={isProcessingAction}
+                            className="text-[12px] font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100/80 px-3 py-1.5 rounded-lg border-none cursor-pointer transition disabled:opacity-50"
+                          >
+                            Remover
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </section>
+            ) : (
+              /* Postulations Subtab */
+              <div className="flex flex-col gap-6">
+                {postulations.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-slate-400 bg-white border border-slate-200 rounded-xl">
+                    <span className="material-symbols-rounded text-[48px] mb-3 text-slate-300">assignment</span>
+                    <p className="text-sm font-medium">No hay postulaciones pendientes de revisión.</p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-4">
+                    {postulations.map((post) => (
+                      <div key={post.id} className="bg-white border border-slate-200 rounded-xl p-6 flex flex-col gap-5 shadow-none animate-in fade-in duration-200">
+                        {/* Postulation Header */}
+                        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-4">
+                          <div className="flex items-center gap-3">
+                            {post.user.profile.avatarUrl ? (
+                              <img src={post.user.profile.avatarUrl} alt="" className="h-12 w-12 rounded-xl object-cover shrink-0" />
+                            ) : (
+                              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-[16px] font-bold text-slate-500 uppercase shrink-0">
+                                {(post.user.profile.fullName || post.user.email).slice(0, 1).toUpperCase()}
+                              </span>
+                            )}
+                            <div>
+                              <h3 className="text-[16px] font-bold text-slate-900 leading-tight">
+                                {fieldValue(post.user.profile.fullName || `${post.user.profile.firstName} ${post.user.profile.lastName}`)}
+                              </h3>
+                              <p className="text-xs text-slate-500 mt-0.5">{post.user.email} • Postulado el {formatShortTime(post.createdAt)}</p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handlePostulationAction(post.id, "decline")}
+                              disabled={isProcessingAction}
+                              className="px-4 py-2 rounded-xl border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-slate-900 bg-white text-xs font-bold transition active:scale-95 cursor-pointer disabled:opacity-50 h-9 flex items-center justify-center"
+                            >
+                              Rechazar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handlePostulationAction(post.id, "accept")}
+                              disabled={isProcessingAction}
+                              className="px-4 py-2 rounded-xl bg-black hover:bg-zinc-900 text-white text-xs font-bold transition active:scale-95 border-none cursor-pointer disabled:opacity-50 h-9 flex items-center justify-center"
+                            >
+                              Aceptar Especialista
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Details grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-[14px]">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Especialidad</span>
+                            <span className="font-semibold text-slate-900">{post.specialty}</span>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Título Profesional</span>
+                            <span className="font-medium text-slate-800">{post.title}</span>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Consultorio / Espacio</span>
+                            <span className="font-medium text-slate-800">{fieldValue(post.clinicName)}</span>
+                          </div>
+                        </div>
+
+                        {/* Bio */}
+                        <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col gap-1 text-[13.5px]">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Biografía y Enfoque</span>
+                          <p className="text-slate-700 whitespace-pre-wrap leading-relaxed mt-1">{post.bio}</p>
+                        </div>
+
+                        {/* Footer (Socials & Courses) */}
+                        <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
+                          {/* Links */}
+                          <div className="flex items-center gap-3">
+                            {post.linkedinUrl && (
+                              <a href={post.linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-slate-500 hover:text-[#0077B5] transition-colors text-xs font-medium">
+                                <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+                                LinkedIn
+                              </a>
+                            )}
+                            {post.instagramUrl && (
+                              <a href={post.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-slate-500 hover:text-[#E1306C] transition-colors text-xs font-medium">
+                                <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8A3.6 3.6 0 0 0 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6A3.6 3.6 0 0 0 16.4 4H7.6m4.4 3.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9m0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5m4.7-.8a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+                                Instagram
+                              </a>
+                            )}
+                            {post.websiteUrl && (
+                              <a href={post.websiteUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-slate-500 hover:text-black transition-colors text-xs font-medium">
+                                <span className="material-symbols-rounded text-[16px] shrink-0">language</span>
+                                Sitio Web
+                              </a>
+                            )}
+                          </div>
+
+                          {/* Courses */}
+                          {post.courses && Array.isArray(post.courses) && post.courses.length > 0 && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Cursos ({post.courses.length}):</span>
+                              <div className="flex gap-2">
+                                {post.courses.map((course: any, idx: number) => (
+                                  <a
+                                    key={idx}
+                                    href={course.url || course.coverUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-2.5 py-1 text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors border border-slate-200/50"
+                                    title={course.description || course.name || course.title}
+                                  >
+                                    {course.name || course.title || `Curso ${idx + 1}`}
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
