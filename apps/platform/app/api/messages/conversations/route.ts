@@ -284,6 +284,29 @@ export async function POST(request: Request) {
       include: conversationInclude,
     });
 
+    try {
+      const recipientUser = await prisma.user.findUnique({
+        where: { id: recipientId },
+        select: { email: true, profile: { select: { firstName: true, lastName: true, fullName: true } } },
+      });
+      if (recipientUser) {
+        const recipientName = recipientUser.profile?.fullName || `${recipientUser.profile?.firstName || ""} ${recipientUser.profile?.lastName || ""}`.trim() || recipientUser.email || "Usuario";
+        await prisma.activityLog.create({
+          data: {
+            userId: session.userId,
+            action: "FIRST_CONTACT",
+            details: JSON.stringify({
+              recipientId,
+              recipientEmail: recipientUser.email,
+              recipientName,
+            }),
+          },
+        });
+      }
+    } catch (logError) {
+      console.error("Failed to log FIRST_CONTACT activity:", logError);
+    }
+
     return NextResponse.json({
       conversation: serializeConversation(conversation, session.userId),
     }, { status: 201 });

@@ -76,8 +76,11 @@ function PlatformContent() {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as HTMLElement;
 
-      // If clicking inside a SelectInput portal dropdown, don't close the filter popup
-      if (target.closest('[data-select-portal="true"]')) {
+      // If clicking inside the mobile filters modal or a SelectInput portal dropdown, don't close the filters
+      if (
+        target.closest('[data-mobile-filters="true"]') ||
+        target.closest('[data-select-portal="true"]')
+      ) {
         return;
       }
 
@@ -431,9 +434,9 @@ function PlatformContent() {
   };
 
   return (
-    <div className="flex-1 w-full flex flex-col h-full md:overflow-hidden overflow-visible">
+    <div className="flex-1 w-full flex flex-col h-full overflow-visible">
 
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row gap-6 lg:gap-8 h-full md:overflow-hidden overflow-visible pt-4 pb-6 md:py-6">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-8 flex flex-col md:flex-row gap-6 lg:gap-8 h-full overflow-visible pt-4 pb-6 md:py-6">
 
         {/* Left Column - LinkedIn User Card (1/4 size on desktop) */}
         <div className="hidden md:flex w-[260px] lg:w-[290px] flex-col gap-3 shrink-0 h-fit">
@@ -521,7 +524,7 @@ function PlatformContent() {
         </div>
 
         {/* Main Feed Content (Right side - 3/4 on desktop) */}
-        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 h-full md:overflow-visible overflow-hidden">
 
           {/* Search & Filter Section */}
           <div className="flex flex-col sticky top-0 z-40 bg-[#F8FAFC] pb-4 transition-all duration-300 ease-in-out gap-3 w-full">
@@ -562,7 +565,7 @@ function PlatformContent() {
             </div>
 
             <div className="flex items-center gap-3 w-full relative">
-              <div className="flex-1 h-12 px-3.5 bg-white rounded-xl border border-zinc-200 flex items-center gap-3 focus-within:border-black group transition-all duration-300 relative">
+              <div className="flex-1 min-w-0 h-12 px-3.5 bg-white rounded-xl border border-zinc-200 flex items-center gap-3 focus-within:border-black group transition-all duration-300 relative">
                 <span className="material-symbols-outlined text-[22px] text-slate-400 group-focus-within:text-black">search</span>
                 <input
                   type="text"
@@ -582,7 +585,7 @@ function PlatformContent() {
                     }
                   }}
                   placeholder="Buscar por ciudad, país o temas de interés"
-                  className="flex-1 bg-transparent border-none text-base sm:text-sm font-normal text-slate-800 placeholder:text-slate-400 focus:outline-none"
+                  className="flex-1 min-w-0 bg-transparent border-none text-base sm:text-sm font-normal text-slate-800 placeholder:text-slate-400 focus:outline-none"
                 />
 
                 {searchQuery && (
@@ -664,12 +667,12 @@ function PlatformContent() {
               {showFilters && (
                 <div 
                   ref={desktopDropdownRef}
+                  style={{ maxHeight: 'min(580px, calc(100vh - 120px))' }}
                   className="
                     hidden md:flex 
                     absolute 
                     top-[56px] right-0 
-                    w-[384px] 
-                    max-h-[420px]
+                    w-[410px] 
                     bg-white 
                     rounded-2xl 
                     border border-zinc-200 
@@ -695,6 +698,7 @@ function PlatformContent() {
               {/* Mobile: React Portal Full-Screen Modal */}
               {showFilters && mounted && createPortal(
                 <div
+                  data-mobile-filters="true"
                   className="
                     md:hidden 
                     fixed 

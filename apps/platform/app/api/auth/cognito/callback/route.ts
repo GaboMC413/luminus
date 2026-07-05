@@ -381,6 +381,27 @@ export async function GET(request: Request) {
 
     setSessionCookie(token);
 
+    try {
+      if (isNewUser) {
+        await prisma.activityLog.create({
+          data: {
+            userId: user.id,
+            action: "USER_CREATED",
+            details: JSON.stringify({ email: user.email, provider: federatedProvider.authProvider }),
+          },
+        });
+      }
+      await prisma.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "LOGIN",
+          details: JSON.stringify({ email: user.email, provider: federatedProvider.authProvider }),
+        },
+      });
+    } catch (logError) {
+      console.error("Failed to log activity in Cognito callback:", logError);
+    }
+
     return redirectTo(requestUrl, user.profile?.isOnboarded ? "/comunidad" : "/auth/registrarse?onboarding=1");
   } catch (callbackError) {
     console.error("Cognito OAuth callback failed.", callbackError);

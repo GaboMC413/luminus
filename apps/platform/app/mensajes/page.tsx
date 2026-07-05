@@ -58,6 +58,7 @@ function MessagesContent() {
   const [hasMore, setHasMore] = useState(false);
   const [connection, setConnection] = useState<any>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const shouldScrollToBottomRef = useRef(false);
   const scrollPreserveRef = useRef<{ height: number; top: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -72,6 +73,8 @@ function MessagesContent() {
   const chatMenuRef = useRef<HTMLDivElement>(null);
   const [viewportHeight, setViewportHeight] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
+
+  const selectedConv = conversations.find((conversation) => conversation.id === selectedId) || newConversation;
 
   useEffect(() => {
     if (isUuid(recipientId)) {
@@ -170,8 +173,11 @@ function MessagesContent() {
       setHasMore(false);
       setConnection(null);
       setOtherLastReadAt(null);
+      setIsLoadingMessages(false);
       return;
     }
+
+    setIsLoadingMessages(true);
 
     async function loadMessages() {
       try {
@@ -194,10 +200,12 @@ function MessagesContent() {
             return incomingMessages;
           }
 
-          const prevIds = new Set(prev.map((m) => m.id));
-          const newMessages = incomingMessages.filter((m: any) => !prevIds.has(m.id));
-
-          if (newMessages.length === 0) return prev;
+          const dbMsgIds = new Set(incomingMessages.map((m: any) => m.id));
+          // Retain local sent messages that are not yet returned by the DB poll
+          const localOnlyMessages = prev.filter(
+            (m) => !dbMsgIds.has(m.id) && m.sender_id !== selectedConv?.participant?.id
+          );
+          const combined = [...incomingMessages, ...localOnlyMessages];
 
           const container = chatContainerRef.current;
           const isNearBottom = container
@@ -207,7 +215,10 @@ function MessagesContent() {
             shouldScrollToBottomRef.current = true;
           }
 
-          return [...prev, ...newMessages];
+          // Sort chronologically ascending
+          return combined.sort(
+            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+          );
         });
 
         setNextCursor((prevCursor) => (prevCursor === null ? data.nextCursor : prevCursor));
@@ -217,6 +228,8 @@ function MessagesContent() {
         window.dispatchEvent(new Event("luminus_messages_update"));
       } catch (err: any) {
         setError(err.message || "No pudimos cargar la conversacion.");
+      } finally {
+        setIsLoadingMessages(false);
       }
     }
 
@@ -227,7 +240,7 @@ function MessagesContent() {
     return () => {
       clearInterval(pollInterval);
     };
-  }, [selectedId]);
+  }, [selectedId, selectedConv?.participant?.id]);
 
   async function loadMoreMessages() {
     if (isLoadingMore || !hasMore || !nextCursor || !selectedId) return;
@@ -365,6 +378,21 @@ function MessagesContent() {
       setError(err.message || "No pudimos enviar el mensaje.");
     } finally {
       setIsSending(false);
+      // Re-focus the input to keep the keyboard open on mobile
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 50);
+    }
+  };
+
+  const handleSendClick = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    handleSend();
+  };
+
+  const handleChatContainerClick = () => {
+    if (document.activeElement === textareaRef.current) {
+      textareaRef.current?.blur();
     }
   };
 
@@ -548,7 +576,6 @@ function MessagesContent() {
     }
   };
 
-  const selectedConv = conversations.find((conversation) => conversation.id === selectedId) || newConversation;
   const filteredConversations = conversations.filter((conversation) => {
     const lastMessage = conversation.last_message?.body || "";
     const searchable = `${conversation.participant.name} ${lastMessage}`.toLowerCase();
@@ -746,6 +773,10 @@ function MessagesContent() {
                 }`}>
                   <button
                     onClick={() => {
+                      if (document.activeElement === textareaRef.current) {
+                        textareaRef.current?.blur();
+                        return;
+                      }
                       window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
                       const from = searchParams.get("from");
                       if (from === "profile" && recipientId) {
@@ -814,6 +845,10 @@ function MessagesContent() {
                     {/* Mobile Back Button */}
                     <button
                       onClick={() => {
+                        if (document.activeElement === textareaRef.current) {
+                          textareaRef.current?.blur();
+                          return;
+                        }
                         window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
                         const from = searchParams.get("from");
                         if (from === "profile") {
@@ -904,13 +939,25 @@ function MessagesContent() {
                   )}
                 </div>
 
-                <div ref={chatContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto p-3 thin-scrollbar flex flex-col gap-0.5 bg-white overscroll-contain">
+                <div ref={chatContainerRef} onScroll={handleScroll} onClick={handleChatContainerClick} className="flex-1 overflow-y-auto p-3 thin-scrollbar flex flex-col gap-0.5 bg-white overscroll-contain">
                   {isLoadingMore && (
                     <div className="flex justify-center py-2">
                       <span className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></span>
                     </div>
                   )}
-                  {messages.length === 0 ? (
+                  {isLoadingMessages ? (
+                    <div className="flex-1 flex flex-col gap-4 bg-white justify-end p-2">
+                      <div className="flex flex-col items-start gap-1">
+                        <div className="w-[55%] h-10 bg-slate-100 rounded-xl rounded-tl-none animate-pulse" />
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="w-[45%] h-12 bg-slate-100 rounded-xl rounded-tr-none animate-pulse" />
+                      </div>
+                      <div className="flex flex-col items-start gap-1">
+                        <div className="w-[65%] h-10 bg-slate-100 rounded-xl rounded-tl-none animate-pulse" />
+                      </div>
+                    </div>
+                  ) : messages.length === 0 ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-4">
                       <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 mb-3">
                         <span className="material-symbols-rounded text-[24px]">chat_bubble_outline</span>
@@ -1031,7 +1078,9 @@ function MessagesContent() {
                           }}
                         />
                         <button
-                          onClick={handleSend}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onTouchStart={handleSendClick}
+                          onClick={handleSendClick}
                           className={`absolute right-1.5 bottom-1.5 w-10 h-10 rounded-full flex items-center justify-center transition-all border-none ${
                             inputText.trim() && !isSending
                               ? "text-slate-800"

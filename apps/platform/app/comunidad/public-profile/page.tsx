@@ -30,6 +30,8 @@ function PublicProfileContent() {
   const connectionDropdownRefDesktop = useRef<HTMLDivElement>(null);
   const connectionDropdownRefMobile = useRef<HTMLDivElement>(null);
   const [isConnectionDropdownOpen, setIsConnectionDropdownOpen] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [isConfirmBlockOpen, setIsConfirmBlockOpen] = useState(false);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -205,7 +207,7 @@ function PublicProfileContent() {
       }));
     } catch (err: any) {
       console.error("Error managing connection:", err);
-      alert(err.message || "No pudimos procesar la acción de la conexión.");
+      setConnectionError(err.message || "No pudimos procesar la acción de la conexión.");
     } finally {
       setConnectionLoading(false);
     }
@@ -234,7 +236,7 @@ function PublicProfileContent() {
       }));
     } catch (err: any) {
       console.error("Error declining connection:", err);
-      alert(err.message || "No pudimos rechazar la solicitud.");
+      setConnectionError(err.message || "No pudimos rechazar la solicitud.");
     } finally {
       setConnectionLoading(false);
     }
@@ -265,20 +267,22 @@ function PublicProfileContent() {
       }));
     } catch (err: any) {
       console.error("Error removing connection:", err);
-      alert(err.message || "No pudimos eliminar de tu red.");
+      setConnectionError(err.message || "No pudimos eliminar de tu red.");
     } finally {
       setConnectionLoading(false);
     }
   };
 
-  const handleBlockConnection = async (e?: React.MouseEvent) => {
+  const handleBlockConnection = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     setIsConnectionDropdownOpen(false);
+    setIsConfirmBlockOpen(true);
+  };
+
+  const executeBlockConnection = async () => {
+    setIsConfirmBlockOpen(false);
     const id = searchParams.get("id");
     if (!id || connectionLoading) return;
-
-    const confirmBlock = window.confirm("¿Estás seguro de que quieres bloquear a este usuario?");
-    if (!confirmBlock) return;
 
     try {
       setConnectionLoading(true);
@@ -301,7 +305,7 @@ function PublicProfileContent() {
       }));
     } catch (err: any) {
       console.error("Error blocking connection:", err);
-      alert(err.message || "No pudimos bloquear al usuario.");
+      setConnectionError(err.message || "No pudimos bloquear al usuario.");
     } finally {
       setConnectionLoading(false);
     }
@@ -699,6 +703,64 @@ function PublicProfileContent() {
           >
             Cerrar
           </button>
+        </div>
+      </Modal>
+
+      {/* Connection error/cooldown notification modal */}
+      <Modal
+        isOpen={!!connectionError}
+        onClose={() => setConnectionError(null)}
+        title="Acción de conexión"
+        maxWidth="400px"
+        backdropClassName="bg-transparent backdrop-blur-none"
+        containerClassName="shadow-none border border-slate-200"
+      >
+        <div className="flex flex-col gap-4 text-center p-2 animate-in fade-in duration-200">
+          <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 mx-auto">
+            <span className="material-symbols-outlined text-[24px]">info</span>
+          </div>
+          <p className="text-sm text-slate-600 font-medium font-jakarta leading-relaxed">
+            {connectionError}
+          </p>
+          <button
+            onClick={() => setConnectionError(null)}
+            className="w-full h-11 bg-black text-white hover:bg-zinc-800 text-xs font-bold rounded-xl transition duration-200 cursor-pointer outline-none active:scale-95 mt-2"
+          >
+            Entendido
+          </button>
+        </div>
+      </Modal>
+
+      {/* Block confirmation modal */}
+      <Modal
+        isOpen={isConfirmBlockOpen}
+        onClose={() => setIsConfirmBlockOpen(false)}
+        title="Bloquear usuario"
+        maxWidth="400px"
+        backdropClassName="bg-transparent backdrop-blur-none"
+        containerClassName="shadow-none border border-slate-200"
+      >
+        <div className="flex flex-col gap-4 text-center p-2 animate-in fade-in duration-200">
+          <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center text-red-500 mx-auto">
+            <span className="material-symbols-outlined text-[24px]">block</span>
+          </div>
+          <p className="text-sm text-slate-600 font-medium font-jakarta leading-relaxed">
+            ¿Estás seguro de que quieres bloquear a este usuario? No podrán interactuar ni enviarse solicitudes.
+          </p>
+          <div className="flex gap-2 mt-2">
+            <button
+              onClick={() => setIsConfirmBlockOpen(false)}
+              className="flex-1 h-11 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition duration-200 cursor-pointer outline-none active:scale-95"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={executeBlockConnection}
+              className="flex-1 h-11 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl transition duration-200 cursor-pointer outline-none active:scale-95"
+            >
+              Bloquear
+            </button>
+          </div>
         </div>
       </Modal>
     </div>

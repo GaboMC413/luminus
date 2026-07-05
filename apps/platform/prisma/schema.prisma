@@ -83,6 +83,7 @@ model User {
   notifications Notification[]
   reportsSubmitted UserReport[] @relation("ReportsSubmitted")
   reportsReceived  UserReport[] @relation("ReportsReceived")
+  activityLogs     ActivityLog[]
 
   @@map("users")
 }
@@ -133,7 +134,7 @@ model UserProfile {
 model Interest {
   id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   categoryId    String         @map("category_id") @db.Uuid
-  name          String         @db.VarChar
+  name          String         @unique @db.VarChar
   slug          String         @unique @db.VarChar
   sortOrder     Int            @default(0) @map("sort_order")
   isActive      Boolean        @default(true) @map("is_active")
@@ -147,7 +148,7 @@ model Interest {
 
 model InterestCategory {
   id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String     @db.VarChar
+  name      String     @unique @db.VarChar
   slug      String     @unique @db.VarChar
   sortOrder Int        @default(0) @map("sort_order")
   createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz
@@ -310,4 +311,19 @@ model UserReport {
   @@index([reporterId])
   @@index([reportedId])
   @@map("user_reports")
+}
+
+model ActivityLog {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  action    String   @db.VarChar
+  details   String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("activity_logs")
 }

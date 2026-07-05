@@ -296,6 +296,20 @@ export async function PATCH(request: Request) {
       console.error("Failed to check onboarding quests completion status:", questError);
     }
 
+    try {
+      await prisma.activityLog.create({
+        data: {
+          userId: session.userId,
+          action: "UPDATE_PROFILE",
+          details: JSON.stringify({
+            updatedFields: Object.keys(profileData),
+          }),
+        },
+      });
+    } catch (logErr) {
+      console.error("Failed to log UPDATE_PROFILE activity:", logErr);
+    }
+
     const serialized = serializeProfile(user);
     return NextResponse.json({
       ...serialized,
