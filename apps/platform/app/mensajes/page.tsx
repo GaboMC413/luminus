@@ -71,6 +71,7 @@ function MessagesContent() {
   const [isChatMenuOpen, setIsChatMenuOpen] = useState(false);
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const chatMenuRef = useRef<HTMLDivElement>(null);
+  const isSendingRef = useRef(false);
   const [viewportHeight, setViewportHeight] = useState<number | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -346,9 +347,12 @@ function MessagesContent() {
 
   const handleSend = async () => {
     const body = inputText.trim();
-    if (!body || !selectedId || isSending) return;
+    if (!body || !selectedId || isSendingRef.current) return;
+
+    textareaRef.current?.focus();
 
     try {
+      isSendingRef.current = true;
       setIsSending(true);
       setError(null);
       const response = await fetch(`/api/messages/conversations/${selectedId}/messages`, {
@@ -377,11 +381,9 @@ function MessagesContent() {
     } catch (err: any) {
       setError(err.message || "No pudimos enviar el mensaje.");
     } finally {
+      isSendingRef.current = false;
       setIsSending(false);
-      // Re-focus the input to keep the keyboard open on mobile
-      setTimeout(() => {
-        textareaRef.current?.focus();
-      }, 50);
+      textareaRef.current?.focus();
     }
   };
 
@@ -1085,8 +1087,9 @@ function MessagesContent() {
                             inputText.trim() && !isSending
                               ? "text-slate-800"
                               : "text-slate-400"
-                          } bg-slate-100 hover:bg-black hover:text-white cursor-pointer hover:scale-105 active:scale-95 touch-manipulation`}
-                          disabled={isSending}
+                          } bg-slate-100 hover:bg-black hover:text-white cursor-pointer hover:scale-105 active:scale-95 touch-manipulation ${
+                            isSending ? "pointer-events-none" : ""
+                          }`}
                         >
                           <span className="material-symbols-rounded text-[18px] ml-0.5">send</span>
                         </button>
