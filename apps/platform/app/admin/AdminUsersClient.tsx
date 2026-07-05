@@ -284,7 +284,7 @@ export function AdminUsersClient({
       }
 
       const data = await response.json();
-      
+
       setSupportChats((prevSupportChats) => {
         return prevSupportChats.map((chat) => {
           if (chat.id === selectedSupportChat.id) {
@@ -470,44 +470,40 @@ export function AdminUsersClient({
         <nav className="p-4 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible">
           <button
             onClick={() => setActiveTab("usuarios")}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${
-              activeTab === "usuarios"
-                ? "bg-black text-white"
-                : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
-            }`}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "usuarios"
+              ? "bg-black text-white"
+              : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
+              }`}
           >
             <span className="material-symbols-rounded text-[20px]">group</span>
             <span>Usuarios</span>
           </button>
           <button
             onClick={() => setActiveTab("chats")}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${
-              activeTab === "chats"
-                ? "bg-black text-white"
-                : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
-            }`}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "chats"
+              ? "bg-black text-white"
+              : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
+              }`}
           >
             <span className="material-symbols-rounded text-[20px]">chat</span>
             <span>Registros de Chats</span>
           </button>
           <button
             onClick={() => setActiveTab("soporte")}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${
-              activeTab === "soporte"
-                ? "bg-black text-white"
-                : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
-            }`}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "soporte"
+              ? "bg-black text-white"
+              : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
+              }`}
           >
             <span className="material-symbols-rounded text-[20px]">support_agent</span>
-            <span>Soporte (Luminus)</span>
+            <span>Chats de LUMINUS</span>
           </button>
           <button
             onClick={() => setActiveTab("logs")}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${
-              activeTab === "logs"
-                ? "bg-black text-white"
-                : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
-            }`}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "logs"
+              ? "bg-black text-white"
+              : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
+              }`}
           >
             <span className="material-symbols-rounded text-[20px]">receipt_long</span>
             <span>Historial de Acciones</span>
@@ -864,11 +860,10 @@ export function AdminUsersClient({
                               <div className="h-8 w-8 shrink-0" />
                             )}
                             <div>
-                              <div className={`p-3 rounded-xl text-[13px] leading-relaxed ${
-                                isUser1
-                                  ? "bg-white text-slate-900 rounded-tl-none border border-slate-100"
-                                  : "bg-black text-white rounded-tr-none"
-                              }`}>
+                              <div className={`p-3 rounded-xl text-[13px] leading-relaxed ${isUser1
+                                ? "bg-white text-slate-900 rounded-tl-none border border-slate-100"
+                                : "bg-black text-white rounded-tr-none"
+                                }`}>
                                 {msg.body}
                               </div>
                               {isLast && (
@@ -1007,11 +1002,10 @@ export function AdminUsersClient({
                               <div className="h-8 w-8 shrink-0" />
                             )}
                             <div>
-                              <div className={`p-3 rounded-xl text-[13px] leading-relaxed ${
-                                isSystem
-                                  ? "bg-black text-white rounded-tr-none"
-                                  : "bg-white text-slate-900 rounded-tl-none border border-slate-100"
-                              }`}>
+                              <div className={`p-3 rounded-xl text-[13px] leading-relaxed ${isSystem
+                                ? "bg-black text-white rounded-tr-none"
+                                : "bg-white text-slate-900 rounded-tl-none border border-slate-100"
+                                }`}>
                                 {msg.body}
                               </div>
                               {isLast && (
