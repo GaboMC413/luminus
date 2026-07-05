@@ -9,16 +9,10 @@ import { ProfileAboutSection } from "@/features/user-profile/components/ProfileA
 import { ProfileInterestsSection } from "@/features/user-profile/components/ProfileInterestsSection";
 import { ProfileCompletionCard } from "@/features/user-profile/components/ProfileCompletionCard";
 import { Modal } from "@/components/ui/Modal";
+import { PageLoader } from "@/components/ui/PageLoader";
 export default function PublicProfilePage() {
   return (
-    <Suspense fallback={
-      <div className="w-full h-screen bg-slate-50 flex flex-col items-center justify-center">
-        <div className="flex flex-col items-center gap-4 animate-float">
-          <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px] opacity-80 invert brightness-0" />
-          <p className="text-[11px] text-slate-400 uppercase tracking-widest font-semibold animate-pulse-slow">Cargando perfil público...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<PageLoader />}>
       <PublicProfileContent />
     </Suspense>
   );
@@ -365,14 +359,7 @@ function PublicProfileContent() {
   };
 
   if (loading) {
-    return (
-      <div className="w-full h-screen bg-slate-50 flex flex-col items-center justify-center">
-        <div className="flex flex-col items-center gap-4 animate-float">
-          <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px] opacity-80 invert brightness-0" />
-          <p className="text-[11px] text-slate-400 uppercase tracking-widest font-semibold animate-pulse-slow">Cargando perfil...</p>
-        </div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (error || !profile) {

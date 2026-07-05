@@ -233,7 +233,7 @@ export function PhoneInput({
     <div 
       ref={containerRef}
       style={{ scrollMarginTop: '100px' }}
-      className={`reg-input-bordered px-4 flex items-center transition w-full relative ${className} ${disabled ? 'pointer-events-none' : 'focus-within:border-black focus-within:ring-1 focus-within:ring-black'} ${error ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : ''}`}
+      className={`reg-input-bordered px-4 flex items-center transition w-full relative ${className} ${disabled ? 'pointer-events-none' : 'focus-within:border-black'} ${error ? '!border-[#FF3D3D]' : ''}`}
     >
       <div
         className={`relative flex items-center pr-2 shrink-0 h-full border-r border-slate-100 mr-2 ${!disabled ? 'cursor-pointer' : ''}`}

@@ -4,6 +4,8 @@ import React, { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
+import { PageLoader } from "@/components/ui/PageLoader";
+import { DotSpinner } from "@/components/ui/DotSpinner";
 
 
 interface ProfileDetails {
@@ -189,7 +191,7 @@ function NetworkContent() {
               {/* Scrollable Network List */}
               <div className="w-full flex-1 overflow-y-auto thin-scrollbar divide-y divide-slate-100 bg-white">
                 {isLoading && connections.length === 0 ? (
-                  <div className="p-6 text-sm text-slate-400 text-center">Cargando tu red...</div>
+                  <div className="p-8 flex justify-center items-center"><DotSpinner size={32} color="black" /></div>
                 ) : filteredNetwork.length === 0 ? (
                   <div className="p-12 text-center text-slate-400 text-sm flex flex-col items-center gap-4 py-16 max-w-md mx-auto w-full">
                     <span className="material-symbols-rounded text-slate-300 text-[40px] select-none">group_off</span>
@@ -306,7 +308,7 @@ function NetworkContent() {
                 {/* Scrollable Requests List */}
                 <div className="flex-1 overflow-y-auto thin-scrollbar divide-y divide-slate-100 md:max-h-full max-h-[300px]">
                   {isLoading && connections.length === 0 ? (
-                    <div className="p-6 text-[14px] text-slate-400 text-center">Cargando solicitudes...</div>
+                    <div className="p-8 flex justify-center items-center"><DotSpinner size={32} color="black" /></div>
                   ) : (
                     pendingRequests.map((conn) => (
                       <div key={conn.id} className="flex items-center gap-3 p-4 bg-white hover:bg-slate-50/50 transition-colors">
@@ -377,16 +379,7 @@ function NetworkContent() {
 
 export default function NetworkPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex-1 w-full flex h-full bg-slate-50 items-center justify-center">
-          <div className="flex flex-col items-center gap-4 animate-pulse">
-            <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px] invert brightness-0" />
-            <p className="text-[11px] text-slate-400 uppercase tracking-widest font-semibold">Cargando red...</p>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<PageLoader />}>
       <NetworkContent />
     </Suspense>
   );

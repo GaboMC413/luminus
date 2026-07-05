@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentSession } from "@/lib/auth/session";
 import { listAdminUsers } from "@/lib/admin/users";
+import { listAdminChats } from "@/lib/admin/chats";
 import { AdminUsersClient } from "./AdminUsersClient";
 
 export const runtime = "nodejs";
@@ -26,6 +27,7 @@ export default async function AdminPage() {
 
   const { prisma } = await import("@/lib/db");
   const users = await listAdminUsers(prisma);
+  const chats = await listAdminChats(prisma);
 
-  return <AdminUsersClient initialUsers={users} />;
+  return <AdminUsersClient initialUsers={users} initialChats={chats} />;
 }

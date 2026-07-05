@@ -4,6 +4,8 @@ import React, { Suspense, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { formatRelativeTime } from "@/components/ui/PlatformNavbar";
 import { OnboardingProgressCard } from "@/components/ui/NotificationPopup";
+import { PageLoader } from "@/components/ui/PageLoader";
+import { DotSpinner } from "@/components/ui/DotSpinner";
 
 type Notification = {
   id: string;
@@ -364,7 +366,7 @@ function NotificationsContent() {
               {/* Scrollable Notifications List */}
               <div className="flex-1 overflow-y-auto thin-scrollbar bg-white divide-y divide-slate-100">
                 {isLoading ? (
-                  <div className="p-6 text-sm text-slate-400 text-center">Cargando notificaciones...</div>
+                  <div className="p-8 flex justify-center items-center"><DotSpinner size={32} color="black" /></div>
                 ) : filteredNotifications.length === 0 ? (
                   <div className="p-12 text-center text-slate-400 text-sm flex flex-col items-center gap-4">
                     <span className="material-symbols-rounded text-slate-300 text-[48px]">notifications_off</span>
@@ -495,16 +497,7 @@ function NotificationsContent() {
 
 export default function NotificationsPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex-1 w-full flex h-full bg-slate-50 items-center justify-center">
-          <div className="flex flex-col items-center gap-4 animate-pulse">
-            <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px] invert brightness-0" />
-            <p className="text-[11px] text-slate-400 uppercase tracking-widest font-semibold">Cargando notificaciones...</p>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<PageLoader />}>
       <NotificationsContent />
     </Suspense>
   );

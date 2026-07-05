@@ -79,6 +79,9 @@ export async function GET(request: Request) {
         { profile: { firstName: { contains: query, mode: "insensitive" } } },
         { profile: { lastName: { contains: query, mode: "insensitive" } } },
         { profile: { profession: { contains: query, mode: "insensitive" } } },
+        { profile: { country: { contains: query, mode: "insensitive" } } },
+        { profile: { city: { contains: query, mode: "insensitive" } } },
+        { interests: { some: { interest: { name: { contains: query, mode: "insensitive" } } } } },
       ];
     }
 
