@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentSession } from "@/lib/auth/session";
 import { listAdminUsers } from "@/lib/admin/users";
-import { listAdminChats } from "@/lib/admin/chats";
+import { listAdminChats, listAdminSupportChats } from "@/lib/admin/chats";
 import { AdminUsersClient } from "./AdminUsersClient";
 
 export const runtime = "nodejs";
@@ -28,6 +28,7 @@ export default async function AdminPage() {
   const { prisma } = await import("@/lib/db");
   const users = await listAdminUsers(prisma);
   const chats = await listAdminChats(prisma);
+  const supportChats = await listAdminSupportChats(prisma);
 
   const logsRaw = await prisma.activityLog.findMany({
     include: {
@@ -68,5 +69,5 @@ export default async function AdminPage() {
     },
   }));
 
-  return <AdminUsersClient initialUsers={users} initialChats={chats} initialLogs={logs} />;
+  return <AdminUsersClient initialUsers={users} initialChats={chats} initialSupportChats={supportChats} initialLogs={logs} />;
 }

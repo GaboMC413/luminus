@@ -48,6 +48,63 @@ export function serializeAdminChat(conversation: any) {
 
 export async function listAdminChats(prisma: PrismaClient) {
   const conversations = await prisma.conversation.findMany({
+    where: {
+      participants: {
+        none: {
+          user: {
+            email: "info@luminuslatam.com",
+          },
+        },
+      },
+    },
+    include: {
+      participants: {
+        include: {
+          user: {
+            include: {
+              profile: true,
+            },
+          },
+        },
+      },
+      messages: {
+        where: {
+          deletedAt: null,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      },
+    },
+    orderBy: {
+      updatedAt: "desc",
+    },
+    take: 100,
+  });
+
+  return conversations.map(serializeAdminChat);
+}
+
+export async function listAdminSupportChats(prisma: PrismaClient) {
+  const conversations = await prisma.conversation.findMany({
+    where: {
+      participants: {
+        some: {
+          user: {
+            email: "info@luminuslatam.com",
+          },
+        },
+      },
+      messages: {
+        some: {
+          sender: {
+            email: {
+              not: "info@luminuslatam.com",
+            },
+          },
+        },
+      },
+    },
     include: {
       participants: {
         include: {

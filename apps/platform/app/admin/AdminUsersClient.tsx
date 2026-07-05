@@ -220,24 +220,99 @@ function fieldValue(value: string) {
 export function AdminUsersClient({
   initialUsers,
   initialChats = [],
+  initialSupportChats = [],
   initialLogs = [],
 }: {
   initialUsers: AdminUser[];
   initialChats: AdminChat[];
+  initialSupportChats: AdminChat[];
   initialLogs: AdminLog[];
 }) {
   const [users, setUsers] = useState(initialUsers);
   const [chats, setChats] = useState(initialChats);
+  const [supportChats, setSupportChats] = useState(initialSupportChats);
   const [logs, setLogs] = useState(initialLogs);
-  const [activeTab, setActiveTab] = useState<"usuarios" | "chats" | "logs">("usuarios");
+  const [activeTab, setActiveTab] = useState<"usuarios" | "chats" | "logs" | "soporte">("usuarios");
   const [selectedChatId, setSelectedChatId] = useState(initialChats[0]?.id ?? "");
   const selectedChat = chats.find((c) => c.id === selectedChatId) ?? chats[0] ?? null;
+
+  const [selectedSupportChatId, setSelectedSupportChatId] = useState(initialSupportChats[0]?.id ?? "");
+  const selectedSupportChat = supportChats.find((c) => c.id === selectedSupportChatId) ?? supportChats[0] ?? null;
 
   const [selectedId, setSelectedId] = useState(initialUsers[0]?.id ?? "");
   const [search, setSearch] = useState("");
   const [chatSearch, setChatSearch] = useState("");
+  const [supportSearch, setSupportSearch] = useState("");
+  const [replyText, setReplyText] = useState("");
+  const [isSendingReply, setIsSendingReply] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
+
+  async function sendSupportReply(event: React.FormEvent) {
+    event.preventDefault();
+    if (!selectedSupportChat || !replyText.trim() || isSendingReply) return;
+
+    setIsSendingReply(true);
+    try {
+      const response = await fetch(`/api/admin/chats`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          conversationId: selectedSupportChat.id,
+          body: replyText.trim(),
+        }),
+      });
+
+      if (!response.ok) {
+        alert("No se pudo enviar el mensaje.");
+        return;
+      }
+
+      const data = await response.json();
+      
+      setSupportChats((prevSupportChats) => {
+        return prevSupportChats.map((chat) => {
+          if (chat.id === selectedSupportChat.id) {
+            return {
+              ...chat,
+              updatedAt: new Date().toISOString(),
+              messages: [...chat.messages, {
+                id: data.message.id,
+                body: data.message.body,
+                senderId: data.message.sender_id,
+                createdAt: data.message.created_at,
+              }],
+            };
+          }
+          return chat;
+        });
+      });
+      setReplyText("");
+    } catch (err) {
+      console.error("Failed to reply to support chat:", err);
+    } finally {
+      setIsSendingReply(false);
+    }
+  }
+
+  const filteredSupportChats = useMemo(() => {
+    const query = supportSearch.trim().toLowerCase();
+    if (!query) return supportChats;
+
+    return supportChats.filter((chat) => {
+      const clientUser = chat.user1?.email === "info@luminuslatam.com" ? chat.user2 : chat.user1;
+      if (!clientUser) return false;
+
+      const haystack = [
+        clientUser.name || "",
+        clientUser.email || "",
+      ].join(" ").toLowerCase();
+
+      return haystack.includes(query);
+    });
+  }, [supportSearch, supportChats]);
 
   // Logs filtering states
   const [logSearch, setLogSearch] = useState("");
@@ -403,6 +478,17 @@ export function AdminUsersClient({
           >
             <span className="material-symbols-rounded text-[20px]">chat</span>
             <span>Registros de Chats</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("soporte")}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${
+              activeTab === "soporte"
+                ? "bg-black text-white"
+                : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
+            }`}
+          >
+            <span className="material-symbols-rounded text-[20px]">support_agent</span>
+            <span>Soporte (Luminus)</span>
           </button>
           <button
             onClick={() => setActiveTab("logs")}
@@ -765,6 +851,158 @@ export function AdminUsersClient({
               ) : (
                 <div className="rounded-lg border border-slate-200 border-dashed bg-slate-50 flex items-center justify-center text-slate-400 p-8 text-center h-[740px] shadow-none">
                   <p className="text-sm font-medium">Selecciona una conversación para ver los detalles.</p>
+                </div>
+              )}
+            </section>
+          </div>
+        ) : activeTab === "soporte" ? (
+          /* Support Chats Tab */
+          <div className="mx-auto flex max-w-[1200px] flex-col gap-6 px-6 py-8 animate-in fade-in duration-200">
+            <header className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h1 className="text-[28px] font-bold leading-tight font-jakarta">Soporte (Luminus)</h1>
+                <p className="mt-1 text-[14px] text-slate-500">{supportChats.length} conversaciones de soporte</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <InputField
+                  value={supportSearch}
+                  onChange={(event) => setSupportSearch(event.target.value)}
+                  placeholder="Buscar usuario"
+                  className="!w-[280px] !h-11"
+                />
+              </div>
+            </header>
+
+            <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+              {/* Left Column: list of support chats */}
+              <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-none">
+                <div className="grid grid-cols-[1fr_120px] border-b border-slate-200 bg-slate-50 px-4 py-3 text-[12px] font-bold uppercase text-slate-500">
+                  <span>Usuario</span>
+                  <span>Última Actividad</span>
+                </div>
+                <div className="max-h-[680px] overflow-y-auto">
+                  {filteredSupportChats.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                      <span className="material-symbols-rounded text-[48px] mb-3 text-slate-300">support_agent</span>
+                      <p className="text-sm font-medium">No se encontraron conversaciones de soporte.</p>
+                    </div>
+                  ) : (
+                    filteredSupportChats.map((chat) => {
+                      const active = chat.id === selectedSupportChat?.id;
+                      const clientUser = chat.user1?.email === "info@luminuslatam.com" ? chat.user2 : chat.user1;
+
+                      return (
+                        <button
+                          key={chat.id}
+                          type="button"
+                          onClick={() => setSelectedSupportChatId(chat.id)}
+                          className={`grid w-full grid-cols-[1fr_120px] items-center border-b border-slate-100 px-4 py-3.5 text-left text-[14px] transition hover:bg-slate-50 outline-none border-none cursor-pointer ${active ? "bg-slate-100" : "bg-white"}`}
+                        >
+                          {/* Client User Info */}
+                          <span className="flex min-w-0 items-center gap-3 pr-2">
+                            {clientUser?.avatarUrl ? (
+                              <img src={clientUser.avatarUrl} alt="" className="h-8 w-8 rounded-lg object-cover shrink-0" />
+                            ) : (
+                              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-[12px] font-bold text-slate-500 uppercase shrink-0">
+                                {(clientUser?.name || "?").slice(0, 1).toUpperCase()}
+                              </span>
+                            )}
+                            <span className="min-w-0">
+                              <span className="block truncate font-semibold text-slate-900">{clientUser?.name || "Desconocido"}</span>
+                              <span className="block truncate text-[11px] text-slate-500">{clientUser?.email || "Sin email"}</span>
+                            </span>
+                          </span>
+
+                          {/* Contact Date */}
+                          <span className="text-slate-600 text-xs truncate">
+                            {formatDate(chat.updatedAt)}
+                          </span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column: messages and reply form */}
+              {selectedSupportChat ? (
+                <aside className="rounded-lg border border-slate-200 bg-white flex flex-col h-[740px] overflow-hidden shadow-none">
+                  {/* Header */}
+                  <div className="border-b border-slate-200 px-5 py-4 shrink-0">
+                    <h2 className="text-base font-bold text-slate-900 font-jakarta">Conversación con Soporte</h2>
+                    <p className="text-xs text-slate-500 mt-1 truncate">
+                      Usuario: <span className="font-semibold">{selectedSupportChat.user1?.email === "info@luminuslatam.com" ? selectedSupportChat.user2?.name : selectedSupportChat.user1?.name}</span>
+                    </p>
+                  </div>
+
+                  {/* Message Thread */}
+                  <div className="flex-1 overflow-y-auto p-5 bg-slate-50 space-y-4 custom-scrollbar">
+                    {selectedSupportChat.messages.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center h-full text-slate-400 py-12">
+                        <span className="material-symbols-rounded text-[40px] mb-2 text-slate-300">chat_bubble_outline</span>
+                        <p className="text-sm font-medium">No hay mensajes en esta conversación.</p>
+                      </div>
+                    ) : (
+                      selectedSupportChat.messages.map((msg) => {
+                        const isSystem = msg.senderId === (selectedSupportChat.user1?.email === "info@luminuslatam.com" ? selectedSupportChat.user1?.id : selectedSupportChat.user2?.id);
+                        const senderName = isSystem ? "LUMINUS" : (selectedSupportChat.user1?.email === "info@luminuslatam.com" ? selectedSupportChat.user2?.name : selectedSupportChat.user1?.name);
+                        const avatarUrl = isSystem ? "/Profile Image LUMINUS.png" : (selectedSupportChat.user1?.email === "info@luminuslatam.com" ? selectedSupportChat.user2?.avatarUrl : selectedSupportChat.user1?.avatarUrl);
+
+                        return (
+                          <div
+                            key={msg.id}
+                            className={`flex gap-3 max-w-[85%] ${isSystem ? "ml-auto flex-row-reverse" : "mr-auto"}`}
+                          >
+                            {avatarUrl ? (
+                              <img
+                                src={avatarUrl}
+                                alt=""
+                                className="h-8 w-8 rounded-lg object-cover shrink-0 mt-1"
+                              />
+                            ) : (
+                              <div className="h-8 w-8 rounded-lg bg-slate-200 text-slate-600 font-bold flex items-center justify-center text-xs shrink-0 mt-1 uppercase">
+                                {(senderName || "?").slice(0, 1).toUpperCase()}
+                              </div>
+                            )}
+                            <div>
+                              <div className={`p-3 rounded-xl text-[13px] leading-relaxed ${
+                                isSystem
+                                  ? "bg-black text-white rounded-tr-none"
+                                  : "bg-white text-slate-900 rounded-tl-none border border-slate-100"
+                              }`}>
+                                {msg.body}
+                              </div>
+                              <span className={`block text-[9px] text-slate-400 mt-1 font-medium ${isSystem ? "text-right" : "text-left"}`}>
+                                {formatShortTime(msg.createdAt)}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Message Input Box */}
+                  <form onSubmit={sendSupportReply} className="border-t border-slate-200 p-4 bg-white flex gap-3 items-center shrink-0">
+                    <InputField
+                      value={replyText}
+                      onChange={(e) => setReplyText(e.target.value)}
+                      placeholder="Escribe tu respuesta como LUMINUS..."
+                      disabled={isSendingReply}
+                      className="flex-1"
+                    />
+                    <Button
+                      type="submit"
+                      disabled={isSendingReply || !replyText.trim()}
+                      className="!w-fit !h-10 px-5 shrink-0"
+                    >
+                      {isSendingReply ? "Enviando..." : "Responder"}
+                    </Button>
+                  </form>
+                </aside>
+              ) : (
+                <div className="rounded-lg border border-slate-200 border-dashed bg-slate-50 flex items-center justify-center text-slate-400 p-8 text-center h-[740px] shadow-none">
+                  <p className="text-sm font-medium">Selecciona una conversación de soporte para responder.</p>
                 </div>
               )}
             </section>
