@@ -265,8 +265,25 @@ export async function GET(request: Request) {
     const existingUser = existingByIdentity?.user || existingByExternalIdentity?.user || existingByLegacySub || existingByEmail;
     const isNewUser = !existingUser;
 
-    if (existingUser && existingUser.status !== "active") {
-      return redirectTo(requestUrl, "/auth/iniciar-sesion?error=account_disabled");
+    if (existingUser) {
+      if (existingUser.status === "disabled") {
+        return redirectTo(requestUrl, "/auth/iniciar-sesion?error=account_disabled");
+      }
+      if (existingUser.status === "deleted") {
+        const token = createSessionToken({
+          userId: existingUser.id,
+          email: existingUser.email,
+          role: existingUser.role,
+        });
+        cookies().set("luminus_reactivation_token", token, {
+          path: "/",
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          maxAge: 5 * 60,
+        });
+        return redirectTo(requestUrl, "/auth/iniciar-sesion?reactivate_oauth=1");
+      }
     }
 
     const user = existingUser

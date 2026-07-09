@@ -60,6 +60,7 @@ export async function GET(request: Request) {
         not: session.userId,
         notIn: blockedUserIds,
       },
+      status: "active",
       profile: {
         isOnboarded: true,
       },

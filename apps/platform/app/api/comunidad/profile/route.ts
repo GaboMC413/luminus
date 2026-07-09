@@ -41,7 +41,7 @@ export async function GET(request: Request) {
       },
     });
 
-    if (!user) {
+    if (!user || user.status !== "active") {
       return NextResponse.json({ message: "Usuario no encontrado." }, { status: 404 });
     }
 

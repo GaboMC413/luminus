@@ -262,3 +262,28 @@ export function getCognitoErrorStatus(error: unknown, fallbackStatus = 500) {
 
   return fallbackStatus;
 }
+
+export async function confirmSignUp(email: string, code: string) {
+  const { clientId, clientSecret } = getCognitoClientConfig();
+  const normalizedEmail = email.trim().toLowerCase();
+  const secretHash = getSecretHash(normalizedEmail, clientId, clientSecret);
+
+  await cognitoRequest("ConfirmSignUp", {
+    ClientId: clientId,
+    Username: normalizedEmail,
+    ConfirmationCode: code.trim(),
+    ...(secretHash ? { SecretHash: secretHash } : {}),
+  });
+}
+
+export async function resendConfirmationCode(email: string) {
+  const { clientId, clientSecret } = getCognitoClientConfig();
+  const normalizedEmail = email.trim().toLowerCase();
+  const secretHash = getSecretHash(normalizedEmail, clientId, clientSecret);
+
+  await cognitoRequest("ResendConfirmationCode", {
+    ClientId: clientId,
+    Username: normalizedEmail,
+    ...(secretHash ? { SecretHash: secretHash } : {}),
+  });
+}

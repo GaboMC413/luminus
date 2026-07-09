@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       },
     });
 
-    if (existingLocalUser && existingLocalUser.status !== "active") {
+    if (existingLocalUser && existingLocalUser.status === "disabled") {
       return NextResponse.json(
         { message: "Tu cuenta no esta activa. Contacta al equipo de LUMINUS para revisarla." },
         { status: 403 },
@@ -38,7 +38,25 @@ export async function POST(request: Request) {
     }
 
     const cognitoUsername = existingLocalUser?.identities[0]?.providerSubject || existingLocalUser?.cognitoSub;
-    const cognitoSession = await signInWithCognito(validation.email, validation.password, cognitoUsername);
+    let cognitoSession;
+    try {
+      cognitoSession = await signInWithCognito(validation.email, validation.password, cognitoUsername);
+    } catch (cognitoError: any) {
+      if (cognitoError.code === "UserNotConfirmedException") {
+        if (process.env.SKIP_EMAIL_VERIFICATION === "true") {
+          const { adminConfirmUser } = await import("@/lib/auth/cognito-admin");
+          await adminConfirmUser(validation.email);
+          cognitoSession = await signInWithCognito(validation.email, validation.password, cognitoUsername);
+        } else {
+          return NextResponse.json(
+            { message: "Tu cuenta necesita confirmar el correo.", code: "REQUIRES_VERIFICATION" },
+            { status: 403 }
+          );
+        }
+      } else {
+        throw cognitoError;
+      }
+    }
 
     const existingByIdentity = await prisma.userIdentity.findUnique({
       where: {
@@ -66,7 +84,26 @@ export async function POST(request: Request) {
       );
     }
 
-    if (user.status !== "active") {
+    if (user.status === "deleted") {
+      if (body?.reactivate) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { status: "active" },
+        });
+        user.status = "active";
+        try {
+          const { syncCognitoUserStatus } = await import("@/lib/auth/cognito-admin");
+          await syncCognitoUserStatus(user as any, "active");
+        } catch (err) {
+          console.error("Failed to sync status to active in cognito", err);
+        }
+      } else {
+        return NextResponse.json(
+          { code: "REQUIRES_REACTIVATION", message: "Tu cuenta fue eliminada. ¿Deseas reactivarla?" },
+          { status: 403 },
+        );
+      }
+    } else if (user.status !== "active") {
       return NextResponse.json(
         { message: "Tu cuenta no esta activa. Contacta al equipo de LUMINUS para revisarla." },
         { status: 403 },
