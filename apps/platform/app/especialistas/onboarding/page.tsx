@@ -128,11 +128,39 @@ export default function SpecialistOnboardingPage() {
   // Submission handler
   const handleSubmit = async () => {
     setLoading(true);
-    // Simulate submission to backend API
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const payload = {
+        specialty,
+        title,
+        bio,
+        clinicName: clinicEnabled ? clinicName : null,
+        linkedinUrl: linkedin || null,
+        instagramUrl: instagram || null,
+        websiteUrl: website || null,
+        courses: coursesEnabled ? courses.map(c => ({ name: c.name, description: c.description, url: c.url })) : [],
+      };
+
+      const response = await fetch("/api/especialistas/postulate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        alert(data.message || "Error al enviar la postulación.");
+        return;
+      }
+
       setStep(6); // Go to thank you screen
-    }, 1500);
+    } catch (err) {
+      console.error("Failed to submit postulation:", err);
+      alert("Error de conexión al enviar la postulación.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const progressPercentage = Math.min(((step - 1) / 5) * 100, 100);

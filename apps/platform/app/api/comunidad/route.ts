@@ -74,6 +74,18 @@ export async function GET(request: Request) {
     }
 
     if (query) {
+      try {
+        await prisma.activityLog.create({
+          data: {
+            userId: session.userId,
+            action: "COMMUNITY_SEARCH",
+            details: JSON.stringify({ query }),
+          },
+        });
+      } catch (logError) {
+        console.error("Failed to log community search:", logError);
+      }
+
       where.OR = [
         { profile: { fullName: { contains: query, mode: "insensitive" } } },
         { profile: { firstName: { contains: query, mode: "insensitive" } } },

@@ -1,0 +1,130 @@
+import { NextResponse } from "next/server";
+import { getCurrentSession } from "@/lib/auth/session";
+
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+export async function PATCH(request: Request) {
+  const session = getCurrentSession();
+  if (!session || session.role !== "ADMIN") {
+    return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const { id, action, userId } = body; // action can be 'accept', 'decline', or 'remove'
+
+    if (action !== "remove" && !id) {
+      return NextResponse.json({ message: "ID de postulación es requerido." }, { status: 400 });
+    }
+    if (action === "remove" && !userId) {
+      return NextResponse.json({ message: "ID de usuario es requerido." }, { status: 400 });
+    }
+    if (!action) {
+      return NextResponse.json({ message: "Acción es requerida." }, { status: 400 });
+    }
+
+    const { prisma } = await import("@/lib/db");
+
+    if (action === "accept") {
+      const postulation = await prisma.specialistPostulation.findUnique({
+        where: { id },
+      });
+
+      if (!postulation) {
+        return NextResponse.json({ message: "Postulación no encontrada." }, { status: 404 });
+      }
+
+      // Update postulation status to accepted
+      await prisma.specialistPostulation.update({
+        where: { id },
+        data: { status: "accepted" },
+      });
+
+      // Create or update SpecialistProfile
+      await prisma.specialistProfile.upsert({
+        where: { userId: postulation.userId },
+        update: {
+          specialty: postulation.specialty,
+          title: postulation.title,
+          clinicName: postulation.clinicName,
+          bio: postulation.bio,
+          linkedinUrl: postulation.linkedinUrl,
+          instagramUrl: postulation.instagramUrl,
+          websiteUrl: postulation.websiteUrl,
+          courses: postulation.courses || undefined,
+        },
+        create: {
+          userId: postulation.userId,
+          specialty: postulation.specialty,
+          title: postulation.title,
+          clinicName: postulation.clinicName,
+          bio: postulation.bio,
+          linkedinUrl: postulation.linkedinUrl,
+          instagramUrl: postulation.instagramUrl,
+          websiteUrl: postulation.websiteUrl,
+          courses: postulation.courses || undefined,
+        },
+      });
+
+      // Log action
+      await prisma.activityLog.create({
+        data: {
+          userId: session.userId,
+          action: "ACCEPT_SPECIALIST",
+          details: JSON.stringify({ targetUserId: postulation.userId }),
+        },
+      });
+    } else if (action === "decline") {
+      const postulation = await prisma.specialistPostulation.findUnique({
+        where: { id },
+      });
+
+      if (!postulation) {
+        return NextResponse.json({ message: "Postulación no encontrada." }, { status: 404 });
+      }
+
+      // Update postulation status to declined
+      await prisma.specialistPostulation.update({
+        where: { id },
+        data: { status: "declined" },
+      });
+
+      // Log action
+      await prisma.activityLog.create({
+        data: {
+          userId: session.userId,
+          action: "DECLINE_SPECIALIST",
+          details: JSON.stringify({ targetUserId: postulation.userId }),
+        },
+      });
+    } else if (action === "remove") {
+      // Delete SpecialistProfile
+      await prisma.specialistProfile.delete({
+        where: { userId },
+      });
+
+      // Update their postulations to declined (or delete them)
+      await prisma.specialistPostulation.updateMany({
+        where: { userId, status: "accepted" },
+        data: { status: "declined" },
+      });
+
+      // Log action
+      await prisma.activityLog.create({
+        data: {
+          userId: session.userId,
+          action: "REMOVE_SPECIALIST",
+          details: JSON.stringify({ targetUserId: userId }),
+        },
+      });
+    } else {
+      return NextResponse.json({ message: "Acción no soportada." }, { status: 400 });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Failed to process postulation action:", error);
+    return NextResponse.json({ message: "Error al procesar la acción." }, { status: 500 });
+  }
+}
