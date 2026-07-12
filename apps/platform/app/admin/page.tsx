@@ -69,5 +69,28 @@ export default async function AdminPage() {
     },
   }));
 
-  return <AdminUsersClient initialUsers={users} initialChats={chats} initialSupportChats={supportChats} initialLogs={logs} />;
+  const emailLogsRaw = await prisma.sentEmailLog.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 500,
+  });
+
+  const emailLogs = emailLogsRaw.map((log: any) => ({
+    id: log.id,
+    recipient: log.recipient,
+    subject: log.subject,
+    htmlBody: log.htmlBody,
+    createdAt: log.createdAt.toISOString(),
+  }));
+
+  return (
+    <AdminUsersClient
+      initialUsers={users}
+      initialChats={chats}
+      initialSupportChats={supportChats}
+      initialLogs={logs}
+      initialEmailLogs={emailLogs}
+    />
+  );
 }

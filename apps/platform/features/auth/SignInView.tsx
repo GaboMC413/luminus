@@ -185,7 +185,7 @@ export default function SignInView() {
               </div>
 
               {message.text && (
-                <p className={`text-left px-5 sm:px-6 mt-4 text-body-small font-bold ${message.type === 'error' ? 'text-red-500' : 'text-green-600'} tracking-[-0.03em]`}>
+                <p className={`text-left px-0 mt-4 text-body-small font-bold ${message.type === 'error' ? 'text-red-500' : 'text-green-600'} tracking-[-0.03em]`}>
                   {message.text}
                 </p>
               )}

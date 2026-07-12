@@ -26,7 +26,17 @@ export async function POST(request: Request) {
     const { prisma } = await import("@/lib/db");
     const user = await prisma.user.findUnique({
       where: { email },
-      select: { id: true },
+      select: {
+        id: true,
+        email: true,
+        cognitoSub: true,
+        identities: {
+          select: {
+            provider: true,
+            providerSubject: true,
+          },
+        },
+      },
     });
 
     if (!user) {
@@ -59,6 +69,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "El codigo es incorrecto o ha expirado." }, { status: 400 });
     }
 
+    const { updateCognitoUserPassword } = await import("@/lib/auth/cognito-admin");
+    await updateCognitoUserPassword(user, newPassword);
+
     await prisma.$transaction([
       prisma.user.update({
         where: { id: user.id },
@@ -72,7 +85,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, message: "Contrasena actualizada con exito." });
   } catch (error) {
-    console.error("Password reset database flow failed.", error);
-    return NextResponse.json({ message: "No pudimos actualizar la contrasena." }, { status: 500 });
+    console.error("Password reset flow failed.", error);
+    const { getCognitoErrorMessage, getCognitoErrorStatus } = await import("@/lib/auth/cognito-password");
+    return NextResponse.json(
+      { message: getCognitoErrorMessage(error, "No pudimos actualizar la contrasena.") },
+      { status: getCognitoErrorStatus(error, 500) }
+    );
   }
 }

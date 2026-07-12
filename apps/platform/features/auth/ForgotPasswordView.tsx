@@ -67,9 +67,7 @@ export default function ForgotPasswordView() {
       setTimer(180); // Reset timer
       setCanResend(false);
       setMessage({
-        text: data.code
-          ? `Código enviado. Código de prueba: ${data.code}`
-          : "Si existe una cuenta con ese correo, enviaremos un código de recuperación.",
+        text: "Si existe una cuenta con ese correo, enviaremos un código de recuperación.",
         type: "success"
       });
     } catch {
@@ -254,7 +252,7 @@ export default function ForgotPasswordView() {
                         if (message.type === 'error') setMessage({ text: "", type: "" });
                       }}
                       variant="clean"
-                      className={`!bg-white border border-zinc-200/80 focus:border-slate-800 text-center tracking-wider font-semibold ${message.type === 'error' && !code ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
+                      className={`!bg-white border border-zinc-200/80 focus:border-slate-800 ${message.type === 'error' && !code ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
                       enterKeyHint="go"
                     />
                   )}
@@ -277,7 +275,7 @@ export default function ForgotPasswordView() {
                       />
 
                       {/* Password Requirements Checklist - Sleek Stacked Layout */}
-                      <div className="flex flex-col gap-1.5 px-5 sm:px-6 mb-2">
+                      <div className="flex flex-col gap-1.5 px-0 mb-2">
                         <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
                           <p className={`text-xs sm:text-sm font-normal tracking-tight ${newPassword.length >= 12 ? 'text-green-600' : 'text-slate-500'}`}>
                             Mínimo 12 caracteres
@@ -323,7 +321,7 @@ export default function ForgotPasswordView() {
                 </div>
 
                 {message.text && (
-                  <p className={`text-left px-5 sm:px-6 mt-4 text-xs sm:text-sm font-bold tracking-tight ${message.type === 'error' ? 'text-red-500' : 'text-green-600'}`}>
+                  <p className={`text-left px-0 mt-4 text-xs sm:text-sm font-bold tracking-tight ${message.type === 'error' ? 'text-red-500' : 'text-green-600'}`}>
                     {message.text}
                   </p>
                 )}

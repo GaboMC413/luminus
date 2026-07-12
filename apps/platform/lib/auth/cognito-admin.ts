@@ -2,6 +2,7 @@ import {
   AdminDeleteUserCommand,
   AdminDisableUserCommand,
   AdminEnableUserCommand,
+  AdminSetUserPasswordCommand,
   CognitoIdentityProviderClient,
   UserNotFoundException,
 } from "@aws-sdk/client-cognito-identity-provider";
@@ -81,6 +82,48 @@ export async function syncCognitoUserStatus(user: CognitoManagedUser, status: Us
       return;
     }
 
+    throw error;
+  }
+}
+
+export async function updateCognitoUserPassword(user: CognitoManagedUser, password: string) {
+  if (isSystemUser(user)) {
+    return;
+  }
+
+  const hasPoolId = !!process.env.COGNITO_USER_POOL_ID?.trim();
+  const hasAdminKeys = !!(process.env.COGNITO_ADMIN_ACCESS_KEY_ID?.trim() && process.env.COGNITO_ADMIN_SECRET_ACCESS_KEY?.trim());
+
+  if (!hasPoolId || (!hasAdminKeys && process.env.NODE_ENV === "development")) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn(
+        `[COGNITO BYPASS]: Cognito admin credentials or Pool ID are missing. Skipping password update in Cognito User Pool for user: ${user.email}`
+      );
+      return;
+    }
+  }
+
+  const client = getCognitoAdminClient();
+  const UserPoolId = getUserPoolId();
+  const Username = getCognitoUsername(user);
+
+  try {
+    await client.send(
+      new AdminSetUserPasswordCommand({
+        UserPoolId,
+        Username,
+        Password: password,
+        Permanent: true,
+      })
+    );
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn(
+        `[COGNITO BYPASS]: Cognito password update failed in development mode. Skipping. Error:`,
+        error
+      );
+      return;
+    }
     throw error;
   }
 }

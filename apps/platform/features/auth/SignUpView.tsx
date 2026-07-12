@@ -328,7 +328,7 @@ export default function SignUpView() {
                 />
 
                 {/* Password Requirements Checklist - Stacked Layout */}
-                <div className="flex flex-col gap-1.5 px-5 sm:px-6 mb-2">
+                <div className="flex flex-col gap-1.5 px-0 mb-2">
                   <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
                     <p className={`text-xs sm:text-sm font-normal tracking-tight ${password.length >= 12 ? 'text-green-600' : 'text-slate-500'}`}>
                       Mínimo 12 caracteres
@@ -370,7 +370,7 @@ export default function SignUpView() {
                 />
 
                 {message.text && (
-                  <p className={`text-left px-5 sm:px-6 mt-2 text-xs sm:text-sm font-bold ${message.type === 'error' ? 'text-red-500' : 'text-green-600'} tracking-tight`}>
+                  <p className={`text-left px-0 mt-2 text-xs sm:text-sm font-bold ${message.type === 'error' ? 'text-red-500' : 'text-green-600'} tracking-tight`}>
                     {message.text}
                   </p>
                 )}

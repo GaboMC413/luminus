@@ -28,6 +28,28 @@ export async function PATCH(request: Request) {
 
   try {
     const { prisma } = await import("@/lib/db");
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: {
+        id: true,
+        email: true,
+        cognitoSub: true,
+        identities: {
+          select: {
+            provider: true,
+            providerSubject: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ message: "Usuario no encontrado." }, { status: 404 });
+    }
+
+    const { updateCognitoUserPassword } = await import("@/lib/auth/cognito-admin");
+    await updateCognitoUserPassword(user, newPassword);
+
     await prisma.user.update({
       where: { id: session.userId },
       data: { passwordHash: hashPassword(newPassword) },
@@ -36,6 +58,10 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true, message: "Contrasena actualizada con exito." });
   } catch (error) {
     console.error("Authenticated password change failed.", error);
-    return NextResponse.json({ message: "No pudimos actualizar la contrasena." }, { status: 500 });
+    const { getCognitoErrorMessage, getCognitoErrorStatus } = await import("@/lib/auth/cognito-password");
+    return NextResponse.json(
+      { message: getCognitoErrorMessage(error, "No pudimos actualizar la contrasena.") },
+      { status: getCognitoErrorStatus(error, 500) }
+    );
   }
 }
