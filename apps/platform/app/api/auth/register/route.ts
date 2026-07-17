@@ -17,10 +17,16 @@ export async function POST(request: Request) {
     const { prisma } = await import("@/lib/db");
     const existingUser = await prisma.user.findUnique({
       where: { email: validation.email },
-      select: { id: true },
+      select: { id: true, status: true },
     });
 
     if (existingUser) {
+      if (existingUser.status === "deleted") {
+        return NextResponse.json(
+          { message: "Este correo está asociado a una cuenta eliminada. Inicia sesión para reactivarla, o utiliza un correo diferente." },
+          { status: 409 },
+        );
+      }
       return NextResponse.json(
         { message: "Ya existe una cuenta registrada con este correo." },
         { status: 409 },
@@ -28,6 +34,14 @@ export async function POST(request: Request) {
     }
 
     const cognitoUser = await signUpWithCognito(validation.email, validation.password);
+    
+    // Si el bypass local/dev está activo o ya está confirmado (ej. por SSO), autoconfirmar
+    if (!cognitoUser.userConfirmed && process.env.SKIP_EMAIL_VERIFICATION === "true") {
+      const { adminConfirmUser } = await import("@/lib/auth/cognito-admin");
+      await adminConfirmUser(validation.email);
+      cognitoUser.userConfirmed = true;
+    }
+
     const user = await prisma.user.create({
       data: {
         email: validation.email,
@@ -56,6 +70,15 @@ export async function POST(request: Request) {
       console.error("Welcome message setup failed, proceeding with registration.", welcomeError);
     }
 
+    // Si no está confirmado (y no hubo bypass), pedir verificación de correo en el frontend
+    if (!cognitoUser.userConfirmed) {
+      return NextResponse.json(
+        { message: "Por favor, verifica tu correo.", code: "REQUIRES_VERIFICATION" },
+        { status: 202 }
+      );
+    }
+
+    // Si ya está confirmado (por bypass o auto-confirm), creamos la sesión local
     const token = createSessionToken({
       userId: user.id,
       email: user.email,

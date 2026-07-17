@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/InputField";
+import { Modal } from "@/components/ui/Modal";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
+import { VerificationModal } from "./VerificationModal";
 
 function GoogleIcon() {
   return (
@@ -37,6 +39,8 @@ export default function SignInView() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [reactivateModalOpen, setReactivateModalOpen] = useState(false);
+  const [verifyModalOpen, setVerifyModalOpen] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -57,6 +61,8 @@ export default function SignInView() {
         text: "Tu cuenta no esta activa. Contacta al equipo de LUMINUS para revisarla.",
         type: "error",
       });
+    } else if (params.get("reactivate_oauth") === "1") {
+      setReactivateModalOpen(true);
     }
   }, []);
 
@@ -64,7 +70,7 @@ export default function SignInView() {
     window.location.href = "/api/auth/cognito/start?provider=google";
   };
 
-  const handleSignIn = async () => {
+  const handleSignIn = async (reactivate = false) => {
     if (!email || !password) {
       setMessage({ text: "Por favor, completa todos los campos.", type: "error" });
       return;
@@ -78,11 +84,19 @@ export default function SignInView() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, reactivate }),
       });
       const data = await response.json();
 
       if (!response.ok) {
+        if (data.code === "REQUIRES_REACTIVATION") {
+          setReactivateModalOpen(true);
+          return;
+        }
+        if (data.code === "REQUIRES_VERIFICATION") {
+          setVerifyModalOpen(true);
+          return;
+        }
         setMessage({ text: data.message ?? "No pudimos iniciar sesion.", type: "error" });
         return;
       }
@@ -95,6 +109,33 @@ export default function SignInView() {
     }
 
   };
+
+  const handleReactivate = async () => {
+    setReactivateModalOpen(false);
+    
+    // If it's the OAuth flow, we use a separate endpoint that validates the cookie token.
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("reactivate_oauth") === "1") {
+      setLoading(true);
+      try {
+        const response = await fetch("/api/auth/reactivate-oauth", { method: "POST" });
+        if (response.ok) {
+          router.push("/comunidad");
+        } else {
+          setMessage({ text: "No pudimos reactivar tu cuenta de Google. Intenta nuevamente.", type: "error" });
+        }
+      } catch (error) {
+        setMessage({ text: "No pudimos conectar con el servidor.", type: "error" });
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Otherwise, it's the email/password flow
+    handleSignIn(true);
+  };
+
   return (
     <div className="auth-fixed-page flex flex-col lg:flex-row font-sans bg-slate-50 text-slate-900">
 
@@ -242,6 +283,47 @@ export default function SignInView() {
         <PlatformFooter className="bg-transparent border-t-0 py-4 shrink-0 lg:hidden" />
 
 
+        {/* Reactivate Modal */}
+        <Modal
+          isOpen={reactivateModalOpen}
+          onClose={() => setReactivateModalOpen(false)}
+          title="Reactivar cuenta"
+          footer={
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setReactivateModalOpen(false)}
+                className="flex-1"
+                disabled={loading}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleReactivate}
+                className="flex-1"
+                disabled={loading}
+              >
+                {loading ? "Reactivando..." : "Reactivar mi cuenta"}
+              </Button>
+            </>
+          }
+        >
+          <p className="text-slate-600 text-[15px] font-sans">
+            Esta cuenta fue eliminada previamente. ¿Deseas reactivarla y recuperar tu perfil?
+          </p>
+        </Modal>
+
+        {/* Verification Modal */}
+        <VerificationModal
+          isOpen={verifyModalOpen}
+          email={email}
+          onClose={() => setVerifyModalOpen(false)}
+          onSuccess={() => {
+            setVerifyModalOpen(false);
+            router.push("/comunidad");
+          }}
+        />
       </div>
     </div>
   );

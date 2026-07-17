@@ -6,6 +6,7 @@ import { InputField } from "@/components/ui/InputField";
 import { PersonalData } from "./registration/PersonalData";
 import { InterestSelection } from "./registration/InterestSelection";
 import { PlanSelection } from "./registration/PlanSelection";
+import { VerificationModal } from "./VerificationModal";
 import Link from "next/link";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
 import { useRouter } from "next/navigation";
@@ -56,6 +57,8 @@ export default function SignUpView() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: "", type: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [verifyModalOpen, setVerifyModalOpen] = useState(false);
+  const [verifyEmail, setVerifyEmail] = useState("");
 
   // Profile Data State (Preserved across steps)
   const [profileData, setProfileData] = useState({
@@ -172,6 +175,11 @@ export default function SignUpView() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 202 && data.code === "REQUIRES_VERIFICATION") {
+          setVerifyEmail(email);
+          setVerifyModalOpen(true);
+          return;
+        }
         setMessage({ text: data.message ?? "No pudimos crear tu cuenta.", type: "error" });
         return;
       }
@@ -429,7 +437,16 @@ export default function SignUpView() {
           {/* Auth Page Footer */}
           <PlatformFooter className="bg-transparent border-t-0 py-4 shrink-0 lg:hidden" />
 
-
+          {/* Verification Modal */}
+          <VerificationModal
+            isOpen={verifyModalOpen}
+            email={verifyEmail}
+            onClose={() => setVerifyModalOpen(false)}
+            onSuccess={() => {
+              setVerifyModalOpen(false);
+              setStep(2);
+            }}
+          />
         </div>
 
       </div>

@@ -31,6 +31,7 @@ export async function POST(request: Request) {
         email: true,
         cognitoSub: true,
         identities: {
+          where: { provider: "cognito" },
           select: {
             provider: true,
             providerSubject: true,
@@ -82,6 +83,7 @@ export async function POST(request: Request) {
         data: { usedAt: new Date() },
       }),
     ]);
+
 
     return NextResponse.json({ success: true, message: "Contrasena actualizada con exito." });
   } catch (error) {

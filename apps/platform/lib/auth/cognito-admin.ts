@@ -3,6 +3,7 @@ import {
   AdminDisableUserCommand,
   AdminEnableUserCommand,
   AdminSetUserPasswordCommand,
+  AdminConfirmSignUpCommand,
   CognitoIdentityProviderClient,
   UserNotFoundException,
 } from "@aws-sdk/client-cognito-identity-provider";
@@ -125,5 +126,21 @@ export async function updateCognitoUserPassword(user: CognitoManagedUser, passwo
       return;
     }
     throw error;
+  }
+}
+
+export async function adminConfirmUser(email: string) {
+  const client = getCognitoAdminClient();
+  const UserPoolId = getUserPoolId();
+
+  try {
+    await client.send(
+      new AdminConfirmSignUpCommand({
+        UserPoolId,
+        Username: email,
+      })
+    );
+  } catch (error) {
+    console.error("Failed to auto-confirm user in Cognito:", error);
   }
 }

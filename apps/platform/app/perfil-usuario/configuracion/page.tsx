@@ -2,6 +2,8 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { SuccessModal } from "@/components/ui/SuccessModal";
+import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 import { COUNTRIES, Country } from "@/utils/countries";
 import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -31,11 +33,29 @@ function SettingsContent() {
   const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
   const [attentionCounter, setAttentionCounter] = useState(0);
 
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleDeleteAccount = () => {
-    showSuccess(
-      "Eliminar cuenta",
-      "La solicitud para eliminar tu cuenta ha sido recibida y se procesará próximamente."
-    );
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      const response = await fetch("/api/account", { method: "DELETE" });
+      if (response.ok) {
+        router.push("/auth/iniciar-sesion");
+      } else {
+        const data = await response.json();
+        alert(data.message || "No se pudo eliminar la cuenta.");
+      }
+    } catch (error) {
+      alert("Error de conexión al eliminar la cuenta.");
+    } finally {
+      setIsDeleting(false);
+      setDeleteModalOpen(false);
+    }
   };
 
   // Profile data states reactively synchronized to localStorage
@@ -138,6 +158,8 @@ function SettingsContent() {
     { id: "password", label: "Contraseña", icon: "lock" },
     { id: "membership", label: "Membresía", icon: "award_star" },
   ];
+
+  const genderSuffix = gender === "Mujer" ? "segura" : gender === "Hombre" ? "seguro" : "segure";
 
   return (
     <div className="flex-1 w-full flex flex-col bg-slate-50">
@@ -300,6 +322,36 @@ function SettingsContent() {
         title={successModalConfig.title}
         message={successModalConfig.message}
       />
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        title="Eliminar cuenta"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteModalOpen(false)}
+              className="flex-1"
+              disabled={isDeleting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              onClick={confirmDeleteAccount}
+              className="flex-1 !bg-red-500 hover:!bg-red-600 border-red-500"
+              disabled={isDeleting}
+            >
+              {isDeleting ? "Eliminando..." : "Eliminar"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-slate-600 text-[15px] font-sans">
+          ¿Estás {genderSuffix} de querer eliminar esta cuenta? Tu perfil dejará de ser visible para los demás usuarios.
+        </p>
+      </Modal>
     </div>
   );
 }
