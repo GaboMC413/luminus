@@ -14,15 +14,111 @@ interface Course {
   coverUrl?: string;
 }
 
-const TAG_GROUPS = {
-  "Crecimiento personal": ["Autoconocimiento", "Propósito de vida", "Cambios de vida", "Motivación", "Toma de decisiones", "Confianza personal", "Hábitos conscientes", "Aprendizaje continuo"],
-  "Bienestar emocional": ["Bienestar emocional", "Equilibrio emocional", "Gestión emocional", "Calma interior", "Autoestima", "Acompañamiento personal", "Ansiedad y estrés", "Comunicación consciente"],
-  "Salud integral": ["Salud integral", "Prevención", "Longevidad", "Salud hormonal", "Salud digestiva", "Salud metabólica", "Salud cardiovascular", "Inmunidad", "Dolor crónico", "Manejo del dolor", "Recuperación", "Salud sexual", "Fertilidad", "Embarazo"],
-  "Movimiento físico": ["Cuidado del cuerpo", "Entrenamiento funcional", "Fuerza", "Masa muscular", "Resistencia", "Postura y movilidad", "Movimiento consciente", "Cardio", "Yoga", "Pilates"],
-  "Nutrición": ["Alimentación saludable", "Nutrición diaria", "Alimentación consciente", "Cocina práctica", "Alimentación vegetal", "Peso saludable", "Suplementación", "Vitaminas", "Hidratación"],
-  "Estilo de vida": ["Autocuidado", "Calidad de vida", "Rutinas saludables", "Sueño reparador", "Descanso", "Balance vida personal", "Organización personal", "Sustentabilidad"],
-  "Espiritualidad y conexión": ["Atención plena", "Meditación", "Respiración", "Conexión interior", "Espiritualidad", "Experiencias conscientes", "Naturaleza"],
-  "Relaciones": ["Relaciones saludables", "Vínculos conscientes", "Comunicación en pareja", "Familia", "Límites personales", "Autoestima en vínculos", "Acompañamiento en procesos personales"]
+const TAG_GROUPS: Record<string, string[]> = {
+  "Crecimiento personal": [
+    "Coaching de vida",
+    "Coaching ejecutivo",
+    "Coaching ontológico",
+    "Orientación vocacional",
+    "Mentoría profesional",
+    "Desarrollo de liderazgo",
+    "Desarrollo organizacional",
+    "Facilitación de procesos",
+    "Formación en habilidades blandas",
+    "Otro"
+  ],
+  "Bienestar emocional": [
+    "Psicología",
+    "Psicoterapia",
+    "Terapia cognitivo-conductual",
+    "Terapia sistémica",
+    "Terapia gestáltica",
+    "Terapia humanista",
+    "Psicología positiva",
+    "Acompañamiento en duelo",
+    "Arteterapia",
+    "Musicoterapia",
+    "Otro"
+  ],
+  "Salud integral": [
+    "Medicina general",
+    "Medicina integrativa",
+    "Medicina funcional",
+    "Fisioterapia",
+    "Terapia ocupacional",
+    "Osteopatía",
+    "Quiropraxia",
+    "Medicina del dolor",
+    "Medicina del sueño",
+    "Ginecología",
+    "Endocrinología",
+    "Otro"
+  ],
+  "Movimiento físico": [
+    "Entrenamiento personal",
+    "Entrenamiento funcional",
+    "Entrenamiento de fuerza",
+    "Preparación física",
+    "Yoga",
+    "Pilates",
+    "Movilidad",
+    "Danza",
+    "Calistenia",
+    "Entrenamiento postural",
+    "Acondicionamiento físico",
+    "Otro"
+  ],
+  "Nutrición": [
+    "Nutrición clínica",
+    "Nutrición deportiva",
+    "Nutrición funcional",
+    "Nutrición vegetariana",
+    "Nutrición vegana",
+    "Nutrición materno-infantil",
+    "Nutrición digestiva",
+    "Nutrición hormonal",
+    "Psiconutrición",
+    "Educación alimentaria",
+    "Otro"
+  ],
+  "Espiritualidad": [
+    "Meditación",
+    "Mindfulness",
+    "Respiración consciente",
+    "Acompañamiento espiritual",
+    "Filosofía práctica",
+    "Prácticas contemplativas",
+    "Sonoterapia",
+    "Facilitación de retiros",
+    "Desarrollo espiritual",
+    "Otro"
+  ],
+  "Vínculos": [
+    "Terapia de pareja",
+    "Terapia familiar",
+    "Sexología",
+    "Terapia sexual",
+    "Mediación familiar",
+    "Orientación parental",
+    "Psicología perinatal",
+    "Acompañamiento en crianza",
+    "Comunicación interpersonal",
+    "Otro"
+  ],
+  "Terapias complementarias": [
+    "Acupuntura",
+    "Medicina tradicional china",
+    "Ayurveda",
+    "Reiki",
+    "Masoterapia",
+    "Aromaterapia",
+    "Reflexología",
+    "Sonoterapia",
+    "Terapia floral",
+    "Terapias energéticas",
+    "Biomagnetismo",
+    "Otro"
+  ]
 };
 
 export default function SpecialistOnboardingPage() {
@@ -42,9 +138,15 @@ export default function SpecialistOnboardingPage() {
   const [title, setTitle] = useState("");
   const [bio, setBio] = useState("");
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
-  const [linkedin, setLinkedin] = useState("");
-  const [instagram, setInstagram] = useState("");
-  const [website, setWebsite] = useState("");
+  
+  // Social links state
+  interface SocialLink {
+    platform: string;
+    url: string;
+  }
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([
+    { platform: "Instagram", url: "" }
+  ]);
 
   // Step 3
   const [sessionsEnabled, setSessionsEnabled] = useState(false);
@@ -70,15 +172,13 @@ export default function SpecialistOnboardingPage() {
   }, [step]);
 
   const specialtyOptions = [
-    "Salud mental y acompañamiento emocional",
-    "Medicina y salud integral",
-    "Nutrición y alimentación",
-    "Movimiento y cuerpo",
-    "Mindfulness, meditación y espiritualidad",
-    "Desarrollo personal y propósito",
-    "Relaciones y comunicación",
-    "Estilo de vida y hábitos saludables",
-    "Bienestar femenino, fertilidad y ciclos",
+    "Crecimiento personal",
+    "Bienestar emocional",
+    "Salud integral",
+    "Movimiento físico",
+    "Nutrición",
+    "Espiritualidad",
+    "Vínculos",
     "Terapias complementarias"
   ];
 
@@ -115,28 +215,65 @@ export default function SpecialistOnboardingPage() {
     }
   };
 
+  const [customAreaInput, setCustomAreaInput] = useState("");
+  const [customAreas, setCustomAreas] = useState<string[]>([]);
+
   const toggleArea = (area: string) => {
     if (selectedAreas.includes(area)) {
       setSelectedAreas(selectedAreas.filter(a => a !== area));
     } else {
-      if (selectedAreas.length < 5) {
-        setSelectedAreas([...selectedAreas, area]);
-      }
+      setSelectedAreas([...selectedAreas, area]);
     }
+  };
+
+  const handleAddCustomArea = () => {
+    const trimmed = customAreaInput.trim();
+    if (trimmed && !selectedAreas.includes(trimmed)) {
+      setSelectedAreas([...selectedAreas, trimmed]);
+      setCustomAreas([...customAreas, trimmed]);
+      setCustomAreaInput("");
+    }
+  };
+
+  const handleRemoveCustomArea = (areaToRemove: string) => {
+    setSelectedAreas(selectedAreas.filter(a => a !== areaToRemove));
+    setCustomAreas(customAreas.filter(a => a !== areaToRemove));
+  };
+
+  const ALL_PLATFORMS = ["Instagram", "YouTube", "Facebook", "LinkedIn", "Website", "X"];
+
+  const handleSocialLinkChange = (index: number, field: keyof SocialLink, value: string) => {
+    const updated = [...socialLinks];
+    updated[index][field] = value;
+    setSocialLinks(updated);
+  };
+
+  const handleAddSocialLinkRow = () => {
+    const used = socialLinks.map(l => l.platform);
+    const unused = ALL_PLATFORMS.find(p => !used.includes(p)) || "Website";
+    setSocialLinks([...socialLinks, { platform: unused, url: "" }]);
+  };
+
+  const handleRemoveSocialLinkRow = (index: number) => {
+    setSocialLinks(socialLinks.filter((_, i) => i !== index));
   };
 
   // Submission handler
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      const linkedinObj = socialLinks.find((l) => l.platform.toLowerCase() === "linkedin");
+      const instagramObj = socialLinks.find((l) => l.platform.toLowerCase() === "instagram");
+      const websiteObj = socialLinks.find((l) => l.platform.toLowerCase() === "website" || l.platform.toLowerCase() === "web");
+
       const payload = {
         specialty,
         title,
         bio,
         clinicName: clinicEnabled ? clinicName : null,
-        linkedinUrl: linkedin || null,
-        instagramUrl: instagram || null,
-        websiteUrl: website || null,
+        linkedinUrl: linkedinObj?.url || null,
+        instagramUrl: instagramObj?.url || null,
+        websiteUrl: websiteObj?.url || null,
         courses: coursesEnabled ? courses.map(c => ({ name: c.name, description: c.description, url: c.url })) : [],
       };
 
@@ -242,7 +379,7 @@ export default function SpecialistOnboardingPage() {
         <div className="flex-1 flex flex-col items-center pt-8 md:pt-16 pb-12 md:pb-24 px-6 md:px-12">
           <div className="w-full max-w-[344px] md:max-w-[580px] flex flex-col">
             
-            {step < 6 && (
+            {step === 1 && (
               <div className="mb-6">
                 <Button
                   onClick={() => router.push("/especialistas")}
@@ -258,27 +395,24 @@ export default function SpecialistOnboardingPage() {
               <div className="flex flex-col gap-6 animate-in fade-in duration-300">
                 <div className="flex flex-col gap-2">
                   <h1 className="text-[24px] md:text-[28px] font-bold text-slate-900 font-jakarta leading-tight">
-                    Sumarte como Especialista en LUMINUS
+                    Forma parte de LUMINUS como especialista
                   </h1>
-                  <h2 className="text-[13px] md:text-[14px] font-medium text-slate-500 uppercase tracking-widest font-sans">
-                    Tu espacio profesional de bienestar y crecimiento en Latinoamérica.
-                  </h2>
                 </div>
 
                 <div className="flex flex-col gap-5 text-[14px] text-slate-600 leading-relaxed font-sans mt-2">
                   <p>
-                    Luminus es una plataforma diseñada para conectar a personas que buscan mejorar su bienestar integral con profesionales y terapeutas de confianza.
+                    LUMINUS es una red de bienestar que reúne a especialistas, espacios y personas de toda Latinoamérica.
                   </p>
                   <p>
-                    Como especialista en la plataforma, podrás dar a conocer tu enfoque, recibir solicitudes de sesiones de 15 minutos de primer contacto, y dar visibilidad a tus consultorios físicos y cursos externos.
+                    Como especialista, podrás presentar tu perfil profesional, compartir tu enfoque, recibir solicitudes de sesiones breves de primer contacto y dar visibilidad a tus consultorios, espacios y cursos.
                   </p>
                   <p>
-                    Toda postulación es evaluada por nuestro <strong className="text-slate-900 font-bold">Consejo de Expertos</strong> para garantizar los estándares de excelencia académica y profesional en la red.
+                    Cada postulación es revisada por el Consejo de Expertos de LUMINUS para asegurar la calidad, la trayectoria y la coherencia profesional de quienes forman parte de la red.
                   </p>
                 </div>
 
                 {/* Terms and conditions checkbox */}
-                <div className="flex items-start gap-3 mt-6 p-4 bg-white rounded-xl border border-zinc-200">
+                <div className="flex items-start gap-3 mt-4 px-1">
                   <input
                     type="checkbox"
                     id="terms"
@@ -324,123 +458,171 @@ export default function SpecialistOnboardingPage() {
               <div className="flex flex-col gap-6 animate-in fade-in duration-300">
                 <div className="flex flex-col gap-1">
                   <h1 className="text-[24px] md:text-[28px] font-bold text-slate-900 font-jakarta leading-tight">
-                    Tu Perfil Profesional
+                    Perfil profesional
                   </h1>
                   <p className="text-[13px] md:text-[14px] text-slate-500 font-sans">
-                    Cuéntanos sobre tu especialidad y enfoque.
+                    Comparte información sobre tu especialidad, experiencia y forma de trabajo.
                   </p>
                 </div>
 
                 <div className="flex flex-col gap-5 mt-2">
+                  {/* 1. Primary Specialty */}
                   <SelectInput
                     label="Especialidad principal *"
                     value={specialty}
                     options={specialtyOptions}
-                    onSelect={(val) => setSpecialty(val)}
+                    onSelect={(val) => {
+                      setSpecialty(val);
+                      setSelectedAreas([]);
+                    }}
                     placeholder="Seleccioná tu especialidad principal"
                   />
 
-                  <div className="flex flex-col gap-2">
-                    <label className="text-label ml-1">Título o credencial profesional *</label>
+                  {/* 2. Accompaniment Areas (Appears only when Specialty is selected) */}
+                  {specialty && (
+                    <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 mt-2 animate-in fade-in duration-200">
+                      <label className="text-label ml-1 font-jakarta font-bold">Áreas de acompañamiento *</label>
+                      <p className="text-[11px] text-slate-400 -mt-1 leading-normal ml-1">
+                        Selecciona las áreas en las que brindas acompañamiento. Puedes elegir varias opciones o agregar una nueva.
+                      </p>
+
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {(TAG_GROUPS[specialty] || []).map(tag => {
+                          const isSelected = selectedAreas.includes(tag);
+                          return (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() => toggleArea(tag)}
+                              className={`px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all cursor-pointer select-none ${
+                                isSelected
+                                  ? "bg-black text-white border-black"
+                                  : "bg-white text-slate-600 border-zinc-200 hover:border-zinc-300 hover:text-black"
+                              }`}
+                            >
+                              {tag}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {selectedAreas.includes("Otro") && (
+                        <div className="flex flex-col gap-2.5 mt-2 animate-in fade-in duration-200">
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              value={customAreaInput}
+                              onChange={(e) => setCustomAreaInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  handleAddCustomArea();
+                                }
+                              }}
+                              placeholder="Agregar otra área de acompañamiento"
+                              className="flex-1 h-10 px-3.5 border border-zinc-200 rounded-xl text-[13px] text-zinc-900 focus:outline-none focus:border-black focus:ring-1 focus:ring-black bg-white font-sans"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleAddCustomArea}
+                              className="h-10 px-5 bg-black hover:bg-slate-800 text-white text-xs font-bold rounded-xl shrink-0 cursor-pointer border-none transition-colors"
+                            >
+                              Agregar
+                            </button>
+                          </div>
+
+                          {customAreas.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-1">
+                              {customAreas.map((cArea) => (
+                                <span key={cArea} className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-semibold bg-slate-900 text-white">
+                                  {cArea}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveCustomArea(cArea)}
+                                    className="hover:text-red-300 transition-colors cursor-pointer bg-transparent border-none text-white text-xs font-bold"
+                                  >
+                                    ✕
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 3. Professional Title */}
+                  <div className="flex flex-col gap-2 border-t border-slate-100 pt-4 mt-2">
+                    <label className="text-label ml-1 font-jakarta font-bold">Título o credencial profesional *</label>
                     <InputField
                       type="text"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Ej. Psicóloga clínica, Nutricionista, Coach de bienestar"
+                      placeholder="Ejemplo: Psicología clínica, Nutrición, Coaching de bienestar."
                     />
                   </div>
 
-                  {/* Areas of accompaniment multiselect */}
-                  <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 mt-2">
-                    <div className="flex justify-between items-baseline ml-1">
-                      <label className="text-label font-jakarta font-bold">Áreas de acompañamiento *</label>
-                      <span className="text-[11px] font-bold text-slate-400">
-                        {selectedAreas.length} / 5 seleccionadas
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-400 -mt-1 leading-normal ml-1">
-                      Seleccioná hasta 5 temas en los que acompañás para que las personas puedan encontrarte mejor.
-                    </p>
-
-                    <div className="flex flex-col gap-4 max-h-[300px] overflow-y-auto custom-scrollbar p-3 bg-white rounded-xl border border-zinc-200 mt-1">
-                      {Object.entries(TAG_GROUPS).map(([groupName, tags]) => (
-                        <div key={groupName} className="flex flex-col gap-2">
-                          <h4 className="text-[12px] font-bold text-slate-800 font-jakarta uppercase tracking-wider border-b border-slate-100 pb-1">
-                            {groupName}
-                          </h4>
-                          <div className="flex flex-wrap gap-1.5 pt-0.5 pb-2">
-                            {tags.map(tag => {
-                              const isSelected = selectedAreas.includes(tag);
-                              const maxReached = selectedAreas.length >= 5;
-                              const isDisabled = maxReached && !isSelected;
-                              return (
-                                <button
-                                  key={tag}
-                                  type="button"
-                                  disabled={isDisabled}
-                                  onClick={() => toggleArea(tag)}
-                                  className={`px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all cursor-pointer select-none ${
-                                    isSelected
-                                      ? "bg-black text-white border-black"
-                                      : isDisabled
-                                        ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-50"
-                                        : "bg-white text-slate-600 border-zinc-200 hover:border-zinc-300 hover:text-black"
-                                  }`}
-                                >
-                                  {tag}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
+                  {/* 4. Bio */}
                   <div className="flex flex-col gap-2 border-t border-slate-100 pt-4 mt-2">
                     <label className="text-label ml-1 font-jakarta font-bold">Biografía y enfoque *</label>
                     <textarea
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
-                      placeholder="Contá brevemente tu enfoque, tu experiencia y cómo acompañás a las personas."
+                      placeholder="Describe brevemente tu experiencia profesional, tu enfoque de trabajo y la manera en que acompañas a las personas."
                       rows={5}
                       className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-xl text-[14px] text-zinc-900 focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition-all resize-none placeholder:text-slate-400 font-sans leading-relaxed"
                     />
                   </div>
 
+                  {/* 5. Dynamic Social Links List */}
                   <div className="flex flex-col gap-3 border-t border-slate-100 pt-4 mt-2">
-                    <label className="text-label ml-1 font-jakarta font-bold">Enlaces Profesionales (Opcional)</label>
+                    <label className="text-label ml-1 font-jakarta font-bold">Redes y enlaces</label>
                     <div className="flex flex-col gap-3">
-                      <div className="relative flex items-center">
-                        <span className="material-symbols-outlined text-slate-400 absolute left-4 text-[20px]">link</span>
-                        <InputField
-                          type="url"
-                          value={linkedin}
-                          onChange={(e) => setLinkedin(e.target.value)}
-                          placeholder="Enlace a LinkedIn (https://linkedin.com/in/...)"
-                          className="pl-11"
-                        />
-                      </div>
-                      <div className="relative flex items-center">
-                        <span className="material-symbols-outlined text-slate-400 absolute left-4 text-[20px]">photo_camera</span>
-                        <InputField
-                          type="url"
-                          value={instagram}
-                          onChange={(e) => setInstagram(e.target.value)}
-                          placeholder="Enlace a Instagram (https://instagram.com/...)"
-                          className="pl-11"
-                        />
-                      </div>
-                      <div className="relative flex items-center">
-                        <span className="material-symbols-outlined text-slate-400 absolute left-4 text-[20px]">language</span>
-                        <InputField
-                          type="url"
-                          value={website}
-                          onChange={(e) => setWebsite(e.target.value)}
-                          placeholder="Sitio Web Personal (https://...)"
-                          className="pl-11"
-                        />
-                      </div>
+                      {socialLinks.map((link, idx) => {
+                        const availablePlatforms = ALL_PLATFORMS.filter(
+                          (p) => p === link.platform || !socialLinks.some((other, otherIdx) => otherIdx !== idx && other.platform === p)
+                        );
+                        return (
+                          <div key={idx} className="flex gap-2 items-center">
+                            <div className="w-36 shrink-0">
+                              <SelectInput
+                                value={link.platform}
+                                options={availablePlatforms}
+                                onSelect={(val) => handleSocialLinkChange(idx, "platform", val)}
+                                className="!h-10 text-[13px]"
+                              />
+                            </div>
+                            <input
+                              type="url"
+                              value={link.url}
+                              onChange={(e) => handleSocialLinkChange(idx, "url", e.target.value)}
+                              placeholder="https://..."
+                              className="flex-1 h-10 px-3.5 border border-zinc-200 rounded-xl text-[13px] text-zinc-900 focus:outline-none focus:border-black focus:ring-1 focus:ring-black bg-white font-sans"
+                            />
+                            {socialLinks.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveSocialLinkRow(idx)}
+                                className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors bg-transparent border-none cursor-pointer shrink-0"
+                                title="Eliminar enlace"
+                              >
+                                <span className="material-symbols-rounded text-[20px] block">delete</span>
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {socialLinks.length < ALL_PLATFORMS.length && (
+                        <button
+                          type="button"
+                          onClick={handleAddSocialLinkRow}
+                          className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold font-jakarta rounded-xl border border-zinc-200/80 transition-colors cursor-pointer self-start mt-1"
+                        >
+                          Agregar otro enlace
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -456,7 +638,7 @@ export default function SpecialistOnboardingPage() {
                   <Button
                     onClick={() => setStep(3)}
                     variant="primary"
-                    disabled={!specialty || !title || !bio || selectedAreas.length === 0}
+                    disabled={!specialty || selectedAreas.length === 0 || !title.trim() || !bio.trim()}
                     className="!w-auto px-6 !h-11 text-[13px] font-jakarta font-bold bg-black text-white hover:bg-zinc-900"
                   >
                     Siguiente
