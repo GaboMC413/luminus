@@ -67,6 +67,8 @@ function PlatformContent() {
   const [fetchingMore, setFetchingMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
+  const [userConnections, setUserConnections] = useState<any[]>([]);
+  const [connectionsLoading, setConnectionsLoading] = useState(true);
   const router = useRouter();
 
   const desktopDropdownRef = useRef<HTMLDivElement>(null);
@@ -169,6 +171,37 @@ function PlatformContent() {
     }
     loadCurrentUser();
   }, []);
+
+  useEffect(() => {
+    async function loadConnections() {
+      try {
+        setConnectionsLoading(true);
+        const res = await fetch("/api/connections");
+        if (res.ok) {
+          const data = await res.json();
+          setUserConnections(data.connections || []);
+        }
+      } catch (err) {
+        console.error("Error loading user connections:", err);
+      } finally {
+        setConnectionsLoading(false);
+      }
+    }
+    loadConnections();
+  }, []);
+
+  const activeConnections = useMemo(() => {
+    const accepted = userConnections.filter((c: any) => c.status === "accepted");
+    return accepted.sort((a: any, b: any) => {
+      const dateA = new Date(a.updated_at || a.created_at || 0).getTime();
+      const dateB = new Date(b.updated_at || b.created_at || 0).getTime();
+      return dateB - dateA;
+    });
+  }, [userConnections]);
+
+  const pendingIncomingCount = useMemo(() => {
+    return userConnections.filter((c: any) => c.status === "pending" && c.direction === "incoming").length;
+  }, [userConnections]);
 
   useEffect(() => {
     async function loadFilters() {
@@ -503,15 +536,88 @@ function PlatformContent() {
               <h4 className="text-sm font-semibold text-slate-900 font-jakarta">Mi red</h4>
             </div>
 
-            {/* Empty State */}
-            <div className="flex flex-col items-center text-center py-4 px-2 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200/80">
-              <span className="material-symbols-outlined text-slate-300 text-[24px] mb-1.5 select-none">
-                people_outline
-              </span>
-              <p className="text-xs text-slate-400 font-medium leading-normal max-w-[190px]">
-                Todavía no tienes conexiones en tu red
-              </p>
-            </div>
+            {/* Pending Requests Notice */}
+            {pendingIncomingCount > 0 && (
+              <div 
+                onClick={() => router.push('/red')}
+                className="flex items-center justify-between p-2.5 rounded-xl bg-violet-50 hover:bg-violet-100/80 border border-violet-100 transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className="w-2 h-2 rounded-full bg-violet-600 animate-pulse shrink-0" />
+                  <span className="text-xs font-semibold text-violet-900 truncate">
+                    {pendingIncomingCount} {pendingIncomingCount === 1 ? 'solicitud pendiente' : 'solicitudes pendientes'}
+                  </span>
+                </div>
+                <span className="material-symbols-outlined text-[16px] text-violet-500 group-hover:translate-x-0.5 transition-transform shrink-0">
+                  chevron_right
+                </span>
+              </div>
+            )}
+
+            {/* Network Connections Content */}
+            {connectionsLoading ? (
+              <div className="flex flex-wrap gap-2.5 py-1">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="w-11 h-11 rounded-xl bg-slate-100 animate-pulse shrink-0" />
+                ))}
+              </div>
+            ) : activeConnections.length === 0 ? (
+              /* Empty State */
+              <div className="flex flex-col items-center text-center py-4 px-2 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200/80">
+                <span className="material-symbols-outlined text-slate-300 text-[24px] mb-1.5 select-none">
+                  people_outline
+                </span>
+                <p className="text-xs text-slate-400 font-medium leading-normal max-w-[190px]">
+                  Todavía no tienes conexiones en tu red
+                </p>
+              </div>
+            ) : (
+              /* Active Connections Avatars Grid with Hover Tooltip */
+              <div className="flex flex-wrap gap-2.5 items-center py-1">
+                {activeConnections.slice(0, 15).map((conn: any) => (
+                  <div
+                    key={conn.id}
+                    onClick={() => router.push(`/comunidad/public-profile?id=${conn.user.id}`)}
+                    className="relative group cursor-pointer"
+                  >
+                    <div className="w-11 h-11 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/80 group-hover:border-slate-400 transition-all duration-200 flex items-center justify-center shrink-0 group-hover:-translate-y-0.5">
+                      {conn.user.avatar ? (
+                        <img
+                          src={conn.user.avatar}
+                          alt={conn.user.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="material-symbols-outlined text-slate-400 text-[22px] select-none">person</span>
+                      )}
+                    </div>
+
+                    {/* Tooltip on Hover */}
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:flex flex-col items-center z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-150">
+                      <div className="bg-slate-900 text-white text-xs py-1.5 px-3 rounded-xl border border-slate-800 flex flex-col items-center text-center max-w-[190px] whitespace-nowrap">
+                        <span className="font-semibold font-jakarta text-[12px] leading-tight text-white">{conn.user.name}</span>
+                        {conn.user.location && (
+                          <span className="text-[10px] font-normal text-slate-300 mt-0.5 truncate max-w-[170px] font-sans">
+                            {conn.user.location}
+                          </span>
+                        )}
+                      </div>
+                      <div className="w-2 h-2 bg-slate-900 rotate-45 -mt-1" />
+                    </div>
+                  </div>
+                ))}
+
+                {activeConnections.length > 15 && (
+                  <div
+                    onClick={() => router.push('/red')}
+                    className="w-11 h-11 rounded-xl bg-slate-100 hover:bg-slate-200/80 border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center cursor-pointer transition-colors shadow-none shrink-0"
+                    title="Ver más conexiones"
+                  >
+                    +{activeConnections.length - 15}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Button to Ver mi red */}
             <button
@@ -558,7 +664,7 @@ function PlatformContent() {
               </div>
               <button
                 onClick={() => router.push('/red')}
-                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-lg text-xs font-semibold font-jakarta border-none cursor-pointer animate-none"
+                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-lg text-xs font-semibold font-jakarta border-none cursor-pointer animate-none flex items-center justify-center"
               >
                 Ver mi red
               </button>

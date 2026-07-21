@@ -131,7 +131,13 @@ function NetworkContent() {
     (c) => c.status === "pending" && c.direction === "incoming"
   );
 
-  const activeNetwork = connections.filter((c) => c.status === "accepted");
+  const activeNetwork = connections
+    .filter((c) => c.status === "accepted")
+    .sort((a: any, b: any) => {
+      const dateA = new Date(a.updated_at || a.created_at || 0).getTime();
+      const dateB = new Date(b.updated_at || b.created_at || 0).getTime();
+      return dateB - dateA;
+    });
 
   // Filter network by search query
   const filteredNetwork = activeNetwork.filter((conn) => {
@@ -173,8 +179,13 @@ function NetworkContent() {
             <div className={`order-2 md:order-1 w-full ${pendingRequests.length > 0 ? "md:col-span-8" : "md:col-span-12"} flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0 shrink-0`}>
               
               {/* Search Bar at Top of Active List */}
-              <div className="p-3 border-b border-slate-100 shrink-0 bg-white">
-                <div className="relative">
+              <div className="p-3 border-b border-slate-100 shrink-0 bg-white flex items-center gap-3">
+                {!isLoading && (
+                  <span className="text-slate-500 text-sm font-medium whitespace-nowrap shrink-0 font-jakarta pl-1">
+                    {activeNetwork.length} {activeNetwork.length === 1 ? 'persona' : 'personas'}
+                  </span>
+                )}
+                <div className="relative flex-1">
                   <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
                   <input
                     type="text"
