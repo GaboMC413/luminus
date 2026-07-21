@@ -3,10 +3,7 @@ import {
   AdminDisableUserCommand,
   AdminEnableUserCommand,
   AdminSetUserPasswordCommand,
-<<<<<<< HEAD
-=======
   AdminConfirmSignUpCommand,
->>>>>>> feautre/eliminar-cuenta
   CognitoIdentityProviderClient,
   UserNotFoundException,
 } from "@aws-sdk/client-cognito-identity-provider";
@@ -90,16 +87,11 @@ export async function syncCognitoUserStatus(user: CognitoManagedUser, status: Us
   }
 }
 
-<<<<<<< HEAD
 export async function updateCognitoUserPassword(user: CognitoManagedUser, password: string) {
-=======
-export async function adminSetUserPassword(user: CognitoManagedUser, password: string, permanent: boolean = true) {
->>>>>>> feautre/eliminar-cuenta
   if (isSystemUser(user)) {
     return;
   }
 
-<<<<<<< HEAD
   const hasPoolId = !!process.env.COGNITO_USER_POOL_ID?.trim();
   const hasAdminKeys = !!(process.env.COGNITO_ADMIN_ACCESS_KEY_ID?.trim() && process.env.COGNITO_ADMIN_SECRET_ACCESS_KEY?.trim());
 
@@ -112,13 +104,10 @@ export async function adminSetUserPassword(user: CognitoManagedUser, password: s
     }
   }
 
-=======
->>>>>>> feautre/eliminar-cuenta
   const client = getCognitoAdminClient();
   const UserPoolId = getUserPoolId();
   const Username = getCognitoUsername(user);
 
-<<<<<<< HEAD
   try {
     await client.send(
       new AdminSetUserPasswordCommand({
@@ -137,15 +126,7 @@ export async function adminSetUserPassword(user: CognitoManagedUser, password: s
       return;
     }
     throw error;
-=======
-  await client.send(
-    new AdminSetUserPasswordCommand({
-      UserPoolId,
-      Username,
-      Password: password,
-      Permanent: permanent,
-    })
-  );
+  }
 }
 
 export async function adminConfirmUser(email: string) {
@@ -161,6 +142,5 @@ export async function adminConfirmUser(email: string) {
     );
   } catch (error) {
     console.error("Failed to auto-confirm user in Cognito:", error);
->>>>>>> feautre/eliminar-cuenta
   }
 }
