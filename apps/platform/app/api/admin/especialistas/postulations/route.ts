@@ -118,6 +118,43 @@ export async function PATCH(request: Request) {
           details: JSON.stringify({ targetUserId: userId }),
         },
       });
+    } else if (action === "update") {
+      if (!userId) {
+        return NextResponse.json({ message: "ID de usuario es requerido." }, { status: 400 });
+      }
+
+      const { specialty, title, clinicName, bio, linkedinUrl, instagramUrl, websiteUrl } = body;
+
+      const updatedSpec = await prisma.specialistProfile.update({
+        where: { userId },
+        data: {
+          specialty: String(specialty || ""),
+          title: String(title || ""),
+          clinicName: clinicName ? String(clinicName) : null,
+          bio: String(bio || ""),
+          linkedinUrl: linkedinUrl ? String(linkedinUrl) : null,
+          instagramUrl: instagramUrl ? String(instagramUrl) : null,
+          websiteUrl: websiteUrl ? String(websiteUrl) : null,
+        },
+        include: {
+          user: {
+            include: {
+              profile: true,
+            },
+          },
+        },
+      });
+
+      // Log action
+      await prisma.activityLog.create({
+        data: {
+          userId: session.userId,
+          action: "UPDATE_SPECIALIST",
+          details: JSON.stringify({ targetUserId: userId }),
+        },
+      });
+
+      return NextResponse.json({ ok: true, specialist: updatedSpec });
     } else {
       return NextResponse.json({ message: "Acción no soportada." }, { status: 400 });
     }

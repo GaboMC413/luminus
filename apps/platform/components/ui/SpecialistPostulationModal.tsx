@@ -33,12 +33,14 @@ export function SpecialistPostulationModal({
   const [submitting, setSubmitting] = useState(false);
 
   const specialtyOptions = [
-    "Psicología / Psicoterapia",
-    "Nutrición y Alimentación",
-    "Coaching de Bienestar",
-    "Yoga y Movimiento",
-    "Terapias Alternativas",
-    "Medicina y Salud Integral"
+    "Crecimiento personal",
+    "Bienestar emocional",
+    "Salud integral",
+    "Movimiento físico",
+    "Nutrición",
+    "Espiritualidad",
+    "Vínculos",
+    "Terapias complementarias"
   ];
 
   const handleAddCourse = () => {

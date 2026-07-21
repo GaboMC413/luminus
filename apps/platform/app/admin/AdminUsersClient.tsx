@@ -316,6 +316,7 @@ export function AdminUsersClient({
   const [specialists, setSpecialists] = useState<AdminSpecialist[]>(initialSpecialists);
   const [postulations, setPostulations] = useState<AdminPostulation[]>(initialPostulations);
   const [activeTab, setActiveTab] = useState<"usuarios" | "chats" | "logs" | "soporte" | "busquedas" | "especialistas" | "emails">("usuarios");
+  const [userSubTab, setUserSubTab] = useState<"activos" | "eliminados">("activos");
   const [specialistSubTab, setSpecialistSubTab] = useState<"lista" | "postulaciones">("lista");
   const [emailSubTab, setEmailSubTab] = useState<"historial" | "plantillas">("historial");
   
@@ -371,6 +372,7 @@ export function AdminUsersClient({
   const [selectedId, setSelectedId] = useState(initialUsers[0]?.id ?? "");
   const [selectedRole, setSelectedRole] = useState<string>("USER");
   const [selectedStatus, setSelectedStatus] = useState<string>("active");
+  const [isEditingUser, setIsEditingUser] = useState<boolean>(false);
 
   const selectedUser = users.find((user) => user.id === selectedId) ?? users[0] ?? null;
 
@@ -378,11 +380,21 @@ export function AdminUsersClient({
     if (selectedUser) {
       setSelectedRole(selectedUser.role);
       setSelectedStatus(selectedUser.status);
+      setIsEditingUser(false);
     }
   }, [selectedUser]);
 
   const [specialistSearch, setSpecialistSearch] = useState("");
+  const [selectedSpecialistUserId, setSelectedSpecialistUserId] = useState<string>(initialSpecialists[0]?.userId ?? "");
+  const selectedSpecialist = specialists.find((spec) => spec.userId === selectedSpecialistUserId) ?? specialists[0] ?? null;
   const [isProcessingAction, setIsProcessingAction] = useState(false);
+  const [isEditingSpecialist, setIsEditingSpecialist] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (selectedSpecialist) {
+      setIsEditingSpecialist(false);
+    }
+  }, [selectedSpecialistUserId]);
 
   const filteredSpecialists = useMemo(() => {
     const query = specialistSearch.trim().toLowerCase();
@@ -465,8 +477,50 @@ export function AdminUsersClient({
       }
 
       setSpecialists(prev => prev.filter(s => s.userId !== userId));
+      if (selectedSpecialistUserId === userId) {
+        setSelectedSpecialistUserId(specialists.find(s => s.userId !== userId)?.userId ?? "");
+      }
     } catch (err) {
       console.error("Failed to remove specialist:", err);
+      alert("Error de conexión.");
+    } finally {
+      setIsProcessingAction(false);
+    }
+  }
+
+  async function updateSelectedSpecialist(formData: FormData) {
+    if (!selectedSpecialist || isProcessingAction) return;
+    setIsProcessingAction(true);
+    try {
+      const response = await fetch("/api/admin/especialistas/postulations", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action: "update",
+          userId: selectedSpecialist.userId,
+          specialty: formData.get("specialty"),
+          title: formData.get("title"),
+          clinicName: formData.get("clinicName"),
+          bio: formData.get("bio"),
+          linkedinUrl: formData.get("linkedinUrl"),
+          instagramUrl: formData.get("instagramUrl"),
+          websiteUrl: formData.get("websiteUrl"),
+        }),
+      });
+
+      const data = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        alert(data?.message || "Error al actualizar especialista.");
+        return;
+      }
+
+      setSpecialists((current) => current.map((s) => (s.userId === data.specialist.userId ? data.specialist : s)));
+      setIsEditingSpecialist(false);
+    } catch (err) {
+      console.error("Failed to update specialist:", err);
       alert("Error de conexión.");
     } finally {
       setIsProcessingAction(false);
@@ -640,12 +694,21 @@ export function AdminUsersClient({
     });
   }, [logs, logSearch, logAction, logDatePreset, logStartDate, logEndDate]);
 
+  const activeUsers = useMemo(() => {
+    return users.filter((user) => user.status !== "deleted");
+  }, [users]);
+
+  const deletedUsers = useMemo(() => {
+    return users.filter((user) => user.status === "deleted");
+  }, [users]);
+
   const filteredUsers = useMemo(() => {
+    const baseList = userSubTab === "eliminados" ? deletedUsers : activeUsers;
     const query = search.trim().toLowerCase();
 
-    if (!query) return users;
+    if (!query) return baseList;
 
-    return users.filter((user) => {
+    return baseList.filter((user) => {
       const haystack = [
         user.email,
         user.profile.firstName,
@@ -659,7 +722,16 @@ export function AdminUsersClient({
 
       return haystack.includes(query);
     });
-  }, [search, users]);
+  }, [search, activeUsers, deletedUsers, userSubTab]);
+
+  useEffect(() => {
+    if (activeTab === "usuarios") {
+      const currentInList = filteredUsers.some((u) => u.id === selectedId);
+      if (!currentInList && filteredUsers.length > 0) {
+        setSelectedId(filteredUsers[0].id);
+      }
+    }
+  }, [userSubTab, filteredUsers, selectedId, activeTab]);
 
   const filteredChats = useMemo(() => {
     const query = chatSearch.trim().toLowerCase();
@@ -720,6 +792,7 @@ export function AdminUsersClient({
 
       setUsers((currentUsers) => currentUsers.map((user) => (user.id === data.user.id ? data.user : user)));
       setMessage("Cambios guardados.");
+      setIsEditingUser(false);
     } finally {
       setIsSaving(false);
     }
@@ -736,73 +809,73 @@ export function AdminUsersClient({
         <nav className="p-4 flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible">
           <button
             onClick={() => setActiveTab("usuarios")}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "usuarios"
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer text-left ${activeTab === "usuarios"
               ? "bg-black text-white"
               : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
               }`}
           >
-            <span className="material-symbols-rounded text-[20px]">group</span>
-            <span>Usuarios</span>
+            <span className="material-symbols-rounded text-[20px] shrink-0">group</span>
+            <span className="truncate text-left flex-1 min-w-0">Usuarios</span>
           </button>
           <button
             onClick={() => setActiveTab("chats")}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "chats"
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer text-left ${activeTab === "chats"
               ? "bg-black text-white"
               : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
               }`}
           >
-            <span className="material-symbols-rounded text-[20px]">chat</span>
-            <span>Registros de Chats</span>
+            <span className="material-symbols-rounded text-[20px] shrink-0">chat</span>
+            <span className="truncate text-left flex-1 min-w-0">Registros de Chats</span>
           </button>
           <button
             onClick={() => setActiveTab("soporte")}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "soporte"
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer text-left ${activeTab === "soporte"
               ? "bg-black text-white"
               : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
               }`}
           >
-            <span className="material-symbols-rounded text-[20px]">support_agent</span>
-            <span>Chats de LUMINUS</span>
+            <span className="material-symbols-rounded text-[20px] shrink-0">support_agent</span>
+            <span className="truncate text-left flex-1 min-w-0">Chats de LUMINUS</span>
           </button>
           <button
             onClick={() => setActiveTab("logs")}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "logs"
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer text-left ${activeTab === "logs"
               ? "bg-black text-white"
               : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
               }`}
           >
-            <span className="material-symbols-rounded text-[20px]">receipt_long</span>
-            <span>Historial de Acciones</span>
+            <span className="material-symbols-rounded text-[20px] shrink-0">receipt_long</span>
+            <span className="truncate text-left flex-1 min-w-0">Historial de Acciones</span>
           </button>
           <button
             onClick={() => setActiveTab("busquedas")}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "busquedas"
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer text-left ${activeTab === "busquedas"
               ? "bg-black text-white"
               : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
               }`}
           >
-            <span className="material-symbols-rounded text-[20px]">search</span>
-            <span>Búsquedas de Comunidad</span>
+            <span className="material-symbols-rounded text-[20px] shrink-0">search</span>
+            <span className="truncate text-left flex-1 min-w-0">Búsquedas de Comunidad</span>
           </button>
           <button
             onClick={() => setActiveTab("especialistas")}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "especialistas"
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer text-left ${activeTab === "especialistas"
               ? "bg-black text-white"
               : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
               }`}
           >
-            <span className="material-symbols-rounded text-[20px]">psychology</span>
-            <span>Especialistas</span>
+            <span className="material-symbols-rounded text-[20px] shrink-0">psychology</span>
+            <span className="truncate text-left flex-1 min-w-0">Especialistas</span>
           </button>
           <button
             onClick={() => setActiveTab("emails")}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer ${activeTab === "emails"
+            className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all border-none outline-none cursor-pointer text-left ${activeTab === "emails"
               ? "bg-black text-white"
               : "bg-transparent text-slate-500 hover:bg-slate-50 hover:text-slate-950"
               }`}
           >
-            <span className="material-symbols-rounded text-[20px]">mail</span>
-            <span>Mails Enviados</span>
+            <span className="material-symbols-rounded text-[20px] shrink-0">mail</span>
+            <span className="truncate text-left flex-1 min-w-0">Mails Enviados</span>
           </button>
         </nav>
       </aside>
@@ -813,234 +886,448 @@ export function AdminUsersClient({
           <div className="mx-auto flex max-w-[1200px] flex-col gap-6 px-6 py-8">
             <header className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <h1 className="text-[28px] font-bold leading-tight font-jakarta">Usuarios</h1>
-                <p className="mt-1 text-[14px] text-slate-500">{users.length} registros</p>
+                <h1 className="text-[28px] font-bold leading-tight font-jakarta">
+                  {userSubTab === "eliminados" ? "Usuarios Eliminados" : "Usuarios Activos"}
+                </h1>
+                <p className="mt-1 text-[14px] text-slate-500">
+                  {filteredUsers.length} {filteredUsers.length === 1 ? "registro" : "registros"}
+                </p>
               </div>
-              <div className="flex items-center gap-3">
-                <InputField
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Buscar usuario"
-                  className="!w-[280px] !h-11"
-                />
+
+              {/* Sub-tab selection (Matching Mails subtab style with shadow-none) */}
+              <div className="flex bg-slate-100 p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setUserSubTab("activos")}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer border-none outline-none ${
+                    userSubTab === "activos"
+                      ? "bg-white text-slate-950 shadow-none font-bold"
+                      : "bg-transparent text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  Usuarios Activos ({activeUsers.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUserSubTab("eliminados")}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer border-none outline-none ${
+                    userSubTab === "eliminados"
+                      ? "bg-white text-slate-950 shadow-none font-bold"
+                      : "bg-transparent text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  Usuarios Eliminados ({deletedUsers.length})
+                </button>
               </div>
             </header>
 
             <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
-              <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-none">
-                <div className="grid grid-cols-[minmax(200px,1.4fr)_100px_100px_140px_110px] border-b border-slate-200 bg-slate-50 px-4 py-3 text-[12px] font-bold uppercase text-slate-500">
-                  <span>Usuario</span>
-                  <span>Rol</span>
-                  <span>Estado</span>
-                  <span>Ciudad</span>
-                  <span>Alta</span>
-                </div>
-                <div className="max-h-[680px] overflow-y-auto">
-                  {filteredUsers.map((user) => {
-                    const active = user.id === selectedUser?.id;
+              <div className="flex flex-col gap-4">
+                <InputField
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder={userSubTab === "eliminados" ? "Buscar usuario eliminado..." : "Buscar usuario activo..."}
+                  className="!w-full !h-10"
+                />
 
-                    return (
-                      <button
-                        key={user.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedId(user.id);
-                          setMessage("");
-                        }}
-                        className={`grid w-full grid-cols-[minmax(200px,1.4fr)_100px_100px_140px_110px] items-center border-b border-slate-100 px-4 py-3.5 text-left text-[14px] transition hover:bg-slate-50 outline-none border-none cursor-pointer ${active ? "bg-slate-100" : "bg-white"}`}
-                      >
-                        <span className="flex min-w-0 items-center gap-3">
-                          {user.profile.avatarUrl ? (
-                            <img src={user.profile.avatarUrl} alt="" className="h-9 w-9 rounded-lg object-cover" />
-                          ) : (
-                            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-[13px] font-bold text-slate-500 uppercase">
-                              {(user.profile.firstName || user.email).slice(0, 1).toUpperCase()}
-                            </span>
-                          )}
-                          <span className="min-w-0">
-                            <span className="block truncate font-semibold">{fieldValue(user.profile.fullName || `${user.profile.firstName} ${user.profile.lastName}`)}</span>
-                            <span className="block truncate text-[12px] text-slate-500">{user.email}</span>
-                          </span>
+                <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-none">
+                  <div className="grid grid-cols-[1.5fr_110px_130px_100px] border-b border-slate-200 bg-slate-50 px-4 py-3 text-[12px] font-bold uppercase text-slate-500">
+                    <span>Usuario</span>
+                    <span>País</span>
+                    <span>Ciudad</span>
+                    <span>Alta</span>
+                  </div>
+                  <div className="max-h-[680px] overflow-y-auto">
+                    {filteredUsers.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+                        <span className="material-symbols-rounded text-[40px] mb-2 text-slate-300">
+                          {userSubTab === "eliminados" ? "person_off" : "group_off"}
                         </span>
-                        <span className="font-semibold text-slate-700">{user.role}</span>
-                        <span className="font-semibold text-slate-700">{user.status}</span>
-                        <span className="truncate text-slate-600">{fieldValue(user.profile.city)}</span>
-                        <span className="text-slate-600">{formatDate(user.createdAt)}</span>
-                      </button>
-                    );
-                  })}
+                        <p className="text-sm font-medium">
+                          {userSubTab === "eliminados"
+                            ? "No hay usuarios eliminados."
+                            : "No se encontraron usuarios activos."}
+                        </p>
+                      </div>
+                    ) : (
+                      filteredUsers.map((user) => {
+                        const active = user.id === selectedUser?.id;
+
+                        return (
+                          <button
+                            key={user.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedId(user.id);
+                              setMessage("");
+                            }}
+                            className={`grid w-full grid-cols-[1.5fr_110px_130px_100px] items-center border-b border-slate-100 px-4 py-3.5 text-left text-[14px] transition hover:bg-slate-50 outline-none border-none cursor-pointer ${active ? "bg-slate-100" : "bg-white"}`}
+                          >
+                            <span className="flex min-w-0 items-center gap-3">
+                              <span className="relative shrink-0">
+                                {user.profile.avatarUrl ? (
+                                  <img src={user.profile.avatarUrl} alt="" className="h-9 w-9 rounded-lg object-cover" />
+                                ) : (
+                                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-[13px] font-bold text-slate-500 uppercase">
+                                    {(user.profile.firstName || user.email).slice(0, 1).toUpperCase()}
+                                  </span>
+                                )}
+                                {specialists.some((s) => s.userId === user.id) && (
+                                  <span
+                                    className="absolute -bottom-1 -right-1 text-black leading-none drop-shadow-sm select-none"
+                                    title="Especialista"
+                                  >
+                                    <span
+                                      className="material-symbols-outlined text-[13px] leading-none block"
+                                      style={{ fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                                    >
+                                      heart_smile
+                                    </span>
+                                  </span>
+                                )}
+                              </span>
+                              <span className="min-w-0">
+                                <span className="block font-semibold text-slate-900 truncate">
+                                  {fieldValue(user.profile.fullName || `${user.profile.firstName} ${user.profile.lastName}`)}
+                                </span>
+                                <span className="block truncate text-[12px] text-slate-500">{user.email}</span>
+                              </span>
+                            </span>
+                            <span className="truncate text-slate-600 pr-2">{fieldValue(user.profile.country)}</span>
+                            <span className="truncate text-slate-600 pr-2">{fieldValue(user.profile.city)}</span>
+                            <span className="text-slate-600">{formatDate(user.createdAt)}</span>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
               </div>
 
               {selectedUser && (
-                <aside className="rounded-lg border border-slate-200 bg-white shadow-none">
-                  <div className="border-b border-slate-200 px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      {selectedUser.profile.avatarUrl ? (
-                        <img src={selectedUser.profile.avatarUrl} alt="" className="h-12 w-12 rounded-lg object-cover" />
-                      ) : (
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-100 font-bold text-slate-500 uppercase">
-                          {(selectedUser.profile.firstName || selectedUser.email).slice(0, 1).toUpperCase()}
+                <aside className="rounded-lg border border-slate-200 bg-white shadow-none flex flex-col overflow-hidden max-h-[740px] overflow-y-auto">
+                  {/* Card Header */}
+                  <div className="border-b border-slate-200 p-5 bg-white shrink-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                        <div className="relative shrink-0">
+                          {selectedUser.profile.avatarUrl ? (
+                            <img src={selectedUser.profile.avatarUrl} alt="" className="h-14 w-14 rounded-2xl object-cover" />
+                          ) : (
+                            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 font-bold text-slate-600 uppercase text-xl">
+                              {(selectedUser.profile.firstName || selectedUser.email).slice(0, 1).toUpperCase()}
+                            </div>
+                          )}
+                          {specialists.some((s) => s.userId === selectedUser.id) && (
+                            <span
+                              className="absolute -bottom-1 -right-1 text-black leading-none drop-shadow-sm select-none"
+                              title="Especialista"
+                            >
+                              <span
+                                className="material-symbols-outlined text-[16px] leading-none block"
+                                style={{ fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                              >
+                                heart_smile
+                              </span>
+                            </span>
+                          )}
                         </div>
-                      )}
-                      <div className="min-w-0">
-                        <h2 className="truncate text-[17px] font-bold leading-tight">{selectedUser.email}</h2>
-                        <p className="text-[13px] text-slate-500 mt-1">Ultimo login: {formatDate(selectedUser.lastLoginAt)}</p>
+                        <div className="min-w-0 flex-1">
+                          <h2 className="truncate text-base font-bold text-slate-900 leading-tight">
+                            {fieldValue(selectedUser.profile.fullName || `${selectedUser.profile.firstName} ${selectedUser.profile.lastName}`)}
+                          </h2>
+                          <p className="truncate text-xs text-slate-500 mt-0.5">{selectedUser.email}</p>
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wide ${selectedUser.role === 'ADMIN' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-100 text-slate-700'}`}>
+                              {selectedUser.role}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wide ${selectedUser.status === 'active' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                              {selectedUser.status}
+                            </span>
+                          </div>
+                        </div>
                       </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingUser((prev) => !prev)}
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none cursor-pointer transition-colors ${
+                          isEditingUser
+                            ? "bg-black text-white hover:bg-slate-800"
+                            : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+                        }`}
+                        title={isEditingUser ? "Cancelar edición" : "Editar perfil"}
+                      >
+                        <span className="material-symbols-rounded text-[18px] block">
+                          {isEditingUser ? "close" : "edit"}
+                        </span>
+                      </button>
                     </div>
+
+                    {(() => {
+                      const linkedSpecialist = specialists.find((s) => s.userId === selectedUser.id);
+                      if (!linkedSpecialist) return null;
+
+                      return (
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => {
+                            setSelectedSpecialistUserId(linkedSpecialist.userId);
+                            setSpecialistSubTab("lista");
+                            setActiveTab("especialistas");
+                          }}
+                          className="w-full mt-4 flex items-center justify-center !h-9 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border-none shadow-none transition-colors"
+                        >
+                          Ver perfil de especialista
+                        </Button>
+                      );
+                    })()}
                   </div>
 
-                  <form
-                    key={selectedUser.id}
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      updateSelectedUser(new FormData(event.currentTarget));
-                    }}
-                    className="flex flex-col gap-4 p-5"
-                  >
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-1.5">
-                        <span className="text-[11px] font-bold uppercase text-slate-400">Rol</span>
-                        <input type="hidden" name="role" value={selectedRole} />
-                        <SelectInput
-                          value={selectedRole}
-                          options={[
-                            { label: "USER", value: "USER" },
-                            { label: "ADMIN", value: "ADMIN" }
-                          ]}
-                          onSelect={(val) => setSelectedRole(val)}
-                        />
+                  {/* Card Content */}
+                  {!isEditingUser ? (
+                    /* Read-Only User Card View */
+                    <div className="p-5 flex flex-col gap-4.5 text-sm">
+                      {/* Personal Info Card */}
+                      <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 flex flex-col gap-3.5">
+                        <span className="text-[12px] font-bold uppercase tracking-wider text-slate-400">Información Personal</span>
+                        <div className="grid grid-cols-2 gap-3.5 text-xs">
+                          <div>
+                            <span className="text-slate-400 block text-[11px] font-bold uppercase tracking-wide">Profesión</span>
+                            <span className="font-semibold text-slate-900 text-[13.5px] truncate block mt-0.5">{fieldValue(selectedUser.profile.profession)}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[11px] font-bold uppercase tracking-wide">Celular</span>
+                            <span className="font-semibold text-slate-900 text-[13.5px] truncate block mt-0.5">{fieldValue(selectedUser.profile.phoneNumber)}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[11px] font-bold uppercase tracking-wide">Ciudad</span>
+                            <span className="font-semibold text-slate-900 text-[13.5px] truncate block mt-0.5">{fieldValue(selectedUser.profile.city)}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[11px] font-bold uppercase tracking-wide">País</span>
+                            <span className="font-semibold text-slate-900 text-[13.5px] truncate block mt-0.5">{fieldValue(selectedUser.profile.country)}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[11px] font-bold uppercase tracking-wide">Género</span>
+                            <span className="font-semibold text-slate-900 text-[13.5px] truncate block mt-0.5">{fieldValue(selectedUser.profile.gender)}</span>
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[11px] font-bold uppercase tracking-wide">Nacimiento</span>
+                            <span className="font-semibold text-slate-900 text-[13.5px] truncate block mt-0.5">{fieldValue(selectedUser.profile.birthdate)}</span>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex flex-col gap-1.5">
-                        <span className="text-[11px] font-bold uppercase text-slate-400">Estado</span>
-                        <input type="hidden" name="status" value={selectedStatus} />
-                        <SelectInput
-                          value={selectedStatus}
-                          options={[
-                            { label: "active", value: "active" },
-                            { label: "disabled", value: "disabled" },
-                            { label: "deleted", value: "deleted" }
-                          ]}
-                          onSelect={(val) => setSelectedStatus(val)}
-                        />
-                      </div>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-1.5">
-                        <span className="text-[11px] font-bold uppercase text-slate-400">Nombre</span>
-                        <InputField name="firstName" defaultValue={selectedUser.profile.firstName} className="h-10" />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <span className="text-[11px] font-bold uppercase text-slate-400">Apellido</span>
-                        <InputField name="lastName" defaultValue={selectedUser.profile.lastName} className="h-10" />
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <span className="text-[11px] font-bold uppercase text-slate-400">Profesion</span>
-                      <InputField name="profession" defaultValue={selectedUser.profile.profession} className="h-10" />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-1.5">
-                        <span className="text-[11px] font-bold uppercase text-slate-400">Ciudad</span>
-                        <InputField name="city" defaultValue={selectedUser.profile.city} className="h-10" />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <span className="text-[11px] font-bold uppercase text-slate-400">Pais</span>
-                        <InputField name="country" defaultValue={selectedUser.profile.country} className="h-10" />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-1.5">
-                        <span className="text-[11px] font-bold uppercase text-slate-400">Celular</span>
-                        <InputField name="phoneNumber" defaultValue={selectedUser.profile.phoneNumber} className="h-10" />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <span className="text-[11px] font-bold uppercase text-slate-400">Plan</span>
-                        <InputField name="selectedPlan" defaultValue={selectedUser.profile.selectedPlan} className="h-10" />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-1.5">
-                        <span className="text-[11px] font-bold uppercase text-slate-400">Genero</span>
-                        <InputField name="gender" defaultValue={selectedUser.profile.gender} className="h-10" />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <span className="text-[11px] font-bold uppercase text-slate-400">Nacimiento</span>
-                        <InputField type="date" name="birthdate" defaultValue={selectedUser.profile.birthdate} className="h-10" />
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <span className="text-[11px] font-bold uppercase text-slate-400">Bio</span>
-                      <textarea name="bio" defaultValue={selectedUser.profile.bio} rows={3} className="rounded-lg border border-slate-200 px-3 py-2 text-[14px] text-slate-900 font-medium outline-none resize-none" />
-                    </div>
-
-                    <label className="flex items-center gap-2.5 text-[13px] font-semibold text-slate-700 cursor-pointer">
-                      <input type="checkbox" name="isOnboarded" defaultChecked={selectedUser.profile.isOnboarded} className="h-4.5 w-4.5 accent-black rounded cursor-pointer" />
-                      Onboarding completo
-                    </label>
-
-                    <div>
-                      <h3 className="mb-2 text-[11px] font-bold uppercase text-slate-500">Intereses</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedUser.interests.length > 0 ? (
-                          selectedUser.interests.map((interest) => (
-                            <span key={interest.id} className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[12px] font-semibold text-slate-700">
-                              {interest.name}
+                      {/* Subscription & Status Card */}
+                      <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 flex flex-col gap-3.5">
+                        <span className="text-[12px] font-bold uppercase tracking-wider text-slate-400">Cuenta y Estado</span>
+                        <div className="grid grid-cols-2 gap-3.5 text-xs">
+                          <div>
+                            <span className="text-slate-400 block text-[11px] font-bold uppercase tracking-wide">Plan</span>
+                            <span className="inline-block mt-1 px-3 py-1 rounded-md bg-white border border-slate-200 font-bold text-slate-800 text-[12px]">
+                              {fieldValue(selectedUser.profile.selectedPlan)}
                             </span>
-                          ))
-                        ) : (
-                          <span className="text-[13px] text-slate-400">Sin intereses</span>
-                        )}
-
+                          </div>
+                          <div>
+                            <span className="text-slate-400 block text-[11px] font-bold uppercase tracking-wide">Onboarding</span>
+                            <span className={`inline-block mt-1 px-3 py-1 rounded-md font-bold text-[12px] ${selectedUser.profile.isOnboarded ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                              {selectedUser.profile.isOnboarded ? 'Completado' : 'Pendiente'}
+                            </span>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-slate-400 block text-[11px] font-bold uppercase tracking-wide">Último Login</span>
+                            <span className="font-semibold text-slate-900 text-[13.5px] block mt-0.5">{formatDate(selectedUser.lastLoginAt)}</span>
+                          </div>
+                        </div>
                       </div>
+
+                      {/* Bio Card */}
+                      <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 flex flex-col gap-1.5">
+                        <span className="text-[12px] font-bold uppercase tracking-wider text-slate-400">Biografía</span>
+                        <p className="text-[13.5px] text-slate-700 leading-relaxed whitespace-pre-wrap mt-0.5">
+                          {selectedUser.profile.bio || "Sin biografía especificada."}
+                        </p>
+                      </div>
+
+                      {/* Intereses Card */}
+                      <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 flex flex-col gap-2.5">
+                        <span className="text-[12px] font-bold uppercase tracking-wider text-slate-400">Intereses</span>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedUser.interests.length > 0 ? (
+                            selectedUser.interests.map((interest) => (
+                              <span key={interest.id} className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[12.5px] font-semibold text-slate-700">
+                                {interest.name}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="text-[13px] text-slate-400 italic">Sin intereses declarados</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {message && <p className={`text-[13px] font-semibold ${message.includes("guardados") ? "text-emerald-600" : "text-red-500"}`}>{message}</p>}
+
+                      <Button
+                        type="button"
+                        onClick={() => setIsEditingUser(true)}
+                        className="w-full mt-1 !h-10 bg-black hover:bg-slate-800 text-white font-bold transition-all shadow-none text-xs"
+                      >
+                        Editar perfil
+                      </Button>
                     </div>
-
-                    {message && <p className={`text-[13px] font-semibold ${message.includes("guardados") ? "text-emerald-600" : "text-red-500"}`}>{message}</p>}
-
-                    <Button
-                      type="submit"
-                      disabled={isSaving}
-                      className="!h-11 !w-full"
+                  ) : (
+                    /* Edit Mode Form */
+                    <form
+                      key={selectedUser.id}
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        updateSelectedUser(new FormData(event.currentTarget));
+                      }}
+                      className="p-5 flex flex-col gap-4 text-sm"
                     >
-                      {isSaving ? "Guardando..." : "Guardar cambios"}
-                    </Button>
-                  </form>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">Rol</span>
+                          <input type="hidden" name="role" value={selectedRole} />
+                          <SelectInput
+                            value={selectedRole}
+                            options={[
+                              { label: "USER", value: "USER" },
+                              { label: "ADMIN", value: "ADMIN" }
+                            ]}
+                            onSelect={(val) => setSelectedRole(val)}
+                            className="!h-9 text-[13px]"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">Estado</span>
+                          <input type="hidden" name="status" value={selectedStatus} />
+                          <SelectInput
+                            value={selectedStatus}
+                            options={[
+                              { label: "active", value: "active" },
+                              { label: "disabled", value: "disabled" },
+                              { label: "deleted", value: "deleted" }
+                            ]}
+                            onSelect={(val) => setSelectedStatus(val)}
+                            className="!h-9 text-[13px]"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">Nombre</span>
+                          <InputField name="firstName" defaultValue={selectedUser.profile.firstName} className="!h-9 text-[13px]" />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">Apellido</span>
+                          <InputField name="lastName" defaultValue={selectedUser.profile.lastName} className="!h-9 text-[13px]" />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Profesion</span>
+                        <InputField name="profession" defaultValue={selectedUser.profile.profession} className="!h-9 text-[13px]" />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">Ciudad</span>
+                          <InputField name="city" defaultValue={selectedUser.profile.city} className="!h-9 text-[13px]" />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">Pais</span>
+                          <InputField name="country" defaultValue={selectedUser.profile.country} className="!h-9 text-[13px]" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">Celular</span>
+                          <InputField name="phoneNumber" defaultValue={selectedUser.profile.phoneNumber} className="!h-9 text-[13px]" />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">Plan</span>
+                          <InputField name="selectedPlan" defaultValue={selectedUser.profile.selectedPlan} className="!h-9 text-[13px]" />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">Genero</span>
+                          <InputField name="gender" defaultValue={selectedUser.profile.gender} className="!h-9 text-[13px]" />
+                        </div>
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">Nacimiento</span>
+                          <InputField type="date" name="birthdate" defaultValue={selectedUser.profile.birthdate} className="!h-9 text-[13px]" />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[11px] font-bold uppercase text-slate-400">Bio</span>
+                        <textarea name="bio" defaultValue={selectedUser.profile.bio} rows={2.5} className="rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-900 font-medium outline-none resize-none min-h-[64px]" />
+                      </div>
+
+                      <label className="flex items-center gap-2.5 text-[13px] font-semibold text-slate-700 cursor-pointer">
+                        <input type="checkbox" name="isOnboarded" defaultChecked={selectedUser.profile.isOnboarded} className="h-4.5 w-4.5 accent-black rounded cursor-pointer" />
+                        Onboarding completo
+                      </label>
+
+                      {message && <p className={`text-[13px] font-semibold ${message.includes("guardados") ? "text-emerald-600" : "text-red-500"}`}>{message}</p>}
+
+                      <div className="flex gap-2 mt-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => setIsEditingUser(false)}
+                          disabled={isSaving}
+                          className="!h-10 flex-1 font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border-none shadow-none text-xs"
+                        >
+                          Cancelar
+                        </Button>
+                        <Button
+                          type="submit"
+                          disabled={isSaving}
+                          className="!h-10 flex-1 font-bold bg-black hover:bg-slate-800 text-white shadow-none text-xs"
+                        >
+                          {isSaving ? "Guardando..." : "Guardar cambios"}
+                        </Button>
+                      </div>
+                    </form>
+                  )}
                 </aside>
               )}
             </section>
           </div>
         ) : activeTab === "chats" ? (
           /* Registros de Chats Tab */
-          <div className="mx-auto flex max-w-[1200px] flex-col gap-6 px-6 py-8">
+          <div className="mx-auto flex max-w-[1200px] flex-col gap-6 px-6 py-8 animate-in fade-in duration-200">
             <header className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h1 className="text-[28px] font-bold leading-tight font-jakarta">Registros de Chats</h1>
-                <p className="mt-1 text-[14px] text-slate-500">{chats.length} conversaciones registradas</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <InputField
-                  value={chatSearch}
-                  onChange={(event) => setChatSearch(event.target.value)}
-                  placeholder="Buscar por usuario"
-                  className="!w-[280px] !h-11"
-                />
+                <p className="mt-1 text-[14px] text-slate-500">{filteredChats.length} {filteredChats.length === 1 ? "conversación registrada" : "conversaciones registradas"}</p>
               </div>
             </header>
 
             <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
               {/* Left Column: list of chats */}
-              <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-none">
-                <div className="grid grid-cols-[1fr_1fr_120px] border-b border-slate-200 bg-slate-50 px-4 py-3 text-[12px] font-bold uppercase text-slate-500">
-                  <span>Usuario Iniciador</span>
-                  <span>Usuario Contactado</span>
-                  <span>Fecha</span>
-                </div>
+              <div className="flex flex-col gap-4">
+                <InputField
+                  value={chatSearch}
+                  onChange={(event) => setChatSearch(event.target.value)}
+                  placeholder="Buscar conversación por usuario..."
+                  className="!w-full !h-10"
+                />
+
+                <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-none">
+                  <div className="grid grid-cols-[1fr_1fr_120px] border-b border-slate-200 bg-slate-50 px-4 py-3 text-[12px] font-bold uppercase text-slate-500">
+                    <span>Usuario Iniciador</span>
+                    <span>Usuario Contactado</span>
+                    <span>Fecha</span>
+                  </div>
                 <div className="max-h-[460px] overflow-y-auto">
                   {filteredChats.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-slate-400">
@@ -1098,6 +1385,7 @@ export function AdminUsersClient({
                   )}
                 </div>
               </div>
+            </div>
 
               {/* Right Column: selected chat messages thread */}
               {selectedChat ? (
@@ -1178,25 +1466,25 @@ export function AdminUsersClient({
             <header className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h1 className="text-[28px] font-bold leading-tight font-jakarta">Soporte (Luminus)</h1>
-                <p className="mt-1 text-[14px] text-slate-500">{supportChats.length} conversaciones de soporte</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <InputField
-                  value={supportSearch}
-                  onChange={(event) => setSupportSearch(event.target.value)}
-                  placeholder="Buscar usuario"
-                  className="!w-[280px] !h-11"
-                />
+                <p className="mt-1 text-[14px] text-slate-500">{filteredSupportChats.length} {filteredSupportChats.length === 1 ? "conversación de soporte" : "conversaciones de soporte"}</p>
               </div>
             </header>
 
             <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
               {/* Left Column: list of support chats */}
-              <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-none">
-                <div className="grid grid-cols-[1fr_120px] border-b border-slate-200 bg-slate-50 px-4 py-3 text-[12px] font-bold uppercase text-slate-500">
-                  <span>Usuario</span>
-                  <span>Última Actividad</span>
-                </div>
+              <div className="flex flex-col gap-4">
+                <InputField
+                  value={supportSearch}
+                  onChange={(event) => setSupportSearch(event.target.value)}
+                  placeholder="Buscar chat de soporte por usuario..."
+                  className="!w-full !h-10"
+                />
+
+                <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-none">
+                  <div className="grid grid-cols-[1fr_120px] border-b border-slate-200 bg-slate-50 px-4 py-3 text-[12px] font-bold uppercase text-slate-500">
+                    <span>Usuario</span>
+                    <span>Última Actividad</span>
+                  </div>
                 <div className="max-h-[460px] overflow-y-auto">
                   {filteredSupportChats.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-20 text-slate-400">
@@ -1240,6 +1528,7 @@ export function AdminUsersClient({
                   )}
                 </div>
               </div>
+            </div>
 
               {/* Right Column: messages and reply form */}
               {selectedSupportChat ? (
@@ -1345,13 +1634,13 @@ export function AdminUsersClient({
               <div className="flex bg-slate-100 p-1 rounded-xl">
                 <button
                   onClick={() => setEmailSubTab("historial")}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer border-none outline-none ${emailSubTab === "historial" ? "bg-white text-slate-950 shadow-sm" : "bg-transparent text-slate-500 hover:text-slate-900"}`}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer border-none outline-none ${emailSubTab === "historial" ? "bg-white text-slate-950 shadow-none font-bold" : "bg-transparent text-slate-500 hover:text-slate-900"}`}
                 >
                   Historial de Envíos
                 </button>
                 <button
                   onClick={() => setEmailSubTab("plantillas")}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer border-none outline-none ${emailSubTab === "plantillas" ? "bg-white text-slate-950 shadow-sm" : "bg-transparent text-slate-500 hover:text-slate-900"}`}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer border-none outline-none ${emailSubTab === "plantillas" ? "bg-white text-slate-950 shadow-none font-bold" : "bg-transparent text-slate-500 hover:text-slate-900"}`}
                 >
                   Plantillas de Diseño
                 </button>
@@ -1360,21 +1649,19 @@ export function AdminUsersClient({
 
             {emailSubTab === "historial" ? (
               /* Email Logs Sub-tab */
-              <div className="flex flex-col gap-6">
-                {/* Filters */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5 flex flex-wrap gap-4 items-end shadow-none">
-                  <div className="flex flex-col gap-1.5 min-w-[200px] flex-1">
-                    <span className="text-[11px] font-bold uppercase text-slate-400">Buscar destinatario / asunto</span>
+              <div className="flex flex-col gap-4">
+                {/* Search and filters bar over list without container box */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex-1 min-w-[200px]">
                     <InputField
                       value={emailSearch}
                       onChange={(e) => setEmailSearch(e.target.value)}
-                      placeholder="Email o asunto"
-                      className="!h-10"
+                      placeholder="Buscar por email o asunto..."
+                      className="!w-full !h-10"
                     />
                   </div>
 
-                  <div className="flex flex-col gap-1.5 min-w-[180px]">
-                    <span className="text-[11px] font-bold uppercase text-slate-400">Rango de fechas</span>
+                  <div className="min-w-[160px]">
                     <SelectInput
                       value={emailDatePreset}
                       options={[
@@ -1387,13 +1674,13 @@ export function AdminUsersClient({
                         { label: "Fechas fijas", value: "custom" },
                       ]}
                       onSelect={(val) => setEmailDatePreset(val)}
+                      className="!h-10"
                     />
                   </div>
 
                   {emailDatePreset === "custom" && (
                     <>
-                      <div className="flex flex-col gap-1.5 w-[140px]">
-                        <span className="text-[11px] font-bold uppercase text-slate-400">Desde</span>
+                      <div className="w-[120px]">
                         <InputField
                           type="date"
                           value={emailStartDate}
@@ -1401,8 +1688,7 @@ export function AdminUsersClient({
                           className="!h-10"
                         />
                       </div>
-                      <div className="flex flex-col gap-1.5 w-[140px]">
-                        <span className="text-[11px] font-bold uppercase text-slate-400">Hasta</span>
+                      <div className="w-[120px]">
                         <InputField
                           type="date"
                           value={emailEndDate}
@@ -1551,22 +1837,18 @@ export function AdminUsersClient({
               </div>
             </header>
 
-            {/* Filter controls row */}
-            <div className="bg-white rounded-xl border border-slate-200 p-5 flex flex-wrap gap-4 items-end shadow-none">
-              {/* User search */}
-              <div className="flex flex-col gap-1.5 min-w-[200px] flex-1">
-                <span className="text-[11px] font-bold uppercase text-slate-400">Usuario</span>
+            {/* Filter controls row over table without container box */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex-1 min-w-[220px]">
                 <InputField
                   value={logSearch}
                   onChange={(e) => setLogSearch(e.target.value)}
-                  placeholder="Buscar por nombre o email"
-                  className="!h-10"
+                  placeholder="Buscar por usuario o término..."
+                  className="!w-full !h-10"
                 />
               </div>
 
-              {/* Action type */}
-              <div className="flex flex-col gap-1.5 min-w-[180px]">
-                <span className="text-[11px] font-bold uppercase text-slate-400">Acción</span>
+              <div className="min-w-[170px]">
                 <SelectInput
                   value={logAction}
                   options={[
@@ -1587,12 +1869,11 @@ export function AdminUsersClient({
                     { label: "Actualizó Perfil", value: "UPDATE_PROFILE" },
                   ]}
                   onSelect={(val) => setLogAction(val)}
+                  className="!h-10"
                 />
               </div>
 
-              {/* Date Presets */}
-              <div className="flex flex-col gap-1.5 min-w-[180px]">
-                <span className="text-[11px] font-bold uppercase text-slate-400">Tiempo</span>
+              <div className="min-w-[170px]">
                 <SelectInput
                   value={logDatePreset}
                   options={[
@@ -1605,14 +1886,13 @@ export function AdminUsersClient({
                     { label: "Fechas fijas", value: "custom" },
                   ]}
                   onSelect={(val) => setLogDatePreset(val)}
+                  className="!h-10"
                 />
               </div>
 
-              {/* Custom Range start */}
               {logDatePreset === "custom" && (
                 <>
-                  <div className="flex flex-col gap-1.5 w-[140px]">
-                    <span className="text-[11px] font-bold uppercase text-slate-400">Desde</span>
+                  <div className="w-[130px]">
                     <InputField
                       type="date"
                       value={logStartDate}
@@ -1620,8 +1900,7 @@ export function AdminUsersClient({
                       className="!h-10"
                     />
                   </div>
-                  <div className="flex flex-col gap-1.5 w-[140px]">
-                    <span className="text-[11px] font-bold uppercase text-slate-400">Hasta</span>
+                  <div className="w-[130px]">
                     <InputField
                       type="date"
                       value={logEndDate}
@@ -1632,7 +1911,6 @@ export function AdminUsersClient({
                 </>
               )}
 
-              {/* Reset button */}
               <Button
                 type="button"
                 variant="small"
@@ -1651,7 +1929,7 @@ export function AdminUsersClient({
 
             {/* Table */}
             <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-none">
-              <div className="grid grid-cols-[1.5fr_1.2fr_2fr_180px] border-b border-slate-200 bg-slate-50 px-6 py-3.5 text-[12px] font-bold uppercase text-slate-500">
+              <div className="grid grid-cols-[1.5fr_1.2fr_2fr_180px] border-b border-slate-200 bg-slate-50 px-4 py-3 text-[12px] font-bold uppercase text-slate-500">
                 <span>Usuario</span>
                 <span>Acción</span>
                 <span>Detalles</span>
@@ -1667,7 +1945,7 @@ export function AdminUsersClient({
                   filteredLogs.map((log) => (
                     <div
                       key={log.id}
-                      className="grid w-full grid-cols-[1.5fr_1.2fr_2fr_180px] items-center border-b border-slate-100 px-6 py-4 text-left text-[14px] transition hover:bg-slate-50/50 bg-white"
+                      className="grid w-full grid-cols-[1.5fr_1.2fr_2fr_180px] items-center border-b border-slate-100 px-4 py-3.5 text-left text-[14px] transition hover:bg-slate-50/50 bg-white"
                     >
                       {/* User */}
                       <span className="flex min-w-0 items-center gap-3">
@@ -1710,21 +1988,20 @@ export function AdminUsersClient({
             <header className="flex flex-wrap items-center justify-between gap-4">
               <div>
                 <h1 className="text-[28px] font-bold leading-tight font-jakarta">Búsquedas de Comunidad</h1>
-                <p className="mt-1 text-[14px] text-slate-500">{filteredSearches.length} búsquedas registradas</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <InputField
-                  value={searchQueryFilter}
-                  onChange={(event) => setSearchQueryFilter(event.target.value)}
-                  placeholder="Buscar por usuario o término"
-                  className="!w-[280px] !h-11"
-                />
+                <p className="mt-1 text-[14px] text-slate-500">{filteredSearches.length} {filteredSearches.length === 1 ? "búsqueda registrada" : "búsquedas registradas"}</p>
               </div>
             </header>
 
+            <InputField
+              value={searchQueryFilter}
+              onChange={(event) => setSearchQueryFilter(event.target.value)}
+              placeholder="Buscar por usuario o término..."
+              className="!w-full !h-10"
+            />
+
             {/* Table */}
             <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-none">
-              <div className="grid grid-cols-[1.5fr_2fr_180px] border-b border-slate-200 bg-slate-50 px-6 py-3.5 text-[12px] font-bold uppercase text-slate-500">
+              <div className="grid grid-cols-[1.5fr_2fr_180px] border-b border-slate-200 bg-slate-50 px-4 py-3 text-[12px] font-bold uppercase text-slate-500">
                 <span>Usuario</span>
                 <span>Término Buscado</span>
                 <span>Fecha y Hora</span>
@@ -1739,7 +2016,7 @@ export function AdminUsersClient({
                   filteredSearches.map((searchLog) => (
                     <div
                       key={searchLog.id}
-                      className="grid w-full grid-cols-[1.5fr_2fr_180px] items-center border-b border-slate-100 px-6 py-4 text-left text-[14px] transition hover:bg-slate-50/50 bg-white"
+                      className="grid w-full grid-cols-[1.5fr_2fr_180px] items-center border-b border-slate-100 px-4 py-3.5 text-left text-[14px] transition hover:bg-slate-50/50 bg-white"
                     >
                       {/* User */}
                       <span className="flex min-w-0 items-center gap-3">
@@ -1784,149 +2061,413 @@ export function AdminUsersClient({
                 </h1>
                 <p className="mt-1 text-[14px] text-slate-500">
                   {specialistSubTab === "lista"
-                    ? `${filteredSpecialists.length} especialistas registrados`
-                    : `${postulations.length} postulaciones pendientes`}
+                    ? `${filteredSpecialists.length} ${filteredSpecialists.length === 1 ? "especialista registrado" : "especialistas registrados"}`
+                    : `${postulations.length} ${postulations.length === 1 ? "postulación pendiente" : "postulaciones pendientes"}`}
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
-                {/* Search only applies to active list */}
-                {specialistSubTab === "lista" && (
-                  <InputField
-                    value={specialistSearch}
-                    onChange={(event) => setSpecialistSearch(event.target.value)}
-                    placeholder="Buscar especialista..."
-                    className="!w-[280px] !h-11"
-                  />
-                )}
-
-                {/* Sub-tab Toggle Button */}
-                <Button
-                  onClick={() => setSpecialistSubTab(specialistSubTab === "lista" ? "postulaciones" : "lista")}
-                  variant={specialistSubTab === "lista" ? "outline" : "primary"}
-                  className="!h-11 font-jakarta font-bold !w-auto px-5"
+              {/* Sub-tab selection (Matching Usuarios benchmark) */}
+              <div className="flex bg-slate-100 p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setSpecialistSubTab("lista")}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer border-none outline-none ${
+                    specialistSubTab === "lista"
+                      ? "bg-white text-slate-950 shadow-none font-bold"
+                      : "bg-transparent text-slate-500 hover:text-slate-900"
+                  }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <span className="material-symbols-rounded text-[20px]">
-                      {specialistSubTab === "lista" ? "assignment" : "group"}
-                    </span>
-                    {specialistSubTab === "lista"
-                      ? `Postulaciones (${postulations.length})`
-                      : "Ver Especialistas"}
-                  </span>
-                </Button>
+                  Especialistas Activos ({specialists.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSpecialistSubTab("postulaciones")}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer border-none outline-none ${
+                    specialistSubTab === "postulaciones"
+                      ? "bg-white text-slate-950 shadow-none font-bold"
+                      : "bg-transparent text-slate-500 hover:text-slate-900"
+                  }`}
+                >
+                  Postulaciones ({postulations.length})
+                </button>
               </div>
             </header>
 
             {specialistSubTab === "lista" ? (
               /* Specialists List Subtab */
-              <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-none">
-                <div className="grid grid-cols-[1.5fr_2fr_1.2fr_180px_160px] border-b border-slate-200 bg-slate-50 px-6 py-3.5 text-[12px] font-bold uppercase text-slate-500">
-                  <span>Usuario</span>
-                  <span>Especialidad / Título</span>
-                  <span>Consultorio</span>
-                  <span>Redes</span>
-                  <span className="text-right">Acción</span>
-                </div>
-                <div className="max-h-[680px] overflow-y-auto">
-                  {filteredSpecialists.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                      <span className="material-symbols-rounded text-[48px] mb-3 text-slate-300">psychology</span>
-                      <p className="text-sm font-medium">No se encontraron especialistas.</p>
+              <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+                {/* Left Column: List of Specialists */}
+                <div className="flex flex-col gap-4">
+                  <InputField
+                    value={specialistSearch}
+                    onChange={(event) => setSpecialistSearch(event.target.value)}
+                    placeholder="Buscar especialista..."
+                    className="!w-full !h-10"
+                  />
+
+                  <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-none">
+                    <div className="grid grid-cols-[1.4fr_1.6fr_1.1fr_100px_90px] border-b border-slate-200 bg-slate-50 px-4 py-3 text-[12px] font-bold uppercase text-slate-500">
+                      <span>Usuario</span>
+                      <span>Especialidad / Título</span>
+                      <span>Consultorio</span>
+                      <span>Redes</span>
+                      <span className="text-right">Acción</span>
                     </div>
-                  ) : (
-                    filteredSpecialists.map((spec) => (
-                      <div
-                        key={spec.userId}
-                        className="grid w-full grid-cols-[1.5fr_2fr_1.2fr_180px_160px] items-center border-b border-slate-100 px-6 py-4 text-left text-[14px] transition hover:bg-slate-50/50 bg-white"
-                      >
-                        {/* User info */}
-                        <span className="flex min-w-0 items-center gap-3">
-                          {spec.user.profile.avatarUrl ? (
-                            <img src={spec.user.profile.avatarUrl} alt="" className="h-9 w-9 rounded-lg object-cover shrink-0" />
-                          ) : (
-                            <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-[13px] font-bold text-slate-500 uppercase shrink-0">
-                              {(spec.user.profile.fullName || spec.user.email).slice(0, 1).toUpperCase()}
+                    <div className="max-h-[680px] overflow-y-auto">
+                      {filteredSpecialists.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                          <span className="material-symbols-rounded text-[48px] mb-3 text-slate-300">psychology</span>
+                          <p className="text-sm font-medium">No se encontraron especialistas.</p>
+                        </div>
+                      ) : (
+                        filteredSpecialists.map((spec) => {
+                          const active = spec.userId === selectedSpecialist?.userId;
+
+                          return (
+                            <button
+                              key={spec.userId}
+                              type="button"
+                              onClick={() => setSelectedSpecialistUserId(spec.userId)}
+                              className={`grid w-full grid-cols-[1.4fr_1.6fr_1.1fr_100px_90px] items-center border-b border-slate-100 px-4 py-3.5 text-left text-[14px] transition hover:bg-slate-50 outline-none border-none cursor-pointer ${active ? "bg-slate-100" : "bg-white"}`}
+                            >
+                              {/* User info */}
+                              <span className="flex min-w-0 items-center gap-3 pr-2">
+                                <span className="relative shrink-0">
+                                  {spec.user.profile.avatarUrl ? (
+                                    <img src={spec.user.profile.avatarUrl} alt="" className="h-9 w-9 rounded-lg object-cover shrink-0" />
+                                  ) : (
+                                    <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-[13px] font-bold text-slate-500 uppercase shrink-0">
+                                      {(spec.user.profile.fullName || spec.user.email).slice(0, 1).toUpperCase()}
+                                    </span>
+                                  )}
+                                  <span
+                                    className="absolute -bottom-1 -right-1 text-black leading-none drop-shadow-sm select-none"
+                                    title="Especialista"
+                                  >
+                                    <span
+                                      className="material-symbols-outlined text-[13px] leading-none block"
+                                      style={{ fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                                    >
+                                      heart_smile
+                                    </span>
+                                  </span>
+                                </span>
+                                <span className="min-w-0">
+                                  <span className="block truncate font-semibold text-slate-900">
+                                    {fieldValue(spec.user.profile.fullName || `${spec.user.profile.firstName} ${spec.user.profile.lastName}`)}
+                                  </span>
+                                  <span className="block truncate text-[12px] text-slate-500">{spec.user.email}</span>
+                                </span>
+                              </span>
+
+                              {/* Specialty / Title */}
+                              <span className="flex flex-col gap-0.5 pr-2 min-w-0">
+                                <span className="font-semibold text-slate-900 truncate">{spec.specialty}</span>
+                                <span className="text-[12px] text-slate-500 truncate">{spec.title}</span>
+                              </span>
+
+                              {/* Clinic */}
+                              <span className="text-slate-600 font-medium truncate pr-2">
+                                {fieldValue(spec.clinicName)}
+                              </span>
+
+                              {/* Social Links */}
+                              <span className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                {spec.linkedinUrl ? (
+                                  <a
+                                    href={spec.linkedinUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#0077B5] hover:border-[#0077B5]/30 transition-colors"
+                                    title="LinkedIn"
+                                  >
+                                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                      <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                                    </svg>
+                                  </a>
+                                ) : null}
+                                {spec.instagramUrl ? (
+                                  <a
+                                    href={spec.instagramUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#E1306C] hover:border-[#E1306C]/30 transition-colors"
+                                    title="Instagram"
+                                  >
+                                    <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                                      <path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8A3.6 3.6 0 0 0 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6A3.6 3.6 0 0 0 16.4 4H7.6m4.4 3.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9m0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5m4.7-.8a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                                    </svg>
+                                  </a>
+                                ) : null}
+                                {spec.websiteUrl ? (
+                                  <a
+                                    href={spec.websiteUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-black hover:border-black/30 transition-colors"
+                                    title="Sitio Web"
+                                  >
+                                    <span className="material-symbols-rounded text-[16px]">language</span>
+                                  </a>
+                                ) : null}
+                                {!spec.linkedinUrl && !spec.instagramUrl && !spec.websiteUrl && (
+                                  <span className="text-slate-400 text-xs italic">-</span>
+                                )}
+                              </span>
+
+                              {/* Action */}
+                              <div className="text-right" onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveSpecialist(spec.userId)}
+                                  disabled={isProcessingAction}
+                                  className="text-[12px] font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100/80 px-2.5 py-1 rounded-lg border-none cursor-pointer transition disabled:opacity-50"
+                                >
+                                  Remover
+                                </button>
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Selected Specialist Side Detail Panel */}
+                {selectedSpecialist ? (
+                  <aside className="rounded-lg border border-slate-200 bg-white shadow-none flex flex-col overflow-hidden max-h-[740px] overflow-y-auto">
+                    {/* Header */}
+                    <div className="border-b border-slate-200 p-5 bg-white shrink-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                          <div className="relative shrink-0">
+                            {selectedSpecialist.user.profile.avatarUrl ? (
+                              <img src={selectedSpecialist.user.profile.avatarUrl} alt="" className="h-14 w-14 rounded-2xl object-cover shrink-0" />
+                            ) : (
+                              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 font-bold text-slate-600 uppercase text-xl shrink-0">
+                                {(selectedSpecialist.user.profile.fullName || selectedSpecialist.user.email).slice(0, 1).toUpperCase()}
+                              </div>
+                            )}
+                            <span
+                              className="absolute -bottom-1 -right-1 text-black leading-none drop-shadow-sm select-none"
+                              title="Especialista"
+                            >
+                              <span
+                                className="material-symbols-outlined text-[16px] leading-none block"
+                                style={{ fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20" }}
+                              >
+                                heart_smile
+                              </span>
                             </span>
-                          )}
-                          <span className="min-w-0">
-                            <span className="block truncate font-semibold text-slate-900">
-                              {fieldValue(spec.user.profile.fullName || `${spec.user.profile.firstName} ${spec.user.profile.lastName}`)}
-                            </span>
-                            <span className="block truncate text-[12px] text-slate-500">{spec.user.email}</span>
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h2 className="truncate text-base font-bold text-slate-900 leading-tight">
+                              {fieldValue(selectedSpecialist.user.profile.fullName || `${selectedSpecialist.user.profile.firstName} ${selectedSpecialist.user.profile.lastName}`)}
+                            </h2>
+                            <p className="truncate text-xs text-slate-500 mt-0.5">{selectedSpecialist.user.email}</p>
+                            <div className="flex items-center gap-2 mt-2 flex-wrap">
+                              <span className="px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wide bg-emerald-100 text-emerald-800">
+                                {selectedSpecialist.specialty}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingSpecialist((prev) => !prev)}
+                          className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none cursor-pointer transition-colors ${
+                            isEditingSpecialist
+                              ? "bg-black text-white hover:bg-slate-800"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+                          }`}
+                          title={isEditingSpecialist ? "Cancelar edición" : "Editar especialista"}
+                        >
+                          <span className="material-symbols-rounded text-[18px] block">
+                            {isEditingSpecialist ? "close" : "edit"}
                           </span>
-                        </span>
+                        </button>
+                      </div>
 
-                        {/* Specialty / Title */}
-                        <span className="flex flex-col gap-0.5 pr-4">
-                          <span className="font-semibold text-slate-900">{spec.specialty}</span>
-                          <span className="text-[12px] text-slate-500 line-clamp-1">{spec.title}</span>
-                        </span>
+                      {/* Button: Ver perfil de usuario */}
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        onClick={() => {
+                          const linkedUser = users.find((u) => u.id === selectedSpecialist.userId);
+                          if (linkedUser) {
+                            setSelectedId(linkedUser.id);
+                            setUserSubTab(linkedUser.status === "deleted" ? "eliminados" : "activos");
+                            setActiveTab("usuarios");
+                          } else {
+                            alert("Usuario no encontrado en la lista actual.");
+                          }
+                        }}
+                        className="w-full mt-4 flex items-center justify-center !h-9 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border-none shadow-none transition-colors"
+                      >
+                        Ver perfil de usuario
+                      </Button>
+                    </div>
 
-                        {/* Clinic */}
-                        <span className="text-slate-600 font-medium truncate pr-4">
-                          {fieldValue(spec.clinicName)}
-                        </span>
+                    {!isEditingSpecialist ? (
+                      /* Specialist Detailed Content - Read Only */
+                      <div className="p-5 flex flex-col gap-4.5 text-sm">
+                        {/* Professional Info Card */}
+                        <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 flex flex-col gap-3.5">
+                          <span className="text-[12px] font-bold uppercase tracking-wider text-slate-400">Información Profesional</span>
+                          <div className="flex flex-col gap-3 text-xs">
+                            <div>
+                              <span className="text-slate-400 block text-[11px] font-bold uppercase tracking-wide">Título Profesional</span>
+                              <span className="font-semibold text-slate-900 text-[13.5px] block mt-0.5">{fieldValue(selectedSpecialist.title)}</span>
+                            </div>
+                            <div>
+                              <span className="text-slate-400 block text-[11px] font-bold uppercase tracking-wide">Consultorio / Espacio</span>
+                              <span className="font-semibold text-slate-900 text-[13.5px] block mt-0.5">{fieldValue(selectedSpecialist.clinicName)}</span>
+                            </div>
+                          </div>
+                        </div>
 
-                        {/* Social Links */}
-                        <span className="flex items-center gap-2">
-                          {spec.linkedinUrl ? (
-                            <a
-                              href={spec.linkedinUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#0077B5] hover:border-[#0077B5]/30 transition-colors"
-                              title="LinkedIn"
-                            >
-                              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
-                              </svg>
-                            </a>
-                          ) : null}
-                          {spec.instagramUrl ? (
-                            <a
-                              href={spec.instagramUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-[#E1306C] hover:border-[#E1306C]/30 transition-colors"
-                              title="Instagram"
-                            >
-                              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                                <path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8A3.6 3.6 0 0 0 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6A3.6 3.6 0 0 0 16.4 4H7.6m4.4 3.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9m0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5m4.7-.8a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
-                              </svg>
-                            </a>
-                          ) : null}
-                          {spec.websiteUrl ? (
-                            <a
-                              href={spec.websiteUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:text-black hover:border-black/30 transition-colors"
-                              title="Sitio Web"
-                            >
-                              <span className="material-symbols-rounded text-[18px]">language</span>
-                            </a>
-                          ) : null}
-                          {!spec.linkedinUrl && !spec.instagramUrl && !spec.websiteUrl && (
-                            <span className="text-slate-400 text-xs italic">-</span>
-                          )}
-                        </span>
+                        {/* Bio Card */}
+                        {selectedSpecialist.bio && (
+                          <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 flex flex-col gap-1.5">
+                            <span className="text-[12px] font-bold uppercase tracking-wider text-slate-400">Biografía y Enfoque</span>
+                            <p className="text-[13.5px] text-slate-700 leading-relaxed whitespace-pre-wrap mt-0.5">{selectedSpecialist.bio}</p>
+                          </div>
+                        )}
 
-                        {/* Action */}
-                        <div className="text-right">
+                        {/* Social Links Card */}
+                        <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 flex flex-col gap-3">
+                          <span className="text-[12px] font-bold uppercase tracking-wider text-slate-400">Redes y Enlaces</span>
+                          <div className="flex flex-wrap gap-2 text-xs">
+                            {selectedSpecialist.linkedinUrl && (
+                              <a href={selectedSpecialist.linkedinUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-[#0077B5] transition-colors font-medium text-[13px]">
+                                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/></svg>
+                                LinkedIn
+                              </a>
+                            )}
+                            {selectedSpecialist.instagramUrl && (
+                              <a href={selectedSpecialist.instagramUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-[#E1306C] transition-colors font-medium text-[13px]">
+                                <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8A3.6 3.6 0 0 0 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6A3.6 3.6 0 0 0 16.4 4H7.6m4.4 3.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9m0 2a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5m4.7-.8a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+                                Instagram
+                              </a>
+                            )}
+                            {selectedSpecialist.websiteUrl && (
+                              <a href={selectedSpecialist.websiteUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:text-black transition-colors font-medium text-[13px]">
+                                <span className="material-symbols-rounded text-[16px]">language</span>
+                                Sitio Web
+                              </a>
+                            )}
+                            {!selectedSpecialist.linkedinUrl && !selectedSpecialist.instagramUrl && !selectedSpecialist.websiteUrl && (
+                              <span className="text-[13px] text-slate-400 italic">Sin redes agregadas</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Courses Card */}
+                        {selectedSpecialist.courses && Array.isArray(selectedSpecialist.courses) && selectedSpecialist.courses.length > 0 && (
+                          <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 flex flex-col gap-2.5">
+                            <span className="text-[12px] font-bold uppercase tracking-wider text-slate-400">Cursos ({selectedSpecialist.courses.length})</span>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedSpecialist.courses.map((course: any, idx: number) => (
+                                <a
+                                  key={idx}
+                                  href={course.url || course.coverUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="px-3 py-1.5 text-[12.5px] font-semibold bg-white hover:bg-slate-100 text-slate-700 rounded-lg transition-colors border border-slate-200"
+                                  title={course.description || course.name || course.title}
+                                >
+                                  {course.name || course.title || `Curso ${idx + 1}`}
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Remove button */}
+                        <div className="pt-2">
                           <button
                             type="button"
-                            onClick={() => handleRemoveSpecialist(spec.userId)}
+                            onClick={() => handleRemoveSpecialist(selectedSpecialist.userId)}
                             disabled={isProcessingAction}
-                            className="text-[12px] font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100/80 px-3 py-1.5 rounded-lg border-none cursor-pointer transition disabled:opacity-50"
+                            className="w-full text-xs font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100/80 py-2.5 rounded-xl border border-red-200/50 cursor-pointer transition disabled:opacity-50"
                           >
-                            Remover
+                            Remover Especialista
                           </button>
                         </div>
                       </div>
-                    ))
-                  )}
-                </div>
+                    ) : (
+                      /* Specialist Edit Mode Form */
+                      <form
+                        key={selectedSpecialist.userId}
+                        onSubmit={(event) => {
+                          event.preventDefault();
+                          updateSelectedSpecialist(new FormData(event.currentTarget));
+                        }}
+                        className="p-5 flex flex-col gap-4 text-sm"
+                      >
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">Especialidad</span>
+                          <InputField name="specialty" defaultValue={selectedSpecialist.specialty} className="!h-9 text-[13px]" />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">Título Profesional</span>
+                          <InputField name="title" defaultValue={selectedSpecialist.title} className="!h-9 text-[13px]" />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">Consultorio / Espacio</span>
+                          <InputField name="clinicName" defaultValue={selectedSpecialist.clinicName || ""} className="!h-9 text-[13px]" />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">Biografía y Enfoque</span>
+                          <textarea name="bio" defaultValue={selectedSpecialist.bio || ""} rows={3} className="rounded-lg border border-slate-200 px-3 py-2 text-[13px] text-slate-900 font-medium outline-none resize-none min-h-[72px]" />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">LinkedIn URL</span>
+                          <InputField name="linkedinUrl" defaultValue={selectedSpecialist.linkedinUrl || ""} className="!h-9 text-[13px]" />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">Instagram URL</span>
+                          <InputField name="instagramUrl" defaultValue={selectedSpecialist.instagramUrl || ""} className="!h-9 text-[13px]" />
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[11px] font-bold uppercase text-slate-400">Sitio Web URL</span>
+                          <InputField name="websiteUrl" defaultValue={selectedSpecialist.websiteUrl || ""} className="!h-9 text-[13px]" />
+                        </div>
+
+                        <div className="flex gap-2 mt-2">
+                          <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => setIsEditingSpecialist(false)}
+                            disabled={isProcessingAction}
+                            className="!h-10 flex-1 font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border-none shadow-none text-xs"
+                          >
+                            Cancelar
+                          </Button>
+                          <Button
+                            type="submit"
+                            disabled={isProcessingAction}
+                            className="!h-10 flex-1 font-bold bg-black hover:bg-slate-800 text-white shadow-none text-xs"
+                          >
+                            {isProcessingAction ? "Guardando..." : "Guardar cambios"}
+                          </Button>
+                        </div>
+                      </form>
+                    )}
+                  </aside>
+                ) : (
+                  <div className="rounded-lg border border-slate-200 border-dashed bg-slate-50 flex items-center justify-center text-slate-400 p-8 text-center h-[520px] shadow-none">
+                    <p className="text-sm font-medium">Selecciona un especialista para ver los detalles.</p>
+                  </div>
+                )}
               </section>
             ) : (
               /* Postulations Subtab */
