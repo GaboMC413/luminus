@@ -11,13 +11,14 @@ import { SelectInput } from "@/components/ui/SelectInput";
 import { PageLoader } from "@/components/ui/PageLoader";
 
 const CATEGORIES_MAPPING = {
-  "Crecimiento Personal": ["Autocuidado", "Motivación", "Calma interior", "Propósito de vida", "Organización personal", "Toma de decisiones", "Rutinas saludables", "Hábitos conscientes", "Confianza personal", "Autoestima", "Acompañamiento personal", "Crecimiento Personal", "Autoconocimiento", "Aprendizaje continuo"],
-  "Bienestar Emocional": ["Gestión emocional", "Relaciones saludables", "Calma interior", "Bienestar emocional", "Equilibrio emocional", "Acompañamiento personal", "Comunicación consciente", "Autoestima"],
-  "Salud y Medicina": ["Salud integral", "Suplementación", "Salud hormonal", "Salud cardiovascular", "Prevención", "Longevidad", "Salud digestiva", "Bienestar físico", "Dolor crónico", "Manejo del dolor", "Recuperación", "Alergias", "Inmunidad", "Peso saludable", "Salud metabólica", "Salud sexual", "Fertilidad", "Embarazo"],
-  "Movimiento Físico": ["Yoga y Pilates", "Atención plena", "Meditación", "Postura y movilidad", "Fuerza", "Entrenamiento funcional", "Cuidado del cuerpo", "Masa muscular", "Resistencia", "Movimiento consciente", "Cardio"],
-  "Nutrición": ["Nutrición diaria", "Alimentación consciente", "Alimentación saludable", "Cocina práctica", "Suplementación", "Hidratación", "Salud digestiva", "Alimentación vegetal", "Vitaminas"],
-  "Estilo de Vida": ["Autocuidado", "Sustentabilidad", "Experiencias conscientes", "Naturaleza", "Calidad de vida", "Rutinas saludables", "Organización personal", "Sueño reparador", "Descanso", "Balance vida personal"],
-  "Espiritualidad": ["Atención plena", "Meditación", "Conexión interior", "Espiritualidad", "Experiencias conscientes", "Naturaleza"]
+  "Crecimiento Personal": ["Autoconocimiento", "Propósito", "Hábitos", "Creatividad", "Emprendimiento", "Desarrollo profesional"],
+  "Bienestar Emocional": ["Autocuidado", "Autoestima", "Inteligencia emocional", "Gestión del estrés", "Resiliencia", "Salud mental"],
+  "Salud Integral": ["Sueño", "Longevidad", "Salud digestiva", "Salud hormonal", "Prevención", "Bienestar corporal"],
+  "Movimiento Físico": ["Entrenamiento", "Running", "Yoga", "Pilates", "Danza", "Senderismo", "Ciclismo", "Natación"],
+  "Nutrición": ["Alimentación consciente", "Alimentación vegetal", "Nutrición deportiva", "Cocina", "Suplementación"],
+  "Espiritualidad": ["Meditación", "Mindfulness", "Respiración", "Filosofía", "Naturaleza", "Desarrollo espiritual"],
+  "Vínculos": ["Pareja", "Familia", "Amistad", "Crianza", "Sexualidad", "Comunidad", "Comunicación"],
+  "Terapias Complementarias": ["Acupuntura", "Ayurveda", "Reiki", "Masajes", "Aromaterapia", "Reflexología", "Sonoterapia", "Terapia floral"]
 };
 
 export default function PlatformPage() {

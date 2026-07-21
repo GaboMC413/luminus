@@ -226,6 +226,79 @@ export default async function AdminPage() {
     },
   }));
 
+  const categoriesRaw = await prisma.interestCategory.findMany({
+    orderBy: { sortOrder: "asc" },
+    include: {
+      interests: { orderBy: { sortOrder: "asc" } },
+      specialistAreas: { orderBy: { sortOrder: "asc" } },
+    },
+  });
+
+  const categories = categoriesRaw.map((cat: any) => ({
+    id: cat.id,
+    name: cat.name,
+    slug: cat.slug,
+    icon: cat.icon || "label",
+    iconFilled: cat.iconFilled ?? true,
+    color: cat.color || "#3B82F6",
+    bgColor: cat.bgColor || "#DBEAFE",
+    sortOrder: cat.sortOrder,
+    createdAt: cat.createdAt.toISOString(),
+    updatedAt: cat.updatedAt.toISOString(),
+    interests: (cat.interests || []).map((i: any) => ({
+      id: i.id,
+      categoryId: i.categoryId,
+      name: i.name,
+      slug: i.slug,
+      sortOrder: i.sortOrder,
+      isActive: i.isActive,
+    })),
+    specialistAreas: (cat.specialistAreas || []).map((s: any) => ({
+      id: s.id,
+      categoryId: s.categoryId,
+      name: s.name,
+      slug: s.slug,
+      sortOrder: s.sortOrder,
+      isActive: s.isActive,
+    })),
+  }));
+
+  const suggestionsRaw = await prisma.categorySuggestion.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: {
+        select: {
+          email: true,
+          profile: {
+            select: {
+              firstName: true,
+              lastName: true,
+              fullName: true,
+            },
+          },
+        },
+      },
+      category: {
+        select: { id: true, name: true },
+      },
+    },
+  });
+
+  const suggestions = suggestionsRaw.map((sugg: any) => ({
+    id: sugg.id,
+    type: sugg.type,
+    name: sugg.name,
+    status: sugg.status,
+    userId: sugg.userId,
+    categoryId: sugg.categoryId,
+    createdAt: sugg.createdAt.toISOString(),
+    user: sugg.user ? {
+      email: sugg.user.email,
+      fullName: sugg.user.profile?.fullName || `${sugg.user.profile?.firstName || ""} ${sugg.user.profile?.lastName || ""}`.trim() || sugg.user.email,
+    } : null,
+    categoryName: sugg.category?.name || null,
+  }));
+
   return (
     <AdminUsersClient
       initialUsers={users}
@@ -236,6 +309,8 @@ export default async function AdminPage() {
       initialSearches={searches}
       initialSpecialists={specialists}
       initialPostulations={postulations}
+      initialCategories={categories}
+      initialSuggestions={suggestions}
     />
   );
 }
