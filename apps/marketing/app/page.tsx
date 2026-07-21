@@ -1,38 +1,39 @@
-import React from "react";
-import type { Metadata } from "next";
-import { Hero } from "../components/marketing/Hero";
-import { FeatureGrid } from "../components/marketing/FeatureGrid";
-import { BenefitsGrid } from "../components/marketing/BenefitsGrid";
-import { PricingSection } from "../components/marketing/PricingSection";
-import { TrustSection } from "../components/marketing/TrustSection";
-import { CTASection } from "../components/marketing/CTASection";
-import { homeContent } from "../content/home";
-
-export const metadata: Metadata = {
-  title: "LUMINUS Latam | Conecta con tu bienestar integral",
-  description: "Una plataforma de bienestar contemporánea que conecta personas, especialistas y organizaciones en una red humana de acompañamiento y aprendizaje consciente.",
-};
-
-export default function Home() {
+export default function ComingSoon() {
   return (
-    <>
-      {/* 1. Hero Section */}
-      <Hero {...homeContent.hero} gradientClass="hero-home-gradient" />
-
-      {/* 2. Sección: Qué puedes hacer dentro de LUMINUS */}
-      <FeatureGrid id="que-hacer" {...homeContent.features} />
-
-      {/* 3. Sección de valor emocional (Beneficios) */}
-      <BenefitsGrid id="acompanamiento" {...homeContent.benefits} />
-
-      {/* 4. Sección de planes */}
-      <PricingSection id="planes-bienestar" {...homeContent.pricing} />
-
-      {/* 5. Sección de confianza / aclaración */}
-      <TrustSection id="confianza" {...homeContent.trust} />
-
-      {/* 6. CTA final */}
-      <CTASection {...homeContent.finalCta} cardBg="dark" />
-    </>
+    <main style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100dvh',
+      backgroundColor: '#000000',
+      color: '#FFFFFF',
+      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      padding: '24px',
+      paddingTop: 'calc(24px + env(safe-area-inset-top))',
+      paddingBottom: 'calc(24px + env(safe-area-inset-bottom))',
+      textAlign: 'center'
+    }}>
+      <h1 style={{
+        fontSize: '2rem',
+        fontWeight: '300',
+        letterSpacing: '0.05em',
+        marginBottom: '16px',
+        lineHeight: '1.4',
+        color: '#F4F4F5'
+      }}>
+        "Nuestra luz pronto volverá a brillar"
+      </h1>
+      <p style={{
+        fontSize: '0.875rem',
+        fontWeight: '700',
+        letterSpacing: '0.3em',
+        textTransform: 'uppercase',
+        color: '#A1A1AA',
+        margin: 0
+      }}>
+        LUMINUS
+      </p>
+    </main>
   );
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { hashPassword } from "@/lib/auth/password";
 import { hashRecoveryCode, PASSWORD_RESET_MAX_ATTEMPTS } from "@/lib/auth/recoveryTokens";
+import { adminSetUserPassword } from "@/lib/auth/cognito-admin";
 
 export const runtime = "nodejs";
 
@@ -31,11 +32,15 @@ export async function POST(request: Request) {
         email: true,
         cognitoSub: true,
         identities: {
-          where: { provider: "cognito" },
+<<<<<<< HEAD
           select: {
             provider: true,
             providerSubject: true,
           },
+=======
+          where: { provider: "cognito" },
+          select: { providerSubject: true, provider: true },
+>>>>>>> feautre/eliminar-cuenta
         },
       },
     });
@@ -84,6 +89,14 @@ export async function POST(request: Request) {
       }),
     ]);
 
+    try {
+      if (user.cognitoSub) {
+        await adminSetUserPassword(user as any, newPassword, true);
+      }
+    } catch (cognitoError) {
+      console.error("Failed to sync new password to Cognito", cognitoError);
+      // We don't fail the request here, but log it. They might have a local fallback if needed.
+    }
 
     return NextResponse.json({ success: true, message: "Contrasena actualizada con exito." });
   } catch (error) {
