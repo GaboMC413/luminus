@@ -149,7 +149,11 @@ export async function GET(request: Request) {
         profile: true,
         interests: {
           include: {
-            interest: true,
+            interest: {
+              include: {
+                category: true,
+              },
+            },
           },
         },
       },
@@ -162,12 +166,29 @@ export async function GET(request: Request) {
     const serialized = paginatedUsers.map((user: any) => {
       const profile = (user.profile ?? {}) as any;
       const fullName = profile.fullName || `${profile.firstName || ""} ${profile.lastName || ""}`.trim();
+
+      const userCategoriesMap = new Map();
+      (user.interests ?? []).forEach((row: any) => {
+        const cat = row.interest?.category;
+        if (cat && !userCategoriesMap.has(cat.id)) {
+          userCategoriesMap.set(cat.id, {
+            id: cat.id,
+            name: cat.name,
+            icon: cat.icon || "label",
+            iconFilled: cat.iconFilled ?? true,
+            color: cat.color || "#3B82F6",
+            bgColor: cat.bgColor || "#DBEAFE",
+          });
+        }
+      });
+
       return {
         id: user.id,
         name: fullName || "Usuario sin nombre",
         location: `${profile.city || ""}, ${profile.country || ""}`.replace(/^,\s*|,\s*$/, "").trim() || "Ubicación no definida",
         avatar: profile.avatarUrl || "",
         interests: (user.interests ?? []).map((row: any) => row.interest.name),
+        categories: Array.from(userCategoriesMap.values()),
         profession: profile.profession || "",
       };
     });

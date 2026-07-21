@@ -59,7 +59,7 @@ export function EditInterestsModal({ isOpen, onClose, onSave, initialInterests, 
         {INTEREST_CATEGORIES.map((category) => (
           <div key={category.title} className="flex flex-col gap-2.5 md:gap-4">
             <h3 className="flex items-center gap-1.5 md:gap-2 text-[13px] md:text-[15px] font-bold" style={{ color: category.color }}>
-              <span className="material-symbols-outlined text-[18px] md:text-[20px]">{category.icon}</span>
+              <span className="material-symbols-outlined text-[18px] md:text-[20px]" style={(category as any).iconFilled ? { fontVariationSettings: "'FILL' 1" } : undefined}>{category.icon}</span>
               {category.title}
             </h3>
             <div className="flex flex-wrap gap-2">

@@ -86,6 +86,7 @@ model User {
   activityLogs     ActivityLog[]
   specialistProfile SpecialistProfile?
   specialistPostulations SpecialistPostulation[]
+  categorySuggestions CategorySuggestion[]
 
   @@map("users")
 }
@@ -118,30 +119,28 @@ model UserProfile {
   country       String?   @db.VarChar
   phoneNumber   String?   @map("phone_number") @db.VarChar
   gender        String?   @db.VarChar
-  birthdate     DateTime? @db.Date
-  bio           String?
-  intention     String?
+  birthdate     DateTime? @db.Timestamptz
   selectedPlan  String?   @map("selected_plan") @db.VarChar
+  bio           String?   @db.Text
+  intention     String?   @db.Text
   isOnboarded   Boolean   @default(false) @map("is_onboarded")
   createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([isOnboarded, country])
-  @@index([isOnboarded, city])
-  @@index([country])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("user_profiles")
 }
 
 model Interest {
-  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  categoryId    String         @map("category_id") @db.Uuid
-  name          String         @unique @db.VarChar
-  slug          String         @unique @db.VarChar
-  sortOrder     Int            @default(0) @map("sort_order")
-  isActive      Boolean        @default(true) @map("is_active")
-  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId    String           @map("category_id") @db.Uuid
+  name          String           @unique @db.VarChar
+  slug          String           @unique @db.VarChar
+  sortOrder     Int              @default(0) @map("sort_order")
+  isActive      Boolean          @default(true) @map("is_active")
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   category      InterestCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   userInterests UserInterest[]
 
@@ -149,15 +148,65 @@ model Interest {
 }
 
 model InterestCategory {
-  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String     @unique @db.VarChar
-  slug      String     @unique @db.VarChar
-  sortOrder Int        @default(0) @map("sort_order")
-  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  interests Interest[]
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String               @unique @db.VarChar
+  slug                String               @unique @db.VarChar
+  icon                String?              @db.VarChar
+  iconFilled          Boolean              @default(true) @map("icon_filled")
+  color               String?              @db.VarChar
+  bgColor             String?              @map("bg_color") @db.VarChar
+  sortOrder           Int                  @default(0) @map("sort_order")
+  createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  interests           Interest[]
+  specialistAreas     SpecialistArea[]
+  categorySuggestions CategorySuggestion[]
 
   @@map("interest_categories")
+}
+
+model SpecialistArea {
+  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId String           @map("category_id") @db.Uuid
+  name       String           @db.VarChar
+  slug       String           @unique @db.VarChar
+  sortOrder  Int              @default(0) @map("sort_order")
+  isActive   Boolean          @default(true) @map("is_active")
+  createdAt  DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  category   InterestCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("specialist_areas")
+}
+
+enum SuggestionType {
+  USER_INTEREST
+  SPECIALIST_AREA
+
+  @@map("suggestion_type")
+}
+
+enum SuggestionStatus {
+  pending
+  approved
+  rejected
+
+  @@map("suggestion_status")
+}
+
+model CategorySuggestion {
+  id         String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String?           @map("user_id") @db.Uuid
+  categoryId String?           @map("category_id") @db.Uuid
+  type       SuggestionType    @default(USER_INTEREST)
+  name       String            @db.VarChar
+  status     SuggestionStatus  @default(pending)
+  createdAt  DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  user       User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  category   InterestCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@map("category_suggestions")
 }
 
 model UserInterest {

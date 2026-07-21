@@ -12,22 +12,24 @@ export const SEARCH_DATA = {
     "Panamá", "Paraguay", "Perú", "Puerto Rico", "República Dominicana", "Uruguay", "Venezuela"
   ],
   interests: [
-    "Propósito de vida", "Cambios de vida", "Motivación", "Toma de decisiones", "Autoconocimiento", "Confianza personal", "Aprendizaje continuo", "Hábitos conscientes",
-    "Bienestar emocional", "Equilibrio emocional", "Calma interior", "Acompañamiento personal", "Gestión emocional", "Relaciones saludables", "Comunicación consciente", "Autoestima",
-    "Salud integral", "Bienestar físico", "Prevención", "Longevidad", "Dolor crónico", "Manejo del dolor", "Recuperación", "Alergias", "Salud hormonal", "Inmunidad", "Salud digestiva", "Peso saludable", "Salud cardiovascular", "Salud metabólica", "Salud sexual", "Fertilidad", "Embarazo",
-    "Cuidado del cuerpo", "Entrenamiento funcional", "Postura y movilidad", "Fuerza", "Masa muscular", "Resistencia", "Movimiento consciente", "Cardio", "Yoga y Pilates",
-    "Alimentación saludable", "Nutrición diaria", "Alimentación consciente", "Cocina práctica", "Alimentación vegetal", "Suplementación", "Vitaminas", "Hidratación",
-    "Autocuidado", "Calidad de vida", "Rutinas saludables", "Organización personal", "Sueño reparador", "Descanso", "Balance vida personal", "Sustentabilidad",
-    "Atención plena", "Meditación", "Conexión interior", "Espiritualidad", "Experiencias conscientes", "Naturaleza"
+    "Autoconocimiento", "Propósito", "Hábitos", "Creatividad", "Emprendimiento", "Desarrollo profesional",
+    "Autocuidado", "Autoestima", "Inteligencia emocional", "Gestión del estrés", "Resiliencia", "Salud mental",
+    "Sueño", "Longevidad", "Salud digestiva", "Salud hormonal", "Prevención", "Bienestar corporal",
+    "Entrenamiento", "Running", "Yoga", "Pilates", "Danza", "Senderismo", "Ciclismo", "Natación",
+    "Alimentación consciente", "Alimentación vegetal", "Nutrición deportiva", "Cocina", "Suplementación",
+    "Meditación", "Mindfulness", "Respiración", "Filosofía", "Naturaleza", "Desarrollo espiritual",
+    "Pareja", "Familia", "Amistad", "Crianza", "Sexualidad", "Comunidad", "Comunicación",
+    "Acupuntura", "Ayurveda", "Reiki", "Masajes", "Aromaterapia", "Reflexología", "Sonoterapia", "Terapia floral"
   ]
 };
 
 export const INTEREST_CATEGORIES = [
-  { icon: 'psychiatry', title: 'Crecimiento Personal', color: '#22C55E', items: ['Propósito de vida', 'Cambios de vida', 'Motivación', 'Toma de decisiones', 'Autoconocimiento', 'Confianza personal', 'Aprendizaje continuo', 'Hábitos conscientes'] },
-  { icon: 'mood', title: 'Bienestar Emocional', color: '#E384FF', items: ['Bienestar emocional', 'Equilibrio emocional', 'Calma interior', 'Acompañamiento personal', 'Gestión emocional', 'Relaciones saludables', 'Comunicación consciente', 'Autoestima'] },
-  { icon: 'stethoscope', title: 'Salud y Medicina', color: '#2D69FC', items: ['Salud integral', 'Bienestar físico', 'Prevención', 'Longevidad', 'Dolor crónico', 'Manejo del dolor', 'Recuperación', 'Alergias', 'Salud hormonal', 'Inmunidad', 'Salud digestiva', 'Peso saludable', 'Salud cardiovascular', 'Salud metabólica', 'Salud sexual', 'Fertilidad', 'Embarazo'] },
-  { icon: 'directions_run', title: 'Movimiento Físico', color: '#FF4B26', items: ['Cuidado del cuerpo', 'Entrenamiento funcional', 'Postura y movilidad', 'Fuerza', 'Masa muscular', 'Resistencia', 'Movimiento consciente', 'Cardio', 'Yoga y Pilates'] },
-  { icon: 'nutrition', title: 'Nutrición', color: '#84CC16', items: ['Alimentación saludable', 'Nutrición diaria', 'Alimentación consciente', 'Cocina práctica', 'Alimentación vegetal', 'Suplementación', 'Vitaminas', 'Hidratación'] },
-  { icon: 'wb_sunny', title: 'Estilo de Vida', color: '#F97316', items: ['Autocuidado', 'Calidad de vida', 'Rutinas saludables', 'Organización personal', 'Sueño reparador', 'Descanso', 'Balance vida personal', 'Sustentabilidad'] },
-  { icon: 'self_improvement', title: 'Espiritualidad y Conexión', color: '#8B5CF6', items: ['Atención plena', 'Meditación', 'Conexión interior', 'Espiritualidad', 'Experiencias conscientes', 'Naturaleza'] }
+  { icon: 'sunny', iconFilled: true, title: 'Crecimiento Personal', color: '#F59E0B', bgColor: '#FEF3C7', items: ['Autoconocimiento', 'Propósito', 'Hábitos', 'Creatividad', 'Emprendimiento', 'Desarrollo profesional'] },
+  { icon: 'mood', iconFilled: true, title: 'Bienestar Emocional', color: '#F472B6', bgColor: '#FBCFE8', items: ['Autocuidado', 'Autoestima', 'Inteligencia emocional', 'Gestión del estrés', 'Resiliencia', 'Salud mental'] },
+  { icon: 'stethoscope', iconFilled: true, title: 'Salud Integral', color: '#2563EB', bgColor: '#DBEAFE', items: ['Sueño', 'Longevidad', 'Salud digestiva', 'Salud hormonal', 'Prevención', 'Bienestar corporal'] },
+  { icon: 'directions_run', iconFilled: true, title: 'Movimiento Físico', color: '#EF4444', bgColor: '#FECACA', items: ['Entrenamiento', 'Running', 'Yoga', 'Pilates', 'Danza', 'Senderismo', 'Ciclismo', 'Natación'] },
+  { icon: 'nutrition', iconFilled: true, title: 'Nutrición', color: '#84CC16', bgColor: '#ECFCCB', items: ['Alimentación consciente', 'Alimentación vegetal', 'Nutrición deportiva', 'Cocina', 'Suplementación'] },
+  { icon: 'self_improvement', iconFilled: true, title: 'Espiritualidad', color: '#6D28D9', bgColor: '#EDE9FE', items: ['Meditación', 'Mindfulness', 'Respiración', 'Filosofía', 'Naturaleza', 'Desarrollo espiritual'] },
+  { icon: 'person_celebrate', iconFilled: true, title: 'Vínculos', color: '#F97316', bgColor: '#FECACA', items: ['Pareja', 'Familia', 'Amistad', 'Crianza', 'Sexualidad', 'Comunidad', 'Comunicación'] },
+  { icon: 'spa', iconFilled: true, title: 'Terapias Complementarias', color: '#14B8A6', bgColor: '#CCFBF1', items: ['Acupuntura', 'Ayurveda', 'Reiki', 'Masajes', 'Aromaterapia', 'Reflexología', 'Sonoterapia', 'Terapia floral'] }
 ];
