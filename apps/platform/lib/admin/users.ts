@@ -40,6 +40,11 @@ export function serializeAdminUser(user: any) {
       slug: item.interest.slug,
       category: item.interest.category?.name ?? "",
     })),
+    prompts: (user.profilePrompts || []).map((p: any) => ({
+      id: p.id,
+      question: p.question,
+      answer: p.answer,
+    })),
   };
 }
 
@@ -70,6 +75,11 @@ export async function listAdminUsers(prisma: PrismaClient, search = "") {
         },
         orderBy: {
           createdAt: "asc",
+        },
+      },
+      profilePrompts: {
+        orderBy: {
+          sortOrder: "asc",
         },
       },
     },
@@ -107,6 +117,7 @@ export function normalizeAdminUserPatch(input: unknown) {
   const profileFields = [
     "firstName",
     "lastName",
+    "avatarUrl",
     "profession",
     "city",
     "country",

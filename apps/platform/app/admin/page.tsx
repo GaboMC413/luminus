@@ -137,6 +137,12 @@ export default async function AdminPage() {
 
   const specialistsRaw = await prisma.specialistProfile.findMany({
     include: {
+      spaces: {
+        include: {
+          availability: true,
+        },
+      },
+      courses: true,
       user: {
         select: {
           email: true,
@@ -146,6 +152,7 @@ export default async function AdminPage() {
               lastName: true,
               fullName: true,
               avatarUrl: true,
+              city: true,
             },
           },
         },
@@ -165,6 +172,10 @@ export default async function AdminPage() {
     linkedinUrl: spec.linkedinUrl || "",
     instagramUrl: spec.instagramUrl || "",
     websiteUrl: spec.websiteUrl || "",
+    institution: spec.institution || null,
+    selectedAreas: spec.selectedAreas || [],
+    resumeUrl: spec.resumeUrl || null,
+    spaces: spec.spaces || [],
     courses: spec.courses || [],
     createdAt: spec.createdAt.toISOString(),
     user: {
@@ -174,6 +185,7 @@ export default async function AdminPage() {
         lastName: spec.user.profile?.lastName || "",
         fullName: spec.user.profile?.fullName || "",
         avatarUrl: spec.user.profile?.avatarUrl || "",
+        city: spec.user.profile?.city || "",
       },
     },
   }));
@@ -192,6 +204,7 @@ export default async function AdminPage() {
               lastName: true,
               fullName: true,
               avatarUrl: true,
+              city: true,
             },
           },
         },
@@ -212,6 +225,11 @@ export default async function AdminPage() {
     linkedinUrl: post.linkedinUrl || "",
     instagramUrl: post.instagramUrl || "",
     websiteUrl: post.websiteUrl || "",
+    institution: post.institution || null,
+    selectedAreas: post.selectedAreas || [],
+    resumeUrl: post.resumeUrl || null,
+    clinicData: post.clinicData || null,
+    sessionsData: post.sessionsData || null,
     courses: post.courses || [],
     status: post.status,
     createdAt: post.createdAt.toISOString(),
@@ -222,6 +240,7 @@ export default async function AdminPage() {
         lastName: post.user.profile?.lastName || "",
         fullName: post.user.profile?.fullName || "",
         avatarUrl: post.user.profile?.avatarUrl || "",
+        city: post.user.profile?.city || "",
       },
     },
   }));

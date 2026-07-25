@@ -9,12 +9,6 @@ export function OnboardingSuccessModal() {
 
   return (
     <div className="flex flex-col items-center text-center gap-6 animate-in zoom-in-95 duration-300 py-4">
-      <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center border border-emerald-100 text-emerald-600">
-        <span className="material-symbols-outlined text-[36px] select-none">
-          verified_user
-        </span>
-      </div>
-
       <div className="flex flex-col gap-2">
         <h1 className="text-[26px] md:text-[30px] font-bold text-slate-900 font-jakarta leading-tight">
           Aplicación enviada
