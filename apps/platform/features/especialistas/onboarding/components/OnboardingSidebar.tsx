@@ -32,15 +32,9 @@ export function OnboardingSidebar({
   const showStepper = !isCheckingStatus && !hideStepper && step <= 5;
 
   return (
-    <div className="fixed top-0 left-0 right-0 lg:relative w-full h-auto lg:h-full lg:w-80 xl:w-96 luminus-gradient shrink-0 flex flex-col items-center justify-between py-3 lg:py-12 px-6 lg:px-8 z-50 transition-all duration-500">
+    <div className="hidden lg:flex lg:sticky lg:top-[64px] lg:h-[calc(100vh-64px)] lg:w-80 xl:w-96 luminus-gradient shrink-0 flex-col items-center py-12 px-8 z-50 transition-all duration-500">
       <div className="flex flex-col items-center w-full">
-        {/* Logo */}
-        <Link
-          href="/especialistas"
-          className="flex flex-col items-center cursor-pointer hover:opacity-80 transition-opacity"
-        >
-          <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[20px] lg:h-[24px]" />
-        </Link>
+
 
         {/* Mobile Header Stepper (small screens) */}
         {showStepper && (
@@ -129,12 +123,7 @@ export function OnboardingSidebar({
         )}
       </div>
 
-      {/* Sidebar Footer */}
-      <div className="hidden lg:flex flex-col w-full pt-6 border-t border-white/10 mt-12">
-        <p className="text-[9px] text-white/60 text-center uppercase tracking-widest font-sans">
-          Luminus Latam © 2026
-        </p>
-      </div>
+
     </div>
   );
 }

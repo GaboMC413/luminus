@@ -11,6 +11,7 @@ import { Step5Courses } from "@/features/especialistas/onboarding/components/Ste
 import { OnboardingSuccessModal } from "@/features/especialistas/onboarding/components/OnboardingSuccessModal";
 import { ApplicationStatusView } from "@/features/especialistas/onboarding/components/ApplicationStatusView";
 import { SocialLink, CourseItem } from "@/features/especialistas/onboarding/types";
+import { uploadResume } from "@/lib/uploadResume";
 
 const specialtyOptions = [
   "Crecimiento personal",
@@ -61,6 +62,9 @@ export default function SpecialistOnboardingPage() {
   const goToStep = (targetStep: number) => {
     setStep(targetStep);
     setMaxVisitedStep((prev) => Math.max(prev, targetStep));
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   // Step 1 State
@@ -116,6 +120,19 @@ export default function SpecialistOnboardingPage() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
+      let uploadedResumeUrl: string | null = null;
+      if (resumeFile) {
+        try {
+          const uploadRes = await uploadResume(resumeFile);
+          uploadedResumeUrl = uploadRes.publicUrl;
+        } catch (uploadErr: any) {
+          console.error("Resume upload failed:", uploadErr);
+          alert(uploadErr.message || "Error al subir el currículum. Por favor intenta de nuevo.");
+          setLoading(false);
+          return;
+        }
+      }
+
       const linkedinObj = socialLinks.find((l) => l.platform?.toLowerCase() === "linkedin");
       const instagramObj = socialLinks.find((l) => l.platform?.toLowerCase() === "instagram");
       const websiteObj = socialLinks.find(
@@ -126,23 +143,29 @@ export default function SpecialistOnboardingPage() {
         specialty,
         title,
         bio,
-        clinicType: clinicChoice === "yes" ? spaceType : null,
-        clinicName: clinicChoice === "yes" ? clinicName : null,
-        clinicAddress: clinicChoice === "yes" ? clinicAddress : null,
-        clinicCity: clinicChoice === "yes" ? city : null,
-        clinicCountry: clinicChoice === "yes" ? country : null,
-        clinicLat: clinicChoice === "yes" ? lat : null,
-        clinicLng: clinicChoice === "yes" ? lng : null,
-        googlePlaceId: clinicChoice === "yes" ? googlePlaceId : null,
-        googleMapsUrl: clinicChoice === "yes" ? googleMapsUrl : null,
-        clinicPhone:
-          clinicChoice === "yes"
-            ? clinicPhone.trim()
-              ? `${phoneCountry.dial} ${clinicPhone.trim()}`
-              : null
-            : null,
-        clinicWebsite: clinicChoice === "yes" ? clinicWebsite : null,
-        clinicCoverUrl: clinicChoice === "yes" ? selectedPhotoUrl : null,
+        institution: institution || null,
+        selectedAreas: selectedAreas || [],
+        clinicData: clinicChoice === "yes" ? {
+          spaceType: spaceType || null,
+          clinicName: clinicName || null,
+          clinicAddress: clinicAddress || null,
+          clinicCity: city || null,
+          clinicCountry: country || null,
+          clinicLat: lat || null,
+          clinicLng: lng || null,
+          googlePlaceId: googlePlaceId || null,
+          googleMapsUrl: googleMapsUrl || null,
+          clinicPhone: clinicPhone.trim() ? `${phoneCountry.dial} ${clinicPhone.trim()}` : null,
+          clinicWebsite: clinicWebsite || null,
+          clinicCoverUrl: selectedPhotoUrl || null,
+        } : null,
+        sessionsData: sessionsChoice === "yes" ? {
+          enabled: sessionsEnabled,
+          selectedDays: selectedDays || [],
+          startTime: startTime || null,
+          endTime: endTime || null,
+        } : null,
+        resumeUrl: uploadedResumeUrl,
         linkedinUrl: linkedinObj?.url || null,
         instagramUrl: instagramObj?.url || null,
         websiteUrl: websiteObj?.url || null,
@@ -186,7 +209,7 @@ export default function SpecialistOnboardingPage() {
   const isUnderReview = appStatus?.status === "pending_review";
 
   return (
-    <div className="auth-fixed-page bg-slate-50 flex flex-col lg:flex-row font-sans text-slate-800">
+    <div className="flex-grow w-full bg-slate-50 flex flex-col lg:flex-row font-sans text-slate-800">
       {/* 1. Left Sidebar */}
       <OnboardingSidebar
         step={isUnderReview ? 6 : step}
@@ -197,12 +220,11 @@ export default function SpecialistOnboardingPage() {
       />
 
       {/* 2. Main Onboarding wizard pane */}
-      <div
-        ref={scrollContainerRef}
-        className="flex-1 flex flex-col min-h-0 h-full overflow-y-auto pt-14 lg:pt-0"
-      >
-        <div className="flex-1 flex flex-col items-center pt-8 md:pt-16 pb-12 md:pb-24 px-6 md:px-12">
-          <div className="w-full max-w-[344px] md:max-w-[580px] flex flex-col">
+      <div className="flex-grow flex flex-col pt-0">
+        <div 
+          className={`flex-grow flex flex-col items-center pt-4 pb-6 md:py-6 px-4 md:px-6 ${(step === 6 || isUnderReview) ? "justify-center" : ""}`}
+        >
+          <div className="w-full max-w-[580px] flex flex-col">
             {checkingStatus ? (
               <div className="flex items-center justify-center py-20">
                 <span className="animate-spin material-symbols-rounded text-slate-400 text-[28px]">

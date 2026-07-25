@@ -388,21 +388,27 @@ enum PostulationStatus {
 }
 
 model SpecialistPostulation {
-  id           String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId       String            @map("user_id") @db.Uuid
-  specialty    String            @db.VarChar
-  title        String            @db.VarChar
-  clinicName   String?           @map("clinic_name") @db.VarChar
-  bio          String            @db.Text
-  linkedinUrl  String?           @map("linkedin_url") @db.VarChar
-  instagramUrl String?           @map("instagram_url") @db.VarChar
-  websiteUrl   String?           @map("website_url") @db.VarChar
-  courses      Json?
-  status       PostulationStatus @default(pending)
-  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String            @map("user_id") @db.Uuid
+  specialty     String            @db.VarChar
+  title         String            @db.VarChar
+  clinicName    String?           @map("clinic_name") @db.VarChar
+  bio           String            @db.Text
+  linkedinUrl   String?           @map("linkedin_url") @db.VarChar
+  instagramUrl  String?           @map("instagram_url") @db.VarChar
+  websiteUrl    String?           @map("website_url") @db.VarChar
+  courses       Json?
+  status        PostulationStatus @default(pending)
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  institution   String?           @db.VarChar
+  selectedAreas Json?             @map("selected_areas")
+  clinicData    Json?             @map("clinic_data")
+  sessionsData  Json?             @map("sessions_data")
+  resumeUrl     String?           @map("resume_url") @db.VarChar
+
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
@@ -410,21 +416,89 @@ model SpecialistPostulation {
 }
 
 model SpecialistProfile {
-  userId       String   @id @map("user_id") @db.Uuid
-  specialty    String   @db.VarChar
-  title        String   @db.VarChar
-  clinicName   String?  @map("clinic_name") @db.VarChar
-  bio          String   @db.Text
-  linkedinUrl  String?  @map("linkedin_url") @db.VarChar
-  instagramUrl String?  @map("instagram_url") @db.VarChar
-  websiteUrl   String?  @map("website_url") @db.VarChar
-  courses      Json?
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  userId        String   @id @map("user_id") @db.Uuid
+  specialty     String   @db.VarChar
+  title         String   @db.VarChar
+  clinicName    String?  @map("clinic_name") @db.VarChar
+  bio           String   @db.Text
+  linkedinUrl   String?  @map("linkedin_url") @db.VarChar
+  instagramUrl  String?  @map("instagram_url") @db.VarChar
+  websiteUrl    String?  @map("website_url") @db.VarChar
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  institution   String?  @db.VarChar
+  selectedAreas Json?    @map("selected_areas")
+  resumeUrl     String?  @map("resume_url") @db.VarChar
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courses      SpecialistCourse[]
+  spaces       SpecialistSpace[]
 
   @@map("specialist_profiles")
+}
+
+model SpecialistCourse {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  name        String    @db.VarChar
+  type        String?   @db.VarChar
+  description String    @db.Text
+  modality    String?   @db.VarChar
+  url         String?   @db.VarChar
+  coverUrl    String?   @map("cover_url") @db.VarChar
+  institution String?   @db.VarChar
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  specialist  SpecialistProfile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("specialist_courses")
+}
+
+model SpecialistSpace {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String    @map("user_id") @db.Uuid
+  spaceType     String?   @map("space_type") @db.VarChar
+  name          String    @db.VarChar
+  address       String?   @db.VarChar
+  city          String?   @db.VarChar
+  country       String?   @db.VarChar
+  lat           Decimal?  @db.Decimal(9, 6)
+  lng           Decimal?  @db.Decimal(9, 6)
+  googlePlaceId String?   @map("google_place_id") @db.VarChar
+  googleMapsUrl String?   @map("google_maps_url") @db.VarChar
+  phone         String?   @db.VarChar
+  website       String?   @db.VarChar
+  coverUrl      String?   @map("cover_url") @db.VarChar
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  specialist    SpecialistProfile      @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  availability  SpecialistAvailability[]
+
+  @@index([userId])
+  @@index([city])
+  @@map("specialist_spaces")
+}
+
+model SpecialistAvailability {
+  id        String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  spaceId   String          @map("space_id") @db.Uuid
+  dayOfWeek Int             @map("day_of_week") @db.SmallInt
+  startTime String          @map("start_time") @db.VarChar
+  endTime   String          @map("end_time") @db.VarChar
+  isActive  Boolean         @default(true) @map("is_active")
+  createdAt DateTime        @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  space     SpecialistSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId])
+  @@map("specialist_availability")
 }
 
 model SentEmailLog {

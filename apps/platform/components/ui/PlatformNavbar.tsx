@@ -493,7 +493,7 @@ export function PlatformNavbar() {
   return (
     <>
       {/* Desktop Header */}
-      <header className="fixed top-0 left-0 w-full bg-white border-b border-slate-200 z-50 h-[64px] lg:h-[80px] px-6 lg:px-8 flex items-center justify-between">
+      <header className="fixed top-0 left-0 w-full bg-white border-b border-slate-200 z-50 h-[64px] px-6 lg:px-8 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <Link href="/">
             <img src="/logo-luminus-black.svg" alt="Luminus" className="hidden sm:block h-[20px] cursor-pointer" />
@@ -608,7 +608,7 @@ export function PlatformNavbar() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-              className={`group flex items-center gap-2.5 p-1 lg:pr-2 rounded-xl transition-all ${isProfileDropdownOpen ? "bg-slate-50" : "hover:bg-slate-50"}`}
+              className={`group flex items-center gap-2.5 p-1 lg:pr-2.5 rounded-xl transition-all ${isProfileDropdownOpen ? "bg-slate-50" : "hover:bg-slate-50"}`}
             >
               {profileAvatar ? (
                 <img
@@ -624,10 +624,13 @@ export function PlatformNavbar() {
               <span className={`hidden lg:block text-sm font-semibold ${isProfileDropdownOpen ? "text-slate-900" : "text-slate-500 group-hover:text-slate-900"}`}>
                 {profileName}
               </span>
+              <span className="material-symbols-rounded text-slate-400 text-[18px] hidden lg:block">
+                keyboard_arrow_down
+              </span>
             </button>
 
           {isProfileDropdownOpen && (
-            <div className="fixed right-6 top-[72px] sm:absolute sm:right-0 sm:top-auto sm:mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+            <div className="fixed right-6 top-[64px] sm:absolute sm:right-0 sm:top-auto sm:mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
               <Link
                 href="/perfil-usuario"
                 onClick={() => setIsProfileDropdownOpen(false)}

@@ -12,7 +12,20 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { specialty, title, clinicName, bio, linkedinUrl, instagramUrl, websiteUrl, courses } = body;
+    const {
+      specialty,
+      title,
+      bio,
+      institution,
+      selectedAreas,
+      clinicData,
+      sessionsData,
+      resumeUrl,
+      linkedinUrl,
+      instagramUrl,
+      websiteUrl,
+      courses,
+    } = body;
 
     if (!specialty || !title || !bio) {
       return NextResponse.json({ message: "Campos obligatorios faltantes." }, { status: 400 });
@@ -50,13 +63,18 @@ export async function POST(request: Request) {
         userId: session.userId,
         specialty,
         title,
-        clinicName: clinicName || null,
+        clinicName: clinicData?.clinicName || null,
         bio,
         linkedinUrl: linkedinUrl || null,
         instagramUrl: instagramUrl || null,
         websiteUrl: websiteUrl || null,
         courses: courses ? courses : undefined,
         status: "pending",
+        institution: institution || null,
+        selectedAreas: selectedAreas ? selectedAreas : undefined,
+        clinicData: clinicData ? clinicData : undefined,
+        sessionsData: sessionsData ? sessionsData : undefined,
+        resumeUrl: resumeUrl || null,
       },
     });
 

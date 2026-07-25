@@ -30,7 +30,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
   disabled = false,
   disabledOpacity = true,
   autoFocus,
-  preventScrollOnOpen = false
+  preventScrollOnOpen = true
 }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);

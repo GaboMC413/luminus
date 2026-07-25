@@ -79,7 +79,7 @@ export function Step1Intro({
       </div>
 
       {/* Benefit Cards (2x3 Grid Layout) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1">
+      <div className="grid grid-cols-2 gap-3 mt-1">
         {BENEFITS.map((benefit, idx) => (
           <div
             key={idx}
