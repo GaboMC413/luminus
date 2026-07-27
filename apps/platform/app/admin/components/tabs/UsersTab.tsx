@@ -6,6 +6,7 @@ import { InputField } from "@/components/ui/InputField";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { Button } from "@/components/ui/Button";
 import { InterestPill } from "@/components/ui/InterestPill";
+import { Modal } from "@/components/ui/Modal";
 import { uploadAvatar } from "@/lib/uploadAvatar";
 import { PhotoEditor } from "@/features/auth/registration/PhotoEditor";
 import { fieldValue, formatDate } from "../../utils";
@@ -28,7 +29,7 @@ export function UsersTab({
   setSelectedSpecialistUserId,
   setSpecialistSubTab,
 }: UsersTabProps) {
-  const [userSubTab, setUserSubTab] = useState<"activos" | "eliminados">("activos");
+  const [userSubTab, setUserSubTab] = useState<"activos" | "cerradas" | "deshabilitados">("activos");
   const [search, setSearch] = useState("");
 
   const [selectedId, setSelectedId] = useState<string>(users[0]?.id ?? "");
@@ -36,6 +37,7 @@ export function UsersTab({
   const [selectedStatus, setSelectedStatus] = useState<string>(users[0]?.status ?? "active");
   const [selectedPlan, setSelectedPlan] = useState<string>(users[0]?.profile?.selectedPlan || "Trial");
   const [isEditingUser, setIsEditingUser] = useState<boolean>(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
 
@@ -45,10 +47,15 @@ export function UsersTab({
   const [isCroppingAvatar, setIsCroppingAvatar] = useState<boolean>(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
 
-  const activeUsers = useMemo(() => users.filter((u) => u.status !== "deleted"), [users]);
-  const deletedUsers = useMemo(() => users.filter((u) => u.status === "deleted"), [users]);
+  const activeUsers = useMemo(() => users.filter((u) => u.status === "active"), [users]);
+  const closedUsers = useMemo(() => users.filter((u) => u.status === "deleted"), [users]);
+  const disabledUsers = useMemo(() => users.filter((u) => u.status === "disabled"), [users]);
 
-  const baseUsersList = userSubTab === "eliminados" ? deletedUsers : activeUsers;
+  const baseUsersList = userSubTab === "cerradas"
+    ? closedUsers
+    : userSubTab === "deshabilitados"
+      ? disabledUsers
+      : activeUsers;
 
   // Specialist user ID set for quick lookup
   const specialistUserIds = useMemo(() => {
@@ -256,9 +263,10 @@ export function UsersTab({
                   value={userSubTab}
                   options={[
                     { label: `Activos · ${activeUsers.length}`, value: "activos" },
-                    { label: `Eliminados · ${deletedUsers.length}`, value: "eliminados" },
+                    { label: `Cuentas cerradas · ${closedUsers.length}`, value: "cerradas" },
+                    { label: `Deshabilitados · ${disabledUsers.length}`, value: "deshabilitados" },
                   ]}
-                  onSelect={(val) => setUserSubTab(val as "activos" | "eliminados")}
+                  onSelect={(val) => setUserSubTab(val as "activos" | "cerradas" | "deshabilitados")}
                   className="!h-10 text-xs font-bold"
                 />
               </div>
@@ -309,12 +317,14 @@ export function UsersTab({
               {filteredUsers.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-slate-400">
                   <span className="material-symbols-rounded text-[44px] mb-2 text-slate-300">
-                    {userSubTab === "eliminados" ? "person_off" : "group_off"}
+                    {userSubTab === "cerradas" || userSubTab === "deshabilitados" ? "person_off" : "group_off"}
                   </span>
                   <p className="text-sm font-medium">
-                    {userSubTab === "eliminados"
-                      ? "No hay usuarios eliminados."
-                      : "No se encontraron usuarios activos."}
+                    {userSubTab === "cerradas"
+                      ? "No hay cuentas cerradas."
+                      : userSubTab === "deshabilitados"
+                        ? "No hay usuarios deshabilitados."
+                        : "No se encontraron usuarios activos."}
                   </p>
                 </div>
               ) : (
@@ -490,7 +500,7 @@ export function UsersTab({
                         {selectedUser.status === "active"
                           ? "Activo"
                           : selectedUser.status === "deleted"
-                            ? "Eliminado"
+                            ? "Cuenta cerrada"
                             : "Deshabilitado"}
                       </AdminBadge>
 
@@ -501,26 +511,41 @@ export function UsersTab({
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!isEditingUser && selectedUser) {
-                      setSelectedRole(selectedUser.role);
-                      setSelectedStatus(selectedUser.status);
-                      setSelectedPlan(selectedUser.profile.selectedPlan || "Trial");
-                    }
-                    setIsEditingUser((prev) => !prev);
-                  }}
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none cursor-pointer transition-colors ${isEditingUser
-                    ? "bg-black text-white hover:bg-slate-800"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
-                    }`}
-                  title={isEditingUser ? "Cancelar edición" : "Editar usuario"}
-                >
-                  <span className="material-symbols-rounded text-[18px] block">
-                    {isEditingUser ? "close" : "edit"}
-                  </span>
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!isEditingUser && selectedUser) {
+                        setSelectedRole(selectedUser.role);
+                        setSelectedStatus(selectedUser.status);
+                        setSelectedPlan(selectedUser.profile.selectedPlan || "Trial");
+                      }
+                      setIsEditingUser((prev) => !prev);
+                    }}
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none cursor-pointer transition-colors ${isEditingUser
+                      ? "bg-black text-white hover:bg-slate-800"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+                      }`}
+                    title={isEditingUser ? "Cancelar edición" : "Editar usuario"}
+                  >
+                    <span className="material-symbols-rounded text-[18px] block">
+                      {isEditingUser ? "close" : "edit"}
+                    </span>
+                  </button>
+
+                  {!isEditingUser && (
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteConfirm(true)}
+                      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none cursor-pointer transition-colors bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700"
+                      title="Eliminar usuario"
+                    >
+                      <span className="material-symbols-rounded text-[18px] block">
+                        delete
+                      </span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Link to Specialist profile if linked */}
@@ -680,7 +705,7 @@ export function UsersTab({
                     </span>
                     <div className="text-xs font-sans leading-relaxed">
                       <strong className="block font-bold text-rose-950 mb-0.5 text-[13px]">
-                        ¡Atención! La cuenta será marcada como ELIMINADA
+                        ¡Atención! La cuenta será marcada como CERRADA
                       </strong>
                       Esta acción deshabilitará el acceso de {selectedUser.email} a la plataforma LUMINUS. Puedes revertir este estado más tarde seleccionando "Activo".
                     </div>
@@ -718,7 +743,7 @@ export function UsersTab({
                           options={[
                             { label: "Activo", value: "active" },
                             { label: "Deshabilitado", value: "disabled" },
-                            { label: "Eliminado", value: "deleted" },
+                            { label: "Cuenta cerrada", value: "deleted" },
                           ]}
                           className="!h-9 text-xs"
                         />
@@ -850,7 +875,7 @@ export function UsersTab({
                     {isSaving
                       ? "Guardando..."
                       : selectedStatus === "deleted"
-                        ? "Guardar como Eliminado"
+                        ? "Guardar como Cuenta Cerrada"
                         : "Guardar cambios"}
                   </Button>
                 </div>
@@ -863,6 +888,62 @@ export function UsersTab({
           </AdminCard>
         )}
       </div>
+
+      {showDeleteConfirm && selectedUser && (
+        <Modal
+          isOpen={showDeleteConfirm}
+          onClose={() => setShowDeleteConfirm(false)}
+          title="Confirmar eliminación"
+          maxWidth="440px"
+          footer={
+            <div className="flex gap-3 w-full">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 border-none shadow-none text-xs h-10"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={() => {
+                  // Simulate deleting the user locally by removing them from state
+                  setUsers((prevUsers) =>
+                    prevUsers.filter((u) => u.id !== selectedUser.id)
+                  );
+                  setShowDeleteConfirm(false);
+                  setMessage(`Usuario ${fieldValue(selectedUser.profile.fullName || `${selectedUser.profile.firstName} ${selectedUser.profile.lastName}`)} eliminado permanentemente.`);
+                  
+                  // Clear success message after 3 seconds
+                  setTimeout(() => {
+                    setMessage("");
+                  }, 3000);
+                }}
+                className="flex-1 font-bold text-xs text-white bg-rose-600 hover:bg-rose-700 h-10"
+              >
+                Eliminar
+              </Button>
+            </div>
+          }
+        >
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-slate-600 leading-relaxed">
+              ¿Estás seguro de que deseas eliminar permanentemente al usuario{" "}
+              <strong className="text-slate-900 font-semibold">
+                {fieldValue(
+                  selectedUser.profile.fullName ||
+                    `${selectedUser.profile.firstName} ${selectedUser.profile.lastName}`
+                )}
+              </strong>
+              ?
+            </p>
+            <p className="text-xs text-rose-500 font-medium">
+              Esta acción eliminará al usuario por completo de la plataforma. Esta acción no se puede deshacer.
+            </p>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

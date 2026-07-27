@@ -20,7 +20,7 @@ interface SpecialistsTabProps {
   selectedSpecialistUserId: string | null;
   setSelectedSpecialistUserId: (id: string | null) => void;
   setSelectedId: (id: string) => void;
-  setUserSubTab: (tab: "activos" | "eliminados") => void;
+  setUserSubTab: (tab: "activos" | "cerradas" | "deshabilitados") => void;
   setActiveTab: (tab: AdminTab) => void;
 }
 
@@ -601,7 +601,7 @@ export function SpecialistsTab({
                     const linkedUser = users.find((u) => u.id === selectedSpecialist.userId);
                     if (linkedUser) {
                       setSelectedId(linkedUser.id);
-                      setUserSubTab(linkedUser.status === "deleted" ? "eliminados" : "activos");
+                      setUserSubTab(linkedUser.status === "deleted" ? "cerradas" : linkedUser.status === "disabled" ? "deshabilitados" : "activos");
                       setActiveTab("usuarios");
                     } else {
                       alert("Usuario no encontrado en la lista actual.");
@@ -956,7 +956,7 @@ export function SpecialistsTab({
                         const linkedUser = users.find((u) => u.id === selectedPostulation.userId);
                         if (linkedUser) {
                           setSelectedId(linkedUser.id);
-                          setUserSubTab(linkedUser.status === "deleted" ? "eliminados" : "activos");
+                          setUserSubTab(linkedUser.status === "deleted" ? "cerradas" : linkedUser.status === "disabled" ? "deshabilitados" : "activos");
                           setActiveTab("usuarios");
                         } else {
                           alert("Usuario no encontrado en la lista actual.");
