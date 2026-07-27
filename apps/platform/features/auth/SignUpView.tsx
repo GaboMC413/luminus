@@ -174,12 +174,13 @@ export default function SignUpView() {
       });
       const data = await response.json();
 
+      if (response.status === 202 && data.code === "REQUIRES_VERIFICATION") {
+        setVerifyEmail(email);
+        setVerifyModalOpen(true);
+        return;
+      }
+
       if (!response.ok) {
-        if (response.status === 202 && data.code === "REQUIRES_VERIFICATION") {
-          setVerifyEmail(email);
-          setVerifyModalOpen(true);
-          return;
-        }
         setMessage({ text: data.message ?? "No pudimos crear tu cuenta.", type: "error" });
         return;
       }
