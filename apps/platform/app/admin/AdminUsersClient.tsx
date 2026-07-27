@@ -65,7 +65,7 @@ export function AdminUsersClient({
 
   // Shared User selection state
   const [, setSelectedId] = useState<string>(initialUsers[0]?.id ?? "");
-  const [, setUserSubTab] = useState<"activos" | "eliminados">("activos");
+  const [, setUserSubTab] = useState<"activos" | "cerradas" | "deshabilitados">("activos");
 
   const pendingSuggestionsCount = useMemo(() => {
     return suggestions.filter((s) => s.status === "pending").length;
