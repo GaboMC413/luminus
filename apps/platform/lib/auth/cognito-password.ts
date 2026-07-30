@@ -41,7 +41,8 @@ function getCognitoRegion() {
 
 function getCognitoClientConfig() {
   const clientId = process.env.COGNITO_CLIENT_ID;
-  const clientSecret = process.env.COGNITO_CLIENT_SECRET;
+  const rawSecret = process.env.COGNITO_CLIENT_SECRET;
+  const clientSecret = !rawSecret || rawSecret === "NONE" || rawSecret === "false" ? undefined : rawSecret;
 
   if (!clientId) {
     throw makeCognitoError("Cognito password auth is not configured.", "CognitoConfigError", 500);
