@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { isUuid } from "@/utils/validation";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,8 +36,6 @@ export async function GET(request: Request) {
     .filter(Boolean);
 
   try {
-    const { prisma } = await import("@/lib/db");
-    
     const blockedConnections = await prisma.userConnection.findMany({
       where: {
         status: "blocked",
