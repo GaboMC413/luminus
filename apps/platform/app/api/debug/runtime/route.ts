@@ -1,30 +1,50 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function describeEnv(name: string) {
-  const value = process.env[name];
+function sanitizeError(message: string): string {
+  let sanitized = message
+    .replace(/postgresql:\/\/[^\s"']+/gi, "postgresql://[REDACTED]")
+    .replace(/postgres:\/\/[^\s"']+/gi, "postgres://[REDACTED]")
+    .replace(/password=[^\s&"']+/gi, "password=[REDACTED]");
 
-  return {
-    configured: Boolean(value),
-    length: value?.length ?? 0,
-  };
+  if (process.env.DATABASE_URL) {
+    sanitized = sanitized.split(process.env.DATABASE_URL).join("[REDACTED_DATABASE_URL]");
+  }
+
+  return sanitized;
 }
 
 export async function GET() {
-  if (process.env.NODE_ENV === "production" && process.env.ENABLE_RUNTIME_DEBUG !== "true") {
+  if (process.env.ENABLE_RUNTIME_DEBUG !== "true") {
     return NextResponse.json({ message: "Not found." }, { status: 404 });
   }
 
+  let prismaConnection = {
+    success: false,
+    errorName: null as string | null,
+    errorCode: null as string | null,
+    errorMessage: null as string | null,
+  };
+
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    prismaConnection.success = true;
+  } catch (err: any) {
+    prismaConnection.success = false;
+    prismaConnection.errorName = err?.name || err?.constructor?.name || "Error";
+    prismaConnection.errorCode = err?.code || null;
+    const rawMessage = err?.message || String(err);
+    prismaConnection.errorMessage = sanitizeError(rawMessage);
+  }
+
   return NextResponse.json({
-    nodeEnv: process.env.NODE_ENV,
-    authSessionSecret: describeEnv("AUTH_SESSION_SECRET"),
-    databaseUrl: describeEnv("DATABASE_URL"),
-    s3AvatarBucket: describeEnv("S3_AVATAR_BUCKET"),
-    s3AvatarRegion: describeEnv("S3_AVATAR_REGION"),
-    s3AvatarPublicBaseUrl: describeEnv("S3_AVATAR_PUBLIC_BASE_URL"),
-    s3AvatarAccessKeyId: describeEnv("S3_AVATAR_ACCESS_KEY_ID"),
-    s3AvatarSecretAccessKey: describeEnv("S3_AVATAR_SECRET_ACCESS_KEY"),
+    databaseUrl: {
+      configured: Boolean(process.env.DATABASE_URL),
+    },
+    prismaConnection,
   });
 }
+
