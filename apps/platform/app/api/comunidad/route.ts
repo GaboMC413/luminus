@@ -196,6 +196,10 @@ export async function GET(request: Request) {
       users: serialized,
       nextCursor,
       hasMore,
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, max-age=0'
+      }
     });
   } catch (error) {
     console.error("Failed to fetch community users.", error);

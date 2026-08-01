@@ -241,8 +241,9 @@ function PlatformContent() {
       if (appliedFilters.selectedInterests.length > 0) {
         params.set("interests", appliedFilters.selectedInterests.join(","));
       }
+      params.set("_t", Date.now().toString());
 
-      const res = await fetch(`/api/comunidad?${params.toString()}`);
+      const res = await fetch(`/api/comunidad?${params.toString()}`, { cache: "no-store" });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.message || `Error del servidor: ${res.status}`);
