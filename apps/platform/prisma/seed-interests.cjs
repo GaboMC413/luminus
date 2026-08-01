@@ -1,5 +1,26 @@
-const { PrismaClient } = require("@prisma/client");
+const fs = require("fs");
+const path = require("path");
 
+function loadEnvFile(filePath) {
+  if (fs.existsSync(filePath)) {
+    const content = fs.readFileSync(filePath, "utf8");
+    for (const line of content.split("\n")) {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith("#") && trimmed.includes("=")) {
+        const [key, ...values] = trimmed.split("=");
+        const val = values.join("=").replace(/^["']|["']$/g, "").trim();
+        if (key && !process.env[key.trim()]) {
+          process.env[key.trim()] = val;
+        }
+      }
+    }
+  }
+}
+
+loadEnvFile(path.resolve(__dirname, "../.env.local"));
+loadEnvFile(path.resolve(__dirname, "../.env"));
+
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const categories = [
