@@ -907,22 +907,42 @@ export function UsersTab({
               </Button>
               <Button
                 type="button"
-                onClick={() => {
-                  // Simulate deleting the user locally by removing them from state
-                  setUsers((prevUsers) =>
-                    prevUsers.filter((u) => u.id !== selectedUser.id)
-                  );
-                  setShowDeleteConfirm(false);
-                  setMessage(`Usuario ${fieldValue(selectedUser.profile.fullName || `${selectedUser.profile.firstName} ${selectedUser.profile.lastName}`)} eliminado permanentemente.`);
-                  
-                  // Clear success message after 3 seconds
-                  setTimeout(() => {
-                    setMessage("");
-                  }, 3000);
+                onClick={async () => {
+                  if (isSaving) return;
+                  setIsSaving(true);
+                  try {
+                    const response = await fetch(`/api/admin/users?id=${selectedUser.id}`, {
+                      method: "DELETE",
+                    });
+                    
+                    if (!response.ok) {
+                      const data = await response.json();
+                      alert(data.message || "Error al eliminar el usuario permanentemente.");
+                      setIsSaving(false);
+                      return;
+                    }
+
+                    // Remove them from state
+                    setUsers((prevUsers) =>
+                      prevUsers.filter((u) => u.id !== selectedUser.id)
+                    );
+                    setShowDeleteConfirm(false);
+                    setMessage(`Usuario ${fieldValue(selectedUser.profile.fullName || `${selectedUser.profile.firstName} ${selectedUser.profile.lastName}`)} eliminado permanentemente.`);
+                    
+                    // Clear success message after 3 seconds
+                    setTimeout(() => {
+                      setMessage("");
+                    }, 3000);
+                  } catch (error) {
+                    alert("Error de conexión al eliminar usuario.");
+                  } finally {
+                    setIsSaving(false);
+                  }
                 }}
-                className="flex-1 font-bold text-xs text-white bg-rose-600 hover:bg-rose-700 h-10"
+                disabled={isSaving}
+                className="flex-1 font-bold text-xs text-white bg-rose-600 hover:bg-rose-700 h-10 disabled:opacity-50"
               >
-                Eliminar
+                {isSaving ? "Eliminando..." : "Eliminar"}
               </Button>
             </div>
           }
