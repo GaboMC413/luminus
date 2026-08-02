@@ -48,6 +48,7 @@ const categories = [
       "Desarrollo organizacional",
       "Facilitación de procesos",
       "Formación en habilidades blandas",
+      "Otro",
     ],
   },
   {
@@ -75,6 +76,7 @@ const categories = [
       "Acompañamiento en duelo",
       "Arteterapia",
       "Musicoterapia",
+      "Otro",
     ],
   },
   {
@@ -103,11 +105,12 @@ const categories = [
       "Medicina del sueño",
       "Ginecología",
       "Endocrinología",
+      "Otro",
     ],
   },
   {
     title: "Movimiento Físico",
-    icon: "directions_run",
+    icon: "exercise",
     iconFilled: true,
     color: "#EF4444",
     bgColor: "#FECACA",
@@ -133,6 +136,7 @@ const categories = [
       "Calistenia",
       "Entrenamiento postural",
       "Acondicionamiento físico",
+      "Otro",
     ],
   },
   {
@@ -147,6 +151,7 @@ const categories = [
       "Nutrición deportiva",
       "Cocina",
       "Suplementación",
+      "Fermentación",
     ],
     specialistAreas: [
       "Nutrición clínica",
@@ -159,6 +164,7 @@ const categories = [
       "Nutrición hormonal",
       "Psiconutrición",
       "Educación alimentaria",
+      "Otro",
     ],
   },
   {
@@ -185,6 +191,7 @@ const categories = [
       "Sonoterapia",
       "Facilitación de retiros",
       "Desarrollo espiritual",
+      "Otro",
     ],
   },
   {
@@ -212,6 +219,7 @@ const categories = [
       "Psicología perinatal",
       "Acompañamiento en crianza",
       "Comunicación interpersonal",
+      "Otro",
     ],
   },
   {
@@ -242,7 +250,17 @@ const categories = [
       "Terapia floral",
       "Terapias energéticas",
       "Biomagnetismo",
+      "Otro",
     ],
+  },
+  {
+    title: "Otro",
+    icon: "star",
+    iconFilled: true,
+    color: "#64748B",
+    bgColor: "#F1F5F9",
+    items: ["Otro"],
+    specialistAreas: ["Otro"],
   },
 ];
 

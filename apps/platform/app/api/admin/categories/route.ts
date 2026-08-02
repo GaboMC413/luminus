@@ -116,6 +116,10 @@ export async function POST(request: Request) {
   }
 }
 
+export async function PUT(request: Request) {
+  return PATCH(request);
+}
+
 export async function PATCH(request: Request) {
   const session = getCurrentSession();
   if (!session || session.role !== "ADMIN") {

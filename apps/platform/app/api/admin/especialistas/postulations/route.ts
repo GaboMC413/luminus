@@ -78,10 +78,26 @@ export async function PATCH(request: Request) {
           where: { userId: postulation.userId },
         });
 
+        const categoryArea = cData.categoryArea || null;
+        let categoryId: string | null = null;
+        if (categoryArea) {
+          const categoryRecord = await prisma.interestCategory.findFirst({
+            where: {
+              name: { equals: categoryArea, mode: "insensitive" },
+            },
+          });
+          if (categoryRecord) {
+            categoryId = categoryRecord.id;
+          }
+        }
+
         const spacePayload = {
           userId: postulation.userId,
           spaceType: cData.spaceType || null,
+          categoryArea,
+          categoryId,
           name: cData.clinicName || "Consultorio principal",
+          description: cData.clinicDescription || null,
           address: cData.clinicAddress || null,
           city: cData.clinicCity || null,
           country: cData.clinicCountry || null,
