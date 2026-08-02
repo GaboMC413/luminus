@@ -34,9 +34,18 @@ export function InterestSelection({
       return arr;
     };
 
-    // Shuffle only the categories
-    const shuffled = shuffle(INTEREST_CATEGORIES);
-    setCategories(shuffled);
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.categories && Array.isArray(data.categories) && data.categories.length > 0) {
+          setCategories(shuffle(data.categories));
+        } else {
+          setCategories(shuffle(INTEREST_CATEGORIES));
+        }
+      })
+      .catch(() => {
+        setCategories(shuffle(INTEREST_CATEGORIES));
+      });
   }, []);
 
   const toggleInterest = (item: string) => {

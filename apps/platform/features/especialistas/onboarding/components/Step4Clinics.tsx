@@ -11,39 +11,58 @@ import { PhoneInput } from "@/components/ui/PhoneInput";
 
 export const SPACE_TYPE_OPTIONS = [
   {
-    label: "Consultorio",
-    value: "Consultorio",
-    description: "Atención individual, orientación profesional y sesiones personalizadas.",
+    label: "Centro de desarrollo personal",
+    value: "Centro de desarrollo personal",
+    categoryArea: "Crecimiento Personal",
+    description: "Coaching, mentoría, liderazgo, orientación y crecimiento personal.",
   },
   {
-    label: "Clínica",
-    value: "Clínica",
-    description: "Consultas, evaluaciones y tratamientos con uno o varios profesionales.",
+    label: "Centro de psicología y bienestar emocional",
+    value: "Centro de psicología y bienestar emocional",
+    categoryArea: "Bienestar Emocional",
+    description: "Psicología, psicoterapia, acompañamiento emocional, talleres y grupos de apoyo.",
   },
   {
-    label: "Centro médico",
-    value: "Centro médico",
-    description: "Medicina, nutrición, salud preventiva y atención clínica.",
-  },
-  {
-    label: "Centro terapéutico",
-    value: "Centro terapéutico",
-    description: "Psicología, terapias corporales, prácticas complementarias y acompañamiento emocional.",
-  },
-  {
-    label: "Centro de rehabilitación",
-    value: "Centro de rehabilitación",
-    description: "Fisioterapia, recuperación física, movilidad y rehabilitación funcional.",
+    label: "Centro de salud integral",
+    value: "Centro de salud integral",
+    categoryArea: "Salud Integral",
+    description: "Atención médica, prevención, hábitos saludables y servicios coordinados de bienestar.",
   },
   {
     label: "Centro de actividad física",
     value: "Centro de actividad física",
-    description: "Entrenamiento, yoga, pilates, movimiento y prácticas corporales.",
+    categoryArea: "Movimiento Físico",
+    description: "Entrenamiento, yoga, pilates, movilidad, danza y otras prácticas corporales.",
   },
   {
-    label: "Espacio multidisciplinario",
-    value: "Espacio multidisciplinario",
-    description: "Diferentes especialidades, enfoques y servicios reunidos en un mismo lugar.",
+    label: "Centro de nutrición",
+    value: "Centro de nutrición",
+    categoryArea: "Nutrición",
+    description: "Consultas nutricionales, educación alimentaria y acompañamiento en hábitos de alimentación.",
+  },
+  {
+    label: "Centro de meditación y espiritualidad",
+    value: "Centro de meditación y espiritualidad",
+    categoryArea: "Espiritualidad",
+    description: "Meditación, mindfulness, respiración, encuentros y prácticas contemplativas.",
+  },
+  {
+    label: "Espacio de familia y vínculos",
+    value: "Espacio de familia y vínculos",
+    categoryArea: "Vínculos",
+    description: "Crianza, pareja, familia, talleres y actividades compartidas.",
+  },
+  {
+    label: "Centro de terapias complementarias",
+    value: "Centro de terapias complementarias",
+    categoryArea: "Terapias Complementarias",
+    description: "Masajes, acupuntura, reiki, reflexología y otras prácticas complementarias.",
+  },
+  {
+    label: "Otro tipo de espacio",
+    value: "Otro tipo de espacio",
+    categoryArea: "Otro",
+    description: "Permite escribir manualmente el tipo de espacio.",
   },
 ];
 
@@ -241,8 +260,12 @@ interface Step4ClinicsProps {
   setClinicEnabled: (val: boolean) => void;
   spaceType: string;
   setSpaceType: (val: string) => void;
+  customSpaceType: string;
+  setCustomSpaceType: (val: string) => void;
   clinicName: string;
   setClinicName: (val: string) => void;
+  clinicDescription: string;
+  setClinicDescription: (val: string) => void;
   clinicAddress: string;
   setClinicAddress: (val: string) => void;
   city: string;
@@ -283,8 +306,12 @@ export function Step4Clinics({
   setClinicEnabled,
   spaceType,
   setSpaceType,
+  customSpaceType,
+  setCustomSpaceType,
   clinicName,
   setClinicName,
+  clinicDescription,
+  setClinicDescription,
   clinicAddress,
   setClinicAddress,
   city,
@@ -320,7 +347,9 @@ export function Step4Clinics({
 }: Step4ClinicsProps) {
   const clinicContainerRef = useRef<HTMLDivElement>(null);
   const spaceTypeSelectRef = useRef<HTMLDivElement>(null);
+  const customSpaceTypeInputRef = useRef<HTMLInputElement>(null);
   const clinicNameInputRef = useRef<HTMLInputElement>(null);
+  const clinicDescriptionInputRef = useRef<HTMLTextAreaElement>(null);
   const clinicAddressInputRef = useRef<HTMLInputElement>(null);
   const cityInputRef = useRef<HTMLInputElement>(null);
   const countryInputRef = useRef<HTMLInputElement>(null);
@@ -385,13 +414,16 @@ export function Step4Clinics({
           service.getDetails(
             {
               placeId,
-              fields: ["photos", "website", "formatted_phone_number", "international_phone_number"],
+              fields: ["photos", "website", "formatted_phone_number", "international_phone_number", "editorial_summary"],
             },
             (placeDetails: any, statusDetails: any) => {
               if (
                 statusDetails === (window as any).google.maps.places.PlacesServiceStatus.OK &&
                 placeDetails
               ) {
+                if (placeDetails.editorial_summary?.overview) {
+                  setClinicDescription(placeDetails.editorial_summary.overview);
+                }
                 if (placeDetails.photos?.length > 0) {
                   const photosUrls = placeDetails.photos.map((p: any) =>
                     p.getUrl({ maxWidth: 800, maxHeight: 600 })
@@ -492,10 +524,22 @@ export function Step4Clinics({
         spaceTypeSelectRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
+      if (spaceType === "Otro tipo de espacio" && !customSpaceType.trim()) {
+        setErrorField("customSpaceType");
+        customSpaceTypeInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        customSpaceTypeInputRef.current?.focus();
+        return;
+      }
       if (!clinicName.trim()) {
         setErrorField("clinicName");
         clinicNameInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
         clinicNameInputRef.current?.focus();
+        return;
+      }
+      if (!clinicDescription.trim()) {
+        setErrorField("clinicDescription");
+        clinicDescriptionInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        clinicDescriptionInputRef.current?.focus();
         return;
       }
       if (!clinicAddress.trim()) {
@@ -627,6 +671,25 @@ export function Step4Clinics({
                     {errorField === "spaceType" && (
                       <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">Selecciona el tipo de espacio</p>
                     )}
+                    {spaceType === "Otro tipo de espacio" && (
+                      <div className="mt-1.5 flex flex-col gap-1">
+                        <label className="text-label ml-1 text-slate-700">Otro tipo de espacio*</label>
+                        <InputField
+                          ref={customSpaceTypeInputRef}
+                          type="text"
+                          value={customSpaceType}
+                          onChange={(e) => {
+                            setCustomSpaceType(e.target.value);
+                            if (errorField === "customSpaceType") setErrorField(null);
+                          }}
+                          placeholder="Escribe el tipo de espacio"
+                          className={errorField === "customSpaceType" ? "!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]" : ""}
+                        />
+                        {errorField === "customSpaceType" && (
+                          <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">Escribe el tipo de espacio</p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-col gap-2">
@@ -644,6 +707,25 @@ export function Step4Clinics({
                     />
                     {errorField === "clinicName" && (
                       <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">Ingresa el nombre del espacio</p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <label className="text-label ml-1">Descripción del espacio *</label>
+                    <textarea
+                      ref={clinicDescriptionInputRef}
+                      value={clinicDescription}
+                      onChange={(e) => {
+                        setClinicDescription(e.target.value);
+                        if (errorField === "clinicDescription") setErrorField(null);
+                      }}
+                      placeholder="Breve descripción del espacio, instalaciones, enfoque o comodidades..."
+                      rows={3}
+                      className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-[14px] text-slate-800 focus:outline-none focus:border-black font-sans resize-none transition-all duration-200 ${errorField === "clinicDescription" ? "!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]" : "border-slate-200"
+                        }`}
+                    />
+                    {errorField === "clinicDescription" && (
+                      <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">Ingresa la descripción del espacio</p>
                     )}
                   </div>
 

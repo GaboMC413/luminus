@@ -24,6 +24,55 @@ const hoursOptions = [
   "22:00",
 ];
 
+export const TIMEZONE_OPTIONS = [
+  // América Latina (Capitales y principales zonas)
+  "America/Argentina/Buenos_Aires (GMT-3)",
+  "America/Argentina/Cordoba (GMT-3)",
+  "America/Argentina/Mendoza (GMT-3)",
+  "America/Asuncion (GMT-3/GMT-4)",
+  "America/Bogota (GMT-5)",
+  "America/Caracas (GMT-4)",
+  "America/Cancun (GMT-5)",
+  "America/Costa_Rica (GMT-6)",
+  "America/El_Salvador (GMT-6)",
+  "America/Guayaquil (GMT-5)",
+  "America/Guatemala (GMT-6)",
+  "America/Havana (GMT-5/GMT-4)",
+  "America/La_Paz (GMT-4)",
+  "America/Lima (GMT-5)",
+  "America/Managua (GMT-6)",
+  "America/Manaus (GMT-4)",
+  "America/Mexico_City (GMT-6)",
+  "America/Montevideo (GMT-3)",
+  "America/Noronha (GMT-2)",
+  "America/Panama (GMT-5)",
+  "America/Puerto_Rico (GMT-4)",
+  "America/Santiago (GMT-3/GMT-4)",
+  "America/Santo_Domingo (GMT-4)",
+  "America/Sao_Paulo (GMT-3)",
+  "America/Tegucigalpa (GMT-6)",
+  "America/Tijuana (GMT-8/GMT-7)",
+
+  // Estados Unidos y Canadá (Ciudades más comunes)
+  "America/New_York (GMT-5/GMT-4 - Este: Nueva York, Miami)",
+  "America/Chicago (GMT-6/GMT-5 - Central: Chicago, Houston)",
+  "America/Denver (GMT-7/GMT-6 - Montaña: Denver, Phoenix)",
+  "America/Los_Angeles (GMT-8/GMT-7 - Pacífico: Los Ángeles, San Francisco)",
+  "America/Anchorage (GMT-9/GMT-8 - Alaska)",
+  "Pacific/Honolulu (GMT-10 - Hawái)",
+  "America/Toronto (GMT-5/GMT-4 - Canadá Este)",
+  "America/Vancouver (GMT-8/GMT-7 - Canadá Pacífico)",
+
+  // Europa
+  "Europe/Madrid (GMT+1/GMT+2 - España)",
+  "Atlantic/Canary (GMT+0/GMT+1 - Islas Canarias)",
+  "Europe/London (GMT+0/GMT+1 - Reino Unido)",
+  "Europe/Paris (GMT+1/GMT+2 - Europa Central)",
+
+  // Universal
+  "UTC (GMT+0)",
+];
+
 interface Step3SessionsProps {
   sessionsChoice: "yes" | "no" | null;
   setSessionsChoice: (val: "yes" | "no" | null) => void;
@@ -34,6 +83,8 @@ interface Step3SessionsProps {
   setStartTime: (val: string) => void;
   endTime: string;
   setEndTime: (val: string) => void;
+  timeZone: string;
+  setTimeZone: (val: string) => void;
   errorField: string | null;
   setErrorField: (val: string | null) => void;
   onNext: () => void;
@@ -50,6 +101,8 @@ export function Step3Sessions({
   setStartTime,
   endTime,
   setEndTime,
+  timeZone,
+  setTimeZone,
   errorField,
   setErrorField,
   onNext,
@@ -58,6 +111,22 @@ export function Step3Sessions({
   const sessionsContainerRef = useRef<HTMLDivElement>(null);
   const daysContainerRef = useRef<HTMLDivElement>(null);
   const timeContainerRef = useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (!timeZone) {
+      try {
+        const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        if (detected) {
+          const match = TIMEZONE_OPTIONS.find((t) => t.toLowerCase().includes(detected.toLowerCase()));
+          setTimeZone(match || `${detected} (Detectado)`);
+        } else {
+          setTimeZone("America/Argentina/Buenos_Aires (GMT-3)");
+        }
+      } catch {
+        setTimeZone("America/Argentina/Buenos_Aires (GMT-3)");
+      }
+    }
+  }, [timeZone, setTimeZone]);
 
   const toggleDay = (day: string) => {
     if (errorField === "days") setErrorField(null);
@@ -228,6 +297,19 @@ export function Step3Sessions({
                       Selecciona el horario desde y hasta
                     </p>
                   )}
+                </div>
+
+                {/* Timezone dropdown */}
+                <div className="flex flex-col gap-1.5 mt-2">
+                  <label className="text-label ml-1 font-jakarta font-bold text-slate-800">
+                    Zona horaria
+                  </label>
+                  <SelectInput
+                    value={timeZone}
+                    options={TIMEZONE_OPTIONS}
+                    placeholder="Seleccionar zona horaria"
+                    onSelect={(val) => setTimeZone(val)}
+                  />
                 </div>
               </div>
             )}

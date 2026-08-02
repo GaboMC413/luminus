@@ -177,6 +177,7 @@ export function SpecialistsTab({
           {
             name: acceptedPostulation.clinicData.clinicName || "Consultorio principal",
             spaceType: acceptedPostulation.clinicData.spaceType || null,
+            categoryArea: acceptedPostulation.clinicData.categoryArea || null,
             address: acceptedPostulation.clinicData.clinicAddress || null,
             city: acceptedPostulation.clinicData.clinicCity || null,
             country: acceptedPostulation.clinicData.clinicCountry || null,
@@ -673,13 +674,21 @@ export function SpecialistsTab({
                           <div key={idx} className="bg-slate-50/50 rounded-xl p-3 border border-slate-100">
                             <div className="flex justify-between items-start mb-2">
                               <span className="font-bold text-xs text-slate-700">{space.name || `Espacio ${idx + 1}`}</span>
-                              {space.spaceType && (
-                                <span className="px-2 py-0.5 bg-slate-200 text-slate-700 text-[10px] uppercase font-bold rounded-md">
-                                  {space.spaceType}
-                                </span>
-                              )}
+                              <div className="flex gap-1.5 items-center flex-wrap">
+                                {space.categoryArea && (
+                                  <span className="px-2 py-0.5 bg-amber-100/80 text-amber-800 text-[10px] font-semibold rounded-md">
+                                    {space.categoryArea}
+                                  </span>
+                                )}
+                                {space.spaceType && (
+                                  <span className="px-2 py-0.5 bg-slate-200 text-slate-700 text-[10px] uppercase font-bold rounded-md">
+                                    {space.spaceType}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                             <div className="text-xs text-slate-500 space-y-1">
+                              {space.description && <p className="text-slate-600 italic">"{space.description}"</p>}
                               {space.address && <p>📍 {space.address} ({space.city || ""}, {space.country || ""})</p>}
                               {space.phone && <p>📞 {space.phone}</p>}
                               {space.website && <p>🔗 <a href={space.website} target="_blank" rel="noreferrer" className="underline hover:text-black">{space.website}</a></p>}
@@ -1173,11 +1182,18 @@ export function SpecialistsTab({
                         <h4 className="font-bold text-sm text-slate-800">
                           {selectedPostulation.clinicData.clinicName || <span className="text-slate-400 italic">No provisto</span>}
                         </h4>
-                        {selectedPostulation.clinicData.spaceType && (
-                          <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] uppercase font-bold rounded-md border border-slate-200/50">
-                            {selectedPostulation.clinicData.spaceType}
-                          </span>
-                        )}
+                        <div className="flex gap-1.5 items-center flex-wrap">
+                          {selectedPostulation.clinicData.categoryArea && (
+                            <span className="px-2 py-0.5 bg-amber-100/80 text-amber-800 text-[10px] font-semibold rounded-md">
+                              {selectedPostulation.clinicData.categoryArea}
+                            </span>
+                          )}
+                          {selectedPostulation.clinicData.spaceType && (
+                            <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] uppercase font-bold rounded-md border border-slate-200/50">
+                              {selectedPostulation.clinicData.spaceType}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       <div className="text-xs text-slate-600 space-y-1.5">
@@ -1218,7 +1234,11 @@ export function SpecialistsTab({
                         <div className="pt-2 mt-1 border-t border-slate-100">
                           <span className="block font-bold text-[10px] uppercase text-slate-400 mb-0.5 font-jakarta">Descripción</span>
                           <p className="text-slate-700 leading-relaxed font-medium">
-                            {selectedPostulation.clinicData.description ? selectedPostulation.clinicData.description : <span className="text-slate-400 italic font-jakarta">No provisto</span>}
+                            {selectedPostulation.clinicData.clinicDescription || selectedPostulation.clinicData.description ? (
+                              selectedPostulation.clinicData.clinicDescription || selectedPostulation.clinicData.description
+                            ) : (
+                              <span className="text-slate-400 italic font-jakarta">No provisto</span>
+                            )}
                           </p>
                         </div>
                       </div>

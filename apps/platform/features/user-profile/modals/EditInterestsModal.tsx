@@ -16,11 +16,21 @@ interface EditInterestsModalProps {
 export function EditInterestsModal({ isOpen, onClose, onSave, initialInterests, initialOtherInterests }: EditInterestsModalProps) {
   const [selected, setSelected] = useState<string[]>(initialInterests);
   const [other, setOther] = useState(initialOtherInterests);
+  const [categories, setCategories] = useState<any[]>(INTEREST_CATEGORIES);
 
   useEffect(() => {
     if (isOpen) {
       setSelected(initialInterests);
       setOther(initialOtherInterests);
+
+      fetch("/api/categories")
+        .then((res) => res.json())
+        .then((data) => {
+          if (data?.categories && Array.isArray(data.categories) && data.categories.length > 0) {
+            setCategories(data.categories);
+          }
+        })
+        .catch(() => {});
     }
   }, [isOpen, initialInterests, initialOtherInterests]);
 
@@ -56,11 +66,11 @@ export function EditInterestsModal({ isOpen, onClose, onSave, initialInterests, 
       }
     >
       <div className="flex flex-col gap-5 md:gap-8">
-        {INTEREST_CATEGORIES.map((category) => (
-          <div key={category.title} className="flex flex-col gap-2.5 md:gap-4">
+        {categories.map((category) => (
+          <div key={category.title || category.name} className="flex flex-col gap-2.5 md:gap-4">
             <h3 className="flex items-center gap-1.5 md:gap-2 text-[13px] md:text-[15px] font-bold" style={{ color: category.color }}>
               <span className="material-symbols-outlined text-[18px] md:text-[20px]" style={(category as any).iconFilled ? { fontVariationSettings: "'FILL' 1" } : undefined}>{category.icon}</span>
-              {category.title}
+              {category.title || category.name}
             </h3>
             <div className="flex flex-wrap gap-2">
               {category.items.map((item) => {

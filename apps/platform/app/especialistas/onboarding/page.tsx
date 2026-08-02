@@ -6,7 +6,7 @@ import { OnboardingSidebar } from "@/features/especialistas/onboarding/component
 import { Step1Intro } from "@/features/especialistas/onboarding/components/Step1Intro";
 import { Step2Profile } from "@/features/especialistas/onboarding/components/Step2Profile";
 import { Step3Sessions } from "@/features/especialistas/onboarding/components/Step3Sessions";
-import { Step4Clinics } from "@/features/especialistas/onboarding/components/Step4Clinics";
+import { Step4Clinics, SPACE_TYPE_OPTIONS } from "@/features/especialistas/onboarding/components/Step4Clinics";
 import { Step5Courses } from "@/features/especialistas/onboarding/components/Step5Courses";
 import { OnboardingSuccessModal } from "@/features/especialistas/onboarding/components/OnboardingSuccessModal";
 import { ApplicationStatusView } from "@/features/especialistas/onboarding/components/ApplicationStatusView";
@@ -17,8 +17,9 @@ const specialtyOptions = [
   "Crecimiento personal",
   "Bienestar emocional",
   "Salud integral",
-  "Cuerpo y movimiento",
-  "Mente y espiritualidad",
+  "Movimiento físico",
+  "Nutrición",
+  "Espiritualidad",
   "Vínculos",
   "Terapias complementarias",
 ];
@@ -85,12 +86,15 @@ export default function SpecialistOnboardingPage() {
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const [timeZone, setTimeZone] = useState("");
 
   // Step 4 State
   const [clinicChoice, setClinicChoice] = useState<"yes" | "no" | null>(null);
   const [clinicEnabled, setClinicEnabled] = useState(false);
   const [spaceType, setSpaceType] = useState("");
+  const [customSpaceType, setCustomSpaceType] = useState("");
   const [clinicName, setClinicName] = useState("");
+  const [clinicDescription, setClinicDescription] = useState("");
   const [clinicAddress, setClinicAddress] = useState("");
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
@@ -146,8 +150,10 @@ export default function SpecialistOnboardingPage() {
         institution: institution || null,
         selectedAreas: selectedAreas || [],
         clinicData: clinicChoice === "yes" ? {
-          spaceType: spaceType || null,
+          spaceType: spaceType === "Otro tipo de espacio" ? (customSpaceType.trim() || "Otro tipo de espacio") : (spaceType || null),
+          categoryArea: spaceType === "Otro tipo de espacio" ? "Otro" : (SPACE_TYPE_OPTIONS.find((o) => o.value === spaceType)?.categoryArea || null),
           clinicName: clinicName || null,
+          clinicDescription: clinicDescription || null,
           clinicAddress: clinicAddress || null,
           clinicCity: city || null,
           clinicCountry: country || null,
@@ -164,6 +170,7 @@ export default function SpecialistOnboardingPage() {
           selectedDays: selectedDays || [],
           startTime: startTime || null,
           endTime: endTime || null,
+          timeZone: timeZone || null,
         } : null,
         resumeUrl: uploadedResumeUrl,
         linkedinUrl: linkedinObj?.url || null,
@@ -283,6 +290,8 @@ export default function SpecialistOnboardingPage() {
                     setStartTime={setStartTime}
                     endTime={endTime}
                     setEndTime={setEndTime}
+                    timeZone={timeZone}
+                    setTimeZone={setTimeZone}
                     errorField={errorField}
                     setErrorField={setErrorField}
                     onNext={() => goToStep(4)}
@@ -297,8 +306,12 @@ export default function SpecialistOnboardingPage() {
                     setClinicEnabled={setClinicEnabled}
                     spaceType={spaceType}
                     setSpaceType={setSpaceType}
+                    customSpaceType={customSpaceType}
+                    setCustomSpaceType={setCustomSpaceType}
                     clinicName={clinicName}
                     setClinicName={setClinicName}
+                    clinicDescription={clinicDescription}
+                    setClinicDescription={setClinicDescription}
                     clinicAddress={clinicAddress}
                     setClinicAddress={setClinicAddress}
                     city={city}
