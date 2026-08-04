@@ -292,7 +292,7 @@ export function Step2Profile({
       <div className="flex flex-col gap-1">
         <h1 className="text-title-display font-jakarta">Perfil profesional</h1>
         <p className="text-body-secondary">
-          Comparte información sobre tu especialidad, experiencia y forma de trabajo.
+          Completa la información que aparecerá en tu perfil.
         </p>
       </div>
 
@@ -324,7 +324,7 @@ export function Step2Profile({
           <div ref={areasContainerRef} className="flex flex-col gap-3 mt-2 animate-in fade-in duration-200">
             <label className="text-label ml-1">Áreas de acompañamiento *</label>
             <p className="text-body-secondary text-[13px] ml-1 -mt-1">
-              Selecciona las áreas en las que brindas acompañamiento. Puedes elegir varias opciones o agregar una nueva.
+              Selecciona las áreas en las que trabajas.
             </p>
 
             <div className="flex flex-wrap gap-2 pt-1">
@@ -456,7 +456,7 @@ export function Step2Profile({
               setBio(e.target.value);
               if (errorField === "bio") setErrorField(null);
             }}
-            placeholder="Resume tu trayectoria, tu enfoque profesional y la forma en que desarrollas tu práctica."
+            placeholder="Cuéntanos brevemente sobre tu experiencia y forma de trabajo."
             rows={5}
             className={`reg-input-bordered !h-auto p-4 resize-none ${
               errorField === "bio" ? "!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]" : ""
@@ -547,7 +547,7 @@ export function Step2Profile({
             </span>
           </div>
           <p className="text-body-secondary text-[13px] ml-1 -mt-1">
-            Puedes adjuntar tu currículum para ampliar la información de tu perfil.
+            Puedes adjuntar tu currículum para completar tu perfil.
           </p>
           <div className="flex flex-col gap-2.5 mt-1 w-full">
             <input
@@ -564,7 +564,7 @@ export function Step2Profile({
               type="button"
               variant="secondary"
               onClick={() => resumeInputRef.current?.click()}
-              className="!w-full border-dashed border-slate-200 hover:border-slate-300 py-3.5"
+              className="!w-auto self-start mt-1"
             >
               <span className="material-symbols-rounded text-[18px] mr-2">upload_file</span>
               {resumeFile ? resumeFile.name : "Subir currículum"}
@@ -592,7 +592,7 @@ export function Step2Profile({
           Atrás
         </Button>
         <Button onClick={handleNextStep2} variant="primary" className="!w-auto px-6 gap-2">
-          Siguiente
+          Continuar
           <span className="material-symbols-rounded text-[18px]">arrow_forward</span>
         </Button>
       </div>

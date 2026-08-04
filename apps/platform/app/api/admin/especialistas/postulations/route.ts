@@ -78,12 +78,14 @@ export async function PATCH(request: Request) {
           where: { userId: postulation.userId },
         });
 
-        const categoryArea = cData.categoryArea || null;
+        const rawCategories: string[] = Array.isArray(cData.spaceCategories) ? cData.spaceCategories : (cData.categoryArea ? [cData.categoryArea] : []);
+        const primaryCategoryName = rawCategories[0] || cData.categoryArea || null;
         let categoryId: string | null = null;
-        if (categoryArea) {
+
+        if (primaryCategoryName) {
           const categoryRecord = await prisma.interestCategory.findFirst({
             where: {
-              name: { equals: categoryArea, mode: "insensitive" },
+              name: { equals: primaryCategoryName, mode: "insensitive" },
             },
           });
           if (categoryRecord) {
@@ -94,7 +96,8 @@ export async function PATCH(request: Request) {
         const spacePayload = {
           userId: postulation.userId,
           spaceType: cData.spaceType || null,
-          categoryArea,
+          customSpaceType: cData.customSpaceType || null,
+          categoryArea: primaryCategoryName,
           categoryId,
           name: cData.clinicName || "Consultorio principal",
           description: cData.clinicDescription || null,
@@ -123,6 +126,65 @@ export async function PATCH(request: Request) {
             data: spacePayload,
           });
           spaceId = createdSpace.id;
+        }
+
+        // Handle multi-categories (SpecialistSpaceCategory)
+        await prisma.specialistSpaceCategory.deleteMany({
+          where: { spaceId },
+        });
+
+        if (rawCategories.length > 0) {
+          const matchingDbCategories = await prisma.interestCategory.findMany({
+            where: {
+              name: { in: rawCategories, mode: "insensitive" },
+            },
+          });
+
+          if (matchingDbCategories.length > 0) {
+            await prisma.specialistSpaceCategory.createMany({
+              data: matchingDbCategories.map((c) => ({
+                spaceId,
+                categoryId: c.id,
+              })),
+              skipDuplicates: true,
+            });
+          }
+        }
+
+        // Handle services and activities (SpecialistSpaceService)
+        await prisma.specialistSpaceService.deleteMany({
+          where: { spaceId },
+        });
+
+        const rawServices: Array<{ name: string; categoryName: string; isCustom?: boolean }> = Array.isArray(cData.spaceServices)
+          ? cData.spaceServices
+          : [];
+
+        if (rawServices.length > 0) {
+          const allDbCategories = await prisma.interestCategory.findMany();
+          const categoryMap = new Map<string, string>();
+          allDbCategories.forEach((cat) => {
+            categoryMap.set(cat.name.toLowerCase(), cat.id);
+          });
+
+          const servicesToInsert = rawServices
+            .map((svc) => {
+              const matchedId = categoryMap.get((svc.categoryName || "").toLowerCase()) || categoryId;
+              if (!matchedId || !svc.name) return null;
+              return {
+                spaceId,
+                categoryId: matchedId,
+                name: svc.name,
+                isCustom: !!svc.isCustom,
+              };
+            })
+            .filter(Boolean) as Array<{ spaceId: string; categoryId: string; name: string; isCustom: boolean }>;
+
+          if (servicesToInsert.length > 0) {
+            await prisma.specialistSpaceService.createMany({
+              data: servicesToInsert,
+            });
+          }
         }
 
         // Handle availability (SpecialistAvailability)

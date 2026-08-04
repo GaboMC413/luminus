@@ -223,20 +223,14 @@ export function Step5Courses({
           Cursos y talleres
         </h1>
         <p className="text-[13px] md:text-[14px] text-slate-500 font-sans">
-          Comparte tus propuestas formativas con la comunidad.
-        </p>
-      </div>
-
-      <div className="flex flex-col gap-4 text-[14px] text-slate-600 leading-relaxed font-sans mt-1">
-        <p>
-          Puedes agregar cursos grabados, talleres presenciales o capacitaciones publicadas en otras plataformas. Los usuarios podrán conocerlas desde tu perfil y acceder mediante el enlace que indiques.
+          Comparte cursos, talleres o capacitaciones desde tu perfil.
         </p>
       </div>
 
       {/* Initial Decision Options */}
       <div ref={coursesContainerRef} className="flex flex-col gap-3 mt-1">
         <label className="text-label ml-1 font-jakarta font-bold text-slate-900">
-          ¿Deseas agregar cursos o talleres?
+          ¿Deseas agregar un curso o taller?
         </label>
         {errorField === "coursesChoice" && (
           <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">
@@ -260,10 +254,10 @@ export function Step5Courses({
           >
             <div className="flex flex-col gap-0.5">
               <span className="text-[14px] font-bold text-slate-900 font-jakarta">
-                Sí, quiero agregar uno
+                Sí, agregar uno
               </span>
               <span className="text-[13px] text-slate-500 font-sans leading-normal">
-                Comparte un curso, taller o capacitación vinculada a tu actividad profesional.
+                Comparte una propuesta vinculada a tu actividad profesional.
               </span>
             </div>
 
@@ -276,7 +270,7 @@ export function Step5Courses({
                 {/* Importer Section */}
                 <div className="flex flex-col gap-2">
                   <label className="text-label ml-1 font-jakarta font-bold text-slate-900">
-                    Enlace al curso
+                    Enlace
                   </label>
 
                   <div className="flex gap-2 items-center">
@@ -293,7 +287,7 @@ export function Step5Courses({
                           handleFetchCourseMetadata();
                         }
                       }}
-                      placeholder="Pega aquí el enlace a donde está publicado"
+                      placeholder="Pega el enlace donde está publicado."
                       className="!bg-white"
                     />
                     <Button
@@ -465,10 +459,10 @@ export function Step5Courses({
           >
             <div className="flex flex-col gap-0.5">
               <span className="text-[14px] font-bold text-slate-900 font-jakarta">
-                No por el momento
+                Agregar más adelante
               </span>
               <span className="text-[13px] text-slate-500 font-sans leading-normal">
-                Podrás agregar cursos y talleres más adelante desde tu perfil.
+                Podrás agregar cursos y talleres desde tu perfil.
               </span>
             </div>
           </div>
@@ -496,7 +490,7 @@ export function Step5Courses({
 
         {/* Supporting text near CTA */}
         <p className="text-[12px] text-slate-400 text-right font-medium">
-          Revisaremos la información antes de aprobar tu incorporación a la red.
+          Revisaremos tu información antes de aprobar tu incorporación.
         </p>
       </div>
     </div>

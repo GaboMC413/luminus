@@ -6,7 +6,7 @@ import { OnboardingSidebar } from "@/features/especialistas/onboarding/component
 import { Step1Intro } from "@/features/especialistas/onboarding/components/Step1Intro";
 import { Step2Profile } from "@/features/especialistas/onboarding/components/Step2Profile";
 import { Step3Sessions } from "@/features/especialistas/onboarding/components/Step3Sessions";
-import { Step4Clinics, SPACE_TYPE_OPTIONS } from "@/features/especialistas/onboarding/components/Step4Clinics";
+import { Step4Spaces, SPACE_TYPE_OPTIONS } from "@/features/especialistas/onboarding/components/Step4Spaces";
 import { Step5Courses } from "@/features/especialistas/onboarding/components/Step5Courses";
 import { OnboardingSuccessModal } from "@/features/especialistas/onboarding/components/OnboardingSuccessModal";
 import { ApplicationStatusView } from "@/features/especialistas/onboarding/components/ApplicationStatusView";
@@ -93,6 +93,8 @@ export default function SpecialistOnboardingPage() {
   const [clinicEnabled, setClinicEnabled] = useState(false);
   const [spaceType, setSpaceType] = useState("");
   const [customSpaceType, setCustomSpaceType] = useState("");
+  const [spaceCategories, setSpaceCategories] = useState<string[]>([]);
+  const [spaceServices, setSpaceServices] = useState<any[]>([]);
   const [clinicName, setClinicName] = useState("");
   const [clinicDescription, setClinicDescription] = useState("");
   const [clinicAddress, setClinicAddress] = useState("");
@@ -150,8 +152,10 @@ export default function SpecialistOnboardingPage() {
         institution: institution || null,
         selectedAreas: selectedAreas || [],
         clinicData: clinicChoice === "yes" ? {
-          spaceType: spaceType === "Otro tipo de espacio" ? (customSpaceType.trim() || "Otro tipo de espacio") : (spaceType || null),
-          categoryArea: spaceType === "Otro tipo de espacio" ? "Otro" : (SPACE_TYPE_OPTIONS.find((o) => o.value === spaceType)?.categoryArea || null),
+          spaceType: spaceType === "Otro" ? (customSpaceType.trim() || "Otro") : (spaceType || null),
+          customSpaceType: spaceType === "Otro" ? customSpaceType.trim() : null,
+          spaceCategories: spaceCategories || [],
+          spaceServices: spaceServices || [],
           clinicName: clinicName || null,
           clinicDescription: clinicDescription || null,
           clinicAddress: clinicAddress || null,
@@ -300,7 +304,7 @@ export default function SpecialistOnboardingPage() {
                 )}
 
                 {step === 4 && (
-                  <Step4Clinics
+                  <Step4Spaces
                     clinicChoice={clinicChoice}
                     setClinicChoice={setClinicChoice}
                     setClinicEnabled={setClinicEnabled}
@@ -308,6 +312,10 @@ export default function SpecialistOnboardingPage() {
                     setSpaceType={setSpaceType}
                     customSpaceType={customSpaceType}
                     setCustomSpaceType={setCustomSpaceType}
+                    spaceCategories={spaceCategories}
+                    setSpaceCategories={setSpaceCategories}
+                    spaceServices={spaceServices}
+                    setSpaceServices={setSpaceServices}
                     clinicName={clinicName}
                     setClinicName={setClinicName}
                     clinicDescription={clinicDescription}

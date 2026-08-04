@@ -162,6 +162,8 @@ model InterestCategory {
   specialistAreas     SpecialistArea[]
   categorySuggestions CategorySuggestion[]
   specialistSpaces    SpecialistSpace[]
+  spaceCategories     SpecialistSpaceCategory[]
+  spaceServices       SpecialistSpaceService[]
 
   @@map("interest_categories")
 }
@@ -463,33 +465,65 @@ model SpecialistCourse {
 model SpecialistSpace {
   id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   userId        String            @map("user_id") @db.Uuid
-  spaceType     String?           @map("space_type") @db.VarChar
-  categoryArea  String?           @map("category_area") @db.VarChar
-  categoryId    String?           @map("category_id") @db.Uuid
-  name          String            @db.VarChar
-  description   String?           @db.Text
-  address       String?           @db.VarChar
-  city          String?           @db.VarChar
-  country       String?           @db.VarChar
-  lat           Decimal?          @db.Decimal(9, 6)
-  lng           Decimal?          @db.Decimal(9, 6)
-  googlePlaceId String?           @map("google_place_id") @db.VarChar
-  googleMapsUrl String?           @map("google_maps_url") @db.VarChar
-  phone         String?           @db.VarChar
-  website       String?           @db.VarChar
-  coverUrl      String?           @map("cover_url") @db.VarChar
-  isActive      Boolean           @default(true) @map("is_active")
-  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt     DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  spaceType       String?                   @map("space_type") @db.VarChar
+  customSpaceType String?                   @map("custom_space_type") @db.VarChar
+  categoryArea    String?                   @map("category_area") @db.VarChar
+  categoryId      String?                   @map("category_id") @db.Uuid
+  name            String                    @db.VarChar
+  description     String?                   @db.Text
+  address         String?                   @db.VarChar
+  city            String?                   @db.VarChar
+  country         String?                   @db.VarChar
+  lat             Decimal?                  @db.Decimal(9, 6)
+  lng             Decimal?                  @db.Decimal(9, 6)
+  googlePlaceId   String?                   @map("google_place_id") @db.VarChar
+  googleMapsUrl   String?                   @map("google_maps_url") @db.VarChar
+  phone           String?                   @db.VarChar
+  website         String?                   @db.VarChar
+  coverUrl        String?                   @map("cover_url") @db.VarChar
+  isActive        Boolean                   @default(true) @map("is_active")
+  createdAt       DateTime                  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime                  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  specialist   SpecialistProfile        @relation(fields: [userId], references: [userId], onDelete: Cascade)
-  category     InterestCategory?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  availability SpecialistAvailability[]
+  specialist      SpecialistProfile         @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  category        InterestCategory?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  availability    SpecialistAvailability[]
+  spaceCategories SpecialistSpaceCategory[]
+  services        SpecialistSpaceService[]
 
   @@index([userId])
   @@index([categoryId])
   @@index([city])
   @@map("specialist_spaces")
+}
+
+model SpecialistSpaceCategory {
+  spaceId    String           @map("space_id") @db.Uuid
+  categoryId String           @map("category_id") @db.Uuid
+  createdAt  DateTime         @default(now()) @map("created_at") @db.Timestamptz
+
+  space    SpecialistSpace  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  category InterestCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([spaceId, categoryId])
+  @@index([categoryId])
+  @@map("specialist_space_categories")
+}
+
+model SpecialistSpaceService {
+  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  spaceId    String           @map("space_id") @db.Uuid
+  categoryId String           @map("category_id") @db.Uuid
+  name       String           @db.VarChar
+  isCustom   Boolean          @default(false) @map("is_custom")
+  createdAt  DateTime         @default(now()) @map("created_at") @db.Timestamptz
+
+  space    SpecialistSpace  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  category InterestCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId])
+  @@index([categoryId])
+  @@map("specialist_space_services")
 }
 
 model SpecialistAvailability {

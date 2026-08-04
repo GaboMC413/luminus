@@ -30,13 +30,13 @@ export function EditInterestsModal({ isOpen, onClose, onSave, initialInterests, 
             setCategories(data.categories);
           }
         })
-        .catch(() => {});
+        .catch(() => { });
     }
   }, [isOpen, initialInterests, initialOtherInterests]);
 
   const toggleInterest = (interest: string) => {
-    setSelected(prev => 
-      prev.includes(interest) 
+    setSelected(prev =>
+      prev.includes(interest)
         ? prev.filter(i => i !== interest)
         : [...prev, interest]
     );
@@ -53,11 +53,11 @@ export function EditInterestsModal({ isOpen, onClose, onSave, initialInterests, 
           <Button variant="secondary" onClick={onClose} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !rounded-[10px] md:!rounded-[12px]">
             Cancelar
           </Button>
-          <Button 
+          <Button
             onClick={() => {
               onSave(selected, other);
               onClose();
-            }} 
+            }}
             className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !bg-black !text-white hover:!bg-slate-800 !rounded-[10px] md:!rounded-[12px]"
           >
             Guardar cambios
@@ -73,18 +73,17 @@ export function EditInterestsModal({ isOpen, onClose, onSave, initialInterests, 
               {category.title || category.name}
             </h3>
             <div className="flex flex-wrap gap-2">
-              {category.items.map((item) => {
+              {category.items.map((item: string) => {
                 const isSelected = selected.includes(item);
                 return (
                   <button
                     key={item}
                     type="button"
                     onClick={() => toggleInterest(item)}
-                    className={`h-8 md:h-9 px-3.5 md:px-4 rounded-full text-[12px] md:text-[13px] font-medium transition-all duration-200 border cursor-pointer ${
-                      isSelected
+                    className={`h-8 md:h-9 px-3.5 md:px-4 rounded-full text-[12px] md:text-[13px] font-medium transition-all duration-200 border cursor-pointer ${isSelected
                         ? 'bg-slate-900 border-slate-900 text-white'
                         : 'bg-white border-slate-200 text-slate-900 hover:border-slate-300'
-                    }`}
+                      }`}
                   >
                     {item}
                   </button>
