@@ -19,6 +19,12 @@ export interface PlaceDetails {
   mainText: string;
 }
 
+export interface SpaceServiceItem {
+  name: string;
+  categoryName: string;
+  isCustom?: boolean;
+}
+
 export interface OnboardingPayload {
   specialty: string;
   title: string;
@@ -40,3 +46,4 @@ export interface OnboardingPayload {
   websiteUrl: string | null;
   courses: CourseItem[];
 }
+

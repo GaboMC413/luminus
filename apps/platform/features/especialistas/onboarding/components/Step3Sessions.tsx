@@ -172,20 +172,16 @@ export function Step3Sessions({
           Sesiones introductorias
         </h1>
         <p className="text-[13px] md:text-[14px] text-slate-500 font-sans">
-          Ofrece encuentros breves para que nuevos usuarios conozcan tu enfoque profesional.
+          Ofrece encuentros de 15 minutos para que nuevos usuarios conozcan tu trabajo.
         </p>
       </div>
 
-      <div className="flex flex-col gap-4 text-[14px] text-slate-600 leading-relaxed font-sans mt-1">
-        <p>
-          Las sesiones tienen una duración de 15 minutos. Podrás revisar cada solicitud y decidir si deseas aceptarla antes de incorporarla a tu agenda.
-        </p>
-      </div>
+
 
       {/* Question & 2 Options */}
       <div ref={sessionsContainerRef} className="flex flex-col gap-3 mt-1">
         <label className="text-label ml-1 font-jakarta font-bold text-slate-900">
-          ¿Deseas ofrecer sesiones de primer contacto?
+          ¿Deseas ofrecer sesiones introductorias?
         </label>
         {errorField === "sessionsChoice" && (
           <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">Selecciona una opción para continuar</p>
@@ -207,10 +203,10 @@ export function Step3Sessions({
           >
             <div className="flex flex-col gap-0.5">
               <span className="text-[14px] font-bold text-slate-900 font-jakarta">
-                Sí, quiero ofrecer sesiones
+                Sí, ofrecer sesiones
               </span>
               <span className="text-[13px] text-slate-500 font-sans leading-normal">
-                Los usuarios podrán solicitarte encuentros introductorios de 15 minutos.
+                Los usuarios podrán solicitarte encuentros de 15 minutos.
               </span>
             </div>
 
@@ -222,7 +218,7 @@ export function Step3Sessions({
               >
                 <div className="flex flex-col gap-0.5">
                   <h3 className="text-[14px] font-bold text-slate-900 font-jakarta">
-                    Disponibilidad para sesiones
+                    Disponibilidad
                   </h3>
                   <p className="text-slate-500 text-[13px]">
                     Selecciona los días y horarios en los que puedes recibir solicitudes.
@@ -331,10 +327,10 @@ export function Step3Sessions({
           >
             <div className="flex flex-col gap-0.5">
               <span className="text-[14px] font-bold text-slate-900 font-jakarta">
-                No por el momento
+                Configurar más adelante
               </span>
               <span className="text-[13px] text-slate-500 font-sans leading-normal">
-                Podrás habilitar las sesiones de primer contacto en cualquier momento desde tu perfil.
+                Podrás habilitar las sesiones desde tu perfil.
               </span>
             </div>
           </div>

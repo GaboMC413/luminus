@@ -35,3 +35,137 @@ export const INTEREST_CATEGORIES = [
   { icon: 'spa', iconFilled: true, title: 'Terapias Complementarias', color: '#14B8A6', bgColor: '#CCFBF1', items: ['Acupuntura', 'Ayurveda', 'Reiki', 'Masajes', 'Aromaterapia', 'Reflexología', 'Sonoterapia', 'Terapia floral'] },
   { icon: 'star', iconFilled: true, title: 'Otro', color: '#64748B', bgColor: '#F1F5F9', items: ['Otro'] }
 ];
+
+export const SPACE_TYPE_OPTIONS_CONFIG = [
+  {
+    value: "Consultorio",
+    label: "Consultorio",
+    subtitle: "Espacio destinado principalmente a consultas y sesiones individuales."
+  },
+  {
+    value: "Clínica",
+    label: "Clínica",
+    subtitle: "Espacio orientado a evaluaciones, tratamientos y atención profesional de la salud."
+  },
+  {
+    value: "Centro",
+    label: "Centro",
+    subtitle: "Espacio que reúne diferentes servicios, actividades o profesionales."
+  },
+  {
+    value: "Estudio",
+    label: "Estudio",
+    subtitle: "Espacio preparado para clases y actividades físicas, corporales o artísticas."
+  },
+  {
+    value: "Espacio educativo",
+    label: "Espacio educativo",
+    subtitle: "Espacio dedicado a talleres, encuentros, formación y actividades de aprendizaje."
+  },
+  {
+    value: "Otro",
+    label: "Otro",
+    subtitle: "Selecciona esta opción cuando ninguna de las anteriores describa el espacio."
+  }
+];
+
+export const LUMINUS_CATEGORY_SUBTITLES: Record<string, string> = {
+  "Crecimiento personal": "Coaching, mentoría, liderazgo, orientación y desarrollo personal o profesional.",
+  "Crecimiento Personal": "Coaching, mentoría, liderazgo, orientación y desarrollo personal o profesional.",
+  "Bienestar emocional": "Psicología, psicoterapia, acompañamiento emocional y actividades terapéuticas.",
+  "Bienestar Emocional": "Psicología, psicoterapia, acompañamiento emocional y actividades terapéuticas.",
+  "Salud integral": "Atención médica, prevención, rehabilitación y cuidado general de la salud.",
+  "Salud Integral": "Atención médica, prevención, rehabilitación y cuidado general de la salud.",
+  "Movimiento físico": "Entrenamiento, yoga, pilates, danza, movilidad y prácticas corporales.",
+  "Movimiento Físico": "Entrenamiento, yoga, pilates, danza, movilidad y prácticas corporales.",
+  "Nutrición": "Atención nutricional, educación alimentaria y acompañamiento en hábitos de alimentación.",
+  "Espiritualidad": "Meditación, mindfulness, respiración y prácticas de desarrollo espiritual.",
+  "Vínculos": "Pareja, familia, crianza, sexualidad y relaciones interpersonales.",
+  "Terapias complementarias": "Masajes, acupuntura, reiki y otras prácticas complementarias de bienestar.",
+  "Terapias Complementarias": "Masajes, acupuntura, reiki y otras prácticas complementarias de bienestar."
+};
+
+export const SPACE_SERVICES_BY_CATEGORY: Record<string, string[]> = {
+  "Crecimiento personal": [
+    "Sesiones de coaching",
+    "Mentoría individual",
+    "Talleres de desarrollo personal",
+    "Liderazgo y orientación"
+  ],
+  "Crecimiento Personal": [
+    "Sesiones de coaching",
+    "Mentoría individual",
+    "Talleres de desarrollo personal",
+    "Liderazgo y orientación"
+  ],
+  "Bienestar emocional": [
+    "Consultas psicológicas",
+    "Sesiones de coaching",
+    "Acompañamiento emocional",
+    "Grupos de apoyo emocional"
+  ],
+  "Bienestar Emocional": [
+    "Consultas psicológicas",
+    "Sesiones de coaching",
+    "Acompañamiento emocional",
+    "Grupos de apoyo emocional"
+  ],
+  "Salud integral": [
+    "Consultas médicas",
+    "Fisioterapia",
+    "Evaluaciones de salud",
+    "Tratamientos de rehabilitación"
+  ],
+  "Salud Integral": [
+    "Consultas médicas",
+    "Fisioterapia",
+    "Evaluaciones de salud",
+    "Tratamientos de rehabilitación"
+  ],
+  "Movimiento físico": [
+    "Entrenamiento personalizado",
+    "Clases grupales",
+    "Yoga",
+    "Pilates",
+    "Danza y expresión corporal"
+  ],
+  "Movimiento Físico": [
+    "Entrenamiento personalizado",
+    "Clases grupales",
+    "Yoga",
+    "Pilates",
+    "Danza y expresión corporal"
+  ],
+  "Nutrición": [
+    "Consultas nutricionales",
+    "Talleres de alimentación",
+    "Educación alimentaria"
+  ],
+  "Espiritualidad": [
+    "Meditación guiada",
+    "Sesiones de mindfulness",
+    "Prácticas de respiración",
+    "Encuentros contemplativos"
+  ],
+  "Vínculos": [
+    "Talleres para familias",
+    "Actividades para bebés y niños",
+    "Consultas para parejas",
+    "Terapia familiar"
+  ],
+  "Terapias complementarias": [
+    "Masajes terapéuticos",
+    "Acupuntura",
+    "Sesiones de reiki",
+    "Reflexología",
+    "Aromaterapia"
+  ],
+  "Terapias Complementarias": [
+    "Masajes terapéuticos",
+    "Acupuntura",
+    "Sesiones de reiki",
+    "Reflexología",
+    "Aromaterapia"
+  ]
+};
+

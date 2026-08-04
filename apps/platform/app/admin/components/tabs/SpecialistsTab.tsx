@@ -672,21 +672,48 @@ export function SpecialistsTab({
                       <div className="flex flex-col gap-3">
                         {selectedSpecialist.spaces.map((space: any, idx: number) => (
                           <div key={idx} className="bg-slate-50/50 rounded-xl p-3 border border-slate-100">
-                            <div className="flex justify-between items-start mb-2">
+                             <div className="flex justify-between items-start mb-2 flex-wrap gap-2">
                               <span className="font-bold text-xs text-slate-700">{space.name || `Espacio ${idx + 1}`}</span>
                               <div className="flex gap-1.5 items-center flex-wrap">
-                                {space.categoryArea && (
-                                  <span className="px-2 py-0.5 bg-amber-100/80 text-amber-800 text-[10px] font-semibold rounded-md">
-                                    {space.categoryArea}
-                                  </span>
-                                )}
                                 {space.spaceType && (
-                                  <span className="px-2 py-0.5 bg-slate-200 text-slate-700 text-[10px] uppercase font-bold rounded-md">
-                                    {space.spaceType}
+                                  <span className="px-2 py-0.5 bg-slate-900 text-white text-[10px] uppercase font-bold rounded-md">
+                                    {space.spaceType === "Otro" && space.customSpaceType ? `Otro: ${space.customSpaceType}` : space.spaceType}
                                   </span>
                                 )}
                               </div>
                             </div>
+
+                            {/* Categories Badges */}
+                            {((space.spaceCategories && space.spaceCategories.length > 0) || space.categoryArea) && (
+                              <div className="flex flex-wrap gap-1 mb-2">
+                                {space.spaceCategories && space.spaceCategories.length > 0 ? (
+                                  space.spaceCategories.map((sc: any, cIdx: number) => (
+                                    <span key={cIdx} className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-md">
+                                      {sc.category?.name || "Categoría"}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-md">
+                                    {space.categoryArea}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Services List */}
+                            {space.services && space.services.length > 0 && (
+                              <div className="flex flex-col gap-1 mb-2 pt-1">
+                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Servicios y Actividades</span>
+                                <div className="flex flex-wrap gap-1">
+                                  {space.services.map((svc: any, sIdx: number) => (
+                                    <span key={sIdx} className="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10.5px] font-semibold rounded-md border border-slate-200/60">
+                                      {svc.name}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
                             <div className="text-xs text-slate-500 space-y-1">
                               {space.description && <p className="text-slate-600 italic">"{space.description}"</p>}
                               {space.address && <p>📍 {space.address} ({space.city || ""}, {space.country || ""})</p>}
@@ -1183,18 +1210,46 @@ export function SpecialistsTab({
                           {selectedPostulation.clinicData.clinicName || <span className="text-slate-400 italic">No provisto</span>}
                         </h4>
                         <div className="flex gap-1.5 items-center flex-wrap">
-                          {selectedPostulation.clinicData.categoryArea && (
-                            <span className="px-2 py-0.5 bg-amber-100/80 text-amber-800 text-[10px] font-semibold rounded-md">
-                              {selectedPostulation.clinicData.categoryArea}
-                            </span>
-                          )}
                           {selectedPostulation.clinicData.spaceType && (
-                            <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] uppercase font-bold rounded-md border border-slate-200/50">
-                              {selectedPostulation.clinicData.spaceType}
+                            <span className="px-2 py-0.5 bg-slate-900 text-white text-[10px] uppercase font-bold rounded-md">
+                              {selectedPostulation.clinicData.spaceType === "Otro" && selectedPostulation.clinicData.customSpaceType
+                                ? `Otro: ${selectedPostulation.clinicData.customSpaceType}`
+                                : selectedPostulation.clinicData.spaceType}
                             </span>
                           )}
                         </div>
                       </div>
+
+                      {/* Categories Badges */}
+                      {((selectedPostulation.clinicData.spaceCategories && selectedPostulation.clinicData.spaceCategories.length > 0) || selectedPostulation.clinicData.categoryArea) && (
+                        <div className="flex flex-wrap gap-1">
+                          {selectedPostulation.clinicData.spaceCategories && selectedPostulation.clinicData.spaceCategories.length > 0 ? (
+                            selectedPostulation.clinicData.spaceCategories.map((catName: string, cIdx: number) => (
+                              <span key={cIdx} className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-md">
+                                {catName}
+                              </span>
+                            ))
+                          ) : (
+                            <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold rounded-md">
+                              {selectedPostulation.clinicData.categoryArea}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Services List */}
+                      {selectedPostulation.clinicData.spaceServices && selectedPostulation.clinicData.spaceServices.length > 0 && (
+                        <div className="flex flex-col gap-1 pt-1">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Servicios y Actividades</span>
+                          <div className="flex flex-wrap gap-1">
+                            {selectedPostulation.clinicData.spaceServices.map((svc: any, sIdx: number) => (
+                              <span key={sIdx} className="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10.5px] font-semibold rounded-md border border-slate-200/60">
+                                {typeof svc === "string" ? svc : svc.name}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       <div className="text-xs text-slate-600 space-y-1.5">
                         <p className="flex items-center gap-1.5">

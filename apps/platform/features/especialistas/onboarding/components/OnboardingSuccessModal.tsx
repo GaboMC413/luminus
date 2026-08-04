@@ -9,7 +9,7 @@ export function OnboardingSuccessModal() {
 
   return (
     <div className="flex flex-col items-center text-center gap-6 animate-in zoom-in-95 duration-300 py-4">
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <h1 className="text-[26px] md:text-[30px] font-bold text-slate-900 font-jakarta leading-tight">
           Aplicación enviada
         </h1>
@@ -20,16 +20,18 @@ export function OnboardingSuccessModal() {
 
       <div className="text-[14px] text-slate-600 leading-relaxed font-sans max-w-[480px] flex flex-col gap-4 mt-1">
         <p>
-          Recibimos correctamente tu información. Nuestro Consejo de Expertos revisará tu perfil, formación, trayectoria y enfoque profesional para evaluar tu incorporación a la red.
+          Recibimos correctamente tu información. Nuestro Consejo de Expertos revisará tu perfil, formación, experiencia y enfoque profesional para evaluar tu incorporación a la red.
+        </p>
+
+        <p>
+          Este proceso nos permite conocer mejor tu trayectoria y asegurar que los especialistas de LUMINUS mantengan los criterios profesionales de la comunidad.
         </p>
 
         <p className="text-[13px] text-slate-500 font-medium">
-          Te notificaremos por correo electrónico cuando haya novedades sobre el proceso.
+          Te enviaremos un correo electrónico cuando tu aplicación sea aprobada, rechazada o necesitemos información adicional.
         </p>
 
-        <div className="p-3.5 bg-slate-100/80 rounded-xl border border-slate-200/80 text-[12px] text-slate-500 font-medium leading-normal">
-          Mientras tu aplicación esté en revisión, no podrás enviar una nueva ni modificar la información presentada.
-        </div>
+
       </div>
 
       <div className="flex flex-col items-center gap-3 mt-4 w-full sm:w-auto">
