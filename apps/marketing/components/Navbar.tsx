@@ -1,161 +1,140 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, Home, Briefcase, Globe, MessageSquare, ArrowRight, Building, Calendar } from "lucide-react";
 
-export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
+export function Navbar() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const toggleMenu = () => {
-    setIsOpen(!isOpen);
+  const scrollToSection = (id: string) => {
+    setMobileMenuOpen(false);
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
-  // Lock body scroll when mobile menu is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
-    }
-    return () => {
-      document.body.classList.remove("overflow-hidden");
-    };
-  }, [isOpen]);
-
-  const navLinks = [
-    { href: "/especialistas", label: "Especialistas LUMINUS", icon: <Briefcase className="h-5 w-5 text-luminus-orange" /> },
-    { href: "/empresas-aliadas", label: "Empresas Aliadas", icon: <Building className="h-5 w-5 text-luminus-lime" /> },
-    { href: "/eventos", label: "Eventos y Actividades", icon: <Calendar className="h-5 w-5 text-luminus-pink" /> },
-    { href: "/sobre-nosotros", label: "Sobre Nosotros", icon: <Globe className="h-5 w-5 text-luminus-blue" /> },
-    { href: "/contacto", label: "Contactar", icon: <MessageSquare className="h-5 w-5 text-luminus-pink" /> },
-  ];
-
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full border-b border-slate-100 bg-white/80 backdrop-blur-md transition-colors duration-300">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        {/* Brand Logo */}
-        <Link href="/" className="group flex items-center gap-3 transition-transform duration-205 hover:scale-[1.01]">
-          <Image
-            src="/logo-luminus-black.svg"
-            alt="LUMINUS Latam Logo"
-            width={157}
-            height={20}
-            className="h-5 sm:h-6 w-auto"
-            priority
-          />
-        </Link>
+    <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm transition-all">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-8 h-16 md:h-20 flex items-center justify-between">
+        {/* Left: Logo & Nav Links */}
+        <div className="flex items-center gap-8 lg:gap-12">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <Image
+              src="/logo-luminus-black.svg"
+              alt="LUMINUS"
+              width={140}
+              height={24}
+              priority
+              className="h-5 md:h-6 w-auto"
+            />
+          </Link>
 
-        {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm font-semibold text-slate-600 hover:text-black transition-colors"
+          {/* Nav Links (Desktop) */}
+          <nav className="hidden lg:flex items-center gap-1.5">
+            <button
+              onClick={() => scrollToSection("especialistas")}
+              className="px-3.5 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100/80 rounded-lg transition-colors cursor-pointer"
             >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+              Para Especialistas
+            </button>
+            <button
+              onClick={() => scrollToSection("entrevistas")}
+              className="px-3.5 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100/80 rounded-lg transition-colors cursor-pointer"
+            >
+              Entrevistas y encuentros
+            </button>
+            <button
+              onClick={() => scrollToSection("faq")}
+              className="px-3.5 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100/80 rounded-lg transition-colors cursor-pointer"
+            >
+              Preguntas Frecuentes
+            </button>
+            <button
+              onClick={() => scrollToSection("contacto")}
+              className="px-3.5 py-2 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100/80 rounded-lg transition-colors cursor-pointer"
+            >
+              Contactarnos
+            </button>
+          </nav>
+        </div>
 
-        {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-4">
+        {/* Right: Auth Buttons (Desktop) */}
+        <div className="hidden sm:flex items-center gap-3">
           <a
-            href="https://app.luminuslatam.com/auth/iniciar-sesion"
-            className="text-sm font-semibold text-slate-600 hover:text-black transition-colors px-3 py-2"
+            href="https://app.luminus.lat/auth"
+            className="px-6 py-2.5 text-sm font-semibold text-slate-900 border border-slate-900 rounded-xl hover:bg-slate-100 transition-all text-center min-w-[130px]"
           >
-            Ingresar
+            Iniciar Sesión
           </a>
           <a
-            href="https://app.luminuslatam.com/auth/registrarse"
-            className="inline-flex items-center justify-center rounded-full bg-black px-5 py-2 text-sm font-semibold text-white hover:bg-neutral-900 transition-all duration-200 shadow-soft hover:shadow-medium"
+            href="https://app.luminus.lat/auth"
+            className="px-6 py-2.5 text-sm font-semibold text-white bg-black hover:bg-slate-800 rounded-xl transition-all shadow-sm text-center min-w-[130px]"
           >
-            Crear cuenta
+            Registrarme
           </a>
         </div>
 
-        {/* Mobile Hamburger Button */}
-        <div className="flex md:hidden items-center">
-          <button
-            onClick={toggleMenu}
-            aria-label="Toggle navigation menu"
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-black hover:bg-slate-50 transition-all duration-150 focus:outline-none"
-          >
-            <X className={`h-6 w-6 stroke-[2.5] ${isOpen ? "block" : "hidden"}`} />
-            <Menu className={`h-6 w-6 stroke-[2.5] ${isOpen ? "hidden" : "block"}`} />
-          </button>
-        </div>
+        {/* Mobile Hamburger Toggle */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="lg:hidden p-2 rounded-lg text-slate-700 hover:bg-slate-100 focus:outline-none"
+          aria-label="Toggle Navigation Menu"
+        >
+          {mobileMenuOpen ? (
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          )}
+        </button>
       </div>
 
-      {/* Mobile 100% Screen Full Menu Panel */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 bg-white flex flex-col h-screen w-screen md:hidden overflow-y-auto animate-fadeIn">
-          {/* Header row at the top inside mobile menu */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-white">
-            <Link
-              href="/"
-              onClick={() => setIsOpen(false)}
-              className="group flex items-center gap-3 transition-transform duration-205 hover:scale-[1.01]"
+      {/* Mobile Drawer */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden bg-white border-b border-slate-200 px-4 pt-3 pb-6 flex flex-col gap-3 shadow-lg">
+          <button
+            onClick={() => scrollToSection("especialistas")}
+            className="text-left px-3 py-2.5 text-base font-medium text-slate-800 hover:bg-slate-50 rounded-lg"
+          >
+            Para Especialistas
+          </button>
+          <button
+            onClick={() => scrollToSection("entrevistas")}
+            className="text-left px-3 py-2.5 text-base font-medium text-slate-800 hover:bg-slate-50 rounded-lg"
+          >
+            Entrevistas y encuentros
+          </button>
+          <button
+            onClick={() => scrollToSection("faq")}
+            className="text-left px-3 py-2.5 text-base font-medium text-slate-800 hover:bg-slate-50 rounded-lg"
+          >
+            Preguntas Frecuentes
+          </button>
+          <button
+            onClick={() => scrollToSection("contacto")}
+            className="text-left px-3 py-2.5 text-base font-medium text-slate-800 hover:bg-slate-50 rounded-lg"
+          >
+            Contactarnos
+          </button>
+          <div className="pt-3 border-t border-slate-100 flex flex-col gap-2.5">
+            <a
+              href="https://app.luminus.lat/auth"
+              className="w-full py-3 text-center text-sm font-semibold text-slate-900 border border-slate-900 rounded-xl hover:bg-slate-50"
             >
-              <Image
-                src="/logo-luminus-black.svg"
-                alt="LUMINUS Latam Logo"
-                width={157}
-                height={20}
-                className="h-5 sm:h-6 w-auto"
-                priority
-              />
-            </Link>
-            <button
-              onClick={() => setIsOpen(false)}
-              aria-label="Close navigation menu"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-black hover:bg-slate-50 transition-all focus:outline-none"
+              Iniciar Sesión
+            </a>
+            <a
+              href="https://app.luminus.lat/auth"
+              className="w-full py-3 text-center text-sm font-semibold text-white bg-black hover:bg-slate-800 rounded-xl shadow-sm"
             >
-              <X className="h-6 w-6 stroke-[2.5]" />
-            </button>
-          </div>
-
-          {/* Immersive Scrollable Menu Content */}
-          <div className="flex-1 flex flex-col justify-between px-6 py-8 gap-8 overflow-y-auto bg-white">
-            {/* Navigation Links */}
-            <nav className="flex flex-col gap-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-4 p-3 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-slate-50 transition-all duration-200"
-                >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-soft">
-                    {link.icon}
-                  </div>
-                  <span className="font-display text-lg font-semibold text-slate-800">
-                    {link.label}
-                  </span>
-                </Link>
-              ))}
-            </nav>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col gap-4 mt-auto pb-6">
-              <a
-                href="https://app.luminuslatam.com/auth/iniciar-sesion"
-                onClick={() => setIsOpen(false)}
-                className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white py-3.5 px-6 text-base font-semibold text-slate-700 hover:bg-slate-50 transition-all duration-200"
-              >
-                Ingresar a mi cuenta
-              </a>
-              <a
-                href="https://app.luminuslatam.com/auth/registrarse"
-                onClick={() => setIsOpen(false)}
-                className="inline-flex items-center justify-center rounded-full bg-black py-3.5 px-6 text-base font-semibold text-white hover:bg-neutral-900 transition-all duration-200"
-              >
-                Registrarse / Crear cuenta
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </a>
-            </div>
+              Registrarme
+            </a>
           </div>
         </div>
       )}

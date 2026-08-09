@@ -1,40 +1,37 @@
-export default function ComingSoon() {
+import { Navbar } from "@/components/Navbar";
+import { Hero } from "@/components/Hero";
+import { DarkFeatureShowcase } from "@/components/DarkFeatureShowcase";
+import { FeatureCards } from "@/components/FeatureCards";
+import { TripleCards } from "@/components/TripleCards";
+import { CategoriesGrid } from "@/components/CategoriesGrid";
+import { SpecialistsHighlight } from "@/components/SpecialistsHighlight";
+import { ConversationSection } from "@/components/ConversationSection";
+import { InterviewsSection } from "@/components/InterviewsSection";
+import { ForSpecialistsSection } from "@/components/ForSpecialistsSection";
+import { PricingSection } from "@/components/PricingSection";
+import { FaqSection } from "@/components/FaqSection";
+import { ContactBanner } from "@/components/ContactBanner";
+import { Footer } from "@/components/Footer";
+
+export default function Home() {
   return (
-    <main style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100dvh',
-      backgroundColor: '#000000',
-      color: '#FFFFFF',
-      fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      padding: '24px',
-      paddingTop: 'calc(24px + env(safe-area-inset-top))',
-      paddingBottom: 'calc(24px + env(safe-area-inset-bottom))',
-      textAlign: 'center'
-    }}>
-      <h1 style={{
-        fontSize: '2rem',
-        fontWeight: '300',
-        letterSpacing: '0.05em',
-        marginBottom: '16px',
-        lineHeight: '1.4',
-        color: '#F4F4F5'
-      }}>
-        "Nuestra luz pronto volverá a brillar"
-      </h1>
-      <p style={{
-        fontSize: '0.875rem',
-        fontWeight: '700',
-        letterSpacing: '0.3em',
-        textTransform: 'uppercase',
-        color: '#A1A1AA',
-        margin: 0
-      }}>
-        LUMINUS
-      </p>
-    </main>
+    <div className="w-full min-h-screen bg-white text-slate-900 font-sans flex flex-col antialiased">
+      <Navbar />
+      <main className="flex-1 w-full flex flex-col">
+        <Hero />
+        <DarkFeatureShowcase />
+        <FeatureCards />
+        <TripleCards />
+        <CategoriesGrid />
+        <SpecialistsHighlight />
+        <ConversationSection />
+        <InterviewsSection />
+        <ForSpecialistsSection />
+        <PricingSection />
+        <FaqSection />
+        <ContactBanner />
+      </main>
+      <Footer />
+    </div>
   );
 }
-
