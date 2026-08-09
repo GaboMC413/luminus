@@ -41,8 +41,8 @@ export function formatRelativeTime(timestamp: any): string {
 const NAV_ITEMS = [
   { id: "comunidad", label: "Comunidad", path: "/comunidad", icon: "/Icons/NavBar/comunity inactive.svg", activeIcon: "/Icons/NavBar/community active.svg" },
   { id: "especialistas", label: "Especialistas", path: "/especialistas", icon: "/Icons/NavBar/expert inactive.svg", activeIcon: "/Icons/NavBar/expert active.svg" },
-  { id: "espacios", label: "Espacios", path: "/espacios", icon: "/Icons/NavBar/espacios inactive.svg", activeIcon: "/Icons/NavBar/espacios active.svg" },
-  { id: "mapa", label: "Mapa", path: "/mapa", icon: "/Icons/NavBar/map inactive.svg", activeIcon: "/Icons/NavBar/map active.svg" },
+  { id: "grupos", label: "Grupos", path: "/grupos", icon: "/Icons/NavBar/espacios inactive.svg", activeIcon: "/Icons/NavBar/espacios active.svg" },
+  { id: "espacios", label: "Espacios", path: "/espacios", icon: "/Icons/NavBar/map inactive.svg", activeIcon: "/Icons/NavBar/map active.svg" },
   { id: "faro", label: "Faro", path: "/faro", icon: "/Icons/NavBar/faro inactive.svg", activeIcon: "/Icons/NavBar/faro active.svg" },
 ];
 
@@ -366,8 +366,8 @@ export function PlatformNavbar() {
   const getActiveTab = () => {
     if (pathname.includes("/comunidad")) return "comunidad";
     if (pathname.includes("/especialistas")) return "especialistas";
+    if (pathname.includes("/grupos")) return "grupos";
     if (pathname.includes("/espacios")) return "espacios";
-    if (pathname.includes("/mapa")) return "mapa";
     if (pathname.includes("/faro")) return "faro";
     if (pathname.includes("/perfil-usuario")) return "perfil-usuario";
     return "";

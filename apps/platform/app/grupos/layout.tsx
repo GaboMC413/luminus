@@ -1,9 +1,8 @@
 import { assertOnboarded } from "@/lib/auth/session";
-import { redirect } from "next/navigation";
 import { PlatformNavbar } from "@/components/ui/PlatformNavbar";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
 
-export default async function MapLayout({
+export default async function GruposLayout({
   children,
 }: {
   children: React.ReactNode;
