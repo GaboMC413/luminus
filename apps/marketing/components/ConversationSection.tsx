@@ -7,7 +7,7 @@ export function ConversationSection() {
         <div className="flex flex-col lg:flex-row items-stretch gap-6 h-auto lg:h-[560px]">
           
           {/* Left Photo */}
-          <div className="w-full lg:w-1/4 h-[300px] lg:h-full relative rounded-3xl overflow-hidden shadow-sm shrink-0">
+          <div className="w-full lg:w-1/4 h-[300px] lg:h-full relative rounded-3xl overflow-hidden shrink-0 bg-slate-200">
             <Image
               src="/Home/Mujer sonriendo en videollamada.png"
               alt="Mujer sonriendo en videollamada"
@@ -18,7 +18,7 @@ export function ConversationSection() {
           </div>
 
           {/* Center Blue Card */}
-          <div className="w-full lg:w-2/4 bg-[#0450FB] text-white rounded-3xl p-8 md:p-12 lg:p-14 flex flex-col justify-center gap-6 shadow-md">
+          <div className="w-full lg:w-2/4 bg-[#0450FB] text-white rounded-3xl p-8 md:p-12 lg:p-14 flex flex-col justify-center gap-6">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
               Comienza con una conversación
             </h2>
@@ -31,7 +31,7 @@ export function ConversationSection() {
             <div className="pt-2">
               <a
                 href="https://app.luminus.lat/auth"
-                className="inline-block py-3.5 px-8 text-base font-semibold text-white bg-black hover:bg-slate-800 rounded-2xl shadow-md transition-all text-center min-w-[260px]"
+                className="inline-block py-3.5 px-8 text-base font-semibold text-white bg-black hover:bg-slate-800 rounded-2xl text-center min-w-[260px]"
               >
                 Solicitar una sesión
               </a>
@@ -39,7 +39,7 @@ export function ConversationSection() {
           </div>
 
           {/* Right Photo */}
-          <div className="w-full lg:w-1/4 h-[300px] lg:h-full relative rounded-3xl overflow-hidden shadow-sm shrink-0">
+          <div className="w-full lg:w-1/4 h-[300px] lg:h-full relative rounded-3xl overflow-hidden shrink-0 bg-slate-200">
             <Image
               src="/Home/Mujer mirando celular en sofá.png"
               alt="Mujer mirando celular en sofá"

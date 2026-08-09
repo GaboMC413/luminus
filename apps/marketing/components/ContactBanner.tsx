@@ -24,16 +24,16 @@ export function ContactBanner() {
           <div className="pt-2">
             <a
               href="mailto:hola@luminus.lat"
-              className="inline-block py-3.5 px-8 text-base font-semibold text-slate-950 bg-white hover:bg-slate-100 rounded-2xl shadow-md transition-all text-center min-w-[260px]"
+              className="inline-block py-3.5 px-8 text-base font-semibold text-slate-950 bg-white hover:bg-slate-100 rounded-2xl text-center min-w-[260px]"
             >
               Contactar a LUMINUS
             </a>
           </div>
         </div>
 
-        {/* Right Column: Mobile App Preview Mockup */}
+        {/* Right Column: Clean App Preview */}
         <div className="w-full lg:w-1/2 flex items-center justify-center relative min-h-[300px] md:min-h-[420px]">
-          <div className="relative w-[220px] sm:w-[260px] h-[440px] sm:h-[500px] bg-slate-900 rounded-[36px] border-4 border-slate-800 shadow-2xl overflow-hidden transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+          <div className="relative w-[240px] sm:w-[280px] h-[440px] sm:h-[500px] bg-slate-900 rounded-2xl overflow-hidden shrink-0">
             <Image
               src="/Home/Luminus app - buscar especialistas y comunidad.png"
               alt="LUMINUS App Contact Preview"

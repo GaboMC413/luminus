@@ -101,7 +101,7 @@ export function CategoriesGrid() {
           {CATEGORIES.map((cat, index) => (
             <div
               key={index}
-              className="bg-white p-8 rounded-3xl flex flex-col gap-4 shadow-sm hover:shadow-md transition-all border border-slate-200/60 h-[260px] justify-between"
+              className="bg-white p-8 rounded-3xl flex flex-col gap-4 border border-slate-200/80 h-[260px] justify-between"
             >
               <div className="flex flex-col gap-3">
                 <div style={{ color: cat.color }} className="w-10 h-10 shrink-0">

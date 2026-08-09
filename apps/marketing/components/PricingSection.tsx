@@ -19,7 +19,7 @@ export function PricingSection() {
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900">
             Forma parte de LUMINUS
           </h2>
-          <p className="text-lg sm:text-xl md:text-2xl text-slate-800 max-w-[860px] leading-relaxed">
+          <p className="text-lg sm:text-xl md:text-2xl text-slate-800 max-w-[860px] leading-relaxed font-normal">
             Accede a la comunidad, descubre nuevas formas de cuidar tu bienestar y aprovecha todas las herramientas que nuestra plataforma pone a tu alcance.
           </p>
           <p className="text-base sm:text-lg text-slate-700 font-semibold">
@@ -31,7 +31,7 @@ export function PricingSection() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-[1040px] items-stretch">
           
           {/* Card 1: Monthly */}
-          <div className="bg-white rounded-3xl p-8 md:p-10 flex flex-col justify-between gap-8 shadow-lg border border-slate-200/80 hover:shadow-xl transition-shadow">
+          <div className="bg-white rounded-3xl p-8 md:p-10 flex flex-col justify-between gap-8 border border-slate-200">
             
             <div className="flex flex-col gap-6">
               {/* Header Badge & Price */}
@@ -46,7 +46,7 @@ export function PricingSection() {
                   <p className="text-sm font-bold text-slate-800 pt-1">
                     Luego de tus primeros 3 meses sin costo.
                   </p>
-                  <p className="text-sm text-slate-600 leading-relaxed">
+                  <p className="text-sm text-slate-600 leading-relaxed font-normal">
                     Para quienes prefieren la flexibilidad de continuar mes a mes.
                   </p>
                 </div>
@@ -76,7 +76,7 @@ export function PricingSection() {
             <div className="flex flex-col gap-4 pt-4 border-t border-slate-100">
               <a
                 href="https://app.luminus.lat/auth"
-                className="w-full py-4 text-center text-base font-semibold text-white bg-black hover:bg-slate-800 rounded-2xl shadow-md transition-all"
+                className="w-full py-4 text-center text-base font-semibold text-white bg-black hover:bg-slate-800 rounded-2xl"
               >
                 Comenzar 3 meses gratis
               </a>
@@ -88,7 +88,7 @@ export function PricingSection() {
           </div>
 
           {/* Card 2: Annual */}
-          <div className="bg-white rounded-3xl p-8 md:p-10 flex flex-col justify-between gap-8 shadow-xl border-2 border-slate-900 relative hover:shadow-2xl transition-shadow">
+          <div className="bg-white rounded-3xl p-8 md:p-10 flex flex-col justify-between gap-8 border-2 border-slate-900 relative">
             
             <div className="flex flex-col gap-6">
               {/* Header Badge & Price */}
@@ -108,7 +108,7 @@ export function PricingSection() {
                   <p className="text-sm font-bold text-slate-800 pt-1">
                     Luego de tus primeros 3 meses sin costo.
                   </p>
-                  <p className="text-sm text-slate-600 leading-relaxed">
+                  <p className="text-sm text-slate-600 leading-relaxed font-normal">
                     Para quienes quieren ahorrar frente al plan mensual. <span className="italic text-slate-700">(USD 3,75 / mes)</span>
                   </p>
                 </div>
@@ -138,7 +138,7 @@ export function PricingSection() {
             <div className="flex flex-col gap-4 pt-4 border-t border-slate-100">
               <a
                 href="https://app.luminus.lat/auth"
-                className="w-full py-4 text-center text-base font-semibold text-white bg-black hover:bg-slate-800 rounded-2xl shadow-md transition-all"
+                className="w-full py-4 text-center text-base font-semibold text-white bg-black hover:bg-slate-800 rounded-2xl"
               >
                 Comenzar 3 meses gratis
               </a>

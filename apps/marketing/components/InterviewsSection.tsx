@@ -7,28 +7,28 @@ const INTERVIEWS = [
     title: "Cuando la comida se vuelve bienestar",
     description:
       "En este encuentro en vivo con Anaí Costa —licenciada en nutrición y creadora de Nutriendo Hábitos— descubrirás cómo transformar tu relación con la comida desde un enfoque integral, lejos de las dietas restrictivas y más cerca de un estilo de vida sostenible y consciente.",
-    image: "/Comundiad.png",
+    image: "/Home/Grupo de personas sonriendo.png",
     youtubeUrl: "https://www.youtube.com/@luminuslatam",
   },
   {
     title: "Respiración, postura y movimiento consciente",
     description:
       "Laura Ravaioli es terapeuta corporal con más de 25 años de experiencia, creadora y especialista del Método REEM (Reeducación Estructural por la Economía del Movimiento), una innovadora técnica que ayuda a optimizar el rendimiento del cuerpo con el menor esfuerzo posible.",
-    image: "/specialsitsLUMINUS.png",
+    image: "/Home/Tres personas de pie sonriendo.png",
     youtubeUrl: "https://www.youtube.com/@luminuslatam",
   },
   {
     title: "Cómo fomentar el amor propio",
     description:
       "En este encuentro con Carla Lorenzo —psicóloga, actriz y comunicadora uruguaya especializada en enfoque gestáltico— vas a explorar herramientas reales de autoconocimiento y autocuidado para construir una relación más sana y compasiva con vos mismo/a.",
-    image: "/Comundiad.png",
+    image: "/Home/Mujer sonriendo en videollamada.png",
     youtubeUrl: "https://www.youtube.com/@luminuslatam",
   },
   {
     title: "Sanar para Ser",
     description:
       "En esta charla en vivo, el Dr. Julio Tarabini, médico y terapeuta integrador, comparte una visión de la sanación como un camino profundo que atraviesa cuerpo, mente, emociones y espíritu. Una conversación íntima sobre cómo aliviar el dolor y vivir con mayor autenticidad.",
-    image: "/specialsitsLUMINUS.png",
+    image: "/Home/Mujer mirando celular en sofá.png",
     youtubeUrl: "https://www.youtube.com/@luminuslatam",
   },
 ];
@@ -53,7 +53,7 @@ export function InterviewsSection() {
           {INTERVIEWS.map((item, index) => (
             <div
               key={index}
-              className="bg-white rounded-3xl p-5 flex flex-col justify-between gap-5 shadow-sm hover:shadow-md transition-all border border-slate-200/80 h-[420px]"
+              className="bg-white rounded-3xl p-5 flex flex-col justify-between gap-5 border border-slate-200 h-[420px]"
             >
               <div className="flex flex-col gap-4">
                 {/* Thumbnail */}
@@ -63,9 +63,10 @@ export function InterviewsSection() {
                     alt={item.title}
                     fill
                     className="object-cover"
+                    sizes="300px"
                   />
                   <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-white/90 shadow-md flex items-center justify-center text-slate-900">
+                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-slate-900">
                       <svg className="w-6 h-6 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z" />
                       </svg>
@@ -78,7 +79,7 @@ export function InterviewsSection() {
                   <h3 className="text-lg font-bold text-slate-900 leading-snug line-clamp-2">
                     {item.title}
                   </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-4">
+                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-4 font-normal">
                     {item.description}
                   </p>
                 </div>
@@ -106,7 +107,7 @@ export function InterviewsSection() {
             href="https://www.youtube.com/@luminuslatam"
             target="_blank"
             rel="noopener noreferrer"
-            className="py-3.5 px-10 text-base font-semibold text-slate-900 bg-white border border-slate-300 hover:bg-slate-50 rounded-2xl shadow-sm transition-all text-center min-w-[280px]"
+            className="py-3.5 px-10 text-base font-semibold text-slate-900 bg-white border border-slate-300 hover:bg-slate-50 rounded-2xl text-center min-w-[280px]"
           >
             Ver todas las entrevistas
           </a>

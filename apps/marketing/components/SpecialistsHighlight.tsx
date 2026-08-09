@@ -19,16 +19,16 @@ export function SpecialistsHighlight() {
           <div className="pt-2">
             <a
               href="https://app.luminus.lat/auth"
-              className="inline-block py-3.5 px-8 text-base font-semibold text-white bg-black hover:bg-slate-800 rounded-2xl shadow-md transition-all text-center min-w-[280px]"
+              className="inline-block py-3.5 px-8 text-base font-semibold text-white bg-black hover:bg-slate-800 rounded-2xl text-center min-w-[280px]"
             >
               Explorar especialistas
             </a>
           </div>
         </div>
 
-        {/* Right Column: Pastel & App Mockup */}
+        {/* Right Column: Clean App Preview */}
         <div className="w-full lg:w-1/2 bg-[#eed7c4] min-h-[360px] lg:min-h-[560px] relative flex items-center justify-center p-8 overflow-hidden">
-          <div className="relative w-[240px] sm:w-[280px] h-[460px] sm:h-[520px] bg-slate-900 rounded-[36px] border-4 border-slate-800 shadow-2xl overflow-hidden transform rotate-6 hover:rotate-0 transition-transform duration-500">
+          <div className="relative w-[260px] sm:w-[300px] h-[480px] sm:h-[540px] bg-slate-900 rounded-2xl overflow-hidden shrink-0">
             <Image
               src="/Home/Luminus app - perfil especialista y directorio.png"
               alt="Directorio de Especialistas LUMINUS"

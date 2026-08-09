@@ -6,12 +6,12 @@ export function FeatureCards() {
       <div className="max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-12 md:gap-16">
         
         {/* Card 1: Comunidad */}
-        <div id="comunidad" className="w-full bg-[#FF7700] rounded-3xl overflow-hidden flex flex-col lg:flex-row items-stretch shadow-md">
+        <div id="comunidad" className="w-full bg-[#FF7700] rounded-3xl overflow-hidden flex flex-col lg:flex-row items-stretch">
           {/* Image */}
           <div className="w-full lg:w-1/2 min-h-[320px] lg:min-h-[500px] relative bg-amber-100">
             <Image
               src="/Home/Grupo de personas sonriendo.png"
-              alt="Comunidad LUMINUS - Grupo de personas sonriendo"
+              alt="Comunidad LUMINUS"
               fill
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"
@@ -32,7 +32,7 @@ export function FeatureCards() {
             <div className="pt-2">
               <a
                 href="https://app.luminus.lat/auth"
-                className="inline-block py-3.5 px-8 text-base font-semibold text-white bg-black hover:bg-slate-800 rounded-2xl shadow-md transition-all text-center min-w-[260px]"
+                className="inline-block py-3.5 px-8 text-base font-semibold text-white bg-black hover:bg-slate-800 rounded-2xl text-center min-w-[260px]"
               >
                 Descubre la comunidad
               </a>
@@ -41,7 +41,7 @@ export function FeatureCards() {
         </div>
 
         {/* Card 2: Especialistas */}
-        <div id="especialistas" className="w-full bg-[#0450FB] rounded-3xl overflow-hidden flex flex-col-reverse lg:flex-row items-stretch shadow-md">
+        <div id="especialistas" className="w-full bg-[#0450FB] rounded-3xl overflow-hidden flex flex-col-reverse lg:flex-row items-stretch">
           {/* Text Content */}
           <div className="w-full lg:w-1/2 p-8 md:p-12 lg:p-14 flex flex-col justify-center gap-6 text-white">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight">
@@ -56,7 +56,7 @@ export function FeatureCards() {
             <div className="pt-2">
               <a
                 href="https://app.luminus.lat/auth"
-                className="inline-block py-3.5 px-8 text-base font-semibold text-white bg-black hover:bg-slate-800 rounded-2xl shadow-md transition-all text-center min-w-[260px]"
+                className="inline-block py-3.5 px-8 text-base font-semibold text-white bg-black hover:bg-slate-800 rounded-2xl text-center min-w-[260px]"
               >
                 Encuentra especialistas
               </a>
@@ -67,7 +67,7 @@ export function FeatureCards() {
           <div className="w-full lg:w-1/2 min-h-[320px] lg:min-h-[500px] relative bg-blue-900">
             <Image
               src="/Home/Tres personas de pie sonriendo.png"
-              alt="Especialistas LUMINUS - Tres personas sonriendo"
+              alt="Especialistas LUMINUS"
               fill
               className="object-cover"
               sizes="(max-width: 1024px) 100vw, 50vw"
