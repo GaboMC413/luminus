@@ -13,26 +13,28 @@ export function DarkFeatureShowcase() {
         </div>
 
         {/* Right Column: Phone Mockups Container */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center relative min-h-[300px] md:min-h-[380px]">
+        <div className="w-full lg:w-1/2 flex items-center justify-center relative min-h-[320px] md:min-h-[420px]">
           <div className="relative w-full max-w-[500px] flex items-center justify-center">
             
             {/* Phone 1 (Tilted Left) */}
-            <div className="relative w-[200px] sm:w-[240px] h-[340px] sm:h-[400px] bg-slate-900 rounded-[32px] border-4 border-slate-800 shadow-2xl overflow-hidden transform -rotate-12 -translate-x-6 sm:-translate-x-10 hover:rotate-0 transition-transform duration-500 z-10 shrink-0">
+            <div className="relative w-[190px] sm:w-[230px] h-[360px] sm:h-[420px] bg-slate-900 rounded-[32px] border-4 border-slate-800 shadow-2xl overflow-hidden transform -rotate-12 -translate-x-6 sm:-translate-x-10 hover:rotate-0 transition-transform duration-500 z-10 shrink-0">
               <Image
-                src="/Comundiad.png"
-                alt="LUMINUS Comunidad"
+                src="/Home/Luminus app - comunidad y especialistas.png"
+                alt="LUMINUS Comunidad App"
                 fill
                 className="object-cover object-top"
+                sizes="240px"
               />
             </div>
 
             {/* Phone 2 (Tilted Right) */}
-            <div className="relative w-[200px] sm:w-[240px] h-[340px] sm:h-[400px] bg-slate-900 rounded-[32px] border-4 border-slate-800 shadow-2xl overflow-hidden transform rotate-12 translate-x-6 sm:translate-x-10 hover:rotate-0 transition-transform duration-500 z-20 shrink-0">
+            <div className="relative w-[190px] sm:w-[230px] h-[360px] sm:h-[420px] bg-slate-900 rounded-[32px] border-4 border-slate-800 shadow-2xl overflow-hidden transform rotate-12 translate-x-6 sm:translate-x-10 hover:rotate-0 transition-transform duration-500 z-20 shrink-0">
               <Image
-                src="/specialsitsLUMINUS.png"
-                alt="LUMINUS Especialistas"
+                src="/Home/Luminus app - chat con especialista.png"
+                alt="LUMINUS Chat App"
                 fill
                 className="object-cover object-top"
+                sizes="240px"
               />
             </div>
 

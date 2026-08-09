@@ -26,14 +26,15 @@ export function SpecialistsHighlight() {
           </div>
         </div>
 
-        {/* Right Column: Pastel & Mockup */}
+        {/* Right Column: Pastel & App Mockup */}
         <div className="w-full lg:w-1/2 bg-[#eed7c4] min-h-[360px] lg:min-h-[560px] relative flex items-center justify-center p-8 overflow-hidden">
-          <div className="relative w-full max-w-[440px] h-[400px] md:h-[480px]">
+          <div className="relative w-[240px] sm:w-[280px] h-[460px] sm:h-[520px] bg-slate-900 rounded-[36px] border-4 border-slate-800 shadow-2xl overflow-hidden transform rotate-6 hover:rotate-0 transition-transform duration-500">
             <Image
-              src="/specialsitsLUMINUS.png"
-              alt="Especialistas Mockup"
+              src="/Home/Luminus app - perfil especialista y directorio.png"
+              alt="Directorio de Especialistas LUMINUS"
               fill
-              className="object-cover object-top rounded-3xl shadow-2xl transform rotate-6 border-4 border-white"
+              className="object-cover object-top"
+              sizes="300px"
             />
           </div>
         </div>

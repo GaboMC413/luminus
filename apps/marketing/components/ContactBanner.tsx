@@ -32,13 +32,14 @@ export function ContactBanner() {
         </div>
 
         {/* Right Column: Mobile App Preview Mockup */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center relative min-h-[300px] md:min-h-[380px]">
-          <div className="relative w-full max-w-[460px] h-[360px] md:h-[440px]">
+        <div className="w-full lg:w-1/2 flex items-center justify-center relative min-h-[300px] md:min-h-[420px]">
+          <div className="relative w-[220px] sm:w-[260px] h-[440px] sm:h-[500px] bg-slate-900 rounded-[36px] border-4 border-slate-800 shadow-2xl overflow-hidden transform -rotate-3 hover:rotate-0 transition-transform duration-500">
             <Image
-              src="/Comundiad.png"
-              alt="LUMINUS Contact Preview"
+              src="/Home/Luminus app - buscar especialistas y comunidad.png"
+              alt="LUMINUS App Contact Preview"
               fill
-              className="object-cover object-top rounded-3xl border-4 border-slate-800 shadow-2xl"
+              className="object-cover object-top"
+              sizes="280px"
             />
           </div>
         </div>
