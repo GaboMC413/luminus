@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export function ContactBanner() {
   return (
-    <section id="contacto" className="w-full bg-black text-white py-16 md:py-24 overflow-hidden relative border-t border-black">
+    <section id="contacto" className="w-full bg-black text-white py-16 md:py-24 overflow-hidden relative">
       <div className="max-w-[1440px] mx-auto px-6 md:px-12 flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16">
         
         {/* Left Column: Text & CTA */}
@@ -31,15 +31,16 @@ export function ContactBanner() {
           </div>
         </div>
 
-        {/* Right Column: Clean App Preview */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center relative min-h-[300px] md:min-h-[420px]">
-          <div className="relative w-[240px] sm:w-[280px] h-[440px] sm:h-[500px] bg-slate-900 rounded-2xl overflow-hidden shrink-0">
+        {/* Right Column: Transparent PNG App Mockup */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center relative min-h-[380px] lg:min-h-[500px]">
+          <div className="relative w-full max-w-[540px] h-[380px] lg:h-[500px]">
             <Image
               src="/Home/Luminus app - buscar especialistas y comunidad.png"
-              alt="LUMINUS App Contact Preview"
+              alt="LUMINUS App Overview"
               fill
-              className="object-cover object-top"
-              sizes="280px"
+              className="object-contain"
+              sizes="(max-width: 1024px) 100vw, 500px"
+              priority
             />
           </div>
         </div>
