@@ -3,15 +3,22 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const router = useRouter();
 
-  const scrollToSection = (id: string) => {
+  const handleNavClick = (id: string) => {
     setMobileMenuOpen(false);
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+    if (pathname !== "/") {
+      router.push(`/#${id}`);
+    } else {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+      }
     }
   };
 
@@ -27,38 +34,40 @@ export function Navbar() {
             width={140}
             height={24}
             priority
-            className="h-5 md:h-6 w-auto"
+            className="h-5 w-auto"
           />
         </Link>
 
         {/* Nav Links (Desktop) */}
         <nav className="hidden lg:flex items-center gap-6">
-          <button
-            onClick={() => scrollToSection("especialistas-section")}
-            className="text-sm font-normal text-slate-800 hover:text-black transition-colors cursor-pointer"
+          <Link
+            href="/especialistas"
+            className="text-sm font-normal text-slate-800 hover:text-black transition-colors"
           >
             Para Especialistas
-          </button>
-          <button
-            onClick={() => scrollToSection("entrevistas")}
-            className="text-sm font-normal text-slate-800 hover:text-black transition-colors cursor-pointer"
+          </Link>
+          <Link
+            href="/entrevistas"
+            className="text-sm font-normal text-slate-800 hover:text-black transition-colors"
           >
             Entrevistas y encuentros
-          </button>
+          </Link>
+
           <button
-            onClick={() => scrollToSection("faq")}
+            onClick={() => handleNavClick("faq")}
             className="text-sm font-normal text-slate-800 hover:text-black transition-colors cursor-pointer"
           >
             Preguntas Frecuentes
           </button>
           <button
-            onClick={() => scrollToSection("contacto")}
+            onClick={() => handleNavClick("contacto")}
             className="text-sm font-normal text-slate-800 hover:text-black transition-colors cursor-pointer"
           >
             Contactarnos
           </button>
         </nav>
       </div>
+
 
       {/* Right: Auth Buttons (Desktop) */}
       <div className="hidden sm:flex items-center gap-3">
@@ -96,30 +105,34 @@ export function Navbar() {
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="absolute top-[64px] left-0 w-full bg-white border-b border-black px-6 py-6 flex flex-col gap-4 shadow-lg lg:hidden">
-          <button
-            onClick={() => scrollToSection("especialistas-section")}
+          <Link
+            href="/especialistas"
+            onClick={() => setMobileMenuOpen(false)}
             className="text-left py-2 text-base font-normal text-slate-800 hover:text-black"
           >
             Para Especialistas
-          </button>
-          <button
-            onClick={() => scrollToSection("entrevistas")}
+          </Link>
+          <Link
+            href="/entrevistas"
+            onClick={() => setMobileMenuOpen(false)}
             className="text-left py-2 text-base font-normal text-slate-800 hover:text-black"
           >
             Entrevistas y encuentros
-          </button>
+          </Link>
+
           <button
-            onClick={() => scrollToSection("faq")}
+            onClick={() => handleNavClick("faq")}
             className="text-left py-2 text-base font-normal text-slate-800 hover:text-black"
           >
             Preguntas Frecuentes
           </button>
           <button
-            onClick={() => scrollToSection("contacto")}
+            onClick={() => handleNavClick("contacto")}
             className="text-left py-2 text-base font-normal text-slate-800 hover:text-black"
           >
             Contactarnos
           </button>
+
           <div className="pt-4 border-t border-slate-200 flex flex-col gap-3">
             <a
               href="https://app.luminus.lat/auth"

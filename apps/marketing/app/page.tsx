@@ -1,16 +1,19 @@
-import { Navbar } from "@/components/Navbar";
-import { Hero } from "@/components/Hero";
-import { DarkFeatureShowcase } from "@/components/DarkFeatureShowcase";
-import { FeatureCards } from "@/components/FeatureCards";
-import { CategoriesGrid } from "@/components/CategoriesGrid";
-import { SpecialistsHighlight } from "@/components/SpecialistsHighlight";
-import { ConversationSection } from "@/components/ConversationSection";
-import { InterviewsSection } from "@/components/InterviewsSection";
-import { ForSpecialistsSection } from "@/components/ForSpecialistsSection";
-import { PricingSection } from "@/components/PricingSection";
-import { FaqSection } from "@/components/FaqSection";
-import { ContactBanner } from "@/components/ContactBanner";
-import { Footer } from "@/components/Footer";
+import {
+  Navbar,
+  Hero,
+  DarkFeatureShowcase,
+  FeatureCards,
+  CategoriesGrid,
+  SpecialistsHighlight,
+  ConversationSection,
+  InterviewsSection,
+  ForSpecialistsSection,
+  PricingSection,
+  FaqSection,
+  ContactBanner,
+  Footer,
+} from "@/components";
+
 
 export default function Home() {
   return (

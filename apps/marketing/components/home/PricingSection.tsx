@@ -11,9 +11,9 @@ const PRICING_FEATURES = [
 
 export function PricingSection() {
   return (
-    <section id="pricing" className="w-full py-16 md:py-24 bg-gradient-to-l from-slate-100/80 via-slate-50 to-white flex justify-center items-center">
+    <section id="pricing" className="w-full py-16 md:py-24 flex justify-center items-center" style={{ background: "linear-gradient(0deg, rgba(255,255,255,0.75) 0%, #ffffff 100%), linear-gradient(90deg, #FF7700 0%, #E855C8 33%, #0450FB 66%, #A8C800 100%)" }}>
       <div className="max-w-[1440px] w-full px-4 md:px-10 flex flex-col justify-end items-center gap-8">
-        
+
         {/* Header */}
         <div className="w-full max-w-[960px] flex flex-col justify-start items-center gap-6 text-center">
           <h2 className="w-full text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900 leading-[48px]">
@@ -22,18 +22,15 @@ export function PricingSection() {
           <p className="w-full text-xl sm:text-2xl font-normal text-slate-900 leading-8">
             Accede a la comunidad, descubre nuevas formas de cuidar tu bienestar y aprovecha todas las herramientas que nuestra plataforma pone a tu alcance.
           </p>
-          <p className="w-full text-base sm:text-lg font-normal text-slate-800 leading-6">
-            Empieza con 3 meses sin costo y sin ingresar datos de pago.
-          </p>
         </div>
 
         {/* Pricing Cards */}
         <div className="w-full max-w-[1080px] grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch pt-4">
-          
+
           {/* Card 1: Membresía Mensual */}
           <div className="p-8 bg-white rounded-2xl flex flex-col justify-between items-start gap-6 border border-slate-200/80 shadow-sm">
             <div className="w-full flex flex-col justify-start items-start gap-4">
-              
+
               {/* Badge */}
               <div className="px-3 py-1 bg-black rounded-2xl inline-flex justify-center items-center gap-2.5">
                 <span className="text-white text-xs font-medium uppercase leading-5 tracking-wider">
@@ -59,16 +56,16 @@ export function PricingSection() {
             <hr className="w-full border-t border-gray-200 my-1" />
 
             {/* Features List */}
-            <div className="w-full flex flex-col justify-start items-start gap-2.5">
-              <div className="text-slate-900 text-base font-normal leading-6">
+            <div className="w-full flex flex-col justify-start items-start gap-1.5">
+              <div className="text-slate-900 text-sm font-medium leading-5 mb-0.5">
                 Incluye:
               </div>
               {PRICING_FEATURES.map((feat, index) => (
-                <div key={index} className="w-full inline-flex justify-start items-start gap-2">
-                  <svg className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <div key={index} className="w-full inline-flex justify-start items-center gap-2">
+                  <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="flex-1 text-slate-900 text-base font-normal leading-6">
+                  <span className="flex-1 text-slate-900 text-sm font-normal leading-5">
                     {feat}
                   </span>
                 </div>
@@ -95,7 +92,7 @@ export function PricingSection() {
           {/* Card 2: Membresía Anual */}
           <div className="p-8 bg-white rounded-2xl flex flex-col justify-between items-start gap-6 border border-slate-200/80 shadow-sm">
             <div className="w-full flex flex-col justify-start items-start gap-4">
-              
+
               {/* Header Badge & Discount */}
               <div className="w-full inline-flex justify-between items-center">
                 <div className="px-3 py-1 bg-black rounded-2xl flex justify-center items-center gap-2.5">
@@ -126,16 +123,16 @@ export function PricingSection() {
             <hr className="w-full border-t border-gray-200 my-1" />
 
             {/* Features List */}
-            <div className="w-full flex flex-col justify-start items-start gap-2.5">
-              <div className="text-slate-900 text-base font-normal leading-6">
+            <div className="w-full flex flex-col justify-start items-start gap-1.5">
+              <div className="text-slate-900 text-sm font-medium leading-5 mb-0.5">
                 Incluye:
               </div>
               {PRICING_FEATURES.map((feat, index) => (
-                <div key={index} className="w-full inline-flex justify-start items-start gap-2">
-                  <svg className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <div key={index} className="w-full inline-flex justify-start items-center gap-2">
+                  <svg className="w-4 h-4 text-emerald-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="flex-1 text-slate-900 text-base font-normal leading-6">
+                  <span className="flex-1 text-slate-900 text-sm font-normal leading-5">
                     {feat}
                   </span>
                 </div>

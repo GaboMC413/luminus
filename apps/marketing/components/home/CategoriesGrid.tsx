@@ -56,10 +56,10 @@ export function CategoriesGrid() {
 
         {/* Header */}
         <div className="flex flex-col items-center text-center gap-4">
-          <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
+          <h2 className="text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[48px]">
             El bienestar puede tomar muchas formas.
           </h2>
-          <p className="text-body-large font-normal text-slate-700 max-w-[800px]">
+          <p className="text-lg sm:text-xl lg:text-[24px] font-normal text-slate-800 leading-8 max-w-[800px]">
             Reunimos distintas áreas, enfoques y profesionales para que puedas explorar lo que tiene sentido para ti.
           </p>
         </div>
