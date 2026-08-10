@@ -1,72 +1,119 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Image from "next/image";
 
 const INTERVIEWS = [
   {
+    id: "G7LahF0Mq9A",
     title: "Cuando la comida se vuelve bienestar",
     description:
       "En este encuentro en vivo con Anaí Costa —licenciada en nutrición y creadora de Nutriendo Hábitos— descubrirás cómo transformar tu relación con la comida desde un enfoque integral, lejos de las dietas restrictivas y más cerca de un estilo de vida sostenible y consciente.",
-    image: "/Photos/Grupo de personas sonriendo.png",
-    youtubeUrl: "https://www.youtube.com/@luminuslatam",
+    thumbnail: "https://img.youtube.com/vi/G7LahF0Mq9A/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=G7LahF0Mq9A",
   },
   {
+    id: "l6xc6mspgxk",
     title: "Respiración, postura y movimiento consciente",
     description:
-      "Laura Ravaioli es terapeuta corporal con más de 25 años de experiencia, creadora y especialista del Método REEM (Reeducación Estructural por la Economía del Movimiento), una innovadora técnica que ayuda a optimizar el rendimiento del cuerpo con el menor esfuerzo posible.",
-    image: "/Photos/Tres personas de pie sonriendo.png",
-    youtubeUrl: "https://www.youtube.com/@luminuslatam",
+      "Laura Ravaioli es terapeuta corporal con más de 25 años de experiencia, creadora y especialista del Método REEM (Reeducación Estructural por la Economía del Movimiento), una innovadora técnica que ayuda a las personas a optimizar el rendimiento de su cuerpo con el menor esfuerzo posible.",
+    thumbnail: "https://img.youtube.com/vi/l6xc6mspgxk/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=l6xc6mspgxk",
   },
   {
+    id: "s7S-ojIpoqU",
     title: "Cómo fomentar el amor propio",
     description:
       "En este encuentro con Carla Lorenzo —psicóloga, actriz y comunicadora uruguaya especializada en enfoque gestáltico— vas a explorar herramientas reales de autoconocimiento y autocuidado para construir una relación más sana y compasiva con vos mismo/a.",
-    image: "/Photos/Mujer sonriendo en videollamada.png",
-    youtubeUrl: "https://www.youtube.com/@luminuslatam",
+    thumbnail: "https://img.youtube.com/vi/s7S-ojIpoqU/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=s7S-ojIpoqU",
   },
   {
+    id: "d7yR4NBydiY",
     title: "Sanar para Ser",
     description:
-      "En esta charla en vivo, el Dr. Julio Tarabini, médico y terapeuta integrador, comparte una visión de la sanación como un camino profundo que atraviesa cuerpo, mente, emociones y espíritu. Una conversación íntima sobre cómo aliviar el dolor y vivir con mayor autenticidad.",
-    image: "/Photos/Mujer mirando celular en sofá.png",
-    youtubeUrl: "https://www.youtube.com/@luminuslatam",
+      "En esta charla en vivo, el Dr. Julio Tarabini, médico y terapeuta integrador, comparte una visión de la sanación como un camino profundo que atraviesa cuerpo, mente, emociones y espíritu. Una conversación íntima y transformadora sobre cómo aliviar el dolor, reconectar con nuestro equilibrio interior y vivir con mayor autenticidad.",
+    thumbnail: "https://img.youtube.com/vi/d7yR4NBydiY/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=d7yR4NBydiY",
+  },
+  {
+    id: "Z77iwEAMakU",
+    title: "Hábitos conscientes y dirección de vida",
+    description:
+      "Encuentro en vivo con especialistas sobre cómo construir rutinas sostenibles, tomar decisiones alineadas con tu bienestar y cultivar hábitos que potencien tu desarrollo integral.",
+    thumbnail: "https://img.youtube.com/vi/Z77iwEAMakU/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=Z77iwEAMakU",
+  },
+  {
+    id: "fZW8QjPkpFg",
+    title: "Bienestar integral y autoconocimiento",
+    description:
+      "Una conversación sobre las distintas dimensiones de la salud, cómo escuchar las señales de tu cuerpo y construir espacios de calma y equilibrio en tu vida cotidiana.",
+    thumbnail: "https://img.youtube.com/vi/fZW8QjPkpFg/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=fZW8QjPkpFg",
   },
 ];
 
 export function InterviewsSection() {
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [scrollPos, setScrollPos] = useState(0);
+
+  const scroll = (direction: "left" | "right") => {
+    if (carouselRef.current) {
+      const scrollAmount = carouselRef.current.clientWidth * 0.8;
+      const targetScroll =
+        direction === "left"
+          ? carouselRef.current.scrollLeft - scrollAmount
+          : carouselRef.current.scrollLeft + scrollAmount;
+      carouselRef.current.scrollTo({
+        left: targetScroll,
+        behavior: "smooth",
+      });
+      setScrollPos(targetScroll);
+    }
+  };
+
   return (
-    <section id="entrevistas" className="w-full py-16 md:py-24 bg-slate-100">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-12">
+    <section id="entrevistas" className="w-full py-16 px-4 md:px-10 bg-slate-100 flex justify-center items-center">
+      <div className="max-w-[1440px] w-full flex flex-col justify-end items-center gap-10">
         
         {/* Header */}
-        <div className="flex flex-col gap-4 text-left">
-          <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
+        <div className="w-full flex flex-col justify-start items-start gap-4 text-left">
+          <h2 className="w-full text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900 leading-[48px]">
             Actividades para conectar con nuevas ideas
           </h2>
-          <p className="text-lg sm:text-heading-6 font-normal text-slate-700 max-w-[840px]">
+          <p className="w-full text-lg sm:text-xl lg:text-[24px] font-normal text-slate-800 leading-8">
             Entrevistas y encuentros con especialistas para descubrir nuevas perspectivas sobre bienestar.
           </p>
         </div>
 
-        {/* Interviews Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {INTERVIEWS.map((item, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-3xl p-5 flex flex-col justify-between gap-5 border border-slate-200 h-[420px]"
-            >
-              <div className="flex flex-col gap-4">
-                {/* Thumbnail */}
-                <div className="w-full h-44 relative rounded-2xl overflow-hidden bg-slate-200 shrink-0">
+        {/* Carousel & Bottom Controls Container */}
+        <div className="w-full flex flex-col justify-start items-start gap-8">
+          
+          {/* Carousel Track (6 Items) */}
+          <div
+            ref={carouselRef}
+            className="w-full flex items-start gap-8 overflow-x-auto scroll-smooth scrollbar-none py-2"
+            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+          >
+            {INTERVIEWS.map((item) => (
+              <div
+                key={item.id}
+                className="w-[340px] sm:w-[384px] h-[384px] p-4 bg-white rounded-2xl shrink-0 flex flex-col justify-between border border-slate-200/80"
+              >
+                {/* 16:9 YouTube Cover Thumbnail */}
+                <div className="w-full h-48 relative rounded-xl overflow-hidden bg-slate-200 shrink-0 aspect-[16/9]">
                   <Image
-                    src={item.image}
+                    src={item.thumbnail}
                     alt={item.title}
                     fill
                     className="object-cover"
-                    sizes="300px"
+                    sizes="384px"
+                    unoptimized
                   />
-                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-slate-900">
+                  {/* YouTube Play Icon Overlay */}
+                  <div className="absolute inset-0 bg-black/20 flex items-center justify-center group-hover:bg-black/30 transition-colors">
+                    <div className="w-12 h-12 rounded-full bg-white/90 flex items-center justify-center text-slate-900 shadow-md">
                       <svg className="w-6 h-6 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z" />
                       </svg>
@@ -75,42 +122,66 @@ export function InterviewsSection() {
                 </div>
 
                 {/* Content */}
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-body-large font-normal text-slate-900 leading-snug line-clamp-2">
+                <div className="w-full flex-1 flex flex-col justify-start items-start gap-2 pt-1">
+                  <h3 className="w-full text-lg font-medium text-slate-900 leading-6 line-clamp-1">
                     {item.title}
                   </h3>
-                  <p className="text-body-xs font-normal text-slate-600 leading-relaxed line-clamp-4">
+                  <p className="w-full text-xs font-normal text-slate-700 leading-5 line-clamp-4">
                     {item.description}
                   </p>
                 </div>
+
+                {/* Link */}
+                <a
+                  href={item.youtubeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-normal text-black underline leading-5 hover:text-red-600 transition-colors pt-2 border-t border-slate-100"
+                >
+                  <span>Ver en YouTube</span>
+                  <svg className="w-4 h-4 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </a>
               </div>
+            ))}
+          </div>
 
-              {/* Link */}
-              <a
-                href={item.youtubeUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-body-small font-normal text-slate-900 hover:text-red-600 transition-colors pt-2 border-t border-slate-100"
-              >
-                <span>Ver en YouTube</span>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </a>
-            </div>
-          ))}
-        </div>
+          {/* Navigation Bar */}
+          <div className="w-full inline-flex justify-between items-center pt-2">
+            {/* Left Arrow Button */}
+            <button
+              onClick={() => scroll("left")}
+              className="p-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl flex justify-center items-center transition-colors cursor-pointer"
+              aria-label="Previous slide"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
 
-        {/* Bottom Actions */}
-        <div className="flex items-center justify-center pt-4">
-          <a
-            href="https://www.youtube.com/@luminuslatam"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="py-3.5 px-10 text-body-medium font-normal text-slate-900 bg-white border border-slate-300 hover:bg-slate-50 rounded-2xl text-center min-w-[280px]"
-          >
-            Ver todas las entrevistas
-          </a>
+            {/* Center Channel CTA */}
+            <a
+              href="https://www.youtube.com/@luminuslatam"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-8 py-3.5 bg-white border border-slate-300 hover:bg-slate-50 rounded-2xl flex justify-center items-center text-black text-base font-normal underline leading-6 transition-colors"
+            >
+              Ver todas las entrevistas
+            </a>
+
+            {/* Right Arrow Button */}
+            <button
+              onClick={() => scroll("right")}
+              className="p-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl flex justify-center items-center transition-colors cursor-pointer"
+              aria-label="Next slide"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
         </div>
 
       </div>
