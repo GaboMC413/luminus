@@ -15,7 +15,7 @@ export function DarkFeatureShowcase() {
         {/* Right 50% Column - Full Edge-to-Edge Fill */}
         <div className="w-full lg:w-1/2 h-[320px] relative overflow-hidden">
           <Image
-            src="/Home/Luminus app - comunidad y especialistas.png"
+            src="/Photos/Luminus app - comunidad y especialistas.png"
             alt="LUMINUS App Showcase"
             fill
             className="object-cover object-left"

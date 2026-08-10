@@ -10,7 +10,7 @@ export function FeatureCards() {
           {/* Image */}
           <div className="w-full lg:w-1/2 min-h-[320px] lg:min-h-[500px] relative bg-amber-100">
             <Image
-              src="/Home/Grupo de personas sonriendo.png"
+              src="/Photos/Grupo de personas sonriendo.png"
               alt="Comunidad LUMINUS"
               fill
               className="object-cover"
@@ -66,7 +66,7 @@ export function FeatureCards() {
           {/* Image */}
           <div className="w-full lg:w-1/2 min-h-[320px] lg:min-h-[500px] relative bg-blue-900">
             <Image
-              src="/Home/Tres personas de pie sonriendo.png"
+              src="/Photos/Tres personas de pie sonriendo.png"
               alt="Especialistas LUMINUS"
               fill
               className="object-cover"

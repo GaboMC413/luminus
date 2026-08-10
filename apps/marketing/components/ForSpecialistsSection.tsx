@@ -35,7 +35,7 @@ export function ForSpecialistsSection() {
         {/* Left Column: Image */}
         <div className="w-full lg:w-1/2 min-h-[360px] lg:min-h-[640px] relative bg-pink-900">
           <Image
-            src="/Home/Grupo diverso de cinco personas sentadas.png"
+            src="/Photos/Grupo diverso de cinco personas sentadas.png"
             alt="Grupo de especialistas LUMINUS"
             fill
             className="object-cover"

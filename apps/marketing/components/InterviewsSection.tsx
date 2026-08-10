@@ -7,28 +7,28 @@ const INTERVIEWS = [
     title: "Cuando la comida se vuelve bienestar",
     description:
       "En este encuentro en vivo con Anaí Costa —licenciada en nutrición y creadora de Nutriendo Hábitos— descubrirás cómo transformar tu relación con la comida desde un enfoque integral, lejos de las dietas restrictivas y más cerca de un estilo de vida sostenible y consciente.",
-    image: "/Home/Grupo de personas sonriendo.png",
+    image: "/Photos/Grupo de personas sonriendo.png",
     youtubeUrl: "https://www.youtube.com/@luminuslatam",
   },
   {
     title: "Respiración, postura y movimiento consciente",
     description:
       "Laura Ravaioli es terapeuta corporal con más de 25 años de experiencia, creadora y especialista del Método REEM (Reeducación Estructural por la Economía del Movimiento), una innovadora técnica que ayuda a optimizar el rendimiento del cuerpo con el menor esfuerzo posible.",
-    image: "/Home/Tres personas de pie sonriendo.png",
+    image: "/Photos/Tres personas de pie sonriendo.png",
     youtubeUrl: "https://www.youtube.com/@luminuslatam",
   },
   {
     title: "Cómo fomentar el amor propio",
     description:
       "En este encuentro con Carla Lorenzo —psicóloga, actriz y comunicadora uruguaya especializada en enfoque gestáltico— vas a explorar herramientas reales de autoconocimiento y autocuidado para construir una relación más sana y compasiva con vos mismo/a.",
-    image: "/Home/Mujer sonriendo en videollamada.png",
+    image: "/Photos/Mujer sonriendo en videollamada.png",
     youtubeUrl: "https://www.youtube.com/@luminuslatam",
   },
   {
     title: "Sanar para Ser",
     description:
       "En esta charla en vivo, el Dr. Julio Tarabini, médico y terapeuta integrador, comparte una visión de la sanación como un camino profundo que atraviesa cuerpo, mente, emociones y espíritu. Una conversación íntima sobre cómo aliviar el dolor y vivir con mayor autenticidad.",
-    image: "/Home/Mujer mirando celular en sofá.png",
+    image: "/Photos/Mujer mirando celular en sofá.png",
     youtubeUrl: "https://www.youtube.com/@luminuslatam",
   },
 ];

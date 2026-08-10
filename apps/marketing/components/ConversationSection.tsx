@@ -9,7 +9,7 @@ export function ConversationSection() {
           {/* Left Photo */}
           <div className="w-full lg:w-1/4 h-[300px] lg:h-full relative rounded-3xl overflow-hidden shrink-0 bg-slate-200">
             <Image
-              src="/Home/Mujer sonriendo en videollamada.png"
+              src="/Photos/Mujer sonriendo en videollamada.png"
               alt="Mujer sonriendo en videollamada"
               fill
               className="object-cover"
@@ -41,7 +41,7 @@ export function ConversationSection() {
           {/* Right Photo */}
           <div className="w-full lg:w-1/4 h-[300px] lg:h-full relative rounded-3xl overflow-hidden shrink-0 bg-slate-200">
             <Image
-              src="/Home/Mujer mirando celular en sofá.png"
+              src="/Photos/Mujer mirando celular en sofá.png"
               alt="Mujer mirando celular en sofá"
               fill
               className="object-cover"

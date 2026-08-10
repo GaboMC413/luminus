@@ -30,7 +30,7 @@ export function SpecialistsHighlight() {
         <div className="w-full lg:w-1/2 bg-[#eed7c4] min-h-[360px] lg:min-h-[560px] relative flex items-center justify-center p-8 overflow-hidden">
           <div className="relative w-[260px] sm:w-[300px] h-[480px] sm:h-[540px] bg-slate-900 rounded-2xl overflow-hidden shrink-0">
             <Image
-              src="/Home/Luminus app - perfil especialista y directorio.png"
+              src="/Photos/Luminus app - perfil especialista y directorio.png"
               alt="Directorio de Especialistas LUMINUS"
               fill
               className="object-cover object-top"

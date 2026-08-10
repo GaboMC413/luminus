@@ -35,7 +35,7 @@ export function ContactBanner() {
         <div className="w-full lg:w-1/2 flex items-center justify-center relative min-h-[380px] lg:min-h-[500px]">
           <div className="relative w-full max-w-[540px] h-[380px] lg:h-[500px]">
             <Image
-              src="/Home/Luminus app - buscar especialistas y comunidad.png"
+              src="/Photos/Luminus app - buscar especialistas y comunidad.png"
               alt="LUMINUS App Overview"
               fill
               className="object-contain"
