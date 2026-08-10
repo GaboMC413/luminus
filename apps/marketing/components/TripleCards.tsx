@@ -2,14 +2,14 @@ import Image from "next/image";
 
 export function TripleCards() {
   return (
-    <section className="w-full py-6 md:py-10 bg-white">
+    <section className="w-full pt-6 md:pt-8 pb-16 md:pb-24 bg-white">
       <div className="max-w-[1440px] mx-auto px-4 md:px-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
           
           {/* Card 1: Espacios */}
-          <div className="bg-[#6D28D9] rounded-3xl overflow-hidden flex flex-col justify-between">
-            {/* Top Full-bleed Image */}
-            <div className="w-full h-72 sm:h-80 relative overflow-hidden bg-[#d5c9e8]">
+          <div className="bg-[#6D28D9] rounded-3xl overflow-hidden flex flex-col justify-between h-[500px]">
+            {/* Top Relative Flexible Image Box */}
+            <div className="relative flex-1 w-full min-h-[220px] overflow-hidden bg-[#d5c9e8]">
               <Image
                 src="/Photos/Luminus app - explorar espacios.png"
                 alt="LUMINUS Espacios"
@@ -21,7 +21,7 @@ export function TripleCards() {
             </div>
 
             {/* Bottom Content */}
-            <div className="p-8 flex flex-col gap-6 text-white justify-between flex-1">
+            <div className="p-8 flex flex-col gap-6 text-white justify-between shrink-0">
               <div className="flex flex-col gap-3">
                 <h3 className="text-3xl lg:text-heading-3 font-normal tracking-tight text-white">
                   Espacios
@@ -39,9 +39,9 @@ export function TripleCards() {
           </div>
 
           {/* Card 2: Grupos */}
-          <div className="bg-[#A8C800] rounded-3xl overflow-hidden flex flex-col justify-between">
-            {/* Top Full-bleed Image */}
-            <div className="w-full h-72 sm:h-80 relative overflow-hidden bg-[#e7eec4]">
+          <div className="bg-[#A8C800] rounded-3xl overflow-hidden flex flex-col justify-between h-[500px]">
+            {/* Top Relative Flexible Image Box */}
+            <div className="relative flex-1 w-full min-h-[220px] overflow-hidden bg-[#e7eec4]">
               <Image
                 src="/Photos/Luminus app - explorar grupos.png"
                 alt="LUMINUS Grupos"
@@ -53,7 +53,7 @@ export function TripleCards() {
             </div>
 
             {/* Bottom Content (Text in White) */}
-            <div className="p-8 flex flex-col gap-6 text-white justify-between flex-1">
+            <div className="p-8 flex flex-col gap-6 text-white justify-between shrink-0">
               <div className="flex flex-col gap-3">
                 <h3 className="text-3xl lg:text-heading-3 font-normal tracking-tight text-white">
                   Grupos
@@ -71,9 +71,9 @@ export function TripleCards() {
           </div>
 
           {/* Card 3: Faro AI */}
-          <div className="bg-[#E855C8] rounded-3xl overflow-hidden flex flex-col justify-between">
-            {/* Top Full-bleed Image */}
-            <div className="w-full h-72 sm:h-80 relative overflow-hidden bg-[#e9c9e2]">
+          <div className="bg-[#E855C8] rounded-3xl overflow-hidden flex flex-col justify-between h-[500px]">
+            {/* Top Relative Flexible Image Box */}
+            <div className="relative flex-1 w-full min-h-[220px] overflow-hidden bg-[#e9c9e2]">
               <Image
                 src="/Photos/Luminus app - chat con especialista.png"
                 alt="LUMINUS Faro AI"
@@ -85,7 +85,7 @@ export function TripleCards() {
             </div>
 
             {/* Bottom Content */}
-            <div className="p-8 flex flex-col gap-6 text-white justify-between flex-1">
+            <div className="p-8 flex flex-col gap-6 text-white justify-between shrink-0">
               <div className="flex flex-col gap-3">
                 <h3 className="text-3xl lg:text-heading-3 font-normal tracking-tight text-white">
                   Faro AI
