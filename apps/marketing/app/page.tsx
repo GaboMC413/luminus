@@ -2,7 +2,6 @@ import { Navbar } from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { DarkFeatureShowcase } from "@/components/DarkFeatureShowcase";
 import { FeatureCards } from "@/components/FeatureCards";
-import { TripleCards } from "@/components/TripleCards";
 import { CategoriesGrid } from "@/components/CategoriesGrid";
 import { SpecialistsHighlight } from "@/components/SpecialistsHighlight";
 import { ConversationSection } from "@/components/ConversationSection";
@@ -21,7 +20,6 @@ export default function Home() {
         <Hero />
         <DarkFeatureShowcase />
         <FeatureCards />
-        <TripleCards />
         <CategoriesGrid />
         <SpecialistsHighlight />
         <ConversationSection />
