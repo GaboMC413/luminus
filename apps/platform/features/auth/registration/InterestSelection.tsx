@@ -34,9 +34,18 @@ export function InterestSelection({
       return arr;
     };
 
-    // Shuffle only the categories
-    const shuffled = shuffle(INTEREST_CATEGORIES);
-    setCategories(shuffled);
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.categories && Array.isArray(data.categories) && data.categories.length > 0) {
+          setCategories(shuffle(data.categories));
+        } else {
+          setCategories(shuffle(INTEREST_CATEGORIES));
+        }
+      })
+      .catch(() => {
+        setCategories(shuffle(INTEREST_CATEGORIES));
+      });
   }, []);
 
   const toggleInterest = (item: string) => {
@@ -101,7 +110,7 @@ export function InterestSelection({
         {categories.map((category) => (
           <div key={category.title} className="flex flex-col gap-4">
             <h3 className="flex items-center gap-2 text-[16px] md:text-[17px] font-bold font-sans animate-in fade-in duration-300" style={{ color: category.color }}>
-              <span className="material-symbols-outlined select-none text-[20px]">{category.icon}</span>
+              <span className="material-symbols-outlined select-none text-[20px]" style={(category as any).iconFilled ? { fontVariationSettings: "'FILL' 1" } : undefined}>{category.icon}</span>
               {category.title}
             </h3>
             <div className="flex flex-wrap gap-2">

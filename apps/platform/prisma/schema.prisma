@@ -57,35 +57,36 @@ enum UserTier {
 }
 
 model User {
-  id            String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  cognitoSub    String       @unique @map("cognito_sub")
-  email         String       @unique @db.VarChar
-  passwordHash  String?      @map("password_hash")
-  emailVerified Boolean      @default(false) @map("email_verified")
-  authProvider  AuthProvider @default(unknown) @map("auth_provider")
-  role          UserRole     @default(USER)
-  status        UserStatus   @default(active)
-  tier          UserTier     @default(FREE)
-  trialExpiresAt DateTime?    @map("trial_expires_at") @db.Timestamptz
-  lastLoginAt   DateTime?    @map("last_login_at") @db.Timestamptz
-  createdAt     DateTime     @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt     DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  profile       UserProfile?
-  identities    UserIdentity[]
-  interests     UserInterest[]
-  profilePrompts UserProfilePrompt[]
-  passwordResetTokens PasswordResetToken[]
-  emailChangeTokens EmailChangeToken[]
-  sentConnections UserConnection[] @relation("SentConnections")
-  receivedConnections UserConnection[] @relation("ReceivedConnections")
+  id                       String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  cognitoSub               String                    @unique @map("cognito_sub")
+  email                    String                    @unique @db.VarChar
+  passwordHash             String?                   @map("password_hash")
+  emailVerified            Boolean                   @default(false) @map("email_verified")
+  authProvider             AuthProvider              @default(unknown) @map("auth_provider")
+  role                     UserRole                  @default(USER)
+  status                   UserStatus                @default(active)
+  tier                     UserTier                  @default(FREE)
+  trialExpiresAt           DateTime?                 @map("trial_expires_at") @db.Timestamptz
+  lastLoginAt              DateTime?                 @map("last_login_at") @db.Timestamptz
+  createdAt                DateTime                  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                DateTime                  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  profile                  UserProfile?
+  identities               UserIdentity[]
+  interests                UserInterest[]
+  profilePrompts           UserProfilePrompt[]
+  passwordResetTokens      PasswordResetToken[]
+  emailChangeTokens        EmailChangeToken[]
+  sentConnections          UserConnection[]          @relation("SentConnections")
+  receivedConnections      UserConnection[]          @relation("ReceivedConnections")
   conversationParticipants ConversationParticipant[]
-  sentMessages  Message[]
-  notifications Notification[]
-  reportsSubmitted UserReport[] @relation("ReportsSubmitted")
-  reportsReceived  UserReport[] @relation("ReportsReceived")
-  activityLogs     ActivityLog[]
-  specialistProfile SpecialistProfile?
-  specialistPostulations SpecialistPostulation[]
+  sentMessages             Message[]
+  notifications            Notification[]
+  reportsSubmitted         UserReport[]              @relation("ReportsSubmitted")
+  reportsReceived          UserReport[]              @relation("ReportsReceived")
+  activityLogs             ActivityLog[]
+  specialistProfile        SpecialistProfile?
+  specialistPostulations   SpecialistPostulation[]
+  categorySuggestions      CategorySuggestion[]
 
   @@map("users")
 }
@@ -107,41 +108,39 @@ model UserIdentity {
 }
 
 model UserProfile {
-  userId        String    @id @map("user_id") @db.Uuid
-  fullName      String?   @map("full_name") @db.VarChar
-  firstName     String?   @map("first_name") @db.VarChar
-  lastName      String?   @map("last_name") @db.VarChar
-  avatarUrl     String?   @map("avatar_url") @db.VarChar
-  coverUrl      String?   @map("cover_url") @db.VarChar
-  profession    String?   @db.VarChar
-  city          String?   @db.VarChar
-  country       String?   @db.VarChar
-  phoneNumber   String?   @map("phone_number") @db.VarChar
-  gender        String?   @db.VarChar
-  birthdate     DateTime? @db.Date
-  bio           String?
-  intention     String?
-  selectedPlan  String?   @map("selected_plan") @db.VarChar
-  isOnboarded   Boolean   @default(false) @map("is_onboarded")
-  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String    @id @map("user_id") @db.Uuid
+  fullName     String?   @map("full_name") @db.VarChar
+  firstName    String?   @map("first_name") @db.VarChar
+  lastName     String?   @map("last_name") @db.VarChar
+  avatarUrl    String?   @map("avatar_url") @db.VarChar
+  coverUrl     String?   @map("cover_url") @db.VarChar
+  profession   String?   @db.VarChar
+  city         String?   @db.VarChar
+  country      String?   @db.VarChar
+  phoneNumber  String?   @map("phone_number") @db.VarChar
+  gender       String?   @db.VarChar
+  birthdate    DateTime? @db.Timestamptz
+  selectedPlan String?   @map("selected_plan") @db.VarChar
+  bio          String?   @db.Text
+  intention    String?   @db.Text
+  isOnboarded  Boolean   @default(false) @map("is_onboarded")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  @@index([isOnboarded, country])
-  @@index([isOnboarded, city])
-  @@index([country])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("user_profiles")
 }
 
 model Interest {
-  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  categoryId    String         @map("category_id") @db.Uuid
-  name          String         @unique @db.VarChar
-  slug          String         @unique @db.VarChar
-  sortOrder     Int            @default(0) @map("sort_order")
-  isActive      Boolean        @default(true) @map("is_active")
-  createdAt     DateTime       @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  id            String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId    String           @map("category_id") @db.Uuid
+  name          String           @unique @db.VarChar
+  slug          String           @unique @db.VarChar
+  sortOrder     Int              @default(0) @map("sort_order")
+  isActive      Boolean          @default(true) @map("is_active")
+  createdAt     DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   category      InterestCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   userInterests UserInterest[]
 
@@ -149,15 +148,68 @@ model Interest {
 }
 
 model InterestCategory {
-  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name      String     @unique @db.VarChar
-  slug      String     @unique @db.VarChar
-  sortOrder Int        @default(0) @map("sort_order")
-  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  interests Interest[]
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                String               @unique @db.VarChar
+  slug                String               @unique @db.VarChar
+  icon                String?              @db.VarChar
+  iconFilled          Boolean              @default(true) @map("icon_filled")
+  color               String?              @db.VarChar
+  bgColor             String?              @map("bg_color") @db.VarChar
+  sortOrder           Int                  @default(0) @map("sort_order")
+  createdAt           DateTime             @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt           DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  interests           Interest[]
+  specialistAreas     SpecialistArea[]
+  categorySuggestions CategorySuggestion[]
+  specialistSpaces    SpecialistSpace[]
+  spaceCategories     SpecialistSpaceCategory[]
+  spaceServices       SpecialistSpaceService[]
 
   @@map("interest_categories")
+}
+
+model SpecialistArea {
+  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  categoryId String           @map("category_id") @db.Uuid
+  name       String           @db.VarChar
+  slug       String           @unique @db.VarChar
+  sortOrder  Int              @default(0) @map("sort_order")
+  isActive   Boolean          @default(true) @map("is_active")
+  createdAt  DateTime         @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  category   InterestCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("specialist_areas")
+}
+
+enum SuggestionType {
+  USER_INTEREST
+  SPECIALIST_AREA
+
+  @@map("suggestion_type")
+}
+
+enum SuggestionStatus {
+  pending
+  approved
+  rejected
+
+  @@map("suggestion_status")
+}
+
+model CategorySuggestion {
+  id         String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String?           @map("user_id") @db.Uuid
+  categoryId String?           @map("category_id") @db.Uuid
+  type       SuggestionType    @default(USER_INTEREST)
+  name       String            @db.VarChar
+  status     SuggestionStatus  @default(pending)
+  createdAt  DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  user       User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  category   InterestCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@map("category_suggestions")
 }
 
 model UserInterest {
@@ -221,18 +273,18 @@ model EmailChangeToken {
 }
 
 model Notification {
-  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  userId    String    @map("user_id") @db.Uuid
-  type      String    @default("system") @db.VarChar
-  title     String    @db.VarChar
-  actorName String?   @map("actor_name") @db.VarChar
-  actorAvatarUrl String? @map("actor_avatar_url") @db.VarChar
-  body      String
-  actionUrl String?   @map("action_url") @db.VarChar
-  readAt    DateTime? @map("read_at") @db.Timestamptz
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  type           String    @default("system") @db.VarChar
+  title          String    @db.VarChar
+  actorName      String?   @map("actor_name") @db.VarChar
+  actorAvatarUrl String?   @map("actor_avatar_url") @db.VarChar
+  body           String
+  actionUrl      String?   @map("action_url") @db.VarChar
+  readAt         DateTime? @map("read_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, readAt, createdAt])
   @@map("notifications")
@@ -307,8 +359,8 @@ model UserReport {
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  reporter    User     @relation("ReportsSubmitted", fields: [reporterId], references: [id], onDelete: Cascade)
-  reported    User     @relation("ReportsReceived", fields: [reportedId], references: [id], onDelete: Cascade)
+  reporter User @relation("ReportsSubmitted", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported User @relation("ReportsReceived", fields: [reportedId], references: [id], onDelete: Cascade)
 
   @@index([reporterId])
   @@index([reportedId])
@@ -322,7 +374,7 @@ model ActivityLog {
   details   String?  @db.Text
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([action])
@@ -353,7 +405,13 @@ model SpecialistPostulation {
   createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  institution   String? @db.VarChar
+  selectedAreas Json?   @map("selected_areas")
+  clinicData    Json?   @map("clinic_data")
+  sessionsData  Json?   @map("sessions_data")
+  resumeUrl     String? @map("resume_url") @db.VarChar
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([status])
@@ -369,21 +427,127 @@ model SpecialistProfile {
   linkedinUrl  String?  @map("linkedin_url") @db.VarChar
   instagramUrl String?  @map("instagram_url") @db.VarChar
   websiteUrl   String?  @map("website_url") @db.VarChar
-  courses      Json?
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  institution   String? @db.VarChar
+  selectedAreas Json?   @map("selected_areas")
+  resumeUrl     String? @map("resume_url") @db.VarChar
+
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courses       SpecialistCourse[]
+  spaces        SpecialistSpace[]
+  legacyCourses Json?              @map("courses")
 
   @@map("specialist_profiles")
 }
 
+model SpecialistCourse {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String   @db.VarChar
+  type        String?  @db.VarChar
+  description String   @db.Text
+  modality    String?  @db.VarChar
+  url         String?  @db.VarChar
+  coverUrl    String?  @map("cover_url") @db.VarChar
+  institution String?  @db.VarChar
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  specialist SpecialistProfile @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("specialist_courses")
+}
+
+model SpecialistSpace {
+  id            String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String            @map("user_id") @db.Uuid
+  spaceType       String?                   @map("space_type") @db.VarChar
+  customSpaceType String?                   @map("custom_space_type") @db.VarChar
+  categoryArea    String?                   @map("category_area") @db.VarChar
+  categoryId      String?                   @map("category_id") @db.Uuid
+  name            String                    @db.VarChar
+  description     String?                   @db.Text
+  address         String?                   @db.VarChar
+  city            String?                   @db.VarChar
+  country         String?                   @db.VarChar
+  lat             Decimal?                  @db.Decimal(9, 6)
+  lng             Decimal?                  @db.Decimal(9, 6)
+  googlePlaceId   String?                   @map("google_place_id") @db.VarChar
+  googleMapsUrl   String?                   @map("google_maps_url") @db.VarChar
+  phone           String?                   @db.VarChar
+  website         String?                   @db.VarChar
+  coverUrl        String?                   @map("cover_url") @db.VarChar
+  isActive        Boolean                   @default(true) @map("is_active")
+  createdAt       DateTime                  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime                  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  specialist      SpecialistProfile         @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  category        InterestCategory?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  availability    SpecialistAvailability[]
+  spaceCategories SpecialistSpaceCategory[]
+  services        SpecialistSpaceService[]
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([city])
+  @@map("specialist_spaces")
+}
+
+model SpecialistSpaceCategory {
+  spaceId    String           @map("space_id") @db.Uuid
+  categoryId String           @map("category_id") @db.Uuid
+  createdAt  DateTime         @default(now()) @map("created_at") @db.Timestamptz
+
+  space    SpecialistSpace  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  category InterestCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([spaceId, categoryId])
+  @@index([categoryId])
+  @@map("specialist_space_categories")
+}
+
+model SpecialistSpaceService {
+  id         String           @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  spaceId    String           @map("space_id") @db.Uuid
+  categoryId String           @map("category_id") @db.Uuid
+  name       String           @db.VarChar
+  isCustom   Boolean          @default(false) @map("is_custom")
+  createdAt  DateTime         @default(now()) @map("created_at") @db.Timestamptz
+
+  space    SpecialistSpace  @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  category InterestCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId])
+  @@index([categoryId])
+  @@map("specialist_space_services")
+}
+
+model SpecialistAvailability {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  spaceId   String   @map("space_id") @db.Uuid
+  dayOfWeek Int      @map("day_of_week") @db.SmallInt
+  startTime String   @map("start_time") @db.VarChar
+  endTime   String   @map("end_time") @db.VarChar
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  space SpecialistSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+
+  @@index([spaceId])
+  @@map("specialist_availability")
+}
+
 model SentEmailLog {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  recipient  String   @db.VarChar
-  subject    String   @db.VarChar
-  htmlBody   String   @db.Text
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipient String   @db.VarChar
+  subject   String   @db.VarChar
+  htmlBody  String   @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   @@index([recipient])
   @@index([createdAt])

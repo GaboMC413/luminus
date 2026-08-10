@@ -13,18 +13,18 @@ export default function EspaciosPage() {
         {/* Banner Image */}
         <div 
           className="w-full bg-cover bg-center bg-no-repeat flex-1 min-h-0 md:aspect-[2.39/1] md:min-h-[350px] md:flex-initial"
-          style={{ backgroundImage: "url('/Spaces.png')" }}
+          style={{ backgroundImage: "url('/Map.png')" }}
         />
 
         {/* Info Card */}
         <div className="w-full bg-white border-t border-slate-200/80 p-4 md:p-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-6 shadow-none shrink-0">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 w-full md:w-auto">
-            {/* Icon container - same size as Specialists page */}
+            {/* Icon container */}
             <div className="w-12 h-12 md:w-20 md:h-20 bg-slate-50 border border-slate-200 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
               <div
                 style={{
-                  maskImage: "url('/Icons/NavBar/espacios active.svg')",
-                  WebkitMaskImage: "url('/Icons/NavBar/espacios active.svg')",
+                  maskImage: "url('/Icons/NavBar/map active.svg')",
+                  WebkitMaskImage: "url('/Icons/NavBar/map active.svg')",
                   maskSize: "contain",
                   WebkitMaskSize: "contain",
                   maskRepeat: "no-repeat",
@@ -43,7 +43,7 @@ export default function EspaciosPage() {
                 Espacios LUMINUS
               </h4>
               <p className="text-slate-600 text-[12.5px] md:text-[14px] leading-relaxed max-w-[650px]">
-                Próximamente podrás participar en espacios creados por especialistas, con contenido, encuentros e invitaciones para seguir aprendiendo.
+                Próximamente podrás explorar personas, especialistas, clínicas, consultorios y espacios de atención cerca de ti y en toda LATAM.
               </p>
             </div>
           </div>

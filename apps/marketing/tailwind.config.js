@@ -8,48 +8,36 @@ module.exports = {
     extend: {
       colors: {
         luminus: {
-          blue: {
-            pastel: '#DCE6FF',
-            DEFAULT: '#0450FB',
-            deep: '#002C9E',
-          },
-          lime: {
-            pastel: '#F4F8B8',
-            DEFAULT: '#D4E600',
-            deep: '#7A8500',
-          },
-          orange: {
-            pastel: '#FFE0C2',
-            DEFAULT: '#FF7700',
-            deep: '#B84A00',
-          },
-          pink: {
-            pastel: '#FFE0FC',
-            DEFAULT: '#FF80FC',
-            deep: '#B832B4',
-          },
-          white: '#FFFFFF',
-          black: '#000000',
-          bg: '#FFFFFF',
-          text: '#000000',
-          secondary: '#4B5563',
-          border: '#000000',
+          cobalt: '#0450FB',
+          tangerine: '#FF7700',
+          'tangerine-light': '#eed7c4',
+          violet: '#6D28D9',
+          'violet-light': '#d5c9e8',
+          chartreuse: '#A8C800',
+          'chartreuse-light': '#e7eec4',
+          magenta: '#E855C8',
+          'magenta-light': '#e9c9e2',
+          amber: '#F0A500',
+          crimson: '#E63946',
+          emerald: '#0FA87A',
         }
       },
-      fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        display: ['Outfit', 'sans-serif'],
+      fontSize: {
+        'heading-1': ['60px', { lineHeight: '72px' }],
+        'heading-3': ['40px', { lineHeight: '48px' }],
+        'heading-5': ['28px', { lineHeight: '40px' }],
+        'heading-6': ['24px', { lineHeight: '30px' }],
+        'body-large': ['18px', { lineHeight: '26px' }],
+        'body-medium': ['16px', { lineHeight: '24px' }],
+        'body-small': ['14px', { lineHeight: '22px' }],
+        'body-xs': ['12px', { lineHeight: '20px' }],
       },
-      boxShadow: {
-        'premium': '0 4px 30px rgba(0, 0, 0, 0.02)',
-        'premium-hover': '0 10px 40px rgba(0, 0, 0, 0.05)',
-        'bold-sm': '2px 2px 0px 0px #000000',
-        'bold': '4px 4px 0px 0px #000000',
-        'bold-lg': '8px 8px 0px 0px #000000',
-        'bold-blue': '4px 4px 0px 0px #0450FB',
-        'bold-orange': '4px 4px 0px 0px #FF7700',
-        'bold-lime': '4px 4px 0px 0px #D4E600',
-        'bold-pink': '4px 4px 0px 0px #FF80FC',
+      fontFamily: {
+        sans: ['var(--font-jakarta)', 'system-ui', 'sans-serif'],
+      },
+      rotate: {
+        '15': '15deg',
+        '-15': '-15deg',
       }
     },
   },

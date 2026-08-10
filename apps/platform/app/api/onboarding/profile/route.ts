@@ -144,6 +144,17 @@ export async function POST(request: Request) {
         }
       }
 
+      if (otherInterests) {
+        await tx.categorySuggestion.create({
+          data: {
+            userId: session.userId,
+            type: "USER_INTEREST",
+            name: otherInterests,
+            status: "pending",
+          },
+        });
+      }
+
       return savedProfile;
     });
 

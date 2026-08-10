@@ -137,6 +137,12 @@ export default async function AdminPage() {
 
   const specialistsRaw = await prisma.specialistProfile.findMany({
     include: {
+      spaces: {
+        include: {
+          availability: true,
+        },
+      },
+      courses: true,
       user: {
         select: {
           email: true,
@@ -146,6 +152,7 @@ export default async function AdminPage() {
               lastName: true,
               fullName: true,
               avatarUrl: true,
+              city: true,
             },
           },
         },
@@ -165,6 +172,10 @@ export default async function AdminPage() {
     linkedinUrl: spec.linkedinUrl || "",
     instagramUrl: spec.instagramUrl || "",
     websiteUrl: spec.websiteUrl || "",
+    institution: spec.institution || null,
+    selectedAreas: spec.selectedAreas || [],
+    resumeUrl: spec.resumeUrl || null,
+    spaces: spec.spaces || [],
     courses: spec.courses || [],
     createdAt: spec.createdAt.toISOString(),
     user: {
@@ -174,6 +185,7 @@ export default async function AdminPage() {
         lastName: spec.user.profile?.lastName || "",
         fullName: spec.user.profile?.fullName || "",
         avatarUrl: spec.user.profile?.avatarUrl || "",
+        city: spec.user.profile?.city || "",
       },
     },
   }));
@@ -192,6 +204,7 @@ export default async function AdminPage() {
               lastName: true,
               fullName: true,
               avatarUrl: true,
+              city: true,
             },
           },
         },
@@ -212,6 +225,11 @@ export default async function AdminPage() {
     linkedinUrl: post.linkedinUrl || "",
     instagramUrl: post.instagramUrl || "",
     websiteUrl: post.websiteUrl || "",
+    institution: post.institution || null,
+    selectedAreas: post.selectedAreas || [],
+    resumeUrl: post.resumeUrl || null,
+    clinicData: post.clinicData || null,
+    sessionsData: post.sessionsData || null,
     courses: post.courses || [],
     status: post.status,
     createdAt: post.createdAt.toISOString(),
@@ -222,8 +240,82 @@ export default async function AdminPage() {
         lastName: post.user.profile?.lastName || "",
         fullName: post.user.profile?.fullName || "",
         avatarUrl: post.user.profile?.avatarUrl || "",
+        city: post.user.profile?.city || "",
       },
     },
+  }));
+
+  const categoriesRaw = await prisma.interestCategory.findMany({
+    orderBy: { sortOrder: "asc" },
+    include: {
+      interests: { orderBy: { sortOrder: "asc" } },
+      specialistAreas: { orderBy: { sortOrder: "asc" } },
+    },
+  });
+
+  const categories = categoriesRaw.map((cat: any) => ({
+    id: cat.id,
+    name: cat.name,
+    slug: cat.slug,
+    icon: cat.icon || "label",
+    iconFilled: cat.iconFilled ?? true,
+    color: cat.color || "#3B82F6",
+    bgColor: cat.bgColor || "#DBEAFE",
+    sortOrder: cat.sortOrder,
+    createdAt: cat.createdAt.toISOString(),
+    updatedAt: cat.updatedAt.toISOString(),
+    interests: (cat.interests || []).map((i: any) => ({
+      id: i.id,
+      categoryId: i.categoryId,
+      name: i.name,
+      slug: i.slug,
+      sortOrder: i.sortOrder,
+      isActive: i.isActive,
+    })),
+    specialistAreas: (cat.specialistAreas || []).map((s: any) => ({
+      id: s.id,
+      categoryId: s.categoryId,
+      name: s.name,
+      slug: s.slug,
+      sortOrder: s.sortOrder,
+      isActive: s.isActive,
+    })),
+  }));
+
+  const suggestionsRaw = await prisma.categorySuggestion.findMany({
+    orderBy: { createdAt: "desc" },
+    include: {
+      user: {
+        select: {
+          email: true,
+          profile: {
+            select: {
+              firstName: true,
+              lastName: true,
+              fullName: true,
+            },
+          },
+        },
+      },
+      category: {
+        select: { id: true, name: true },
+      },
+    },
+  });
+
+  const suggestions = suggestionsRaw.map((sugg: any) => ({
+    id: sugg.id,
+    type: sugg.type,
+    name: sugg.name,
+    status: sugg.status,
+    userId: sugg.userId,
+    categoryId: sugg.categoryId,
+    createdAt: sugg.createdAt.toISOString(),
+    user: sugg.user ? {
+      email: sugg.user.email,
+      fullName: sugg.user.profile?.fullName || `${sugg.user.profile?.firstName || ""} ${sugg.user.profile?.lastName || ""}`.trim() || sugg.user.email,
+    } : null,
+    categoryName: sugg.category?.name || null,
   }));
 
   return (
@@ -236,6 +328,8 @@ export default async function AdminPage() {
       initialSearches={searches}
       initialSpecialists={specialists}
       initialPostulations={postulations}
+      initialCategories={categories}
+      initialSuggestions={suggestions}
     />
   );
 }

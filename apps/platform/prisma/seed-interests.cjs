@@ -1,106 +1,266 @@
-const { PrismaClient } = require("@prisma/client");
+const fs = require("fs");
+const path = require("path");
 
+function loadEnvFile(filePath) {
+  if (fs.existsSync(filePath)) {
+    const content = fs.readFileSync(filePath, "utf8");
+    for (const line of content.split("\n")) {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith("#") && trimmed.includes("=")) {
+        const [key, ...values] = trimmed.split("=");
+        const val = values.join("=").replace(/^["']|["']$/g, "").trim();
+        if (key && !process.env[key.trim()]) {
+          process.env[key.trim()] = val;
+        }
+      }
+    }
+  }
+}
+
+loadEnvFile(path.resolve(__dirname, "../.env.local"));
+loadEnvFile(path.resolve(__dirname, "../.env"));
+
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const categories = [
   {
     title: "Crecimiento Personal",
+    icon: "sunny",
+    iconFilled: true,
+    color: "#F59E0B",
+    bgColor: "#FEF3C7",
     items: [
-      "Propósito de vida",
-      "Cambios de vida",
-      "Motivación",
-      "Toma de decisiones",
       "Autoconocimiento",
-      "Confianza personal",
-      "Aprendizaje continuo",
-      "Hábitos conscientes",
+      "Propósito",
+      "Hábitos",
+      "Creatividad",
+      "Emprendimiento",
+      "Desarrollo profesional",
+    ],
+    specialistAreas: [
+      "Coaching de vida",
+      "Coaching ejecutivo",
+      "Coaching ontológico",
+      "Orientación vocacional",
+      "Mentoría profesional",
+      "Desarrollo de liderazgo",
+      "Desarrollo organizacional",
+      "Facilitación de procesos",
+      "Formación en habilidades blandas",
+      "Otro",
     ],
   },
   {
     title: "Bienestar Emocional",
+    icon: "mood",
+    iconFilled: true,
+    color: "#F472B6",
+    bgColor: "#FBCFE8",
     items: [
-      "Bienestar emocional",
-      "Equilibrio emocional",
-      "Calma interior",
-      "Acompañamiento personal",
-      "Gestión emocional",
-      "Relaciones saludables",
-      "Comunicación consciente",
+      "Autocuidado",
       "Autoestima",
+      "Inteligencia emocional",
+      "Gestión del estrés",
+      "Resiliencia",
+      "Salud mental",
+    ],
+    specialistAreas: [
+      "Psicología",
+      "Psicoterapia",
+      "Terapia cognitivo-conductual",
+      "Terapia sistémica",
+      "Terapia gestáltica",
+      "Terapia humanista",
+      "Psicología positiva",
+      "Acompañamiento en duelo",
+      "Arteterapia",
+      "Musicoterapia",
+      "Otro",
     ],
   },
   {
-    title: "Salud y Medicina",
+    title: "Salud Integral",
+    icon: "stethoscope",
+    iconFilled: true,
+    color: "#2563EB",
+    bgColor: "#DBEAFE",
     items: [
-      "Salud integral",
-      "Bienestar físico",
-      "Prevención",
+      "Sueño",
       "Longevidad",
-      "Dolor crónico",
-      "Manejo del dolor",
-      "Recuperación",
-      "Alergias",
-      "Salud hormonal",
-      "Inmunidad",
       "Salud digestiva",
-      "Peso saludable",
-      "Salud cardiovascular",
-      "Salud metabólica",
-      "Salud sexual",
-      "Fertilidad",
-      "Embarazo",
+      "Salud hormonal",
+      "Prevención",
+      "Bienestar corporal",
+    ],
+    specialistAreas: [
+      "Medicina general",
+      "Medicina integrativa",
+      "Medicina funcional",
+      "Fisioterapia",
+      "Terapia ocupacional",
+      "Osteopatía",
+      "Quiropraxia",
+      "Medicina del dolor",
+      "Medicina del sueño",
+      "Ginecología",
+      "Endocrinología",
+      "Otro",
     ],
   },
   {
     title: "Movimiento Físico",
+    icon: "exercise",
+    iconFilled: true,
+    color: "#EF4444",
+    bgColor: "#FECACA",
     items: [
-      "Cuidado del cuerpo",
+      "Entrenamiento",
+      "Running",
+      "Yoga",
+      "Pilates",
+      "Danza",
+      "Senderismo",
+      "Ciclismo",
+      "Natación",
+    ],
+    specialistAreas: [
+      "Entrenamiento personal",
       "Entrenamiento funcional",
-      "Postura y movilidad",
-      "Fuerza",
-      "Masa muscular",
-      "Resistencia",
-      "Movimiento consciente",
-      "Cardio",
-      "Yoga y Pilates",
+      "Entrenamiento de fuerza",
+      "Preparación física",
+      "Yoga",
+      "Pilates",
+      "Movilidad",
+      "Danza",
+      "Calistenia",
+      "Entrenamiento postural",
+      "Acondicionamiento físico",
+      "Otro",
     ],
   },
   {
     title: "Nutrición",
+    icon: "nutrition",
+    iconFilled: true,
+    color: "#84CC16",
+    bgColor: "#ECFCCB",
     items: [
-      "Alimentación saludable",
-      "Nutrición diaria",
       "Alimentación consciente",
-      "Cocina práctica",
       "Alimentación vegetal",
+      "Nutrición deportiva",
+      "Cocina",
       "Suplementación",
-      "Vitaminas",
-      "Hidratación",
+      "Fermentación",
+    ],
+    specialistAreas: [
+      "Nutrición clínica",
+      "Nutrición deportiva",
+      "Nutrición funcional",
+      "Nutrición vegetariana",
+      "Nutrición vegana",
+      "Nutrición materno-infantil",
+      "Nutrición digestiva",
+      "Nutrición hormonal",
+      "Psiconutrición",
+      "Educación alimentaria",
+      "Otro",
     ],
   },
   {
-    title: "Estilo de Vida",
+    title: "Espiritualidad",
+    icon: "self_improvement",
+    iconFilled: true,
+    color: "#6D28D9",
+    bgColor: "#EDE9FE",
     items: [
-      "Autocuidado",
-      "Calidad de vida",
-      "Rutinas saludables",
-      "Organización personal",
-      "Sueño reparador",
-      "Descanso",
-      "Balance vida personal",
-      "Sustentabilidad",
-    ],
-  },
-  {
-    title: "Espiritualidad y Conexión",
-    items: [
-      "Atención plena",
       "Meditación",
-      "Conexión interior",
-      "Espiritualidad",
-      "Experiencias conscientes",
+      "Mindfulness",
+      "Respiración",
+      "Filosofía",
       "Naturaleza",
+      "Desarrollo espiritual",
     ],
+    specialistAreas: [
+      "Meditación",
+      "Mindfulness",
+      "Respiración consciente",
+      "Acompañamiento espiritual",
+      "Filosofía práctica",
+      "Prácticas contemplativas",
+      "Sonoterapia",
+      "Facilitación de retiros",
+      "Desarrollo espiritual",
+      "Otro",
+    ],
+  },
+  {
+    title: "Vínculos",
+    icon: "person_celebrate",
+    iconFilled: true,
+    color: "#F97316",
+    bgColor: "#FECACA",
+    items: [
+      "Pareja",
+      "Familia",
+      "Amistad",
+      "Crianza",
+      "Sexualidad",
+      "Comunidad",
+      "Comunicación",
+    ],
+    specialistAreas: [
+      "Terapia de pareja",
+      "Terapia familiar",
+      "Sexología",
+      "Terapia sexual",
+      "Mediación familiar",
+      "Orientación parental",
+      "Psicología perinatal",
+      "Acompañamiento en crianza",
+      "Comunicación interpersonal",
+      "Otro",
+    ],
+  },
+  {
+    title: "Terapias Complementarias",
+    icon: "spa",
+    iconFilled: true,
+    color: "#14B8A6",
+    bgColor: "#CCFBF1",
+    items: [
+      "Acupuntura",
+      "Ayurveda",
+      "Reiki",
+      "Masajes",
+      "Aromaterapia",
+      "Reflexología",
+      "Sonoterapia",
+      "Terapia floral",
+    ],
+    specialistAreas: [
+      "Acupuntura",
+      "Medicina tradicional china",
+      "Ayurveda",
+      "Reiki",
+      "Masoterapia",
+      "Aromaterapia",
+      "Reflexología",
+      "Sonoterapia",
+      "Terapia floral",
+      "Terapias energéticas",
+      "Biomagnetismo",
+      "Otro",
+    ],
+  },
+  {
+    title: "Otro",
+    icon: "star",
+    iconFilled: true,
+    color: "#64748B",
+    bgColor: "#F1F5F9",
+    items: ["Otro"],
+    specialistAreas: ["Otro"],
   },
 ];
 
@@ -115,17 +275,26 @@ function slugify(value) {
 
 async function main() {
   let interestCount = 0;
+  let areaCount = 0;
 
   for (const [categoryIndex, category] of categories.entries()) {
     const savedCategory = await prisma.interestCategory.upsert({
       where: { slug: slugify(category.title) },
       update: {
         name: category.title,
+        icon: category.icon,
+        iconFilled: category.iconFilled,
+        color: category.color,
+        bgColor: category.bgColor,
         sortOrder: categoryIndex,
       },
       create: {
         name: category.title,
         slug: slugify(category.title),
+        icon: category.icon,
+        iconFilled: category.iconFilled,
+        color: category.color,
+        bgColor: category.bgColor,
         sortOrder: categoryIndex,
       },
     });
@@ -149,9 +318,29 @@ async function main() {
       });
       interestCount += 1;
     }
+
+    for (const [areaIndex, areaName] of (category.specialistAreas || []).entries()) {
+      await prisma.specialistArea.upsert({
+        where: { slug: slugify(areaName) },
+        update: {
+          categoryId: savedCategory.id,
+          name: areaName,
+          sortOrder: areaIndex,
+          isActive: true,
+        },
+        create: {
+          categoryId: savedCategory.id,
+          name: areaName,
+          slug: slugify(areaName),
+          sortOrder: areaIndex,
+          isActive: true,
+        },
+      });
+      areaCount += 1;
+    }
   }
 
-  console.log(`Seeded ${categories.length} interest categories and ${interestCount} interests.`);
+  console.log(`Seeded ${categories.length} categories, ${interestCount} user interests, and ${areaCount} specialist areas.`);
 }
 
 main()

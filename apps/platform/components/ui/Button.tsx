@@ -9,7 +9,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 // Used for general actions, forms, and primary/secondary navigation buttons.
 export function Button({ variant = 'primary', children, className = '', ...props }: ButtonProps) {
   // Base styles for standard buttons
-  const baseStyles = "transition-all outline-none flex items-center justify-center font-jakarta duration-300 ease-out active:scale-95 cursor-pointer select-none";
+  const baseStyles = "transition-all outline-none flex items-center justify-center font-jakarta duration-300 ease-out active:scale-95 cursor-pointer select-none disabled:bg-slate-200 disabled:text-slate-400 disabled:border-transparent disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:bg-slate-200 disabled:hover:text-slate-400";
 
   const variants = {
     primary: "w-full h-11 md:h-12 px-5 sm:px-6 rounded-xl text-button font-medium bg-black text-white hover:bg-zinc-900",

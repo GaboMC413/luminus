@@ -234,6 +234,17 @@ export async function PATCH(request: Request) {
         }
       }
 
+      if (intention) {
+        await tx.categorySuggestion.create({
+          data: {
+            userId: session.userId,
+            type: "USER_INTEREST",
+            name: intention,
+            status: "pending",
+          },
+        });
+      }
+
       if (shouldUpdatePrompts) {
         const prompts = (data.prompts as ProfilePromptInput[])
           .map((prompt, index) => ({

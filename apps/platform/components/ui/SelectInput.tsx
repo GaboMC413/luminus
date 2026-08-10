@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 interface SelectInputProps {
   label?: string;
   value: string;
-  options: string[] | { label: string; value: string }[];
+  options: string[] | { label: string; value: string; description?: string }[];
   onSelect: (value: string) => void;
   placeholder?: string;
   variant?: 'clean' | 'bordered';
@@ -30,7 +30,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
   disabled = false,
   disabledOpacity = true,
   autoFocus,
-  preventScrollOnOpen = false
+  preventScrollOnOpen = true
 }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -181,6 +181,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
       {options.map((option, index) => {
         const optLabel = typeof option === 'string' ? option : option.label;
         const optValue = typeof option === 'string' ? option : option.value;
+        const optDescription = typeof option === 'string' ? undefined : (option as any).description;
         const isSelected = value === optValue;
         const isHighlighted = highlightedIndex === index;
 
@@ -193,12 +194,21 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
             }}
             onMouseEnter={() => setHighlightedIndex(index)}
             className={`
-              px-4 py-2 cursor-pointer transition-colors text-body truncate w-full block
-              ${isSelected ? 'font-semibold text-black' : ''}
-              ${isHighlighted ? 'bg-slate-100 text-black' : 'text-slate-600 hover:bg-slate-50'}
+              px-4 py-2.5 cursor-pointer transition-colors w-full block border-b border-slate-100 last:border-none
+              ${isSelected ? 'bg-emerald-50/40 text-black' : ''}
+              ${isHighlighted ? 'bg-slate-50 text-black' : 'text-slate-600'}
             `}
           >
-            {optLabel}
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className={`text-[13px] md:text-[14px] ${isSelected ? 'font-bold text-emerald-800' : 'font-semibold text-slate-900'} font-jakarta truncate`}>
+                {optLabel}
+              </span>
+              {optDescription && (
+                <span className="text-[11px] md:text-[12px] text-slate-500 font-sans leading-snug whitespace-normal">
+                  {optDescription}
+                </span>
+              )}
+            </div>
           </div>
         );
       })}
@@ -290,8 +300,8 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
         }}
         className={`
           ${variantClass} px-4 flex items-center cursor-pointer transition-all duration-300 group outline-none w-full min-w-0
-          ${error ? '!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]' : 'focus:border-black focus:ring-1 focus:ring-black'}
-          ${isOpen ? 'border-black' : ''}
+          ${error ? '!border-[#FF3D3D]' : 'focus:border-slate-800'}
+          ${isOpen ? 'border-slate-800' : ''}
           ${disabled ? `${disabledOpacity ? 'opacity-50' : ''} cursor-not-allowed` : ''}
         `}
       >

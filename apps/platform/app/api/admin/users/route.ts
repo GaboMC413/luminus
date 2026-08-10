@@ -139,3 +139,50 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ message: describeAdminUpdateError(error) }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request) {
+  const admin = requireAdmin();
+
+  if (!admin.ok) {
+    return admin.response;
+  }
+
+  const url = new URL(request.url);
+  const id = url.searchParams.get("id");
+
+  if (!id) {
+    return NextResponse.json({ message: "ID de usuario es requerido." }, { status: 400 });
+  }
+
+  if (id === admin.session.userId) {
+    return NextResponse.json({ message: "No puedes eliminar tu propio usuario admin." }, { status: 400 });
+  }
+
+  try {
+    const { prisma } = await import("@/lib/db");
+
+    const existingUser = await prisma.user.findUnique({
+      where: { id },
+      include: {
+        identities: true,
+      },
+    });
+
+    if (!existingUser) {
+      return NextResponse.json({ message: "Usuario no encontrado." }, { status: 404 });
+    }
+
+    // First delete from Cognito
+    await syncCognitoUserStatus(existingUser, "deleted");
+
+    // Then hard delete from Database
+    await prisma.user.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ message: "Usuario eliminado permanentemente." });
+  } catch (error) {
+    console.error("Failed to delete admin user.", error);
+    return NextResponse.json({ message: describeAdminUpdateError(error) }, { status: 500 });
+  }
+}

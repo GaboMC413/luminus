@@ -1,0 +1,56 @@
+"use client";
+
+import React from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/Button";
+
+export function OnboardingSuccessModal() {
+  const router = useRouter();
+
+  return (
+    <div className="flex flex-col items-center text-center gap-6 animate-in zoom-in-95 duration-300 py-4">
+      <div className="flex flex-col gap-1.5">
+        <h1 className="text-[26px] md:text-[30px] font-bold text-slate-900 font-jakarta leading-tight">
+          Aplicación enviada
+        </h1>
+        <p className="text-[15px] font-semibold text-slate-700 font-jakarta">
+          Gracias por aplicar como especialista en LUMINUS.
+        </p>
+      </div>
+
+      <div className="text-[14px] text-slate-600 leading-relaxed font-sans max-w-[480px] flex flex-col gap-4 mt-1">
+        <p>
+          Recibimos correctamente tu información. Nuestro Consejo de Expertos revisará tu perfil, formación, experiencia y enfoque profesional para evaluar tu incorporación a la red.
+        </p>
+
+        <p>
+          Este proceso nos permite conocer mejor tu trayectoria y asegurar que los especialistas de LUMINUS mantengan los criterios profesionales de la comunidad.
+        </p>
+
+        <p className="text-[13px] text-slate-500 font-medium">
+          Te enviaremos un correo electrónico cuando tu aplicación sea aprobada, rechazada o necesitemos información adicional.
+        </p>
+
+
+      </div>
+
+      <div className="flex flex-col items-center gap-3 mt-4 w-full sm:w-auto">
+        <Button
+          onClick={() => router.push("/especialistas")}
+          variant="primary"
+          className="w-full sm:!w-auto px-8 !h-12 bg-slate-900 text-white hover:bg-black font-bold font-jakarta text-[13px] tracking-wide !rounded-xl"
+        >
+          Volver a Especialistas
+        </Button>
+
+        <button
+          type="button"
+          onClick={() => router.push("/")}
+          className="text-[13px] text-slate-500 hover:text-slate-900 font-semibold font-jakarta hover:underline transition bg-transparent border-none cursor-pointer py-1"
+        >
+          Ir al inicio
+        </button>
+      </div>
+    </div>
+  );
+}
