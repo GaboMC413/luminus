@@ -19,15 +19,15 @@ export function TripleCards() {
             {/* Bottom Content */}
             <div className="p-8 flex flex-col gap-6 text-white justify-between flex-1">
               <div className="flex flex-col gap-3">
-                <h3 className="text-3xl font-bold tracking-tight">
+                <h3 className="text-3xl lg:text-heading-3 font-normal tracking-tight">
                   Espacios
                 </h3>
-                <p className="text-base md:text-lg text-purple-100 leading-relaxed font-normal">
+                <p className="text-body-large text-purple-100 font-normal">
                   Encuentra consultorios, clínicas, centros, estudios y otros espacios de bienestar cerca de ti.
                 </p>
               </div>
               <div>
-                <span className="inline-block px-4 py-1.5 bg-white text-slate-900 font-semibold text-xs rounded-full uppercase tracking-wider">
+                <span className="inline-block px-4 py-1 bg-white text-slate-900 font-medium text-body-xs rounded-full uppercase tracking-wider">
                   PRÓXIMAMENTE
                 </span>
               </div>
@@ -48,15 +48,15 @@ export function TripleCards() {
             {/* Bottom Content */}
             <div className="p-8 flex flex-col gap-6 text-slate-950 justify-between flex-1">
               <div className="flex flex-col gap-3">
-                <h3 className="text-3xl font-bold tracking-tight">
+                <h3 className="text-3xl lg:text-heading-3 font-normal tracking-tight">
                   Grupos
                 </h3>
-                <p className="text-base md:text-lg text-slate-900 leading-relaxed font-normal">
+                <p className="text-body-large text-slate-900 font-normal">
                   Forma parte de grupos de conversación alrededor de temas, intereses y experiencias que te importan.
                 </p>
               </div>
               <div>
-                <span className="inline-block px-4 py-1.5 bg-white text-slate-900 font-semibold text-xs rounded-full uppercase tracking-wider">
+                <span className="inline-block px-4 py-1 bg-white text-slate-900 font-medium text-body-xs rounded-full uppercase tracking-wider">
                   PRÓXIMAMENTE
                 </span>
               </div>
@@ -77,15 +77,15 @@ export function TripleCards() {
             {/* Bottom Content */}
             <div className="p-8 flex flex-col gap-6 text-white justify-between flex-1">
               <div className="flex flex-col gap-3">
-                <h3 className="text-3xl font-bold tracking-tight">
+                <h3 className="text-3xl lg:text-heading-3 font-normal tracking-tight">
                   Faro AI
                 </h3>
-                <p className="text-base md:text-lg text-pink-100 leading-relaxed font-normal">
+                <p className="text-body-large text-pink-100 font-normal">
                   Encuentra orientación personalizada para descubrir qué tipo de acompañamiento puede ser adecuado para ti.
                 </p>
               </div>
               <div>
-                <span className="inline-block px-4 py-1.5 bg-white text-slate-900 font-semibold text-xs rounded-full uppercase tracking-wider">
+                <span className="inline-block px-4 py-1 bg-white text-slate-900 font-medium text-body-xs rounded-full uppercase tracking-wider">
                   PRÓXIMAMENTE
                 </span>
               </div>

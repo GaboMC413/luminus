@@ -22,6 +22,16 @@ module.exports = {
           emerald: '#0FA87A',
         }
       },
+      fontSize: {
+        'heading-1': ['60px', { lineHeight: '72px' }],
+        'heading-3': ['40px', { lineHeight: '48px' }],
+        'heading-5': ['28px', { lineHeight: '40px' }],
+        'heading-6': ['24px', { lineHeight: '30px' }],
+        'body-large': ['18px', { lineHeight: '26px' }],
+        'body-medium': ['16px', { lineHeight: '24px' }],
+        'body-small': ['14px', { lineHeight: '22px' }],
+        'body-xs': ['12px', { lineHeight: '20px' }],
+      },
       fontFamily: {
         sans: ['var(--font-jakarta)', 'system-ui', 'sans-serif'],
       },

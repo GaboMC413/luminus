@@ -40,10 +40,10 @@ export function InterviewsSection() {
         
         {/* Header */}
         <div className="flex flex-col gap-4 text-left">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900">
+          <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
             Actividades para conectar con nuevas ideas
           </h2>
-          <p className="text-lg sm:text-xl text-slate-700 max-w-[840px] leading-relaxed">
+          <p className="text-lg sm:text-heading-6 font-normal text-slate-700 max-w-[840px]">
             Entrevistas y encuentros con especialistas para descubrir nuevas perspectivas sobre bienestar.
           </p>
         </div>
@@ -76,10 +76,10 @@ export function InterviewsSection() {
 
                 {/* Content */}
                 <div className="flex flex-col gap-2">
-                  <h3 className="text-lg font-bold text-slate-900 leading-snug line-clamp-2">
+                  <h3 className="text-body-large font-normal text-slate-900 leading-snug line-clamp-2">
                     {item.title}
                   </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed line-clamp-4 font-normal">
+                  <p className="text-body-xs font-normal text-slate-600 leading-relaxed line-clamp-4">
                     {item.description}
                   </p>
                 </div>
@@ -90,7 +90,7 @@ export function InterviewsSection() {
                 href={item.youtubeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm font-semibold text-slate-900 hover:text-red-600 transition-colors pt-2 border-t border-slate-100"
+                className="inline-flex items-center gap-2 text-body-small font-normal text-slate-900 hover:text-red-600 transition-colors pt-2 border-t border-slate-100"
               >
                 <span>Ver en YouTube</span>
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -107,7 +107,7 @@ export function InterviewsSection() {
             href="https://www.youtube.com/@luminuslatam"
             target="_blank"
             rel="noopener noreferrer"
-            className="py-3.5 px-10 text-base font-semibold text-slate-900 bg-white border border-slate-300 hover:bg-slate-50 rounded-2xl text-center min-w-[280px]"
+            className="py-3.5 px-10 text-body-medium font-normal text-slate-900 bg-white border border-slate-300 hover:bg-slate-50 rounded-2xl text-center min-w-[280px]"
           >
             Ver todas las entrevistas
           </a>

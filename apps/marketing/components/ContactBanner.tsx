@@ -7,10 +7,10 @@ export function ContactBanner() {
         
         {/* Left Column: Text & CTA */}
         <div className="w-full lg:w-1/2 flex flex-col gap-6">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white">
+          <h2 className="text-3xl lg:text-heading-3 font-normal tracking-tight text-white">
             Conectarnos con nuevas formas de bienestar
           </h2>
-          <div className="flex flex-col gap-4 text-base md:text-lg text-slate-300 leading-relaxed font-normal">
+          <div className="flex flex-col gap-4 text-body-medium font-normal text-slate-300">
             <p>
               Nacimos con la idea de acercar personas, especialistas, experiencias y herramientas que puedan ayudarnos a vivir con más bienestar.
             </p>
@@ -24,7 +24,7 @@ export function ContactBanner() {
           <div className="pt-2">
             <a
               href="mailto:hola@luminus.lat"
-              className="inline-block py-3.5 px-8 text-base font-semibold text-slate-950 bg-white hover:bg-slate-100 rounded-2xl text-center min-w-[260px]"
+              className="inline-block py-3.5 px-8 text-body-medium font-normal text-slate-950 bg-white hover:bg-slate-100 rounded-2xl text-center min-w-[260px]"
             >
               Contactar a LUMINUS
             </a>

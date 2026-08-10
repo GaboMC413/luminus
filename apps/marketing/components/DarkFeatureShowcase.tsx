@@ -2,12 +2,12 @@ import Image from "next/image";
 
 export function DarkFeatureShowcase() {
   return (
-    <section className="w-full bg-black text-white overflow-hidden">
-      <div className="w-full flex flex-col lg:flex-row items-center justify-between min-h-[320px]">
+    <section className="w-full bg-black text-white overflow-hidden flex justify-center items-center">
+      <div className="w-full max-w-[1440px] flex flex-col lg:flex-row items-center justify-between min-h-[320px]">
         
         {/* Left 50% Column */}
         <div className="w-full lg:w-1/2 px-8 sm:px-14 lg:px-20 py-12 lg:py-0 flex items-center justify-start">
-          <p className="text-2xl sm:text-3xl font-normal leading-relaxed lg:leading-[40px] text-white max-w-xl">
+          <p className="text-xl sm:text-heading-6 lg:text-heading-5 font-normal text-white max-w-xl">
             Un lugar para descubrir nuevas herramientas, encontrar profesionales, compartir intereses y acceder a experiencias que acompañen tu bienestar en diferentes momentos de tu vida.
           </p>
         </div>

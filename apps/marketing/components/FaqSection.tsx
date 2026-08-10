@@ -70,7 +70,7 @@ export function FaqSection() {
       <div className="max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-12">
         
         {/* Title */}
-        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 text-center">
+        <h2 className="text-2xl sm:text-heading-5 font-normal tracking-tight text-slate-900 text-center">
           Preguntas frecuentes
         </h2>
 
@@ -86,7 +86,7 @@ export function FaqSection() {
                 <div key={key} className="border-b border-slate-200 pb-4">
                   <button
                     onClick={() => toggleFaq(key)}
-                    className="w-full flex items-center justify-between text-left py-2 font-medium text-slate-900 text-base md:text-lg hover:text-slate-700 transition-colors gap-4"
+                    className="w-full flex items-center justify-between text-left py-2 font-normal text-slate-900 text-body-large hover:text-slate-700 transition-colors gap-4"
                   >
                     <span>{faq.question}</span>
                     <span className={`transform transition-transform duration-300 shrink-0 ${isOpen ? "rotate-180" : ""}`}>
@@ -96,7 +96,7 @@ export function FaqSection() {
                     </span>
                   </button>
                   {isOpen && (
-                    <div className="pt-2 pb-1 text-sm md:text-base text-slate-600 leading-relaxed font-normal">
+                    <div className="pt-2 pb-1 text-body-medium text-slate-600 font-normal">
                       {faq.answer}
                     </div>
                   )}
@@ -114,7 +114,7 @@ export function FaqSection() {
                 <div key={key} className="border-b border-slate-200 pb-4">
                   <button
                     onClick={() => toggleFaq(key)}
-                    className="w-full flex items-center justify-between text-left py-2 font-medium text-slate-900 text-base md:text-lg hover:text-slate-700 transition-colors gap-4"
+                    className="w-full flex items-center justify-between text-left py-2 font-normal text-slate-900 text-body-large hover:text-slate-700 transition-colors gap-4"
                   >
                     <span>{faq.question}</span>
                     <span className={`transform transition-transform duration-300 shrink-0 ${isOpen ? "rotate-180" : ""}`}>
@@ -124,7 +124,7 @@ export function FaqSection() {
                     </span>
                   </button>
                   {isOpen && (
-                    <div className="pt-2 pb-1 text-sm md:text-base text-slate-600 leading-relaxed font-normal">
+                    <div className="pt-2 pb-1 text-body-medium text-slate-600 font-normal">
                       {faq.answer}
                     </div>
                   )}

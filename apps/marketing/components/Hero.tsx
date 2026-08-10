@@ -4,12 +4,12 @@ export function Hero() {
       <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center flex flex-col items-center gap-8 md:gap-10 relative z-10">
         
         {/* Main Title */}
-        <h1 className="text-3xl sm:text-5xl md:text-6xl font-normal tracking-tight text-black leading-[1.15] max-w-4xl">
+        <h1 className="text-3xl sm:text-heading-3 lg:text-heading-1 font-normal tracking-tight text-black max-w-4xl">
           Un espacio para conectar, aprender y cuidar tu bienestar
         </h1>
 
         {/* Subtitle */}
-        <p className="text-lg sm:text-xl md:text-2xl font-normal text-black leading-relaxed max-w-3xl">
+        <p className="text-lg sm:text-body-large lg:text-heading-6 font-normal text-black max-w-3xl">
           LUMINUS es una plataforma de bienestar que conecta personas, especialistas y espacios de toda Latinoamérica en una misma comunidad.
         </p>
 
@@ -17,11 +17,11 @@ export function Hero() {
         <div className="flex flex-col items-center gap-4 w-full pt-2">
           <a
             href="https://app.luminus.lat/auth"
-            className="w-full max-w-[320px] py-3.5 px-6 text-base font-normal text-white bg-black hover:bg-slate-800 rounded-2xl text-center"
+            className="w-full max-w-[320px] py-3.5 px-6 text-body-medium font-normal text-white bg-black hover:bg-slate-800 rounded-2xl text-center"
           >
             Crear mi cuenta gratis
           </a>
-          <p className="text-xs sm:text-sm text-black max-w-md leading-relaxed">
+          <p className="text-body-small text-black max-w-md">
             Empieza con <span className="font-bold">3 meses de acceso sin costo</span>. No se solicitan datos de pago al registrarte.
           </p>
         </div>

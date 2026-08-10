@@ -47,10 +47,10 @@ export function ForSpecialistsSection() {
         <div className="w-full lg:w-1/2 p-8 md:p-14 lg:p-16 flex flex-col justify-center gap-8">
           
           <div className="flex flex-col gap-3">
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-white">
+            <h2 className="text-3xl lg:text-heading-3 font-normal tracking-tight text-white">
               Para especialistas
             </h2>
-            <p className="text-xl md:text-2xl font-normal text-pink-100">
+            <p className="text-xl lg:text-heading-6 font-normal text-pink-100">
               Muestra tu propuesta profesional dentro de la red.
             </p>
           </div>
@@ -65,10 +65,10 @@ export function ForSpecialistsSection() {
                   </svg>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <h4 className="text-base font-bold text-white leading-tight">
+                  <h4 className="text-body-large font-bold text-white leading-tight">
                     {item.title}
                   </h4>
-                  <p className="text-xs md:text-sm text-pink-100 leading-relaxed">
+                  <p className="text-body-small font-normal text-pink-100">
                     {item.desc}
                   </p>
                 </div>
@@ -80,7 +80,7 @@ export function ForSpecialistsSection() {
           <div className="pt-4">
             <a
               href="https://app.luminus.lat/auth"
-              className="inline-block py-3.5 px-8 text-base font-semibold text-white bg-black hover:bg-slate-800 rounded-2xl shadow-md transition-all text-center min-w-[280px]"
+              className="inline-block py-3.5 px-8 text-body-medium font-normal text-white bg-black hover:bg-slate-800 rounded-2xl text-center min-w-[280px]"
             >
               Sumarme como Especialista
             </a>
