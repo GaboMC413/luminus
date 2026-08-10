@@ -5,56 +5,86 @@ import { useState } from "react";
 const FAQS_LEFT = [
   {
     question: "¿Qué es LUMINUS y cuál es su propósito?",
-    answer:
-      "LUMINUS es una plataforma de bienestar que reúne personas, especialistas, contenidos, espacios y herramientas digitales para acompañar procesos de bienestar, desarrollo personal y vida consciente en Latinoamérica.",
+    paragraphs: [
+      "LUMINUS es una plataforma digital de bienestar creada para conectar personas, especialistas independientes, espacios, actividades y herramientas dentro de una misma red.",
+      "Nuestro propósito es facilitar el acceso a distintas formas de acompañamiento y bienestar, haciendo más simple descubrir profesionales, perspectivas y recursos que puedan ser relevantes para cada persona.",
+      "LUMINUS reúne distintas áreas como bienestar emocional, salud integral, crecimiento personal, movimiento, nutrición, espiritualidad, vínculos y terapias complementarias, desde una mirada amplia y diversa del bienestar.",
+    ],
   },
   {
     question: "¿Quién puede formar parte de LUMINUS?",
-    answer:
-      "Cualquier persona interesada en cuidar y explorar su bienestar personal, así como especialistas, profesionales capacitados, consultorios y clínicas que busquen conectar con la comunidad.",
+    paragraphs: [
+      "LUMINUS está pensado para personas interesadas en explorar distintas formas de bienestar y para profesionales que desarrollan su actividad en áreas relacionadas.",
+      "Los usuarios pueden participar de la comunidad, descubrir especialistas, explorar espacios, acceder a actividades y utilizar las herramientas disponibles dentro de la plataforma.",
+      "Los especialistas cuentan con un perfil profesional diferenciado desde el cual pueden presentar su experiencia, formación, áreas de acompañamiento, servicios, espacios y otras propuestas vinculadas con su práctica.",
+    ],
   },
   {
-    question: "¿Cómo se incorporan los Especialistas a la Plataforma?",
-    answer:
-      "Los especialistas completan una postulación en la cual revisamos su formación, credenciales y enfoque profesional de forma ética antes de habilitar su perfil activo en la plataforma.",
+    question: "¿Cómo se incorporan los especialistas a la plataforma?",
+    paragraphs: [
+      "Los profesionales interesados en formar parte de la red deben completar un proceso de aplicación donde presentan información sobre su formación, experiencia, trayectoria y áreas de trabajo.",
+      "Cada aplicación es revisada antes de habilitar el perfil profesional. Este proceso busca mantener criterios de calidad, claridad y responsabilidad dentro de la red.",
+      "Los especialistas participan de manera independiente. Su presencia en LUMINUS no implica una relación laboral, societaria ni de representación con la plataforma.",
+    ],
   },
   {
-    question: "¿Qué rol tiene LUMINUS en los servicios ofrecidos por los Especialistas?",
-    answer:
-      "LUMINUS facilita el encuentro y la comunicación directa de forma transparente. Cada profesional realiza sus atenciones de manera independiente conforme a su práctica profesional.",
+    question: "¿Qué rol tiene LUMINUS en los servicios ofrecidos por los especialistas?",
+    paragraphs: [
+      "LUMINUS funciona como una plataforma de conexión y descubrimiento. No presta directamente servicios médicos, psicológicos, terapéuticos ni otros servicios profesionales ofrecidos por los especialistas.",
+      "Cualquier relación profesional que se establezca posteriormente, así como sus condiciones, honorarios, tratamientos o seguimientos, es acordada directamente entre el usuario y el especialista correspondiente.",
+      "La información disponible en la plataforma tiene como objetivo facilitar el acceso y el conocimiento de distintas opciones, pero no sustituye una evaluación, diagnóstico o indicación profesional.",
+    ],
   },
   {
     question: "¿Cómo funciona la membresía de LUMINUS?",
-    answer:
-      "Todas las cuentas nuevas inician con 3 meses sin costo y sin ingresar datos de pago. Al finalizar este período, puedes elegir continuar con la membresía mensual de USD 5 o la anual de USD 45.",
+    paragraphs: [
+      "La membresía permite acceder a la experiencia y las herramientas disponibles dentro de la plataforma según el plan elegido.",
+      "Actualmente, las nuevas cuentas pueden comenzar con un período inicial de 3 meses sin costo y sin ingresar datos de pago. Antes de que finalice ese período, LUMINUS informará al usuario para que pueda decidir si desea continuar con una membresía mensual o anual.",
+      "Las funcionalidades de la plataforma pueden evolucionar e incorporarse progresivamente. La disponibilidad de cada herramienta será comunicada de forma clara dentro de LUMINUS.",
+    ],
   },
 ];
 
 const FAQS_RIGHT = [
   {
     question: "¿En qué países está disponible LUMINUS?",
-    answer:
-      "LUMINUS está abierta y accesible para usuarios y profesionales en toda América Latina y la comunidad hispanohablante a nivel global.",
+    paragraphs: [
+      "LUMINUS tiene alcance latinoamericano y está pensado para conectar personas y profesionales de diferentes países de la región.",
+      "La plataforma digital puede utilizarse desde distintos lugares, aunque la disponibilidad de especialistas, espacios, actividades y determinadas funcionalidades puede variar según el país o la ciudad.",
+      "A medida que la red crece, también se amplía la presencia de profesionales y propuestas disponibles en diferentes mercados de Latinoamérica.",
+    ],
   },
   {
     question: "¿Cómo protege LUMINUS la información y la privacidad de sus usuarios?",
-    answer:
-      "Implementamos rigurosas medidas de seguridad y cifrado para proteger todos tus datos personales, preferencias de bienestar e interacciones dentro de la plataforma.",
+    paragraphs: [
+      "LUMINUS procura recopilar únicamente la información necesaria para operar la plataforma, administrar las cuentas y ofrecer sus funcionalidades.",
+      "La información personal se gestiona de acuerdo con nuestra Política de Privacidad y mediante medidas técnicas y organizativas destinadas a proteger los datos de los usuarios.",
+      "Cada funcionalidad determina qué información puede ser visible para otros miembros y cuál permanece asociada de forma privada a la cuenta. Los detalles sobre tratamiento de datos, almacenamiento y derechos de los usuarios se encuentran desarrollados en la documentación legal de la plataforma.",
+    ],
   },
   {
     question: "¿Cómo se construye y modera la comunidad de LUMINUS?",
-    answer:
-      "Nos regimos por principios de respeto, empatía, autenticidad y cuidado mutuo. Contamos con lineamientos de convivencia y moderación continua.",
+    paragraphs: [
+      "LUMINUS busca construir una comunidad basada en el respeto, la diversidad de perspectivas y la participación responsable.",
+      "La plataforma cuenta con normas de convivencia y criterios de uso destinados a proteger a sus miembros y mantener la calidad de las interacciones. Las conductas que incumplan estas normas pueden ser revisadas y, cuando corresponda, dar lugar a restricciones o suspensión de una cuenta.",
+      "La diversidad de experiencias, disciplinas y puntos de vista forma parte de LUMINUS, siempre dentro de un marco de respeto hacia los demás miembros.",
+    ],
   },
   {
     question: "¿LUMINUS recomienda profesionales o garantiza sus servicios?",
-    answer:
-      "Brindamos información detallada, transparente y verificada de cada perfil para que tengas la libertad y la claridad de elegir al especialista que mejor resuene con tu proceso.",
+    paragraphs: [
+      "LUMINUS permite descubrir especialistas y acceder a información sobre su trayectoria, formación, áreas de trabajo y servicios, pero no garantiza resultados ni determina qué profesional es adecuado para cada persona.",
+      "La decisión de contactar o contratar a un especialista corresponde exclusivamente al usuario.",
+      "El proceso de aplicación de profesionales busca aportar mayor claridad y confianza sobre la información presentada en la plataforma, pero no reemplaza la evaluación personal ni las responsabilidades propias de cada especialista.",
+    ],
   },
   {
     question: "¿Cómo puedo comunicarme con LUMINUS?",
-    answer:
-      "Puedes contactarnos a través del formulario al final de esta página o escribiéndonos directamente en nuestras redes sociales o chat de la plataforma.",
+    paragraphs: [
+      "Puedes comunicarte con nosotros para realizar consultas sobre la plataforma, solicitar soporte, resolver dudas sobre tu cuenta o compartir comentarios sobre tu experiencia.",
+      "Contacto: info@luminuslatam.com",
+      "Nuestro equipo responderá a través de los canales oficiales de LUMINUS.",
+    ],
   },
 ];
 
@@ -96,8 +126,10 @@ export function FaqSection() {
                     </span>
                   </button>
                   {isOpen && (
-                    <div className="pt-2 pb-1 text-body-medium text-slate-600 font-normal">
-                      {faq.answer}
+                    <div className="pt-2 pb-1 text-body-medium text-slate-600 font-normal flex flex-col gap-3">
+                      {faq.paragraphs.map((p, idx) => (
+                        <p key={idx}>{p}</p>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -124,8 +156,10 @@ export function FaqSection() {
                     </span>
                   </button>
                   {isOpen && (
-                    <div className="pt-2 pb-1 text-body-medium text-slate-600 font-normal">
-                      {faq.answer}
+                    <div className="pt-2 pb-1 text-body-medium text-slate-600 font-normal flex flex-col gap-3">
+                      {faq.paragraphs.map((p, idx) => (
+                        <p key={idx}>{p}</p>
+                      ))}
                     </div>
                   )}
                 </div>

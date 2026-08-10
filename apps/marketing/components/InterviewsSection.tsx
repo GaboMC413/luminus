@@ -111,7 +111,7 @@ export function InterviewsSection() {
         {/* Carousel & Controls */}
         <div className="w-full flex flex-col justify-start items-start gap-8">
           
-          {/* Carousel Track with Full Margin Alignment & Snap */}
+          {/* Carousel Track with Equal Padding */}
           <div
             ref={carouselRef}
             className="w-[calc(100%+2rem)] md:w-[calc(100%+5rem)] -mx-4 md:-mx-10 px-4 md:px-10 flex items-start gap-6 sm:gap-8 overflow-x-auto scroll-smooth scrollbar-none py-2 snap-x snap-mandatory"
@@ -120,7 +120,7 @@ export function InterviewsSection() {
             {INTERVIEWS.map((item) => (
               <div
                 key={item.id}
-                className="w-[300px] sm:w-[384px] h-[384px] p-4 bg-white rounded-2xl shrink-0 flex flex-col justify-end items-start gap-4 border border-slate-200/80 snap-start"
+                className="w-[300px] sm:w-[384px] h-[400px] p-4 bg-white rounded-2xl shrink-0 flex flex-col justify-between gap-4 border border-slate-200/80 snap-start group"
               >
                 {/* 16:9 Cover Image */}
                 <div className="w-full h-48 relative rounded-xl overflow-hidden bg-slate-200 shrink-0">
@@ -139,22 +139,22 @@ export function InterviewsSection() {
                   <h3 className="w-full text-lg font-medium text-slate-900 leading-6 line-clamp-1">
                     {item.title}
                   </h3>
-                  <p className="w-full flex-1 text-xs font-normal text-slate-700 leading-5 line-clamp-4">
+                  <p className="w-full text-xs font-normal text-slate-700 leading-5 line-clamp-3">
                     {item.description}
                   </p>
                 </div>
 
-                {/* Link with Encircled Play Icon */}
-                <div className="inline-flex justify-start items-start gap-1">
+                {/* Link (no underline, red hover effect on text and play icon) */}
+                <div className="inline-flex justify-start items-center">
                   <a
                     href={item.youtubeUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-sm font-normal text-black underline leading-5 hover:text-red-600 transition-colors"
+                    className="inline-flex items-center gap-2 text-sm font-normal text-slate-900 no-underline leading-5 group-hover:text-red-600 transition-colors"
                   >
                     <span>Ver en YouTube</span>
-                    <div className="w-5 h-5 rounded-full border border-black flex items-center justify-center shrink-0">
-                      <svg className="w-2.5 h-2.5 ml-0.5 fill-black" viewBox="0 0 24 24">
+                    <div className="w-5 h-5 rounded-full border border-slate-900 group-hover:border-red-600 flex items-center justify-center shrink-0 transition-colors">
+                      <svg className="w-2.5 h-2.5 ml-0.5 fill-slate-900 group-hover:fill-red-600 transition-colors" viewBox="0 0 24 24">
                         <path d="M8 5v14l11-7z" />
                       </svg>
                     </div>
@@ -182,12 +182,12 @@ export function InterviewsSection() {
               </svg>
             </button>
 
-            {/* Center Button */}
+            {/* Center Button (no underline) */}
             <a
               href="https://www.youtube.com/@luminuslatam"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-6 py-3.5 bg-white border border-slate-300 hover:bg-slate-50 rounded-2xl flex justify-center items-center text-black text-base font-normal underline leading-6 transition-colors"
+              className="px-6 py-3.5 bg-white border border-slate-300 hover:bg-slate-50 rounded-2xl flex justify-center items-center text-slate-900 text-base font-medium no-underline leading-6 transition-colors shadow-sm"
             >
               Ver todas las entrevistas
             </a>
