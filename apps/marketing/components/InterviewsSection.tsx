@@ -38,9 +38,9 @@ const INTERVIEWS = [
   },
   {
     id: "Z77iwEAMakU",
-    title: "Hábitos conscientes y dirección de vida",
+    title: "El té como vehículo terapéutico",
     description:
-      "Encuentro en vivo con especialistas sobre cómo construir rutinas sostenibles, tomar decisiones alineadas con tu bienestar y cultivar hábitos que potencien tu desarrollo integral.",
+      "Encuentro en vivo con Mónica Devoto —sommelier de té— explorando las propiedades curativas, rituales y beneficios del té como herramienta de calma, presencia y salud integral.",
     thumbnail: "https://i.ytimg.com/vi/Z77iwEAMakU/hqdefault.jpg",
     youtubeUrl: "https://www.youtube.com/watch?v=Z77iwEAMakU",
   },
@@ -99,7 +99,7 @@ export function InterviewsSection() {
       <div className="max-w-[1440px] w-full px-4 md:px-10 flex flex-col justify-end items-center gap-10">
         
         {/* Header */}
-        <div className="w-full flex flex-col justify-start items-start gap-6 text-left">
+        <div className="w-full flex flex-col justify-start items-start gap-4 text-left">
           <h2 className="w-full text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900 leading-[48px]">
             Actividades para conectar con nuevas ideas
           </h2>
@@ -111,7 +111,7 @@ export function InterviewsSection() {
         {/* Carousel & Controls */}
         <div className="w-full flex flex-col justify-start items-start gap-8">
           
-          {/* Carousel Track within standard page margins */}
+          {/* Carousel Track aligned with max-w-1440px container */}
           <div
             ref={carouselRef}
             className="w-full flex items-start gap-6 sm:gap-8 overflow-x-auto scroll-smooth scrollbar-none py-2 snap-x snap-mandatory"
@@ -174,7 +174,7 @@ export function InterviewsSection() {
 
           {/* Navigation Controls */}
           <div className="w-full inline-flex justify-between items-center pt-2">
-            {/* Left Arrow (Disabled initially) */}
+            {/* Left Arrow (Disabled initially at position 0) */}
             <button
               onClick={() => scroll("left")}
               disabled={!canScrollLeft}
