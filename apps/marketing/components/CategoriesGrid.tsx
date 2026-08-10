@@ -3,49 +3,49 @@ const CATEGORIES = [
     title: "Crecimiento Personal",
     color: "#F0A500",
     description: "Herramientas y acompañamiento para desarrollar tu potencial y encontrar propósito.",
-    icon: "sunny",
+    icon: "/Icons/sunny_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Bienestar Emocional",
     color: "#E855C8",
     description: "Espacios y profesionales para comprender tus emociones, cuidar tu salud mental y sentirte mejor.",
-    icon: "mood",
+    icon: "/Icons/mood_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Salud Integral",
     color: "#0450FB",
     description: "Enfoques orientados al cuidado de tu salud desde una mirada amplia e integral.",
-    icon: "stethoscope",
+    icon: "/Icons/ecg_heart_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Movimiento Físico",
     color: "#E63946",
     description: "Prácticas y acompañamiento para mantenerte activo, fortalecer tu cuerpo y mejorar tu bienestar físico.",
-    icon: "exercise",
+    icon: "/Icons/exercise_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Nutrición",
     color: "#A8C800",
     description: "Orientación para construir una relación más saludable y consciente con la alimentación.",
-    icon: "nutrition",
+    icon: "/Icons/nutrition_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Espiritualidad",
     color: "#6D28D9",
     description: "Prácticas para cultivar la presencia, la conexión interior y el equilibrio personal.",
-    icon: "self_improvement",
+    icon: "/Icons/self_improvement_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Vínculos y relaciones",
     color: "#FF7700",
     description: "Acompañamiento para construir relaciones más saludables de pareja, familia y otros vínculos.",
-    icon: "person_celebrate",
+    icon: "/Icons/join_inner_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Terapias Alternativas",
     color: "#0FA87A",
     description: "Disciplinas y prácticas que amplían las formas de cuidar tu bienestar y conectar cuerpo y mente.",
-    icon: "spa",
+    icon: "/Icons/spa_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
 ];
 
@@ -72,12 +72,20 @@ export function CategoriesGrid() {
               className="bg-white p-8 rounded-3xl flex flex-col gap-4 border border-slate-200/80 h-[260px] justify-between"
             >
               <div className="flex flex-col gap-3">
-                <span
-                  style={{ color: cat.color }}
-                  className="material-symbols-rounded text-4xl select-none"
-                >
-                  {cat.icon}
-                </span>
+                <div
+                  style={{
+                    backgroundColor: cat.color,
+                    maskImage: `url('${cat.icon}')`,
+                    WebkitMaskImage: `url('${cat.icon}')`,
+                    maskRepeat: "no-repeat",
+                    WebkitMaskRepeat: "no-repeat",
+                    maskPosition: "center",
+                    WebkitMaskPosition: "center",
+                    maskSize: "contain",
+                    WebkitMaskSize: "contain",
+                  }}
+                  className="w-10 h-10 shrink-0"
+                />
                 <h3
                   style={{ color: cat.color }}
                   className="text-xl lg:text-heading-6 font-bold leading-tight"
