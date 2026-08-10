@@ -59,12 +59,12 @@ export function Navbar() {
           >
             Preguntas Frecuentes
           </button>
-          <button
-            onClick={() => handleNavClick("contacto")}
-            className="text-sm font-normal text-slate-800 hover:text-black transition-colors cursor-pointer"
+          <Link
+            href="/contacto"
+            className="text-sm font-normal text-slate-800 hover:text-black transition-colors"
           >
             Contactarnos
-          </button>
+          </Link>
         </nav>
       </div>
 
@@ -126,12 +126,13 @@ export function Navbar() {
           >
             Preguntas Frecuentes
           </button>
-          <button
-            onClick={() => handleNavClick("contacto")}
+          <Link
+            href="/contacto"
+            onClick={() => setMobileMenuOpen(false)}
             className="text-left py-2 text-base font-normal text-slate-800 hover:text-black"
           >
             Contactarnos
-          </button>
+          </Link>
 
           <div className="pt-4 border-t border-slate-200 flex flex-col gap-3">
             <a

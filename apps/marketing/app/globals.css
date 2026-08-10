@@ -34,3 +34,26 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
+
+@layer components {
+  /* Shared form input styles (mirrored from platform/app/app.css) */
+  .reg-input-bordered {
+    @apply w-full h-12 px-4 bg-white border border-zinc-200 rounded-xl text-base text-zinc-900 placeholder-zinc-400 outline-none transition-all duration-300;
+    focus: border-slate-800;
+  }
+  .reg-input-bordered:focus {
+    @apply border-slate-800;
+  }
+
+  .reg-input-textarea {
+    @apply w-full px-4 py-3 bg-white border border-zinc-200 rounded-xl text-base text-zinc-900 placeholder-zinc-400 outline-none transition-all duration-300 resize-none;
+  }
+  .reg-input-textarea:focus {
+    @apply border-slate-800;
+  }
+
+  .btn-pill-primary {
+    @apply h-12 px-6 rounded-xl bg-black hover:bg-zinc-900 text-white font-medium text-sm flex items-center justify-center transition-all duration-300 active:scale-95 cursor-pointer;
+  }
+}
+

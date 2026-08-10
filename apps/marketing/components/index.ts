@@ -34,6 +34,11 @@ export * from "./events/EventsVoicesCallout";
 export * from "./events/EventsFormatsGrid";
 export * from "./events/EventsClosingCta";
 
+// Contact Page Components
+export * from "./contact/ContactHero";
+export * from "./contact/ContactForm";
+
+
 
 
 
