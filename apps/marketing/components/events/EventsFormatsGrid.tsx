@@ -16,11 +16,12 @@ export function EventsFormatsGrid() {
         </div>
 
         {/* 3 Formats Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 w-full items-stretch">
 
           {/* Card 1: Especialistas en Streaming */}
-          <div className="bg-[#6D28D9] rounded-3xl overflow-hidden flex flex-col justify-between h-[520px]">
-            <div className="relative flex-1 w-full min-h-[240px] overflow-hidden bg-purple-900">
+          <div className="bg-[#6D28D9] rounded-3xl overflow-hidden flex flex-col">
+            {/* Fixed-height image area */}
+            <div className="relative w-full h-[300px] shrink-0 overflow-hidden">
               <Image
                 src="/Photos/Pareja de hosts en estudio de podcast.png"
                 alt="Especialistas en Streaming"
@@ -30,7 +31,8 @@ export function EventsFormatsGrid() {
                 priority
               />
             </div>
-            <div className="p-8 flex flex-col gap-6 text-white justify-between shrink-0">
+            {/* Content area grows to fill remaining space */}
+            <div className="p-8 flex flex-col justify-between gap-4 text-white flex-1">
               <div className="flex flex-col gap-3">
                 <h3 className="text-2xl lg:text-3xl font-normal tracking-tight text-white">
                   Especialistas en Streaming
@@ -48,8 +50,8 @@ export function EventsFormatsGrid() {
           </div>
 
           {/* Card 2: Conversatorios Virtuales */}
-          <div className="bg-[#A8C800] rounded-3xl overflow-hidden flex flex-col justify-between h-[520px]">
-            <div className="relative flex-1 w-full min-h-[240px] overflow-hidden bg-lime-900">
+          <div className="bg-[#A8C800] rounded-3xl overflow-hidden flex flex-col">
+            <div className="relative w-full h-[300px] shrink-0 overflow-hidden">
               <Image
                 src="/Photos/Videollamada grupal.png"
                 alt="Conversatorios Virtuales"
@@ -59,7 +61,7 @@ export function EventsFormatsGrid() {
                 priority
               />
             </div>
-            <div className="p-8 flex flex-col gap-6 text-white justify-between shrink-0">
+            <div className="p-8 flex flex-col justify-between gap-4 text-white flex-1">
               <div className="flex flex-col gap-3">
                 <h3 className="text-2xl lg:text-3xl font-normal tracking-tight text-white">
                   Conversatorios Virtuales
@@ -77,8 +79,8 @@ export function EventsFormatsGrid() {
           </div>
 
           {/* Card 3: Experiencias Locales */}
-          <div className="bg-[#E855C8] rounded-3xl overflow-hidden flex flex-col justify-between h-[520px]">
-            <div className="relative flex-1 w-full min-h-[240px] overflow-hidden bg-pink-900">
+          <div className="bg-[#E855C8] rounded-3xl overflow-hidden flex flex-col">
+            <div className="relative w-full h-[300px] shrink-0 overflow-hidden">
               <Image
                 src="/Photos/Grupo conversando en terraza.png"
                 alt="Experiencias Locales"
@@ -88,13 +90,13 @@ export function EventsFormatsGrid() {
                 priority
               />
             </div>
-            <div className="p-8 flex flex-col gap-6 text-white justify-between shrink-0">
+            <div className="p-8 flex flex-col justify-between gap-4 text-white flex-1">
               <div className="flex flex-col gap-3">
                 <h3 className="text-2xl lg:text-3xl font-normal tracking-tight text-white">
                   Experiencias Locales
                 </h3>
                 <p className="text-base font-normal text-pink-100 leading-relaxed">
-                  Nuevas formas de llevar estas conversaciones fuera de la pantalla y encontrarnos como comunidad.
+                  Formas de llevar estas conversaciones fuera de la pantalla y encontrarnos como comunidad.
                 </p>
               </div>
               <div>
