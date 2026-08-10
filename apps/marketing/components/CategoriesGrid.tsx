@@ -53,7 +53,7 @@ export function CategoriesGrid() {
   return (
     <section className="w-full py-16 md:py-24 bg-slate-100">
       <div className="max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-12">
-        
+
         {/* Header */}
         <div className="flex flex-col items-center text-center gap-4">
           <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
@@ -84,7 +84,7 @@ export function CategoriesGrid() {
                     maskSize: "contain",
                     WebkitMaskSize: "contain",
                   }}
-                  className="w-10 h-10 shrink-0"
+                  className="w-8 h-8 shrink-0"
                 />
                 <h3
                   style={{ color: cat.color }}

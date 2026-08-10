@@ -26,17 +26,16 @@ export function SpecialistsHighlight() {
           </div>
         </div>
 
-        {/* Right Column: Clean App Preview */}
-        <div className="w-full lg:w-1/2 bg-[#eed7c4] min-h-[360px] lg:min-h-[560px] relative flex items-center justify-center p-8 overflow-hidden">
-          <div className="relative w-[260px] sm:w-[300px] h-[480px] sm:h-[540px] bg-slate-900 rounded-2xl overflow-hidden shrink-0">
-            <Image
-              src="/Photos/Luminus app - perfil especialista y directorio.png"
-              alt="Directorio de Especialistas LUMINUS"
-              fill
-              className="object-cover object-top"
-              sizes="300px"
-            />
-          </div>
+        {/* Right Column: Full Bleed Image Asset */}
+        <div className="w-full lg:w-1/2 min-h-[360px] lg:min-h-[560px] relative overflow-hidden bg-[#eed7c4]">
+          <Image
+            src="/Photos/Luminus app - perfil especialista y directorio.png"
+            alt="Directorio de Especialistas LUMINUS"
+            fill
+            className="object-cover object-left"
+            sizes="(max-width: 1024px) 100vw, 50vw"
+            priority
+          />
         </div>
 
       </div>
