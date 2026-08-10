@@ -8,17 +8,16 @@ export function TripleCards() {
           
           {/* Card 1: Espacios */}
           <div className="bg-[#6D28D9] rounded-3xl overflow-hidden flex flex-col justify-between">
-            {/* Top Area with App Screenshot */}
-            <div className="w-full h-56 md:h-64 bg-[#d5c9e8] relative flex items-center justify-center overflow-hidden p-4">
-              <div className="relative w-[180px] h-[260px] rounded-[24px] overflow-hidden bg-slate-900 shadow-lg translate-y-6">
-                <Image
-                  src="/Photos/Luminus app - explorar espacios.png"
-                  alt="LUMINUS Espacios"
-                  fill
-                  className="object-cover object-top"
-                  sizes="200px"
-                />
-              </div>
+            {/* Top Full-bleed Image */}
+            <div className="w-full h-72 sm:h-80 relative overflow-hidden bg-[#d5c9e8]">
+              <Image
+                src="/Photos/Luminus app - explorar espacios.png"
+                alt="LUMINUS Espacios"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 33vw"
+                priority
+              />
             </div>
 
             {/* Bottom Content */}
@@ -41,17 +40,16 @@ export function TripleCards() {
 
           {/* Card 2: Grupos */}
           <div className="bg-[#A8C800] rounded-3xl overflow-hidden flex flex-col justify-between">
-            {/* Top Area with App Screenshot */}
-            <div className="w-full h-56 md:h-64 bg-[#e7eec4] relative flex items-center justify-center overflow-hidden p-4">
-              <div className="relative w-[180px] h-[260px] rounded-[24px] overflow-hidden bg-slate-900 shadow-lg translate-y-6">
-                <Image
-                  src="/Photos/Luminus app - explorar grupos.png"
-                  alt="LUMINUS Grupos"
-                  fill
-                  className="object-cover object-top"
-                  sizes="200px"
-                />
-              </div>
+            {/* Top Full-bleed Image */}
+            <div className="w-full h-72 sm:h-80 relative overflow-hidden bg-[#e7eec4]">
+              <Image
+                src="/Photos/Luminus app - explorar grupos.png"
+                alt="LUMINUS Grupos"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 33vw"
+                priority
+              />
             </div>
 
             {/* Bottom Content (Text in White) */}
@@ -74,17 +72,16 @@ export function TripleCards() {
 
           {/* Card 3: Faro AI */}
           <div className="bg-[#E855C8] rounded-3xl overflow-hidden flex flex-col justify-between">
-            {/* Top Area with App Screenshot */}
-            <div className="w-full h-56 md:h-64 bg-[#e9c9e2] relative flex items-center justify-center overflow-hidden p-4">
-              <div className="relative w-[180px] h-[260px] rounded-[24px] overflow-hidden bg-slate-900 shadow-lg translate-y-6">
-                <Image
-                  src="/Photos/Luminus app - chat con especialista.png"
-                  alt="LUMINUS Faro AI"
-                  fill
-                  className="object-cover object-top"
-                  sizes="200px"
-                />
-              </div>
+            {/* Top Full-bleed Image */}
+            <div className="w-full h-72 sm:h-80 relative overflow-hidden bg-[#e9c9e2]">
+              <Image
+                src="/Photos/Luminus app - chat con especialista.png"
+                alt="LUMINUS Faro AI"
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 33vw"
+                priority
+              />
             </div>
 
             {/* Bottom Content */}
