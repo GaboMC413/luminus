@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 
 const INTERVIEWS = [
@@ -56,10 +56,33 @@ const INTERVIEWS = [
 
 export function InterviewsSection() {
   const carouselRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    if (carouselRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+      setCanScrollLeft(scrollLeft > 8);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 8);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const el = carouselRef.current;
+    if (el) {
+      el.addEventListener("scroll", checkScroll, { passive: true });
+      window.addEventListener("resize", checkScroll);
+      return () => {
+        el.removeEventListener("scroll", checkScroll);
+        window.removeEventListener("resize", checkScroll);
+      };
+    }
+  }, []);
 
   const scroll = (direction: "left" | "right") => {
     if (carouselRef.current) {
-      const scrollAmount = carouselRef.current.clientWidth * 0.8;
+      const scrollAmount = carouselRef.current.clientWidth * 0.85;
       const targetScroll =
         direction === "left"
           ? carouselRef.current.scrollLeft - scrollAmount
@@ -72,7 +95,7 @@ export function InterviewsSection() {
   };
 
   return (
-    <section id="entrevistas" className="w-full py-16 px-4 md:px-10 bg-slate-100 flex justify-center items-center">
+    <section id="entrevistas" className="w-full py-16 px-4 md:px-10 bg-slate-100 flex justify-center items-center overflow-hidden">
       <div className="max-w-[1440px] w-full flex flex-col justify-end items-center gap-10">
         
         {/* Header */}
@@ -88,18 +111,18 @@ export function InterviewsSection() {
         {/* Carousel & Controls */}
         <div className="w-full flex flex-col justify-start items-start gap-8">
           
-          {/* Carousel Track */}
+          {/* Carousel Track with Full Margin Alignment & Snap */}
           <div
             ref={carouselRef}
-            className="w-full flex items-start gap-8 overflow-x-auto scroll-smooth scrollbar-none py-2"
+            className="w-[calc(100%+2rem)] md:w-[calc(100%+5rem)] -mx-4 md:-mx-10 px-4 md:px-10 flex items-start gap-6 sm:gap-8 overflow-x-auto scroll-smooth scrollbar-none py-2 snap-x snap-mandatory"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {INTERVIEWS.map((item) => (
               <div
                 key={item.id}
-                className="w-[340px] sm:w-[384px] h-[384px] p-4 bg-white rounded-2xl shrink-0 flex flex-col justify-end items-start gap-4 border border-slate-200/80"
+                className="w-[300px] sm:w-[384px] h-[384px] p-4 bg-white rounded-2xl shrink-0 flex flex-col justify-end items-start gap-4 border border-slate-200/80 snap-start"
               >
-                {/* 16:9 YouTube Cover Image */}
+                {/* 16:9 Cover Image */}
                 <div className="w-full h-48 relative rounded-xl overflow-hidden bg-slate-200 shrink-0">
                   <Image
                     src={item.thumbnail}
@@ -146,10 +169,15 @@ export function InterviewsSection() {
             {/* Left Arrow */}
             <button
               onClick={() => scroll("left")}
-              className="p-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl flex justify-center items-center transition-colors cursor-pointer"
+              disabled={!canScrollLeft}
+              className={`p-3 rounded-xl flex justify-center items-center transition-all ${
+                canScrollLeft
+                  ? "bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer"
+                  : "bg-gray-200 text-gray-400 opacity-50 cursor-not-allowed"
+              }`}
               aria-label="Previous slide"
             >
-              <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </button>
@@ -167,10 +195,15 @@ export function InterviewsSection() {
             {/* Right Arrow */}
             <button
               onClick={() => scroll("right")}
-              className="p-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl flex justify-center items-center transition-colors cursor-pointer"
+              disabled={!canScrollRight}
+              className={`p-3 rounded-xl flex justify-center items-center transition-all ${
+                canScrollRight
+                  ? "bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer"
+                  : "bg-gray-200 text-gray-400 opacity-50 cursor-not-allowed"
+              }`}
               aria-label="Next slide"
             >
-              <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
               </svg>
             </button>
