@@ -16,7 +16,7 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white border-b border-black h-[64px] flex items-center justify-between px-6 lg:px-12">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-white border-b border-black h-[64px] flex items-center justify-between px-6 lg:px-12">
       {/* Left: Logo & Navigation Links */}
       <div className="flex items-center gap-8 lg:gap-12">
         {/* Logo */}
