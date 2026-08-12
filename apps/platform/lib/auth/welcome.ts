@@ -61,11 +61,11 @@ Luminus es tu espacio para explorar, aprender y conectar. Te compartimos algunas
 🩺 *Especialistas*: Accede a profesionales de bienestar capacitados para acompañarte en tu proceso de forma ética.
 👉 [Ver Especialistas](https://luminus.lat/especialistas)
 
-🧭 *Espacios*: Explora grupos de discusión, lecturas recomendadas y actividades diseñadas para tu crecimiento.
-👉 [Ver Espacios](https://luminus.lat/espacios)
+💬 *Grupos*: Explora grupos de discusión, lecturas recomendadas y actividades diseñadas para tu crecimiento.
+👉 [Ver Grupos](https://luminus.lat/grupos)
 
-🗺️ *Mapa*: Ubica de forma interactiva recursos, actividades y profesionales de bienestar cerca de ti.
-👉 [Ver Mapa](https://luminus.lat/mapa)
+🗺️ *Espacios*: Ubica de forma interactiva recursos, actividades y profesionales de bienestar cerca de ti.
+👉 [Ver Espacios](https://luminus.lat/espacios)
 
 💡 *Faro*: Encuentra guías claras y herramientas valiosas sobre salud mental y desarrollo personal.
 👉 [Ver Faro](https://luminus.lat/faro)

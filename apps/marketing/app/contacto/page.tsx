@@ -1,12 +1,24 @@
-import React from "react";
-import type { Metadata } from "next";
-import ContactoClient from "./ContactoClient";
+import {
+  Navbar,
+  ContactHero,
+  ContactForm,
+  Footer,
+} from "@/components";
 
-export const metadata: Metadata = {
-  title: "LUMINUS Latam | Contacto y Soporte",
-  description: "Escríbenos. Estamos aquí para guiarte, responder tus inquietudes y ayudarte a dar tus primeros pasos en la red de bienestar de LUMINUS.",
+export const metadata = {
+  title: "Contacto | LUMINUS - Tu red de bienestar",
+  description: "¿Tienes alguna pregunta, propuesta o quieres conocer más sobre LUMINUS? Escríbenos y te responderemos a la brevedad.",
 };
 
 export default function ContactoPage() {
-  return <ContactoClient />;
+  return (
+    <main className="w-full min-h-screen bg-white flex flex-col justify-start items-start">
+      <Navbar />
+      <div className="w-full pt-[64px]">
+        <ContactHero />
+        <ContactForm />
+      </div>
+      <Footer />
+    </main>
+  );
 }
