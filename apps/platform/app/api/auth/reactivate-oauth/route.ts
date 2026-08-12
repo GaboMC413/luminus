@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { setSessionCookie, readSessionToken } from "@/lib/auth/session";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -19,7 +20,6 @@ export async function POST() {
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
     
     await prisma.user.update({
       where: { id: payload.userId as string },

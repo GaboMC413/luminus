@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { decodeCognitoIdToken } from "@/lib/auth/cognito-password";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -216,7 +217,6 @@ export async function GET(request: Request) {
       throw new Error("Cognito user profile is missing required identifiers.");
     }
 
-    const { prisma } = await import("@/lib/db");
     const existingByIdentity = await prisma.userIdentity.findUnique({
       where: {
         provider_providerSubject: {

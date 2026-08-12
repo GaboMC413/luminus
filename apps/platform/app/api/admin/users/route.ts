@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { listAdminUsers, normalizeAdminUserPatch, serializeAdminUser } from "@/lib/admin/users";
 import { syncCognitoUserStatus } from "@/lib/auth/cognito-admin";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -58,7 +59,6 @@ export async function GET(request: Request) {
   const search = url.searchParams.get("search") || "";
 
   try {
-    const { prisma } = await import("@/lib/db");
     const users = await listAdminUsers(prisma, search);
 
     return NextResponse.json({ users });
@@ -86,7 +86,6 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
 
     if (parsed.userData.status) {
       const existingUser = await prisma.user.findUnique({
@@ -159,7 +158,6 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
 
     const existingUser = await prisma.user.findUnique({
       where: { id },

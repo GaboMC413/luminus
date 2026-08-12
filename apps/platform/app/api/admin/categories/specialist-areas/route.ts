@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -27,7 +28,6 @@ export async function POST(request: Request) {
     const name = body.name.trim();
     const slug = slugify(name);
 
-    const { prisma } = await import("@/lib/db");
 
     const count = await prisma.specialistArea.count({
       where: { categoryId: body.categoryId },
@@ -74,7 +74,6 @@ export async function PATCH(request: Request) {
     if (typeof body.isActive === "boolean") updateData.isActive = body.isActive;
     if (typeof body.sortOrder === "number") updateData.sortOrder = body.sortOrder;
 
-    const { prisma } = await import("@/lib/db");
 
     const specialistArea = await prisma.specialistArea.update({
       where: { id: body.id },
@@ -102,7 +101,6 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ message: "ID de área obligatorio." }, { status: 400 });
     }
 
-    const { prisma } = await import("@/lib/db");
 
     await prisma.specialistArea.delete({
       where: { id },

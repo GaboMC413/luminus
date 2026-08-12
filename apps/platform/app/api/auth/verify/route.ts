@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { confirmSignUp } from "@/lib/auth/cognito-password";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -12,7 +13,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
     
     // 1. Confirm the code with Cognito
     await confirmSignUp(body.email, body.code);

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { clearSessionCookie, getCurrentSession } from "@/lib/auth/session";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -11,7 +12,6 @@ export async function DELETE() {
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
 
     // We do NOT delete from Cognito here because we need their credentials
     // to validate them when they try to reactivate the account via login.

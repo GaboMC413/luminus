@@ -3,6 +3,7 @@ import { getCurrentSession } from "@/lib/auth/session";
 import { isUuid } from "@/utils/validation";
 import { sanitizeMessageBody } from "@/utils/sanitization";
 import { isRateLimited, RATE_LIMITS } from "@/utils/rateLimit";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,7 +61,6 @@ export async function GET(request: Request, { params }: { params: { conversation
   const limit = Math.min(Math.max(limitParam, 1), 100);
 
   try {
-    const { prisma } = await import("@/lib/db");
     const participant = await assertParticipant(prisma, conversationId, session.userId);
 
     if (!participant) {
@@ -188,7 +188,6 @@ export async function POST(request: Request, { params }: { params: { conversatio
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
     const participant = await assertParticipant(prisma, conversationId, session.userId);
 
     if (!participant) {

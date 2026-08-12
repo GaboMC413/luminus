@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { parsePhoneNumberFromString, CountryCode } from "libphonenumber-js";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -77,7 +78,6 @@ export async function POST(request: Request) {
       : undefined;
 
   try {
-    const { prisma } = await import("@/lib/db");
     const profile = await prisma.$transaction(async (tx: any) => {
       const savedProfile = await tx.userProfile.upsert({
         where: { userId: session.userId },

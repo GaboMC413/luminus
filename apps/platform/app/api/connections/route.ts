@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { isUuid } from "@/utils/validation";
 import { isRateLimited, RATE_LIMITS } from "@/utils/rateLimit";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -45,7 +46,6 @@ export async function GET() {
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
     const connections = await prisma.userConnection.findMany({
       where: {
         OR: [
@@ -98,7 +98,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
     const recipient = await prisma.user.findUnique({
       where: { id: recipientId },
       select: {
@@ -334,7 +333,6 @@ export async function PUT(request: Request) {
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
     const connection = await prisma.userConnection.findFirst({
       where: {
         requesterId,
@@ -476,7 +474,6 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
     const connection = await prisma.userConnection.findFirst({
       where: {
         OR: [
@@ -610,7 +607,6 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
 
     if (action === "unblock") {
       const blocked = await prisma.userConnection.findFirst({

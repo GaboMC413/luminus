@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { isUuid } from "@/utils/validation";
 import { isRateLimited, RATE_LIMITS } from "@/utils/rateLimit";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,7 +33,6 @@ export async function DELETE(
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
     
     // Check if the user is a participant of the conversation
     const participant = await prisma.conversationParticipant.findUnique({
@@ -124,7 +124,6 @@ export async function PATCH(
       return NextResponse.json({ message: "Acción no soportada." }, { status: 400 });
     }
 
-    const { prisma } = await import("@/lib/db");
     
     // Check if the user is a participant of the conversation
     const participant = await prisma.conversationParticipant.findUnique({

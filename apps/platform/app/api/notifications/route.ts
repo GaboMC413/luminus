@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { getOnboardingQuests } from "@/lib/onboarding";
 import { isUuid } from "@/utils/validation";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -62,7 +63,6 @@ export async function GET() {
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
     const notifications = await prisma.notification.findMany({
       where: {
         userId: session.userId,
@@ -121,7 +121,6 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
     const now = new Date();
 
     if (markAll) {
@@ -168,7 +167,6 @@ export async function DELETE(request: Request) {
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
     await prisma.notification.deleteMany({
       where: {
         id: notificationId,

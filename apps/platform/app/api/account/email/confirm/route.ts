@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSessionToken, getCurrentSession, setSessionCookie } from "@/lib/auth/session";
 import { hashRecoveryCode, PASSWORD_RESET_MAX_ATTEMPTS } from "@/lib/auth/recoveryTokens";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -20,7 +21,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
     const token = await prisma.emailChangeToken.findFirst({
       where: {
         userId: session.userId,

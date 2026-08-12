@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { hashPassword } from "@/lib/auth/password";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -27,7 +28,6 @@ export async function PATCH(request: Request) {
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
       select: {

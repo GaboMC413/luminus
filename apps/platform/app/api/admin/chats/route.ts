@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { isUuid } from "@/utils/validation";
 import { sanitizeMessageBody } from "@/utils/sanitization";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,7 +28,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "El mensaje no puede estar vacio." }, { status: 400 });
     }
 
-    const { prisma } = await import("@/lib/db");
 
     // 1. Get the official LUMINUS system account
     const SYSTEM_EMAIL = "info@luminuslatam.com";

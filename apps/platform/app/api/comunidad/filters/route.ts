@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,7 +16,6 @@ export async function GET(request: Request) {
   const country = searchParams.get("country")?.trim() || "";
 
   try {
-    const { prisma } = await import("@/lib/db");
 
     // Group countries of active onboarded users
     const countryGroups = await prisma.userProfile.groupBy({

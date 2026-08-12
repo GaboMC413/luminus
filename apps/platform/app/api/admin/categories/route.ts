@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -19,7 +20,6 @@ export async function GET() {
   }
 
   try {
-    const { prisma } = await import("@/lib/db");
 
     const categories = await prisma.interestCategory.findMany({
       orderBy: { sortOrder: "asc" },
@@ -86,7 +86,6 @@ export async function POST(request: Request) {
     const color = typeof body.color === "string" ? body.color.trim() : "#3B82F6";
     const bgColor = typeof body.bgColor === "string" ? body.bgColor.trim() : "#DBEAFE";
 
-    const { prisma } = await import("@/lib/db");
 
     const count = await prisma.interestCategory.count();
 
@@ -143,7 +142,6 @@ export async function PATCH(request: Request) {
     if (typeof body.bgColor === "string") updateData.bgColor = body.bgColor.trim();
     if (typeof body.sortOrder === "number") updateData.sortOrder = body.sortOrder;
 
-    const { prisma } = await import("@/lib/db");
 
     const category = await prisma.interestCategory.update({
       where: { id: body.id },
@@ -175,7 +173,6 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ message: "ID de categoría obligatorio." }, { status: 400 });
     }
 
-    const { prisma } = await import("@/lib/db");
 
     await prisma.interestCategory.delete({
       where: { id },
