@@ -1,14 +1,23 @@
 import fs from "fs";
 import path from "path";
 import { supabase } from "@/lib/supabase";
-import { Navbar, InterviewsSection, Footer } from "@/components";
+import {
+  Navbar,
+  EventsHero,
+  EventsOverviewCard,
+  InterviewsSection,
+  EventsVoicesCallout,
+  EventsFormatsGrid,
+  EventsClosingCta,
+  Footer,
+} from "@/components";
 
 export const metadata = {
-  title: "Entrevistas y Charlas | LUMINUS - Experiencias de Bienestar",
-  description: "Explora la biblioteca completa de entrevistas y charlas sobre salud y bienestar de LUMINUS.",
+  title: "Eventos y Encuentros | LUMINUS - Experiencias de Bienestar",
+  description: "Descubre entrevistas y encuentros que reúnen distintas perspectivas para acercar nuevas formas de entender el bienestar, compartir experiencias y conectar con ideas.",
 };
 
-export default async function EntrevistasListingPage() {
+export default async function EventosPage() {
   let events = [];
   
   try {
@@ -55,7 +64,12 @@ export default async function EntrevistasListingPage() {
     <main className="w-full min-h-screen bg-white flex flex-col justify-start items-start">
       <Navbar />
       <div className="w-full pt-[64px]">
-        <InterviewsSection events={events} isGrid={true} />
+        <EventsHero />
+        <EventsOverviewCard />
+        <InterviewsSection events={events} isGrid={false} />
+        <EventsVoicesCallout />
+        <EventsFormatsGrid />
+        <EventsClosingCta />
       </div>
       <Footer />
     </main>
