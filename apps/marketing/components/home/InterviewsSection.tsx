@@ -8,7 +8,7 @@ const INTERVIEWS = [
     id: "G7LahF0Mq9A",
     title: "Cuando la comida se vuelve bienestar",
     description:
-      "En este encuentro en vivo con Anaí Costa —licenciada en nutrición y creadora de Nutriendo Hábitos— descubrirás cómo transformar tu relación con la comida desde un enfoque integral, lejos de las dietas restrictivas y más cerca de un estilo de vida sostenible y consciente.",
+      "En este encuentro en vivo con Anaí Costa descubrirás cómo transformar tu relación con la comida desde un enfoque integral, lejos de las dietas restrictivas y más cerca de un estilo de vida sostenible y consciente.",
     thumbnail: "https://i.ytimg.com/vi/G7LahF0Mq9A/hqdefault.jpg",
     youtubeUrl: "https://www.youtube.com/watch?v=G7LahF0Mq9A",
   },
@@ -16,7 +16,7 @@ const INTERVIEWS = [
     id: "l6xc6mspgxk",
     title: "Respiración, postura y movimiento consciente",
     description:
-      "Laura Ravaioli es terapeuta corporal con más de 25 años de experiencia, creadora y especialista del Método REEM (Reeducación Estructural por la Economía del Movimiento), una innovadora técnica que ayuda a las personas a optimizar el rendimiento de su cuerpo con el menor esfuerzo posible.",
+      "Laura Ravaioli, terapeuta corporal, creadora y especialista del Método REEM, una innovadora técnica que ayuda a las personas a optimizar el rendimiento de su cuerpo con el menor esfuerzo posible.",
     thumbnail: "https://i.ytimg.com/vi/l6xc6mspgxk/hqdefault.jpg",
     youtubeUrl: "https://www.youtube.com/watch?v=l6xc6mspgxk",
   },
@@ -24,7 +24,7 @@ const INTERVIEWS = [
     id: "s7S-ojIpoqU",
     title: "Cómo fomentar el amor propio",
     description:
-      "En este encuentro con Carla Lorenzo —psicóloga, actriz y comunicadora uruguaya especializada en enfoque gestáltico— vas a explorar herramientas reales de autoconocimiento y autocuidado para construir una relación más sana y compasiva con vos mismo/a.",
+      "En este encuentro con Carla Lorenzo, psicóloga especializada en enfoque gestáltico, vas a explorar herramientas reales de autoconocimiento y autocuidado para construir una relación más sana y compasiva con vos mismo/a.",
     thumbnail: "https://i.ytimg.com/vi/s7S-ojIpoqU/hqdefault.jpg",
     youtubeUrl: "https://www.youtube.com/watch?v=s7S-ojIpoqU",
   },
@@ -32,7 +32,7 @@ const INTERVIEWS = [
     id: "d7yR4NBydiY",
     title: "Sanar para Ser",
     description:
-      "En esta charla en vivo, el Dr. Julio Tarabini, médico y terapeuta integrador, comparte una visión de la sanación como un camino profundo que atraviesa cuerpo, mente, emociones y espíritu. Una conversación íntima y transformadora sobre cómo aliviar el dolor, reconectar con nuestro equilibrio interior y vivir con mayor autenticidad.",
+      "En esta charla en vivo, el Dr. Julio Tarabini, médico y terapeuta integrador, comparte una visión de la sanación como un camino profundo que atraviesa cuerpo, mente, emociones y espíritu.",
     thumbnail: "https://i.ytimg.com/vi/d7yR4NBydiY/hqdefault.jpg",
     youtubeUrl: "https://www.youtube.com/watch?v=d7yR4NBydiY",
   },
@@ -40,7 +40,7 @@ const INTERVIEWS = [
     id: "Z77iwEAMakU",
     title: "El té como vehículo terapéutico",
     description:
-      "Encuentro en vivo con Mónica Devoto —sommelier de té— explorando las propiedades curativas, rituales y beneficios del té como herramienta de calma, presencia y salud integral.",
+      "Encuentro en vivo con Mónica Devoto, sommelier de té, explorando las propiedades curativas, rituales y beneficios del té como herramienta de calma, presencia y salud integral.",
     thumbnail: "https://i.ytimg.com/vi/Z77iwEAMakU/hqdefault.jpg",
     youtubeUrl: "https://www.youtube.com/watch?v=Z77iwEAMakU",
   },
@@ -103,10 +103,10 @@ export function InterviewsSection() {
       <div className="max-w-[1440px] mx-auto px-4 md:px-10">
         <div className="w-full flex flex-col justify-start items-start gap-4 text-left">
           <h2 className="w-full text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[48px]">
-            Actividades para conectar con nuevas ideas
+            Nuevas miradas sobre el bienestar
           </h2>
           <p className="w-full text-lg sm:text-xl lg:text-[24px] font-normal text-slate-800 leading-8">
-            Entrevistas y encuentros con especialistas para descubrir nuevas perspectivas sobre bienestar.
+            Entrevistas y conversaciones con especialistas de distintas disciplinas.
           </p>
         </div>
       </div>
@@ -193,8 +193,8 @@ export function InterviewsSection() {
             onClick={() => scroll("left")}
             disabled={!canScrollLeft}
             className={`p-3 rounded-xl flex justify-center items-center transition-all ${canScrollLeft
-                ? "bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer"
-                : "bg-gray-200 text-gray-400 opacity-40 cursor-not-allowed pointer-events-none"
+              ? "bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer"
+              : "bg-gray-200 text-gray-400 opacity-40 cursor-not-allowed pointer-events-none"
               }`}
             aria-label="Previous slide"
           >
@@ -216,8 +216,8 @@ export function InterviewsSection() {
             onClick={() => scroll("right")}
             disabled={!canScrollRight}
             className={`p-3 rounded-xl flex justify-center items-center transition-all ${canScrollRight
-                ? "bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer"
-                : "bg-gray-200 text-gray-400 opacity-40 cursor-not-allowed pointer-events-none"
+              ? "bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer"
+              : "bg-gray-200 text-gray-400 opacity-40 cursor-not-allowed pointer-events-none"
               }`}
             aria-label="Next slide"
           >

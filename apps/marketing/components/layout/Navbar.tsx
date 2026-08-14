@@ -72,13 +72,13 @@ export function Navbar() {
       {/* Right: Auth Buttons (Desktop) */}
       <div className="hidden sm:flex items-center gap-3">
         <a
-          href="https://app.luminus.lat/auth"
+          href="https://app.luminuslatam.com/auth/iniciar-sesion"
           className="px-6 py-2 text-sm font-normal text-black border border-black rounded-xl hover:bg-slate-50 transition-colors text-center"
         >
           Iniciar Sesión
         </a>
         <a
-          href="https://app.luminus.lat/auth"
+          href="https://app.luminuslatam.com/auth/registrarse"
           className="px-6 py-2 text-sm font-normal text-white bg-black hover:bg-slate-800 rounded-xl transition-colors text-center"
         >
           Registrarme
@@ -136,13 +136,13 @@ export function Navbar() {
 
           <div className="pt-4 border-t border-slate-200 flex flex-col gap-3">
             <a
-              href="https://app.luminus.lat/auth"
+              href="https://app.luminuslatam.com/auth/iniciar-sesion"
               className="w-full py-2.5 text-center text-sm font-normal text-black border border-black rounded-xl hover:bg-slate-50"
             >
               Iniciar Sesión
             </a>
             <a
-              href="https://app.luminus.lat/auth"
+              href="https://app.luminuslatam.com/auth/registrarse"
               className="w-full py-2.5 text-center text-sm font-normal text-white bg-black hover:bg-slate-800 rounded-xl"
             >
               Registrarme
