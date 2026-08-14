@@ -5,7 +5,7 @@ export function FeatureCards() {
   return (
     <section className="w-full py-16 md:py-24 bg-white">
       <div className="max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-12 md:gap-16">
-        
+
         {/* Card 1: Comunidad */}
         <div id="comunidad" className="w-full bg-[#FF7700] rounded-3xl overflow-hidden flex flex-col lg:flex-row items-stretch">
           {/* Image */}
@@ -21,14 +21,11 @@ export function FeatureCards() {
 
           {/* Text Content */}
           <div className="w-full lg:w-1/2 p-8 md:p-12 lg:p-14 flex flex-col justify-center gap-6 text-white">
-            <h2 className="text-3xl lg:text-heading-3 font-normal tracking-tight">
-              Comunidad
+            <h2 className="text-3xl lg:text-heading-3 font-normal tracking-tight leading-tight">
+              Conecta con personas en toda Latinoamérica
             </h2>
-            <p className="text-xl lg:text-heading-6 font-normal text-amber-50">
-              Un espacio para encontrarte con personas que comparten intereses, inquietudes y formas de entender el bienestar.
-            </p>
-            <p className="text-body-medium font-normal text-white/90">
-              Descubre personas de toda Latinoamérica, conoce qué temas les interesan y conecta a partir de experiencias en común. La comunidad está pensada para ampliar tu entorno, descubrir nuevas perspectivas y generar vínculos que puedan acompañar distintas etapas de tu camino.
+            <p className="text-body-large font-normal text-white/90 leading-relaxed">
+              Una comunidad donde conocer personas con intereses similares para compartir experienciasy descubrir nuevas formas de entender la vida.
             </p>
             <div className="pt-2">
               <a
@@ -45,14 +42,11 @@ export function FeatureCards() {
         <div id="especialistas" className="w-full bg-[#0450FB] rounded-3xl overflow-hidden flex flex-col-reverse lg:flex-row items-stretch">
           {/* Text Content */}
           <div className="w-full lg:w-1/2 p-8 md:p-12 lg:p-14 flex flex-col justify-center gap-6 text-white">
-            <h2 className="text-3xl lg:text-heading-3 font-normal tracking-tight">
-              Especialistas
+            <h2 className="text-3xl lg:text-heading-3 font-normal tracking-tight leading-tight">
+              Explora una red de Especialistas calificados.
             </h2>
-            <p className="text-xl lg:text-heading-6 font-normal text-blue-100">
-              Profesionales de distintas áreas del bienestar, reunidos en un mismo lugar para ayudarte a encontrar el acompañamiento que buscas.
-            </p>
-            <p className="text-body-medium font-normal text-white/90">
-              Explora sus perfiles, formación, experiencia, áreas de trabajo, servicios y enfoque profesional. Conoce mejor quién está detrás de cada especialidad antes de contactarlo y encuentra personas cuyo trabajo tenga sentido para tus necesidades, intereses y momento actual.
+            <p className="text-body-large font-normal text-white/90 leading-relaxed">
+              Descubre profesionales de distintas áreas del bienestar, conoce cómo trabajan y conecta con quienes mejor se adapten a lo que necesitas.
             </p>
             <div className="pt-2">
               <a
