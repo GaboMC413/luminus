@@ -67,7 +67,7 @@ export function SpecialistsDisciplines() {
           </p>
           <div className="pt-2">
             <a
-              href="https://app.luminuslatam.com/auth/registrarse"
+              href="https://app.luminus.lat/auth"
               className="inline-block px-8 py-3.5 bg-black hover:bg-slate-800 text-white text-base font-normal rounded-2xl text-center min-w-[240px] transition-colors"
             >
               Aplicar como Especialista
