@@ -47,7 +47,7 @@ export function Navbar() {
             Para Especialistas
           </Link>
           <Link
-            href="/entrevistas"
+            href="/eventos"
             className="text-sm font-normal text-slate-800 hover:text-black transition-colors"
           >
             Entrevistas y encuentros
@@ -113,7 +113,7 @@ export function Navbar() {
             Para Especialistas
           </Link>
           <Link
-            href="/entrevistas"
+            href="/eventos"
             onClick={() => setMobileMenuOpen(false)}
             className="text-left py-2 text-base font-normal text-slate-800 hover:text-black"
           >
