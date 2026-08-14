@@ -3,7 +3,7 @@ import Image from "next/image";
 export function TripleCards() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 w-full">
-
+      
       {/* Card 1: Espacios */}
       <div className="bg-[#6D28D9] rounded-3xl overflow-hidden flex flex-col justify-between h-[500px]">
         {/* Top Relative Flexible Image Box */}
@@ -24,8 +24,8 @@ export function TripleCards() {
             <h3 className="text-3xl lg:text-heading-3 font-normal tracking-tight text-white">
               Espacios
             </h3>
-            <p className="text-body-large text-white/90 font-normal">
-              Encuentra consultorios, clínicas y otros espacios de bienestar cerca de ti.
+            <p className="text-body-large text-purple-100 font-normal">
+              Encuentra consultorios, clínicas, centros, estudios y otros espacios de bienestar cerca de ti.
             </p>
           </div>
           <div>
@@ -57,7 +57,7 @@ export function TripleCards() {
               Grupos
             </h3>
             <p className="text-body-large text-white/90 font-normal">
-              Forma parte de conversaciones alrededor de temas que te interesan.
+              Forma parte de grupos de conversación alrededor de temas, intereses y experiencias que te importan.
             </p>
           </div>
           <div>
@@ -88,8 +88,8 @@ export function TripleCards() {
             <h3 className="text-3xl lg:text-heading-3 font-normal tracking-tight text-white">
               Faro AI
             </h3>
-            <p className="text-body-large  text-white/90 font-normal">
-              Orientación personalizada para descubrir el acompañamiento adecuado.
+            <p className="text-body-large text-pink-100 font-normal">
+              Encuentra orientación personalizada para descubrir qué tipo de acompañamiento puede ser adecuado para ti.
             </p>
           </div>
           <div>

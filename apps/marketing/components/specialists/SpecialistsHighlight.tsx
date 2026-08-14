@@ -4,14 +4,17 @@ export function SpecialistsHighlight() {
   return (
     <section className="w-full bg-[#FF7700] text-white overflow-hidden">
       <div className="max-w-[1440px] mx-auto flex flex-col lg:flex-row items-stretch min-h-[560px]">
-
+        
         {/* Left Column: Text & CTA */}
         <div className="w-full lg:w-1/2 p-8 md:p-16 lg:p-20 flex flex-col justify-center gap-6">
-          <h2 className="text-3xl lg:text-heading-3 font-normal tracking-tight text-white leading-tight">
-            Conoce mejor a cada Especialista
+          <h2 className="text-3xl lg:text-heading-3 font-normal tracking-tight text-white">
+            Descubre Especialistas
           </h2>
-          <p className="text-body-large font-normal text-white/90 leading-relaxed">
-            En su perfil puedes conocer su experiencia, formación, áreas de trabajo y formas de atención. Una manera simple de entender su trayectoria y enfoque antes de decidir con quién contactar.
+          <p className="text-xl lg:text-heading-6 font-normal text-amber-100">
+            Cada Especialista cuenta con un perfil con su experiencia, formación, áreas de servicios y formas de atención.
+          </p>
+          <p className="text-body-large font-normal text-white/90">
+            Una manera simple de conocer enfoques, trayectorias y propuestas profesionales en LATAM.
           </p>
           <div className="pt-2">
             <a

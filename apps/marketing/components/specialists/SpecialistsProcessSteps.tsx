@@ -67,7 +67,7 @@ export function SpecialistsProcessSteps() {
         {/* CTA & Disclaimer */}
         <div className="flex flex-col items-center gap-6 max-w-[800px] pt-4">
           <a
-            href="https://app.luminuslatam.com/auth/registrarse"
+            href="https://app.luminus.lat/auth"
             className="px-8 py-3.5 bg-black hover:bg-slate-800 text-white text-base font-normal rounded-2xl min-w-[280px] transition-colors"
           >
             Comenzar mi aplicación

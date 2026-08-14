@@ -23,7 +23,7 @@ export function SpecialistsClosingCta() {
           </div>
           <div className="flex flex-wrap items-center gap-6 pt-2">
             <a
-              href="https://app.luminuslatam.com/auth/registrarse"
+              href="https://app.luminus.lat/auth"
               className="inline-block py-3.5 px-8 text-base font-normal text-slate-950 bg-white hover:bg-slate-100 rounded-2xl text-center min-w-[240px] transition-colors"
             >
               Aplicar como especialista
