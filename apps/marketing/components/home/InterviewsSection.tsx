@@ -21,6 +21,9 @@ export interface EventItem {
 interface InterviewsSectionProps {
   events?: EventItem[];
   isGrid?: boolean;
+  title?: string;
+  subtitle?: string;
+  showTitle?: boolean;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -86,7 +89,16 @@ const INTERVIEWS = [
   },
 ];
 
-export function InterviewsSection({ events, isGrid = false }: InterviewsSectionProps) {
+export function InterviewsSection({
+  events,
+  isGrid = false,
+  title,
+  subtitle,
+  showTitle = true,
+}: InterviewsSectionProps) {
+  const defaultTitle = title || (isGrid ? "Entrevistas y grabaciones" : "Nuevas miradas sobre el bienestar");
+  const defaultSubtitle = subtitle || (isGrid ? undefined : "Entrevistas y conversaciones con especialistas de distintas disciplinas.");
+
   const carouselRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -98,6 +110,17 @@ export function InterviewsSection({ events, isGrid = false }: InterviewsSectionP
   useEffect(() => {
     setCurrentPage(1);
   }, [activeCategory]);
+
+  const isFirstMount = useRef(true);
+  useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [currentPage, activeCategory]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -199,39 +222,51 @@ export function InterviewsSection({ events, isGrid = false }: InterviewsSectionP
   };
 
   return (
-    <section id="entrevistas" className="w-full py-16 bg-slate-100">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-10">
-        <div className="w-full flex flex-col justify-start items-start gap-4 text-left">
-          <h2 className="w-full text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[48px]">
-            Entrevistas y grabaciones
-          </h2>
+    <section id="entrevistas" className="w-full pt-8 md:pt-12 pb-8 md:pb-16 bg-slate-100 flex-1 flex flex-col">
+      {showTitle && (
+        <div className="max-w-[1440px] mx-auto px-4 md:px-10 mb-6 md:mb-10">
+          <div className="w-full flex flex-col justify-start items-start gap-3 md:gap-4 text-left">
+            <h2 className="w-full text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[40px] md:leading-[48px]">
+              {defaultTitle}
+            </h2>
+            {defaultSubtitle && (
+              <p className="w-full text-lg sm:text-xl lg:text-[24px] font-normal text-slate-800 leading-7 md:leading-8">
+                {defaultSubtitle}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="mt-10 w-full flex flex-col gap-8">
+      <div className="w-full flex flex-col gap-4 md:gap-5 flex-1">
         {isGrid && (
-          <div
-            className="flex flex-nowrap overflow-x-auto gap-2 justify-start mb-4 max-w-[1440px] mx-auto px-4 md:px-10 pb-2 touch-pan-x scroll-smooth"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {Object.keys(CATEGORY_COLORS).map(catName => {
-              const isSelected = activeCategory === catName;
-              const color = CATEGORY_COLORS[catName];
-              return (
-                <button
-                  key={catName}
-                  onClick={() => setActiveCategory(catName)}
-                  style={{
-                    backgroundColor: isSelected ? color : '#f8fafc',
-                    color: isSelected ? '#ffffff' : '#475569',
-                    borderColor: isSelected ? color : '#e2e8f0'
-                  }}
-                  className="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-full border transition-all duration-300 hover:scale-105 cursor-pointer shrink-0"
-                >
-                  {catName}
-                </button>
-              );
-            })}
+          <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-6 md:gap-8">
+            <h3 className="text-2xl sm:text-heading-5 font-normal tracking-tight text-slate-900 select-none">
+              Actividades y grabaciones
+            </h3>
+            <div
+              className="w-full flex flex-nowrap overflow-x-auto gap-2 justify-start pb-2 touch-pan-x scroll-smooth"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {Object.keys(CATEGORY_COLORS).map(catName => {
+                const isSelected = activeCategory === catName;
+                const color = CATEGORY_COLORS[catName];
+                return (
+                  <button
+                    key={catName}
+                    onClick={() => setActiveCategory(catName)}
+                    style={{
+                      backgroundColor: isSelected ? color : '#f8fafc',
+                      color: isSelected ? '#ffffff' : '#475569',
+                      borderColor: isSelected ? color : '#e2e8f0'
+                    }}
+                    className="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-full border transition-all duration-300 hover:scale-105 cursor-pointer shrink-0"
+                  >
+                    {catName}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -316,7 +351,6 @@ export function InterviewsSection({ events, isGrid = false }: InterviewsSectionP
                 <button
                   onClick={() => {
                     setCurrentPage(prev => Math.max(prev - 1, 1));
-                    document.getElementById('entrevistas')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                   disabled={currentPage === 1}
                   className={`p-3 rounded-xl flex justify-center items-center transition-all ${currentPage > 1
@@ -337,7 +371,6 @@ export function InterviewsSection({ events, isGrid = false }: InterviewsSectionP
                 <button
                   onClick={() => {
                     setCurrentPage(prev => Math.min(prev + 1, totalPages));
-                    document.getElementById('entrevistas')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                   disabled={currentPage === totalPages}
                   className={`p-3 rounded-xl flex justify-center items-center transition-all ${currentPage < totalPages
