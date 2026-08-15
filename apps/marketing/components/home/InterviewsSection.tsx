@@ -221,20 +221,7 @@ export function InterviewsSection({
 
   return (
     <section id="entrevistas" className="w-full py-8 md:py-16 bg-slate-100">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-10">
-        <div className="w-full flex flex-col justify-start items-start gap-3 md:gap-4 text-left">
-          <h2 className="w-full text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[40px] md:leading-[48px]">
-            {defaultTitle}
-          </h2>
-          {defaultSubtitle && (
-            <p className="w-full text-lg sm:text-xl lg:text-[24px] font-normal text-slate-800 leading-7 md:leading-8">
-              {defaultSubtitle}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-6 md:mt-10 w-full flex flex-col gap-4 md:gap-5">
+      <div className="w-full flex flex-col gap-4 md:gap-5">
         {isGrid && (
           <div
             className="w-full flex flex-nowrap overflow-x-auto gap-2 justify-start max-w-[1440px] mx-auto px-4 md:px-10 pb-2 touch-pan-x scroll-smooth"
