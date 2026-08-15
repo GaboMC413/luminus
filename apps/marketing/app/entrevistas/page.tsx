@@ -13,20 +13,24 @@ export default async function EntrevistasListingPage() {
   
   try {
     // 1. Attempt to fetch from Supabase
-    const { data, error } = await supabase
-      .from("events")
-      .select("*")
-      .order("date", { ascending: false });
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .order("date", { ascending: false });
 
-    if (data && data.length > 0) {
-      events = data;
-      console.log(`Fetched ${events.length} events from Supabase`);
-    } else {
-      if (error) {
-        console.warn("Supabase query failed, falling back to local JSON:", error.message);
+      if (data && data.length > 0) {
+        events = data;
+        console.log(`Fetched ${events.length} events from Supabase`);
       } else {
-        console.log("Supabase events table is empty, falling back to local JSON");
+        if (error) {
+          console.warn("Supabase query failed, falling back to local JSON:", error.message);
+        } else {
+          console.log("Supabase events table is empty, falling back to local JSON");
+        }
       }
+    } else {
+      console.warn("Supabase client not initialized, falling back to local JSON");
     }
   } catch (err) {
     console.warn("Could not connect to Supabase or fetch data, falling back to local JSON:", err);
