@@ -234,10 +234,10 @@ export function InterviewsSection({
         </div>
       </div>
 
-      <div className="mt-6 md:mt-10 w-full flex flex-col gap-6 md:gap-8">
+      <div className="mt-6 md:mt-10 w-full flex flex-col gap-4 md:gap-5">
         {isGrid && (
           <div
-            className="flex flex-nowrap overflow-x-auto gap-2 justify-start mb-4 max-w-[1440px] mx-auto px-4 md:px-10 pb-2 touch-pan-x scroll-smooth"
+            className="w-full flex flex-nowrap overflow-x-auto gap-2 justify-start max-w-[1440px] mx-auto px-4 md:px-10 pb-2 touch-pan-x scroll-smooth"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {Object.keys(CATEGORY_COLORS).map(catName => {
