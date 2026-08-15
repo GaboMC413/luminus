@@ -109,6 +109,17 @@ export function InterviewsSection({
     setCurrentPage(1);
   }, [activeCategory]);
 
+  const isFirstMount = useRef(true);
+  useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [currentPage, activeCategory]);
+
   useEffect(() => {
     const handleResize = () => {
       if (typeof window !== "undefined") {
@@ -331,7 +342,6 @@ export function InterviewsSection({
                 <button
                   onClick={() => {
                     setCurrentPage(prev => Math.max(prev - 1, 1));
-                    document.getElementById('entrevistas')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                   disabled={currentPage === 1}
                   className={`p-3 rounded-xl flex justify-center items-center transition-all ${currentPage > 1
@@ -352,7 +362,6 @@ export function InterviewsSection({
                 <button
                   onClick={() => {
                     setCurrentPage(prev => Math.min(prev + 1, totalPages));
-                    document.getElementById('entrevistas')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                   disabled={currentPage === totalPages}
                   className={`p-3 rounded-xl flex justify-center items-center transition-all ${currentPage < totalPages
