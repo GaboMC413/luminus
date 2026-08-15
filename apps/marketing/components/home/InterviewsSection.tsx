@@ -21,6 +21,8 @@ export interface EventItem {
 interface InterviewsSectionProps {
   events?: EventItem[];
   isGrid?: boolean;
+  title?: string;
+  subtitle?: string;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -86,7 +88,15 @@ const INTERVIEWS = [
   },
 ];
 
-export function InterviewsSection({ events, isGrid = false }: InterviewsSectionProps) {
+export function InterviewsSection({
+  events,
+  isGrid = false,
+  title,
+  subtitle,
+}: InterviewsSectionProps) {
+  const defaultTitle = title || (isGrid ? "Entrevistas y grabaciones" : "Nuevas miradas sobre el bienestar");
+  const defaultSubtitle = subtitle || (isGrid ? undefined : "Entrevistas y conversaciones con especialistas de distintas disciplinas.");
+
   const carouselRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -203,8 +213,13 @@ export function InterviewsSection({ events, isGrid = false }: InterviewsSectionP
       <div className="max-w-[1440px] mx-auto px-4 md:px-10">
         <div className="w-full flex flex-col justify-start items-start gap-4 text-left">
           <h2 className="w-full text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[48px]">
-            Entrevistas y grabaciones
+            {defaultTitle}
           </h2>
+          {defaultSubtitle && (
+            <p className="w-full text-lg sm:text-xl lg:text-[24px] font-normal text-slate-800 leading-8">
+              {defaultSubtitle}
+            </p>
+          )}
         </div>
       </div>
 
