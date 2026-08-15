@@ -23,6 +23,7 @@ interface InterviewsSectionProps {
   isGrid?: boolean;
   title?: string;
   subtitle?: string;
+  showTitle?: boolean;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -93,6 +94,7 @@ export function InterviewsSection({
   isGrid = false,
   title,
   subtitle,
+  showTitle = true,
 }: InterviewsSectionProps) {
   const defaultTitle = title || (isGrid ? "Entrevistas y grabaciones" : "Nuevas miradas sobre el bienestar");
   const defaultSubtitle = subtitle || (isGrid ? undefined : "Entrevistas y conversaciones con especialistas de distintas disciplinas.");
@@ -221,6 +223,21 @@ export function InterviewsSection({
 
   return (
     <section id="entrevistas" className="w-full py-8 md:py-16 bg-slate-100">
+      {showTitle && (
+        <div className="max-w-[1440px] mx-auto px-4 md:px-10 mb-6 md:mb-10">
+          <div className="w-full flex flex-col justify-start items-start gap-3 md:gap-4 text-left">
+            <h2 className="w-full text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[40px] md:leading-[48px]">
+              {defaultTitle}
+            </h2>
+            {defaultSubtitle && (
+              <p className="w-full text-lg sm:text-xl lg:text-[24px] font-normal text-slate-800 leading-7 md:leading-8">
+                {defaultSubtitle}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="w-full flex flex-col gap-4 md:gap-5">
         {isGrid && (
           <div
