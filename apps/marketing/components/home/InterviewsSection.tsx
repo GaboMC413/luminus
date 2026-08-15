@@ -222,7 +222,7 @@ export function InterviewsSection({
   };
 
   return (
-    <section id="entrevistas" className="w-full py-8 md:py-16 bg-slate-100 flex-1 flex flex-col">
+    <section id="entrevistas" className="w-full pt-8 md:pt-12 pb-8 md:pb-16 bg-slate-100 flex-1 flex flex-col">
       {showTitle && (
         <div className="max-w-[1440px] mx-auto px-4 md:px-10 mb-6 md:mb-10">
           <div className="w-full flex flex-col justify-start items-start gap-3 md:gap-4 text-left">
@@ -240,7 +240,7 @@ export function InterviewsSection({
 
       <div className="w-full flex flex-col gap-4 md:gap-5 flex-1">
         {isGrid && (
-          <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-4">
+          <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-6 md:gap-8">
             <h3 className="text-2xl sm:text-heading-5 font-normal tracking-tight text-slate-900 select-none">
               Actividades y grabaciones
             </h3>
