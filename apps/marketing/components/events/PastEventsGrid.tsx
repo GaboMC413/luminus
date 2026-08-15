@@ -1,23 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { EventCard } from "./EventCard";
-
-interface EventItem {
-  id?: string;
-  slug?: string;
-  title: string;
-  description?: string;
-  speaker_name?: string;
-  category?: string;
-  date?: string;
-  publishTimeText?: string;
-  cover_url?: string | null;
-  youtube_id?: string;
-  link?: string;
-  is_upcoming?: boolean;
-  [key: string]: unknown;
-}
+import { EventCard, EventItem } from "./EventCard";
 
 interface PastEventsGridProps {
   events: EventItem[];
@@ -84,7 +68,7 @@ export function PastEventsGrid({ events, title, subtitle }: PastEventsGridProps)
       {/* Grid — same max-w, px as InterviewsSection */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10 max-w-[1440px] mx-auto px-4 md:px-10 w-full">
         {paginated.map((item, index) => (
-          <EventCard key={item.id || item.youtube_id || index} item={item as any} />
+          <EventCard key={item.id || item.youtube_id || index} item={item} />
         ))}
       </div>
 

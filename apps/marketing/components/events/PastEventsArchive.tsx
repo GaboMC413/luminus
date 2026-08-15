@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
-import { EventCard } from "./EventCard";
-import { EventItem } from "../home/InterviewsSection";
+import { EventCard, EventItem } from "./EventCard";
 
 interface PastEventsArchiveProps {
   events: EventItem[];

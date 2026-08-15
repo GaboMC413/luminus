@@ -4,22 +4,7 @@ import { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-export interface EventItem {
-  id?: string;
-  slug?: string;
-  youtube_id: string;
-  title: string;
-  description: string;
-  link: string;
-  date: string;
-  speaker_name?: string;
-  category?: string;
-  cover_url?: string | null;
-  publishTimeText?: string;
-  viewCountText?: string;
-  type?: string;
-  is_upcoming?: boolean;
-}
+import { EventItem } from "../events/EventCard";
 
 interface InterviewsSectionProps {
   events?: EventItem[];
@@ -155,7 +140,7 @@ export function InterviewsSection({
   }, []);
 
   // Helper to extract YouTube ID as fallback
-  const getYoutubeId = (url: string): string | null => {
+  const getYoutubeId = (url?: string): string | null => {
     if (!url) return null;
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);

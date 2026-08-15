@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-interface EventItem {
+export interface EventItem {
   id?: string;
   slug?: string;
   title: string;
@@ -16,7 +16,9 @@ interface EventItem {
   youtube_id?: string;
   link?: string;
   is_upcoming?: boolean;
-  [key: string]: unknown;
+  viewCountText?: string;
+  type?: string;
+  [key: string]: any;
 }
 
 interface EventCardProps {
