@@ -222,7 +222,7 @@ export function InterviewsSection({
   };
 
   return (
-    <section id="entrevistas" className="w-full py-8 md:py-16 bg-slate-100">
+    <section id="entrevistas" className="w-full py-8 md:py-16 bg-slate-100 flex-1 flex flex-col">
       {showTitle && (
         <div className="max-w-[1440px] mx-auto px-4 md:px-10 mb-6 md:mb-10">
           <div className="w-full flex flex-col justify-start items-start gap-3 md:gap-4 text-left">
@@ -238,30 +238,35 @@ export function InterviewsSection({
         </div>
       )}
 
-      <div className="w-full flex flex-col gap-4 md:gap-5">
+      <div className="w-full flex-1 flex flex-col gap-4 md:gap-5">
         {isGrid && (
-          <div
-            className="w-full flex flex-nowrap overflow-x-auto gap-2 justify-start max-w-[1440px] mx-auto px-4 md:px-10 pb-2 touch-pan-x scroll-smooth"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {Object.keys(CATEGORY_COLORS).map(catName => {
-              const isSelected = activeCategory === catName;
-              const color = CATEGORY_COLORS[catName];
-              return (
-                <button
-                  key={catName}
-                  onClick={() => setActiveCategory(catName)}
-                  style={{
-                    backgroundColor: isSelected ? color : '#f8fafc',
-                    color: isSelected ? '#ffffff' : '#475569',
-                    borderColor: isSelected ? color : '#e2e8f0'
-                  }}
-                  className="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-full border transition-all duration-300 hover:scale-105 cursor-pointer shrink-0"
-                >
-                  {catName}
-                </button>
-              );
-            })}
+          <div className="w-full flex flex-col gap-2 max-w-[1440px] mx-auto px-4 md:px-10">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 select-none">
+              Actividades
+            </span>
+            <div
+              className="w-full flex flex-nowrap overflow-x-auto gap-2 justify-start pb-2 touch-pan-x scroll-smooth"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {Object.keys(CATEGORY_COLORS).map(catName => {
+                const isSelected = activeCategory === catName;
+                const color = CATEGORY_COLORS[catName];
+                return (
+                  <button
+                    key={catName}
+                    onClick={() => setActiveCategory(catName)}
+                    style={{
+                      backgroundColor: isSelected ? color : '#f8fafc',
+                      color: isSelected ? '#ffffff' : '#475569',
+                      borderColor: isSelected ? color : '#e2e8f0'
+                    }}
+                    className="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-full border transition-all duration-300 hover:scale-105 cursor-pointer shrink-0"
+                  >
+                    {catName}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 

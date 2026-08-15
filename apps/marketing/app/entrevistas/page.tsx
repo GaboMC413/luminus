@@ -58,7 +58,7 @@ export default async function EntrevistasListingPage() {
   return (
     <main className="w-full min-h-screen bg-white flex flex-col justify-start items-start">
       <Navbar />
-      <div className="w-full pt-[64px]">
+      <div className="w-full pt-[64px] flex-1 flex flex-col">
         <InterviewsSection events={events} isGrid={true} showTitle={false} />
       </div>
       <Footer />
