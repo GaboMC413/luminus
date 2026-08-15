@@ -22,18 +22,22 @@ export default async function Home() {
   let events = [];
   
   try {
-    const { data, error } = await supabase
-      .from("events")
-      .select("*")
-      .order("date", { ascending: false });
+    if (supabase) {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .order("date", { ascending: false });
 
-    if (data && data.length > 0) {
-      events = data;
-      console.log(`[Home] Fetched ${events.length} events from Supabase`);
-    } else {
-      if (error) {
-        console.warn("[Home] Supabase query failed, falling back to local JSON:", error.message);
+      if (data && data.length > 0) {
+        events = data;
+        console.log(`[Home] Fetched ${events.length} events from Supabase`);
+      } else {
+        if (error) {
+          console.warn("[Home] Supabase query failed, falling back to local JSON:", error.message);
+        }
       }
+    } else {
+      console.warn("[Home] Supabase client not initialized, falling back to local JSON");
     }
   } catch (err) {
     console.warn("[Home] Could not connect to Supabase or fetch data, falling back to local JSON:", err);
