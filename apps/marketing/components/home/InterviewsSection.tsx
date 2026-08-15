@@ -240,8 +240,8 @@ export function InterviewsSection({
 
       <div className="w-full flex flex-col gap-4 md:gap-5 flex-1">
         {isGrid && (
-          <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-3">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 select-none">
+          <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-4">
+            <h3 className="text-2xl sm:text-heading-5 font-normal tracking-tight text-slate-900 select-none">
               Actividades y grabaciones
             </h3>
             <div
