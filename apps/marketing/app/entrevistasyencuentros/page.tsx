@@ -17,7 +17,7 @@ export const metadata = {
   description: "Descubre entrevistas y encuentros que reúnen distintas perspectivas para acercar nuevas formas de entender el bienestar, compartir experiencias y conectar con ideas.",
 };
 
-export default async function EventosPage() {
+export default async function EntrevistasYEncuentrosPage() {
   let events = [];
   
   try {

@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 
 export interface EventItem {
+  id?: string;
+  slug?: string;
   youtube_id: string;
   title: string;
   description: string;
@@ -16,6 +18,7 @@ export interface EventItem {
   publishTimeText?: string;
   viewCountText?: string;
   type?: string;
+  is_upcoming?: boolean;
 }
 
 interface InterviewsSectionProps {
@@ -89,6 +92,19 @@ const INTERVIEWS = [
   },
 ];
 
+function getPageNumbers(currentPage: number, totalPages: number): (number | string)[] {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+  if (currentPage <= 4) {
+    return [1, 2, 3, 4, 5, "...", totalPages];
+  }
+  if (currentPage >= totalPages - 3) {
+    return [1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+  }
+  return [1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages];
+}
+
 export function InterviewsSection({
   events,
   isGrid = false,
@@ -132,7 +148,7 @@ export function InterviewsSection({
         }
       }
     };
-    
+
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -159,7 +175,7 @@ export function InterviewsSection({
   };
 
   // Use dynamic events if present, otherwise fall back to static list
-  const itemsToRender: EventItem[] = events && events.length > 0
+  const baseItems: EventItem[] = events && events.length > 0
     ? events
     : INTERVIEWS.map(item => ({
       youtube_id: item.id,
@@ -171,6 +187,22 @@ export function InterviewsSection({
       category: item.title.toLowerCase().includes('comida') ? 'Nutrición' : item.title.toLowerCase().includes('amor propio') ? 'Bienestar Emocional' : 'Crecimiento Personal',
       cover_url: item.thumbnail
     }));
+
+  // Filter items: only include recorded videos (past date + valid YouTube video link, excluding upcoming events)
+  const itemsToRender = baseItems.filter((item) => {
+    if (item.is_upcoming === true) return false;
+    if (item.date) {
+      const d = new Date(item.date);
+      if (!isNaN(d.getTime()) && d > new Date()) {
+        return false;
+      }
+    }
+    const hasYoutubeVideo = Boolean(
+      item.youtube_id ||
+      (item.link && (item.link.includes("watch?v=") || item.link.includes("youtu.be/")))
+    );
+    return hasYoutubeVideo;
+  });
 
   // Filter items based on active category
   const filteredItems = activeCategory === "Todos"
@@ -224,7 +256,7 @@ export function InterviewsSection({
   return (
     <section id="entrevistas" className="w-full pt-8 md:pt-12 pb-8 md:pb-16 bg-slate-100 flex-1 flex flex-col">
       {showTitle && (
-        <div className="max-w-[1440px] mx-auto px-4 md:px-10 mb-6 md:mb-10">
+        <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10 mb-6 md:mb-10">
           <div className="w-full flex flex-col justify-start items-start gap-3 md:gap-4 text-left">
             <h2 className="w-full text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[40px] md:leading-[48px]">
               {defaultTitle}
@@ -239,37 +271,6 @@ export function InterviewsSection({
       )}
 
       <div className="w-full flex flex-col gap-4 md:gap-5 flex-1">
-        {isGrid && (
-          <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-6 md:gap-8">
-            <h3 className="text-2xl sm:text-heading-5 font-normal tracking-tight text-slate-900 select-none">
-              Actividades y grabaciones
-            </h3>
-            <div
-              className="w-full flex flex-nowrap overflow-x-auto gap-2 justify-start pb-2 touch-pan-x scroll-smooth"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {Object.keys(CATEGORY_COLORS).map(catName => {
-                const isSelected = activeCategory === catName;
-                const color = CATEGORY_COLORS[catName];
-                return (
-                  <button
-                    key={catName}
-                    onClick={() => setActiveCategory(catName)}
-                    style={{
-                      backgroundColor: isSelected ? color : '#f8fafc',
-                      color: isSelected ? '#ffffff' : '#475569',
-                      borderColor: isSelected ? color : '#e2e8f0'
-                    }}
-                    className="px-3 py-1.5 text-xs sm:text-sm font-medium rounded-full border transition-all duration-300 hover:scale-105 cursor-pointer shrink-0"
-                  >
-                    {catName}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
         {isGrid ? (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10 max-w-[1440px] mx-auto px-4 md:px-10">
@@ -317,28 +318,34 @@ export function InterviewsSection({
                         </a>
                       </div>
 
-                      <div className="inline-flex justify-start items-center mt-auto">
-                        <a
-                          href={item.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group/link inline-flex items-center gap-1.5 text-sm font-medium text-slate-900 no-underline leading-5 hover:text-red-600 transition-colors"
-                        >
-                          <span>Ver en YouTube</span>
-                          <div
-                            style={{
-                              maskImage: "url('/Icons/play_circle_24dp_000000_FILL0_wght300_GRAD0_opsz24.svg')",
-                              WebkitMaskImage: "url('/Icons/play_circle_24dp_000000_FILL0_wght300_GRAD0_opsz24.svg')",
-                              maskRepeat: "no-repeat",
-                              WebkitMaskRepeat: "no-repeat",
-                              maskPosition: "center",
-                              WebkitMaskPosition: "center",
-                              maskSize: "contain",
-                              WebkitMaskSize: "contain",
-                            }}
-                            className="w-5 h-5 bg-slate-900 group-hover/link:bg-red-600 shrink-0 transition-colors"
-                          />
-                        </a>
+                      <div className="inline-flex justify-start items-center mt-auto pt-3 border-t border-slate-100">
+                        {ytId ? (
+                          <a
+                            href={item.link || `https://www.youtube.com/watch?v=${ytId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group/link inline-flex items-center gap-1.5 text-sm font-medium text-slate-900 no-underline leading-5 hover:text-red-600 transition-colors"
+                          >
+                            <span>Ver en YouTube</span>
+                            <div
+                              style={{
+                                maskImage: "url('/Icons/play_circle_24dp_000000_FILL0_wght300_GRAD0_opsz24.svg')",
+                                WebkitMaskImage: "url('/Icons/play_circle_24dp_000000_FILL0_wght300_GRAD0_opsz24.svg')",
+                                maskRepeat: "no-repeat",
+                                WebkitMaskRepeat: "no-repeat",
+                                maskPosition: "center",
+                                WebkitMaskPosition: "center",
+                                maskSize: "contain",
+                                WebkitMaskSize: "contain",
+                              }}
+                              className="w-5 h-5 bg-slate-900 group-hover/link:bg-red-600 shrink-0 transition-colors"
+                            />
+                          </a>
+                        ) : (
+                          <span className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-slate-100 text-slate-500">
+                            Este evento ya pasó
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -347,16 +354,15 @@ export function InterviewsSection({
             </div>
 
             {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-4 mt-12 w-full">
+              <div className="flex justify-center items-center gap-2 mt-12 w-full">
                 <button
-                  onClick={() => {
-                    setCurrentPage(prev => Math.max(prev - 1, 1));
-                  }}
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className={`p-3 rounded-xl flex justify-center items-center transition-all ${currentPage > 1
-                    ? "bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer"
-                    : "bg-gray-200 text-gray-400 opacity-40 cursor-not-allowed pointer-events-none"
-                    }`}
+                  className={`w-10 h-10 rounded-xl flex justify-center items-center transition-all ${
+                    currentPage > 1
+                      ? "bg-slate-200 hover:bg-slate-300 text-slate-700 cursor-pointer"
+                      : "bg-slate-100 text-slate-300 cursor-not-allowed pointer-events-none"
+                  }`}
                   aria-label="Página anterior"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -364,19 +370,38 @@ export function InterviewsSection({
                   </svg>
                 </button>
 
-                <span className="text-sm font-medium text-slate-700 select-none">
-                  Página {currentPage} de {totalPages}
-                </span>
+                {getPageNumbers(currentPage, totalPages).map((p, idx) => {
+                  if (typeof p === "string") {
+                    return (
+                      <span key={`ellipsis-${idx}`} className="px-2 text-slate-400 font-medium select-none">
+                        ...
+                      </span>
+                    );
+                  }
+                  const isCurrent = p === currentPage;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setCurrentPage(p)}
+                      className={`w-10 h-10 rounded-xl text-sm font-medium transition-all cursor-pointer ${
+                        isCurrent
+                          ? "bg-slate-900 text-white shadow-sm"
+                          : "bg-white hover:bg-slate-200 text-slate-700 border border-slate-200"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  );
+                })}
 
                 <button
-                  onClick={() => {
-                    setCurrentPage(prev => Math.min(prev + 1, totalPages));
-                  }}
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className={`p-3 rounded-xl flex justify-center items-center transition-all ${currentPage < totalPages
-                    ? "bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer"
-                    : "bg-gray-200 text-gray-400 opacity-40 cursor-not-allowed pointer-events-none"
-                    }`}
+                  className={`w-10 h-10 rounded-xl flex justify-center items-center transition-all ${
+                    currentPage < totalPages
+                      ? "bg-slate-200 hover:bg-slate-300 text-slate-700 cursor-pointer"
+                      : "bg-slate-100 text-slate-300 cursor-not-allowed pointer-events-none"
+                  }`}
                   aria-label="Página siguiente"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -503,10 +528,10 @@ export function InterviewsSection({
               </button>
 
               <Link
-                href="/entrevistas"
+                href="/grabaciones"
                 className="text-slate-900 text-base font-normal underline hover:text-slate-600 transition-colors"
               >
-                Ver todas las entrevistas
+                Ver todas las grabaciones
               </Link>
 
               <button
