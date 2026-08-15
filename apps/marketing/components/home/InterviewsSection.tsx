@@ -238,12 +238,12 @@ export function InterviewsSection({
         </div>
       )}
 
-      <div className="w-full flex-1 flex flex-col gap-4 md:gap-5">
+      <div className="w-full flex flex-col gap-4 md:gap-5 flex-1">
         {isGrid && (
-          <div className="w-full flex flex-col gap-2 max-w-[1440px] mx-auto px-4 md:px-10">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 select-none">
-              Actividades
-            </span>
+          <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-3">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 select-none">
+              Actividades y grabaciones
+            </h3>
             <div
               className="w-full flex flex-nowrap overflow-x-auto gap-2 justify-start pb-2 touch-pan-x scroll-smooth"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
