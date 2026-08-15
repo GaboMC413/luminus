@@ -1,9 +1,15 @@
 import fs from "fs";
 import path from "path";
 import { supabase } from "@/lib/supabase";
-import { Navbar, InterviewsSection, Footer } from "@/components";
+import { Navbar, Footer } from "@/components";
+import { RecordingsGrid } from "@/components/events/RecordingsGrid";
 
-export default async function EntrevistasListingPage() {
+export const metadata = {
+  title: "Grabaciones | LUMINUS - Encuentros y Entrevistas",
+  description: "Revive los encuentros y entrevistas sobre bienestar de LUMINUS. Mira las grabaciones de conversaciones enriquecedoras con especialistas.",
+};
+
+export default async function GrabacionesListingPage() {
   let events = [];
 
   try {
@@ -50,11 +56,32 @@ export default async function EntrevistasListingPage() {
     }
   }
 
+  // Filter for recorded events only (exclude upcoming events and require valid YouTube video link)
+  const now = new Date();
+  const recordedEvents = events.filter((item: any) => {
+    if (item.is_upcoming === true) return false;
+    if (item.date) {
+      const d = new Date(item.date);
+      if (!isNaN(d.getTime()) && d > now) {
+        return false;
+      }
+    }
+    const hasYoutubeVideo = Boolean(
+      item.youtube_id ||
+      (item.link && (item.link.includes("watch?v=") || item.link.includes("youtu.be/")))
+    );
+    return hasYoutubeVideo;
+  });
+
   return (
     <main className="w-full min-h-screen bg-white flex flex-col justify-start items-start">
       <Navbar />
       <div className="w-full pt-[64px] flex-1 flex flex-col min-h-[110vh]">
-        <InterviewsSection events={events} isGrid={true} showTitle={false} />
+        <RecordingsGrid
+          events={recordedEvents}
+          title="Actividades y grabaciones"
+          subtitle="Revive los encuentros, entrevistas y conversaciones sobre bienestar."
+        />
       </div>
       <Footer />
     </main>

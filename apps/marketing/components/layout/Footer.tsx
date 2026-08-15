@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="w-full bg-white border-t border-black py-6 text-slate-800">
+    <footer className="w-full bg-white border-t border-slate-200 py-6 text-slate-800">
       <div className="max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-20">
 
         {/* Top Row: Logo, Legal Links & Socials */}
