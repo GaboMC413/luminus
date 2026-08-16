@@ -3,9 +3,9 @@
 import { FAQ_CATEGORIES } from "@/data/faqsData";
 import { FaqAccordionList } from "@/components/faqs/FaqAccordionList";
 
-export function SpecialistsFaq() {
-  const specialistCategory = FAQ_CATEGORIES.find((cat) => cat.id === "especialistas");
-  const specialistFaqs = specialistCategory ? specialistCategory.faqs : [];
+export function EventsFaq() {
+  const eventsCategory = FAQ_CATEGORIES.find((cat) => cat.id === "eventos");
+  const eventsFaqs = eventsCategory ? eventsCategory.faqs : [];
 
   return (
     <section id="faq" className="w-full py-16 md:py-24 bg-white border-t border-slate-200">
@@ -16,7 +16,7 @@ export function SpecialistsFaq() {
         </h2>
 
         {/* 2 Column Accordion List using shared component */}
-        <FaqAccordionList faqs={specialistFaqs} twoColumns={true} />
+        <FaqAccordionList faqs={eventsFaqs} twoColumns={true} />
       </div>
     </section>
   );

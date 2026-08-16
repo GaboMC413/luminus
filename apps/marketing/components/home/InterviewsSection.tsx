@@ -189,10 +189,20 @@ export function InterviewsSection({
     return hasYoutubeVideo;
   });
 
+  // Sort items from newest to oldest date
+  const sortedItems = [...itemsToRender].sort((a, b) => {
+    const dateA = a.date ? new Date(a.date).getTime() : 0;
+    const dateB = b.date ? new Date(b.date).getTime() : 0;
+    return dateB - dateA;
+  });
+
   // Filter items based on active category
-  const filteredItems = activeCategory === "Todos"
-    ? itemsToRender
-    : itemsToRender.filter(item => item.category === activeCategory);
+  const filteredItemsRaw = activeCategory === "Todos"
+    ? sortedItems
+    : sortedItems.filter(item => item.category === activeCategory);
+
+  // In carousel mode (!isGrid), limit to the 6 most recent recordings
+  const filteredItems = isGrid ? filteredItemsRaw : filteredItemsRaw.slice(0, 6);
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage) || 1;
   const paginatedItems = filteredItems.slice(

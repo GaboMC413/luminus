@@ -8,6 +8,7 @@ import {
   InterviewsSection,
   EventsVoicesCallout,
   EventsFormatsGrid,
+  EventsFaq,
   EventsClosingCta,
   Footer,
 } from "@/components";
@@ -70,9 +71,15 @@ export default async function EntrevistasYEncuentrosPage() {
       <div className="w-full pt-[64px]">
         <EventsHero />
         <EventsOverviewCard />
-        <InterviewsSection events={events} isGrid={false} />
+        <InterviewsSection
+          events={events}
+          isGrid={false}
+          title="Conversaciones para ver cuando quieras"
+          subtitle="Entrevistas y encuentros anteriores disponibles para ver en cualquier momento."
+        />
         <EventsVoicesCallout />
         <EventsFormatsGrid />
+        <EventsFaq />
         <EventsClosingCta />
       </div>
       <Footer />
