@@ -150,93 +150,96 @@ export function Navbar() {
         )}
       </button>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer (Full height below navbar, covering screen cleanly) */}
       {mobileMenuOpen && (
-        <div className="absolute top-[64px] left-0 w-full bg-white border-b border-slate-200 px-6 py-6 flex flex-col gap-4 shadow-lg lg:hidden">
-          <Link
-            href="/especialistas"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-left py-2 text-base font-normal text-slate-800 hover:text-black"
-          >
-            Para Especialistas
-          </Link>
-          {/* Mobile Accordion Menu */}
-          <div className="flex flex-col">
-            <button
-              onClick={() => setMobileDropdownOpen(!mobileDropdownOpen)}
-              className="flex items-center justify-between py-2 text-base font-normal text-slate-800 hover:text-black text-left focus:outline-none cursor-pointer"
+        <div className="fixed inset-x-0 top-[64px] bottom-0 bg-white z-50 px-6 pt-6 pb-10 flex flex-col justify-between overflow-y-auto lg:hidden">
+          <div className="flex flex-col gap-4">
+            <Link
+              href="/especialistas"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-left py-2.5 text-lg font-normal text-slate-900 hover:text-black border-b border-slate-100"
             >
-              <span>Entrevistas y encuentros</span>
-              <svg 
-                className={`w-4 h-4 transition-transform duration-200 ${mobileDropdownOpen ? 'rotate-180' : ''}`}
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor" 
-                strokeWidth={2}
+              Para Especialistas
+            </Link>
+            {/* Mobile Accordion Menu */}
+            <div className="flex flex-col border-b border-slate-100 pb-1">
+              <button
+                onClick={() => setMobileDropdownOpen(!mobileDropdownOpen)}
+                className="flex items-center justify-between py-2.5 text-lg font-normal text-slate-900 hover:text-black text-left focus:outline-none cursor-pointer"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
+                <span>Entrevistas y encuentros</span>
+                <svg 
+                  className={`w-5 h-5 text-slate-500 transition-transform duration-200 ${mobileDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor" 
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {mobileDropdownOpen && (
+                <div className="flex flex-col pl-4 border-l border-slate-200 my-2 gap-2">
+                  <Link
+                    href="/entrevistasyencuentros"
+                    onClick={() => {
+                      setMobileDropdownOpen(false);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="py-2 text-base font-normal text-slate-700 hover:text-black transition-colors text-left"
+                  >
+                    Conoce la propuesta
+                  </Link>
+                  <Link
+                    href="/grabaciones"
+                    onClick={() => {
+                      setMobileDropdownOpen(false);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="py-2 text-base font-normal text-slate-700 hover:text-black transition-colors text-left"
+                  >
+                    Grabaciones
+                  </Link>
+                  <Link
+                    href="/proximasfechas"
+                    onClick={() => {
+                      setMobileDropdownOpen(false);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="py-2 text-base font-normal text-slate-700 hover:text-black transition-colors text-left"
+                  >
+                    Próximas fechas
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            <button
+              onClick={() => handleNavClick("faq")}
+              className="text-left py-2.5 text-lg font-normal text-slate-900 hover:text-black border-b border-slate-100 cursor-pointer"
+            >
+              Preguntas Frecuentes
             </button>
-            {mobileDropdownOpen && (
-              <div className="flex flex-col pl-4 border-l border-slate-200 mt-1 gap-1">
-                <Link
-                  href="/entrevistasyencuentros"
-                  onClick={() => {
-                    setMobileDropdownOpen(false);
-                    setMobileMenuOpen(false);
-                  }}
-                  className="py-2 text-sm font-normal text-slate-600 hover:text-black transition-colors text-left"
-                >
-                  Conoce la propuesta
-                </Link>
-                <Link
-                  href="/grabaciones"
-                  onClick={() => {
-                    setMobileDropdownOpen(false);
-                    setMobileMenuOpen(false);
-                  }}
-                  className="py-2 text-sm font-normal text-slate-600 hover:text-black transition-colors text-left"
-                >
-                  Grabaciones
-                </Link>
-                <Link
-                  href="/proximasfechas"
-                  onClick={() => {
-                    setMobileDropdownOpen(false);
-                    setMobileMenuOpen(false);
-                  }}
-                  className="py-2 text-sm font-normal text-slate-600 hover:text-black transition-colors text-left"
-                >
-                  Próximas fechas
-                </Link>
-              </div>
-            )}
+            <Link
+              href="/contacto"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-left py-2.5 text-lg font-normal text-slate-900 hover:text-black border-b border-slate-100"
+            >
+              Contactarnos
+            </Link>
           </div>
 
-          <button
-            onClick={() => handleNavClick("faq")}
-            className="text-left py-2 text-base font-normal text-slate-800 hover:text-black"
-          >
-            Preguntas Frecuentes
-          </button>
-          <Link
-            href="/contacto"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-left py-2 text-base font-normal text-slate-800 hover:text-black"
-          >
-            Contactarnos
-          </Link>
-
-          <div className="pt-4 border-t border-slate-200 flex flex-col gap-3">
+          {/* Large Mobile CTA Buttons */}
+          <div className="pt-6 flex flex-col gap-3.5 mt-auto">
             <a
               href="https://app.luminuslatam.com/auth/iniciar-sesion"
-              className="w-full py-2.5 text-center text-sm font-normal text-black border border-black rounded-xl hover:bg-slate-50"
+              className="w-full h-12 text-center text-base font-normal text-black border border-black rounded-2xl hover:bg-slate-50 transition-colors flex items-center justify-center cursor-pointer"
             >
               Iniciar Sesión
             </a>
             <a
               href="https://app.luminuslatam.com/auth/registrarse"
-              className="w-full py-2.5 text-center text-sm font-normal text-white bg-black hover:bg-slate-800 rounded-xl"
+              className="w-full h-12 text-center text-base font-normal text-white bg-black hover:bg-slate-800 rounded-2xl transition-colors flex items-center justify-center shadow-sm cursor-pointer"
             >
               Registrarme
             </a>

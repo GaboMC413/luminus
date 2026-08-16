@@ -90,10 +90,10 @@ export function UpcomingEventsTimeline({ events }: UpcomingEventsTimelineProps) 
         {/* Header Section */}
         <div className="w-full flex flex-col justify-start items-start gap-3 md:gap-4 text-left">
           <h1 className="w-full text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[40px] md:leading-[48px]">
-            Próximas Fechas y Encuentros
+            Próximas Fechas
           </h1>
           <p className="w-full text-lg sm:text-xl lg:text-[24px] font-normal text-slate-800 leading-7 md:leading-8">
-            Acompáñanos en nuestros talleres, conversaciones en vivo y experiencias de bienestar. Reserva tu lugar para participar.
+            Eventos y actividades sobre bienestar.
           </p>
         </div>
 
@@ -196,8 +196,8 @@ export function UpcomingEventsTimeline({ events }: UpcomingEventsTimelineProps) 
                           <p className="text-sm font-light text-slate-600 line-clamp-3 leading-relaxed">
                             {item.description
                               ? item.description
-                                  .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1")
-                                  .replace(/\*\*([^*]+)\*\*/g, "$1")
+                                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1")
+                                .replace(/\*\*([^*]+)\*\*/g, "$1")
                               : ""}
                           </p>
                         </div>

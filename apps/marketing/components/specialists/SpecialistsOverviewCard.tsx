@@ -40,7 +40,7 @@ export function SpecialistsOverviewCard() {
             <div className="pt-2">
               <a
                 href="https://app.luminuslatam.com/auth/registrarse"
-                className="inline-block px-8 py-3.5 bg-black hover:bg-slate-900 text-white text-base font-normal rounded-2xl text-center min-w-[240px] transition-colors"
+                className="flex sm:inline-flex items-center justify-center px-8 py-3.5 bg-black hover:bg-slate-900 text-white text-base font-normal rounded-2xl text-center w-full sm:w-auto sm:min-w-[240px] transition-colors"
               >
                 Aplicar como Especialista
               </a>

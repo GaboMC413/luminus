@@ -111,8 +111,7 @@ export default async function ProximasFechasPage() {
         {pastEvents.length > 0 && (
           <PastEventsGrid
             events={pastEvents}
-            title="Encuentros Pasados y Grabaciones"
-            subtitle="Explora el registro de talleres, conversaciones y experiencias de bienestar que ya realizamos."
+            subtitle="Fechas pasadas."
           />
         )}
       </div>

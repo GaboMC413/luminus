@@ -4,7 +4,7 @@ import Link from "next/link";
 export function Footer() {
   return (
     <footer className="w-full bg-white border-t border-slate-200 py-6 text-slate-800">
-      <div className="max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-20">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-6 md:gap-8">
 
         {/* Top Row: Logo, Legal Links & Socials */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
@@ -20,16 +20,22 @@ export function Footer() {
                 className="h-5 w-auto"
               />
             </Link>
-            <nav className="flex flex-wrap items-center gap-6 text-sm text-slate-700 font-normal">
-              <a href="#" className="hover:text-slate-950 transition-colors">
+            <nav className="flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6 text-xs text-slate-500 font-normal">
+              <Link href="/legal" className="hover:text-slate-900 transition-colors">
+                Centro Legal
+              </Link>
+              <Link href="/legal/terminos" className="hover:text-slate-900 transition-colors">
                 Términos y Condiciones
-              </a>
-              <a href="#" className="hover:text-slate-950 transition-colors">
+              </Link>
+              <Link href="/legal/condiciones-especialistas" className="hover:text-slate-900 transition-colors">
+                Condiciones Especialistas
+              </Link>
+              <Link href="/legal/privacidad" className="hover:text-slate-900 transition-colors">
                 Política de privacidad
-              </a>
-              <a href="#" className="hover:text-slate-950 transition-colors">
+              </Link>
+              <Link href="/legal/cookies" className="hover:text-slate-900 transition-colors">
                 Política de cookies
-              </a>
+              </Link>
             </nav>
           </div>
 

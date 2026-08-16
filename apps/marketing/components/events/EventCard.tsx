@@ -53,7 +53,7 @@ export function EventCard({ item }: EventCardProps) {
   const hasVideo = Boolean(ytId || videoLink);
 
   return (
-    <div className="w-full h-[340px] bg-white rounded-2xl border border-slate-200/80 overflow-hidden flex flex-col group shadow-none">
+    <div className="w-full min-h-[370px] sm:min-h-[340px] h-full bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col group shadow-none">
 
       {/* Thumbnail — edge-to-edge, no extra border radius */}
       {hasVideo && videoLink ? (

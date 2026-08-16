@@ -239,7 +239,7 @@ export function InterviewsSection({
   };
 
   return (
-    <section id="entrevistas" className="w-full pt-8 md:pt-12 pb-8 md:pb-16 bg-slate-100 flex-1 flex flex-col">
+    <section id="entrevistas" className="w-full pt-8 md:pt-12 pb-8 md:pb-16 bg-white flex-1 flex flex-col">
       {showTitle && (
         <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10 mb-6 md:mb-10">
           <div className="w-full flex flex-col justify-start items-start gap-3 md:gap-4 text-left">
@@ -267,7 +267,7 @@ export function InterviewsSection({
                 return (
                   <div
                     key={ytId || item.title}
-                    className="w-full h-[340px] bg-white rounded-2xl border border-slate-200/80 overflow-hidden flex flex-col group shadow-none"
+                    className="w-full min-h-[370px] sm:min-h-[340px] h-full bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col group shadow-none"
                   >
                     <a
                       href={item.link}
@@ -426,7 +426,7 @@ export function InterviewsSection({
                   <div
                     key={ytId || item.title}
                     data-card
-                    className="w-[300px] sm:w-[384px] h-[340px] bg-white rounded-2xl border border-slate-200/80 overflow-hidden flex flex-col shrink-0 snap-start group shadow-none"
+                    className="w-[300px] sm:w-[384px] min-h-[370px] sm:min-h-[340px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col shrink-0 snap-start group shadow-none"
                   >
                     <a
                       href={item.link}
