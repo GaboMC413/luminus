@@ -45,7 +45,7 @@ export function PastEventsGrid({ events, title, subtitle }: PastEventsGridProps)
   if (events.length === 0) return null;
 
   return (
-    <section ref={sectionRef} className="w-full pt-8 md:pt-12 pb-8 md:pb-16 bg-slate-100 flex-1 flex flex-col">
+    <section ref={sectionRef} className="w-full pt-8 md:pt-12 pb-8 md:pb-16 bg-white flex-1 flex flex-col">
 
       {/* Header — same structure and spacing as InterviewsSection */}
       {(title || subtitle) && (

@@ -12,7 +12,7 @@ export function Hero() {
         <div className="flex flex-col items-center gap-4 w-full pt-2">
           <a
             href="https://app.luminuslatam.com/auth/registrarse"
-            className="py-3.5 px-8 text-base font-normal text-white bg-black hover:bg-slate-800 rounded-2xl text-center min-w-[240px] transition-colors"
+            className="flex items-center justify-center w-full sm:w-auto py-3.5 px-8 text-base font-normal text-white bg-black hover:bg-slate-800 rounded-2xl text-center sm:min-w-[240px] transition-colors"
           >
             Crear mi cuenta gratis
           </a>

@@ -16,7 +16,7 @@ export function SpecialistsHighlight() {
           <div className="pt-2">
             <a
               href="https://app.luminus.lat/auth"
-              className="inline-block py-3.5 px-8 text-body-medium font-normal text-white bg-black hover:bg-slate-800 rounded-2xl text-center min-w-[280px]"
+              className="flex sm:inline-flex items-center justify-center w-full sm:w-auto py-3.5 px-8 text-body-medium font-normal text-white bg-black hover:bg-slate-800 rounded-2xl text-center sm:min-w-[280px] transition-colors"
             >
               Explorar especialistas
             </a>

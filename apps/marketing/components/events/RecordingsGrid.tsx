@@ -143,7 +143,7 @@ export function RecordingsGrid({ events, title, subtitle }: RecordingsGridProps)
 
   if (events.length === 0) {
     return (
-      <section className="w-full pt-8 md:pt-12 pb-8 md:pb-16 bg-slate-100 flex-1">
+      <section className="w-full pt-8 md:pt-12 pb-8 md:pb-16 bg-white flex-1">
         <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10 text-center text-slate-500">
           No hay grabaciones disponibles por el momento.
         </div>
@@ -152,7 +152,7 @@ export function RecordingsGrid({ events, title, subtitle }: RecordingsGridProps)
   }
 
   return (
-    <section className="w-full pt-8 md:pt-12 pb-8 md:pb-16 bg-slate-100 flex-1 flex flex-col">
+    <section className="w-full pt-8 md:pt-12 pb-8 md:pb-16 bg-white flex-1 flex flex-col">
 
       {/* Header */}
       {(title || subtitle) && (
@@ -177,7 +177,7 @@ export function RecordingsGrid({ events, title, subtitle }: RecordingsGridProps)
 
         {/* Left Arrow Button with Fade Gradient */}
         {canScrollLeft && (
-          <div className="absolute left-4 md:left-10 top-0 bottom-0 z-20 flex items-center pr-6 bg-gradient-to-r from-slate-100 via-slate-100/90 to-transparent pointer-events-none">
+          <div className="absolute left-4 md:left-10 top-0 bottom-0 z-20 flex items-center pr-6 bg-gradient-to-r from-white via-white/90 to-transparent pointer-events-none">
             <button
               onClick={() => scrollContainer("left")}
               className="w-9 h-9 rounded-full bg-slate-900 hover:bg-slate-800 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-105 pointer-events-auto cursor-pointer"
@@ -192,7 +192,7 @@ export function RecordingsGrid({ events, title, subtitle }: RecordingsGridProps)
 
         {/* Right Arrow Button with Fade Gradient */}
         {canScrollRight && (
-          <div className="absolute right-4 md:right-10 top-0 bottom-0 z-20 flex items-center pl-6 bg-gradient-to-l from-slate-100 via-slate-100/90 to-transparent pointer-events-none">
+          <div className="absolute right-4 md:right-10 top-0 bottom-0 z-20 flex items-center pl-6 bg-gradient-to-l from-white via-white/90 to-transparent pointer-events-none">
             <button
               onClick={() => scrollContainer("right")}
               className="w-9 h-9 rounded-full bg-slate-900 hover:bg-slate-800 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-105 pointer-events-auto cursor-pointer"

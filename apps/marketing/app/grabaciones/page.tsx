@@ -79,8 +79,8 @@ export default async function GrabacionesListingPage() {
       <div className="w-full pt-[64px] flex-1 flex flex-col min-h-[110vh]">
         <RecordingsGrid
           events={recordedEvents}
-          title="Actividades y grabaciones"
-          subtitle="Revive los encuentros, entrevistas y conversaciones sobre bienestar."
+          title="Grabaciones"
+          subtitle="Entrevistas y conversaciones sobre bienestar."
         />
       </div>
       <Footer />

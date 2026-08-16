@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export function ContactBanner() {
   return (
@@ -16,12 +17,12 @@ export function ContactBanner() {
             </p>
           </div>
           <div className="pt-2">
-            <a
-              href="mailto:hola@luminus.lat"
-              className="inline-block py-3.5 px-8 text-base font-normal text-slate-950 bg-white hover:bg-slate-100 rounded-2xl text-center min-w-[240px] transition-colors"
+            <Link
+              href="/contacto"
+              className="flex sm:inline-flex items-center justify-center w-full sm:w-auto py-3.5 px-8 text-base font-normal text-slate-950 bg-white hover:bg-slate-100 rounded-2xl text-center sm:min-w-[240px] transition-colors"
             >
               Contactar a LUMINUS
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -41,4 +42,3 @@ export function ContactBanner() {
     </section>
   );
 }
-
