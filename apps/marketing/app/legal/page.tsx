@@ -30,6 +30,12 @@ export default function LegalPage() {
       description: "Detalla el uso de cookies y tecnologías de seguimiento destinadas a optimizar y personalizar tu experiencia de navegación.",
       href: "/legal/cookies",
     },
+    {
+      title: "Preguntas Frecuentes",
+      description: "Respuestas organizadas por categorías sobre el funcionamiento de LUMINUS, membresías y la Red de Especialistas.",
+      href: "/preguntas-frecuentes",
+      actionText: "Ver preguntas",
+    },
   ];
 
   return (
@@ -70,7 +76,7 @@ export default function LegalPage() {
 
                 {/* Bottom link */}
                 <div className="inline-flex justify-start items-center mt-auto pt-4 mt-4 border-t border-slate-200/80 text-sm font-medium text-slate-600 group-hover:text-black transition-colors gap-1.5">
-                  <span>Leer documento</span>
+                  <span>{doc.actionText || "Leer documento"}</span>
                   <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>

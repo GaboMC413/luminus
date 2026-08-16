@@ -21,6 +21,9 @@ export function Footer() {
               />
             </Link>
             <nav className="flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-6 text-xs text-slate-500 font-normal">
+              <Link href="/preguntas-frecuentes" className="hover:text-slate-900 transition-colors">
+                Preguntas Frecuentes
+              </Link>
               <Link href="/legal" className="hover:text-slate-900 transition-colors">
                 Centro Legal
               </Link>

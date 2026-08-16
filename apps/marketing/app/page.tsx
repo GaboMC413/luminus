@@ -57,12 +57,8 @@ export default async function Home() {
         }
       }
     } catch (fsErr) {
-      console.error("[Home] Error reading local fallback JSON:", fsErr);
     }
   }
-
-  // Get the latest 8 events for the home page carousel
-  const homeEvents = events.slice(0, 8);
 
   return (
     <div className="w-full min-h-screen bg-white text-slate-900 font-sans flex flex-col antialiased">
@@ -74,7 +70,7 @@ export default async function Home() {
         <CategoriesGrid />
         <SpecialistsHighlight />
         <ConversationSection />
-        <InterviewsSection events={homeEvents} />
+        <InterviewsSection events={events} />
         <ForSpecialistsSection />
         <PricingSection />
         <FaqSection />
