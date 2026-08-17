@@ -277,7 +277,7 @@ export function InterviewsSection({
                 return (
                   <div
                     key={ytId || item.title}
-                    className="w-full min-h-[370px] sm:min-h-[340px] h-full bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col group shadow-none"
+                    className="w-full min-h-0 sm:min-h-[320px] h-full bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col group shadow-none"
                   >
                     <a
                       href={item.link}
@@ -436,7 +436,7 @@ export function InterviewsSection({
                   <div
                     key={ytId || item.title}
                     data-card
-                    className="w-[300px] sm:w-[384px] min-h-[370px] sm:min-h-[340px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col shrink-0 snap-start group shadow-none"
+                    className="w-[300px] sm:w-[384px] min-h-0 sm:min-h-[320px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col shrink-0 snap-start group shadow-none"
                   >
                     <a
                       href={item.link}
