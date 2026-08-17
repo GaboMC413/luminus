@@ -11,20 +11,25 @@ export interface SelectOption {
 interface CustomSelectProps {
   options: (string | SelectOption)[];
   value: string;
-  onSelect: (value: string) => void;
+  onSelect?: (value: string) => void;
+  onChange?: (value: string) => void;
   placeholder?: string;
   disabled?: boolean;
   dark?: boolean;
+  required?: boolean;
 }
 
 export function CustomSelect({
   options,
   value,
   onSelect,
+  onChange,
   placeholder = "Selecciona una opción",
   disabled = false,
   dark = false,
 }: CustomSelectProps) {
+  const handleSelect = onSelect || onChange;
+
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [coords, setCoords] = useState<{ top?: number; bottom?: number; left: number; width: number; maxHeight: number } | null>(null);
@@ -132,7 +137,7 @@ export function CustomSelect({
             key={optValue}
             onClick={(e) => {
               e.stopPropagation();
-              onSelect(optValue);
+              handleSelect?.(optValue);
               setIsOpen(false);
             }}
             className={`px-3.5 py-2.5 rounded-xl cursor-pointer transition-colors text-sm ${
