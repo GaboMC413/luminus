@@ -17,6 +17,7 @@ type CognitoTokenResponse = {
 type CognitoStartState = {
   state: string;
   provider?: "Google";
+  intent?: "signup" | "signin";
 };
 
 type CognitoIdentityClaim = {
@@ -192,15 +193,17 @@ export async function GET(request: Request) {
     maxAge: 0,
   });
 
+  const fallbackPath = storedState?.intent === "signup" ? "/auth/registrarse" : "/auth/iniciar-sesion";
+
   if (error) {
     const errorDescription = requestUrl.searchParams.get("error_description") || "unknown";
-    return redirectTo(requestUrl, `/auth/iniciar-sesion?error=cognito&reason=${encodeURIComponent(error + ": " + errorDescription)}`);
+    return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=${encodeURIComponent(error + ": " + errorDescription)}`);
   }
 
-  if (!code) return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito&reason=no_code");
-  if (!state) return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito&reason=no_state");
-  if (!storedState) return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito&reason=no_cookie");
-  if (state !== storedState.state) return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito&reason=state_mismatch");
+  if (!code) return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=no_code`);
+  if (!state) return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=no_state`);
+  if (!storedState) return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=no_cookie`);
+  if (state !== storedState.state) return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=state_mismatch`);
 
   try {
     const redirectUri = `${getPublicOrigin(requestUrl)}/api/auth/cognito/callback`;
@@ -426,6 +429,7 @@ export async function GET(request: Request) {
   } catch (callbackError) {
     console.error("Cognito OAuth callback failed.", callbackError);
     const reason = callbackError instanceof Error ? encodeURIComponent(callbackError.message) : "unknown";
-    return redirectTo(requestUrl, `/auth/iniciar-sesion?error=cognito&reason=${reason}`);
+    const fallbackPath = storedState?.intent === "signup" ? "/auth/registrarse" : "/auth/iniciar-sesion";
+    return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=${reason}`);
   }
 }

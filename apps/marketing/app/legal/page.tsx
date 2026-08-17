@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "Centro Legal | LUMINUS Latam",
-  description: "Documentos oficiales, políticas de privacidad, términos de servicio y lineamientos de la plataforma LUMINUS.",
+  description: "Políticas de privacidad, términos y condiciones de la plataforma LUMINUS.",
 };
 
 export default function LegalPage() {
@@ -12,94 +14,80 @@ export default function LegalPage() {
       title: "Términos y Condiciones",
       description: "Regula el uso de la plataforma, el registro, la propiedad intelectual y la relación con los especialistas de bienestar.",
       href: "/legal/terminos",
-      icon: "gavel",
     },
     {
       title: "Condiciones para Especialistas",
-      description: "Regula la postulación, admisión y participación de los especialistas dentro de la red LUMINUS.",
+      description: "Regula la postulación, admisión, participación y permanencia de los especialistas dentro de la red LUMINUS.",
       href: "/legal/condiciones-especialistas",
-      icon: "assignment_ind",
     },
     {
       title: "Política de Privacidad",
       description: "Explica detalladamente cómo recopilamos, utilizamos, protegemos y gestionamos tus datos personales dentro de LUMINUS.",
       href: "/legal/privacidad",
-      icon: "shield_person",
     },
     {
       title: "Política de Cookies",
       description: "Detalla el uso de cookies y tecnologías de seguimiento destinadas a optimizar y personalizar tu experiencia de navegación.",
       href: "/legal/cookies",
-      icon: "cookie",
+    },
+    {
+      title: "Preguntas Frecuentes",
+      description: "Respuestas organizadas por categorías sobre el funcionamiento de LUMINUS, membresías y la Red de Especialistas.",
+      href: "/preguntas-frecuentes",
+      actionText: "Ver preguntas",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white flex flex-col">
-      {/* Header */}
-      <header className="fixed top-0 left-0 w-full h-[70px] md:h-[80px] bg-white/80 backdrop-blur-md border-b border-zinc-100 px-6 md:px-8 flex items-center justify-between z-50">
-        <Link href="/" className="hover:opacity-80 transition-opacity">
-          <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[18px] md:h-[20px]" />
-        </Link>
-        <Link 
-          href="https://app.luminuslatam.com/auth/registrarse" 
-          className="group flex items-center gap-2 text-[14px] font-medium border border-black px-4 md:px-6 py-2 rounded-full hover:bg-black hover:text-white transition-all"
-        >
-          <span className="hidden md:inline">Volver al registro</span>
-          <span className="material-symbols-rounded md:hidden text-[20px]">arrow_back</span>
-        </Link>
-      </header>
+    <main className="w-full min-h-screen bg-white flex flex-col justify-between">
+      <Navbar />
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col justify-center max-w-[1000px] mx-auto pt-[120px] md:pt-[160px] pb-16 px-6 md:px-8 w-full">
-        <div className="text-center max-w-[600px] mx-auto mb-16">
-          <h1 className="text-[44px] md:text-[54px] font-jakarta font-normal tracking-tight leading-tight mb-4">
-            Centro Legal
-          </h1>
-          <p className="text-zinc-500 text-[16px] md:text-[18px] leading-relaxed">
-            Documentos oficiales, políticas de privacidad, términos de servicio y lineamientos de la plataforma LUMINUS.
-          </p>
-        </div>
+      <div className="w-full pt-[64px] flex-1 flex flex-col">
+        <section className="w-full pt-8 md:pt-12 pb-8 md:pb-16 bg-white flex-1 flex flex-col">
+          
+          {/* Header — Standardized header structure across all pages */}
+          <div className="max-w-[1440px] mx-auto px-4 md:px-10 mb-6 md:mb-8 w-full">
+            <div className="w-full flex flex-col justify-start items-start gap-3 md:gap-4 text-left">
+              <h1 className="w-full text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[40px] md:leading-[48px]">
+                Centro Legal
+              </h1>
+              <p className="w-full text-lg sm:text-xl lg:text-[24px] font-normal text-slate-800 leading-7 md:leading-8">
+                Políticas de privacidad, términos y condiciones de LUMINUS.
+              </p>
+            </div>
+          </div>
 
-        {/* Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
-          {legalDocs.map((doc) => (
-            <Link 
-              key={doc.title}
-              href={doc.href}
-              className="group relative flex flex-col justify-between p-8 rounded-3xl border-2 border-black/5 hover:border-black hover:shadow-xl hover:-translate-y-1 transition-all duration-300 bg-white"
-            >
-              <div>
-                <div className="w-12 h-12 rounded-2xl bg-zinc-50 flex items-center justify-center border border-zinc-100 mb-6 group-hover:bg-black group-hover:text-white group-hover:border-black transition-all duration-300">
-                  <span className="material-symbols-rounded text-[24px]">
-                    {doc.icon}
-                  </span>
+          {/* 4-Column Cards Grid — Standardized grid container */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-8 max-w-[1440px] mx-auto px-4 md:px-10 w-full">
+            {legalDocs.map((doc) => (
+              <Link
+                key={doc.title}
+                href={doc.href}
+                className="w-full bg-slate-50 border border-slate-200/80 hover:border-slate-300 transition-colors p-6 sm:p-7 flex flex-col justify-between group shadow-none min-h-[220px] rounded-2xl"
+              >
+                <div className="w-full flex flex-col gap-2">
+                  <h2 className="text-xl font-semibold text-slate-900 leading-snug group-hover:text-black transition-colors">
+                    {doc.title}
+                  </h2>
+                  <p className="text-slate-600 text-sm leading-relaxed mt-1">
+                    {doc.description}
+                  </p>
                 </div>
-                <h2 className="text-[20px] font-jakarta font-bold tracking-tight mb-3">
-                  {doc.title}
-                </h2>
-                <p className="text-zinc-500 text-[14px] leading-relaxed mb-6">
-                  {doc.description}
-                </p>
-              </div>
 
-              <div className="flex items-center gap-2 text-[14px] font-bold text-black mt-auto group-hover:translate-x-1 transition-transform">
-                <span>Leer documento</span>
-                <span className="material-symbols-rounded text-[18px]">
-                  arrow_forward
-                </span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </main>
+                {/* Bottom link */}
+                <div className="inline-flex justify-start items-center mt-auto pt-4 mt-4 border-t border-slate-200/80 text-sm font-medium text-slate-600 group-hover:text-black transition-colors gap-1.5">
+                  <span>{doc.actionText || "Leer documento"}</span>
+                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      </div>
 
-      {/* Simple Footer */}
-      <footer className="w-full shrink-0 h-[70px] flex items-center justify-center border-t border-zinc-100">
-        <p className="text-[9px] text-zinc-400 uppercase tracking-wide">
-          LUMINUS LATAM © 2026
-        </p>
-      </footer>
-    </div>
+      <Footer />
+    </main>
   );
 }

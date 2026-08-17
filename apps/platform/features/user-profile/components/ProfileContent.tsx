@@ -128,11 +128,17 @@ export function ProfileContent() {
   }, [loading, profile, searchParams]);
 
   const handleSignOut = async () => {
-    await fetch("/api/auth/logout", {
+    const res = await fetch("/api/auth/logout", {
       method: "POST",
       credentials: "include",
     });
-    router.push("/auth/iniciar-sesion");
+    const data = await res.json().catch(() => ({}));
+
+    if (data?.cognitoLogoutUrl) {
+      window.location.href = data.cognitoLogoutUrl;
+    } else {
+      router.push("/auth/iniciar-sesion");
+    }
   };
 
   const patchProfile = async (payload: Record<string, unknown>) => {
