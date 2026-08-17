@@ -1,14 +1,18 @@
 export async function uploadResume(blob: Blob) {
   if (process.env.NEXT_PUBLIC_USE_MOCK_AVATAR_UPLOAD === "true") {
     console.warn("Luminus: Using local mock resume upload fallback.");
-    const mockUrl = URL.createObjectURL(blob);
+    const contentType = blob.type || "application/pdf";
+    const fileName = typeof File !== "undefined" && blob instanceof File ? blob.name : "curriculum.pdf";
     return {
       key: `mock-resume-${Date.now()}`,
-      publicUrl: mockUrl,
+      fileName,
+      contentType,
+      contentLength: blob.size,
     };
   }
 
   const contentType = blob.type || "application/pdf";
+  const fileName = typeof File !== "undefined" && blob instanceof File ? blob.name : "curriculum.pdf";
   const response = await fetch("/api/uploads/resume", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -16,6 +20,7 @@ export async function uploadResume(blob: Blob) {
     body: JSON.stringify({
       contentType,
       contentLength: blob.size,
+      fileName,
     }),
   });
 
@@ -29,7 +34,9 @@ export async function uploadResume(blob: Blob) {
     method: "PUT",
     headers: {
       "Content-Type": contentType,
-      "Cache-Control": "public, max-age=31536000, immutable",
+      "Cache-Control": "private, no-store",
+      "x-amz-meta-owner": payload.owner,
+      "x-amz-meta-originalfilename": encodeURIComponent(payload.fileName),
     },
     body: blob,
   });
@@ -40,6 +47,8 @@ export async function uploadResume(blob: Blob) {
 
   return {
     key: payload.key as string,
-    publicUrl: payload.publicUrl as string,
+    fileName: payload.fileName as string,
+    contentType: payload.contentType as string,
+    contentLength: payload.contentLength as number,
   };
 }
