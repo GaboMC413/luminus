@@ -26,6 +26,8 @@ export function ContactHero() {
   });
   const [phoneCountry, setPhoneCountry] = useState<Country | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -33,18 +35,50 @@ export function ContactHero() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const dialStr = phoneCountry?.dial ? `${phoneCountry.dial} ` : "";
-    const phoneFull = form.telefono ? `${dialStr}${form.telefono}` : "No provisto";
-    const subject = encodeURIComponent(
-      `[LUMINUS Contacto] ${form.motivo || "Consulta"}`
-    );
-    const body = encodeURIComponent(
-      `Nombre: ${form.nombre} ${form.apellido}\nEmail: ${form.email}\nTeléfono: ${phoneFull}\nMotivo: ${form.motivo}\n\nMensaje:\n${form.mensaje}`
-    );
-    window.location.href = `mailto:hola@luminus.lat?subject=${subject}&body=${body}`;
-    setSubmitted(true);
+    if (!form.motivo) {
+      setErrorMsg("Por favor selecciona un motivo de contacto.");
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg("");
+
+    try {
+      const dialStr = phoneCountry?.dial ? `${phoneCountry.dial} ` : "";
+      const phoneFull = form.telefono ? `${dialStr}${form.telefono}` : "";
+
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          telefono: phoneFull,
+          pais: phoneCountry?.name || "",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Ocurrió un error inesperado.");
+      }
+
+      setSubmitted(true);
+      setForm({
+        nombre: "",
+        apellido: "",
+        email: "",
+        telefono: "",
+        motivo: "",
+        mensaje: "",
+      });
+    } catch (err: any) {
+      setErrorMsg(err.message || "Error al enviar el mensaje. Inténtalo de nuevo.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -68,8 +102,7 @@ export function ContactHero() {
               <div className="text-3xl">✅</div>
               <h2 className="text-xl font-normal text-white">¡Gracias por escribirnos!</h2>
               <p className="text-sm text-slate-300 leading-relaxed">
-                Tu cliente de correo debería haberse abierto con tu mensaje listo para enviar a{" "}
-                <a href="mailto:hola@luminus.lat" className="text-white underline font-medium">hola@luminus.lat</a>.
+                Tu mensaje ha sido recibido con éxito. Nuestro equipo se pondrá en contacto contigo a la brevedad.
               </p>
               <button
                 onClick={() => setSubmitted(false)}
@@ -141,6 +174,7 @@ export function ContactHero() {
                 <PhoneInput
                   value={form.telefono}
                   onChange={(val) => setForm((prev) => ({ ...prev, telefono: val }))}
+                  phoneCountry={phoneCountry}
                   onCountryChange={(c) => setPhoneCountry(c)}
                   placeholder="Teléfono"
                 />
@@ -177,12 +211,29 @@ export function ContactHero() {
                 />
               </div>
 
+              {errorMsg && (
+                <div className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs">
+                  {errorMsg}
+                </div>
+              )}
+
               {/* Botón de envío */}
               <button
                 type="submit"
-                className="w-full h-12 mt-1 bg-white hover:bg-slate-100 text-slate-950 font-medium text-base rounded-2xl transition-colors cursor-pointer flex items-center justify-center"
+                disabled={loading}
+                className="w-full h-12 mt-1 bg-white hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed text-slate-950 font-medium text-base rounded-2xl transition-colors cursor-pointer flex items-center justify-center gap-2"
               >
-                Enviar mensaje
+                {loading ? (
+                  <>
+                    <svg className="animate-spin h-5 w-5 text-slate-950" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Enviando...
+                  </>
+                ) : (
+                  "Enviar mensaje"
+                )}
               </button>
 
             </form>
