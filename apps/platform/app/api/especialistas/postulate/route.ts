@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { verifyUploadedResume } from "@/lib/resumeStorage";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,7 +21,9 @@ export async function POST(request: Request) {
       selectedAreas,
       clinicData,
       sessionsData,
-      resumeUrl,
+      resumeKey,
+      resumeContentType,
+      resumeSize,
       linkedinUrl,
       instagramUrl,
       websiteUrl,
@@ -57,6 +60,29 @@ export async function POST(request: Request) {
       );
     }
 
+    let storedResumeKey: string | null = null;
+    if (resumeKey) {
+      if (typeof resumeKey !== "string") {
+        return NextResponse.json({ message: "Referencia de currículum inválida." }, { status: 400 });
+      }
+
+      try {
+        await verifyUploadedResume({
+          key: resumeKey,
+          userId: session.userId,
+          expectedContentType: typeof resumeContentType === "string" ? resumeContentType : undefined,
+          expectedSize: typeof resumeSize === "number" ? resumeSize : undefined,
+        });
+        storedResumeKey = resumeKey;
+      } catch (error) {
+        console.error("Resume validation failed:", error);
+        return NextResponse.json(
+          { message: "No pudimos validar el currículum subido. Vuelve a seleccionarlo e intenta nuevamente." },
+          { status: 400 },
+        );
+      }
+    }
+
     // Create a new application
     const postulation = await prisma.specialistPostulation.create({
       data: {
@@ -74,7 +100,7 @@ export async function POST(request: Request) {
         selectedAreas: selectedAreas ? selectedAreas : undefined,
         clinicData: clinicData ? clinicData : undefined,
         sessionsData: sessionsData ? sessionsData : undefined,
-        resumeUrl: resumeUrl || null,
+        resumeUrl: storedResumeKey,
       },
     });
 
