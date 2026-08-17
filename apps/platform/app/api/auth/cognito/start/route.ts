@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -32,7 +32,12 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const origin = getPublicOrigin(url);
 
-  if (url.origin !== origin) {
+  const reqHeaders = headers();
+  const host = reqHeaders.get("x-forwarded-host") || reqHeaders.get("host");
+  const protocol = reqHeaders.get("x-forwarded-proto") || (url.protocol.replace(":", ""));
+  const actualOrigin = host ? `${protocol}://${host}`.replace(/\/$/, "") : url.origin;
+
+  if (actualOrigin !== origin) {
     const canonicalUrl = new URL(url.pathname + url.search, origin);
     return NextResponse.redirect(canonicalUrl);
   }
