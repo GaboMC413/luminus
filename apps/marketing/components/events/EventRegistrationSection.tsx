@@ -232,7 +232,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           {/* 4. Bloques con los detalles (Fecha & Plataforma) */}
           <div className="bg-white rounded-2xl p-5 border border-slate-200/80 flex flex-col gap-4 shadow-2xs">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
                 <span className="material-symbols-outlined text-[20px] text-slate-800 select-none">calendar_clock</span>
               </div>
               <span className="text-base font-semibold text-slate-900">{formattedDateTime}</span>
@@ -240,7 +240,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
             {event.location && <div className="w-full border-t border-slate-100" />}
             {event.location && (
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
                   <span className="material-symbols-outlined text-[20px] text-slate-800 select-none">videocam</span>
                 </div>
                 <span className="text-base font-semibold text-slate-900">{event.location}</span>
@@ -329,7 +329,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
 
             <div className="bg-white rounded-2xl p-5 border border-slate-200/80 flex flex-col gap-4 shadow-2xs">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
                   <span className="material-symbols-outlined text-[20px] text-slate-800 select-none">calendar_clock</span>
                 </div>
                 <span className="text-base font-semibold text-slate-900">{formattedDateTime}</span>
@@ -337,7 +337,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
               {event.location && <div className="w-full border-t border-slate-100" />}
               {event.location && (
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
                     <span className="material-symbols-outlined text-[20px] text-slate-800 select-none">videocam</span>
                   </div>
                   <span className="text-base font-semibold text-slate-900">{event.location}</span>
