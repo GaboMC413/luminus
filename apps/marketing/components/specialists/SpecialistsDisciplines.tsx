@@ -153,12 +153,12 @@ export function SpecialistsDisciplines() {
               />
 
               {/* Title */}
-              <h3 style={{ color: item.color }} className="text-lg font-bold leading-snug">
+              <h3 style={{ color: item.color }} className="text-base font-bold leading-snug">
                 {item.title}
               </h3>
 
               {/* Description */}
-              <p className="text-base font-normal text-slate-700 leading-relaxed">
+              <p className="text-sm font-normal text-slate-600 leading-relaxed">
                 {item.description}
               </p>
             </div>
