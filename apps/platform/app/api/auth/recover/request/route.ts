@@ -6,7 +6,6 @@ import {
   isRecoveryDebugEnabled,
 } from "@/lib/auth/recoveryTokens";
 import { sendPasswordResetEmail } from "@/lib/email/passwordResetEmail";
-import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -23,6 +22,7 @@ export async function POST(request: Request) {
   const code = generateRecoveryCode();
 
   try {
+    const { prisma } = await import("@/lib/db");
     const user = await prisma.user.findUnique({
       where: { email },
       select: { id: true },

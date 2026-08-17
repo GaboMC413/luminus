@@ -11,7 +11,6 @@ import {
   Footer,
 } from "@/components";
 
-
 export const metadata = {
   title: "Para Especialistas | LUMINUS - Red Profesional de Bienestar",
   description: "Desarrolla tu práctica profesional dentro de LUMINUS. Da visibilidad a tu trabajo, ofrece sesiones introductorias y conecta con personas en toda Latinoamérica.",

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
-import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -27,6 +26,7 @@ export async function POST(request: Request) {
 
     const { id, action, categoryId, targetType, customName } = body;
 
+    const { prisma } = await import("@/lib/db");
 
     const suggestion = await prisma.categorySuggestion.findUnique({
       where: { id },

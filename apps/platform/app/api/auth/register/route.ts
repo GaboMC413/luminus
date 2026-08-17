@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getCognitoErrorMessage, getCognitoErrorStatus, signUpWithCognito } from "@/lib/auth/cognito-password";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { serializeUser, validateAuthInput } from "@/lib/auth/validation";
-import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -15,6 +14,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    const { prisma } = await import("@/lib/db");
     const existingUser = await prisma.user.findUnique({
       where: { email: validation.email },
       select: { id: true, status: true },

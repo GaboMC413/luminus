@@ -67,7 +67,7 @@ export default function SignInView() {
   }, []);
 
   const handleGoogleSignIn = () => {
-    window.location.href = "/api/auth/cognito/start?provider=google";
+    window.location.href = "/api/auth/cognito/start?provider=google&intent=signin";
   };
 
   const handleSignIn = async (reactivate = false) => {

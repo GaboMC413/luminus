@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
-import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -95,6 +94,7 @@ export async function POST() {
   }
 
   try {
+    const { prisma } = await import("@/lib/db");
 
     for (let categoryIndex = 0; categoryIndex < defaultCategories.length; categoryIndex++) {
       const category = defaultCategories[categoryIndex];

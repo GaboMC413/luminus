@@ -90,6 +90,17 @@ export default function SignUpView() {
     if (params.get("onboarding") === "1") {
       setStep(2);
     }
+    if (params.get("error") === "google_config" || params.get("error") === "cognito_config") {
+      setMessage({
+        text: "Google todavía no está configurado en este entorno.",
+        type: "error",
+      });
+    } else if (params.get("error") === "google" || params.get("error") === "cognito") {
+      setMessage({
+        text: "No pudimos completar el registro con Google. Intenta nuevamente.",
+        type: "error",
+      });
+    }
     // Clear old profile test session keys on signup mount to ensure pristine state
     const profileKeys = [
       "luminus_profile_firstName",
@@ -195,7 +206,7 @@ export default function SignUpView() {
   };
 
   const handleGoogleSignUp = () => {
-    window.location.href = "/api/auth/cognito/start?provider=google";
+    window.location.href = "/api/auth/cognito/start?provider=google&intent=signup";
   };
 
   const isRegistration = step > 1;

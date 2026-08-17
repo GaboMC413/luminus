@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -10,6 +10,7 @@ const COGNITO_SCOPES = ["openid", "email", "profile"];
 type CognitoStartState = {
   state: string;
   provider?: "Google";
+  intent?: "signup" | "signin";
 };
 
 function getPublicOrigin(requestUrl: URL) {
@@ -30,30 +31,22 @@ function getCognitoDomain() {
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const origin = getPublicOrigin(url);
-
-  const reqHeaders = headers();
-  const host = reqHeaders.get("x-forwarded-host") || reqHeaders.get("host");
-  const protocol = reqHeaders.get("x-forwarded-proto") || (url.protocol.replace(":", ""));
-  const actualOrigin = host ? `${protocol}://${host}`.replace(/\/$/, "") : url.origin;
-
-  if (actualOrigin !== origin) {
-    const canonicalUrl = new URL(url.pathname + url.search, origin);
-    return NextResponse.redirect(canonicalUrl);
-  }
-
   const clientId = process.env.COGNITO_CLIENT_ID;
   const cognitoDomain = getCognitoDomain();
+  const origin = getPublicOrigin(url);
   const providerParam = url.searchParams.get("provider")?.trim().toLowerCase();
   const provider = providerParam === "google" ? "Google" : undefined;
+  const intentParam = url.searchParams.get("intent")?.trim().toLowerCase();
+  const intent: "signup" | "signin" = intentParam === "signup" ? "signup" : "signin";
 
   if (!clientId || !cognitoDomain) {
     console.error("Cognito OAuth start failed: Cognito domain or client id is not configured.");
-    return NextResponse.redirect(new URL("/auth/iniciar-sesion?error=cognito_config", origin));
+    const targetPath = intent === "signup" ? "/auth/registrarse" : "/auth/iniciar-sesion";
+    return NextResponse.redirect(new URL(`${targetPath}?error=cognito_config`, origin));
   }
 
   const state = randomBytes(24).toString("base64url");
-  const statePayload: CognitoStartState = { state, provider };
+  const statePayload: CognitoStartState = { state, provider, intent };
   const redirectUri = `${origin}/api/auth/cognito/callback`;
 
   cookies().set(COGNITO_STATE_COOKIE, JSON.stringify(statePayload), {
@@ -70,6 +63,8 @@ export async function GET(request: Request) {
   cognitoUrl.searchParams.set("response_type", "code");
   cognitoUrl.searchParams.set("scope", COGNITO_SCOPES.join(" "));
   cognitoUrl.searchParams.set("state", state);
+  // Force Google Account Chooser to select or switch accounts
+  cognitoUrl.searchParams.set("prompt", "select_account");
   if (provider) {
     cognitoUrl.searchParams.set("identity_provider", provider);
   }

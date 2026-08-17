@@ -1,33 +1,28 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export function ContactBanner() {
   return (
     <section id="contacto" className="w-full bg-black text-white overflow-hidden relative">
-      <div className="w-full max-w-[1440px] mx-auto flex flex-col lg:flex-row items-stretch min-h-[560px]">
+      <div className="w-full max-w-[1440px] mx-auto flex flex-col lg:flex-row items-stretch min-h-[620px]">
 
         {/* Left 50% Column: Text & CTA */}
-        <div className="w-full lg:w-1/2 px-6 md:px-10 lg:px-12 py-16 md:py-20 flex flex-col justify-center gap-6">
-          <h2 className="text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-white leading-[48px]">
-            Conectarnos con nuevas formas de bienestar
+        <div className="w-full lg:w-1/2 p-8 md:p-14 lg:p-16 flex flex-col justify-center gap-6">
+          <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-white">
+            Hacer el bienestar más cercano
           </h2>
-          <div className="flex flex-col gap-4 text-base sm:text-lg font-normal text-slate-300 leading-relaxed">
+          <div className="flex flex-col gap-4 text-body-large font-normal text-slate-300 leading-relaxed">
             <p>
-              Nacimos con la idea de acercar personas, especialistas, experiencias y herramientas que puedan ayudarnos a vivir con más bienestar.
-            </p>
-            <p>
-              Sabemos el valor de la orientación, de ver desde una nueva perspectiva, de descubrir algo que todavía no conocemos. Por eso construimos una red abierta a distintas formas de bienestar, donde la tecnología ayuda a hacer esas conexiones más simples y accesibles.
-            </p>
-            <p>
-              Queremos mantener esa cercanía con quienes forman parte, si quieres conocernos, compartir tu experiencia o escribirnos, estaremos encantados de escucharte.
+              Nacimos con el propósito de hacer el bienestar más cercano, simple y accesible. Creamos una red abierta para descubrir profesionales, herramientas y nuevas perspectivas que te ayuden a vivir mejor. Si quieres conocernos, compartir tu propuesta o hacernos alguna pregunta, escríbenos.
             </p>
           </div>
           <div className="pt-2">
-            <a
-              href="mailto:hola@luminus.lat"
-              className="inline-block py-3.5 px-8 text-base font-normal text-slate-950 bg-white hover:bg-slate-100 rounded-2xl text-center min-w-[240px] transition-colors"
+            <Link
+              href="/contacto"
+              className="flex sm:inline-flex items-center justify-center w-full sm:w-auto py-3.5 px-8 text-base font-normal text-slate-950 bg-white hover:bg-slate-100 rounded-2xl text-center sm:min-w-[240px] transition-colors"
             >
               Contactar a LUMINUS
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -37,7 +32,7 @@ export function ContactBanner() {
             src="/Photos/Luminus app - buscar especialistas y comunidad.png"
             alt="LUMINUS App Overview"
             fill
-            className="object-cover object-bottom-right"
+            className="object-cover object-center lg:object-bottom-right"
             sizes="(max-width: 1024px) 100vw, 50vw"
             priority
           />
@@ -47,4 +42,3 @@ export function ContactBanner() {
     </section>
   );
 }
-

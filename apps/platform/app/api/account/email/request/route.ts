@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { generateRecoveryCode, getRecoveryCodeExpiry, hashRecoveryCode } from "@/lib/auth/recoveryTokens";
 import { sendEmailChangeVerificationEmail } from "@/lib/email/passwordResetEmail";
-import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -31,6 +30,7 @@ export async function POST(request: Request) {
   const code = generateRecoveryCode();
 
   try {
+    const { prisma } = await import("@/lib/db");
     const existingUser = await prisma.user.findUnique({
       where: { email },
       select: { id: true },

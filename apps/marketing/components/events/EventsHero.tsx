@@ -8,10 +8,10 @@ export function EventsHero() {
         {/* Left 50% Column */}
         <div className="w-full lg:w-1/2 px-8 sm:px-12 lg:px-20 py-16 lg:py-24 flex flex-col justify-center gap-6 text-left bg-[#D255CE]">
           <h1 className="text-4xl sm:text-5xl lg:text-[56px] font-normal tracking-tight text-white leading-[1.12] max-w-[620px]">
-            Experiencias que merecen ser transmitidas
+            Entrevistas y encuentros sobre bienestar
           </h1>
           <p className="text-xl lg:text-[24px] font-normal text-white/95 leading-8 max-w-[580px]">
-            Descubre entrevistas y encuentros que reúnen distintas perspectivas para acercar nuevas formas de entender el bienestar, compartir experiencias y conectar con ideas abren nuevos caminos.
+            Conversaciones con especialistas, experiencias compartidas y distintas formas de acercarnos a temas que forman parte de nuestro bienestar.
           </p>
         </div>
 
@@ -19,7 +19,7 @@ export function EventsHero() {
         <div className="w-full lg:w-1/2 relative min-h-[360px] lg:min-h-[640px]">
           <Image
             src="/Photos/Grupo de personas conversando de pie.png"
-            alt="Experiencias y Encuentros LUMINUS"
+            alt="Entrevistas y encuentros sobre bienestar LUMINUS"
             fill
             className="object-cover object-center"
             sizes="(max-width: 1024px) 100vw, 50vw"

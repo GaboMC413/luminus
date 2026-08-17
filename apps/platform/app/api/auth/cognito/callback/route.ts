@@ -2,7 +2,6 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { decodeCognitoIdToken } from "@/lib/auth/cognito-password";
-import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -18,6 +17,7 @@ type CognitoTokenResponse = {
 type CognitoStartState = {
   state: string;
   provider?: "Google";
+  intent?: "signup" | "signin";
 };
 
 type CognitoIdentityClaim = {
@@ -133,16 +133,11 @@ function readStoredState(value?: string): CognitoStartState | null {
     return null;
   }
 
-  let decoded = value;
   try {
-    decoded = decodeURIComponent(value);
-  } catch {}
-
-  try {
-    const parsed = JSON.parse(decoded) as CognitoStartState;
+    const parsed = JSON.parse(value) as CognitoStartState;
     return parsed?.state ? parsed : null;
   } catch {
-    return { state: decoded };
+    return { state: value };
   }
 }
 
@@ -198,15 +193,17 @@ export async function GET(request: Request) {
     maxAge: 0,
   });
 
+  const fallbackPath = storedState?.intent === "signup" ? "/auth/registrarse" : "/auth/iniciar-sesion";
+
   if (error) {
     const errorDescription = requestUrl.searchParams.get("error_description") || "unknown";
-    return redirectTo(requestUrl, `/auth/iniciar-sesion?error=cognito&reason=${encodeURIComponent(error + ": " + errorDescription)}`);
+    return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=${encodeURIComponent(error + ": " + errorDescription)}`);
   }
 
-  if (!code) return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito&reason=no_code");
-  if (!state) return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito&reason=no_state");
-  if (!storedState) return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito&reason=no_cookie");
-  if (state !== storedState.state) return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito&reason=state_mismatch");
+  if (!code) return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=no_code`);
+  if (!state) return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=no_state`);
+  if (!storedState) return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=no_cookie`);
+  if (state !== storedState.state) return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=state_mismatch`);
 
   try {
     const redirectUri = `${getPublicOrigin(requestUrl)}/api/auth/cognito/callback`;
@@ -225,6 +222,7 @@ export async function GET(request: Request) {
       throw new Error("Cognito user profile is missing required identifiers.");
     }
 
+    const { prisma } = await import("@/lib/db");
     const existingByIdentity = await prisma.userIdentity.findUnique({
       where: {
         provider_providerSubject: {
@@ -431,6 +429,7 @@ export async function GET(request: Request) {
   } catch (callbackError) {
     console.error("Cognito OAuth callback failed.", callbackError);
     const reason = callbackError instanceof Error ? encodeURIComponent(callbackError.message) : "unknown";
-    return redirectTo(requestUrl, `/auth/iniciar-sesion?error=cognito&reason=${reason}`);
+    const fallbackPath = storedState?.intent === "signup" ? "/auth/registrarse" : "/auth/iniciar-sesion";
+    return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=${reason}`);
   }
 }

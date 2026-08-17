@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { isUuid } from "@/utils/validation";
 import { isRateLimited, RATE_LIMITS } from "@/utils/rateLimit";
-import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -79,6 +78,7 @@ export async function GET() {
   }
 
   try {
+    const { prisma } = await import("@/lib/db");
     const conversations = await prisma.conversation.findMany({
       where: {
         participants: {
@@ -145,6 +145,7 @@ export async function POST(request: Request) {
   }
 
   try {
+    const { prisma } = await import("@/lib/db");
     const recipient = await prisma.user.findUnique({
       where: { id: recipientId },
       select: { id: true },

@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
-import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,6 +24,7 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ message: "Acción es requerida." }, { status: 400 });
     }
 
+    const { prisma } = await import("@/lib/db");
 
     if (action === "accept") {
       const postulation = await prisma.specialistPostulation.findUnique({

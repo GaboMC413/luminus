@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { clearSessionCookie, getCurrentSession } from "@/lib/auth/session";
 import { serializeUser } from "@/lib/auth/validation";
-import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -13,6 +12,7 @@ export async function GET() {
   }
 
   try {
+    const { prisma } = await import("@/lib/db");
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
       include: { profile: true },

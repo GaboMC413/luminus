@@ -8,7 +8,7 @@ export default function GruposPage() {
 
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8 flex flex-col items-center justify-center h-full min-h-0 overflow-hidden">
-      {/* Unified Container: Feels like a single divided div */}
+      {/* Unified Container */}
       <div className="w-full max-w-5xl border border-slate-200/80 rounded-3xl overflow-hidden flex flex-col shadow-none flex-1 h-full min-h-0">
         {/* Banner Image */}
         <div 

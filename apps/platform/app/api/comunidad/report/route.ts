@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { isUuid } from "@/utils/validation";
-import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -38,6 +37,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Motivo del reporte no válido." }, { status: 400 });
     }
 
+    const { prisma } = await import("@/lib/db");
 
     // Check if the reported user exists
     const reportedUser = await prisma.user.findUnique({

@@ -7,6 +7,8 @@ import { usePathname, useRouter } from "next/navigation";
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileDropdownOpen, setMobileDropdownOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -23,7 +25,7 @@ export function Navbar() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-white border-b border-black h-[64px] flex items-center justify-between px-6 lg:px-12">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full bg-white border-b border-slate-200 h-[64px] flex items-center justify-between px-6 lg:px-12">
       {/* Left: Logo & Navigation Links */}
       <div className="flex items-center gap-8 lg:gap-12">
         {/* Logo */}
@@ -46,19 +48,65 @@ export function Navbar() {
           >
             Para Especialistas
           </Link>
+          {/* Dropdown: Entrevistas y encuentros */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setDropdownOpen(true)}
+            onMouseLeave={() => setDropdownOpen(false)}
+          >
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-normal text-slate-800 hover:bg-slate-100 hover:text-black transition-colors focus:outline-none cursor-pointer ${
+                dropdownOpen ? "bg-slate-100 text-black" : ""
+              }`}
+            >
+              <span>Entrevistas y encuentros</span>
+              <svg 
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`}
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor" 
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            {dropdownOpen && (
+              <div className="absolute left-0 top-full pt-1.5 z-50">
+                <div className="w-60 bg-white border border-slate-200 rounded-xl p-1.5 flex flex-col gap-0.5 text-left shadow-none">
+                  <Link
+                    href="/entrevistasyencuentros"
+                    onClick={() => setDropdownOpen(false)}
+                    className="block px-3.5 py-2.5 text-sm font-normal text-slate-800 hover:bg-slate-50 hover:text-black rounded-lg transition-colors"
+                  >
+                    Conoce la propuesta
+                  </Link>
+                  <Link
+                    href="/grabaciones"
+                    onClick={() => setDropdownOpen(false)}
+                    className="block px-3.5 py-2.5 text-sm font-normal text-slate-800 hover:bg-slate-50 hover:text-black rounded-lg transition-colors"
+                  >
+                    Grabaciones
+                  </Link>
+                  <Link
+                    href="/proximasfechas"
+                    onClick={() => setDropdownOpen(false)}
+                    className="block px-3.5 py-2.5 text-sm font-normal text-slate-800 hover:bg-slate-50 hover:text-black rounded-lg transition-colors"
+                  >
+                    Próximas fechas
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+
           <Link
-            href="/entrevistas"
+            href="/preguntas-frecuentes"
             className="text-sm font-normal text-slate-800 hover:text-black transition-colors"
           >
-            Entrevistas y encuentros
-          </Link>
-
-          <button
-            onClick={() => handleNavClick("faq")}
-            className="text-sm font-normal text-slate-800 hover:text-black transition-colors cursor-pointer"
-          >
             Preguntas Frecuentes
-          </button>
+          </Link>
           <Link
             href="/contacto"
             className="text-sm font-normal text-slate-800 hover:text-black transition-colors"
@@ -72,13 +120,13 @@ export function Navbar() {
       {/* Right: Auth Buttons (Desktop) */}
       <div className="hidden sm:flex items-center gap-3">
         <a
-          href="https://app.luminus.lat/auth"
+          href="https://app.luminuslatam.com/auth/iniciar-sesion"
           className="px-6 py-2 text-sm font-normal text-black border border-black rounded-xl hover:bg-slate-50 transition-colors text-center"
         >
           Iniciar Sesión
         </a>
         <a
-          href="https://app.luminus.lat/auth"
+          href="https://app.luminuslatam.com/auth/registrarse"
           className="px-6 py-2 text-sm font-normal text-white bg-black hover:bg-slate-800 rounded-xl transition-colors text-center"
         >
           Registrarme
@@ -102,48 +150,97 @@ export function Navbar() {
         )}
       </button>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer (Full height below navbar, covering screen cleanly) */}
       {mobileMenuOpen && (
-        <div className="absolute top-[64px] left-0 w-full bg-white border-b border-black px-6 py-6 flex flex-col gap-4 shadow-lg lg:hidden">
-          <Link
-            href="/especialistas"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-left py-2 text-base font-normal text-slate-800 hover:text-black"
-          >
-            Para Especialistas
-          </Link>
-          <Link
-            href="/entrevistas"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-left py-2 text-base font-normal text-slate-800 hover:text-black"
-          >
-            Entrevistas y encuentros
-          </Link>
+        <div className="fixed inset-x-0 top-[64px] bottom-0 bg-white z-50 px-6 pt-6 pb-10 flex flex-col justify-between overflow-y-auto lg:hidden">
+          <div className="flex flex-col gap-4">
+            <Link
+              href="/especialistas"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-left py-2.5 text-lg font-normal text-slate-900 hover:text-black border-b border-slate-100"
+            >
+              Para Especialistas
+            </Link>
+            {/* Mobile Accordion Menu */}
+            <div className="flex flex-col border-b border-slate-100 pb-1">
+              <button
+                onClick={() => setMobileDropdownOpen(!mobileDropdownOpen)}
+                className="flex items-center justify-between py-2.5 text-lg font-normal text-slate-900 hover:text-black text-left focus:outline-none cursor-pointer"
+              >
+                <span>Entrevistas y encuentros</span>
+                <svg 
+                  className={`w-5 h-5 text-slate-500 transition-transform duration-200 ${mobileDropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor" 
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {mobileDropdownOpen && (
+                <div className="flex flex-col pl-4 border-l border-slate-200 my-2 gap-2">
+                  <Link
+                    href="/entrevistasyencuentros"
+                    onClick={() => {
+                      setMobileDropdownOpen(false);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="py-2 text-base font-normal text-slate-700 hover:text-black transition-colors text-left"
+                  >
+                    Conoce la propuesta
+                  </Link>
+                  <Link
+                    href="/grabaciones"
+                    onClick={() => {
+                      setMobileDropdownOpen(false);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="py-2 text-base font-normal text-slate-700 hover:text-black transition-colors text-left"
+                  >
+                    Grabaciones
+                  </Link>
+                  <Link
+                    href="/proximasfechas"
+                    onClick={() => {
+                      setMobileDropdownOpen(false);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="py-2 text-base font-normal text-slate-700 hover:text-black transition-colors text-left"
+                  >
+                    Próximas fechas
+                  </Link>
+                </div>
+              )}
+            </div>
 
-          <button
-            onClick={() => handleNavClick("faq")}
-            className="text-left py-2 text-base font-normal text-slate-800 hover:text-black"
-          >
-            Preguntas Frecuentes
-          </button>
-          <Link
-            href="/contacto"
-            onClick={() => setMobileMenuOpen(false)}
-            className="text-left py-2 text-base font-normal text-slate-800 hover:text-black"
-          >
-            Contactarnos
-          </Link>
+            <Link
+              href="/preguntas-frecuentes"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-left py-2.5 text-lg font-normal text-slate-900 hover:text-black border-b border-slate-100"
+            >
+              Preguntas Frecuentes
+            </Link>
+            <Link
+              href="/contacto"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-left py-2.5 text-lg font-normal text-slate-900 hover:text-black border-b border-slate-100"
+            >
+              Contactarnos
+            </Link>
+          </div>
 
-          <div className="pt-4 border-t border-slate-200 flex flex-col gap-3">
+          {/* Large Mobile CTA Buttons */}
+          <div className="pt-6 flex flex-col gap-3.5 mt-auto">
             <a
-              href="https://app.luminus.lat/auth"
-              className="w-full py-2.5 text-center text-sm font-normal text-black border border-black rounded-xl hover:bg-slate-50"
+              href="https://app.luminuslatam.com/auth/iniciar-sesion"
+              className="w-full h-12 text-center text-base font-normal text-black border border-black rounded-2xl hover:bg-slate-50 transition-colors flex items-center justify-center cursor-pointer"
             >
               Iniciar Sesión
             </a>
             <a
-              href="https://app.luminus.lat/auth"
-              className="w-full py-2.5 text-center text-sm font-normal text-white bg-black hover:bg-slate-800 rounded-xl"
+              href="https://app.luminuslatam.com/auth/registrarse"
+              className="w-full h-12 text-center text-base font-normal text-white bg-black hover:bg-slate-800 rounded-2xl transition-colors flex items-center justify-center shadow-sm cursor-pointer"
             >
               Registrarme
             </a>

@@ -33,10 +33,14 @@ export * from "./events/EventsOverviewCard";
 export * from "./events/EventsVoicesCallout";
 export * from "./events/EventsFormatsGrid";
 export * from "./events/EventsClosingCta";
+export * from "./events/EventsFaq";
+export * from "./events/UpcomingEventsTimeline";
+export * from "./events/EventRegistrationSection";
+export * from "./events/EventCard";
+export * from "./events/PastEventsArchive";
 
 // Contact Page Components
 export * from "./contact/ContactHero";
-export * from "./contact/ContactForm";
 
 
 

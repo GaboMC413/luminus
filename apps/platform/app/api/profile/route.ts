@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
-import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
@@ -90,6 +89,7 @@ export async function GET() {
   }
 
   try {
+    const { prisma } = await import("@/lib/db");
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
       include: {
@@ -193,6 +193,7 @@ export async function PATCH(request: Request) {
   if (data.isOnboarded === true) profileData.isOnboarded = true;
 
   try {
+    const { prisma } = await import("@/lib/db");
     const user = await prisma.$transaction(async (tx: any) => {
       await tx.userProfile.upsert({
         where: { userId: session.userId },
