@@ -13,7 +13,7 @@ export function SpecialistsOverviewCard() {
               src="/Photos/Luminus app - directorio y perfil especialista.png"
               alt="Directorio y Perfil Especialista LUMINUS"
               fill
-              className="object-cover object-left-bottom"
+              className="object-cover object-center lg:object-left-bottom"
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority
             />

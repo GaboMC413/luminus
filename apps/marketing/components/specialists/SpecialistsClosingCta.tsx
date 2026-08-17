@@ -38,7 +38,7 @@ export function SpecialistsClosingCta() {
             src="/Photos/Luminus app - perfiles de Camila y Martín.png"
             alt="Forma parte de una red profesional de bienestar LUMINUS"
             fill
-            className="object-cover object-left-top"
+            className="object-cover object-center lg:object-left-top"
             sizes="(max-width: 1024px) 100vw, 50vw"
             priority
           />

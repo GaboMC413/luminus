@@ -32,7 +32,7 @@ export function ContactBanner() {
             src="/Photos/Luminus app - buscar especialistas y comunidad.png"
             alt="LUMINUS App Overview"
             fill
-            className="object-cover object-bottom-right"
+            className="object-cover object-center lg:object-bottom-right"
             sizes="(max-width: 1024px) 100vw, 50vw"
             priority
           />

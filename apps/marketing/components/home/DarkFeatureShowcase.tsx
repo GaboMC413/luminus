@@ -18,7 +18,7 @@ export function DarkFeatureShowcase() {
             src="/Photos/Luminus app - comunidad y especialistas.png"
             alt="LUMINUS App Showcase"
             fill
-            className="object-cover object-left"
+            className="object-cover object-center lg:object-left"
             sizes="(max-width: 1024px) 100vw, 50vw"
             priority
           />
