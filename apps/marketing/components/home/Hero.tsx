@@ -16,7 +16,7 @@ export function Hero() {
           >
             Crear mi cuenta gratis
           </a>
-          <div className="text-xs sm:text-sm text-black leading-relaxed flex flex-col gap-0.5 font-normal">
+          <div className="text-sm sm:text-sm text-black leading-relaxed flex flex-col gap-0.5 font-normal">
             <p>3 meses sin costo · Sin datos de pago</p>
           </div>
         </div>

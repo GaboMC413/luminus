@@ -97,8 +97,8 @@ export function InterviewsSection({
   subtitle,
   showTitle = true,
 }: InterviewsSectionProps) {
-  const defaultTitle = title || (isGrid ? "Entrevistas y grabaciones" : "Nuevas miradas sobre el bienestar");
-  const defaultSubtitle = subtitle || (isGrid ? undefined : "Entrevistas y conversaciones con especialistas de distintas disciplinas.");
+  const defaultTitle = title || (isGrid ? "Entrevistas y grabaciones" : "Entrevistas y conversaciones con especialistas");
+  const defaultSubtitle = subtitle || (isGrid ? "Entrevistas y conversaciones con especialistas de distintas disciplinas." : undefined);
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
@@ -252,12 +252,12 @@ export function InterviewsSection({
     <section id="entrevistas" className="w-full pt-8 md:pt-12 pb-8 md:pb-16 bg-white flex-1 flex flex-col">
       {showTitle && (
         <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10 mb-6 md:mb-10">
-          <div className="w-full flex flex-col justify-start items-start gap-3 md:gap-4 text-left">
-            <h2 className="w-full text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
+          <div className="w-full flex flex-col justify-center items-center gap-3 md:gap-4 text-center">
+            <h2 className="w-full text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900 text-center">
               {defaultTitle}
             </h2>
             {defaultSubtitle && (
-              <p className="w-full text-xl lg:text-2xl font-normal text-slate-700 leading-8">
+              <p className="w-full text-xl lg:text-2xl font-normal text-slate-700 leading-8 text-center">
                 {defaultSubtitle}
               </p>
             )}

@@ -149,15 +149,15 @@ export function CategoriesGrid() {
         {/* Header */}
         <div className="flex flex-col items-center text-center gap-4 max-w-[960px] mx-auto">
           <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
-            Explora distintas áreas, enfoques y profesionales según lo que estés buscando en cada momento.
+            Distintas áreas según lo que estés buscando en cada momento
           </h2>
         </div>
 
-        {/* Centered Details */}
-        <div className="w-full max-w-[800px] mx-auto min-h-[140px] flex flex-col items-center justify-center text-center px-4">
+        {/* Centered Details with Stable Height Container */}
+        <div className="w-full max-w-[850px] mx-auto h-[160px] sm:h-[180px] flex flex-col items-center justify-center text-center px-4">
           <div
             key={activeIndex}
-            className="flex flex-col gap-4 items-center animate-[fadeInUp_0.4s_ease-out_forwards]"
+            className="flex flex-col gap-3 items-center animate-[fadeInUp_0.4s_ease-out_forwards]"
           >
             <h3
               style={{ color: activeCategory.color }}
@@ -166,7 +166,7 @@ export function CategoriesGrid() {
               {activeCategory.title}
             </h3>
 
-            <p className="text-lg sm:text-xl font-normal text-slate-700 leading-relaxed max-w-[700px]">
+            <p className="text-xl sm:text-2xl font-normal text-slate-800 leading-relaxed max-w-[780px]">
               {activeCategory.description}
             </p>
           </div>
