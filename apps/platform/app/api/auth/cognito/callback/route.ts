@@ -49,7 +49,8 @@ type CognitoIdTokenClaims = {
 
 function getCognitoClientConfig() {
   const clientId = process.env.COGNITO_CLIENT_ID;
-  const clientSecret = process.env.COGNITO_CLIENT_SECRET;
+  const rawSecret = process.env.COGNITO_CLIENT_SECRET;
+  const clientSecret = !rawSecret || rawSecret === "NONE" || rawSecret === "false" ? undefined : rawSecret;
   const domain = process.env.COGNITO_DOMAIN?.trim().replace(/\/$/, "");
 
   if (!clientId || !domain) {
@@ -64,7 +65,7 @@ function getCognitoClientConfig() {
 }
 
 function getPublicOrigin(requestUrl: URL) {
-  return (process.env.AUTH_BASE_URL || requestUrl.origin).replace(/\/$/, "");
+  return (process.env.AUTH_BASE_URL?.trim() || requestUrl.origin).replace(/\/$/, "");
 }
 
 function redirectTo(requestUrl: URL, path: string) {
@@ -198,12 +199,14 @@ export async function GET(request: Request) {
   });
 
   if (error) {
-    return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito");
+    const errorDescription = requestUrl.searchParams.get("error_description") || "unknown";
+    return redirectTo(requestUrl, `/auth/iniciar-sesion?error=cognito&reason=${encodeURIComponent(error + ": " + errorDescription)}`);
   }
 
-  if (!code || !state || !storedState || state !== storedState.state) {
-    return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito");
-  }
+  if (!code) return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito&reason=no_code");
+  if (!state) return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito&reason=no_state");
+  if (!storedState) return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito&reason=no_cookie");
+  if (state !== storedState.state) return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito&reason=state_mismatch");
 
   try {
     const redirectUri = `${getPublicOrigin(requestUrl)}/api/auth/cognito/callback`;
@@ -427,6 +430,7 @@ export async function GET(request: Request) {
     return redirectTo(requestUrl, user.profile?.isOnboarded ? "/comunidad" : "/auth/registrarse?onboarding=1");
   } catch (callbackError) {
     console.error("Cognito OAuth callback failed.", callbackError);
-    return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito");
+    const reason = callbackError instanceof Error ? encodeURIComponent(callbackError.message) : "unknown";
+    return redirectTo(requestUrl, `/auth/iniciar-sesion?error=cognito&reason=${reason}`);
   }
 }
