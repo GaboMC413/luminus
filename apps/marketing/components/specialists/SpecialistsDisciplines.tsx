@@ -97,16 +97,13 @@ export function SpecialistsDisciplines() {
 
   return (
     <section className="w-full py-16 md:py-24 bg-white border-b border-slate-200 flex flex-col gap-10">
-      
+
       {/* Section Header */}
       <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10">
         <div className="flex flex-col items-center text-center gap-4 max-w-[960px] mx-auto">
           <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
-            Distintas disciplinas para acompañar el bienestar
+            Profesionales con enfoques y recorridos que abordan el bienestar desde diferentes perspectivas.
           </h2>
-          <p className="text-xl lg:text-2xl font-normal text-slate-700 leading-8">
-            La Red de Especialistas reúne profesionales de diferentes áreas, con enfoques y recorridos que abordan el bienestar desde perspectivas complementarias.
-          </p>
         </div>
       </div>
 
@@ -134,7 +131,7 @@ export function SpecialistsDisciplines() {
             <div
               key={idx}
               data-card
-              className="w-[240px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-all p-6 flex flex-col justify-start items-start gap-3 shrink-0 snap-start shadow-xs hover:shadow-sm"
+              className="w-[260px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-all p-6 flex flex-col justify-start items-start gap-3 shrink-0 snap-start shadow-xs hover:shadow-sm"
             >
               {/* Icon Top */}
               <div
@@ -176,11 +173,10 @@ export function SpecialistsDisciplines() {
           <button
             onClick={() => scroll("left")}
             disabled={!canScrollLeft}
-            className={`p-3 rounded-xl flex justify-center items-center transition-all ${
-              canScrollLeft
-                ? "bg-slate-200 hover:bg-slate-300 text-slate-700 cursor-pointer"
-                : "bg-slate-200 text-slate-400 opacity-40 cursor-not-allowed pointer-events-none"
-            }`}
+            className={`p-3 rounded-xl flex justify-center items-center transition-all ${canScrollLeft
+              ? "bg-slate-200 hover:bg-slate-300 text-slate-700 cursor-pointer"
+              : "bg-slate-200 text-slate-400 opacity-40 cursor-not-allowed pointer-events-none"
+              }`}
             aria-label="Anterior disciplina"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -191,11 +187,10 @@ export function SpecialistsDisciplines() {
           <button
             onClick={() => scroll("right")}
             disabled={!canScrollRight}
-            className={`p-3 rounded-xl flex justify-center items-center transition-all ${
-              canScrollRight
-                ? "bg-slate-200 hover:bg-slate-300 text-slate-700 cursor-pointer"
-                : "bg-slate-200 text-slate-400 opacity-40 cursor-not-allowed pointer-events-none"
-            }`}
+            className={`p-3 rounded-xl flex justify-center items-center transition-all ${canScrollRight
+              ? "bg-slate-200 hover:bg-slate-300 text-slate-700 cursor-pointer"
+              : "bg-slate-200 text-slate-400 opacity-40 cursor-not-allowed pointer-events-none"
+              }`}
             aria-label="Siguiente disciplina"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

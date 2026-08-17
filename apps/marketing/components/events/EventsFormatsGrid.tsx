@@ -6,13 +6,10 @@ export function EventsFormatsGrid() {
       <div className="max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-12">
 
         {/* Section Header */}
-        <div className="flex flex-col items-center text-center gap-4 max-w-[960px] mx-auto">
+        <div className="flex flex-col items-center text-center gap-4 mx-auto">
           <h2 className="text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[48px]">
-            Nuevas formas de participar
+            Estaremos sumando otros formatos para intercambiar y encontrarnos.
           </h2>
-          <p className="text-xl sm:text-2xl font-normal text-slate-800 leading-8">
-            Estamos sumando otros formatos para conversar, intercambiar y encontrarnos.
-          </p>
         </div>
 
         {/* 3 Formats Cards Grid */}

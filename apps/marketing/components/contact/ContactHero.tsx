@@ -80,14 +80,6 @@ export function ContactHero() {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="w-full max-w-[480px] mx-auto flex flex-col gap-3.5">
-              <div className="flex flex-col gap-1 mb-0.5">
-                <h2 className="text-2xl font-normal text-white tracking-tight">
-                  Envíanos un mensaje
-                </h2>
-                <p className="text-xs text-slate-400">
-                  Completa tus datos y nos pondremos en contacto contigo.
-                </p>
-              </div>
 
               {/* Nombre y Apellido (2 Columnas) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">

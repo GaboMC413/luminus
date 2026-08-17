@@ -109,7 +109,7 @@ export function PricingSection() {
           </div>
 
         </div>
-        <div className="w-full max-w-[960px] flex flex-col justify-start items-center gap-6 text-center">
+        <div className="w-full max-w-[800px] flex flex-col justify-start items-center gap-6 text-center">
           <p className="w-full text-body-medium font-normal text-slate-900 leading-relaxed">
             No solicitamos datos de pago al crear tu cuenta. Te avisaremos antes de que finalicen tus 3 meses sin costo para que puedas decidir si quieres continuar.
           </p>

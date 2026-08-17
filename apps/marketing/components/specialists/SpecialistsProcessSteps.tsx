@@ -66,8 +66,7 @@ export function SpecialistsProcessSteps() {
           >
             Comenzar mi aplicación
           </a>
-
-          <p className="text-sm font-normal text-slate-600 leading-relaxed">
+          <p className="text-body-medium font-normal text-slate-900 leading-relaxed">
             La Red de Especialistas LUMINUS está formada por perfiles revisados y validados de manera individual. Cada incorporación considera la formación, experiencia, trayectoria y enfoque profesional; por eso, la aprobación no es automática y para postularte necesitas una cuenta activa en LUMINUS.
           </p>
         </div>

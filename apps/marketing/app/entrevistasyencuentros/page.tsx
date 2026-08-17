@@ -20,7 +20,7 @@ export const metadata = {
 
 export default async function EntrevistasYEncuentrosPage() {
   let events = [];
-  
+
   try {
     // 1. Attempt to fetch from Supabase
     if (supabase) {
@@ -74,9 +74,7 @@ export default async function EntrevistasYEncuentrosPage() {
         <InterviewsSection
           events={events}
           isGrid={false}
-          title="Conversaciones para ver cuando quieras"
-          subtitle="Entrevistas y encuentros anteriores disponibles para ver en cualquier momento."
-        />
+          title="Entrevistas disponibles para ver en cualquier momento" />
         <EventsVoicesCallout />
         <EventsFormatsGrid />
         <EventsFaq />

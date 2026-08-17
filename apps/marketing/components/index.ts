@@ -41,7 +41,6 @@ export * from "./events/PastEventsArchive";
 
 // Contact Page Components
 export * from "./contact/ContactHero";
-export * from "./contact/ContactForm";
 
 
 
