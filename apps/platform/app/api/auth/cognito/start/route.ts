@@ -30,9 +30,15 @@ function getCognitoDomain() {
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
+  const origin = getPublicOrigin(url);
+
+  if (url.origin !== origin) {
+    const canonicalUrl = new URL(url.pathname + url.search, origin);
+    return NextResponse.redirect(canonicalUrl);
+  }
+
   const clientId = process.env.COGNITO_CLIENT_ID;
   const cognitoDomain = getCognitoDomain();
-  const origin = getPublicOrigin(url);
   const providerParam = url.searchParams.get("provider")?.trim().toLowerCase();
   const provider = providerParam === "google" ? "Google" : undefined;
 

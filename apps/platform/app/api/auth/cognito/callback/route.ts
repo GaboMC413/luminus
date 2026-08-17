@@ -132,11 +132,16 @@ function readStoredState(value?: string): CognitoStartState | null {
     return null;
   }
 
+  let decoded = value;
   try {
-    const parsed = JSON.parse(value) as CognitoStartState;
+    decoded = decodeURIComponent(value);
+  } catch {}
+
+  try {
+    const parsed = JSON.parse(decoded) as CognitoStartState;
     return parsed?.state ? parsed : null;
   } catch {
-    return { state: value };
+    return { state: decoded };
   }
 }
 
