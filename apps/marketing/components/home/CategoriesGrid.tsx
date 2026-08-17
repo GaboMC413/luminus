@@ -149,7 +149,7 @@ export function CategoriesGrid() {
         {/* Header */}
         <div className="flex flex-col items-center text-center gap-4 max-w-[960px] mx-auto">
           <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
-            Distintas áreas según lo que estés buscando en cada momento
+            Explora distintas áreas según lo que estés buscando
           </h2>
         </div>
 
