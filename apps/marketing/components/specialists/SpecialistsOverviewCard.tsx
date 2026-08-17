@@ -4,14 +4,11 @@ export function SpecialistsOverviewCard() {
   return (
     <section className="w-full py-16 md:py-24 bg-white">
       <div className="max-w-[1440px] mx-auto px-4 md:px-10">
-        
+
         <div className="w-full flex flex-col lg:flex-row min-h-[640px] rounded-3xl overflow-hidden border border-slate-200/80 shadow-xs">
-          
+
           {/* Left 50% Column: Warm Sand Background (#eed7c4) with Full-Bleed Mockup */}
           <div className="w-full lg:w-1/2 relative bg-[#eed7c4] min-h-[380px] lg:min-h-[640px] overflow-hidden">
-
-
-
             <Image
               src="/Photos/Luminus app - directorio y perfil especialista.png"
               alt="Directorio y Perfil Especialista LUMINUS"
@@ -27,13 +24,10 @@ export function SpecialistsOverviewCard() {
             <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-normal tracking-tight text-white leading-[50px]">
               Ser Especialista LUMINUS
             </h2>
-            
+
             <div className="flex flex-col gap-4 text-white/95">
               <p className="text-xl lg:text-2xl font-normal leading-8">
-                Forma parte de una red profesional creada para reunir distintas disciplinas del bienestar en un mismo espacio.
-              </p>
-              <p className="text-base font-normal text-white/90 leading-6 pt-2">
-                LUMINUS te permite construir una presencia profesional más completa, acercar tu trabajo a nuevas personas y participar activamente de una comunidad que comparte intereses, experiencias y conocimiento.
+                Presenta tu formación y experiencia dentro de una red que reúne profesionales de distintas disciplinas. Participa además en iniciativas que permiten acercar tu práctica a la comunidad.
               </p>
             </div>
 

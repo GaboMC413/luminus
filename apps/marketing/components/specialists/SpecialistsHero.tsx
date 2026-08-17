@@ -11,13 +11,12 @@ export function SpecialistsHero() {
             Desarrolla tu práctica dentro de LUMINUS
           </h1>
           <p className="text-xl lg:text-[24px] font-normal text-white/90 leading-8 max-w-[580px]">
-            Forma parte de una red profesional y utiliza herramientas pensadas para dar visibilidad a tu trabajo, compartir tus propuestas y conectar con personas en toda Latinoamérica.
+            Forma parte de la Red de Especialistas, presenta tu trabajo y conecta con personas interesadas en conocer tu enfoque.
           </p>
         </div>
 
         {/* Right 50% Column: Full Bleed Photo */}
         <div className="w-full lg:w-1/2 relative min-h-[360px] lg:min-h-[640px]">
-
           <Image
             src="/Photos/Grupo diverso de cinco personas sentadas.png"
             alt="Desarrolla tu práctica dentro de LUMINUS"
