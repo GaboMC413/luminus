@@ -6,49 +6,49 @@ const CATEGORIES = [
   {
     title: "Crecimiento Personal",
     color: "#F0A500",
-    description: "Desarrollo consciente de capacidades, conocimientos y recursos personales orientados al autoconocimiento y la realización de objetivos.",
+    description: "Coaching, mentoría, liderazgo, orientación y otros procesos de desarrollo personal y profesional.",
     icon: "/Icons/sunny_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Bienestar Emocional",
     color: "#E855C8",
-    description: "Desarrollo de los recursos internos para reconocer, expresar y regular las emociones, afrontar desafíos y construir relaciones más sanas.",
+    description: "Psicología, psicoterapia y enfoques orientados a comprender, expresar y gestionar las emociones.",
     icon: "/Icons/mood_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Salud Integral",
     color: "#0450FB",
-    description: "Área que aborda la salud reuniendo medicina, prevención, diagnóstico, tratamiento y otras disciplinas orientadas al cuidado del cuerpo.",
+    description: "Medicina, fisioterapia y otras disciplinas vinculadas a la prevención, el cuidado y la salud integral.",
     icon: "/Icons/ecg_heart_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Movimiento Físico",
     color: "#E63946",
-    description: "Actividades y prácticas corporales destinadas a desarrollar o mantener la movilidad, la fuerza, la resistencia y la condición física.",
+    description: "Entrenamiento, movilidad y prácticas corporales orientadas a desarrollar y cuidar el cuerpo.",
     icon: "/Icons/exercise_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Nutrición",
     color: "#A8C800",
-    description: "Área centrada en la alimentación, los hábitos alimentarios y su relación con la salud y el funcionamiento del organismo.",
+    description: "Nutrición y acompañamiento profesional relacionado con la alimentación y los hábitos.",
     icon: "/Icons/nutrition_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Espiritualidad",
     color: "#6D28D9",
-    description: "Área vinculada con la búsqueda de sentido, la conexión interior, la relación de una persona con aquello que considera trascendente.",
+    description: "Meditación, mindfulness y prácticas orientadas al autoconocimiento, la conciencia y el desarrollo interior.",
     icon: "/Icons/self_improvement_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Vínculos y Relaciones",
     color: "#FF7700",
-    description: "Área relacionada con la forma en que las personas construyen, desarrollan y mantienen relaciones afectivas, familiares y sociales.",
+    description: "Acompañamiento individual, de pareja o familiar en temas relacionados con los vínculos y las relaciones.",
     icon: "/Icons/join_inner_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Terapias Complementarias",
     color: "#0FA87A",
-    description: "Conjunto de prácticas y enfoques utilizados como complemento de otras formas de cuidado, desde perspectivas integrativas o tradicionales.",
+    description: "Prácticas complementarias que incorporan diferentes enfoques para acompañar el bienestar.",
     icon: "/Icons/spa_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
 ];
@@ -148,16 +148,16 @@ export function CategoriesGrid() {
 
         {/* Header */}
         <div className="flex flex-col items-center text-center gap-4 max-w-[960px] mx-auto">
-          <h2 className="text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[48px]">
-            Explora distintas áreas, enfoques y profesionales según lo que estés buscando en cada momento.
+          <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
+            Explora distintas áreas según lo que estés buscando
           </h2>
         </div>
 
-        {/* Centered Details (Above timeline slider) */}
-        <div className="w-full max-w-[800px] mx-auto min-h-[140px] flex flex-col items-center justify-center text-center px-4">
+        {/* Centered Details with Stable Height Container */}
+        <div className="w-full max-w-[850px] mx-auto h-[160px] sm:h-[180px] flex flex-col items-center justify-center text-center px-4">
           <div
             key={activeIndex}
-            className="flex flex-col gap-4 items-center animate-[fadeInUp_0.4s_ease-out_forwards]"
+            className="flex flex-col gap-3 items-center animate-[fadeInUp_0.4s_ease-out_forwards]"
           >
             <h3
               style={{ color: activeCategory.color }}
@@ -166,20 +166,20 @@ export function CategoriesGrid() {
               {activeCategory.title}
             </h3>
 
-            <p className="text-lg sm:text-xl font-normal text-slate-700 leading-relaxed max-w-[700px]">
+            <p className="text-xl sm:text-2xl font-normal text-slate-800 leading-relaxed max-w-[780px]">
               {activeCategory.description}
             </p>
           </div>
         </div>
 
-        {/* Timeline Slider Track (At the bottom of the section) */}
+        {/* Timeline Slider Track */}
         <div
           ref={scrollContainerRef}
           className="w-full overflow-x-auto scrollbar-none py-6 px-4 touch-pan-x"
         >
           <div className="wellness-wheel relative min-w-[760px] max-w-[960px] mx-auto h-20 flex items-center">
 
-            {/* Active Sliding Segment (No background line) */}
+            {/* Active Sliding Segment */}
             <div
               style={{
                 left: `calc(var(--node-offset) + (100% - var(--node-offset) * 2) * ${activeIndex / 7})`,
@@ -189,7 +189,7 @@ export function CategoriesGrid() {
               className="absolute top-1/2 h-[3.5px] w-10 sm:w-14 rounded-full z-10 transition-all duration-500 ease-in-out"
             />
 
-            {/* Category Nodes (Smaller sizes) */}
+            {/* Category Nodes */}
             {CATEGORIES.map((cat, index) => {
               const isActive = index === activeIndex;
               const leftPosition = `calc(var(--node-offset) + (100% - var(--node-offset) * 2) * ${index / 7})`;
@@ -218,8 +218,8 @@ export function CategoriesGrid() {
                   <div
                     style={{
                       backgroundColor: isActive ? '#ffffff' : cat.color,
-                      maskImage: `url('${cat.icon}')`,
-                      WebkitMaskImage: `url('${cat.icon}')`,
+                      maskImage: `url("${cat.icon}")`,
+                      WebkitMaskImage: `url("${cat.icon}")`,
                       maskRepeat: "no-repeat",
                       WebkitMaskRepeat: "no-repeat",
                       maskPosition: "center",
@@ -227,7 +227,7 @@ export function CategoriesGrid() {
                       maskSize: "contain",
                       WebkitMaskSize: "contain",
                     }}
-                    className="w-4.5 h-4.5 sm:w-6 sm:h-6 transition-all duration-500"
+                    className="w-5 h-5 sm:w-6 sm:h-6 transition-all duration-500"
                   />
                 </button>
               );

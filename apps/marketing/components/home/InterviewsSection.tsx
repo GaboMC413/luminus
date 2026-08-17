@@ -77,7 +77,20 @@ const INTERVIEWS = [
   },
 ];
 
-function getPageNumbers(currentPage: number, totalPages: number): (number | string)[] {
+function getPageNumbers(currentPage: number, totalPages: number, isMobile = false): (number | string)[] {
+  if (isMobile) {
+    if (totalPages <= 5) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (currentPage <= 2) {
+      return [1, 2, 3, "...", totalPages];
+    }
+    if (currentPage >= totalPages - 1) {
+      return [1, "...", totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, "...", currentPage, "...", totalPages];
+  }
+
   if (totalPages <= 7) {
     return Array.from({ length: totalPages }, (_, i) => i + 1);
   }
@@ -97,8 +110,8 @@ export function InterviewsSection({
   subtitle,
   showTitle = true,
 }: InterviewsSectionProps) {
-  const defaultTitle = title || (isGrid ? "Entrevistas y grabaciones" : "Nuevas miradas sobre el bienestar");
-  const defaultSubtitle = subtitle || (isGrid ? undefined : "Entrevistas y conversaciones con especialistas de distintas disciplinas.");
+  const defaultTitle = title || (isGrid ? "Entrevistas y grabaciones" : "Entrevistas y conversaciones con especialistas");
+  const defaultSubtitle = subtitle || (isGrid ? "Entrevistas y conversaciones con especialistas de distintas disciplinas." : undefined);
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const spacerRef = useRef<HTMLDivElement>(null);
@@ -107,6 +120,7 @@ export function InterviewsSection({
   const [activeCategory, setActiveCategory] = useState("Todos");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(48);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -126,6 +140,7 @@ export function InterviewsSection({
   useEffect(() => {
     const handleResize = () => {
       if (typeof window !== "undefined") {
+        setIsMobile(window.innerWidth < 640);
         if (window.innerWidth < 768) {
           setItemsPerPage(12);
         } else {
@@ -252,12 +267,12 @@ export function InterviewsSection({
     <section id="entrevistas" className="w-full pt-8 md:pt-12 pb-8 md:pb-16 bg-white flex-1 flex flex-col">
       {showTitle && (
         <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10 mb-6 md:mb-10">
-          <div className="w-full flex flex-col justify-start items-start gap-3 md:gap-4 text-left">
-            <h2 className="w-full text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[40px] md:leading-[48px]">
+          <div className="w-full flex flex-col justify-center items-center gap-3 md:gap-4 text-center">
+            <h2 className="w-full text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900 text-center">
               {defaultTitle}
             </h2>
             {defaultSubtitle && (
-              <p className="w-full text-lg sm:text-xl lg:text-[24px] font-normal text-slate-800 leading-7 md:leading-8">
+              <p className="w-full text-xl lg:text-2xl font-normal text-slate-700 leading-8 text-center">
                 {defaultSubtitle}
               </p>
             )}
@@ -277,7 +292,7 @@ export function InterviewsSection({
                 return (
                   <div
                     key={ytId || item.title}
-                    className="w-full min-h-[370px] sm:min-h-[340px] h-full bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col group shadow-none"
+                    className="w-full min-h-0 sm:min-h-[320px] h-full bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col group shadow-none"
                   >
                     <a
                       href={item.link}
@@ -295,7 +310,7 @@ export function InterviewsSection({
                       />
                     </a>
 
-                    <div className="w-full flex-1 p-4 flex flex-col justify-between items-start gap-3 w-full">
+                    <div className="w-full flex-1 p-4 flex flex-col justify-between items-start gap-3">
                       <div className="w-full flex flex-col gap-2">
                         <div className="w-full flex justify-between items-center text-xs text-slate-500 font-medium">
                           <span className="truncate max-w-[150px] sm:max-w-[200px]">{item.speaker_name || 'Especialista LUMINUS'}</span>
@@ -349,26 +364,26 @@ export function InterviewsSection({
             </div>
 
             {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-12 w-full">
+              <div className="flex justify-center items-center gap-1 sm:gap-2 mt-8 md:mt-12 w-full">
                 <button
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className={`w-10 h-10 rounded-xl flex justify-center items-center transition-all ${
+                  className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex justify-center items-center transition-all ${
                     currentPage > 1
                       ? "bg-slate-200 hover:bg-slate-300 text-slate-700 cursor-pointer"
                       : "bg-slate-100 text-slate-300 cursor-not-allowed pointer-events-none"
                   }`}
                   aria-label="Página anterior"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
 
-                {getPageNumbers(currentPage, totalPages).map((p, idx) => {
+                {getPageNumbers(currentPage, totalPages, isMobile).map((p, idx) => {
                   if (typeof p === "string") {
                     return (
-                      <span key={`ellipsis-${idx}`} className="px-2 text-slate-400 font-medium select-none">
+                      <span key={`ellipsis-${idx}`} className="px-1 text-xs sm:text-sm text-slate-400 font-medium select-none">
                         ...
                       </span>
                     );
@@ -378,7 +393,7 @@ export function InterviewsSection({
                     <button
                       key={p}
                       onClick={() => setCurrentPage(p)}
-                      className={`w-10 h-10 rounded-xl text-sm font-medium transition-all cursor-pointer ${
+                      className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer ${
                         isCurrent
                           ? "bg-slate-900 text-white shadow-sm"
                           : "bg-white hover:bg-slate-200 text-slate-700 border border-slate-200"
@@ -392,14 +407,14 @@ export function InterviewsSection({
                 <button
                   onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  className={`w-10 h-10 rounded-xl flex justify-center items-center transition-all ${
+                  className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl flex justify-center items-center transition-all ${
                     currentPage < totalPages
                       ? "bg-slate-200 hover:bg-slate-300 text-slate-700 cursor-pointer"
                       : "bg-slate-100 text-slate-300 cursor-not-allowed pointer-events-none"
                   }`}
                   aria-label="Página siguiente"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
@@ -436,7 +451,7 @@ export function InterviewsSection({
                   <div
                     key={ytId || item.title}
                     data-card
-                    className="w-[300px] sm:w-[384px] min-h-[370px] sm:min-h-[340px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col shrink-0 snap-start group shadow-none"
+                    className="w-[300px] sm:w-[384px] min-h-0 sm:min-h-[320px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col shrink-0 snap-start group shadow-none"
                   >
                     <a
                       href={item.link}
@@ -512,8 +527,8 @@ export function InterviewsSection({
                 onClick={() => scroll("left")}
                 disabled={!canScrollLeft}
                 className={`p-3 rounded-xl flex justify-center items-center transition-all ${canScrollLeft
-                  ? "bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer"
-                  : "bg-gray-200 text-gray-400 opacity-40 cursor-not-allowed pointer-events-none"
+                  ? "bg-slate-200 hover:bg-slate-300 text-slate-700 cursor-pointer"
+                  : "bg-slate-200 text-slate-400 opacity-40 cursor-not-allowed pointer-events-none"
                   }`}
                 aria-label="Previous slide"
               >
@@ -533,8 +548,8 @@ export function InterviewsSection({
                 onClick={() => scroll("right")}
                 disabled={!canScrollRight}
                 className={`p-3 rounded-xl flex justify-center items-center transition-all ${canScrollRight
-                  ? "bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer"
-                  : "bg-gray-200 text-gray-400 opacity-40 cursor-not-allowed pointer-events-none"
+                  ? "bg-slate-200 hover:bg-slate-300 text-slate-700 cursor-pointer"
+                  : "bg-slate-200 text-slate-400 opacity-40 cursor-not-allowed pointer-events-none"
                   }`}
                 aria-label="Next slide"
               >

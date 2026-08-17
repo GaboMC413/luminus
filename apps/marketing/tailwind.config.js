@@ -24,7 +24,9 @@ module.exports = {
       },
       fontSize: {
         'heading-1': ['60px', { lineHeight: '72px' }],
+        'heading-2': ['56px', { lineHeight: '68px' }],
         'heading-3': ['40px', { lineHeight: '48px' }],
+        'heading-4': ['42px', { lineHeight: '52px' }],
         'heading-5': ['28px', { lineHeight: '40px' }],
         'heading-6': ['24px', { lineHeight: '30px' }],
         'body-large': ['18px', { lineHeight: '26px' }],

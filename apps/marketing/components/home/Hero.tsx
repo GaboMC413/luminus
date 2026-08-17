@@ -4,7 +4,7 @@ export function Hero() {
       <div className="max-w-[960px] mx-auto px-6 text-center flex flex-col items-center gap-8 lg:gap-10 relative z-10">
 
         {/* Main Title */}
-        <h1 className="text-4xl sm:text-5xl lg:text-[60px] font-normal tracking-tight text-black leading-[1.18] max-w-[860px]">
+        <h1 className="text-4xl sm:text-5xl lg:text-heading-1 font-normal tracking-tight text-black leading-[1.18] max-w-[860px]">
           Una red para conectar, aprender y cuidar tu bienestar
         </h1>
 
@@ -16,8 +16,8 @@ export function Hero() {
           >
             Crear mi cuenta gratis
           </a>
-          <div className="text-xs sm:text-sm text-black leading-relaxed flex flex-col gap-0.5 font-normal">
-            <p>3 meses sin costo · Sin datos de pago</p>
+          <div className="text-base sm:text-lg text-black leading-relaxed flex flex-col gap-0.5 font-normal">
+            <p>3 meses sin costo y sin ingresar datos de pago</p>
           </div>
         </div>
 

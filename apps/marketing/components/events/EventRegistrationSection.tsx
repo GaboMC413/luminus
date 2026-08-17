@@ -188,7 +188,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
   const formattedDateTime = formatDateTimeFull(event.date, event.time_text);
 
   return (
-    <div className="w-full py-8 md:py-14 bg-slate-100/70 flex-1 flex flex-col items-center">
+    <div className="w-full py-8 md:py-14 bg-white flex-1 flex flex-col items-center">
       <div className="w-full max-w-[1140px] px-4 sm:px-6 lg:px-8 flex flex-col gap-6 text-left">
 
         {/* Back Link */}
@@ -223,16 +223,15 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
 
           {/* 3. Especialista */}
           {event.speaker_name && (
-            <div className="flex flex-col py-3 border-y border-slate-200/80">
-              <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Especialista</span>
-              <span className="text-xl sm:text-2xl font-semibold text-slate-900 mt-0.5">{event.speaker_name}</span>
+            <div className="flex items-center">
+              <span className="text-xl sm:text-2xl font-normal text-slate-800">Con {event.speaker_name}</span>
             </div>
           )}
 
           {/* 4. Bloques con los detalles (Fecha & Plataforma) */}
           <div className="bg-white rounded-2xl p-5 border border-slate-200/80 flex flex-col gap-4 shadow-2xs">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
                 <span className="material-symbols-outlined text-[20px] text-slate-800 select-none">calendar_clock</span>
               </div>
               <span className="text-base font-semibold text-slate-900">{formattedDateTime}</span>
@@ -240,7 +239,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
             {event.location && <div className="w-full border-t border-slate-100" />}
             {event.location && (
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
                   <span className="material-symbols-outlined text-[20px] text-slate-800 select-none">videocam</span>
                 </div>
                 <span className="text-base font-semibold text-slate-900">{event.location}</span>
@@ -252,12 +251,9 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           <div>
             <button
               onClick={() => setIsOpenModal(true)}
-              className="w-full sm:w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+              className="w-full sm:w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
             >
               <span>Inscribirme a este evento</span>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
             </button>
           </div>
 
@@ -271,12 +267,9 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           <div className="pt-2">
             <button
               onClick={() => setIsOpenModal(true)}
-              className="w-full sm:w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+              className="w-full sm:w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
             >
               <span>Inscribirme a este evento</span>
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
             </button>
           </div>
         </div>
@@ -290,21 +283,17 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
             </h2>
 
             {event.speaker_name && (
-              <div className="flex flex-col py-3 border-y border-slate-200/80">
-                <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Especialista</span>
-                <span className="text-2xl font-semibold text-slate-900 mt-0.5">{event.speaker_name}</span>
+              <div className="flex items-center">
+                <span className="text-2xl font-normal text-slate-800">Con {event.speaker_name}</span>
               </div>
             )}
 
             <div>
               <button
                 onClick={() => setIsOpenModal(true)}
-                className="w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                className="w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
               >
                 <span>Inscribirme a este evento</span>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
               </button>
             </div>
 
@@ -316,12 +305,9 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
             <div className="pt-2">
               <button
                 onClick={() => setIsOpenModal(true)}
-                className="w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                className="w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
               >
                 <span>Inscribirme a este evento</span>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
               </button>
             </div>
           </div>
@@ -341,7 +327,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
 
             <div className="bg-white rounded-2xl p-5 border border-slate-200/80 flex flex-col gap-4 shadow-2xs">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
                   <span className="material-symbols-outlined text-[20px] text-slate-800 select-none">calendar_clock</span>
                 </div>
                 <span className="text-base font-semibold text-slate-900">{formattedDateTime}</span>
@@ -349,7 +335,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
               {event.location && <div className="w-full border-t border-slate-100" />}
               {event.location && (
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
                     <span className="material-symbols-outlined text-[20px] text-slate-800 select-none">videocam</span>
                   </div>
                   <span className="text-base font-semibold text-slate-900">{event.location}</span>
@@ -372,10 +358,12 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
                 setIsOpenModal(false);
                 setSubmitted(false);
               }}
-              className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-colors cursor-pointer"
+              className="absolute top-5 right-5 w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors cursor-pointer"
               aria-label="Cerrar modal"
             >
-              ✕
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
 
             {submitted ? (
