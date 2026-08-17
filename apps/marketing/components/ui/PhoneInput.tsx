@@ -14,6 +14,28 @@ interface PhoneInputProps {
   dark?: boolean;
 }
 
+function parsePhoneNumber(rawVal: string): { country: Country | null; number: string } {
+  if (!rawVal) return { country: null, number: "" };
+  const trimmed = rawVal.trim();
+  let normalized = trimmed;
+  if (normalized.startsWith("00")) {
+    normalized = "+" + normalized.slice(2);
+  }
+
+  if (normalized.startsWith("+")) {
+    const sortedCountries = [...COUNTRIES].sort((a, b) => b.dial.length - a.dial.length);
+    for (const c of sortedCountries) {
+      const cleanDial = c.dial.replace(/[^+\d]/g, "");
+      const cleanNormalized = normalized.replace(/[\s-]/g, "");
+      if (cleanNormalized.startsWith(cleanDial)) {
+        const numberPart = cleanNormalized.slice(cleanDial.length);
+        return { country: c, number: numberPart };
+      }
+    }
+  }
+  return { country: null, number: rawVal };
+}
+
 export function PhoneInput({
   value,
   onChange,
@@ -25,10 +47,25 @@ export function PhoneInput({
 }: PhoneInputProps) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [internalCountry, setInternalCountry] = useState<Country | null>(phoneCountry);
   const [coords, setCoords] = useState<{ top?: number; bottom?: number; left: number; width: number; maxHeight: number } | null>(null);
+
+  const activeCountry = phoneCountry || internalCountry;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value;
+    const { country, number } = parsePhoneNumber(rawVal);
+    if (country) {
+      setInternalCountry(country);
+      onCountryChange?.(country);
+      onChange(number);
+    } else {
+      onChange(rawVal);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -101,6 +138,7 @@ export function PhoneInput({
   }, [showDropdown]);
 
   const handleCountrySelect = (c: Country) => {
+    setInternalCountry(c);
     if (onCountryChange) {
       onCountryChange(c);
     }
@@ -132,10 +170,10 @@ export function PhoneInput({
           }}
           className={`px-3.5 py-2 rounded-xl cursor-pointer transition-colors flex items-center group w-full truncate text-sm ${
             dark
-              ? phoneCountry?.code === c.code
+              ? activeCountry?.code === c.code
                 ? "font-semibold text-white bg-zinc-800"
                 : "text-zinc-300 hover:text-white hover:bg-zinc-800/60"
-              : phoneCountry?.code === c.code
+              : activeCountry?.code === c.code
               ? "font-semibold text-slate-900 bg-slate-100"
               : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
           }`}
@@ -164,9 +202,9 @@ export function PhoneInput({
         }`}
         onClick={() => !disabled && setShowDropdown(!showDropdown)}
       >
-        {phoneCountry ? (
+        {activeCountry ? (
           <span className={`text-base font-normal ${dark ? "text-white" : "text-slate-900"}`}>
-            {phoneCountry.dial}
+            {activeCountry.dial}
           </span>
         ) : (
           <span
@@ -189,11 +227,14 @@ export function PhoneInput({
 
       {/* Phone Number Input */}
       <input
+        id="telefono"
+        name="telefono"
         type="tel"
+        autoComplete="tel"
         placeholder={placeholder}
         value={value}
         disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={handleInputChange}
         className={`w-full h-full bg-transparent px-3 text-base font-normal focus:outline-none ${
           dark ? "text-white placeholder:text-zinc-500" : "text-slate-900 placeholder:text-slate-400"
         }`}
