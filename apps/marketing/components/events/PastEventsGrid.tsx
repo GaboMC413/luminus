@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { EventCard, EventItem } from "./EventCard";
 
 interface PastEventsGridProps {
