@@ -188,7 +188,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
   const formattedDateTime = formatDateTimeFull(event.date, event.time_text);
 
   return (
-    <div className="w-full py-8 md:py-14 bg-slate-100/70 flex-1 flex flex-col items-center">
+    <div className="w-full py-8 md:py-14 bg-white flex-1 flex flex-col items-center">
       <div className="w-full max-w-[1140px] px-4 sm:px-6 lg:px-8 flex flex-col gap-6 text-left">
 
         {/* Back Link */}
@@ -223,9 +223,8 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
 
           {/* 3. Especialista */}
           {event.speaker_name && (
-            <div className="flex flex-col py-3 border-y border-slate-200/80">
-              <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Especialista</span>
-              <span className="text-xl sm:text-2xl font-semibold text-slate-900 mt-0.5">{event.speaker_name}</span>
+            <div className="flex items-center">
+              <span className="text-xl sm:text-2xl font-normal text-slate-800">Con {event.speaker_name}</span>
             </div>
           )}
 
@@ -284,9 +283,8 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
             </h2>
 
             {event.speaker_name && (
-              <div className="flex flex-col py-3 border-y border-slate-200/80">
-                <span className="text-xs text-slate-500 font-medium uppercase tracking-wider">Especialista</span>
-                <span className="text-2xl font-semibold text-slate-900 mt-0.5">{event.speaker_name}</span>
+              <div className="flex items-center">
+                <span className="text-2xl font-normal text-slate-800">Con {event.speaker_name}</span>
               </div>
             )}
 
