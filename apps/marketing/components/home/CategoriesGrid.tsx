@@ -148,7 +148,7 @@ export function CategoriesGrid() {
 
         {/* Header */}
         <div className="flex flex-col items-center text-center gap-4 max-w-[960px] mx-auto">
-          <h2 className="text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[48px]">
+          <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
             Explora distintas áreas, enfoques y profesionales según lo que estés buscando en cada momento.
           </h2>
         </div>

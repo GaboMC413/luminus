@@ -18,8 +18,8 @@ export function ConversationSection() {
           </div>
 
           {/* Center Blue Card */}
-          <div className="w-full lg:w-2/4 bg-[#0450FB] text-white rounded-3xl p-8 md:p-12 lg:p-14 flex flex-col justify-center gap-6">
-            <h2 className="text-3xl lg:text-heading-3 font-normal tracking-tight leading-tight">
+          <div className="w-full lg:w-2/4 bg-luminus-cobalt text-white rounded-3xl p-8 md:p-14 lg:p-16 flex flex-col justify-center gap-6">
+            <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-white">
               Comienza con una conversación
             </h2>
             <p className="text-body-large font-normal text-white/90 leading-relaxed">
@@ -27,7 +27,7 @@ export function ConversationSection() {
             </p>
             <div className="pt-2">
               <a
-                href="https://app.luminus.lat/auth"
+                href="https://app.luminuslatam.com/auth/registrarse"
                 className="flex sm:inline-flex items-center justify-center w-full sm:w-auto py-3.5 px-8 text-body-medium font-normal text-white bg-black hover:bg-slate-800 rounded-2xl text-center sm:min-w-[260px] transition-colors"
               >
                 Solicitar una sesión

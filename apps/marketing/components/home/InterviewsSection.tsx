@@ -253,11 +253,11 @@ export function InterviewsSection({
       {showTitle && (
         <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10 mb-6 md:mb-10">
           <div className="w-full flex flex-col justify-start items-start gap-3 md:gap-4 text-left">
-            <h2 className="w-full text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[40px] md:leading-[48px]">
+            <h2 className="w-full text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
               {defaultTitle}
             </h2>
             {defaultSubtitle && (
-              <p className="w-full text-lg sm:text-xl lg:text-[24px] font-normal text-slate-800 leading-7 md:leading-8">
+              <p className="w-full text-xl lg:text-2xl font-normal text-slate-700 leading-8">
                 {defaultSubtitle}
               </p>
             )}
@@ -295,7 +295,7 @@ export function InterviewsSection({
                       />
                     </a>
 
-                    <div className="w-full flex-1 p-4 flex flex-col justify-between items-start gap-3 w-full">
+                    <div className="w-full flex-1 p-4 flex flex-col justify-between items-start gap-3">
                       <div className="w-full flex flex-col gap-2">
                         <div className="w-full flex justify-between items-center text-xs text-slate-500 font-medium">
                           <span className="truncate max-w-[150px] sm:max-w-[200px]">{item.speaker_name || 'Especialista LUMINUS'}</span>
@@ -512,8 +512,8 @@ export function InterviewsSection({
                 onClick={() => scroll("left")}
                 disabled={!canScrollLeft}
                 className={`p-3 rounded-xl flex justify-center items-center transition-all ${canScrollLeft
-                  ? "bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer"
-                  : "bg-gray-200 text-gray-400 opacity-40 cursor-not-allowed pointer-events-none"
+                  ? "bg-slate-200 hover:bg-slate-300 text-slate-700 cursor-pointer"
+                  : "bg-slate-200 text-slate-400 opacity-40 cursor-not-allowed pointer-events-none"
                   }`}
                 aria-label="Previous slide"
               >
@@ -533,8 +533,8 @@ export function InterviewsSection({
                 onClick={() => scroll("right")}
                 disabled={!canScrollRight}
                 className={`p-3 rounded-xl flex justify-center items-center transition-all ${canScrollRight
-                  ? "bg-gray-200 hover:bg-gray-300 text-gray-700 cursor-pointer"
-                  : "bg-gray-200 text-gray-400 opacity-40 cursor-not-allowed pointer-events-none"
+                  ? "bg-slate-200 hover:bg-slate-300 text-slate-700 cursor-pointer"
+                  : "bg-slate-200 text-slate-400 opacity-40 cursor-not-allowed pointer-events-none"
                   }`}
                 aria-label="Next slide"
               >

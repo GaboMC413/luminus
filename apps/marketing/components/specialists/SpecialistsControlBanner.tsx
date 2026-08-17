@@ -18,9 +18,9 @@ export function SpecialistsControlBanner() {
             />
           </div>
 
-          {/* Center Cobalt Blue Card (50% Width #0450FB) */}
-          <div className="w-full lg:w-2/4 bg-[#0450FB] text-white rounded-3xl p-8 md:p-12 lg:p-14 flex flex-col justify-center gap-6">
-            <h2 className="text-3xl lg:text-[40px] font-normal tracking-tight text-white leading-[48px]">
+          {/* Center Cobalt Blue Card (50% Width) */}
+          <div className="w-full lg:w-2/4 bg-luminus-cobalt text-white rounded-3xl p-8 md:p-14 lg:p-16 flex flex-col justify-center gap-6">
+            <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-white">
               Mantienes el control sobre tu actividad profesional
             </h2>
             <p className="text-xl lg:text-2xl font-normal text-blue-100 leading-8">

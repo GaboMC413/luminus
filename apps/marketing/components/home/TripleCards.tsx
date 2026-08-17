@@ -5,9 +5,9 @@ export function TripleCards() {
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 w-full">
 
       {/* Card 1: Espacios */}
-      <div className="bg-[#6D28D9] rounded-3xl overflow-hidden flex flex-col justify-between h-[500px]">
+      <div className="bg-luminus-violet rounded-3xl overflow-hidden flex flex-col justify-between h-[500px]">
         {/* Top Relative Flexible Image Box */}
-        <div className="relative flex-1 w-full min-h-[220px] overflow-hidden bg-[#d5c9e8]">
+        <div className="relative flex-1 w-full min-h-[220px] overflow-hidden bg-luminus-violet-light">
           <Image
             src="/Photos/Luminus app - explorar espacios.png"
             alt="LUMINUS Espacios"
@@ -37,9 +37,9 @@ export function TripleCards() {
       </div>
 
       {/* Card 2: Grupos */}
-      <div className="bg-[#A8C800] rounded-3xl overflow-hidden flex flex-col justify-between h-[500px]">
+      <div className="bg-luminus-chartreuse rounded-3xl overflow-hidden flex flex-col justify-between h-[500px]">
         {/* Top Relative Flexible Image Box */}
-        <div className="relative flex-1 w-full min-h-[220px] overflow-hidden bg-[#e7eec4]">
+        <div className="relative flex-1 w-full min-h-[220px] overflow-hidden bg-luminus-chartreuse-light">
           <Image
             src="/Photos/Luminus app - explorar grupos.png"
             alt="LUMINUS Grupos"
@@ -50,7 +50,7 @@ export function TripleCards() {
           />
         </div>
 
-        {/* Bottom Content (Text in White) */}
+        {/* Bottom Content */}
         <div className="p-8 flex flex-col gap-6 text-white justify-between shrink-0">
           <div className="flex flex-col gap-3">
             <h3 className="text-3xl lg:text-heading-3 font-normal tracking-tight text-white">
@@ -69,9 +69,9 @@ export function TripleCards() {
       </div>
 
       {/* Card 3: Faro AI */}
-      <div className="bg-[#E855C8] rounded-3xl overflow-hidden flex flex-col justify-between h-[500px]">
+      <div className="bg-luminus-magenta rounded-3xl overflow-hidden flex flex-col justify-between h-[500px]">
         {/* Top Relative Flexible Image Box */}
-        <div className="relative flex-1 w-full min-h-[220px] overflow-hidden bg-[#e9c9e2]">
+        <div className="relative flex-1 w-full min-h-[220px] overflow-hidden bg-luminus-magenta-light">
           <Image
             src="/Photos/Luminus app - chat con especialista.png"
             alt="LUMINUS Faro AI"
@@ -88,7 +88,7 @@ export function TripleCards() {
             <h3 className="text-3xl lg:text-heading-3 font-normal tracking-tight text-white">
               Faro AI
             </h3>
-            <p className="text-body-large  text-white/90 font-normal">
+            <p className="text-body-large text-white/90 font-normal">
               Orientación personalizada para descubrir el acompañamiento adecuado.
             </p>
           </div>

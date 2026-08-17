@@ -24,17 +24,13 @@ const PROCESS_STEPS = [
 export function SpecialistsProcessSteps() {
   return (
     <section
-      className="w-full py-16 md:py-24 flex justify-center items-center border-b border-slate-200"
-      style={{
-        background:
-          "linear-gradient(0deg, rgba(255,255,255,0.75) 0%, #ffffff 100%), linear-gradient(90deg, #FF7700 0%, #E855C8 33%, #0450FB 66%, #A8C800 100%)",
-      }}
+      className="w-full py-16 md:py-24 flex justify-center items-center border-b border-slate-200 bg-[linear-gradient(0deg,rgba(255,255,255,0.75)_0%,#ffffff_100%),linear-gradient(90deg,#FF7700_0%,#E855C8_33%,#0450FB_66%,#A8C800_100%)]"
     >
       <div className="max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col items-center text-center gap-12">
 
         {/* Section Header */}
         <div className="flex flex-col items-center gap-4 max-w-[960px]">
-          <h2 className="text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[48px]">
+          <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
             Cómo formar parte de la Red de Especialistas
           </h2>
         </div>

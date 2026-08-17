@@ -35,11 +35,11 @@ const PLATFORM_FEATURES = [
 
 export function SpecialistsPlatformFeatures() {
   return (
-    <section className="w-full bg-[#E855C8] text-white overflow-hidden">
+    <section className="w-full bg-luminus-magenta text-white overflow-hidden">
       <div className="max-w-[1440px] mx-auto flex flex-col lg:flex-row items-stretch min-h-[640px]">
         
         {/* Left Column: Full-Bleed Image */}
-        <div className="w-full lg:w-1/2 min-h-[360px] lg:min-h-[640px] relative bg-pink-900">
+        <div className="w-full lg:w-1/2 min-h-[360px] lg:min-h-[640px] relative bg-luminus-magenta-light">
           <Image
             src="/Photos/Tres personas de pie sonriendo.png"
             alt="Herramientas para desarrollar tu práctica LUMINUS"
@@ -54,7 +54,7 @@ export function SpecialistsPlatformFeatures() {
         <div className="w-full lg:w-1/2 p-8 md:p-14 lg:p-16 flex flex-col justify-center gap-8">
           
           <div className="flex flex-col gap-3">
-            <h2 className="text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-white leading-[48px]">
+            <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-white">
               Herramientas para desarrollar tu práctica
             </h2>
           </div>

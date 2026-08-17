@@ -11,12 +11,12 @@ const PRICING_FEATURES = [
 
 export function PricingSection() {
   return (
-    <section id="pricing" className="w-full py-16 md:py-24 flex justify-center items-center" style={{ background: "linear-gradient(0deg, rgba(255,255,255,0.75) 0%, #ffffff 100%), linear-gradient(90deg, #FF7700 0%, #E855C8 33%, #0450FB 66%, #A8C800 100%)" }}>
+    <section id="pricing" className="w-full py-16 md:py-24 flex justify-center items-center bg-[linear-gradient(0deg,rgba(255,255,255,0.75)_0%,#ffffff_100%),linear-gradient(90deg,#FF7700_0%,#E855C8_33%,#0450FB_66%,#A8C800_100%)]">
       <div className="max-w-[1440px] w-full px-4 md:px-10 flex flex-col justify-end items-center gap-8">
 
         {/* Header */}
         <div className="w-full max-w-[960px] flex flex-col justify-start items-center gap-6 text-center">
-          <h2 className="w-full text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900 leading-[48px]">
+          <h2 className="w-full text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
             Accede a la red con tu membresía
           </h2>
 

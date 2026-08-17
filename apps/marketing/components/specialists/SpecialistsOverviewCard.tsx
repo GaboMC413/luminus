@@ -7,8 +7,8 @@ export function SpecialistsOverviewCard() {
 
         <div className="w-full flex flex-col lg:flex-row min-h-[640px] rounded-3xl overflow-hidden border border-slate-200/80 shadow-xs">
 
-          {/* Left 50% Column: Warm Sand Background (#eed7c4) with Full-Bleed Mockup */}
-          <div className="w-full lg:w-1/2 relative bg-[#eed7c4] min-h-[380px] lg:min-h-[640px] overflow-hidden">
+          {/* Left 50% Column: Warm Sand Background with Full-Bleed Mockup */}
+          <div className="w-full lg:w-1/2 relative bg-luminus-tangerine-light min-h-[380px] lg:min-h-[640px] overflow-hidden">
             <Image
               src="/Photos/Luminus app - directorio y perfil especialista.png"
               alt="Directorio y Perfil Especialista LUMINUS"
@@ -19,9 +19,9 @@ export function SpecialistsOverviewCard() {
             />
           </div>
 
-          {/* Right 50% Column: Primary Tangerine #FF7700 Content Block */}
-          <div className="w-full lg:w-1/2 bg-[#FF7700] text-white p-8 md:p-12 lg:p-16 flex flex-col justify-center items-start gap-8">
-            <h2 className="text-3xl sm:text-4xl lg:text-[42px] font-normal tracking-tight text-white leading-[50px]">
+          {/* Right 50% Column: Primary Tangerine Content Block */}
+          <div className="w-full lg:w-1/2 bg-luminus-tangerine text-white p-8 md:p-14 lg:p-16 flex flex-col justify-center items-start gap-8">
+            <h2 className="text-3xl sm:text-4xl lg:text-heading-4 font-normal tracking-tight text-white">
               Ser Especialista LUMINUS
             </h2>
 

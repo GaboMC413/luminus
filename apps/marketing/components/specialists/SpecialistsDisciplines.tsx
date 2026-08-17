@@ -40,13 +40,13 @@ const DISCIPLINES = [
     icon: "/Icons/self_improvement_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
-    title: "Vínculos y relaciones",
+    title: "Vínculos y Relaciones",
     color: "#FF7700",
     description: "Acompañamiento individual, de pareja o familiar en temas relacionados con los vínculos y las relaciones.",
     icon: "/Icons/join_inner_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
-    title: "Terapias Alternativas",
+    title: "Terapias Complementarias",
     color: "#0FA87A",
     description: "Prácticas complementarias que incorporan diferentes enfoques para acompañar el bienestar.",
     icon: "/Icons/spa_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
@@ -101,10 +101,10 @@ export function SpecialistsDisciplines() {
       {/* Section Header */}
       <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10">
         <div className="flex flex-col items-center text-center gap-4 max-w-[960px] mx-auto">
-          <h2 className="text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-slate-900 leading-[48px]">
+          <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
             Distintas disciplinas para acompañar el bienestar
           </h2>
-          <p className="text-xl sm:text-2xl font-normal text-slate-700 leading-8">
+          <p className="text-xl lg:text-2xl font-normal text-slate-700 leading-8">
             La Red de Especialistas reúne profesionales de diferentes áreas, con enfoques y recorridos que abordan el bienestar desde perspectivas complementarias.
           </p>
         </div>

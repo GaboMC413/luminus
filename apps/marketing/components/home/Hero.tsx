@@ -4,7 +4,7 @@ export function Hero() {
       <div className="max-w-[960px] mx-auto px-6 text-center flex flex-col items-center gap-8 lg:gap-10 relative z-10">
 
         {/* Main Title */}
-        <h1 className="text-4xl sm:text-5xl lg:text-[60px] font-normal tracking-tight text-black leading-[1.18] max-w-[860px]">
+        <h1 className="text-4xl sm:text-5xl lg:text-heading-1 font-normal tracking-tight text-black leading-[1.18] max-w-[860px]">
           Una red para conectar, aprender y cuidar tu bienestar
         </h1>
 

@@ -7,11 +7,11 @@ export function SpecialistsClosingCta() {
       <div className="w-full max-w-[1440px] mx-auto flex flex-col lg:flex-row items-stretch min-h-[640px]">
         
         {/* Left 50% Column */}
-        <div className="w-full lg:w-1/2 px-8 sm:px-12 lg:px-16 py-12 lg:py-20 flex flex-col justify-center gap-6 text-left">
-          <h2 className="text-3xl sm:text-4xl lg:text-[40px] font-normal tracking-tight text-white leading-[48px]">
+        <div className="w-full lg:w-1/2 p-8 md:p-14 lg:p-16 flex flex-col justify-center gap-6 text-left">
+          <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-white">
             Forma parte de una red profesional de bienestar
           </h2>
-          <div className="flex flex-col gap-3 text-base sm:text-lg font-normal text-slate-300 leading-relaxed">
+          <div className="flex flex-col gap-3 text-body-large font-normal text-slate-300 leading-relaxed">
             <p>
               LUMINUS reúne profesionales de distintas áreas y enfoques para ampliar las formas de acompañar el bienestar en Latinoamérica. Si quieres integrar la Red, puedes comenzar tu aplicación o conversar con nuestro equipo.
             </p>
