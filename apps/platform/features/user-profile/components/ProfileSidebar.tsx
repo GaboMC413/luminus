@@ -34,23 +34,36 @@ export function ProfileSidebar({
     return str.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
   };
 
+  const MONTH_NAMES = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+  ];
+
   const formatDisplayDate = (dateStr: string) => {
     if (!dateStr || dateStr === 'No definido' || dateStr === 'Sin fecha de nacimiento') return 'Sin fecha de nacimiento';
-    if (dateStr.includes('/')) return dateStr;
-    const parts = dateStr.split('-');
-    const formatted = parts.length === 3 ? `${parts[2]} / ${parts[1]} / ${parts[0]}` : dateStr;
 
-    const birthDate = new Date(dateStr);
-    if (isNaN(birthDate.getTime())) return formatted;
+    let day: number | null = null;
+    let monthIndex: number | null = null;
 
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+    if (dateStr.includes('/')) {
+      const parts = dateStr.split('/').map(p => p.trim());
+      if (parts.length >= 2) {
+        day = parseInt(parts[0], 10);
+        monthIndex = parseInt(parts[1], 10) - 1;
+      }
+    } else if (dateStr.includes('-')) {
+      const parts = dateStr.split('-').map(p => p.trim());
+      if (parts.length === 3) {
+        day = parseInt(parts[2], 10);
+        monthIndex = parseInt(parts[1], 10) - 1;
+      }
     }
 
-    return `${formatted} (${age} años)`;
+    if (day && monthIndex !== null && monthIndex >= 0 && monthIndex < 12 && !isNaN(day) && !isNaN(monthIndex)) {
+      return `${day} de ${MONTH_NAMES[monthIndex]}`;
+    }
+
+    return dateStr;
   };
 
   const getGenderIcon = (gender: string) => {
@@ -129,8 +142,7 @@ export function ProfileSidebar({
 
         <div className="w-full flex flex-col gap-4 lg:gap-6 px-1">
           <DetailItem label="Profesión" value={profile.profession} icon="work" onClick={onEditProfile ? () => onEditProfile("profession") : undefined} isPublic={isPublic} firstName={profile.first_name} highlightField={highlightField} />
-          <DetailItem label="Nacimiento" value={formatDisplayDate(profile.birthdate)} icon="cake" onClick={onEditProfile ? () => onEditProfile("birthdate") : undefined} isPublic={isPublic} firstName={profile.first_name} />
-          <DetailItem label="Género" value={profile.gender} icon={getGenderIcon(profile.gender)} onClick={onEditProfile ? () => onEditProfile("gender") : undefined} isPublic={isPublic} firstName={profile.first_name} />
+          <DetailItem label="Cumpleaños" value={formatDisplayDate(profile.birthdate)} icon="cake" isPublic={isPublic} firstName={profile.first_name} />
         </div>
 
         {(!isPublic || onSendMessage || onConnect) && (
