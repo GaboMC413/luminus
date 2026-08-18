@@ -46,10 +46,19 @@ type CognitoIdTokenClaims = {
   identities?: CognitoIdentityClaim[] | string;
 };
 
+function parseClientSecret(rawSecret?: string) {
+  if (!rawSecret) return undefined;
+  const trimmed = rawSecret.trim().replace(/^["']|["']$/g, "");
+  const upper = trimmed.toUpperCase();
+  if (!trimmed || upper === "NONE" || upper === "FALSE" || upper === "CHANGE-ME" || upper === "UNDEFINED" || upper === "NULL") {
+    return undefined;
+  }
+  return trimmed;
+}
+
 function getCognitoClientConfig() {
   const clientId = process.env.COGNITO_CLIENT_ID;
-  const rawSecret = process.env.COGNITO_CLIENT_SECRET;
-  const clientSecret = !rawSecret || rawSecret === "NONE" || rawSecret === "false" ? undefined : rawSecret;
+  const clientSecret = parseClientSecret(process.env.COGNITO_CLIENT_SECRET);
   const domain = process.env.COGNITO_DOMAIN?.trim().replace(/\/$/, "");
 
   if (!clientId || !domain) {

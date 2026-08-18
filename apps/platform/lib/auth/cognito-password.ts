@@ -39,10 +39,19 @@ function getCognitoRegion() {
   return match?.[1] || "us-east-1";
 }
 
+function parseClientSecret(rawSecret?: string) {
+  if (!rawSecret) return undefined;
+  const trimmed = rawSecret.trim().replace(/^["']|["']$/g, "");
+  const upper = trimmed.toUpperCase();
+  if (!trimmed || upper === "NONE" || upper === "FALSE" || upper === "CHANGE-ME" || upper === "UNDEFINED" || upper === "NULL") {
+    return undefined;
+  }
+  return trimmed;
+}
+
 function getCognitoClientConfig() {
   const clientId = process.env.COGNITO_CLIENT_ID;
-  const rawSecret = process.env.COGNITO_CLIENT_SECRET;
-  const clientSecret = !rawSecret || rawSecret === "NONE" || rawSecret === "false" ? undefined : rawSecret;
+  const clientSecret = parseClientSecret(process.env.COGNITO_CLIENT_SECRET);
 
   if (!clientId) {
     throw makeCognitoError("Cognito password auth is not configured.", "CognitoConfigError", 500);
