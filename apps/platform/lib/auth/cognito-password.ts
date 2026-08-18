@@ -242,7 +242,7 @@ export function getCognitoErrorMessage(error: unknown, fallback: string) {
 
   if (cognitoError.code === "InvalidParameterException") {
     console.error("[Cognito InvalidParameterException]:", cognitoError.message);
-    return cognitoError.message || "Los datos ingresados no son validos.";
+    return "Los datos ingresados no son validos.";
   }
 
   return fallback;
