@@ -21,8 +21,8 @@ export function validateAuthInput(input: unknown): AuthValidationResult {
     return { ok: false, message: "Ingresa un correo electronico valido." };
   }
 
-  if (password.length < 12) {
-    return { ok: false, message: "La contrasena debe tener al menos 12 caracteres." };
+  if (password.length < 8) {
+    return { ok: false, message: "La contrasena debe tener al menos 8 caracteres." };
   }
 
   if (!/[A-Z]/.test(password) || !/[a-z]/.test(password)) {

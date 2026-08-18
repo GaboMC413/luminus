@@ -18,8 +18,8 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ message: "La nueva contrasena es requerida." }, { status: 400 });
   }
 
-  if (newPassword.length < 12) {
-    return NextResponse.json({ message: "La contrasena debe tener al menos 12 caracteres." }, { status: 400 });
+  if (newPassword.length < 8) {
+    return NextResponse.json({ message: "La contrasena debe tener al menos 8 caracteres." }, { status: 400 });
   }
 
   if (!/[A-Za-z]/.test(newPassword) || !/\d/.test(newPassword)) {

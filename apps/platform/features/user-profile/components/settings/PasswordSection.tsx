@@ -39,8 +39,8 @@ export function PasswordSection({
   }, [attentionCounter, isEditing]);
 
   const handlePasswordSave = async () => {
-    if (newPassword.length < 12) {
-      setPasswordError("La contraseña debe tener al menos 12 caracteres.");
+    if (newPassword.length < 8) {
+      setPasswordError("La contraseña debe tener al menos 8 caracteres.");
       return;
     }
     if (!/[A-Za-z]/.test(newPassword) || !/\d/.test(newPassword)) {
@@ -138,10 +138,10 @@ export function PasswordSection({
             {/* Requirements Checklist */}
             <div className="flex flex-col gap-1.5 px-1 mb-1">
               <div className="flex items-center gap-2 h-5">
-                <p className={`text-sm font-normal ${newPassword.length >= 12 ? '!text-green-600 font-semibold' : '!text-slate-500'}`}>
-                  Mínimo 12 caracteres
+                <p className={`text-sm font-normal ${newPassword.length >= 8 ? '!text-green-600 font-semibold' : '!text-slate-500'}`}>
+                  Mínimo 8 caracteres
                 </p>
-                {newPassword.length >= 12 && (
+                {newPassword.length >= 8 && (
                   <span className="!text-green-600 text-sm font-semibold">✓</span>
                 )}
               </div>

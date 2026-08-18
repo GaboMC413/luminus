@@ -149,8 +149,8 @@ export default function SignUpView() {
       setMessage({ text: "Las contraseñas no coinciden.", type: "error" });
       return;
     }
-    if (password.length < 12) {
-      setMessage({ text: "La contrasena debe tener al menos 12 caracteres.", type: "error" });
+    if (password.length < 8) {
+      setMessage({ text: "La contrasena debe tener al menos 8 caracteres.", type: "error" });
       return;
     }
     if (!/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
@@ -339,10 +339,10 @@ export default function SignUpView() {
                 {/* Password Requirements Checklist - Stacked Layout */}
                 <div className="flex flex-col gap-1.5 px-0 mb-2">
                   <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
-                    <p className={`text-xs sm:text-sm font-normal tracking-tight ${password.length >= 12 ? 'text-green-600' : 'text-slate-500'}`}>
-                      Mínimo 12 caracteres
+                    <p className={`text-xs sm:text-sm font-normal tracking-tight ${password.length >= 8 ? 'text-green-600' : 'text-slate-500'}`}>
+                      Mínimo 8 caracteres
                     </p>
-                    {password.length >= 12 && (
+                    {password.length >= 8 && (
                       <span className="text-green-600 text-sm sm:text-base font-bold">✓</span>
                     )}
                   </div>
