@@ -56,21 +56,21 @@ Nos alegra acompañarte en este camino hacia una vida con mayor bienestar y prop
 Luminus es tu red para explorar, aprender y conectar. Te compartimos lo que puedes comenzar a explorar hoy y lo que sumaremos muy pronto:
 
 👥 *Comunidad*: Conecta con personas que comparten inquietudes e intereses similares.
-👉 [Ver Comunidad](/comunidad)
+[Ver Comunidad](/comunidad)
 
 🩺 *Especialistas*: Descubre una red de profesionales calificados de distintas áreas del bienestar.
-👉 [Ver Especialistas](/especialistas)
+[Ver Especialistas](/especialistas)
 
 ✨ *Próximamente en LUMINUS:*
 
 🧭 *Espacios* *(Próximamente)*: Encuentra consultorios, clínicas y otros espacios de bienestar cerca de ti.
-👉 [Conocer Espacios](/espacios)
+[Conocer Espacios](/espacios)
 
 💬 *Grupos* *(Próximamente)*: Forma parte de conversaciones alrededor de temas que te interesan.
-👉 [Conocer Grupos](/grupos)
+[Conocer Grupos](/grupos)
 
 💡 *Faro AI* *(Próximamente)*: Orientación personalizada para descubrir el acompañamiento adecuado.
-👉 [Conocer Faro](/faro)
+[Conocer Faro](/faro)
 
 Si necesitas ayuda o tienes alguna pregunta sobre la plataforma, no dudes en responder directamente en este chat. ¡Tu viaje comienza ahora! 🚀`;
 
