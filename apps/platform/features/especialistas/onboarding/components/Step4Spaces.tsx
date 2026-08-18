@@ -842,7 +842,7 @@ export function Step4Spaces({
 
       <div className="flex flex-col gap-4 text-[14px] text-slate-600 leading-relaxed font-sans mt-1">
         <p>
-          Tus espacios aparecerán en el mapa de LUMINUS.
+          Tus espacios aparecerán en la sección Espacios de LUMINUS.
         </p>
       </div>
 

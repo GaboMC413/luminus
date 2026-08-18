@@ -1,6 +1,7 @@
-import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "Condiciones para Especialistas | LUMINUS Latam",
@@ -9,41 +10,45 @@ export const metadata: Metadata = {
 
 export default function CondicionesEspecialistasPage() {
   return (
-    <div className="min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white">
-      {/* Header */}
-      <header className="fixed top-0 left-0 w-full h-[70px] md:h-[80px] bg-white/80 backdrop-blur-md border-b border-zinc-100 px-6 md:px-8 flex items-center justify-between z-50">
-        <Link href="/" className="hover:opacity-80 transition-opacity">
-          <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[18px] md:h-[20px]" />
-        </Link>
-        <Link 
-          href="https://app.luminuslatam.com/auth/registrarse" 
-          className="group flex items-center gap-2 text-[14px] font-medium border border-black px-4 md:px-6 py-2 rounded-full hover:bg-black hover:text-white transition-all"
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col pt-[64px]">
+      <Navbar />
+
+      <main className="flex-1 w-full max-w-[760px] mx-auto px-6 sm:px-8 md:px-12 pt-10 md:pt-14 pb-16 md:pb-24">
+        {/* Back link */}
+        <Link
+          href="/legal"
+          className="inline-flex items-center gap-2 text-sm font-normal text-slate-500 hover:text-slate-900 mb-8 transition-colors"
         >
-          <span className="hidden md:inline">Volver al registro</span>
-          <span className="material-symbols-rounded md:hidden text-[20px]">arrow_back</span>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span>Volver al Centro Legal</span>
         </Link>
-      </header>
 
-      {/* Content */}
-      <main className="max-w-[800px] mx-auto pt-[110px] md:pt-[140px] pb-12 md:pb-24 px-8">
-        <h1 className="text-[36px] md:text-[42px] font-display font-black tracking-tight leading-tight mb-4">
-          Condiciones para Especialistas LUMINUS
-        </h1>
-        <p className="text-zinc-500 text-[14px] mb-12 font-semibold">Última actualización: 29 de Mayo, 2026</p>
-
-        <section className="space-y-10 text-[16px] leading-[1.7] text-zinc-800">
-          <p className="font-semibold text-zinc-900">
-            Estas condiciones regulan la postulación, admisión, participación y permanencia de especialistas, facilitadores, prestadores de servicios, clínicas, consultorios o espacios vinculados al bienestar, desarrollo personal, salud complementaria u otras áreas afines dentro de LUMINUS.
+        {/* Header Title */}
+        <div className="w-full flex flex-col justify-start items-start gap-2 text-left mb-10">
+          <h1 className="text-3xl sm:text-4xl font-normal tracking-tight text-slate-900 leading-tight">
+            Condiciones para Especialistas LUMINUS
+          </h1>
+          <p className="text-slate-400 text-sm font-normal">
+            Última actualización: 29 de Mayo, 2026
           </p>
-          <p className="font-semibold text-zinc-900">
-            Al postularse, crear un perfil de especialista, contratar un plan para especialistas, publicar contenido, ofrecer servicios, participar en espacios o utilizar funcionalidades de especialista dentro de LUMINUS, la persona acepta estas condiciones.
-          </p>
+        </div>
 
-          <hr className="border-zinc-150 my-8" />
+        {/* Content Body — Light, clean document style */}
+        <div className="w-full space-y-8 text-base leading-relaxed text-slate-600 font-normal">
+          <div className="space-y-4">
+            <p>
+              Estas condiciones regulan la postulación, admisión, participación y permanencia de especialistas, facilitadores, prestadores de servicios, clínicas, consultorios o espacios vinculados al bienestar, desarrollo personal, salud complementaria u otras áreas afines dentro de LUMINUS.
+            </p>
+            <p>
+              Al postularse, crear un perfil de especialista, contratar un plan para especialistas, publicar contenido, ofrecer servicios, participar en espacios o utilizar funcionalidades de especialista dentro de LUMINUS, la persona acepta estas condiciones.
+            </p>
+          </div>
 
           {/* Section 1 */}
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-display font-black text-black">1. Naturaleza de LUMINUS</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">1. Naturaleza de LUMINUS</h2>
             <p>
               LUMINUS es una plataforma orientada a conectar personas interesadas en bienestar, desarrollo personal, salud complementaria, vida consciente y áreas afines con especialistas, contenidos, experiencias, espacios y recursos vinculados a dichos temas.
             </p>
@@ -53,8 +58,8 @@ export default function CondicionesEspecialistasPage() {
           </div>
 
           {/* Section 2 */}
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-display font-black text-black">2. Postulación como especialista</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">2. Postulación como especialista</h2>
             <p>
               Las personas que deseen formar parte de la Red de Especialistas LUMINUS podrán postularse mediante los formularios, perfiles o procesos habilitados por la plataforma.
             </p>
@@ -64,15 +69,15 @@ export default function CondicionesEspecialistasPage() {
           </div>
 
           {/* Section 3 */}
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-display font-black text-black">3. Evaluación, admisión y permanencia</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">3. Evaluación, admisión y permanencia</h2>
             <p>
               LUMINUS se reserva el derecho, a su exclusivo criterio, de evaluar, aceptar, rechazar, limitar, suspender, desactivar, remover o dar de baja cualquier postulación, perfil de especialista, publicación, contenido, servicio, curso, recurso, espacio, ubicación en el mapa, clínica, consultorio o participación de especialista dentro de la plataforma.
             </p>
             <p>
               Para dicha evaluación, LUMINUS podrá considerar, entre otros aspectos:
             </p>
-            <ul className="list-disc pl-6 space-y-2 text-zinc-700 font-medium">
+            <ul className="list-disc pl-6 space-y-2 text-slate-600 font-normal">
               <li>Trayectoria del especialista.</li>
               <li>Formación y experiencia comprobable.</li>
               <li>Contenidos previos.</li>
@@ -97,8 +102,8 @@ export default function CondicionesEspecialistasPage() {
           </div>
 
           {/* Section 4 */}
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-display font-black text-black">4. Independencia del especialista</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">4. Independencia del especialista</h2>
             <p>
               Los especialistas que formen parte de LUMINUS actúan de manera independiente y bajo su exclusiva responsabilidad.
             </p>
@@ -111,8 +116,8 @@ export default function CondicionesEspecialistasPage() {
           </div>
 
           {/* Section 5 */}
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-display font-black text-black">5. Alcance de la aprobación del especialista</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">5. Alcance de la aprobación del especialista</h2>
             <p>
               La aprobación de una persona como especialista dentro de LUMINUS no constituye certificación, aval profesional, recomendación personalizada, garantía de calidad, validación técnica, habilitación legal, supervisión, representación ni respaldo sobre los servicios, tratamientos, sesiones, contenidos, cursos, programas, actividades, recomendaciones o prestaciones ofrecidas por dicha persona.
             </p>
@@ -122,8 +127,8 @@ export default function CondicionesEspecialistasPage() {
           </div>
 
           {/* Section 6 */}
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-display font-black text-black">6. Planes, membresías y funcionalidades para especialistas</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">6. Planes, membresías y funcionalidades para especialistas</h2>
             <p>
               LUMINUS podrá ofrecer diferentes planes, membresías o funcionalidades para especialistas, incluyendo planes base, planes avanzados, suscripciones mensuales, pagos anuales, beneficios promocionales o funcionalidades adicionales.
             </p>
@@ -139,8 +144,8 @@ export default function CondicionesEspecialistasPage() {
           </div>
 
           {/* Section 7 */}
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-display font-black text-black">7. Sesiones introductorias y contacto con usuarios</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">7. Sesiones introductorias y contacto con usuarios</h2>
             <p>
               LUMINUS podrá permitir que determinados especialistas ofrezcan sesiones introductorias, llamadas iniciales, espacios de orientación o encuentros breves con usuarios de la plataforma.
             </p>
@@ -156,12 +161,12 @@ export default function CondicionesEspecialistasPage() {
           </div>
 
           {/* Section 8 */}
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-display font-black text-black">8. Obligaciones del especialista</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">8. Obligaciones del especialista</h2>
             <p>
               El especialista se compromete a:
             </p>
-            <ul className="list-disc pl-6 space-y-2 text-zinc-700 font-medium">
+            <ul className="list-disc pl-6 space-y-2 text-slate-600 font-normal">
               <li>Presentar información clara, veraz, completa y actualizada sobre su identidad, formación, experiencia, servicios, enfoque y actividad profesional.</li>
               <li>Mantener un trato respetuoso, ético, responsable y adecuado con usuarios, otros especialistas y miembros de la comunidad.</li>
               <li>No realizar promesas engañosas, afirmaciones falsas, diagnósticos inapropiados, garantías de resultados o comunicaciones que puedan inducir a error.</li>
@@ -175,8 +180,8 @@ export default function CondicionesEspecialistasPage() {
           </div>
 
           {/* Section 9 */}
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-display font-black text-black">9. Contenidos, cursos, recursos y espacios</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">9. Contenidos, cursos, recursos y espacios</h2>
             <p>
               Los especialistas podrán, si la plataforma lo permite y de acuerdo con el plan contratado, publicar contenidos, cursos, recursos, materiales, actividades, espacios, eventos o información vinculada a su área de trabajo.
             </p>
@@ -189,8 +194,8 @@ export default function CondicionesEspecialistasPage() {
           </div>
 
           {/* Section 10 */}
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-display font-black text-black">10. Clínicas, consultorios, espacios físicos y mapa</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">10. Clínicas, consultorios, espacios físicos y mapa</h2>
             <p>
               LUMINUS podrá permitir que ciertos especialistas, clínicas, consultorios o espacios físicos aparezcan en mapas, directorios u otras funcionalidades de localización dentro de la plataforma.
             </p>
@@ -203,8 +208,8 @@ export default function CondicionesEspecialistasPage() {
           </div>
 
           {/* Section 11 */}
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-display font-black text-black">11. Relación entre especialistas y usuarios</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">11. Relación entre especialistas y usuarios</h2>
             <p>
               La contratación, reserva, comunicación, pago, participación o interacción entre un usuario y un especialista se realiza bajo exclusiva responsabilidad de las partes involucradas.
             </p>
@@ -217,15 +222,15 @@ export default function CondicionesEspecialistasPage() {
           </div>
 
           {/* Section 12 */}
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-display font-black text-black">12. Reportes, reclamos y medidas sobre perfiles de especialistas</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">12. Reportes, reclamos y medidas sobre perfiles de especialistas</h2>
             <p>
               LUMINUS podrá recibir reportes, reclamos, comentarios o evaluaciones sobre especialistas, contenidos, servicios, sesiones, espacios, clínicas, consultorios o actividades publicadas dentro de la plataforma.
             </p>
             <p>
               Ante cualquier reporte, reclamo, incumplimiento, conducta incompatible con los valores de LUMINUS, información falsa o incompleta, uso indebido de la plataforma, riesgo para la comunidad o cualquier otra situación que LUMINUS considere relevante, la plataforma podrá adoptar medidas tales como:
             </p>
-            <ul className="list-disc pl-6 space-y-2 text-zinc-700 font-medium">
+            <ul className="list-disc pl-6 space-y-2 text-slate-600 font-normal">
               <li>Solicitar información adicional.</li>
               <li>Revisar perfiles, contenidos o servicios.</li>
               <li>Limitar funcionalidades.</li>
@@ -241,8 +246,8 @@ export default function CondicionesEspecialistasPage() {
           </div>
 
           {/* Section 13 */}
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-display font-black text-black">13. Uso de imagen, nombre y materiales</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">13. Uso de imagen, nombre y materiales</h2>
             <p>
               Cuando el especialista participe en actividades, charlas, contenidos, eventos, espacios o materiales generados en el marco de LUMINUS, podrá autorizar a LUMINUS a utilizar su nombre, imagen, voz, perfil, biografía, contenido, participación o materiales asociados para fines de difusión, comunicación, educación, promoción y posicionamiento de la plataforma.
             </p>
@@ -252,8 +257,8 @@ export default function CondicionesEspecialistasPage() {
           </div>
 
           {/* Section 14 */}
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-display font-black text-black">14. Baja, suspensión o remoción</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">14. Baja, suspensión o remoción</h2>
             <p>
               LUMINUS podrá suspender, limitar o remover la participación de un especialista dentro de la plataforma en caso de incumplimiento de estas condiciones, de otras políticas aplicables, de los valores de la comunidad o ante cualquier situación que LUMINUS considere incompatible con la confianza, seguridad, calidad o propósito de la red.
             </p>
@@ -263,8 +268,8 @@ export default function CondicionesEspecialistasPage() {
           </div>
 
           {/* Section 15 */}
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-display font-black text-black">15. Modificaciones</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">15. Modificaciones</h2>
             <p>
               LUMINUS podrá actualizar, modificar o reemplazar estas condiciones en cualquier momento. Las modificaciones serán publicadas en la plataforma y entrarán en vigencia desde su publicación o desde la fecha que se indique en cada caso.
             </p>
@@ -274,19 +279,16 @@ export default function CondicionesEspecialistasPage() {
           </div>
 
           {/* Section 16 */}
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-display font-black text-black">16. Aceptación</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">16. Aceptación</h2>
             <p>
               Al postularse, crear un perfil de especialista, contratar un plan para especialistas, publicar contenido, ofrecer servicios, participar en espacios o utilizar funcionalidades de especialista dentro de LUMINUS, la persona declara haber leído, comprendido y aceptado estas condiciones.
             </p>
           </div>
-        </section>
+        </div>
       </main>
 
-      {/* Simple Footer */}
-      <div className="w-full shrink-0 h-[64px] flex flex-col justify-center border-t border-zinc-100 mt-auto bg-slate-55">
-        <p className="text-[9px] text-zinc-400 text-center uppercase tracking-wide font-bold">LUMINUS LATAM © 2026</p>
-      </div>
+      <Footer />
     </div>
   );
 }

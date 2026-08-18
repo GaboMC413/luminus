@@ -10,6 +10,7 @@ const COGNITO_SCOPES = ["openid", "email", "profile"];
 type CognitoStartState = {
   state: string;
   provider?: "Google";
+  intent?: "signup" | "signin";
 };
 
 function getPublicOrigin(requestUrl: URL) {
@@ -35,14 +36,17 @@ export async function GET(request: Request) {
   const origin = getPublicOrigin(url);
   const providerParam = url.searchParams.get("provider")?.trim().toLowerCase();
   const provider = providerParam === "google" ? "Google" : undefined;
+  const intentParam = url.searchParams.get("intent")?.trim().toLowerCase();
+  const intent: "signup" | "signin" = intentParam === "signup" ? "signup" : "signin";
 
   if (!clientId || !cognitoDomain) {
     console.error("Cognito OAuth start failed: Cognito domain or client id is not configured.");
-    return NextResponse.redirect(new URL("/auth/iniciar-sesion?error=cognito_config", origin));
+    const targetPath = intent === "signup" ? "/auth/registrarse" : "/auth/iniciar-sesion";
+    return NextResponse.redirect(new URL(`${targetPath}?error=cognito_config`, origin));
   }
 
   const state = randomBytes(24).toString("base64url");
-  const statePayload: CognitoStartState = { state, provider };
+  const statePayload: CognitoStartState = { state, provider, intent };
   const redirectUri = `${origin}/api/auth/cognito/callback`;
 
   cookies().set(COGNITO_STATE_COOKIE, JSON.stringify(statePayload), {
@@ -59,6 +63,8 @@ export async function GET(request: Request) {
   cognitoUrl.searchParams.set("response_type", "code");
   cognitoUrl.searchParams.set("scope", COGNITO_SCOPES.join(" "));
   cognitoUrl.searchParams.set("state", state);
+  // Force Google Account Chooser to select or switch accounts
+  cognitoUrl.searchParams.set("prompt", "select_account");
   if (provider) {
     cognitoUrl.searchParams.set("identity_provider", provider);
   }

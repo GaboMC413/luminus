@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "Términos y Condiciones | LUMINUS Latam",
@@ -8,47 +10,53 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-white text-black font-sans selection:bg-black selection:text-white">
-      {/* Header */}
-      <header className="fixed top-0 left-0 w-full h-[70px] md:h-[80px] bg-white/80 backdrop-blur-md border-b border-zinc-100 px-6 md:px-8 flex items-center justify-between z-50">
-        <Link href="/" className="hover:opacity-80 transition-opacity">
-          <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[18px] md:h-[20px]" />
-        </Link>
-        <Link 
-          href="https://app.luminuslatam.com/auth/registrarse" 
-          className="group flex items-center gap-2 text-[14px] font-medium border border-black px-4 md:px-6 py-2 rounded-full hover:bg-black hover:text-white transition-all"
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col pt-[64px]">
+      <Navbar />
+
+      <main className="flex-1 w-full max-w-[760px] mx-auto px-6 sm:px-8 md:px-12 pt-10 md:pt-14 pb-16 md:pb-24">
+        {/* Back link */}
+        <Link
+          href="/legal"
+          className="inline-flex items-center gap-2 text-sm font-normal text-slate-500 hover:text-slate-900 mb-8 transition-colors"
         >
-          <span className="hidden md:inline">Volver al registro</span>
-          <span className="material-symbols-rounded md:hidden text-[20px]">arrow_back</span>
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span>Volver al Centro Legal</span>
         </Link>
-      </header>
 
-      {/* Content */}
-      <main className="max-w-[800px] mx-auto pt-[110px] md:pt-[140px] pb-12 md:pb-24 px-8">
-        <h1 className="text-[42px] font-jakarta font-normal tracking-tight leading-tight mb-4">Términos y Condiciones</h1>
-        <p className="text-zinc-500 text-[14px] mb-12">Última actualización: 18 de Abril, 2026</p>
+        {/* Header Title */}
+        <div className="w-full flex flex-col justify-start items-start gap-2 text-left mb-10">
+          <h1 className="text-3xl sm:text-4xl font-normal tracking-tight text-slate-900 leading-tight">
+            Términos y Condiciones
+          </h1>
+          <p className="text-slate-400 text-sm font-normal">
+            Última actualización: 18 de Abril, 2026
+          </p>
+        </div>
 
-        <section className="space-y-10 text-[16px] leading-[1.6]">
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-jakarta font-bold">1. Aceptación de los Términos</h2>
+        {/* Content Body — Light, clean document style */}
+        <div className="w-full space-y-8 text-base leading-relaxed text-slate-600 font-normal">
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">1. Aceptación de los Términos</h2>
             <p>
               Al acceder y utilizar LUMINUS LATAM, usted acepta estar sujeto a estos Términos y Condiciones. Si no está de acuerdo con alguna parte de estos términos, no podrá utilizar nuestros servicios. LUMINUS es una plataforma diseñada para conectar personas con especialistas, profesionales y experiencias vinculadas al bienestar, desarrollo personal y crecimiento integral en Latinoamérica.
             </p>
           </div>
 
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-jakarta font-bold">2. Elegibilidad y Registro</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">2. Elegibilidad y Registro</h2>
             <p>
               Para utilizar LUMINUS, debe completar el proceso de registro proporcionando información veraz, exacta y actualizada. Usted es responsable de mantener la confidencialidad de sus credenciales de acceso. La plataforma está dirigida a personas interesadas en acceder a experiencias, contenidos, especialistas y servicios vinculados al bienestar, desarrollo personal, salud complementaria y crecimiento integral.
             </p>
           </div>
 
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-jakarta font-bold">3. Uso de la Plataforma</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">3. Uso de la Plataforma</h2>
             <p>
               Usted se compromete a utilizar la plataforma de manera ética y profesional. Queda estrictamente prohibido:
             </p>
-            <ul className="list-disc pl-6 space-y-2 text-zinc-700">
+            <ul className="list-disc pl-6 space-y-2 text-slate-600">
               <li>Utilizar el servicio para cualquier propósito ilegal o no autorizado.</li>
               <li>Publicar contenido difamatorio, obsceno o que infrinja derechos de propiedad intelectual.</li>
               <li>Intentar interferir con el correcto funcionamiento de los servidores de LUMINUS.</li>
@@ -56,8 +64,8 @@ export default function TermsPage() {
             </ul>
           </div>
 
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-jakarta font-bold">4. Especialistas y servicios profesionales</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">4. Especialistas y servicios profesionales</h2>
             <p>
               LUMINUS actúa únicamente como una plataforma de conexión entre usuarios y especialistas, profesionales, facilitadores o prestadores de servicios vinculados al bienestar, desarrollo personal, salud complementaria u otras áreas afines.
             </p>
@@ -70,24 +78,24 @@ export default function TermsPage() {
             <p>
               La admisión o permanencia de especialistas dentro de LUMINUS podrá estar sujeta a criterios de revisión definidos por la plataforma, sin que ello constituya certificación, aval, garantía o recomendación profesional.
             </p>
-            <p>
+            <p className="pt-1">
               Los especialistas estarán sujetos, además, a las{" "}
-              <Link href="/legal/condiciones-especialistas" className="text-black underline font-semibold hover:text-zinc-600 transition-colors">
+              <Link href="/legal/condiciones-especialistas" className="text-slate-900 underline hover:text-black transition-colors">
                 Condiciones para Especialistas LUMINUS
               </Link>
               .
             </p>
           </div>
 
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-jakarta font-bold">5. Propiedad Intelectual</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">5. Propiedad Intelectual</h2>
             <p>
               Todo el contenido, marcas, logotipos y software asociado con LUMINUS son propiedad exclusiva de LUMINUS LATAM o sus licenciantes. El uso de la plataforma no otorga ningún derecho de propiedad sobre estos activos.
             </p>
           </div>
 
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-jakarta font-bold">6. Limitación de Responsabilidad</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">6. Limitación de Responsabilidad</h2>
             <p>
               LUMINUS proporciona la plataforma “tal cual” y no garantiza que los servicios sean ininterrumpidos, libres de errores o que cumplan con expectativas específicas de los usuarios.
             </p>
@@ -99,19 +107,16 @@ export default function TermsPage() {
             </p>
           </div>
 
-          <div className="space-y-4">
-            <h2 className="text-[20px] font-jakarta font-bold">7. Modificaciones</h2>
+          <div className="space-y-3">
+            <h2 className="text-xl font-normal text-slate-900">7. Modificaciones</h2>
             <p>
               Nos reservamos el derecho de modificar estos términos en cualquier momento. Los cambios entrarán en vigor inmediatamente después de su publicación en el sitio. Se recomienda revisar esta página periódicamente.
             </p>
           </div>
-        </section>
+        </div>
       </main>
 
-      {/* Simple Footer */}
-      <div className="w-full shrink-0 h-[64px] flex flex-col justify-center border-t border-zinc-100 mt-auto">
-        <p className="text-[9px] text-zinc-400 text-center uppercase tracking-wide">LUMINUS LATAM © 2026</p>
-      </div>
+      <Footer />
     </div>
   );
 }
