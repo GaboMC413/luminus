@@ -226,13 +226,14 @@ export function getCognitoErrorMessage(error: unknown, fallback: string) {
 
   if (
     cognitoError.code === "InvalidParameterException" &&
-    (cognitoError.message.includes("USER_PASSWORD_AUTH") || cognitoError.message.includes("Auth flow"))
+    (cognitoError.message?.includes("USER_PASSWORD_AUTH") || cognitoError.message?.includes("Auth flow"))
   ) {
     return "Cognito necesita habilitar USER_PASSWORD_AUTH para este cliente.";
   }
 
   if (cognitoError.code === "InvalidParameterException") {
-    return "Los datos ingresados no son validos.";
+    console.error("[Cognito InvalidParameterException]:", cognitoError.message);
+    return cognitoError.message || "Los datos ingresados no son validos.";
   }
 
   return fallback;
