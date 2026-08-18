@@ -51,24 +51,26 @@ export async function sendWelcomeMessage(prisma: PrismaClient, newUserId: string
   // 2. Draft the welcome message content
   const welcomeText = `¡Te damos la bienvenida a *LUMINUS*! 🌱
 
-Nos hace muy felices acompañarte en este camino hacia una vida con mayor bienestar y propósito. ✨
+Nos alegra acompañarte en este camino hacia una vida con mayor bienestar y propósito. ✨
 
-Luminus es tu espacio para explorar, aprender y conectar. Te compartimos algunas de las herramientas que tienes a tu alcance para comenzar hoy:
+Luminus es tu red para explorar, aprender y conectar. Te compartimos lo que puedes comenzar a explorar hoy y lo que sumaremos muy pronto:
 
 👥 *Comunidad*: Encuentra y conecta con personas afines que comparten tus inquietudes, valores e intereses.
 👉 [Ver Comunidad](/comunidad)
 
-🩺 *Especialistas*: Accede a profesionales de bienestar capacitados para acompañarte en tu proceso de forma ética.
+🩺 *Especialistas*: Descubre profesionales de bienestar capacitados para acompañarte en tu proceso.
 👉 [Ver Especialistas](/especialistas)
 
-💬 *Grupos*: Explora grupos de discusión, lecturas recomendadas y actividades diseñadas para tu crecimiento.
-👉 [Ver Grupos](/grupos)
+✨ *Próximamente en LUMINUS:*
 
-🧭 *Espacios*: Ubica de forma interactiva recursos, actividades y profesionales de bienestar cerca de ti.
-👉 [Ver Espacios](/espacios)
+🧭 *Espacios* *(Próximamente)*: Participa en espacios creados para compartir contenidos, conversaciones y experiencias de bienestar.
+👉 [Conocer Espacios](/espacios)
 
-💡 *Faro*: Encuentra guías claras y herramientas valiosas sobre salud mental y desarrollo personal.
-👉 [Ver Faro](/faro)
+🗺️ *Mapa* *(Próximamente)*: Explora de forma interactiva especialistas, consultorios y espacios de bienestar cerca de ti.
+👉 [Conocer Mapa](/mapa)
+
+💡 *Faro* *(Próximamente)*: Tu asistente impulsado por IA para reflexionar, ordenar ideas y avanzar con más claridad.
+👉 [Conocer Faro](/faro)
 
 Si necesitas ayuda o tienes alguna pregunta sobre la plataforma, no dudes en responder directamente en este chat. ¡Tu viaje comienza ahora! 🚀`;
 
