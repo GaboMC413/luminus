@@ -56,19 +56,19 @@ Nos hace muy felices acompañarte en este camino hacia una vida con mayor bienes
 Luminus es tu espacio para explorar, aprender y conectar. Te compartimos algunas de las herramientas que tienes a tu alcance para comenzar hoy:
 
 👥 *Comunidad*: Encuentra y conecta con personas afines que comparten tus inquietudes, valores e intereses.
-👉 [Ver Comunidad](https://luminus.lat/comunidad)
+👉 [Ver Comunidad](/comunidad)
 
 🩺 *Especialistas*: Accede a profesionales de bienestar capacitados para acompañarte en tu proceso de forma ética.
-👉 [Ver Especialistas](https://luminus.lat/especialistas)
+👉 [Ver Especialistas](/especialistas)
 
-🧭 *Espacios*: Explora grupos de discusión, lecturas recomendadas y actividades diseñadas para tu crecimiento.
-👉 [Ver Espacios](https://luminus.lat/espacios)
+💬 *Grupos*: Explora grupos de discusión, lecturas recomendadas y actividades diseñadas para tu crecimiento.
+👉 [Ver Grupos](/grupos)
 
-🗺️ *Mapa*: Ubica de forma interactiva recursos, actividades y profesionales de bienestar cerca de ti.
-👉 [Ver Mapa](https://luminus.lat/mapa)
+🧭 *Espacios*: Ubica de forma interactiva recursos, actividades y profesionales de bienestar cerca de ti.
+👉 [Ver Espacios](/espacios)
 
 💡 *Faro*: Encuentra guías claras y herramientas valiosas sobre salud mental y desarrollo personal.
-👉 [Ver Faro](https://luminus.lat/faro)
+👉 [Ver Faro](/faro)
 
 Si necesitas ayuda o tienes alguna pregunta sobre la plataforma, no dudes en responder directamente en este chat. ¡Tu viaje comienza ahora! 🚀`;
 
