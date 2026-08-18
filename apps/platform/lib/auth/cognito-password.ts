@@ -122,20 +122,45 @@ export function isCognitoEmailVerified(value: CognitoIdTokenPayload["email_verif
   return value === true || value === "true";
 }
 
+function isSecretMismatchError(error: unknown) {
+  const err = error as CognitoError;
+  return (
+    err.code === "InvalidParameterException" &&
+    (err.message?.includes("not configured for secret") || err.message?.includes("secret hash"))
+  );
+}
+
 export async function signUpWithCognito(email: string, password: string) {
   const { clientId, clientSecret } = getCognitoClientConfig();
   const normalizedEmail = email.trim().toLowerCase();
   const secretHash = getSecretHash(normalizedEmail, clientId, clientSecret);
 
-  const response = await cognitoRequest<CognitoSignUpResponse>("SignUp", {
-    ClientId: clientId,
-    Username: normalizedEmail,
-    Password: password,
-    ...(secretHash ? { SecretHash: secretHash } : {}),
-    UserAttributes: [
-      { Name: "email", Value: normalizedEmail },
-    ],
-  });
+  let response: CognitoSignUpResponse;
+  try {
+    response = await cognitoRequest<CognitoSignUpResponse>("SignUp", {
+      ClientId: clientId,
+      Username: normalizedEmail,
+      Password: password,
+      ...(secretHash ? { SecretHash: secretHash } : {}),
+      UserAttributes: [
+        { Name: "email", Value: normalizedEmail },
+      ],
+    });
+  } catch (error) {
+    if (secretHash && isSecretMismatchError(error)) {
+      console.warn("[Cognito Auth]: Client is not configured for secret in AWS. Retrying SignUp without SecretHash.");
+      response = await cognitoRequest<CognitoSignUpResponse>("SignUp", {
+        ClientId: clientId,
+        Username: normalizedEmail,
+        Password: password,
+        UserAttributes: [
+          { Name: "email", Value: normalizedEmail },
+        ],
+      });
+    } else {
+      throw error;
+    }
+  }
 
   if (!response.UserSub) {
     throw makeCognitoError("Cognito did not return a user subject.", "MissingUserSub", 500);
@@ -151,15 +176,30 @@ async function initiatePasswordAuth(username: string, password: string) {
   const { clientId, clientSecret } = getCognitoClientConfig();
   const secretHash = getSecretHash(username, clientId, clientSecret);
 
-  return cognitoRequest<CognitoAuthResponse>("InitiateAuth", {
-    AuthFlow: "USER_PASSWORD_AUTH",
-    ClientId: clientId,
-    AuthParameters: {
-      USERNAME: username,
-      PASSWORD: password,
-      ...(secretHash ? { SECRET_HASH: secretHash } : {}),
-    },
-  });
+  try {
+    return await cognitoRequest<CognitoAuthResponse>("InitiateAuth", {
+      AuthFlow: "USER_PASSWORD_AUTH",
+      ClientId: clientId,
+      AuthParameters: {
+        USERNAME: username,
+        PASSWORD: password,
+        ...(secretHash ? { SECRET_HASH: secretHash } : {}),
+      },
+    });
+  } catch (error) {
+    if (secretHash && isSecretMismatchError(error)) {
+      console.warn("[Cognito Auth]: Client is not configured for secret in AWS. Retrying InitiateAuth without SECRET_HASH.");
+      return await cognitoRequest<CognitoAuthResponse>("InitiateAuth", {
+        AuthFlow: "USER_PASSWORD_AUTH",
+        ClientId: clientId,
+        AuthParameters: {
+          USERNAME: username,
+          PASSWORD: password,
+        },
+      });
+    }
+    throw error;
+  }
 }
 
 function shouldRetryWithCognitoUsername(error: unknown) {

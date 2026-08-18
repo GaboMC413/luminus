@@ -96,13 +96,23 @@ async function exchangeCodeForAccessToken(code: string, redirectUri: string) {
     headers.Authorization = `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`;
   }
 
-  const response = await fetch(new URL("/oauth2/token", cognitoDomain), {
+  let response = await fetch(new URL("/oauth2/token", cognitoDomain), {
     method: "POST",
     headers,
     body,
   });
 
-  const data = (await response.json().catch(() => null)) as CognitoTokenResponse | null;
+  let data = (await response.json().catch(() => null)) as CognitoTokenResponse | null;
+
+  if (!response.ok && clientSecret && (data?.error_description?.includes("secret") || data?.error?.includes("secret"))) {
+    delete headers.Authorization;
+    response = await fetch(new URL("/oauth2/token", cognitoDomain), {
+      method: "POST",
+      headers,
+      body,
+    });
+    data = (await response.json().catch(() => null)) as CognitoTokenResponse | null;
+  }
 
   if (!response.ok || !data?.access_token || !data.id_token) {
     throw new Error(data?.error_description || data?.error || "Cognito token exchange failed.");
