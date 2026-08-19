@@ -159,7 +159,7 @@ export default function ForgotPasswordView() {
     <div className="auth-fixed-page flex flex-col lg:flex-row font-sans bg-slate-50 text-slate-900">
       
       {/* 1. Left Branding/Marketing Pane (Desktop only) */}
-      <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] bg-white border-r border-slate-200/80 flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden animate-in slide-in-from-left duration-500">
+      <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] luminus-light-gradient border-r border-slate-200/80 flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden animate-in slide-in-from-left duration-500">
         {/* Soft background glows matching marketing hero */}
         <div className="absolute -top-24 -left-24 w-80 h-80 bg-gradient-to-br from-pink-100/60 via-purple-100/40 to-transparent rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-gradient-to-tr from-blue-100/60 via-amber-100/40 to-transparent rounded-full blur-3xl pointer-events-none" />

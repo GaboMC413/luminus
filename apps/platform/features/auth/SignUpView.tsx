@@ -216,7 +216,7 @@ export default function SignUpView() {
       <div className="auth-fixed-page flex flex-col lg:flex-row font-sans bg-slate-50 text-slate-900">
 
         {/* 1. Left Branding/Marketing Pane (Desktop only - 42% width) */}
-        <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] bg-white border-r border-slate-200/80 flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden animate-in slide-in-from-left duration-500">
+        <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] luminus-light-gradient border-r border-slate-200/80 flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden animate-in slide-in-from-left duration-500">
           {/* Soft background glows matching marketing hero */}
           <div className="absolute -top-24 -left-24 w-80 h-80 bg-gradient-to-br from-pink-100/60 via-purple-100/40 to-transparent rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-gradient-to-tr from-blue-100/60 via-amber-100/40 to-transparent rounded-full blur-3xl pointer-events-none" />
@@ -471,7 +471,7 @@ export default function SignUpView() {
     <div className="auth-fixed-page bg-slate-50 flex flex-col lg:flex-row font-sans">
 
       {/* LATERAL SIDEBAR */}
-      <div className="fixed top-0 left-0 right-0 lg:relative w-full h-14 lg:h-full lg:w-80 bg-white border-b lg:border-b-0 lg:border-r border-slate-200/80 shrink-0 flex lg:flex-col items-center justify-center lg:justify-start lg:pt-12 z-50 transition-all duration-500 overflow-hidden">
+      <div className="fixed top-0 left-0 right-0 lg:relative w-full h-14 lg:h-full lg:w-80 luminus-light-gradient border-b lg:border-b-0 lg:border-r border-slate-200/80 shrink-0 flex lg:flex-col items-center justify-center lg:justify-start lg:pt-12 z-50 transition-all duration-500 overflow-hidden">
         {/* Soft background glows */}
         <div className="absolute -top-24 -left-24 w-80 h-80 bg-gradient-to-br from-pink-100/50 via-purple-100/30 to-transparent rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-gradient-to-tr from-blue-100/50 via-amber-100/30 to-transparent rounded-full blur-3xl pointer-events-none" />
