@@ -232,9 +232,20 @@ export async function GET(request: Request) {
     const cognitoUser = await fetchCognitoUser(accessToken);
     const email = (cognitoUser.email || tokenClaims.email || "").trim().toLowerCase();
     const cognitoSubject = tokenClaims.sub || cognitoUser.sub;
-    const firstName = cognitoUser.given_name || tokenClaims.given_name || "";
-    const lastName = cognitoUser.family_name || tokenClaims.family_name || "";
+    let firstName = cognitoUser.given_name || tokenClaims.given_name || "";
+    let lastName = cognitoUser.family_name || tokenClaims.family_name || "";
     const fullName = `${firstName} ${lastName}`.trim() || cognitoUser.name || tokenClaims.name || "";
+
+    if ((!firstName || !lastName) && fullName) {
+      const parts = fullName.trim().split(/\s+/);
+      if (!firstName && parts.length > 0) {
+        firstName = parts[0];
+      }
+      if (!lastName && parts.length > 1) {
+        lastName = parts.slice(1).join(" ");
+      }
+    }
+
     const avatarUrl = cognitoUser.picture || tokenClaims.picture || undefined;
 
     if (!email || !cognitoSubject) {

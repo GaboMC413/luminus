@@ -131,16 +131,25 @@ export default function SignUpView() {
     if (isOnboarding || step === 2) {
       const fetchUserProfile = async () => {
         try {
-          const res = await fetch("/api/profile");
+          const res = await fetch("/api/profile", { cache: "no-store", credentials: "include" });
           if (res.ok) {
             const data = await res.json();
             if (data && data.profile) {
+              const p = data.profile;
               setProfileData(prev => ({
                 ...prev,
-                firstName: prev.firstName || formatName(data.profile.first_name) || "",
-                lastName: prev.lastName || formatName(data.profile.last_name) || "",
-                avatarUrl: prev.avatarUrl || data.profile.profile_picture_url || null,
+                firstName: prev.firstName || formatName(p.first_name) || "",
+                lastName: prev.lastName || formatName(p.last_name) || "",
+                avatarUrl: prev.avatarUrl || p.profile_picture_url || null,
+                city: prev.city || p.city || "",
+                country: prev.country || p.country || "",
+                phone: prev.phone || p.phone_number || "",
+                gender: prev.gender || p.gender || "",
+                birthdateString: prev.birthdateString || p.birthdate || "",
               }));
+              if (data.email) {
+                setEmail(prev => prev || data.email);
+              }
             }
           }
         } catch (err) {
