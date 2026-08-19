@@ -42,6 +42,7 @@ export async function POST(request: Request) {
     const key = `resumes/${session.userId}/${randomUUID()}.${extension}`;
     const s3 = new S3Client({
       region,
+      requestChecksumCalculation: "WHEN_REQUIRED",
       credentials: {
         accessKeyId,
         secretAccessKey,
