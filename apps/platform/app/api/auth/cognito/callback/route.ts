@@ -421,6 +421,8 @@ export async function GET(request: Request) {
       try {
         const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
         await sendWelcomeMessage(prisma, user.id);
+        const { sendWelcomeEmail } = await import("@/lib/email/passwordResetEmail");
+        await sendWelcomeEmail(user.email, user.profile?.firstName || undefined);
       } catch (welcomeError) {
         console.error("Welcome message setup failed, proceeding with Cognito registration.", welcomeError);
       }

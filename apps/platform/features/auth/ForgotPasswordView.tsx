@@ -159,11 +159,7 @@ export default function ForgotPasswordView() {
     <div className="auth-fixed-page flex flex-col lg:flex-row font-sans bg-slate-50 text-slate-900">
       
       {/* 1. Left Branding/Marketing Pane (Desktop only) */}
-      <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] luminus-light-gradient border-r border-slate-200/80 flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden animate-in slide-in-from-left duration-500">
-        {/* Soft background glows matching marketing hero */}
-        <div className="absolute -top-24 -left-24 w-80 h-80 bg-gradient-to-br from-pink-100/60 via-purple-100/40 to-transparent rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-gradient-to-tr from-blue-100/60 via-amber-100/40 to-transparent rounded-full blur-3xl pointer-events-none" />
-
+      <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] luminus-light-gradient border-r border-slate-200 flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden animate-in slide-in-from-left duration-500">
         <div className="relative z-10 flex flex-col h-full">
           <Link href="/" className="w-fit cursor-pointer hover:opacity-80 transition-opacity">
             <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[24px]" />
@@ -188,7 +184,7 @@ export default function ForgotPasswordView() {
       <div className="flex-1 flex flex-col bg-slate-50 min-h-0 h-full overflow-hidden pt-14 lg:pt-0 animate-in fade-in duration-300">
         
         {/* Mobile Header: Logo */}
-        <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-light-gradient border-b border-slate-200/80 flex items-center justify-center shrink-0 z-50">
+        <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-light-gradient-slate border-b-0 flex items-center justify-center shrink-0 z-50">
           <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
             <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[20px]" />
           </Link>

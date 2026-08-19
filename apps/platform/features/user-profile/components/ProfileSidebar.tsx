@@ -78,7 +78,7 @@ export function ProfileSidebar({
   return (
     <div className="bg-white rounded-2xl border border-slate-200 flex flex-col items-start md:items-center shadow-none overflow-hidden relative group">
       {/* Local Cover - Mobile Only */}
-      <div className={`md:hidden w-full h-[130px] md:h-[160px] relative shrink-0 ${!coverUrl || coverUrl.includes("empty") ? 'luminus-gradient' : ''}`}>
+      <div className={`md:hidden w-full h-[130px] md:h-[160px] relative shrink-0 ${!coverUrl || coverUrl.includes("empty") ? 'luminus-light-gradient border-b border-slate-200' : ''}`}>
         {coverUrl && !coverUrl.includes("empty") && (
           <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
         )}

@@ -32,11 +32,7 @@ export function OnboardingSidebar({
   const showStepper = !isCheckingStatus && !hideStepper && step <= 5;
 
   return (
-    <div className="hidden lg:flex lg:sticky lg:top-[64px] lg:h-[calc(100vh-64px)] lg:w-80 xl:w-96 luminus-light-gradient border-r border-slate-200/80 shrink-0 flex-col items-center py-12 px-8 z-50 transition-all duration-500 overflow-hidden relative">
-      {/* Soft background glows matching marketing hero */}
-      <div className="absolute -top-24 -left-24 w-80 h-80 bg-gradient-to-br from-pink-100/50 via-purple-100/30 to-transparent rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-gradient-to-tr from-blue-100/50 via-amber-100/30 to-transparent rounded-full blur-3xl pointer-events-none" />
-
+    <div className="hidden lg:flex lg:sticky lg:top-[64px] lg:h-[calc(100vh-64px)] lg:w-80 xl:w-96 luminus-light-gradient border-r border-slate-200 shrink-0 flex-col items-center py-12 px-8 z-50 transition-all duration-500 overflow-hidden relative">
       <div className="relative z-10 flex flex-col items-center w-full">
 
         {/* Mobile Header Stepper (small screens) */}

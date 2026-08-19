@@ -225,7 +225,7 @@ export default function SignUpView() {
       <div className="auth-fixed-page flex flex-col lg:flex-row font-sans bg-slate-50 text-slate-900">
 
         {/* 1. Left Branding/Marketing Pane (Desktop only - 42% width) */}
-        <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] luminus-light-gradient border-r border-slate-200/80 flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden animate-in slide-in-from-left duration-500">
+        <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] luminus-light-gradient border-r border-slate-200 flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden animate-in slide-in-from-left duration-500">
           <div className="relative z-10 flex flex-col h-full">
             {/* Logo */}
             <Link href="/" className="w-fit cursor-pointer hover:opacity-80 transition-opacity">
@@ -241,7 +241,7 @@ export default function SignUpView() {
               <div className="flex flex-col gap-6 w-full mt-2">
                 {/* Bullet 1 */}
                 <div className="flex gap-4 items-start">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-black flex items-center justify-center mt-0.5">
+                  <div className="flex-shrink-0 w-4.5 h-4.5 rounded-full bg-black flex items-center justify-center mt-0.5">
                     <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
@@ -254,7 +254,7 @@ export default function SignUpView() {
 
                 {/* Bullet 2 */}
                 <div className="flex gap-4 items-start">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-black flex items-center justify-center mt-0.5">
+                  <div className="flex-shrink-0 w-4.5 h-4.5 rounded-full bg-black flex items-center justify-center mt-0.5">
                     <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
@@ -267,7 +267,7 @@ export default function SignUpView() {
 
                 {/* Bullet 3 */}
                 <div className="flex gap-4 items-start">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-black flex items-center justify-center mt-0.5">
+                  <div className="flex-shrink-0 w-4.5 h-4.5 rounded-full bg-black flex items-center justify-center mt-0.5">
                     <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
@@ -280,7 +280,7 @@ export default function SignUpView() {
 
                 {/* Bullet 4 */}
                 <div className="flex gap-4 items-start">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-black flex items-center justify-center mt-0.5">
+                  <div className="flex-shrink-0 w-4.5 h-4.5 rounded-full bg-black flex items-center justify-center mt-0.5">
                     <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
@@ -304,7 +304,7 @@ export default function SignUpView() {
         <div className="flex-1 flex flex-col bg-slate-50 min-h-0 h-full overflow-hidden pt-14 lg:pt-0">
 
           {/* Mobile Header: Logo (only visible on mobile) */}
-          <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-light-gradient border-b border-slate-200/80 flex items-center justify-center shrink-0 z-50">
+          <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-light-gradient-slate border-b-0 flex items-center justify-center shrink-0 z-50">
             <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
               <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[20px]" />
             </Link>
@@ -476,7 +476,7 @@ export default function SignUpView() {
     <div className="auth-fixed-page bg-slate-50 flex flex-col lg:flex-row font-sans">
 
       {/* LATERAL SIDEBAR */}
-      <div className="fixed top-0 left-0 right-0 lg:relative w-full h-14 lg:h-full lg:w-80 luminus-light-gradient border-b lg:border-b-0 lg:border-r border-slate-200/80 shrink-0 flex lg:flex-col items-center justify-center lg:justify-start lg:pt-12 z-50 transition-all duration-500 overflow-hidden">
+      <div className="fixed top-0 left-0 right-0 lg:relative w-full h-14 lg:h-full lg:w-80 luminus-light-gradient-slate lg:luminus-light-gradient border-b-0 lg:border-r border-slate-200 shrink-0 flex lg:flex-col items-center justify-center lg:justify-start lg:pt-12 z-50 transition-all duration-500 overflow-hidden">
         <Link href="/" className="relative z-10 flex flex-col items-center w-full px-8 cursor-pointer hover:opacity-80 transition-opacity">
           <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[20px]" />
         </Link>
