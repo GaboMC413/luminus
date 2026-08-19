@@ -159,7 +159,24 @@ export default async function AdminPage() {
   const specialistsRaw = await loadAdminSection("especialistas", loadWarnings, () => prisma.specialistProfile.findMany({
     include: {
       spaces: {
-        include: {
+        select: {
+          id: true,
+          userId: true,
+          spaceType: true,
+          name: true,
+          address: true,
+          city: true,
+          country: true,
+          lat: true,
+          lng: true,
+          googlePlaceId: true,
+          googleMapsUrl: true,
+          phone: true,
+          website: true,
+          coverUrl: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
           availability: true,
         },
       },
