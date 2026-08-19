@@ -8,38 +8,27 @@ import { Button } from "@/components/ui/Button";
 import { formatShortTime, getPresetStartDate } from "../../utils";
 import { AdminCard } from "../AdminDesignSystem";
 
+import { renderWelcomeEmailHtml, renderPasswordResetEmailHtml } from "@/lib/email/templates";
+
 interface EmailLogsTabProps {
   emailLogs: AdminEmailLog[];
 }
 
 const templatesData = {
+  welcome: {
+    name: "Bienvenida a LUMINUS (Welcome Email)",
+    subject: "¡Te damos la bienvenida a LUMINUS!",
+    htmlBody: renderWelcomeEmailHtml("Usuario LUMINUS"),
+  },
   recovery: {
     name: "Restablecer contraseña (Password Recovery)",
     subject: "Codigo de recuperacion de LUMINUS",
-    htmlBody: `
-      <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.5; padding: 20px;">
-        <h2 style="margin: 0 0 16px; color: #0f172a;">Codigo de recuperacion</h2>
-        <p>Recibimos una solicitud para restablecer tu contrasena de LUMINUS.</p>
-        <p style="font-size: 28px; font-weight: 700; letter-spacing: 4px; margin: 24px 0; color: #000000; font-family: monospace;">123456</p>
-        <p>Este codigo vence en 15 minutos.</p>
-        <p>Si no solicitaste este cambio, puedes ignorar este correo.</p>
-        <p style="margin-top: 32px; font-weight: 600;">LUMINUS</p>
-      </div>
-    `,
+    htmlBody: renderPasswordResetEmailHtml("123456"),
   },
   emailChange: {
     name: "Confirmar Email (Email Change Verification)",
     subject: "Codigo para confirmar tu email de LUMINUS",
-    htmlBody: `
-      <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.5; padding: 20px;">
-        <h2 style="margin: 0 0 16px; color: #0f172a;">Confirma tu nuevo email</h2>
-        <p>Recibimos una solicitud para cambiar el email de tu cuenta LUMINUS.</p>
-        <p style="font-size: 28px; font-weight: 700; letter-spacing: 4px; margin: 24px 0; color: #000000; font-family: monospace;">654321</p>
-        <p>Este codigo vence en 15 minutos.</p>
-        <p>Si no solicitaste este cambio, puedes ignorar este correo.</p>
-        <p style="margin-top: 32px; font-weight: 600;">LUMINUS</p>
-      </div>
-    `,
+    htmlBody: renderPasswordResetEmailHtml("654321"),
   },
 };
 
@@ -50,7 +39,7 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
   const [emailStartDate, setEmailStartDate] = useState("");
   const [emailEndDate, setEmailEndDate] = useState("");
   const [selectedEmailLogId, setSelectedEmailLogId] = useState<string>(emailLogs[0]?.id ?? "");
-  const [selectedTemplate, setSelectedTemplate] = useState<"recovery" | "emailChange">("recovery");
+  const [selectedTemplate, setSelectedTemplate] = useState<"welcome" | "recovery" | "emailChange">("welcome");
 
   const filteredEmailLogs = useMemo(() => {
     return emailLogs.filter((log) => {
@@ -284,6 +273,17 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
               Plantillas Disponibles
             </div>
             <div className="flex flex-col p-2 gap-1 bg-white">
+              <button
+                type="button"
+                onClick={() => setSelectedTemplate("welcome")}
+                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-semibold transition-all cursor-pointer border-none outline-none ${
+                  selectedTemplate === "welcome"
+                    ? "bg-black text-white font-bold"
+                    : "bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+              >
+                Bienvenida a LUMINUS
+              </button>
               <button
                 type="button"
                 onClick={() => setSelectedTemplate("recovery")}

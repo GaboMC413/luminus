@@ -51,24 +51,26 @@ export async function sendWelcomeMessage(prisma: PrismaClient, newUserId: string
   // 2. Draft the welcome message content
   const welcomeText = `¡Te damos la bienvenida a *LUMINUS*! 🌱
 
-Nos hace muy felices acompañarte en este camino hacia una vida con mayor bienestar y propósito. ✨
+Nos alegra acompañarte en este camino hacia una vida con mayor bienestar y propósito. ✨
 
-Luminus es tu espacio para explorar, aprender y conectar. Te compartimos algunas de las herramientas que tienes a tu alcance para comenzar hoy:
+Luminus es tu red para explorar, aprender y conectar. Te compartimos lo que puedes comenzar a explorar hoy y lo que sumaremos muy pronto:
 
-👥 *Comunidad*: Encuentra y conecta con personas afines que comparten tus inquietudes, valores e intereses.
-👉 [Ver Comunidad](https://luminus.lat/comunidad)
+👥 *Comunidad*: Conecta con personas que comparten inquietudes e intereses similares.
+[Ver Comunidad](/comunidad)
 
-🩺 *Especialistas*: Accede a profesionales de bienestar capacitados para acompañarte en tu proceso de forma ética.
-👉 [Ver Especialistas](https://luminus.lat/especialistas)
+🩺 *Especialistas*: Descubre una red de profesionales calificados de distintas áreas del bienestar.
+[Ver Especialistas](/especialistas)
 
-🧭 *Espacios*: Explora grupos de discusión, lecturas recomendadas y actividades diseñadas para tu crecimiento.
-👉 [Ver Espacios](https://luminus.lat/espacios)
+✨ *Próximamente en LUMINUS:*
 
-🗺️ *Mapa*: Ubica de forma interactiva recursos, actividades y profesionales de bienestar cerca de ti.
-👉 [Ver Mapa](https://luminus.lat/mapa)
+🧭 *Espacios* *(Próximamente)*: Encuentra consultorios, clínicas y otros espacios de bienestar cerca de ti.
+[Conocer Espacios](/espacios)
 
-💡 *Faro*: Encuentra guías claras y herramientas valiosas sobre salud mental y desarrollo personal.
-👉 [Ver Faro](https://luminus.lat/faro)
+💬 *Grupos* *(Próximamente)*: Forma parte de conversaciones alrededor de temas que te interesan.
+[Conocer Grupos](/grupos)
+
+💡 *Faro AI* *(Próximamente)*: Orientación personalizada para descubrir el acompañamiento adecuado.
+[Conocer Faro](/faro)
 
 Si necesitas ayuda o tienes alguna pregunta sobre la plataforma, no dudes en responder directamente en este chat. ¡Tu viaje comienza ahora! 🚀`;
 

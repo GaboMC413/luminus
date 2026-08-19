@@ -233,63 +233,8 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
           {locationError && <p className="text-[#FF3D3D] text-[12px] font-bold mt-1 ml-1">{locationError}</p>}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-3.5 md:gap-y-5">
-          <div className="flex flex-col gap-1.5 md:gap-2">
-            <label className="text-label text-[11px] md:text-xs ml-1">Fecha de Nacimiento</label>
-            <div className="flex gap-2 md:gap-3 items-center w-full">
-              <div className="flex-1 min-w-0">
-                <SelectInput
-                  ref={dayRef}
-                  value={birthDay}
-                  options={DAYS}
-                  onSelect={(val) => {
-                    setBirthDay(val);
-                    setDateError("");
-                  }}
-                  placeholder="Día"
-                  error={!!dateError}
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <SelectInput
-                  value={birthMonth}
-                  options={MONTHS}
-                  onSelect={(val) => {
-                    setBirthMonth(val);
-                    setDateError("");
-                  }}
-                  placeholder="Mes"
-                  error={!!dateError}
-                />
-              </div>
-              <div className="flex-1 min-w-0">
-                <SelectInput
-                  value={birthYear}
-                  options={YEARS}
-                  onSelect={(val) => {
-                    setBirthYear(val);
-                    setDateError("");
-                  }}
-                  placeholder="Año"
-                  error={!!dateError}
-                />
-              </div>
-            </div>
-            {dateError && <p className="text-[#FF3D3D] text-[12px] font-bold mt-1">{dateError}</p>}
-          </div>
-          <SelectInput
-            ref={genderRef}
-            label="Género"
-            value={formData.gender}
-            options={[
-              { label: 'Mujer', value: 'Mujer' },
-              { label: 'Hombre', value: 'Hombre' },
-              { label: 'No binario', value: 'No binario' },
-              { label: 'Prefiero no decirlo', value: 'Prefiero no decirlo' }
-            ]}
-            onSelect={(val) => setFormData(prev => ({ ...prev, gender: val }))}
-            autoFocus={initialFocusField === 'gender'}
-          />
+        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+          <span>La fecha de nacimiento y género se gestionan desde los Ajustes de Cuenta.</span>
         </div>
       </form>
     </Modal>

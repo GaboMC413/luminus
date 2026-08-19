@@ -17,6 +17,7 @@ type CognitoTokenResponse = {
 type CognitoStartState = {
   state: string;
   provider?: "Google";
+  intent?: "signup" | "signin";
 };
 
 type CognitoIdentityClaim = {
@@ -211,15 +212,17 @@ export async function GET(request: Request) {
     maxAge: 0,
   });
 
+  const fallbackPath = storedState?.intent === "signup" ? "/auth/registrarse" : "/auth/iniciar-sesion";
+
   if (error) {
     const errorDescription = requestUrl.searchParams.get("error_description") || "unknown";
-    return redirectTo(requestUrl, `/auth/iniciar-sesion?error=cognito&reason=${encodeURIComponent(error + ": " + errorDescription)}`);
+    return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=${encodeURIComponent(error + ": " + errorDescription)}`);
   }
 
-  if (!code) return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito&reason=no_code");
-  if (!state) return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito&reason=no_state");
-  if (!storedState) return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito&reason=no_cookie");
-  if (state !== storedState.state) return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito&reason=state_mismatch");
+  if (!code) return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=no_code`);
+  if (!state) return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=no_state`);
+  if (!storedState) return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=no_cookie`);
+  if (state !== storedState.state) return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=state_mismatch`);
 
   try {
     const redirectUri = `${getPublicOrigin(requestUrl)}/api/auth/cognito/callback`;
@@ -229,9 +232,20 @@ export async function GET(request: Request) {
     const cognitoUser = await fetchCognitoUser(accessToken);
     const email = (cognitoUser.email || tokenClaims.email || "").trim().toLowerCase();
     const cognitoSubject = tokenClaims.sub || cognitoUser.sub;
-    const firstName = cognitoUser.given_name || tokenClaims.given_name || "";
-    const lastName = cognitoUser.family_name || tokenClaims.family_name || "";
+    let firstName = cognitoUser.given_name || tokenClaims.given_name || "";
+    let lastName = cognitoUser.family_name || tokenClaims.family_name || "";
     const fullName = `${firstName} ${lastName}`.trim() || cognitoUser.name || tokenClaims.name || "";
+
+    if ((!firstName || !lastName) && fullName) {
+      const parts = fullName.trim().split(/\s+/);
+      if (!firstName && parts.length > 0) {
+        firstName = parts[0];
+      }
+      if (!lastName && parts.length > 1) {
+        lastName = parts.slice(1).join(" ");
+      }
+    }
+
     const avatarUrl = cognitoUser.picture || tokenClaims.picture || undefined;
 
     if (!email || !cognitoSubject) {
@@ -407,6 +421,8 @@ export async function GET(request: Request) {
       try {
         const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
         await sendWelcomeMessage(prisma, user.id);
+        const { sendWelcomeEmail } = await import("@/lib/email/passwordResetEmail");
+        await sendWelcomeEmail(user.email, user.profile?.firstName || undefined);
       } catch (welcomeError) {
         console.error("Welcome message setup failed, proceeding with Cognito registration.", welcomeError);
       }
@@ -445,6 +461,7 @@ export async function GET(request: Request) {
   } catch (callbackError) {
     console.error("Cognito OAuth callback failed.", callbackError);
     const reason = callbackError instanceof Error ? encodeURIComponent(callbackError.message) : "unknown";
-    return redirectTo(requestUrl, `/auth/iniciar-sesion?error=cognito&reason=${reason}`);
+    const fallbackPath = storedState?.intent === "signup" ? "/auth/registrarse" : "/auth/iniciar-sesion";
+    return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=${reason}`);
   }
 }

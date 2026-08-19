@@ -323,9 +323,9 @@ function PlatformContent() {
   if (error) {
     return (
       <div className="flex-1 w-full max-w-2xl mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[80vh]">
-        <div className="w-full bg-white rounded-2xl p-8 border border-red-100 shadow-none flex flex-col items-center text-center gap-6">
-          <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center text-red-500">
-            <span className="material-symbols-outlined text-[32px]">database_off</span>
+        <div className="w-full bg-white rounded-2xl p-8 border border-slate-200 shadow-none flex flex-col items-center text-center gap-6">
+          <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-700">
+            <span className="material-symbols-outlined text-[28px]">database_off</span>
           </div>
 
           <div className="flex flex-col gap-2">

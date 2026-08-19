@@ -368,27 +368,38 @@ function PublicProfileContent() {
 
   if (error || !profile) {
     const isRestricted = error === "restricted";
+    const handleGoBack = () => {
+      if (typeof window !== "undefined" && window.history.length > 1) {
+        router.back();
+      } else {
+        router.push("/comunidad");
+      }
+    };
+
     return (
-      <div className="w-full h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-red-100 shadow-sm flex flex-col items-center text-center gap-6">
-          <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center text-red-500">
-            <span className="material-symbols-outlined text-[32px]">
-              {isRestricted ? "lock" : "error"}
+      <div className="w-full flex-1 min-h-[calc(100vh-80px)] bg-slate-50 flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-slate-200 shadow-none flex flex-col items-center text-center gap-6">
+          <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-700">
+            <span className="material-symbols-outlined text-[28px]">
+              {isRestricted ? "lock" : "person_off"}
             </span>
           </div>
           <div className="flex flex-col gap-2">
-            <h2 className="text-[20px] font-bold text-slate-900 font-jakarta">
-              {isRestricted ? "Perfil no disponible" : "Error al cargar perfil"}
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900 font-jakarta">
+              Perfil no disponible
             </h2>
-            <p className="text-[14px] text-slate-500">
-              {isRestricted ? "Este perfil no está disponible." : (error || "No se pudo encontrar el usuario especificado.")}
+            <p className="text-sm text-slate-500 leading-relaxed">
+              {isRestricted 
+                ? "Este perfil no está disponible." 
+                : "Este perfil ya no está disponible o la cuenta ha sido eliminada."}
             </p>
           </div>
           <button
-            onClick={() => router.push("/comunidad")}
-            className="h-11 px-6 bg-black text-white rounded-xl text-[14px] font-bold hover:bg-zinc-800 transition duration-200"
+            onClick={handleGoBack}
+            className="h-11 px-7 bg-black text-white rounded-xl text-sm font-semibold hover:bg-zinc-800 transition-colors flex items-center justify-center gap-2 cursor-pointer font-jakarta border-none"
           >
-            Volver a la Comunidad
+            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            Volver
           </button>
         </div>
       </div>

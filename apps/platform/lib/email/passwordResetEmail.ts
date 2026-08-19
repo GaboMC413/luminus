@@ -1,6 +1,7 @@
 import { SendEmailCommand, SESClient } from "@aws-sdk/client-ses";
 import fs from "fs";
 import path from "path";
+import { renderPasswordResetEmailHtml, renderWelcomeEmailHtml } from "./templates";
 
 function getSesClient() {
   const region = process.env.SES_REGION;
@@ -68,16 +69,7 @@ async function logSentEmail(recipient: string, subject: string, htmlBody: string
 }
 
 export async function sendPasswordResetEmail(email: string, code: string) {
-  const htmlBody = `
-    <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.5;">
-      <h2 style="margin: 0 0 16px;">Codigo de recuperacion</h2>
-      <p>Recibimos una solicitud para restablecer tu contrasena de LUMINUS.</p>
-      <p style="font-size: 28px; font-weight: 700; letter-spacing: 4px; margin: 24px 0;">${code}</p>
-      <p>Este codigo vence en 15 minutos.</p>
-      <p>Si no solicitaste este cambio, puedes ignorar este correo.</p>
-      <p style="margin-top: 32px;">LUMINUS</p>
-    </div>
-  `;
+  const htmlBody = renderPasswordResetEmailHtml(code);
 
   if (process.env.NODE_ENV === "development") {
     writeLocalEmailPreview(email, "Codigo de recuperacion de LUMINUS", htmlBody);
@@ -188,6 +180,51 @@ export async function sendEmailChangeVerificationEmail(email: string, code: stri
             "LUMINUS",
           ].join("\n"),
         },
+        Html: {
+          Charset: "UTF-8",
+          Data: htmlBody,
+        },
+      },
+    },
+  });
+
+  await client.send(command);
+}
+
+export async function sendWelcomeEmail(email: string, name?: string) {
+  const htmlBody = renderWelcomeEmailHtml(name || "Usuario");
+  const subject = "¡Te damos la bienvenida a LUMINUS!";
+
+  if (process.env.NODE_ENV === "development") {
+    writeLocalEmailPreview(email, subject, htmlBody);
+  }
+
+  await logSentEmail(email, subject, htmlBody);
+
+  if (!isSesConfigured()) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn(
+        `[SES BYPASS]: AWS SES credentials or configuration are missing. Skipping welcome email to ${email}.`
+      );
+      return;
+    }
+    throw new Error("AWS SES credentials or configuration are missing.");
+  }
+
+  const fromEmail = process.env.SES_FROM_EMAIL;
+  const client = getSesClient();
+
+  const command = new SendEmailCommand({
+    Source: `LUMINUS <${fromEmail}>`,
+    Destination: {
+      ToAddresses: [email],
+    },
+    Message: {
+      Subject: {
+        Charset: "UTF-8",
+        Data: subject,
+      },
+      Body: {
         Html: {
           Charset: "UTF-8",
           Data: htmlBody,

@@ -32,8 +32,7 @@ export const INTEREST_CATEGORIES = [
   { icon: 'nutrition', iconFilled: true, title: 'Nutrición', color: '#84CC16', bgColor: '#ECFCCB', items: ['Alimentación consciente', 'Alimentación vegetal', 'Nutrición deportiva', 'Cocina', 'Suplementación', 'Fermentación'] },
   { icon: 'self_improvement', iconFilled: true, title: 'Espiritualidad', color: '#6D28D9', bgColor: '#EDE9FE', items: ['Meditación', 'Mindfulness', 'Respiración', 'Filosofía', 'Naturaleza', 'Desarrollo espiritual'] },
   { icon: 'person_celebrate', iconFilled: true, title: 'Vínculos', color: '#F97316', bgColor: '#FECACA', items: ['Pareja', 'Familia', 'Amistad', 'Crianza', 'Sexualidad', 'Comunidad', 'Comunicación'] },
-  { icon: 'spa', iconFilled: true, title: 'Terapias Complementarias', color: '#14B8A6', bgColor: '#CCFBF1', items: ['Acupuntura', 'Ayurveda', 'Reiki', 'Masajes', 'Aromaterapia', 'Reflexología', 'Sonoterapia', 'Terapia floral'] },
-  { icon: 'star', iconFilled: true, title: 'Otro', color: '#64748B', bgColor: '#F1F5F9', items: ['Otro'] }
+  { icon: 'spa', iconFilled: true, title: 'Terapias Complementarias', color: '#14B8A6', bgColor: '#CCFBF1', items: ['Acupuntura', 'Ayurveda', 'Reiki', 'Masajes', 'Aromaterapia', 'Reflexología', 'Sonoterapia', 'Terapia floral'] }
 ];
 
 export const SPACE_TYPE_OPTIONS_CONFIG = [

@@ -45,7 +45,7 @@ export default function FAQClient() {
         {
           id: "que-puedo-encontrar",
           question: "¿Qué puedo encontrar dentro de LUMINUS?",
-          answer: "Dentro de LUMINUS podrás acceder progresivamente a comunidad, perfiles de especialistas, espacios de aprendizaje, eventos, contenidos, recursos, mapa de bienestar y herramientas digitales como Faro, nuestro asistente impulsado por IA.\n\nAlgunas funcionalidades ya están disponibles y otras se irán incorporando a medida que la plataforma crezca."
+          answer: "Dentro de LUMINUS podrás acceder progresivamente a comunidad, perfiles de especialistas, grupos de aprendizaje, eventos, contenidos, recursos, espacios de bienestar y herramientas digitales como Faro, nuestro asistente impulsado por IA.\n\nAlgunas funcionalidades ya están disponibles y otras se irán incorporando a medida que la plataforma crezca."
         }
       ]
     },
@@ -99,14 +99,14 @@ export default function FAQClient() {
           answer: "Sí, la plataforma está pensada para facilitar conexiones significativas entre personas con intereses, búsquedas o experiencias afines.\n\nLas formas de contacto y visibilidad dependerán de las funcionalidades disponibles y de la configuración de privacidad de cada perfil."
         },
         {
-          id: "que-son-espacios",
-          question: "¿Qué son los Espacios LUMINUS?",
-          answer: "Los Espacios LUMINUS serán entornos digitales donde especialistas y miembros de la red podrán compartir contenido, recursos, conversaciones, actividades y experiencias vinculadas al bienestar.\n\nEstán pensados para reunir personas alrededor de temas, intereses o prácticas específicas."
+          id: "que-son-grupos",
+          question: "¿Qué son los Grupos LUMINUS?",
+          answer: "Los Grupos LUMINUS serán entornos digitales donde especialistas y miembros de la red podrán compartir contenido, recursos, conversaciones, actividades y experiencias vinculadas al bienestar.\n\nEstán pensados para reunir personas alrededor de temas, intereses o prácticas específicas."
         },
         {
-          id: "que-es-mapa",
-          question: "¿Qué es el Mapa LUMINUS?",
-          answer: "El Mapa LUMINUS será una herramienta para descubrir personas, especialistas, clínicas, consultorios y espacios de bienestar en distintas ciudades de América Latina.\n\nSu objetivo es hacer más visible y accesible la red de bienestar que se está construyendo alrededor de LUMINUS."
+          id: "que-son-espacios",
+          question: "¿Qué son los Espacios LUMINUS?",
+          answer: "Los Espacios LUMINUS serán una herramienta para descubrir personas, especialistas, clínicas, consultorios y espacios de bienestar en distintas ciudades de América Latina.\n\nSu objetivo es hacer más visible y accesible la red de bienestar que se está construyendo alrededor de LUMINUS."
         },
         {
           id: "que-es-faro",
