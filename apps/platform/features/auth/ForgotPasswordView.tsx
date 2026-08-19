@@ -188,7 +188,7 @@ export default function ForgotPasswordView() {
       <div className="flex-1 flex flex-col bg-slate-50 min-h-0 h-full overflow-hidden pt-14 lg:pt-0 animate-in fade-in duration-300">
         
         {/* Mobile Header: Logo */}
-        <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 bg-white border-b border-slate-200 flex items-center justify-center shrink-0 z-50">
+        <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-light-gradient border-b border-slate-200/80 flex items-center justify-center shrink-0 z-50">
           <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
             <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[20px]" />
           </Link>
