@@ -64,14 +64,12 @@
     background-blend-mode: overlay, normal, normal, normal;
   }
 
-  /* LUMINUS SOFT LIGHT GRADIENT (MARKETING HERO STYLE) */
+  /* LUMINUS SOFT LIGHT GRADIENT (MARKETING HERO STYLE - EXACT 1:1 MATCH) */
   .luminus-light-gradient {
     background-color: #ffffff;
     background-image:
-      radial-gradient(circle at 95% 5%, rgba(255, 128, 252, 0.22) 0%, transparent 55%),
-      radial-gradient(circle at 85% 90%, rgba(4, 80, 251, 0.15) 0%, transparent 60%),
-      radial-gradient(circle at 15% 85%, rgba(212, 230, 0, 0.22) 0%, transparent 60%),
-      radial-gradient(circle at 5% 15%, rgba(255, 160, 100, 0.25) 0%, transparent 55%);
+      linear-gradient(180deg, rgba(255, 255, 255, 0.75) 0%, #ffffff 100%),
+      linear-gradient(90deg, #FF7700 0%, #E855C8 33%, #0450FB 66%, #A8C800 100%);
   }
 
   /* HIGH-END TYPOGRAPHY SYSTEM (Tailwind @apply semantic classes, no custom sizing properties) */
