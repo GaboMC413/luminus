@@ -216,79 +216,80 @@ export default function SignUpView() {
       <div className="auth-fixed-page flex flex-col lg:flex-row font-sans bg-slate-50 text-slate-900">
 
         {/* 1. Left Branding/Marketing Pane (Desktop only - 42% width) */}
-        <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] luminus-gradient flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden border-r border-slate-200/10 animate-in slide-in-from-left duration-500">
-          {/* Subtle overlay for enhanced visual depth */}
-          <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] pointer-events-none" />
+        <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] bg-white border-r border-slate-200/80 flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden animate-in slide-in-from-left duration-500">
+          {/* Soft background glows matching marketing hero */}
+          <div className="absolute -top-24 -left-24 w-80 h-80 bg-gradient-to-br from-pink-100/60 via-purple-100/40 to-transparent rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-gradient-to-tr from-blue-100/60 via-amber-100/40 to-transparent rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 flex flex-col h-full">
             {/* Logo */}
             <Link href="/" className="w-fit cursor-pointer hover:opacity-80 transition-opacity">
-              <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px]" />
+              <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[24px]" />
             </Link>
 
             {/* Marketing Copy & Short Experience Cards */}
             <div className="flex flex-col gap-6 w-full mt-20">
-              <h1 className="text-3xl lg:text-4xl font-bold leading-tight tracking-[-0.03em] text-white">
+              <h1 className="text-3xl lg:text-4xl font-bold leading-tight tracking-[-0.03em] text-slate-900 font-jakarta">
                 Regístrate en LUMINUS
               </h1>
 
               <div className="flex flex-col gap-6 w-full mt-2">
                 {/* Bullet 1 */}
                 <div className="flex gap-4 items-start">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/15 flex items-center justify-center mt-0.5 border border-white/10">
-                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center mt-0.5 border border-slate-200">
+                    <svg className="w-3.5 h-3.5 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <h3 className="text-white font-bold text-[16px]">Conexiones de bienestar</h3>
-                    <p className="text-white/90 text-[16px]">Conecta con quienes compartes intereses, búsquedas y formas de vivir el bienestar.</p>
+                    <h3 className="text-slate-900 font-bold text-[16px] font-jakarta">Conexiones de bienestar</h3>
+                    <p className="text-slate-600 text-[15px] leading-relaxed">Conecta con personas que comparten tus búsquedas e intereses.</p>
                   </div>
                 </div>
 
                 {/* Bullet 2 */}
                 <div className="flex gap-4 items-start">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/15 flex items-center justify-center mt-0.5 border border-white/10">
-                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center mt-0.5 border border-slate-200">
+                    <svg className="w-3.5 h-3.5 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <h3 className="text-white font-bold text-[16px]">Especialistas confiables</h3>
-                    <p className="text-white/90 text-[16px]">Descubre profesionales que pueden acompañarte en distintas áreas de tu desarrollo.</p>
+                    <h3 className="text-slate-900 font-bold text-[16px] font-jakarta">Especialistas confiables</h3>
+                    <p className="text-slate-600 text-[15px] leading-relaxed">Descubre profesionales capacitados para acompañar tu proceso.</p>
                   </div>
                 </div>
 
                 {/* Bullet 3 */}
                 <div className="flex gap-4 items-start">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/15 flex items-center justify-center mt-0.5 border border-white/10">
-                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center mt-0.5 border border-slate-200">
+                    <svg className="w-3.5 h-3.5 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <h3 className="text-white font-bold text-[16px]">Recursos para crecer</h3>
-                    <p className="text-white/90 text-[16px]">Accede a contenidos, conversaciones y experiencias diseñadas para acompañar tu proceso.</p>
+                    <h3 className="text-slate-900 font-bold text-[16px] font-jakarta">Recursos para crecer</h3>
+                    <p className="text-slate-600 text-[15px] leading-relaxed">Accede a contenidos, conversaciones y experiencias de valor.</p>
                   </div>
                 </div>
 
                 {/* Bullet 4 */}
                 <div className="flex gap-4 items-start">
-                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-white/15 flex items-center justify-center mt-0.5 border border-white/10">
-                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
+                  <div className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center mt-0.5 border border-slate-200">
+                    <svg className="w-3.5 h-3.5 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <h3 className="text-white font-bold text-[16px]">Guía personalizada</h3>
-                    <p className="text-white/90 text-[16px]">Encuentra orientación para avanzar con más claridad, equilibrio y dirección.</p>
+                    <h3 className="text-slate-900 font-bold text-[16px] font-jakarta">Guía personalizada</h3>
+                    <p className="text-slate-600 text-[15px] leading-relaxed">Encuentra orientación para avanzar con mayor claridad y dirección.</p>
                   </div>
                 </div>
 
               </div>
             </div>
             {/* Sidebar Footer */}
-            <p className="text-label !text-white/70 uppercase tracking-wider font-sans mt-auto">
+            <p className="text-label !text-slate-400 uppercase tracking-wider font-sans mt-auto">
               LUMINUS LATAM © 2026
             </p>
           </div>
@@ -298,9 +299,9 @@ export default function SignUpView() {
         <div className="flex-1 flex flex-col bg-slate-50 min-h-0 h-full overflow-hidden pt-14 lg:pt-0">
 
           {/* Mobile Header: Logo (only visible on mobile) */}
-          <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-gradient flex items-center justify-center shrink-0 z-50">
+          <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 bg-white border-b border-slate-200 flex items-center justify-center shrink-0 z-50">
             <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
-              <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[20px]" />
+              <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[20px]" />
             </Link>
           </div>
 
@@ -470,14 +471,18 @@ export default function SignUpView() {
     <div className="auth-fixed-page bg-slate-50 flex flex-col lg:flex-row font-sans">
 
       {/* LATERAL SIDEBAR */}
-      <div className="fixed top-0 left-0 right-0 lg:relative w-full h-14 lg:h-full lg:w-80 luminus-gradient shrink-0 flex lg:flex-col items-center justify-center lg:justify-start lg:pt-12 z-50 transition-all duration-500">
-        <Link href="/" className="flex flex-col items-center w-full px-8 cursor-pointer hover:opacity-80 transition-opacity">
-          <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[20px]" />
+      <div className="fixed top-0 left-0 right-0 lg:relative w-full h-14 lg:h-full lg:w-80 bg-white border-b lg:border-b-0 lg:border-r border-slate-200/80 shrink-0 flex lg:flex-col items-center justify-center lg:justify-start lg:pt-12 z-50 transition-all duration-500 overflow-hidden">
+        {/* Soft background glows */}
+        <div className="absolute -top-24 -left-24 w-80 h-80 bg-gradient-to-br from-pink-100/50 via-purple-100/30 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-gradient-to-tr from-blue-100/50 via-amber-100/30 to-transparent rounded-full blur-3xl pointer-events-none" />
+
+        <Link href="/" className="relative z-10 flex flex-col items-center w-full px-8 cursor-pointer hover:opacity-80 transition-opacity">
+          <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[20px]" />
         </Link>
 
         {/* SIDEBAR FOOTER */}
-        <div className="hidden lg:flex flex-col mt-auto w-full h-[64px] justify-center border-t border-white/10">
-          <p className="text-[9px] text-white/90 text-center uppercase tracking-widest font-sans">
+        <div className="relative z-10 hidden lg:flex flex-col mt-auto w-full h-[64px] justify-center border-t border-slate-100">
+          <p className="text-[9px] text-slate-400 text-center uppercase tracking-widest font-sans">
             Luminus Latam © 2026
           </p>
         </div>

@@ -159,24 +159,26 @@ export default function ForgotPasswordView() {
     <div className="auth-fixed-page flex flex-col lg:flex-row font-sans bg-slate-50 text-slate-900">
       
       {/* 1. Left Branding/Marketing Pane (Desktop only) */}
-      <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] luminus-gradient flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden border-r border-slate-200/10 animate-in slide-in-from-left duration-500">
-        <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] pointer-events-none" />
+      <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] bg-white border-r border-slate-200/80 flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden animate-in slide-in-from-left duration-500">
+        {/* Soft background glows matching marketing hero */}
+        <div className="absolute -top-24 -left-24 w-80 h-80 bg-gradient-to-br from-pink-100/60 via-purple-100/40 to-transparent rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-gradient-to-tr from-blue-100/60 via-amber-100/40 to-transparent rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col h-full">
           <Link href="/" className="w-fit cursor-pointer hover:opacity-80 transition-opacity">
-            <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[24px]" />
+            <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[24px]" />
           </Link>
 
           <div className="flex flex-col gap-6 max-w-md mt-20 animate-in fade-in duration-700">
-            <h1 className="text-3xl lg:text-4xl font-bold text-white leading-tight tracking-[-0.03em]">
+            <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 leading-tight tracking-[-0.03em] font-jakarta">
               Recuperar contraseña
             </h1>
-            <p className="text-xl text-white/90 leading-relaxed font-normal tracking-[-0.02em]">
+            <p className="text-lg text-slate-600 leading-relaxed font-normal tracking-[-0.01em]">
               Un espacio para conectar con personas, especialistas y recursos que te ayudan a avanzar con más claridad, bienestar y propósito.
             </p>
           </div>
 
-          <p className="text-label !text-white/70 uppercase tracking-wider font-sans mt-auto">
+          <p className="text-label !text-slate-400 uppercase tracking-wider font-sans mt-auto">
             LUMINUS LATAM © 2026
           </p>
         </div>
@@ -186,9 +188,9 @@ export default function ForgotPasswordView() {
       <div className="flex-1 flex flex-col bg-slate-50 min-h-0 h-full overflow-hidden pt-14 lg:pt-0 animate-in fade-in duration-300">
         
         {/* Mobile Header: Logo */}
-        <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-gradient flex items-center justify-center shrink-0 z-50">
+        <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 bg-white border-b border-slate-200 flex items-center justify-center shrink-0 z-50">
           <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
-            <img src="/logo-luminus-white.svg" alt="Luminus" className="h-[20px]" />
+            <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[20px]" />
           </Link>
         </div>
 
