@@ -35,6 +35,7 @@ export function AdminUsersClient({
   initialPostulations = [],
   initialCategories = [],
   initialSuggestions = [],
+  initialLoadWarnings = [],
 }: {
   initialUsers: AdminUser[];
   initialChats: AdminChat[];
@@ -46,6 +47,7 @@ export function AdminUsersClient({
   initialPostulations: AdminPostulation[];
   initialCategories?: AdminCategory[];
   initialSuggestions?: AdminSuggestion[];
+  initialLoadWarnings?: string[];
 }) {
   const [users, setUsers] = useState<AdminUser[]>(initialUsers);
   const [chats] = useState<AdminChat[]>(initialChats);
@@ -88,6 +90,13 @@ export function AdminUsersClient({
     <div className="min-h-screen bg-[#F5F7FA] text-slate-950 flex flex-col">
       {/* Top Header Bar */}
       <AdminHeader />
+
+      {initialLoadWarnings.length > 0 && (
+        <div className="border-b border-amber-300 bg-amber-50 px-6 py-3 text-sm text-amber-900">
+          El administrador abrió parcialmente. No se pudieron cargar estas secciones: {initialLoadWarnings.join(", ")}.
+          El detalle técnico quedó registrado para revisión.
+        </div>
+      )}
 
       {/* Main Workspace (Vertical Nav + Active Tab Content) */}
       <div className="flex-1 flex flex-col lg:flex-row min-w-0">
