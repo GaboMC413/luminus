@@ -207,6 +207,45 @@ export type AdminSuggestion = {
   categoryName: string | null;
 };
 
+export type AdminEvent = {
+  id: string;
+  youtubeId: string | null;
+  slug: string | null;
+  title: string;
+  description: string;
+  date: string | null;
+  timeText: string | null;
+  location: string | null;
+  speakerName: string | null;
+  speakerBio: string | null;
+  category: string | null;
+  coverUrl: string | null;
+  link: string | null;
+  isUpcoming: boolean;
+  createdAt: string;
+  inscriptionsCount?: number;
+};
+
+export type AdminEventInscription = {
+  id: string;
+  eventId: string;
+  userId?: string | null;
+  guestFirstName?: string | null;
+  guestLastName?: string | null;
+  guestEmail?: string | null;
+  guestCity?: string | null;
+  createdAt: string;
+  user?: {
+    email: string;
+    profile?: {
+      firstName?: string;
+      lastName?: string;
+      fullName?: string;
+      avatarUrl?: string;
+    };
+  };
+};
+
 export type AdminTab =
   | "usuarios"
   | "chats"
@@ -215,4 +254,5 @@ export type AdminTab =
   | "busquedas"
   | "especialistas"
   | "emails"
-  | "categorias";
+  | "categorias"
+  | "eventos";

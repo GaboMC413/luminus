@@ -1,6 +1,6 @@
 "use client";
 
-import { renderPasswordResetEmailHtml } from "@/lib/email/templates";
+import { renderPasswordResetEmailHtml } from "@/lib/mails";
 
 export default function PasswordResetEmailPreviewPage() {
   const html = renderPasswordResetEmailHtml("849204");

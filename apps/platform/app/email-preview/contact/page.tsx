@@ -1,6 +1,6 @@
 "use client";
 
-import { renderContactNotificationEmailHtml } from "@/lib/email/templates";
+import { renderContactNotificationEmailHtml } from "@/lib/mails";
 
 export default function ContactEmailPreviewPage() {
   const html = renderContactNotificationEmailHtml({

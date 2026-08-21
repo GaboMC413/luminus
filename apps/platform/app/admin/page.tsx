@@ -356,6 +356,67 @@ export default async function AdminPage() {
     categoryName: sugg.category?.name || null,
   }));
 
+  const eventsRaw = await loadAdminSection("eventos", loadWarnings, () => prisma.event.findMany({
+    include: {
+      inscriptions: {
+        include: {
+          guest: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  }), []);
+
+  const events = eventsRaw.map((ev: any) => ({
+    id: ev.id,
+    youtubeId: ev.youtubeId || null,
+    slug: ev.slug || null,
+    title: ev.title,
+    description: ev.description || "",
+    date: ev.date ? ev.date.toISOString() : null,
+    timeText: ev.timeText || null,
+    location: ev.location || null,
+    speakerName: ev.speakerName || null,
+    speakerBio: ev.speakerBio || null,
+    category: ev.category || null,
+    coverUrl: ev.coverUrl || null,
+    link: ev.link || null,
+    isUpcoming: ev.isUpcoming,
+    createdAt: ev.createdAt.toISOString(),
+    inscriptionsCount: ev.inscriptions?.length || 0,
+  }));
+
+  const inscriptionsRaw = await loadAdminSection("inscripciones", loadWarnings, () => prisma.eventInscription.findMany({
+    include: {
+      guest: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  }), []);
+
+  const inscriptions = inscriptionsRaw.map((ins: any) => ({
+    id: ins.id,
+    eventId: ins.eventId,
+    userId: ins.userId || null,
+    guestFirstName: ins.guest?.firstName || ins.guestFirstName || null,
+    guestLastName: ins.guest?.lastName || ins.guestLastName || null,
+    guestEmail: ins.guest?.email || ins.guestEmail || null,
+    guestCity: ins.guest?.city || ins.guestCity || null,
+    createdAt: ins.createdAt.toISOString(),
+    user: ins.user ? {
+      email: ins.user.email,
+      profile: {
+        firstName: ins.user.profile?.firstName || "",
+        lastName: ins.user.profile?.lastName || "",
+        fullName: ins.user.profile?.fullName || "",
+        avatarUrl: ins.user.profile?.avatarUrl || "",
+      },
+    } : undefined,
+  }));
+
   return (
     <AdminUsersClient
       initialUsers={users}
@@ -368,6 +429,8 @@ export default async function AdminPage() {
       initialPostulations={postulations}
       initialCategories={categories}
       initialSuggestions={suggestions}
+      initialEvents={events}
+      initialInscriptions={inscriptions}
       initialLoadWarnings={loadWarnings}
     />
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { renderWelcomeEmailHtml } from "@/lib/email/templates";
+import { renderWelcomeEmailHtml } from "@/lib/mails";
 
 export default function WelcomeEmailPreviewPage() {
   const html = renderWelcomeEmailHtml("Gabriel");
