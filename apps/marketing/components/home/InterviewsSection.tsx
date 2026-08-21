@@ -174,6 +174,20 @@ export function InterviewsSection({
     }
   };
 
+  // Helper to format upcoming date header
+  const formatUpcomingDateHeader = (dateStr?: string) => {
+    if (!dateStr) return "PROXIMAMENTE";
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return "PROXIMAMENTE";
+      const day = d.getDate();
+      const month = d.toLocaleDateString("es-ES", { month: "short" }).toUpperCase().replace(".", "");
+      return `PROXIMAMENTE: ${day} ${month}`;
+    } catch {
+      return "PROXIMAMENTE";
+    }
+  };
+
   // Use dynamic events if present, otherwise fall back to static list
   const baseItems: EventItem[] = events && events.length > 0
     ? events
@@ -188,35 +202,65 @@ export function InterviewsSection({
       cover_url: item.thumbnail
     }));
 
-  // Filter items: only include recorded videos (past date + valid YouTube video link, excluding upcoming events)
-  const itemsToRender = baseItems.filter((item) => {
-    if (item.is_upcoming === true) return false;
-    if (item.date) {
-      const d = new Date(item.date);
-      if (!isNaN(d.getTime()) && d > new Date()) {
-        return false;
+  const now = new Date();
+
+  // 1. Upcoming events (is_upcoming === true OR date >= now)
+  const upcomingMap = new Map<string, EventItem>();
+  baseItems.forEach((item) => {
+    const isUpcoming =
+      item.is_upcoming === true ||
+      (item.is_upcoming !== false && item.date && !isNaN(new Date(item.date).getTime()) && new Date(item.date) >= now);
+
+    if (isUpcoming) {
+      const key = item.slug || item.id || item.youtube_id;
+      if (key && !upcomingMap.has(key)) {
+        upcomingMap.set(key, item);
       }
     }
-    const hasYoutubeVideo = Boolean(
-      item.youtube_id ||
-      (item.link && (item.link.includes("watch?v=") || item.link.includes("youtu.be/")))
-    );
-    return hasYoutubeVideo;
   });
 
-  // Sort items from newest to oldest date
-  const sortedItems = [...itemsToRender].sort((a, b) => {
+  const upcomingItems = Array.from(upcomingMap.values()).sort((a, b) => {
     const dateA = a.date ? new Date(a.date).getTime() : 0;
     const dateB = b.date ? new Date(b.date).getTime() : 0;
-    return dateB - dateA;
+    return dateA - dateB; // Ascending (soonest upcoming event first)
   });
+
+  // 2. Past recordings (has YouTube video + date < now)
+  const pastMap = new Map<string, EventItem>();
+  baseItems.forEach((item) => {
+    const isUpcoming =
+      item.is_upcoming === true ||
+      (item.is_upcoming !== false && item.date && !isNaN(new Date(item.date).getTime()) && new Date(item.date) >= now);
+
+    if (!isUpcoming) {
+      const hasYoutubeVideo = Boolean(
+        item.youtube_id ||
+        (item.link && (item.link.includes("watch?v=") || item.link.includes("youtu.be/")))
+      );
+      if (hasYoutubeVideo) {
+        const key = item.youtube_id || item.id || item.slug;
+        if (key && !pastMap.has(key)) {
+          pastMap.set(key, item);
+        }
+      }
+    }
+  });
+
+  const pastItems = Array.from(pastMap.values()).sort((a, b) => {
+    const dateA = a.date ? new Date(a.date).getTime() : 0;
+    const dateB = b.date ? new Date(b.date).getTime() : 0;
+    return dateB - dateA; // Descending (newest past recording first)
+  });
+
+  // Combined: upcoming events first, followed by past recordings
+  const sortedItems = [...upcomingItems, ...pastItems];
 
   // Filter items based on active category
   const filteredItemsRaw = activeCategory === "Todos"
     ? sortedItems
     : sortedItems.filter(item => item.category === activeCategory);
 
-  // In carousel mode (!isGrid), limit to the 6 most recent recordings
+  // In carousel mode (!isGrid), limit to the 6 most recent items
   const filteredItems = isGrid ? filteredItemsRaw : filteredItemsRaw.slice(0, 6);
 
   const totalPages = Math.ceil(filteredItems.length / itemsPerPage) || 1;
@@ -229,8 +273,6 @@ export function InterviewsSection({
     if (carouselRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
       const spacerW = spacerRef.current?.offsetWidth ?? 0;
-      // At the very start, scrollLeft equals spacerW (or 0 if scroll-padding works)
-      // Add a small buffer of 5px to avoid false positives from sub-pixel rounding
       setCanScrollLeft(scrollLeft > spacerW + 5);
       setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
     }
@@ -286,18 +328,29 @@ export function InterviewsSection({
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10 max-w-[1440px] mx-auto px-4 md:px-10">
               {paginatedItems.map((item) => {
                 const ytId = item.youtube_id || getYoutubeId(item.link) || '';
+                const isUpcomingEvent =
+                  item.is_upcoming === true ||
+                  (item.is_upcoming !== false && item.date && !isNaN(new Date(item.date).getTime()) && new Date(item.date) >= now);
+
+                const displayDate = isUpcomingEvent
+                  ? formatUpcomingDateHeader(item.date)
+                  : (item.date ? formatDate(item.date) : item.publishTimeText || '');
+
+                const cardHref = isUpcomingEvent
+                  ? `/proximasfechas/${item.slug || item.id}`
+                  : (item.link || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : '#'));
+
                 const thumbUrl = item.cover_url || (ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : '/placeholder-video.jpg');
-                const displayDate = item.date ? formatDate(item.date) : item.publishTimeText || '';
 
                 return (
                   <div
-                    key={ytId || item.title}
+                    key={item.id || ytId || item.title}
                     className="w-full min-h-0 sm:min-h-[320px] h-full bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col group shadow-none"
                   >
-                    <a
-                      href={item.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Link
+                      href={cardHref}
+                      target={isUpcomingEvent ? undefined : "_blank"}
+                      rel={isUpcomingEvent ? undefined : "noopener noreferrer"}
                       className="w-full aspect-video relative overflow-hidden bg-slate-200 shrink-0 block hover:opacity-95 transition-opacity"
                     >
                       <Image
@@ -308,30 +361,40 @@ export function InterviewsSection({
                         sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                         unoptimized
                       />
-                    </a>
+                    </Link>
 
                     <div className="w-full flex-1 p-4 flex flex-col justify-between items-start gap-3">
                       <div className="w-full flex flex-col gap-2">
-                        <div className="w-full flex justify-between items-center text-xs text-slate-500 font-medium">
-                          <span className="truncate max-w-[150px] sm:max-w-[200px]">{item.speaker_name || 'Especialista LUMINUS'}</span>
-                          <span>{displayDate}</span>
+                        <div className="w-full flex justify-between items-center text-xs font-medium">
+                          <span className="truncate max-w-[150px] sm:max-w-[200px] text-slate-500">{item.speaker_name || 'Especialista LUMINUS'}</span>
+                          <span className={isUpcomingEvent ? "font-bold text-slate-900 tracking-tight" : "text-slate-500"}>{displayDate}</span>
                         </div>
-                        <a
-                          href={item.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="no-underline hover:text-red-600 transition-colors block"
+                        <Link
+                          href={cardHref}
+                          target={isUpcomingEvent ? undefined : "_blank"}
+                          rel={isUpcomingEvent ? undefined : "noopener noreferrer"}
+                          className="no-underline hover:text-slate-600 transition-colors block"
                         >
                           <h3 className="w-full text-base font-semibold text-slate-900 leading-snug line-clamp-2">
                             {item.title}
                           </h3>
-                        </a>
+                        </Link>
                       </div>
 
-                      <div className="inline-flex justify-start items-center mt-auto pt-3 border-t border-slate-100">
-                        {ytId ? (
+                      <div className="inline-flex justify-start items-center mt-auto pt-3 border-t border-slate-100 w-full">
+                        {isUpcomingEvent ? (
+                          <Link
+                            href={cardHref}
+                            className="group/link inline-flex items-center gap-1.5 text-sm font-semibold text-slate-900 no-underline leading-5 hover:text-slate-600 transition-colors"
+                          >
+                            <span>Inscribirme</span>
+                            <svg className="w-4 h-4 text-slate-900 group-hover/link:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                          </Link>
+                        ) : ytId ? (
                           <a
-                            href={item.link || `https://www.youtube.com/watch?v=${ytId}`}
+                            href={cardHref}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="group/link inline-flex items-center gap-1.5 text-sm font-medium text-slate-900 no-underline leading-5 hover:text-red-600 transition-colors"
@@ -429,13 +492,10 @@ export function InterviewsSection({
               style={{
                 scrollbarWidth: "none",
                 msOverflowStyle: "none",
-                /* paddingRight keeps trailing space after the last card */
                 paddingRight: "max(1rem, calc((100vw - 1440px) / 2 + 2.5rem))",
-                /* scroll-padding-left tells snap where the snap port starts (= spacer width) */
                 scrollPaddingLeft: "max(1rem, calc((100vw - 1440px) / 2 + 2.5rem))",
               }}
             >
-              {/* Leading spacer — real DOM node so padding-left quirk is avoided */}
               <div
                 ref={spacerRef}
                 aria-hidden
@@ -444,19 +504,30 @@ export function InterviewsSection({
               />
               {filteredItems.map((item) => {
                 const ytId = item.youtube_id || getYoutubeId(item.link) || '';
+                const isUpcomingEvent =
+                  item.is_upcoming === true ||
+                  (item.is_upcoming !== false && item.date && !isNaN(new Date(item.date).getTime()) && new Date(item.date) >= now);
+
+                const displayDate = isUpcomingEvent
+                  ? formatUpcomingDateHeader(item.date)
+                  : (item.date ? formatDate(item.date) : item.publishTimeText || '');
+
+                const cardHref = isUpcomingEvent
+                  ? `/proximasfechas/${item.slug || item.id}`
+                  : (item.link || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : '#'));
+
                 const thumbUrl = item.cover_url || (ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : '/placeholder-video.jpg');
-                const displayDate = item.date ? formatDate(item.date) : item.publishTimeText || '';
 
                 return (
                   <div
-                    key={ytId || item.title}
+                    key={item.id || ytId || item.title}
                     data-card
                     className="w-[300px] sm:w-[384px] min-h-0 sm:min-h-[320px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col shrink-0 snap-start group shadow-none"
                   >
-                    <a
-                      href={item.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <Link
+                      href={cardHref}
+                      target={isUpcomingEvent ? undefined : "_blank"}
+                      rel={isUpcomingEvent ? undefined : "noopener noreferrer"}
                       className="w-full aspect-video relative overflow-hidden bg-slate-200 shrink-0 block hover:opacity-95 transition-opacity"
                     >
                       <Image
@@ -467,48 +538,60 @@ export function InterviewsSection({
                         sizes="384px"
                         unoptimized
                       />
-                    </a>
+                    </Link>
 
                     <div className="w-full flex-1 p-4 flex flex-col justify-between items-start gap-3 w-full">
                       <div className="w-full flex flex-col gap-2">
-                        <div className="w-full flex justify-between items-center text-xs text-slate-500 font-medium">
-                          <span className="truncate max-w-[150px] sm:max-w-[200px]">{item.speaker_name || 'Especialista LUMINUS'}</span>
-                          <span>{displayDate}</span>
+                        <div className="w-full flex justify-between items-center text-xs font-medium">
+                          <span className="truncate max-w-[150px] sm:max-w-[200px] text-slate-500">{item.speaker_name || 'Especialista LUMINUS'}</span>
+                          <span className={isUpcomingEvent ? "font-bold text-slate-900 tracking-tight" : "text-slate-500"}>{displayDate}</span>
                         </div>
-                        <a
-                          href={item.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="no-underline hover:text-red-600 transition-colors block"
+                        <Link
+                          href={cardHref}
+                          target={isUpcomingEvent ? undefined : "_blank"}
+                          rel={isUpcomingEvent ? undefined : "noopener noreferrer"}
+                          className="no-underline hover:text-slate-600 transition-colors block"
                         >
                           <h3 className="w-full text-base font-semibold text-slate-900 leading-snug line-clamp-2">
                             {item.title}
                           </h3>
-                        </a>
+                        </Link>
                       </div>
 
                       <div className="inline-flex justify-start items-center mt-auto">
-                        <a
-                          href={item.link}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group/link inline-flex items-center gap-1.5 text-sm font-medium text-slate-900 no-underline leading-5 hover:text-red-600 transition-colors"
-                        >
-                          <span>Ver en YouTube</span>
-                          <div
-                            style={{
-                              maskImage: "url('/Icons/play_circle_24dp_000000_FILL0_wght300_GRAD0_opsz24.svg')",
-                              WebkitMaskImage: "url('/Icons/play_circle_24dp_000000_FILL0_wght300_GRAD0_opsz24.svg')",
-                              maskRepeat: "no-repeat",
-                              WebkitMaskRepeat: "no-repeat",
-                              maskPosition: "center",
-                              WebkitMaskPosition: "center",
-                              maskSize: "contain",
-                              WebkitMaskSize: "contain",
-                            }}
-                            className="w-5 h-5 bg-slate-900 group-hover/link:bg-red-600 shrink-0 transition-colors"
-                          />
-                        </a>
+                        {isUpcomingEvent ? (
+                          <Link
+                            href={cardHref}
+                            className="group/link inline-flex items-center gap-1.5 text-sm font-semibold text-slate-900 no-underline leading-5 hover:text-slate-600 transition-colors"
+                          >
+                            <span>Inscribirme</span>
+                            <svg className="w-4 h-4 text-slate-900 group-hover/link:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                          </Link>
+                        ) : (
+                          <a
+                            href={cardHref}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group/link inline-flex items-center gap-1.5 text-sm font-medium text-slate-900 no-underline leading-5 hover:text-red-600 transition-colors"
+                          >
+                            <span>Ver en YouTube</span>
+                            <div
+                              style={{
+                                maskImage: "url('/Icons/play_circle_24dp_000000_FILL0_wght300_GRAD0_opsz24.svg')",
+                                WebkitMaskImage: "url('/Icons/play_circle_24dp_000000_FILL0_wght300_GRAD0_opsz24.svg')",
+                                maskRepeat: "no-repeat",
+                                WebkitMaskRepeat: "no-repeat",
+                                maskPosition: "center",
+                                WebkitMaskPosition: "center",
+                                maskSize: "contain",
+                                WebkitMaskSize: "contain",
+                              }}
+                              className="w-5 h-5 bg-slate-900 group-hover/link:bg-red-600 shrink-0 transition-colors"
+                            />
+                          </a>
+                        )}
                       </div>
                     </div>
                   </div>
