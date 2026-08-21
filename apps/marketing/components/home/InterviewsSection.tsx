@@ -197,10 +197,10 @@ export function InterviewsSection({
 
   // Helper to format upcoming date header
   const formatUpcomingDateHeader = (dateStr?: string, timeText?: string) => {
-    if (!dateStr) return { tag: "PROXIMAMENTE", dateText: "" };
+    if (!dateStr) return { tag: "PRÓXIMAMENTE", dateText: "" };
     try {
       const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return { tag: "PROXIMAMENTE", dateText: dateStr };
+      if (isNaN(d.getTime())) return { tag: "PRÓXIMAMENTE", dateText: dateStr };
 
       const weekdayRaw = d.toLocaleDateString("es-ES", { weekday: "long" });
       const weekday = weekdayRaw.charAt(0).toUpperCase() + weekdayRaw.slice(1);
@@ -216,11 +216,11 @@ export function InterviewsSection({
       const cleanTime = `${hours}:${minutes} hs`;
 
       return {
-        tag: "PROXIMAMENTE",
+        tag: "PRÓXIMAMENTE",
         dateText: `${weekday} ${day} de ${month}. ${cleanTime}`,
       };
     } catch {
-      return { tag: "PROXIMAMENTE", dateText: dateStr || "" };
+      return { tag: "PRÓXIMAMENTE", dateText: dateStr || "" };
     }
   };
 
@@ -408,7 +408,7 @@ export function InterviewsSection({
                         {/* 1. Date / PROXIMAMENTE at the top */}
                         {isUpcomingEvent ? (
                           <div className="w-full flex justify-start items-center gap-1.5 text-xs font-medium truncate h-4">
-                            <span className="font-normal text-slate-900 tracking-tight shrink-0">
+                            <span className="font-medium text-slate-900 tracking-tight shrink-0">
                               {upcomingHeader.tag}
                             </span>
                             <span className="text-slate-500 truncate">
@@ -609,7 +609,7 @@ export function InterviewsSection({
                         {/* 1. Date / PROXIMAMENTE at the top */}
                         {isUpcomingEvent ? (
                           <div className="w-full flex justify-start items-center gap-1.5 text-xs font-medium truncate h-4">
-                            <span className="font-normal text-slate-900 tracking-tight shrink-0">
+                            <span className="font-medium text-slate-900 tracking-tight shrink-0">
                               {upcomingHeader.tag}
                             </span>
                             <span className="text-slate-500 truncate">

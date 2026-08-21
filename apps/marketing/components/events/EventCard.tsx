@@ -44,10 +44,10 @@ function getYoutubeId(url?: string): string | null {
 }
 
 function formatUpcomingDateHeader(dateStr?: string, timeText?: string) {
-  if (!dateStr) return { tag: "PROXIMAMENTE", dateText: "" };
+  if (!dateStr) return { tag: "PRÓXIMAMENTE", dateText: "" };
   try {
     const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return { tag: "PROXIMAMENTE", dateText: dateStr };
+    if (isNaN(d.getTime())) return { tag: "PRÓXIMAMENTE", dateText: dateStr };
 
     const weekdayRaw = d.toLocaleDateString("es-ES", { weekday: "long" });
     const weekday = weekdayRaw.charAt(0).toUpperCase() + weekdayRaw.slice(1);
@@ -57,22 +57,17 @@ function formatUpcomingDateHeader(dateStr?: string, timeText?: string) {
     const monthRaw = d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "");
     const month = monthRaw.charAt(0).toUpperCase() + monthRaw.slice(1);
 
-    let cleanTime = "";
-    if (timeText) {
-      const temp = timeText.replace(/\s*hs\.?/gi, "").trim();
-      cleanTime = temp ? `${temp}hrs` : "";
-    } else {
-      const hours = d.getHours().toString().padStart(2, "0");
-      const minutes = d.getMinutes().toString().padStart(2, "0");
-      cleanTime = `${hours}:${minutes}hrs`;
-    }
+    // Local converted time from Date object (no GMT label)
+    const hours = d.getHours().toString().padStart(2, "0");
+    const minutes = d.getMinutes().toString().padStart(2, "0");
+    const cleanTime = `${hours}:${minutes} hs`;
 
     return {
-      tag: "PROXIMAMENTE",
-      dateText: `${weekday} ${day} de ${month}.${cleanTime ? ` ${cleanTime}` : ""}`,
+      tag: "PRÓXIMAMENTE",
+      dateText: `${weekday} ${day} de ${month}. ${cleanTime}`,
     };
   } catch {
-    return { tag: "PROXIMAMENTE", dateText: dateStr || "" };
+    return { tag: "PRÓXIMAMENTE", dateText: dateStr || "" };
   }
 }
 
@@ -146,7 +141,7 @@ export function EventCard({ item }: EventCardProps) {
           {/* 1. Date / PROXIMAMENTE at the top */}
           {isUpcoming ? (
             <div className="w-full flex justify-start items-center gap-1.5 text-xs font-medium truncate h-4">
-              <span className="font-normal text-slate-900 tracking-tight shrink-0">
+              <span className="font-medium text-slate-900 tracking-tight shrink-0">
                 {upcomingHeader.tag}
               </span>
               <span className="text-slate-500 truncate">
