@@ -270,7 +270,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
               variant="soft"
               size="default"
               onClick={handleShare}
-              className="h-12 w-12 !px-0 rounded-2xl shrink-0 border border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100 flex items-center justify-center relative"
+              className="h-12 w-12 !px-0 !rounded-2xl shrink-0 border border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100 flex items-center justify-center relative"
               title={copied ? "¡Enlace copiado!" : "Compartir evento"}
               aria-label="Compartir evento"
             >
@@ -348,7 +348,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
                 variant="soft"
                 size="default"
                 onClick={handleShare}
-                className="h-12 w-12 !px-0 rounded-2xl shrink-0 border border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100 flex items-center justify-center relative"
+                className="h-12 w-12 !px-0 !rounded-2xl shrink-0 border border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100 flex items-center justify-center relative"
                 title={copied ? "¡Enlace copiado!" : "Compartir evento"}
                 aria-label="Compartir evento"
               >
@@ -381,7 +381,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
                 variant="soft"
                 size="default"
                 onClick={handleShare}
-                className="h-12 w-12 !px-0 rounded-2xl shrink-0 border border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100 flex items-center justify-center relative"
+                className="h-12 w-12 !px-0 !rounded-2xl shrink-0 border border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100 flex items-center justify-center relative"
                 title={copied ? "¡Enlace copiado!" : "Compartir evento"}
                 aria-label="Compartir evento"
               >

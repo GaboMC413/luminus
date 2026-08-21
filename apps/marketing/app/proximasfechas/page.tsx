@@ -72,7 +72,6 @@ export default async function ProximasFechasPage() {
   };
 
   supabaseEvents.forEach(processUpcomingEvent);
-  jsonEvents.forEach(processUpcomingEvent);
 
   const upcomingEvents = Array.from(upcomingMap.values()).sort((a: any, b: any) => {
     const dateA = a.date ? new Date(a.date).getTime() : 0;
