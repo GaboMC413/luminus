@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import fs from "fs";
 import path from "path";
 import { notFound } from "next/navigation";
@@ -13,16 +14,42 @@ interface PageProps {
   };
 }
 
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const event = await getEventBySlug(params.slug);
   if (!event) {
     return {
       title: "Inscripción a Evento | LUMINUS",
     };
   }
+
+  const title = `${event.title} | Inscripción LUMINUS`;
+  const description = event.description || "Un espacio para conectar, aprender y cuidar tu bienestar en Latinoamérica.";
+  const eventUrl = `https://luminusbienestar.com/proximasfechas/${params.slug}`;
+  const coverImageUrl = event.cover_url || "/logo-mails.png";
+
   return {
-    title: `${event.title} | Inscripción LUMINUS`,
-    description: event.description,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: eventUrl,
+      siteName: "LUMINUS",
+      locale: "es_LA",
+      type: "website",
+      images: [
+        {
+          url: coverImageUrl,
+          alt: event.title || "Portada de Evento LUMINUS",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [coverImageUrl],
+    },
   };
 }
 

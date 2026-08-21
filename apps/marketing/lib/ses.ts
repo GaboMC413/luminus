@@ -1,20 +1,22 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
-const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
-const accessKeyId = process.env.SES_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
-const secretAccessKey = process.env.SES_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
+function getSesClient() {
+  const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
+  const accessKeyId = process.env.SES_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.SES_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
 
-const sesClient = new SESClient({
-  region,
-  ...(accessKeyId && secretAccessKey
-    ? {
-        credentials: {
-          accessKeyId,
-          secretAccessKey,
-        },
-      }
-    : {}),
-});
+  return new SESClient({
+    region,
+    ...(accessKeyId && secretAccessKey
+      ? {
+          credentials: {
+            accessKeyId,
+            secretAccessKey,
+          },
+        }
+      : {}),
+  });
+}
 
 export interface ContactNotificationPayload {
   nombre: string;
@@ -47,10 +49,18 @@ export async function sendContactNotificationEmail(data: ContactNotificationPayl
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <style>
+    :root {
+      color-scheme: light;
+      supported-color-schemes: light;
+    }
+  </style>
   <title>Nuevo mensaje de contacto</title>
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; -webkit-font-smoothing: antialiased;">
-  <div style="max-width: 580px; margin: 0 auto; padding: 40px 24px;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #ffffff !important; color: #0f172a !important; -webkit-font-smoothing: antialiased;">
+  <div style="max-width: 580px; margin: 0 auto; padding: 40px 24px; background-color: #ffffff !important; color: #0f172a !important;">
     <div style="margin-bottom: 36px;">
       <img src="${LOGO_BASE64}" alt="LUMINUS" width="157" height="26" style="display: block; width: 157px; height: 26px; border: 0; outline: none; text-decoration: none;" />
     </div>
@@ -152,5 +162,183 @@ ${data.mensaje}
     },
   });
 
-  return await sesClient.send(command);
+  return await getSesClient().send(command);
+}
+
+export interface EventRegistrationEmailPayload {
+  firstName: string;
+  lastName?: string;
+  email: string;
+  eventTitle: string;
+  eventCoverUrl?: string | null;
+  eventDate?: string | null;
+  timeText?: string | null;
+  speakerName?: string | null;
+  youtubeUrl?: string | null;
+  eventSlug?: string | null;
+}
+
+function formatEmailDate(dateStr?: string | null): string {
+  if (!dateStr) return "fecha a confirmar";
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const weekday = d.toLocaleDateString("es-ES", { weekday: "long" });
+    const day = d.getDate();
+    const month = d.toLocaleDateString("es-ES", { month: "long" });
+    return `${weekday} ${day} de ${month}`;
+  } catch {
+    return dateStr;
+  }
+}
+
+function cleanTimeText(timeText?: string | null): string {
+  if (!timeText) return "hora a confirmar";
+  return timeText
+    .replace(/\s*\([^)]*GMT[^)]*\)/gi, "")
+    .replace(/\s*\([^)]*UTC[^)]*\)/gi, "")
+    .replace(/\s*GMT[+-]?\d*/gi, "")
+    .replace(/\s*UTC[+-]?\d*/gi, "")
+    .trim() || "hora a confirmar";
+}
+
+export async function sendEventRegistrationEmail(data: EventRegistrationEmailPayload) {
+  const fromEmail = process.env.EVENT_FROM_EMAIL || process.env.SES_FROM_EMAIL || "eventos@luminuslatam.com";
+  const toAddress = data.email.trim();
+
+  const formattedDate = formatEmailDate(data.eventDate);
+  const formattedTime = cleanTimeText(data.timeText);
+
+  const youtubeLink = data.youtubeUrl || (data.eventSlug ? `https://luminusbienestar.com/proximasfechas/${data.eventSlug}` : "https://www.youtube.com/@luminus_latam");
+  const coverImageUrl = data.eventCoverUrl || "https://luminusbienestar.com/logo-mails.png";
+
+  const subject = `[LUMINUS] Confirmación de inscripción: ${data.eventTitle}`;
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <style>
+    :root {
+      color-scheme: light;
+      supported-color-schemes: light;
+    }
+  </style>
+  <title>Confirmación de inscripción</title>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; background-color: #ffffff !important; color: #0f172a !important; -webkit-font-smoothing: antialiased;">
+  <div style="max-width: 580px; margin: 0 auto; padding: 40px 24px; background-color: #ffffff !important; color: #0f172a !important;">
+    
+    <div style="margin-bottom: 36px;">
+      <img src="${LOGO_BASE64}" alt="LUMINUS" width="157" height="26" style="display: block; width: 157px; height: 26px; border: 0; outline: none; text-decoration: none;" />
+    </div>
+
+    <h1 style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 16px 0; color: #0f172a;">
+      ¡Hola ${data.firstName}!
+    </h1>
+
+    <p style="font-size: 15px; line-height: 1.6; color: #334155; margin: 0 0 6px 0;">
+      Te has inscripto a la entrevista online <strong>${data.eventTitle}</strong>.
+    </p>
+
+    <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 28px 0;">
+      Podrás ver el estreno el ${formattedDate} a las ${formattedTime}.
+    </p>
+
+    <!-- Web-styled Event Card: No image padding, edge-to-edge cover, clean typography -->
+    <div style="background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 36px; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+      ${coverImageUrl ? `<img src="${coverImageUrl}" alt="${data.eventTitle}" style="width: 100%; max-height: 320px; object-fit: cover; display: block; border: 0; outline: none; border-top-left-radius: 15px; border-top-right-radius: 15px;" />` : ''}
+      
+      <div style="padding: 20px 24px 24px 24px;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 10px;">
+          <tr>
+            <td align="left" style="font-size: 13px; font-weight: 600; color: #64748b;">
+              ${data.speakerName ? `Con ${data.speakerName}` : 'Especialista LUMINUS'}
+            </td>
+            <td align="right" style="font-size: 13px; font-weight: 500; color: #64748b;">
+              ${formattedDate}
+            </td>
+          </tr>
+        </table>
+        
+        <h2 style="font-size: 20px; font-weight: 700; line-height: 1.35; color: #0f172a; margin: 0 0 20px 0;">
+          ${data.eventTitle}
+        </h2>
+        
+        <div style="border-top: 1px solid #f1f5f9; padding-top: 18px;">
+          <a href="${youtubeLink}" target="_blank" style="display: inline-block; background-color: #0f172a; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 600; text-align: center;">
+            Ver en YouTube
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 36px 0 28px 0;" />
+    
+    <div style="text-align: center; max-width: 500px; margin: 0 auto;">
+      <p style="font-size: 15px; font-weight: 700; margin: 0 0 10px 0; line-height: 1.4; color: #0f172a;">
+        Una red para conectar, aprender y cuidar tu bienestar.
+      </p>
+      <p style="font-size: 13.5px; line-height: 1.6; color: #64748b; margin: 0 0 24px 0;">
+        Conectamos personas y especialistas de distintas áreas en un mismo espacio para compartir experiencias, acceder a nuevas perspectivas y encontrar formas de cuidar el bienestar.
+      </p>
+
+      <div style="text-align: center; margin-bottom: 20px;">
+        <a href="https://www.youtube.com/@luminus_latam" target="_blank" style="display: inline-block; margin: 0 10px; text-decoration: none; color: #0f172a;" aria-label="YouTube">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+        </a>
+        <a href="https://www.instagram.com/luminus_latam/" target="_blank" style="display: inline-block; margin: 0 10px; text-decoration: none; color: #0f172a;" aria-label="Instagram">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        </a>
+        <a href="https://www.linkedin.com/in/gabrielmedcap/" target="_blank" style="display: inline-block; margin: 0 10px; text-decoration: none; color: #0f172a;" aria-label="LinkedIn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+        </a>
+      </div>
+
+      <p style="margin: 0; font-size: 13px; color: #94a3b8; text-align: center;">© 2026 LUMINUS Latam.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  const textContent = `
+¡Hola ${data.firstName}!
+
+Te has inscripto a la entrevista online: ${data.eventTitle}
+Podrás ver el estreno el ${formattedDate} a las ${formattedTime}.
+
+Ver en YouTube: ${youtubeLink}
+
+LUMINUS Latam
+  `.trim();
+
+  const command = new SendEmailCommand({
+    Source: fromEmail,
+    Destination: {
+      ToAddresses: [toAddress],
+    },
+    Message: {
+      Subject: {
+        Data: subject,
+        Charset: "UTF-8",
+      },
+      Body: {
+        Html: {
+          Data: htmlContent,
+          Charset: "UTF-8",
+        },
+        Text: {
+          Data: textContent,
+          Charset: "UTF-8",
+        },
+      },
+    },
+  });
+
+  return await getSesClient().send(command);
 }
