@@ -7,7 +7,7 @@ export function ContactBanner() {
       <div className="w-full max-w-[1440px] mx-auto flex flex-col lg:flex-row items-stretch min-h-[620px]">
 
         {/* Left 50% Column: Text & CTA */}
-        <div className="w-full lg:w-1/2 p-8 md:p-14 lg:p-16 flex flex-col justify-center gap-6">
+        <div className="w-full lg:w-1/2 py-14 px-8 sm:p-14 md:p-14 lg:p-16 flex flex-col justify-center gap-6">
           <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-white">
             Hacer el bienestar más cercano
           </h2>

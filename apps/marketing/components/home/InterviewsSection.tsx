@@ -174,17 +174,53 @@ export function InterviewsSection({
     }
   };
 
+  // Helper to validate speaker name is a real person name and not title text
+  const isSpeakerNameValid = (speakerName?: string, title?: string) => {
+    if (!speakerName) return false;
+    const cleanName = speakerName.trim();
+    if (
+      cleanName === "Especialista LUMINUS" ||
+      cleanName === "Especialistas LUMINUS" ||
+      cleanName === "Especialista" ||
+      cleanName === "LUMINUS"
+    ) {
+      return false;
+    }
+    if (title) {
+      const cleanTitle = title.trim().toLowerCase();
+      const cleanSpeaker = cleanName.toLowerCase();
+      if (cleanTitle === cleanSpeaker) return false;
+      if (cleanSpeaker.length >= 4 && cleanTitle.includes(cleanSpeaker)) return false;
+    }
+    return true;
+  };
+
   // Helper to format upcoming date header
-  const formatUpcomingDateHeader = (dateStr?: string) => {
-    if (!dateStr) return "PROXIMAMENTE";
+  const formatUpcomingDateHeader = (dateStr?: string, timeText?: string) => {
+    if (!dateStr) return { tag: "PROXIMAMENTE", dateText: "" };
     try {
       const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return "PROXIMAMENTE";
+      if (isNaN(d.getTime())) return { tag: "PROXIMAMENTE", dateText: dateStr };
+
+      const weekdayRaw = d.toLocaleDateString("es-ES", { weekday: "long" });
+      const weekday = weekdayRaw.charAt(0).toUpperCase() + weekdayRaw.slice(1);
+
       const day = d.getDate();
-      const month = d.toLocaleDateString("es-ES", { month: "short" }).toUpperCase().replace(".", "");
-      return `PROXIMAMENTE: ${day} ${month}`;
+
+      const monthRaw = d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "");
+      const month = monthRaw.charAt(0).toUpperCase() + monthRaw.slice(1);
+
+      // Local converted time from Date object (no GMT label)
+      const hours = d.getHours().toString().padStart(2, "0");
+      const minutes = d.getMinutes().toString().padStart(2, "0");
+      const cleanTime = `${hours}:${minutes} hs`;
+
+      return {
+        tag: "PROXIMAMENTE",
+        dateText: `${weekday} ${day} de ${month}. ${cleanTime}`,
+      };
     } catch {
-      return "PROXIMAMENTE";
+      return { tag: "PROXIMAMENTE", dateText: dateStr || "" };
     }
   };
 
@@ -306,7 +342,7 @@ export function InterviewsSection({
   };
 
   return (
-    <section id="entrevistas" className="w-full pt-8 md:pt-12 pb-8 md:pb-16 bg-white flex-1 flex flex-col">
+    <section id="entrevistas" className="w-full py-16 md:py-24 bg-white flex-1 flex flex-col">
       {showTitle && (
         <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10 mb-6 md:mb-10">
           <div className="w-full flex flex-col justify-center items-center gap-3 md:gap-4 text-center">
@@ -332,8 +368,12 @@ export function InterviewsSection({
                   item.is_upcoming === true ||
                   (item.is_upcoming !== false && item.date && !isNaN(new Date(item.date).getTime()) && new Date(item.date) >= now);
 
+                const upcomingHeader = isUpcomingEvent
+                  ? formatUpcomingDateHeader(item.date, item.time_text)
+                  : { tag: "", dateText: "" };
+
                 const displayDate = isUpcomingEvent
-                  ? formatUpcomingDateHeader(item.date)
+                  ? upcomingHeader.dateText
                   : (item.date ? formatDate(item.date) : item.publishTimeText || '');
 
                 const cardHref = isUpcomingEvent
@@ -345,7 +385,7 @@ export function InterviewsSection({
                 return (
                   <div
                     key={item.id || ytId || item.title}
-                    className="w-full min-h-0 sm:min-h-[320px] h-full bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col group shadow-none"
+                    className="w-full h-[390px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col group shadow-none"
                   >
                     <Link
                       href={cardHref}
@@ -365,27 +405,47 @@ export function InterviewsSection({
 
                     <div className="w-full flex-1 p-4 flex flex-col justify-between items-start gap-3">
                       <div className="w-full flex flex-col gap-2">
-                        <div className="w-full flex justify-between items-center text-xs font-medium">
-                          <span className="truncate max-w-[150px] sm:max-w-[200px] text-slate-500">{item.speaker_name || 'Especialista LUMINUS'}</span>
-                          <span className={isUpcomingEvent ? "font-bold text-slate-900 tracking-tight" : "text-slate-500"}>{displayDate}</span>
-                        </div>
+                        {/* 1. Date / PROXIMAMENTE at the top */}
+                        {isUpcomingEvent ? (
+                          <div className="w-full flex justify-start items-center gap-1.5 text-xs font-medium truncate h-4">
+                            <span className="font-normal text-slate-900 tracking-tight shrink-0">
+                              {upcomingHeader.tag}
+                            </span>
+                            <span className="text-slate-500 truncate">
+                              {upcomingHeader.dateText}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="w-full flex justify-start items-center text-xs font-medium text-slate-500 h-4">
+                            <span>{displayDate}</span>
+                          </div>
+                        )}
+                        {/* 2. Title */}
                         <Link
                           href={cardHref}
                           target={isUpcomingEvent ? undefined : "_blank"}
                           rel={isUpcomingEvent ? undefined : "noopener noreferrer"}
                           className="no-underline hover:text-slate-600 transition-colors block"
                         >
-                          <h3 className="w-full text-base font-semibold text-slate-900 leading-snug line-clamp-2">
+                          <h3 className="w-full text-base font-semibold text-slate-900 leading-snug line-clamp-2 min-h-[44px]">
                             {item.title}
                           </h3>
                         </Link>
+                        {/* 3. Speaker name below title - fixed height slot for exact alignment */}
+                        <div className="h-5 flex items-center">
+                          {isSpeakerNameValid(item.speaker_name, item.title) && (
+                            <span className="text-xs font-medium text-slate-500 truncate max-w-full">
+                              Con {item.speaker_name!.startsWith('Con ') ? item.speaker_name!.slice(4) : item.speaker_name}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       <div className="inline-flex justify-start items-center mt-auto pt-3 border-t border-slate-100 w-full">
                         {isUpcomingEvent ? (
                           <Link
                             href={cardHref}
-                            className="group/link inline-flex items-center gap-1.5 text-sm font-semibold text-slate-900 no-underline leading-5 hover:text-slate-600 transition-colors"
+                            className="group/link inline-flex items-center gap-1.5 text-sm font-medium text-slate-900 no-underline leading-5 hover:text-slate-600 transition-colors"
                           >
                             <span>Inscribirme</span>
                             <svg className="w-4 h-4 text-slate-900 group-hover/link:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -399,7 +459,7 @@ export function InterviewsSection({
                             rel="noopener noreferrer"
                             className="group/link inline-flex items-center gap-1.5 text-sm font-medium text-slate-900 no-underline leading-5 hover:text-red-600 transition-colors"
                           >
-                            <span>Ver en YouTube</span>
+                            <span>Ver grabación</span>
                             <div
                               style={{
                                 maskImage: "url('/Icons/play_circle_24dp_000000_FILL0_wght300_GRAD0_opsz24.svg')",
@@ -508,8 +568,12 @@ export function InterviewsSection({
                   item.is_upcoming === true ||
                   (item.is_upcoming !== false && item.date && !isNaN(new Date(item.date).getTime()) && new Date(item.date) >= now);
 
+                const upcomingHeader = isUpcomingEvent
+                  ? formatUpcomingDateHeader(item.date, item.time_text)
+                  : { tag: "", dateText: "" };
+
                 const displayDate = isUpcomingEvent
-                  ? formatUpcomingDateHeader(item.date)
+                  ? upcomingHeader.dateText
                   : (item.date ? formatDate(item.date) : item.publishTimeText || '');
 
                 const cardHref = isUpcomingEvent
@@ -522,7 +586,7 @@ export function InterviewsSection({
                   <div
                     key={item.id || ytId || item.title}
                     data-card
-                    className="w-[300px] sm:w-[384px] min-h-0 sm:min-h-[320px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col shrink-0 snap-start group shadow-none"
+                    className="w-[300px] sm:w-[384px] h-[390px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col shrink-0 snap-start group shadow-none"
                   >
                     <Link
                       href={cardHref}
@@ -542,27 +606,47 @@ export function InterviewsSection({
 
                     <div className="w-full flex-1 p-4 flex flex-col justify-between items-start gap-3 w-full">
                       <div className="w-full flex flex-col gap-2">
-                        <div className="w-full flex justify-between items-center text-xs font-medium">
-                          <span className="truncate max-w-[150px] sm:max-w-[200px] text-slate-500">{item.speaker_name || 'Especialista LUMINUS'}</span>
-                          <span className={isUpcomingEvent ? "font-bold text-slate-900 tracking-tight" : "text-slate-500"}>{displayDate}</span>
-                        </div>
+                        {/* 1. Date / PROXIMAMENTE at the top */}
+                        {isUpcomingEvent ? (
+                          <div className="w-full flex justify-start items-center gap-1.5 text-xs font-medium truncate h-4">
+                            <span className="font-normal text-slate-900 tracking-tight shrink-0">
+                              {upcomingHeader.tag}
+                            </span>
+                            <span className="text-slate-500 truncate">
+                              {upcomingHeader.dateText}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="w-full flex justify-start items-center text-xs font-medium text-slate-500 h-4">
+                            <span>{displayDate}</span>
+                          </div>
+                        )}
+                        {/* 2. Title */}
                         <Link
                           href={cardHref}
                           target={isUpcomingEvent ? undefined : "_blank"}
                           rel={isUpcomingEvent ? undefined : "noopener noreferrer"}
                           className="no-underline hover:text-slate-600 transition-colors block"
                         >
-                          <h3 className="w-full text-base font-semibold text-slate-900 leading-snug line-clamp-2">
+                          <h3 className="w-full text-base font-semibold text-slate-900 leading-snug line-clamp-2 min-h-[44px]">
                             {item.title}
                           </h3>
                         </Link>
+                        {/* 3. Speaker name below title - fixed height slot for exact alignment */}
+                        <div className="h-5 flex items-center">
+                          {isSpeakerNameValid(item.speaker_name, item.title) && (
+                            <span className="text-xs font-medium text-slate-500 truncate max-w-full">
+                              Con {item.speaker_name!.startsWith('Con ') ? item.speaker_name!.slice(4) : item.speaker_name}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="inline-flex justify-start items-center mt-auto">
+                      <div className="inline-flex justify-start items-center mt-auto pt-3 border-t border-slate-100 w-full">
                         {isUpcomingEvent ? (
                           <Link
                             href={cardHref}
-                            className="group/link inline-flex items-center gap-1.5 text-sm font-semibold text-slate-900 no-underline leading-5 hover:text-slate-600 transition-colors"
+                            className="group/link inline-flex items-center gap-1.5 text-sm font-medium text-slate-900 no-underline leading-5 hover:text-slate-600 transition-colors"
                           >
                             <span>Inscribirme</span>
                             <svg className="w-4 h-4 text-slate-900 group-hover/link:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -576,7 +660,7 @@ export function InterviewsSection({
                             rel="noopener noreferrer"
                             className="group/link inline-flex items-center gap-1.5 text-sm font-medium text-slate-900 no-underline leading-5 hover:text-red-600 transition-colors"
                           >
-                            <span>Ver en YouTube</span>
+                            <span>Ver grabación</span>
                             <div
                               style={{
                                 maskImage: "url('/Icons/play_circle_24dp_000000_FILL0_wght300_GRAD0_opsz24.svg')",

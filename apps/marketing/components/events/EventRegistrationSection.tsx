@@ -157,13 +157,19 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
     }
   };
 
+  const coverUrl =
+    event.cover_url ||
+    (event.youtube_id
+      ? `https://i.ytimg.com/vi/${event.youtube_id}/hqdefault.jpg`
+      : "/placeholder-video.jpg");
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.city) return;
 
     setIsSubmitting(true);
     try {
-      await fetch("/api/event-inscription", {
+      const res = await fetch("/api/event-inscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -182,6 +188,12 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           eventSlug: event.slug,
         }),
       });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        console.error("[Inscription Error]:", data.error || data.warnings);
+      } else {
+        console.log("[Inscription Success]:", data);
+      }
     } catch (err) {
       console.warn("Registration API failed:", err);
     } finally {
@@ -190,16 +202,10 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
     }
   };
 
-  const coverUrl =
-    event.cover_url ||
-    (event.youtube_id
-      ? `https://i.ytimg.com/vi/${event.youtube_id}/hqdefault.jpg`
-      : "/placeholder-video.jpg");
-
   const formattedDateTime = formatDateTimeFull(event.date, event.time_text);
 
   return (
-    <div className="w-full py-8 md:py-14 bg-white flex-1 flex flex-col items-center">
+    <div className="w-full py-14 sm:py-16 md:py-24 bg-white flex-1 flex flex-col items-center">
       <div className="w-full max-w-[1140px] px-4 sm:px-6 lg:px-8 flex flex-col gap-6 text-left">
 
         {/* Back Link */}
@@ -305,7 +311,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
               variant="soft"
               size="default"
               onClick={handleShare}
-              className="h-12 w-12 !px-0 rounded-2xl shrink-0 border border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100 flex items-center justify-center relative"
+              className="h-12 w-12 !px-0 !rounded-2xl shrink-0 border border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100 flex items-center justify-center relative"
               title={copied ? "¡Enlace copiado!" : "Compartir evento"}
               aria-label="Compartir evento"
             >

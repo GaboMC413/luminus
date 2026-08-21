@@ -43,17 +43,72 @@ function getYoutubeId(url?: string): string | null {
   return match && match[2].length === 11 ? match[2] : null;
 }
 
+function formatUpcomingDateHeader(dateStr?: string, timeText?: string) {
+  if (!dateStr) return { tag: "PROXIMAMENTE", dateText: "" };
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return { tag: "PROXIMAMENTE", dateText: dateStr };
+
+    const weekdayRaw = d.toLocaleDateString("es-ES", { weekday: "long" });
+    const weekday = weekdayRaw.charAt(0).toUpperCase() + weekdayRaw.slice(1);
+
+    const day = d.getDate();
+
+    const monthRaw = d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "");
+    const month = monthRaw.charAt(0).toUpperCase() + monthRaw.slice(1);
+
+    let cleanTime = "";
+    if (timeText) {
+      const temp = timeText.replace(/\s*hs\.?/gi, "").trim();
+      cleanTime = temp ? `${temp}hrs` : "";
+    } else {
+      const hours = d.getHours().toString().padStart(2, "0");
+      const minutes = d.getMinutes().toString().padStart(2, "0");
+      cleanTime = `${hours}:${minutes}hrs`;
+    }
+
+    return {
+      tag: "PROXIMAMENTE",
+      dateText: `${weekday} ${day} de ${month}.${cleanTime ? ` ${cleanTime}` : ""}`,
+    };
+  } catch {
+    return { tag: "PROXIMAMENTE", dateText: dateStr || "" };
+  }
+}
+
+function isSpeakerNameValid(speakerName?: string, title?: string) {
+  if (!speakerName) return false;
+  const cleanName = speakerName.trim();
+  if (
+    cleanName === "Especialista LUMINUS" ||
+    cleanName === "Especialistas LUMINUS" ||
+    cleanName === "Especialista" ||
+    cleanName === "LUMINUS"
+  ) {
+    return false;
+  }
+  if (title) {
+    const cleanTitle = title.trim().toLowerCase();
+    const cleanSpeaker = cleanName.toLowerCase();
+    if (cleanTitle === cleanSpeaker) return false;
+    if (cleanSpeaker.length >= 4 && cleanTitle.includes(cleanSpeaker)) return false;
+  }
+  return true;
+}
+
 export function EventCard({ item }: EventCardProps) {
   const ytId = item.youtube_id || getYoutubeId(item.link) || "";
   const thumbUrl =
     item.cover_url ||
     (ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : "/placeholder-video.jpg");
-  const displayDate = item.date ? formatDate(item.date) : item.publishTimeText || "";
+  const isUpcoming = item.is_upcoming === true || (Boolean(item.date) && !isNaN(new Date(item.date!).getTime()) && new Date(item.date!) >= new Date());
+  const upcomingHeader = isUpcoming ? formatUpcomingDateHeader(item.date, item.time_text) : { tag: "", dateText: "" };
+  const displayDate = isUpcoming ? upcomingHeader.dateText : (item.date ? formatDate(item.date) : item.publishTimeText || "");
   const videoLink = item.link || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : undefined);
   const hasVideo = Boolean(ytId || videoLink);
 
   return (
-    <div className="w-full min-h-0 sm:min-h-[320px] h-full bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col group shadow-none">
+    <div className="w-full h-[390px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col group shadow-none">
 
       {/* Thumbnail — edge-to-edge, no extra border radius */}
       {hasVideo && videoLink ? (
@@ -88,16 +143,25 @@ export function EventCard({ item }: EventCardProps) {
       {/* Content */}
       <div className="w-full flex-1 p-4 flex flex-col justify-between items-start gap-3">
         <div className="w-full flex flex-col gap-2">
+          {/* 1. Date / PROXIMAMENTE at the top */}
+          {isUpcoming ? (
+            <div className="w-full flex justify-start items-center gap-1.5 text-xs font-medium truncate h-4">
+              <span className="font-normal text-slate-900 tracking-tight shrink-0">
+                {upcomingHeader.tag}
+              </span>
+              <span className="text-slate-500 truncate">
+                {upcomingHeader.dateText}
+              </span>
+            </div>
+          ) : displayDate ? (
+            <div className="w-full flex justify-start items-center text-xs font-medium text-slate-500 h-4">
+              <span>{displayDate}</span>
+            </div>
+          ) : (
+            <div className="h-4" />
+          )}
 
-          {/* Speaker + Date row */}
-          <div className="w-full flex justify-between items-center text-xs text-slate-500 font-medium">
-            <span className="truncate max-w-[150px] sm:max-w-[200px]">
-              {item.speaker_name || "Especialista LUMINUS"}
-            </span>
-            {displayDate && <span>{displayDate}</span>}
-          </div>
-
-          {/* Title */}
+          {/* 2. Title */}
           {hasVideo && videoLink ? (
             <a
               href={videoLink}
@@ -105,15 +169,24 @@ export function EventCard({ item }: EventCardProps) {
               rel="noopener noreferrer"
               className="no-underline hover:text-red-600 transition-colors block"
             >
-              <h3 className="w-full text-base font-semibold text-slate-900 leading-snug line-clamp-2">
+              <h3 className="w-full text-base font-semibold text-slate-900 leading-snug line-clamp-2 min-h-[44px]">
                 {item.title}
               </h3>
             </a>
           ) : (
-            <h3 className="w-full text-base font-semibold text-slate-900 leading-snug line-clamp-2">
+            <h3 className="w-full text-base font-semibold text-slate-900 leading-snug line-clamp-2 min-h-[44px]">
               {item.title}
             </h3>
           )}
+
+          {/* 3. Speaker name below title - fixed height slot for exact alignment */}
+          <div className="h-5 flex items-center">
+            {isSpeakerNameValid(item.speaker_name, item.title) && (
+              <span className="text-xs font-medium text-slate-500 truncate max-w-full">
+                Con {item.speaker_name!.startsWith('Con ') ? item.speaker_name!.slice(4) : item.speaker_name}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Footer */}

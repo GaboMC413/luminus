@@ -2,15 +2,16 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { sendEventRegistrationEmail } from "@/lib/ses";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "";
+function getSupabaseServer() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const supabaseKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    "";
 
-const supabaseServer = supabaseUrl && supabaseKey
-  ? createClient(supabaseUrl, supabaseKey)
-  : null;
+  if (!supabaseUrl || !supabaseKey) return null;
+  return createClient(supabaseUrl, supabaseKey);
+}
 
 export async function POST(request: Request) {
   try {
@@ -39,6 +40,8 @@ export async function POST(request: Request) {
       );
     }
 
+    const supabaseServer = getSupabaseServer();
+
     // 1. Save in Supabase
     let dbSuccess = false;
     let dbError = null;
@@ -61,43 +64,67 @@ export async function POST(request: Request) {
           .single();
 
         if (contactError) {
-          console.warn("[Supabase Warning] Contact upsert error:", contactError.message);
+          console.error("[Supabase Contact Error]:", contactError.message);
           dbError = contactError.message;
         } else {
           dbSuccess = true;
           const contactId = contactData?.id;
 
-          if (contactId && eventId) {
+          // Resolve eventId to a valid UUID if necessary
+          let resolvedEventId = eventId;
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId || "");
+
+          if (!isUuid && (eventSlug || eventTitle)) {
+            const { data: foundEvent } = await supabaseServer
+              .from("events")
+              .select("id")
+              .or(`slug.eq.${eventSlug},title.eq.${eventTitle}`)
+              .maybeSingle();
+
+            if (foundEvent) {
+              resolvedEventId = foundEvent.id;
+            }
+          }
+
+          const finalIsUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(resolvedEventId || "");
+
+          if (contactId && finalIsUuid) {
             const { error: inscriptionError } = await supabaseServer
               .from("event_inscriptions")
-              .insert({
-                contact_id: contactId,
-                event_id: eventId,
-                attended: false,
-              });
+              .upsert(
+                {
+                  contact_id: contactId,
+                  event_id: resolvedEventId,
+                  attended: false,
+                },
+                { onConflict: "contact_id,event_id" }
+              );
 
             if (inscriptionError) {
-              console.warn("[Supabase Warning] Inscription insert error:", inscriptionError.message);
+              console.error("[Supabase Inscription Error]:", inscriptionError.message);
+            } else {
+              console.log(`[Supabase Inscription Success] Contact ${contactId} registered for event ${resolvedEventId}`);
             }
           }
         }
       } catch (err: any) {
-        console.warn("[Supabase Error]:", err?.message);
+        console.error("[Supabase Unexpected Error]:", err?.message);
         dbError = err?.message;
       }
+    } else {
+      console.warn("[Supabase Warning] Supabase client not initialized in event-inscription API");
     }
 
     // 2. Send confirmation email via AWS SES
     let emailSuccess = false;
     let emailError = null;
 
-    // Format Youtube URL if not explicitly provided
     const finalYoutubeUrl =
       youtubeUrl ||
       (youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : null);
 
     try {
-      await sendEventRegistrationEmail({
+      const sesResult = await sendEventRegistrationEmail({
         firstName: firstName.trim(),
         lastName: lastName ? lastName.trim() : undefined,
         email: email.trim(),
@@ -109,6 +136,7 @@ export async function POST(request: Request) {
         youtubeUrl: finalYoutubeUrl,
         eventSlug: eventSlug || null,
       });
+      console.log("[AWS SES Event Email Success] MessageId:", sesResult?.MessageId);
       emailSuccess = true;
     } catch (err: any) {
       console.error("[AWS SES Event Email Error]:", {
