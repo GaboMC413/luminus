@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { sendEventRegistrationEmail } from "@/lib/ses";
+import { sendEventRegistrationEmail } from "../../../../../platform/lib/mails/sender";
 
 export async function POST(req: Request) {
   try {
@@ -127,10 +127,8 @@ export async function POST(req: Request) {
     let emailStatus = "sent";
     if (!alreadyRegistered || isResend) {
       try {
-        await sendEventRegistrationEmail({
+        await sendEventRegistrationEmail(cleanEmail, {
           firstName: guest.firstName || cleanFirstName || "Invitado",
-          lastName: guest.lastName || cleanLastName,
-          email: cleanEmail,
           eventTitle: eventTitle || "Evento de Bienestar LUMINUS",
           eventCoverUrl,
           eventDate,
