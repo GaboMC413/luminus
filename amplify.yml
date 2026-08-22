@@ -8,7 +8,9 @@ applications:
             - cd ../.. && npm ci --cache .npm --prefer-offline
         build:
           commands:
-            - cd ../.. && node scripts/generate-env.js apps/platform/.env.production && npm run db:generate -w platform && npm run build:platform
+            - echo "PWD START: $(pwd)"
+            - cd ../.. && echo "PWD AFTER CD: $(pwd)" && (ls -la scripts/ || true) && (node scripts/generate-env.js apps/platform/.env.production || true)
+            - cd ../.. && npm run db:generate -w platform && npm run build:platform
       artifacts:
         baseDirectory: .next
         files:
@@ -27,7 +29,9 @@ applications:
             - cd ../.. && npm ci --cache .npm --prefer-offline
         build:
           commands:
-            - cd ../.. && node scripts/generate-env.js apps/marketing/.env.production && npm run db:generate -w platform && npm run build:marketing
+            - echo "PWD START: $(pwd)"
+            - cd ../.. && echo "PWD AFTER CD: $(pwd)" && (ls -la scripts/ || true) && (node scripts/generate-env.js apps/marketing/.env.production || true)
+            - cd ../.. && npm run db:generate -w platform && npm run build:marketing
       artifacts:
         baseDirectory: .next
         files:
