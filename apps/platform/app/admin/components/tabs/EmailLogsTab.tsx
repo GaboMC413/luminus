@@ -101,7 +101,6 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
     emailEndDate !== "";
 
   return (
-  return (
     <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-8">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
