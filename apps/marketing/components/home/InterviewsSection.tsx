@@ -604,7 +604,7 @@ export function InterviewsSection({
                       />
                     </Link>
 
-                    <div className="w-full flex-1 p-4 flex flex-col justify-between items-start gap-3 w-full">
+                    <div className="w-full flex-1 p-4 flex flex-col justify-between items-start gap-3">
                       <div className="w-full flex flex-col gap-2">
                         {/* 1. Date / PROXIMAMENTE at the top */}
                         {isUpcomingEvent ? (
