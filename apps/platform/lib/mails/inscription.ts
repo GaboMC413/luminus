@@ -11,10 +11,26 @@ export interface EventInscriptionEmailOptions {
   eventSlug?: string | null;
 }
 
+export function formatDateSpanish(dateString?: string | null): string {
+  if (!dateString) return "Próximamente";
+  try {
+    const d = new Date(dateString);
+    if (!isNaN(d.getTime())) {
+      const weekday = d.toLocaleDateString("es-ES", { weekday: "long" });
+      const day = d.getDate();
+      const month = d.toLocaleDateString("es-ES", { month: "long" });
+      const capitalizedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+      const capitalizedMonth = month.charAt(0).toUpperCase() + month.slice(1);
+      return `${capitalizedWeekday} ${day} de ${capitalizedMonth}`;
+    }
+  } catch (e) {}
+  return dateString;
+}
+
 export function renderEventRegistrationEmailHtml(data: EventInscriptionEmailOptions): string {
   const firstName = data.firstName || "Usuario";
   const eventTitle = data.eventTitle || "Taller de Bienestar LUMINUS";
-  const formattedDate = data.eventDate || "Próximamente";
+  const formattedDate = formatDateSpanish(data.eventDate);
   const formattedTime = data.timeText || "18:00 hs (GMT-3)";
   const youtubeLink = data.youtubeUrl || (data.eventSlug ? `https://luminuslatam.com/proximasfechas/${data.eventSlug}` : "https://www.youtube.com/@luminus_latam");
   const coverImageUrl = data.eventCoverUrl || LOGO_IMAGE_URL;

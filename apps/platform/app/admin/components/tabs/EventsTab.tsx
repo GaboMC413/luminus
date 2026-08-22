@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { AdminEvent, AdminEventInscription } from "../../types";
 import { InputField } from "@/components/ui/InputField";
 import { SelectInput } from "@/components/ui/SelectInput";
@@ -140,11 +140,42 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
   // Selected Event object
   const selectedEvent = eventsList.find((ev) => ev.id === selectedEventId) ?? filteredEvents[0] ?? eventsList[0] ?? null;
 
+  const [inscriptionsList, setInscriptionsList] = useState<AdminEventInscription[]>(inscriptions);
+  const [deletingInscriptionId, setDeletingInscriptionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setInscriptionsList(inscriptions);
+  }, [inscriptions]);
+
+  const handleDeleteInscription = async (inscriptionId: string) => {
+    if (!confirm("¿Estás seguro de que deseas eliminar la inscripción de este usuario?")) {
+      return;
+    }
+
+    setDeletingInscriptionId(inscriptionId);
+    try {
+      const res = await fetch(`/api/admin/event-inscriptions/${inscriptionId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setInscriptionsList((prev) => prev.filter((ins) => ins.id !== inscriptionId));
+      } else {
+        alert(data.error || "No se pudo eliminar la inscripción.");
+      }
+    } catch (err) {
+      console.error("Error deleting inscription:", err);
+      alert("Error de conexión al eliminar la inscripción.");
+    } finally {
+      setDeletingInscriptionId(null);
+    }
+  };
+
   // Inscriptions for the currently selected event
   const selectedEventInscriptions = useMemo(() => {
     if (!selectedEvent) return [];
-    return inscriptions.filter((ins) => ins.eventId === selectedEvent.id);
-  }, [inscriptions, selectedEvent]);
+    return inscriptionsList.filter((ins) => ins.eventId === selectedEvent.id);
+  }, [inscriptionsList, selectedEvent]);
 
   // Start editing existing event
   const handleStartEdit = () => {
@@ -644,15 +675,16 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                         <table className="w-full text-left text-xs border-collapse table-fixed">
                           <thead>
                             <tr className="bg-slate-100/60 border-b border-slate-200/60 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
-                              <th className="py-2.5 px-3 w-[28%]">Persona</th>
-                              <th className="py-2.5 px-3 w-[34%]">Email</th>
-                              <th className="py-2.5 px-3 w-[22%]">Ciudad</th>
-                              <th className="py-2.5 px-3 w-[16%] text-right">Fecha</th>
+                              <th className="py-2.5 px-3 w-[26%]">Persona</th>
+                              <th className="py-2.5 px-3 w-[32%]">Email</th>
+                              <th className="py-2.5 px-3 w-[20%]">Ciudad</th>
+                              <th className="py-2.5 px-3 w-[14%] text-right">Fecha</th>
+                              <th className="py-2.5 px-3 w-[8%] text-right"></th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 text-slate-700">
                             {selectedEventInscriptions.map((ins) => (
-                              <tr key={ins.id} className="hover:bg-slate-100/50">
+                              <tr key={ins.id} className="hover:bg-slate-100/50 group transition-colors relative">
                                 <td className="py-2.5 px-3 font-semibold text-slate-900 truncate">
                                   {ins.guestFirstName} {ins.guestLastName}
                                 </td>
@@ -668,6 +700,19 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                                     month: "2-digit",
                                     year: "numeric",
                                   })}
+                                </td>
+                                <td className="py-2.5 px-3 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteInscription(ins.id)}
+                                    disabled={deletingInscriptionId === ins.id}
+                                    className="opacity-0 group-hover:opacity-100 transition-all duration-150 p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 cursor-pointer disabled:opacity-50 inline-flex items-center justify-center"
+                                    title="Eliminar inscripción"
+                                  >
+                                    <span className="material-symbols-rounded text-[16px] block">
+                                      {deletingInscriptionId === ins.id ? "progress_activity" : "delete"}
+                                    </span>
+                                  </button>
                                 </td>
                               </tr>
                             ))}
