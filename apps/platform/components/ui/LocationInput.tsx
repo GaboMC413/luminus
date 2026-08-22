@@ -127,7 +127,12 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
   React.useLayoutEffect(() => {
     if (status === "OK") {
       updateCoords();
+      const openedAt = Date.now();
       const handleScroll = (event: Event) => {
+        // Ignore scroll events that happen within 500ms of suggestions opening (e.g. from mobile keyboard opening or smooth scrollIntoView)
+        if (Date.now() - openedAt < 500) {
+          return;
+        }
         if (dropdownRef.current && dropdownRef.current.contains(event.target as Node)) {
           return;
         }
