@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { supabase } from "@/lib/supabase";
+import { getDbEvents } from "@/lib/events";
 import { Navbar, Footer } from "@/components";
 import { UpcomingEventsTimeline } from "@/components/events/UpcomingEventsTimeline";
 import { PastEventsGrid } from "@/components/events/PastEventsGrid";
@@ -13,93 +13,52 @@ export const metadata = {
   description: "Descubre y reserva tu lugar para los próximos talleres, encuentros y conversaciones en vivo sobre bienestar en LUMINUS.",
 };
 
-export default async function ProximasFechasPage() {
-  let supabaseEvents: any[] = [];
-  let jsonEvents: any[] = [];
-
-  // 1. Fetch from Supabase
-  try {
-    if (supabase) {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .order("date", { ascending: true });
-
-      if (data && data.length > 0) {
-        supabaseEvents = data;
-      } else if (error) {
-        console.warn("Supabase query failed for ProximasFechas:", error.message);
-      }
-    }
-  } catch (err) {
-    console.warn("Could not connect to Supabase for ProximasFechas:", err);
-  }
-
-  // 2. Fetch local JSON events
+async function fetchJsonEvents(): Promise<any[]> {
   try {
     const jsonPath = path.join(process.cwd(), "apps", "marketing", "data", "youtube_videos.json");
-    if (fs.existsSync(jsonPath)) {
-      jsonEvents = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
-    } else {
-      const altPath = path.join(process.cwd(), "data", "youtube_videos.json");
-      if (fs.existsSync(altPath)) {
-        jsonEvents = JSON.parse(fs.readFileSync(altPath, "utf8"));
-      }
-    }
+    if (fs.existsSync(jsonPath)) return JSON.parse(fs.readFileSync(jsonPath, "utf8"));
+    const altPath = path.join(process.cwd(), "data", "youtube_videos.json");
+    if (fs.existsSync(altPath)) return JSON.parse(fs.readFileSync(altPath, "utf8"));
   } catch (fsErr) {
-    console.error("Error loading local JSON for ProximasFechas:", fsErr);
+    console.error("[ProximasFechas] Error loading local JSON:", fsErr);
   }
+  return [];
+}
 
-  // 3. Filter upcoming events
-  const now = new Date();
-  const upcomingMap = new Map<string, any>();
+export default async function ProximasFechasPage() {
+  const [upcomingFromDb, pastFromDb, jsonEvents] = await Promise.all([
+    getDbEvents({ type: "upcoming" }),
+    getDbEvents({ type: "past" }),
+    fetchJsonEvents(),
+  ]);
 
-  const processUpcomingEvent = (ev: any) => {
-    if (!ev) return;
-    const isUpcoming =
-      ev.is_upcoming === true ||
-      (ev.is_upcoming !== false &&
-        ev.date &&
-        !isNaN(new Date(ev.date).getTime()) &&
-        new Date(ev.date) >= now);
+  const safeUpcomingDb = Array.isArray(upcomingFromDb) ? upcomingFromDb : [];
+  const safePastDb = Array.isArray(pastFromDb) ? pastFromDb : [];
 
-    if (isUpcoming) {
-      const key = ev.slug || ev.id || ev.youtube_id;
-      if (key && !upcomingMap.has(key)) {
-        upcomingMap.set(key, ev);
-      }
-    }
-  };
-
-  supabaseEvents.forEach(processUpcomingEvent);
-
-  const upcomingEvents = Array.from(upcomingMap.values()).sort((a: any, b: any) => {
-    const dateA = a.date ? new Date(a.date).getTime() : 0;
-    const dateB = b.date ? new Date(b.date).getTime() : 0;
-    return dateA - dateB;
+  // Upcoming: DB first, fallback a JSON
+  const upcomingDbKeys = new Set(safeUpcomingDb.map((e: any) => e.slug || e.id));
+  const upcomingJsonFallback = jsonEvents.filter((e: any) => {
+    if (e.is_upcoming !== true) return false;
+    const key = e.slug || e.id || e.youtube_id;
+    return key && !upcomingDbKeys.has(key);
+  });
+  const upcomingEvents = [...safeUpcomingDb, ...upcomingJsonFallback].sort((a, b) => {
+    const dA = a.date ? new Date(a.date).getTime() : 0;
+    const dB = b.date ? new Date(b.date).getTime() : 0;
+    return dA - dB;
   });
 
-  // 4. Filter ALL past events for the historic section, sorted descending by date (newest past event first)
-  const combinedList = [...supabaseEvents, ...jsonEvents];
-  const pastEventsMap = new Map<string, any>();
-
-  combinedList.forEach((item: any) => {
-    if (!item) return;
-    if (item.is_upcoming === true) return;
-    if (item.date) {
-      const d = new Date(item.date);
-      if (!isNaN(d.getTime()) && d > now) return;
-    }
-    const key = item.youtube_id || item.id || item.slug;
-    if (key && !pastEventsMap.has(key)) {
-      pastEventsMap.set(key, item);
-    }
+  // Past: DB first, fill with JSON
+  const pastDbKeys = new Set(safePastDb.map((e: any) => e.slug || e.id || e.youtube_id));
+  const pastJsonFallback = jsonEvents.filter((e: any) => {
+    if (e.is_upcoming === true) return false;
+    const key = e.slug || e.id || e.youtube_id;
+    return key && !pastDbKeys.has(key);
   });
-
-  const pastEvents = Array.from(pastEventsMap.values()).sort((a: any, b: any) => {
-    const dateA = a.date ? new Date(a.date).getTime() : 0;
-    const dateB = b.date ? new Date(b.date).getTime() : 0;
-    return dateB - dateA;
+  const pastEvents = [...safePastDb, ...pastJsonFallback].sort((a, b) => {
+    const dA = a.date ? new Date(a.date).getTime() : 0;
+    const dB = b.date ? new Date(b.date).getTime() : 0;
+    return dB - dA;
   });
 
   return (

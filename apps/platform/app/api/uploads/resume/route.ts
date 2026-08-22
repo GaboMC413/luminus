@@ -6,9 +6,10 @@ import { getCurrentSession } from "@/lib/auth/session";
 import {
   ALLOWED_RESUME_CONTENT_TYPES,
   extensionForResumeContentType,
-  getResumeStorageConfig,
+  getS3Config,
   MAX_RESUME_SIZE_BYTES,
   normalizeResumeFileName,
+  createS3Client,
 } from "@/lib/resumeStorage";
 
 export const runtime = "nodejs";
@@ -37,17 +38,16 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { bucket, region, accessKeyId, secretAccessKey } = getResumeStorageConfig();
+    const { bucket, region } = getS3Config();
     const fileName = normalizeResumeFileName(body?.fileName, extension);
     const key = `resumes/${session.userId}/${randomUUID()}.${extension}`;
+
+    // Uses IAM Amplify Service Role — no credentials needed
     const s3 = new S3Client({
       region,
       requestChecksumCalculation: "WHEN_REQUIRED",
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
     });
+
     const command = new PutObjectCommand({
       Bucket: bucket,
       Key: key,
@@ -58,6 +58,7 @@ export async function POST(request: Request) {
         originalfilename: encodeURIComponent(fileName),
       },
     });
+
     const uploadUrl = await getSignedUrl(s3, command, {
       expiresIn: 60,
       unhoistableHeaders: new Set([

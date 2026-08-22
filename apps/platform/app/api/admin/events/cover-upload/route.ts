@@ -9,24 +9,6 @@ export const runtime = "nodejs";
 const ALLOWED_CONTENT_TYPES = new Set(["image/webp", "image/png", "image/jpeg", "image/jpg"]);
 const MAX_COVER_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
-function getBucketConfig() {
-  const bucket = process.env.S3_EVENTS_BUCKET || process.env.S3_AVATAR_BUCKET;
-  const region = process.env.S3_AVATAR_REGION ?? process.env.AWS_REGION ?? "us-east-1";
-  const publicBaseUrl = process.env.S3_EVENTS_PUBLIC_BASE_URL || process.env.S3_AVATAR_PUBLIC_BASE_URL;
-  const accessKeyId = process.env.S3_AVATAR_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.S3_AVATAR_SECRET_ACCESS_KEY;
-
-  if (!bucket) {
-    throw new Error("S3 bucket is not configured.");
-  }
-
-  if (!accessKeyId || !secretAccessKey) {
-    throw new Error("S3 upload credentials are not configured.");
-  }
-
-  return { bucket, region, publicBaseUrl, accessKeyId, secretAccessKey };
-}
-
 function extensionForContentType(contentType: string) {
   if (contentType === "image/png") return "png";
   if (contentType === "image/jpeg" || contentType === "image/jpg") return "jpg";
@@ -56,15 +38,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "La portada debe pesar menos de 5 MB." }, { status: 400 });
     }
 
-    const { bucket, region, publicBaseUrl, accessKeyId, secretAccessKey } = getBucketConfig();
-    const key = `event-covers/${randomUUID()}.${extensionForContentType(contentType)}`;
-    const s3 = new S3Client({
-      region,
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
-    });
+    const bucket = process.env.S3_BUCKET;
+    const region = process.env.S3_REGION || "us-east-1";
+    const publicBaseUrl = process.env.S3_PUBLIC_BASE_URL;
+
+    if (!bucket) {
+      throw new Error("S3_BUCKET is not configured.");
+    }
+
+    const key = `events/covers/${randomUUID()}.${extensionForContentType(contentType)}`;
+
+    // Uses IAM Amplify Service Role — no credentials needed
+    const s3 = new S3Client({ region });
 
     const command = new PutObjectCommand({
       Bucket: bucket,

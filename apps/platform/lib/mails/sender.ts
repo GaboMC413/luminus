@@ -6,29 +6,28 @@ import { renderWelcomeEmailHtml } from "./welcome";
 import { renderEmailChangeVerificationHtml } from "./emailChange";
 
 function getSesClient() {
-  const region = process.env.SES_REGION;
+  const region = process.env.SES_REGION || "us-east-1";
   const accessKeyId = process.env.SES_ACCESS_KEY_ID;
   const secretAccessKey = process.env.SES_SECRET_ACCESS_KEY;
 
-  if (!region || !accessKeyId || !secretAccessKey) {
-    throw new Error("SES email configuration is missing.");
+  if (accessKeyId && secretAccessKey) {
+    return new SESClient({
+      region,
+      credentials: {
+        accessKeyId,
+        secretAccessKey,
+      },
+    });
   }
 
-  return new SESClient({
-    region,
-    credentials: {
-      accessKeyId,
-      secretAccessKey,
-    },
-  });
+  // AWS Amplify IAM Service Role
+  return new SESClient({ region });
 }
 
 function isSesConfigured() {
-  return !!(
-    process.env.SES_REGION &&
-    process.env.SES_ACCESS_KEY_ID &&
-    process.env.SES_SECRET_ACCESS_KEY &&
-    process.env.SES_FROM_EMAIL
+  return (
+    process.env.NODE_ENV === "production" ||
+    Boolean(process.env.SES_REGION || (process.env.SES_ACCESS_KEY_ID && process.env.SES_SECRET_ACCESS_KEY))
   );
 }
 

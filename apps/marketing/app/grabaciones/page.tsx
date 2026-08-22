@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { supabase } from "@/lib/supabase";
+import { getDbEvents } from "@/lib/events";
 import { Navbar, Footer } from "@/components";
 import { RecordingsGrid } from "@/components/events/RecordingsGrid";
 
@@ -10,65 +10,44 @@ export const metadata = {
 };
 
 export default async function GrabacionesListingPage() {
-  let events = [];
+  let events: any[] = [];
 
-  try {
-    // 1. Attempt to fetch from Supabase
-    if (supabase) {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .order("date", { ascending: false });
-
-      if (data && data.length > 0) {
-        events = data;
-        console.log(`Fetched ${events.length} events from Supabase`);
-      } else {
-        if (error) {
-          console.warn("Supabase query failed, falling back to local JSON:", error.message);
-        } else {
-          console.log("Supabase events table is empty, falling back to local JSON");
-        }
-      }
-    } else {
-      console.warn("Supabase client not initialized, falling back to local JSON");
-    }
-  } catch (err) {
-    console.warn("Could not connect to Supabase or fetch data, falling back to local JSON:", err);
+  // 1. Fetch from PostgreSQL via direct Prisma helper
+  const dbEvents = await getDbEvents({ type: "past" });
+  if (Array.isArray(dbEvents) && dbEvents.length > 0) {
+    events = dbEvents;
   }
 
-  // 2. If Supabase has no data or fails, load from the generated JSON
+  // 2. Fallback to local JSON if DB returned nothing
   if (events.length === 0) {
     try {
       const jsonPath = path.join(process.cwd(), "apps", "marketing", "data", "youtube_videos.json");
       if (fs.existsSync(jsonPath)) {
         events = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
-        console.log(`Loaded ${events.length} events from local fallback JSON`);
       } else {
         const altPath = path.join(process.cwd(), "data", "youtube_videos.json");
         if (fs.existsSync(altPath)) {
           events = JSON.parse(fs.readFileSync(altPath, "utf8"));
-          console.log(`Loaded ${events.length} events from local fallback JSON (alt path)`);
         }
       }
     } catch (fsErr) {
-      console.error("Error reading local fallback JSON:", fsErr);
+      console.error("[Grabaciones] Error reading local JSON:", fsErr);
     }
   }
 
-  // Filter for recorded events only (exclude upcoming events and require valid YouTube video link)
+  // Filter: recorded past events with a YouTube video
   const now = new Date();
   const recordedEvents = events.filter((item: any) => {
-    if (item.is_upcoming === true) return false;
+    if (item.isUpcoming === true || item.is_upcoming === true) return false;
     if (item.date) {
       const d = new Date(item.date);
-      if (!isNaN(d.getTime()) && d > now) {
-        return false;
-      }
+      if (!isNaN(d.getTime()) && d > now) return false;
     }
+    const youtubeId = item.youtubeId || item.youtube_id;
+    const link = item.link || "";
     const hasYoutubeVideo = Boolean(
-      item.youtube_id ||
-      (item.link && (item.link.includes("watch?v=") || item.link.includes("youtu.be/")))
+      youtubeId ||
+      (link && (link.includes("watch?v=") || link.includes("youtu.be/")))
     );
     return hasYoutubeVideo;
   });
