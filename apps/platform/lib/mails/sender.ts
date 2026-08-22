@@ -70,7 +70,7 @@ async function logSentEmail(recipient: string, subject: string, htmlBody: string
 }
 
 export async function sendPasswordResetEmail(email: string, code: string) {
-  const fromEmail = process.env.SES_FROM_EMAIL || "info@luminuslatam.com";
+  const fromEmail = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
   const subject = "Código de recuperación de LUMINUS";
   const htmlBody = renderPasswordResetEmailHtml(code);
 
@@ -105,6 +105,7 @@ export async function sendPasswordResetEmail(email: string, code: string) {
         },
       },
     },
+    ConfigurationSetName: "luminus-notificaciones",
   });
 
   try {
@@ -120,7 +121,7 @@ export async function sendPasswordResetEmail(email: string, code: string) {
 }
 
 export async function sendWelcomeEmail(email: string, name: string = "Usuario") {
-  const fromEmail = process.env.SES_FROM_EMAIL || "info@luminuslatam.com";
+  const fromEmail = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
   const subject = "¡Te damos la bienvenida a LUMINUS!";
   const htmlBody = renderWelcomeEmailHtml(name);
 
@@ -155,6 +156,7 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
         },
       },
     },
+    ConfigurationSetName: "luminus-notificaciones",
   });
 
   try {
@@ -170,7 +172,7 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
 }
 
 export async function sendEmailChangeVerificationEmail(email: string, code: string) {
-  const fromEmail = process.env.SES_FROM_EMAIL || "info@luminuslatam.com";
+  const fromEmail = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
   const subject = "Código para confirmar tu email de LUMINUS";
   const htmlBody = renderEmailChangeVerificationHtml(code);
 
@@ -205,6 +207,7 @@ export async function sendEmailChangeVerificationEmail(email: string, code: stri
         },
       },
     },
+    ConfigurationSetName: "luminus-notificaciones",
   });
 
   try {
@@ -259,6 +262,7 @@ export async function sendEventRegistrationEmail(
         },
       },
     },
+    ConfigurationSetName: "luminus-eventos",
   });
 
   try {
