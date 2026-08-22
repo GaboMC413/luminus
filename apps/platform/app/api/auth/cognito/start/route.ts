@@ -18,11 +18,12 @@ function getPublicOrigin(requestUrl: URL) {
 }
 
 function getCognitoDomain() {
-  const domain = process.env.COGNITO_DOMAIN?.trim().replace(/\/$/, "");
+  let domain = process.env.COGNITO_DOMAIN?.trim().replace(/\/$/, "");
 
   if (!domain) {
     return null;
   }
+  domain = domain.replace(/\/(login|oauth2|logout).*$/i, "");
 
   return domain.startsWith("http://") || domain.startsWith("https://")
     ? domain

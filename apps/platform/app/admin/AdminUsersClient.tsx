@@ -26,6 +26,7 @@ import { SpecialistsTab } from "./components/tabs/SpecialistsTab";
 import { EmailLogsTab } from "./components/tabs/EmailLogsTab";
 import { CategoriesTab } from "./components/tabs/CategoriesTab";
 import { EventsTab } from "./components/tabs/EventsTab";
+import { ContactTab } from "./components/tabs/ContactTab";
 
 export function AdminUsersClient({
   initialUsers,
@@ -40,6 +41,7 @@ export function AdminUsersClient({
   initialSuggestions = [],
   initialEvents = [],
   initialInscriptions = [],
+  initialContactMessages = [],
   initialLoadWarnings = [],
 }: {
   initialUsers: AdminUser[];
@@ -54,6 +56,7 @@ export function AdminUsersClient({
   initialSuggestions?: AdminSuggestion[];
   initialEvents?: AdminEvent[];
   initialInscriptions?: AdminEventInscription[];
+  initialContactMessages?: import("./types").AdminContactMessage[];
   initialLoadWarnings?: string[];
 }) {
   const [users, setUsers] = useState<AdminUser[]>(initialUsers);
@@ -61,6 +64,7 @@ export function AdminUsersClient({
   const [supportChats, setSupportChats] = useState<AdminChat[]>(initialSupportChats);
   const [logs] = useState<AdminLog[]>(initialLogs);
   const [emailLogs] = useState<AdminEmailLog[]>(initialEmailLogs);
+  const [contactMessages] = useState<import("./types").AdminContactMessage[]>(initialContactMessages);
   const [searches] = useState<AdminSearch[]>(initialSearches);
   const [specialists, setSpecialists] = useState<AdminSpecialist[]>(initialSpecialists);
   const [postulations, setPostulations] = useState<AdminPostulation[]>(initialPostulations);
@@ -159,6 +163,10 @@ export function AdminUsersClient({
 
           {activeTab === "eventos" && (
             <EventsTab events={events} inscriptions={inscriptions} />
+          )}
+
+          {activeTab === "contacto" && (
+            <ContactTab messages={contactMessages} />
           )}
 
           {activeTab === "emails" && <EmailLogsTab emailLogs={emailLogs} />}
