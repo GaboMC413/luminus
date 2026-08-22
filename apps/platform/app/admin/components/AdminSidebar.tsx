@@ -29,6 +29,7 @@ export function AdminSidebar({
       },
     },
     { id: "eventos" as AdminTab, label: "Eventos", icon: "calendar_month", onClick: () => setActiveTab("eventos") },
+    { id: "contacto" as AdminTab, label: "Mensajes de Contacto", icon: "contact_mail", onClick: () => setActiveTab("contacto") },
     { id: "emails" as AdminTab, label: "Mails Enviados", icon: "mail", onClick: () => setActiveTab("emails") },
     { id: "logs" as AdminTab, label: "Historial de Acciones", icon: "history", onClick: () => setActiveTab("logs") },
     { id: "busquedas" as AdminTab, label: "Búsquedas de Comunidad", icon: "manage_search", onClick: () => setActiveTab("busquedas") },

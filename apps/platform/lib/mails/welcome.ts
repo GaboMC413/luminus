@@ -1,4 +1,4 @@
-import { renderEmailLayout, WEBSITE_URL } from "./EmailLayout";
+import { renderEmailLayout, PLATFORM_APP_URL } from "./EmailLayout";
 
 export function renderWelcomeEmailHtml(name: string = "Usuario"): string {
   const contentHtml = `
@@ -15,7 +15,7 @@ export function renderWelcomeEmailHtml(name: string = "Usuario"): string {
     </p>
 
     <div style="text-align: center; margin: 32px 0;">
-      <a href="${WEBSITE_URL}" target="_blank" style="display: inline-block; background-color: #0f172a; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center;">
+      <a href="${PLATFORM_APP_URL}" target="_blank" style="display: inline-block; background-color: #0f172a; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center;">
         Explorar la plataforma
       </a>
     </div>

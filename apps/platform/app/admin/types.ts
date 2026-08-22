@@ -246,6 +246,18 @@ export type AdminEventInscription = {
   };
 };
 
+export type AdminContactMessage = {
+  id: string;
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono: string | null;
+  pais: string | null;
+  motivo: string;
+  mensaje: string;
+  createdAt: string;
+};
+
 export type AdminTab =
   | "usuarios"
   | "chats"
@@ -255,4 +267,6 @@ export type AdminTab =
   | "especialistas"
   | "emails"
   | "categorias"
-  | "eventos";
+  | "eventos"
+  | "contacto";
+
