@@ -177,7 +177,7 @@ export default function SignUpView() {
       setMessage({ text: "La contrasena debe incluir letras mayúsculas y minúsculas.", type: "error" });
       return;
     }
-    if (!/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+    if (!/\d/.test(password) || !/[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(password)) {
       setMessage({ text: "La contrasena debe incluir al menos un número y un símbolo.", type: "error" });
       return;
     }
@@ -372,10 +372,10 @@ export default function SignUpView() {
                     )}
                   </div>
                   <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
-                    <p className={`text-xs sm:text-sm font-normal tracking-tight ${/\d/.test(password) && /[^A-Za-z0-9]/.test(password) ? 'text-green-600' : 'text-slate-500'}`}>
+                    <p className={`text-xs sm:text-sm font-normal tracking-tight ${/\d/.test(password) && /[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(password) ? 'text-green-600' : 'text-slate-500'}`}>
                       Al menos un número y un símbolo
                     </p>
-                    {/\d/.test(password) && /[^A-Za-z0-9]/.test(password) && (
+                    {/\d/.test(password) && /[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(password) && (
                       <span className="text-green-600 text-sm sm:text-base font-bold">✓</span>
                     )}
                   </div>

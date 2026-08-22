@@ -60,22 +60,30 @@ const YEARS = Array.from({ length: currentYearNum - 1900 + 1 }, (_, i) => {
   return { label: y, value: y };
 });
 
-const isValidBirthdate = (val: string): boolean => {
+const validateBirthdate = (val: string): 'valid' | 'invalid' | 'underage' => {
   const clean = val.replace(/\s+/g, '');
   const parts = clean.split('/').map(p => parseInt(p.trim())).filter(p => !isNaN(p));
-  if (parts.length !== 3) return false;
+  if (parts.length !== 3) return 'invalid';
 
   const [day, month, year] = parts;
-  if (month < 1 || month > 12) return false;
-  if (day < 1 || day > 31) return false;
+  if (month < 1 || month > 12) return 'invalid';
+  if (day < 1 || day > 31) return 'invalid';
 
   const daysInMonth = new Date(year, month, 0).getDate();
-  if (day > daysInMonth) return false;
+  if (day > daysInMonth) return 'invalid';
 
   const currentYear = new Date().getFullYear();
-  if (year < 1900 || year > currentYear) return false;
+  if (year < 1900 || year > currentYear) return 'invalid';
 
-  return true;
+  const today = new Date();
+  let age = today.getFullYear() - year;
+  const monthDiff = (today.getMonth() + 1) - month;
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < day)) {
+    age--;
+  }
+  if (age < 18) return 'underage';
+
+  return 'valid';
 };
 
 export function PersonalData({
@@ -218,7 +226,10 @@ export function PersonalData({
     if (!firstName) { setErrorField('firstName'); return; }
     if (!lastName) { setErrorField('lastName'); return; }
     if (!gender) { setErrorField('gender'); return; }
-    if (!finalBirthdate || !isValidBirthdate(finalBirthdate)) { setErrorField('birthdate'); return; }
+    if (!finalBirthdate) { setErrorField('birthdate'); return; }
+    const birthStatus = validateBirthdate(finalBirthdate);
+    if (birthStatus === 'invalid') { setErrorField('birthdate'); return; }
+    if (birthStatus === 'underage') { setErrorField('underage'); return; }
     if (!city || !country) { setErrorField('city'); return; }
     if (!phone) { setErrorField('phone'); return; }
 
@@ -371,10 +382,10 @@ export function PersonalData({
                   onSelect={(val) => {
                     setBirthDay(val);
                     updateParentBirthdate(val, birthMonth, birthYear);
-                    if (errorField === 'birthdate') setErrorField(null);
+                    if (errorField === 'birthdate' || errorField === 'underage') setErrorField(null);
                   }}
                   placeholder="Día"
-                  error={errorField === 'birthdate'}
+                  error={errorField === 'birthdate' || errorField === 'underage'}
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -384,10 +395,10 @@ export function PersonalData({
                   onSelect={(val) => {
                     setBirthMonth(val);
                     updateParentBirthdate(birthDay, val, birthYear);
-                    if (errorField === 'birthdate') setErrorField(null);
+                    if (errorField === 'birthdate' || errorField === 'underage') setErrorField(null);
                   }}
                   placeholder="Mes"
-                  error={errorField === 'birthdate'}
+                  error={errorField === 'birthdate' || errorField === 'underage'}
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -397,14 +408,15 @@ export function PersonalData({
                   onSelect={(val) => {
                     setBirthYear(val);
                     updateParentBirthdate(birthDay, birthMonth, val);
-                    if (errorField === 'birthdate') setErrorField(null);
+                    if (errorField === 'birthdate' || errorField === 'underage') setErrorField(null);
                   }}
                   placeholder="Año"
-                  error={errorField === 'birthdate'}
+                  error={errorField === 'birthdate' || errorField === 'underage'}
                 />
               </div>
             </div>
             {errorField === 'birthdate' && <p className="text-[#FF3D3D] text-[12px] font-bold">Fecha inválida o incompleta</p>}
+            {errorField === 'underage' && <p className="text-[#FF3D3D] text-[12px] font-bold">Debes ser mayor de 18 años para registrarte</p>}
           </div>
         </div>
 

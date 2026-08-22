@@ -126,7 +126,7 @@ export default function ForgotPasswordView() {
       setMessage({ text: "La contraseña debe incluir letras mayúsculas y minúsculas.", type: "error" });
       return;
     }
-    if (!/\d/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
+    if (!/\d/.test(newPassword) || !/[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(newPassword)) {
       setMessage({ text: "La contraseña debe incluir al menos un número y un símbolo.", type: "error" });
       return;
     }
@@ -291,10 +291,10 @@ export default function ForgotPasswordView() {
                           )}
                         </div>
                         <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
-                          <p className={`text-xs sm:text-sm font-normal tracking-tight ${/\d/.test(newPassword) && /[^A-Za-z0-9]/.test(newPassword) ? 'text-green-600' : 'text-slate-500'}`}>
+                          <p className={`text-xs sm:text-sm font-normal tracking-tight ${/\d/.test(newPassword) && /[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(newPassword) ? 'text-green-600' : 'text-slate-500'}`}>
                             Al menos un número y un símbolo
                           </p>
-                          {/\d/.test(newPassword) && /[^A-Za-z0-9]/.test(newPassword) && (
+                          {/\d/.test(newPassword) && /[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(newPassword) && (
                             <span className="text-green-600 text-sm sm:text-base font-bold">✓</span>
                           )}
                         </div>
