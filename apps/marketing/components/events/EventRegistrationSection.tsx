@@ -19,6 +19,7 @@ interface EventItem {
   date?: string;
   time_text?: string;
   location?: string;
+  coverUrl?: string | null;
   cover_url?: string | null;
   youtube_id?: string;
 }
@@ -157,17 +158,16 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
     }
   };
 
-  const coverUrl =
-    event.cover_url ||
-    (event.youtube_id
-      ? `https://i.ytimg.com/vi/${event.youtube_id}/hqdefault.jpg`
-      : "/placeholder-video.jpg");
+  const coverUrl = event.coverUrl || event.cover_url || "/placeholder-video.jpg";
+
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.city) return;
 
     setIsSubmitting(true);
+    setSubmitError(null);
     try {
       const res = await fetch("/api/event-inscription", {
         method: "POST",
@@ -191,14 +191,16 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
       const data = await res.json();
       if (!res.ok || !data.success) {
         console.error("[Inscription Error]:", data.error || data.warnings);
+        setSubmitError(data.error || "Ocurrió un error al procesar la inscripción.");
       } else {
         console.log("[Inscription Success]:", data);
+        setSubmitted(true);
       }
     } catch (err) {
       console.warn("Registration API failed:", err);
+      setSubmitError("No se pudo conectar con el servidor. Inténtalo nuevamente.");
     } finally {
       setIsSubmitting(false);
-      setSubmitted(true);
     }
   };
 
@@ -545,8 +547,14 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
                   />
                 </div>
 
-                <button
-                  type="submit"
+                {submitError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-medium text-center">
+                    {submitError}
+                  </div>
+                )}
+
+                  <button
+                    type="submit"
                   disabled={isSubmitting}
                   className="w-full mt-1 h-12 px-8 bg-black hover:bg-slate-800 disabled:opacity-50 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
                 >

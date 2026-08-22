@@ -380,7 +380,7 @@ export function InterviewsSection({
                   ? `/proximasfechas/${item.slug || item.id}`
                   : (item.link || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : '#'));
 
-                const thumbUrl = item.cover_url || (ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : '/placeholder-video.jpg');
+                const thumbUrl = item.coverUrl || item.cover_url || '/placeholder-video.jpg';
 
                 return (
                   <div
@@ -580,7 +580,7 @@ export function InterviewsSection({
                   ? `/proximasfechas/${item.slug || item.id}`
                   : (item.link || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : '#'));
 
-                const thumbUrl = item.cover_url || (ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : '/placeholder-video.jpg');
+                const thumbUrl = item.coverUrl || item.cover_url || '/placeholder-video.jpg';
 
                 return (
                   <div

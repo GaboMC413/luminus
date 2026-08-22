@@ -12,6 +12,7 @@ export interface EventItem {
   category?: string;
   date?: string;
   publishTimeText?: string;
+  coverUrl?: string | null;
   cover_url?: string | null;
   youtube_id?: string;
   link?: string;
@@ -93,9 +94,7 @@ function isSpeakerNameValid(speakerName?: string, title?: string) {
 
 export function EventCard({ item }: EventCardProps) {
   const ytId = item.youtube_id || getYoutubeId(item.link) || "";
-  const thumbUrl =
-    item.cover_url ||
-    (ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : "/placeholder-video.jpg");
+  const thumbUrl = item.coverUrl || item.cover_url || "/placeholder-video.jpg";
   const isUpcoming = item.is_upcoming === true || (Boolean(item.date) && !isNaN(new Date(item.date!).getTime()) && new Date(item.date!) >= new Date());
   const upcomingHeader = isUpcoming ? formatUpcomingDateHeader(item.date, item.time_text) : { tag: "", dateText: "" };
   const displayDate = isUpcoming ? upcomingHeader.dateText : (item.date ? formatDate(item.date) : item.publishTimeText || "");

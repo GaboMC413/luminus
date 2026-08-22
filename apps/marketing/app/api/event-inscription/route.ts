@@ -32,7 +32,30 @@ export async function POST(req: Request) {
     const cleanLastName = lastName ? lastName.trim() : "";
     const cleanCity = city ? city.trim() : null;
 
-    // 1. Upsert EventGuest in Database
+    // 1. Resolve Event ID from DB if not provided directly as UUID
+    let resolvedEventId: string | null = null;
+    if (eventId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId)) {
+      resolvedEventId = eventId;
+    } else if (eventSlug || eventTitle) {
+      try {
+        const foundEvent = await prisma.event.findFirst({
+          where: {
+            OR: [
+              ...(eventSlug ? [{ slug: eventSlug }] : []),
+              ...(eventTitle ? [{ title: eventTitle }] : []),
+            ],
+          },
+          select: { id: true },
+        });
+        if (foundEvent) {
+          resolvedEventId = foundEvent.id;
+        }
+      } catch (findErr: any) {
+        console.warn("[Event Lookup Error]:", findErr.message || findErr);
+      }
+    }
+
+    // 2. Upsert EventGuest in Database
     let guest = null;
     try {
       guest = await prisma.eventGuest.upsert({
@@ -53,26 +76,34 @@ export async function POST(req: Request) {
       });
     } catch (dbErr: any) {
       console.error("[Database EventGuest Error]:", dbErr.message || dbErr);
+      return NextResponse.json(
+        { success: false, error: "Error de base de datos al guardar los datos de la persona." },
+        { status: 500 }
+      );
     }
 
-    // 2. Upsert EventInscription if valid eventId UUID is provided
-    if (guest && eventId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId)) {
+    // 3. Upsert EventInscription if resolvedEventId is present
+    if (guest && resolvedEventId) {
       try {
         await prisma.eventInscription.upsert({
           where: {
             eventId_guestId: {
-              eventId,
+              eventId: resolvedEventId,
               guestId: guest.id,
             },
           },
           update: {},
           create: {
-            eventId,
+            eventId: resolvedEventId,
             guestId: guest.id,
           },
         });
       } catch (insErr: any) {
         console.error("[Database EventInscription Error]:", insErr.message || insErr);
+        return NextResponse.json(
+          { success: false, error: "Error de base de datos al vincular la inscripción." },
+          { status: 500 }
+        );
       }
     }
 
