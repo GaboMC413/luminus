@@ -231,7 +231,7 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_1.3fr]">
             {/* Left side list */}
             <AdminCard className="flex flex-col h-185">
-              <div className="border-b border-slate-200/80 bg-slate-50/80 px-4 py-3 text-[11.5px] font-bold uppercase tracking-wider text-slate-500 grid grid-cols-[1.5fr_1.8fr_130px] items-center">
+              <div className="border-b border-slate-200/80 bg-slate-50/80 px-4 py-3 text-[11.5px] font-bold uppercase tracking-wider text-slate-500 grid grid-cols-[160px_minmax(0,1fr)_135px] items-center gap-3">
                 <span>Destinatario</span>
                 <span>Asunto</span>
                 <span className="text-right">Fecha</span>
@@ -246,22 +246,31 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
                 ) : (
                   filteredEmailLogs.map((log) => {
                     const active = log.id === selectedEmailLog?.id;
-                    const isFailed = log.status === "FAILED";
+                    const isRealSuccess = Boolean(log.messageId);
+                    const isLocalPreview = log.status === "LOCAL_PREVIEW";
+                    const isFailed = log.status === "FAILED" || (!isRealSuccess && !isLocalPreview);
+
+                    const dotColorClass = isLocalPreview
+                      ? "bg-blue-500"
+                      : isFailed
+                      ? "bg-rose-500"
+                      : "bg-emerald-500";
+
                     return (
                       <button
                         key={log.id}
                         type="button"
                         onClick={() => setSelectedEmailLogId(log.id)}
-                        className={`grid w-full grid-cols-[1.5fr_1.8fr_130px] items-center px-4 py-3.5 text-left text-[14px] transition hover:bg-slate-50 outline-none border-none cursor-pointer ${
-                          active ? "bg-slate-100/80" : "bg-white"
+                        className={`grid w-full grid-cols-[160px_minmax(0,1fr)_135px] items-center gap-3 px-4 py-3.5 text-left text-[13px] transition hover:bg-slate-50 outline-none border-none cursor-pointer ${
+                          active ? "bg-slate-100/90" : "bg-white"
                         }`}
                       >
-                        <span className="truncate font-bold text-slate-900 pr-2 text-xs flex items-center gap-1.5">
-                          {isFailed && <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" title="Fallo de envío" />}
-                          {log.recipient}
+                        <span className="truncate font-semibold text-slate-900 text-xs flex items-center gap-2 min-w-0">
+                          <span className={`w-2.5 h-2.5 rounded-full ${dotColorClass} shrink-0`} title={isFailed ? "Fallo de envío" : isLocalPreview ? "Preview Local" : "Enviado con éxito"} />
+                          <span className="truncate">{log.recipient}</span>
                         </span>
-                        <span className="truncate text-slate-600 pr-2 text-xs font-medium">{log.subject}</span>
-                        <span className="text-slate-500 text-xs font-sans text-right">
+                        <span className="truncate text-slate-600 text-xs font-normal min-w-0">{log.subject}</span>
+                        <span className="text-slate-500 text-[11px] font-mono text-right shrink-0 whitespace-nowrap">
                           {formatShortTime(log.createdAt)}
                         </span>
                       </button>
@@ -275,45 +284,55 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
             {selectedEmailLog ? (
               <AdminCard className="flex flex-col h-185 relative">
                 {/* Header */}
-                <div className="border-b border-slate-200/80 p-5 shrink-0 bg-slate-50/50 flex items-start justify-between gap-4">
-                  <div className="flex flex-col gap-1.5 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="text-[15px] font-bold text-slate-900 leading-tight truncate font-jakarta">
-                        {selectedEmailLog.subject}
-                      </h2>
-                      {selectedEmailLog.status === "FAILED" ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                <div className="border-b border-slate-200/80 p-5 shrink-0 bg-slate-50/50 flex flex-col gap-2">
+                  {/* Subject Title */}
+                  <h2 className="text-[16px] font-bold text-slate-900 leading-tight font-jakarta">
+                    {selectedEmailLog.subject}
+                  </h2>
+
+                  {/* Colored Status Text (Not a pill) + Copy/View Log Link on the right */}
+                  <div className="flex items-center justify-between gap-3 pt-0.5">
+                    <div>
+                      {selectedEmailLog.status === "FAILED" || (!selectedEmailLog.messageId && selectedEmailLog.status !== "LOCAL_PREVIEW") ? (
+                        <span className="text-xs font-bold text-rose-600 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-rose-600" />
                           Fallo de Envío
                         </span>
                       ) : selectedEmailLog.status === "LOCAL_PREVIEW" ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                        <span className="text-xs font-bold text-blue-600 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-blue-600" />
                           Preview Local
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <span className="text-xs font-bold text-emerald-600 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-600" />
                           AWS SES Enviado
                         </span>
                       )}
                     </div>
-                    <div className="text-[12px] text-slate-500 space-y-0.5 mt-1 font-sans">
-                      <p>
-                        <span className="font-semibold text-slate-700">Para:</span> {selectedEmailLog.recipient}
-                      </p>
-                      <p>
-                        <span className="font-semibold text-slate-700">Fecha:</span>{" "}
-                        {formatShortTime(selectedEmailLog.createdAt)}
-                      </p>
-                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowTraceModal(true)}
+                      className="text-xs font-semibold text-slate-700 hover:text-black transition-colors inline-flex items-center gap-1 hover:underline cursor-pointer"
+                    >
+                      <span>Ver log</span>
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </button>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setShowTraceModal(true)}
-                    className="h-9 px-3.5 bg-black hover:bg-slate-800 text-white rounded-xl text-xs font-medium transition-colors cursor-pointer inline-flex items-center gap-1.5 shrink-0 shadow-xs"
-                  >
-                    <span className="material-symbols-rounded text-[16px]">timeline</span>
-                    <span>Ver trazabilidad</span>
-                  </button>
+                  {/* Recipient & Date */}
+                  <div className="text-[12px] text-slate-500 space-y-0.5 pt-1 font-sans">
+                    <p>
+                      <span className="font-semibold text-slate-700">Para:</span> {selectedEmailLog.recipient}
+                    </p>
+                    <p>
+                      <span className="font-semibold text-slate-700">Fecha:</span>{" "}
+                      {formatShortTime(selectedEmailLog.createdAt)}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Iframe content */}
