@@ -285,24 +285,24 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
               <AdminCard className="flex flex-col h-185 relative">
                 {/* Header */}
                 <div className="border-b border-slate-200/80 p-5 shrink-0 bg-slate-50/50 flex flex-col gap-2">
-                  {/* Subject Title */}
+                  {/* Line 1: Subject Title */}
                   <h2 className="text-[16px] font-bold text-slate-900 leading-tight font-jakarta">
                     {selectedEmailLog.subject}
                   </h2>
 
-                  {/* Recipient & Date */}
-                  <div className="text-[12px] text-slate-500 space-y-0.5 pt-0.5 font-sans">
-                    <p>
+                  {/* Line 2: Recipient (Left) & Date (Right) */}
+                  <div className="flex items-center justify-between gap-4 text-[12px] text-slate-500 font-sans pt-0.5">
+                    <p className="truncate">
                       <span className="font-semibold text-slate-700">Para:</span> {selectedEmailLog.recipient}
                     </p>
-                    <p>
+                    <p className="shrink-0">
                       <span className="font-semibold text-slate-700">Fecha:</span>{" "}
                       {formatShortTime(selectedEmailLog.createdAt)}
                     </p>
                   </div>
 
-                  {/* Colored Status Text + Copy/View Log Link on the right (Below Date) */}
-                  <div className="flex items-center justify-between gap-3 pt-1 border-t border-slate-200/40 mt-1">
+                  {/* Line 3: Status Text + Ver log link (without arrow) right next to it */}
+                  <div className="flex items-center gap-3 pt-0.5">
                     <div>
                       {selectedEmailLog.status === "FAILED" || (!selectedEmailLog.messageId && selectedEmailLog.status !== "LOCAL_PREVIEW") ? (
                         <span className="text-xs font-bold text-rose-600 flex items-center gap-1.5">
@@ -325,12 +325,9 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
                     <button
                       type="button"
                       onClick={() => setShowTraceModal(true)}
-                      className="text-xs font-semibold text-slate-700 hover:text-black transition-colors inline-flex items-center gap-1 hover:underline cursor-pointer"
+                      className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors hover:underline cursor-pointer"
                     >
-                      <span>Ver log</span>
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                      </svg>
+                      Ver log
                     </button>
                   </div>
                 </div>
