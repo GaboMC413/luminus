@@ -706,10 +706,10 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                                     type="button"
                                     onClick={() => handleDeleteInscription(ins.id)}
                                     disabled={deletingInscriptionId === ins.id}
-                                    className="opacity-0 group-hover:opacity-100 transition-all duration-150 p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 cursor-pointer disabled:opacity-50 inline-flex items-center justify-center"
+                                    className="opacity-0 group-hover:opacity-100 transition-all duration-150 w-6 h-6 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 cursor-pointer disabled:opacity-50 inline-flex items-center justify-center shrink-0"
                                     title="Eliminar inscripción"
                                   >
-                                    <span className="material-symbols-rounded text-[16px] block">
+                                    <span className="material-symbols-rounded text-[14px] block">
                                       {deletingInscriptionId === ins.id ? "progress_activity" : "delete"}
                                     </span>
                                   </button>

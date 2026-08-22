@@ -169,6 +169,22 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
 
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  const handleOpenModal = () => {
+    setSubmitted(false);
+    setIsAlreadyRegistered(false);
+    setResendSuccess(false);
+    setSubmitError(null);
+    setIsOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsOpenModal(false);
+    setSubmitted(false);
+    setIsAlreadyRegistered(false);
+    setResendSuccess(false);
+    setSubmitError(null);
+  };
+
   const handleResendEmail = async () => {
     setIsResending(true);
     try {
@@ -316,7 +332,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           {/* 5. Botón de inscripción (1st CTA) */}
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setIsOpenModal(true)}
+              onClick={handleOpenModal}
               className="w-full sm:w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
             >
               <span>Inscribirme a este evento</span>
@@ -351,7 +367,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           {/* 7. Segundo botón de inscripción (2nd CTA) */}
           <div className="pt-2 flex items-center gap-3">
             <button
-              onClick={() => setIsOpenModal(true)}
+              onClick={handleOpenModal}
               className="w-full sm:w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
             >
               <span>Inscribirme a este evento</span>
@@ -394,7 +410,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
 
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setIsOpenModal(true)}
+                onClick={handleOpenModal}
                 className="w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
               >
                 <span>Inscribirme a este evento</span>
@@ -427,7 +443,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
 
             <div className="pt-2 flex items-center gap-3">
               <button
-                onClick={() => setIsOpenModal(true)}
+                onClick={handleOpenModal}
                 className="w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
               >
                 <span>Inscribirme a este evento</span>
@@ -496,10 +512,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
 
             {/* Close Button */}
             <button
-              onClick={() => {
-                setIsOpenModal(false);
-                setSubmitted(false);
-              }}
+              onClick={handleCloseModal}
               className="absolute top-5 right-5 w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors cursor-pointer"
               aria-label="Cerrar modal"
             >
@@ -550,7 +563,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
                     </Link>
 
                     <button
-                      onClick={() => setIsOpenModal(false)}
+                      onClick={handleCloseModal}
                       className="text-slate-400 hover:text-slate-700 text-sm font-normal underline transition-colors pt-2 cursor-pointer"
                     >
                       Cerrar
@@ -569,7 +582,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
                     Te has inscripto a <strong className="font-medium text-slate-800">{event.title}</strong>. Te enviamos los detalles de acceso a <strong className="font-medium text-slate-800">{formData.email}</strong>.
                   </p>
                   <button
-                    onClick={() => setIsOpenModal(false)}
+                    onClick={handleCloseModal}
                     className="mt-1 w-full h-12 px-8 bg-black hover:bg-slate-800 text-white rounded-2xl text-base font-normal transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
                   >
                     Cerrar

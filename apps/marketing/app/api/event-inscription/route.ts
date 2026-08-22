@@ -125,6 +125,7 @@ export async function POST(req: Request) {
     // 4. Send confirmation email via AWS SES from eventos@luminuslatam.com
     // Always trigger email for every event registration or confirmation request
     let emailStatus = "sent";
+    let emailError: string | undefined = undefined;
     try {
       console.log(`[SES START] Procesando envío de email para ${cleanEmail} (evento: ${eventTitle || "Evento LUMINUS"})...`);
       const emailRes = await sendEventRegistrationEmail({
@@ -141,11 +142,17 @@ export async function POST(req: Request) {
       });
       console.log(`[Event Registration Email Sent]: ${cleanEmail} (resend=${!!isResend}) MessageId:`, (emailRes as any)?.messageId || "local-preview");
     } catch (emailErr: any) {
-      console.error("❌ [SES Send Email Error completo]:", JSON.stringify(emailErr, null, 2));
+      console.error("❌ Error enviando email de confirmación:", JSON.stringify(emailErr, null, 2));
       emailStatus = "failed";
+      emailError = emailErr?.message || String(emailErr);
     }
 
-    return NextResponse.json({ success: true, alreadyRegistered, emailStatus });
+    return NextResponse.json({
+      success: true,
+      alreadyRegistered,
+      emailStatus,
+      ...(emailError ? { emailError } : {}),
+    });
   } catch (err: any) {
     console.error("[Event Inscription Route Error]:", err.message || err);
     return NextResponse.json(

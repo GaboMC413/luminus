@@ -51,8 +51,17 @@ async function logSentEmail(recipient: string, subject: string, htmlBody: string
   }
 }
 
+function formatSenderAddress(email: string, defaultName: string): string {
+  const trimmed = email.trim();
+  if (trimmed.includes("<") && trimmed.includes(">")) {
+    return trimmed;
+  }
+  return `"${defaultName}" <${trimmed}>`;
+}
+
 export async function sendPasswordResetEmail(email: string, code: string) {
-  const fromEmail = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
+  const rawFrom = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
+  const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM");
   const subject = "Código de recuperación de LUMINUS";
   const htmlBody = renderPasswordResetEmailHtml(code);
   const textBody = `Tu código de recuperación de contraseña de LUMINUS es: ${code}. Vence en 15 minutos.`;
@@ -90,7 +99,9 @@ export async function sendPasswordResetEmail(email: string, code: string) {
         },
       },
     },
-    ConfigurationSetName: "luminus-notificaciones",
+    ...(process.env.SES_CONFIGURATION_NOTIFICACIONES && {
+      ConfigurationSetName: process.env.SES_CONFIGURATION_NOTIFICACIONES,
+    }),
   });
 
   try {
@@ -106,7 +117,8 @@ export async function sendPasswordResetEmail(email: string, code: string) {
 }
 
 export async function sendWelcomeEmail(email: string, name: string = "Usuario") {
-  const fromEmail = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
+  const rawFrom = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
+  const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM");
   const subject = "¡Te damos la bienvenida a LUMINUS!";
   const htmlBody = renderWelcomeEmailHtml(name);
   const textBody = `¡Te damos la bienvenida a LUMINUS, ${name}! Nos alegra acompañarte en este espacio de bienestar integral.`;
@@ -144,7 +156,9 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
         },
       },
     },
-    ConfigurationSetName: "luminus-notificaciones",
+    ...(process.env.SES_CONFIGURATION_NOTIFICACIONES && {
+      ConfigurationSetName: process.env.SES_CONFIGURATION_NOTIFICACIONES,
+    }),
   });
 
   try {
@@ -160,7 +174,8 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
 }
 
 export async function sendEmailChangeVerificationEmail(email: string, code: string) {
-  const fromEmail = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
+  const rawFrom = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
+  const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM");
   const subject = "Código para confirmar tu email de LUMINUS";
   const htmlBody = renderEmailChangeVerificationHtml(code);
   const textBody = `Tu código para confirmar tu nuevo correo en LUMINUS es: ${code}. Vence en 15 minutos.`;
@@ -198,7 +213,9 @@ export async function sendEmailChangeVerificationEmail(email: string, code: stri
         },
       },
     },
-    ConfigurationSetName: "luminus-notificaciones",
+    ...(process.env.SES_CONFIGURATION_NOTIFICACIONES && {
+      ConfigurationSetName: process.env.SES_CONFIGURATION_NOTIFICACIONES,
+    }),
   });
 
   try {
@@ -217,7 +234,8 @@ export async function sendEventRegistrationEmail(
   email: string,
   options: import("./inscription").EventInscriptionEmailOptions
 ) {
-  const fromEmail = process.env.EVENT_FROM_EMAIL || "eventos@luminuslatam.com";
+  const rawFrom = process.env.EVENT_FROM_EMAIL || "eventos@luminuslatam.com";
+  const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM Eventos");
   const { renderEventRegistrationEmailHtml } = await import("./inscription");
   const htmlBody = renderEventRegistrationEmailHtml(options);
   const subject = `[LUMINUS] Confirmación de inscripción: ${options.eventTitle || "Evento de Bienestar"}`;
@@ -256,7 +274,9 @@ export async function sendEventRegistrationEmail(
         },
       },
     },
-    ConfigurationSetName: "luminus-eventos",
+    ...(process.env.SES_CONFIGURATION_EVENTOS && {
+      ConfigurationSetName: process.env.SES_CONFIGURATION_EVENTOS,
+    }),
   });
 
   try {
@@ -287,7 +307,8 @@ const DEFAULT_CONTACT_RECIPIENTS = [
 ];
 
 export async function sendContactNotificationEmail(data: ContactNotificationPayload) {
-  const fromEmail = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
+  const rawFrom = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
+  const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM");
 
   const envRecipients = process.env.CONTACT_NOTIFICATION_EMAILS
     ? process.env.CONTACT_NOTIFICATION_EMAILS.split(",").map((e) => e.trim()).filter(Boolean)
@@ -297,17 +318,8 @@ export async function sendContactNotificationEmail(data: ContactNotificationPayl
 
   const subject = `[LUMINUS Contacto] ${data.motivo} - ${data.nombre} ${data.apellido}`;
 
-  const htmlBody = `
-    <div style="font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
-      <h2 style="font-size: 20px; color: #0f172a; margin-bottom: 16px;">Nuevo Mensaje de Contacto</h2>
-      <p style="margin-bottom: 8px;"><strong>Motivo:</strong> ${data.motivo}</p>
-      <p style="margin-bottom: 8px;"><strong>Nombre:</strong> ${data.nombre} ${data.apellido}</p>
-      <p style="margin-bottom: 8px;"><strong>Email:</strong> ${data.email}</p>
-      <p style="margin-bottom: 8px;"><strong>Teléfono:</strong> ${data.telefono || "No proporcionado"}</p>
-      <p style="margin-bottom: 8px;"><strong>País:</strong> ${data.pais || "No especificado"}</p>
-      <div style="margin-top: 16px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; white-space: pre-wrap;">${data.mensaje}</div>
-    </div>
-  `;
+  const { renderContactNotificationEmailHtml } = await import("./contact");
+  const htmlBody = renderContactNotificationEmailHtml(data);
   const textBody = `NUEVO MENSAJE DE CONTACTO:\nMotivo: ${data.motivo}\nNombre: ${data.nombre} ${data.apellido}\nEmail: ${data.email}\nMensaje:\n${data.mensaje}`;
 
   writeLocalEmailPreview(toAddresses.join(", "), subject, htmlBody);
@@ -343,7 +355,9 @@ export async function sendContactNotificationEmail(data: ContactNotificationPayl
         },
       },
     },
-    ConfigurationSetName: "luminus-notificaciones",
+    ...(process.env.SES_CONFIGURATION_NOTIFICACIONES && {
+      ConfigurationSetName: process.env.SES_CONFIGURATION_NOTIFICACIONES,
+    }),
   });
 
   try {
