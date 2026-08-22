@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Share2, Check } from "lucide-react";
@@ -130,6 +130,11 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleShare = async () => {
     const shareData = {
@@ -204,7 +209,10 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
     }
   };
 
-  const formattedDateTime = formatDateTimeFull(event.date, event.time_text);
+  // Defer locale-dependent date formatting to client to avoid SSR/client hydration mismatch (#418/#423)
+  const formattedDateTime = mounted
+    ? formatDateTimeFull(event.date, event.time_text)
+    : "Cargando fecha...";
 
   return (
     <div className="w-full py-14 sm:py-16 md:py-24 bg-white flex-1 flex flex-col items-center">

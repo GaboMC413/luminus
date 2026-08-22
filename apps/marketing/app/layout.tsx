@@ -59,7 +59,7 @@ export default function RootLayout({
       </head>
       <body className="bg-white text-slate-900 antialiased selection:bg-slate-900 selection:text-white min-h-screen flex flex-col">
         <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places&language=es`}
+          src={`https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places&language=es&loading=async`}
           strategy="afterInteractive"
         />
         {children}
