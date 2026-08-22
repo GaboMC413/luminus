@@ -3,8 +3,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Share2, Check } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { LocationInput } from "@/components/ui/LocationInput";
+import { Button } from "@/components/ui/Button";
 
 interface EventItem {
   id?: string;
@@ -126,56 +128,32 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpenModal, setIsOpenModal] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.firstName || !formData.lastName || !formData.email || !formData.city) return;
+  const handleShare = async () => {
+    const shareData = {
+      title: event.title,
+      text: `Te comparto este evento en LUMINUS: ${event.title}`,
+      url: typeof window !== "undefined" ? window.location.href : "",
+    };
 
-    setIsSubmitting(true);
-    try {
-      if (supabase) {
-        // 1. Insert or update contact in 'contacts' table
-        const { data: contactData, error: contactError } = await supabase
-          .from("contacts")
-          .upsert(
-            {
-              first_name: formData.firstName,
-              last_name: formData.lastName,
-              email: formData.email,
-              city: formData.city,
-              marketing_consent: true,
-            },
-            { onConflict: "email" }
-          )
-          .select()
-          .single();
-
-        if (contactError) {
-          console.warn("Contact insertion error:", contactError.message);
-        }
-
-        const contactId = contactData?.id;
-
-        // 2. Insert record into 'event_inscriptions' table
-        if (contactId && event.id) {
-          const { error: inscriptionError } = await supabase
-            .from("event_inscriptions")
-            .insert({
-              contact_id: contactId,
-              event_id: event.id,
-              attended: false,
-            });
-
-          if (inscriptionError) {
-            console.warn("Event inscription error:", inscriptionError.message);
-          }
-        }
+    if (typeof navigator !== "undefined" && navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (err) {
+        if ((err as Error)?.name === "AbortError") return;
       }
-    } catch (err) {
-      console.warn("Registration failed:", err);
-    } finally {
-      setIsSubmitting(false);
-      setSubmitted(true);
+    }
+
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      } catch (err) {
+        console.error("Failed to copy link:", err);
+      }
     }
   };
 
@@ -185,10 +163,49 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
       ? `https://i.ytimg.com/vi/${event.youtube_id}/hqdefault.jpg`
       : "/placeholder-video.jpg");
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.city) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/event-inscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          city: formData.city,
+          eventId: event.id,
+          eventTitle: event.title,
+          eventCoverUrl: coverUrl,
+          eventDate: event.date,
+          timeText: event.time_text,
+          speakerName: event.speaker_name,
+          youtubeId: event.youtube_id,
+          youtubeUrl: event.youtube_id ? `https://www.youtube.com/watch?v=${event.youtube_id}` : null,
+          eventSlug: event.slug,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        console.error("[Inscription Error]:", data.error || data.warnings);
+      } else {
+        console.log("[Inscription Success]:", data);
+      }
+    } catch (err) {
+      console.warn("Registration API failed:", err);
+    } finally {
+      setIsSubmitting(false);
+      setSubmitted(true);
+    }
+  };
+
   const formattedDateTime = formatDateTimeFull(event.date, event.time_text);
 
   return (
-    <div className="w-full py-8 md:py-14 bg-white flex-1 flex flex-col items-center">
+    <div className="w-full py-14 sm:py-16 md:py-24 bg-white flex-1 flex flex-col items-center">
       <div className="w-full max-w-[1140px] px-4 sm:px-6 lg:px-8 flex flex-col gap-6 text-left">
 
         {/* Back Link */}
@@ -248,13 +265,32 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           </div>
 
           {/* 5. Botón de inscripción (1st CTA) */}
-          <div>
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setIsOpenModal(true)}
               className="w-full sm:w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
             >
               <span>Inscribirme a este evento</span>
             </button>
+            <Button
+              variant="soft"
+              size="default"
+              onClick={handleShare}
+              className="h-12 w-12 !px-0 !rounded-2xl shrink-0 border border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100 flex items-center justify-center relative"
+              title={copied ? "¡Enlace copiado!" : "Compartir evento"}
+              aria-label="Compartir evento"
+            >
+              {copied ? (
+                <Check className="w-5 h-5 text-emerald-600 animate-in fade-in zoom-in-75 duration-200" />
+              ) : (
+                <Share2 className="w-5 h-5" />
+              )}
+              {copied && (
+                <span className="absolute -top-9 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-normal px-2.5 py-1 rounded-md whitespace-nowrap shadow-lg animate-in fade-in slide-in-from-bottom-1 duration-200 pointer-events-none">
+                  ¡Enlace copiado!
+                </span>
+              )}
+            </Button>
           </div>
 
           {/* 6. Descripción */}
@@ -264,13 +300,32 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           </div>
 
           {/* 7. Segundo botón de inscripción (2nd CTA) */}
-          <div className="pt-2">
+          <div className="pt-2 flex items-center gap-3">
             <button
               onClick={() => setIsOpenModal(true)}
               className="w-full sm:w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
             >
               <span>Inscribirme a este evento</span>
             </button>
+            <Button
+              variant="soft"
+              size="default"
+              onClick={handleShare}
+              className="h-12 w-12 !px-0 !rounded-2xl shrink-0 border border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100 flex items-center justify-center relative"
+              title={copied ? "¡Enlace copiado!" : "Compartir evento"}
+              aria-label="Compartir evento"
+            >
+              {copied ? (
+                <Check className="w-5 h-5 text-emerald-600 animate-in fade-in zoom-in-75 duration-200" />
+              ) : (
+                <Share2 className="w-5 h-5" />
+              )}
+              {copied && (
+                <span className="absolute -top-9 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-normal px-2.5 py-1 rounded-md whitespace-nowrap shadow-lg animate-in fade-in slide-in-from-bottom-1 duration-200 pointer-events-none">
+                  ¡Enlace copiado!
+                </span>
+              )}
+            </Button>
           </div>
         </div>
 
@@ -288,13 +343,32 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
               </div>
             )}
 
-            <div>
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => setIsOpenModal(true)}
                 className="w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
               >
                 <span>Inscribirme a este evento</span>
               </button>
+              <Button
+                variant="soft"
+                size="default"
+                onClick={handleShare}
+                className="h-12 w-12 !px-0 !rounded-2xl shrink-0 border border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100 flex items-center justify-center relative"
+                title={copied ? "¡Enlace copiado!" : "Compartir evento"}
+                aria-label="Compartir evento"
+              >
+                {copied ? (
+                  <Check className="w-5 h-5 text-emerald-600 animate-in fade-in zoom-in-75 duration-200" />
+                ) : (
+                  <Share2 className="w-5 h-5" />
+                )}
+                {copied && (
+                  <span className="absolute -top-9 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-normal px-2.5 py-1 rounded-md whitespace-nowrap shadow-lg animate-in fade-in slide-in-from-bottom-1 duration-200 pointer-events-none">
+                    ¡Enlace copiado!
+                  </span>
+                )}
+              </Button>
             </div>
 
             <div className="flex flex-col gap-3 pt-2">
@@ -302,13 +376,32 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
               {renderMarkdownContent(event.description)}
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 flex items-center gap-3">
               <button
                 onClick={() => setIsOpenModal(true)}
                 className="w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
               >
                 <span>Inscribirme a este evento</span>
               </button>
+              <Button
+                variant="soft"
+                size="default"
+                onClick={handleShare}
+                className="h-12 w-12 !px-0 !rounded-2xl shrink-0 border border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100 flex items-center justify-center relative"
+                title={copied ? "¡Enlace copiado!" : "Compartir evento"}
+                aria-label="Compartir evento"
+              >
+                {copied ? (
+                  <Check className="w-5 h-5 text-emerald-600 animate-in fade-in zoom-in-75 duration-200" />
+                ) : (
+                  <Share2 className="w-5 h-5" />
+                )}
+                {copied && (
+                  <span className="absolute -top-9 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-normal px-2.5 py-1 rounded-md whitespace-nowrap shadow-lg animate-in fade-in slide-in-from-bottom-1 duration-200 pointer-events-none">
+                    ¡Enlace copiado!
+                  </span>
+                )}
+              </Button>
             </div>
           </div>
 
