@@ -118,7 +118,7 @@ export async function sendPasswordResetEmail(email: string, code: string) {
   const htmlBody = renderPasswordResetEmailHtml(code);
   const textBody = `Tu código de recuperación de contraseña de LUMINUS es: ${code}. Vence en 15 minutos.`;
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
-  const configurationSet = process.env.SES_CONFIGURATION_NOTIFICACIONES || null;
+  const configurationSet = process.env.SES_CONFIGURATION_NOTIFICACIONES || "luminus-notificaciones";
 
   writeLocalEmailPreview(email, subject, htmlBody);
 
@@ -254,7 +254,7 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
   const htmlBody = renderWelcomeEmailHtml(name);
   const textBody = `¡Te damos la bienvenida a LUMINUS, ${name}! Nos alegra acompañarte en este espacio de bienestar integral.`;
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
-  const configurationSet = process.env.SES_CONFIGURATION_NOTIFICACIONES || null;
+  const configurationSet = process.env.SES_CONFIGURATION_NOTIFICACIONES || "luminus-notificaciones";
 
   writeLocalEmailPreview(email, subject, htmlBody);
 
@@ -390,7 +390,7 @@ export async function sendEmailChangeVerificationEmail(email: string, code: stri
   const htmlBody = renderEmailChangeVerificationHtml(code);
   const textBody = `Tu código para confirmar tu nuevo correo en LUMINUS es: ${code}. Vence en 15 minutos.`;
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
-  const configurationSet = process.env.SES_CONFIGURATION_NOTIFICACIONES || null;
+  const configurationSet = process.env.SES_CONFIGURATION_NOTIFICACIONES || "luminus-notificaciones";
 
   writeLocalEmailPreview(email, subject, htmlBody);
 
@@ -530,7 +530,7 @@ export async function sendEventRegistrationEmail(
   const subject = `[LUMINUS] Confirmación de inscripción: ${options.eventTitle || "Evento de Bienestar"}`;
   const textBody = `Hola ${options.firstName || "Usuario"},\n\nTe has inscripto a la entrevista online "${options.eventTitle || "Evento LUMINUS"}".\n\nPodrás ver el estreno el ${options.eventDate || "Próximamente"} a las ${options.timeText || "18:00 hs (GMT-3)"}.\n\nEquipo de LUMINUS Eventos.`;
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
-  const configurationSet = process.env.SES_CONFIGURATION_EVENTOS || null;
+  const configurationSet = process.env.SES_CONFIGURATION_EVENTOS || "luminus-eventos";
 
   writeLocalEmailPreview(email, subject, htmlBody);
 
@@ -690,7 +690,7 @@ export async function sendContactNotificationEmail(data: ContactNotificationPayl
   const htmlBody = renderContactNotificationEmailHtml(data);
   const textBody = `NUEVO MENSAJE DE CONTACTO:\nMotivo: ${data.motivo}\nNombre: ${data.nombre} ${data.apellido}\nEmail: ${data.email}\nMensaje:\n${data.mensaje}`;
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
-  const configurationSet = process.env.SES_CONFIGURATION_NOTIFICACIONES || null;
+  const configurationSet = process.env.SES_CONFIGURATION_NOTIFICACIONES || "luminus-notificaciones";
 
   writeLocalEmailPreview(toAddresses.join(", "), subject, htmlBody);
 
