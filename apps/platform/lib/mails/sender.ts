@@ -7,10 +7,10 @@ import { renderWelcomeEmailHtml } from "./welcome";
 import { renderEmailChangeVerificationHtml } from "./emailChange";
 
 function isSesConfigured() {
-  return (
-    process.env.NODE_ENV === "production" ||
-    Boolean(process.env.SES_REGION || (process.env.SES_ACCESS_KEY_ID && process.env.SES_SECRET_ACCESS_KEY))
-  );
+  if (process.env.NODE_ENV === "production") {
+    return true;
+  }
+  return Boolean(process.env.SES_ACCESS_KEY_ID && process.env.SES_SECRET_ACCESS_KEY);
 }
 
 function writeLocalEmailPreview(email: string, subject: string, htmlBody: string) {
