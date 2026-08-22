@@ -1,6 +1,6 @@
 "use client";
 
-import { renderEmailChangeVerificationHtml } from "@/lib/email/templates";
+import { renderEmailChangeVerificationHtml } from "@/lib/mails";
 
 export default function EmailChangePreviewPage() {
   const html = renderEmailChangeVerificationHtml("654321");
