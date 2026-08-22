@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import type { Metadata } from "next";
 import { supabase } from "@/lib/supabase";
 import {
   Navbar,
@@ -13,9 +14,9 @@ import {
   Footer,
 } from "@/components";
 
-export const metadata = {
-  title: "Eventos y Encuentros | LUMINUS - Experiencias de Bienestar",
-  description: "Descubre entrevistas y encuentros que reúnen distintas perspectivas para acercar nuevas formas de entender el bienestar, compartir experiencias y conectar con ideas.",
+export const metadata: Metadata = {
+  title: "Eventos y Actividades | LUMINUS Latam",
+  description: "Talleres, charlas en vivo y experiencias diseñadas para acercar el bienestar integral a tu vida. Únete a nuestros encuentros y accede a la videoteca en YouTube.",
 };
 
 export default async function EntrevistasYEncuentrosPage() {
@@ -74,7 +75,8 @@ export default async function EntrevistasYEncuentrosPage() {
         <InterviewsSection
           events={events}
           isGrid={false}
-          title="Entrevistas disponibles para ver en cualquier momento" />
+          title="Entrevistas disponibles para ver en cualquier momento"
+        />
         <EventsVoicesCallout />
         <EventsFormatsGrid />
         <EventsFaq />
