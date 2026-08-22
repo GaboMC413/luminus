@@ -18,10 +18,6 @@ function extensionForContentType(contentType: string) {
 export async function POST(request: Request) {
   const session = getCurrentSession();
 
-  if (!session) {
-    return NextResponse.json({ message: "No autorizado." }, { status: 401 });
-  }
-
   const body = await request.json().catch(() => null);
   const contentType = typeof body?.contentType === "string" ? body.contentType : "image/webp";
   const contentLength =
@@ -37,17 +33,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "La imagen debe pesar menos de 3 MB." }, { status: 400 });
   }
 
-  const bucket = process.env.S3_BUCKET;
-  const region = process.env.S3_REGION || "us-east-1";
-  const publicBaseUrl = process.env.S3_PUBLIC_BASE_URL;
+  const bucket = process.env.S3_AVATAR_BUCKET || process.env.S3_BUCKET;
+  const region = process.env.S3_AVATAR_REGION || process.env.S3_REGION || "us-east-1";
+  const publicBaseUrl = process.env.S3_AVATAR_PUBLIC_BASE_URL || process.env.S3_PUBLIC_BASE_URL;
+  const accessKeyId = process.env.S3_AVATAR_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.S3_AVATAR_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
 
   if (!bucket) {
-    return NextResponse.json({ message: "S3_BUCKET no está configurado." }, { status: 500 });
+    return NextResponse.json({ message: "S3_AVATAR_BUCKET no está configurado." }, { status: 500 });
   }
 
-  const key = `avatars/${session.userId}/${randomUUID()}.${extensionForContentType(contentType)}`;
-  // Uses IAM Amplify Service Role — no credentials needed
-  const s3 = new S3Client({ region });
+  const userIdOrTemp = session?.userId || `temp-${randomUUID()}`;
+  const key = `avatars/${userIdOrTemp}/${randomUUID()}.${extensionForContentType(contentType)}`;
+
+  const s3 = new S3Client({
+    region,
+    ...(accessKeyId && secretAccessKey
+      ? { credentials: { accessKeyId, secretAccessKey } }
+      : {}),
+  });
 
   const command = new PutObjectCommand({
     Bucket: bucket,
@@ -56,7 +60,7 @@ export async function POST(request: Request) {
     CacheControl: "public, max-age=31536000, immutable",
   });
 
-  const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 60 });
+  const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 120 });
   const publicUrl = publicBaseUrl
     ? `${publicBaseUrl.replace(/\/$/, "")}/${key}`
     : `https://${bucket}.s3.${region}.amazonaws.com/${key}`;

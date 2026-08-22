@@ -38,15 +38,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { bucket, region } = getS3Config();
+    const { bucket } = getS3Config();
     const fileName = normalizeResumeFileName(body?.fileName, extension);
-    const key = `resumes/${session.userId}/${randomUUID()}.${extension}`;
+    const userIdOrGuest = session?.userId || `guest-${randomUUID()}`;
+    const key = `resumes/${userIdOrGuest}/${randomUUID()}.${extension}`;
 
-    // Uses IAM Amplify Service Role — no credentials needed
-    const s3 = new S3Client({
-      region,
-      requestChecksumCalculation: "WHEN_REQUIRED",
-    });
+    const s3 = createS3Client();
 
     const command = new PutObjectCommand({
       Bucket: bucket,
@@ -54,7 +51,7 @@ export async function POST(request: Request) {
       ContentType: contentType,
       CacheControl: "private, no-store",
       Metadata: {
-        owner: session.userId,
+        owner: userIdOrGuest,
         originalfilename: encodeURIComponent(fileName),
       },
     });

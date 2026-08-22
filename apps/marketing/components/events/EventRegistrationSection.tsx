@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Share2, Check } from "lucide-react";
@@ -130,6 +130,11 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleShare = async () => {
     const shareData = {
@@ -158,9 +163,46 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
     }
   };
 
-  const coverUrl = event.coverUrl || event.cover_url || "/placeholder-video.jpg";
+  const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
 
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const handleResendEmail = async () => {
+    setIsResending(true);
+    try {
+      const res = await fetch("/api/event-inscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          eventId: event.id,
+          eventTitle: event.title,
+          eventCoverUrl: coverUrl,
+          eventDate: event.date,
+          timeText: event.time_text,
+          speakerName: event.speaker_name,
+          youtubeId: event.youtube_id,
+          youtubeUrl: event.youtube_id ? `https://www.youtube.com/watch?v=${event.youtube_id}` : null,
+          eventSlug: event.slug,
+          isResend: true,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setResendSuccess(true);
+      } else {
+        setSubmitError(data.error || "No se pudo reenviar el correo.");
+      }
+    } catch {
+      setSubmitError("Error de conexión al intentar reenviar el correo.");
+    } finally {
+      setIsResending(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,6 +210,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
 
     setIsSubmitting(true);
     setSubmitError(null);
+    setResendSuccess(false);
     try {
       const res = await fetch("/api/event-inscription", {
         method: "POST",
@@ -194,6 +237,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
         setSubmitError(data.error || "Ocurrió un error al procesar la inscripción.");
       } else {
         console.log("[Inscription Success]:", data);
+        setIsAlreadyRegistered(!!data.alreadyRegistered);
         setSubmitted(true);
       }
     } catch (err) {
@@ -204,7 +248,10 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
     }
   };
 
-  const formattedDateTime = formatDateTimeFull(event.date, event.time_text);
+  // Defer locale-dependent date formatting to client to avoid SSR/client hydration mismatch (#418/#423)
+  const formattedDateTime = mounted
+    ? formatDateTimeFull(event.date, event.time_text)
+    : "Cargando fecha...";
 
   return (
     <div className="w-full py-14 sm:py-16 md:py-24 bg-white flex-1 flex flex-col items-center">
@@ -462,23 +509,73 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
             </button>
 
             {submitted ? (
-              <div className="flex flex-col items-center justify-center text-center gap-4 pt-2">
-                <div className="w-14 h-14 rounded-full bg-green-100 text-green-700 flex items-center justify-center">
-                  <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
+              isAlreadyRegistered ? (
+                <div className="flex flex-col items-center justify-center text-center gap-4 pt-2">
+                  <div className="w-14 h-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-normal text-slate-900">Ya te inscribiste a este evento</h3>
+                  <p className="text-slate-600 text-sm font-light leading-relaxed">
+                    La información para acceder a <strong className="font-medium text-slate-800">{event.title}</strong> te la enviamos por correo electrónico a <strong className="font-medium text-slate-800">{formData.email}</strong>.
+                  </p>
+
+                  <div className="w-full flex flex-col items-center gap-3 pt-2">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">¿No encuentras el mail?</p>
+                    
+                    <button
+                      onClick={handleResendEmail}
+                      disabled={isResending || resendSuccess}
+                      className="w-full h-12 px-6 bg-black hover:bg-slate-800 disabled:opacity-80 text-white rounded-2xl text-base font-normal transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm gap-2"
+                    >
+                      {isResending ? (
+                        "Reenviando..."
+                      ) : resendSuccess ? (
+                        <>
+                          <Check className="w-5 h-5 text-emerald-400" />
+                          <span>¡Mail reenviado con éxito!</span>
+                        </>
+                      ) : (
+                        "Reenviar mail de confirmación"
+                      )}
+                    </button>
+
+                    <Link
+                      href="/contacto"
+                      target="_blank"
+                      className="text-slate-600 hover:text-black text-sm font-medium underline transition-colors"
+                    >
+                      Contactar a LUMINUS
+                    </Link>
+
+                    <button
+                      onClick={() => setIsOpenModal(false)}
+                      className="text-slate-400 hover:text-slate-700 text-sm font-normal underline transition-colors pt-2 cursor-pointer"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
                 </div>
-                <h3 className="text-2xl font-normal text-slate-900">¡Inscripción confirmada!</h3>
-                <p className="text-slate-600 text-sm font-light leading-relaxed">
-                  Te has inscripto a <strong className="font-medium text-slate-800">{event.title}</strong>. Te enviamos los detalles de acceso a <strong className="font-medium text-slate-800">{formData.email}</strong>.
-                </p>
-                <button
-                  onClick={() => setIsOpenModal(false)}
-                  className="mt-1 w-full h-12 px-8 bg-black hover:bg-slate-800 text-white rounded-2xl text-base font-normal transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
-                >
-                  Cerrar
-                </button>
-              </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center gap-4 pt-2">
+                  <div className="w-14 h-14 rounded-full bg-green-100 text-green-700 flex items-center justify-center">
+                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-normal text-slate-900">¡Inscripción confirmada!</h3>
+                  <p className="text-slate-600 text-sm font-light leading-relaxed">
+                    Te has inscripto a <strong className="font-medium text-slate-800">{event.title}</strong>. Te enviamos los detalles de acceso a <strong className="font-medium text-slate-800">{formData.email}</strong>.
+                  </p>
+                  <button
+                    onClick={() => setIsOpenModal(false)}
+                    className="mt-1 w-full h-12 px-8 bg-black hover:bg-slate-800 text-white rounded-2xl text-base font-normal transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              )
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div className="pr-10">

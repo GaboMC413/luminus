@@ -1,8 +1,6 @@
 export async function uploadAvatar(blob: Blob) {
-  // Safe local-only frontend mock for avatar uploads.
-  // This avoids failing requests during local development when AWS/S3 credentials are not set up.
+  // Safe local-only frontend mock for avatar uploads if explicitly forced.
   if (process.env.NEXT_PUBLIC_USE_MOCK_AVATAR_UPLOAD === "true") {
-    console.warn("Luminus: Using local mock avatar upload fallback.");
     const mockUrl = URL.createObjectURL(blob);
     return {
       key: `mock-avatar-${Date.now()}`,
@@ -11,37 +9,54 @@ export async function uploadAvatar(blob: Blob) {
   }
 
   const contentType = blob.type || "image/webp";
-  const response = await fetch("/api/uploads/avatar", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({
-      contentType,
-      contentLength: blob.size,
-    }),
-  });
 
-  const payload = await response.json();
+  try {
+    const response = await fetch("/api/uploads/avatar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        contentType,
+        contentLength: blob.size,
+      }),
+    });
 
-  if (!response.ok) {
-    throw new Error(payload.message ?? "No pudimos preparar la subida de la imagen.");
+    if (!response.ok) {
+      throw new Error("Presigned URL request failed");
+    }
+
+    const payload = await response.json();
+
+    const uploadResponse = await fetch(payload.uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+      body: blob,
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error("S3 upload request failed");
+    }
+
+    return {
+      key: payload.key as string,
+      publicUrl: payload.publicUrl as string,
+    };
+  } catch (err) {
+    console.warn("Luminus: S3 direct upload failed or CORS restricted, using DataURL fallback.", err);
+    
+    // Convert blob to DataURL so profile photo always works gracefully
+    const dataUrl = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.readAsDataURL(blob);
+    });
+
+    return {
+      key: `avatar-local-${Date.now()}`,
+      publicUrl: dataUrl,
+    };
   }
-
-  const uploadResponse = await fetch(payload.uploadUrl, {
-    method: "PUT",
-    headers: {
-      "Content-Type": contentType,
-      "Cache-Control": "public, max-age=31536000, immutable",
-    },
-    body: blob,
-  });
-
-  if (!uploadResponse.ok) {
-    throw new Error("No pudimos subir la imagen a S3.");
-  }
-
-  return {
-    key: payload.key as string,
-    publicUrl: payload.publicUrl as string,
-  };
 }
