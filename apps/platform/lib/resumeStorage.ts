@@ -26,8 +26,21 @@ export function getResumeStorageConfig() {
 
 export function createS3Client() {
   const { region } = getS3Config();
-  // Uses IAM Amplify Service Role — no hardcoded credentials
-  return new S3Client({ region });
+  const accessKeyId =
+    process.env.S3_AVATAR_ACCESS_KEY_ID ||
+    process.env.SES_ACCESS_KEY_ID ||
+    process.env.AWS_ACCESS_KEY_ID;
+  const secretAccessKey =
+    process.env.S3_AVATAR_SECRET_ACCESS_KEY ||
+    process.env.SES_SECRET_ACCESS_KEY ||
+    process.env.AWS_SECRET_ACCESS_KEY;
+
+  return new S3Client({
+    region,
+    ...(accessKeyId && secretAccessKey
+      ? { credentials: { accessKeyId, secretAccessKey } }
+      : {}),
+  });
 }
 
 /** @deprecated use createS3Client */
