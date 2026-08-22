@@ -10,6 +10,7 @@ import { VerificationModal } from "./VerificationModal";
 import Link from "next/link";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
 import { useRouter } from "next/navigation";
+import { COUNTRIES as ALL_COUNTRIES } from "@/utils/countries";
 
 const formatName = (str?: string) => {
   if (!str) return "";
@@ -136,6 +137,13 @@ export default function SignUpView() {
             const data = await res.json();
             if (data && data.profile) {
               const p = data.profile;
+              const detectedCountry = p.country || p.phone_number
+                ? ALL_COUNTRIES.find(c =>
+                    (p.country && c.name.toLowerCase() === p.country.toLowerCase()) ||
+                    (p.phone_number && (p.phone_number.startsWith(c.dial) || p.phone_number.startsWith(c.code)))
+                  )
+                : null;
+
               setProfileData(prev => ({
                 ...prev,
                 firstName: prev.firstName || formatName(p.first_name) || "",
@@ -144,6 +152,9 @@ export default function SignUpView() {
                 city: prev.city || p.city || "",
                 country: prev.country || p.country || "",
                 phone: prev.phone || p.phone_number || "",
+                phoneCountry: prev.phoneCountry && prev.phoneCountry.code !== 'XX' 
+                  ? prev.phoneCountry 
+                  : (detectedCountry ? { ...detectedCountry, priority: !!detectedCountry.priority } : prev.phoneCountry),
                 gender: prev.gender || p.gender || "",
                 birthdateString: prev.birthdateString || p.birthdate || "",
               }));

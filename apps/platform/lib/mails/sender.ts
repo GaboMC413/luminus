@@ -527,8 +527,13 @@ export async function sendEventRegistrationEmail(
   const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM Eventos");
   const { renderEventRegistrationEmailHtml } = await import("./inscription");
   const htmlBody = renderEventRegistrationEmailHtml(options);
+  let youtubeLink = "https://www.youtube.com/@luminus_latam";
+  if (options.youtubeUrl && options.youtubeUrl.trim()) {
+    const rawYt = options.youtubeUrl.trim();
+    youtubeLink = (rawYt.startsWith("http://") || rawYt.startsWith("https://")) ? rawYt : `https://www.youtube.com/watch?v=${rawYt}`;
+  }
   const subject = `[LUMINUS] Confirmación de inscripción: ${options.eventTitle || "Evento de Bienestar"}`;
-  const textBody = `Hola ${options.firstName || "Usuario"},\n\nTe has inscripto a la entrevista online "${options.eventTitle || "Evento LUMINUS"}".\n\nPodrás ver el estreno el ${options.eventDate || "Próximamente"} a las ${options.timeText || "18:00 hs (GMT-3)"}.\n\nEquipo de LUMINUS Eventos.`;
+  const textBody = `Hola ${options.firstName || "Usuario"},\n\nTe has inscripto a la entrevista online "${options.eventTitle || "Evento LUMINUS"}".\n\nPodrás ver el estreno el ${options.eventDate || "Próximamente"} a las ${options.timeText || "18:00 hs (GMT-3)"}.\n\nVer en YouTube: ${youtubeLink}\n\nEquipo de LUMINUS Eventos.`;
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
   const configurationSet = process.env.SES_CONFIGURATION_EVENTOS || "luminus-eventos";
 

@@ -32,7 +32,17 @@ export function renderEventRegistrationEmailHtml(data: EventInscriptionEmailOpti
   const eventTitle = data.eventTitle || "Taller de Bienestar LUMINUS";
   const formattedDate = formatDateSpanish(data.eventDate);
   const formattedTime = data.timeText || "18:00 hs (GMT-3)";
-  const youtubeLink = data.youtubeUrl || (data.eventSlug ? `https://luminuslatam.com/proximasfechas/${data.eventSlug}` : "https://www.youtube.com/@luminus_latam");
+  
+  let youtubeLink = "https://www.youtube.com/@luminus_latam";
+  if (data.youtubeUrl && data.youtubeUrl.trim()) {
+    const rawYt = data.youtubeUrl.trim();
+    if (rawYt.startsWith("http://") || rawYt.startsWith("https://")) {
+      youtubeLink = rawYt;
+    } else {
+      youtubeLink = `https://www.youtube.com/watch?v=${rawYt}`;
+    }
+  }
+
   const coverImageUrl = data.eventCoverUrl || LOGO_IMAGE_URL;
 
   const contentHtml = `
