@@ -543,11 +543,15 @@ model SpecialistAvailability {
 }
 
 model SentEmailLog {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  recipient String   @db.VarChar
-  subject   String   @db.VarChar
-  htmlBody  String   @db.Text
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipient    String   @db.VarChar
+  subject      String   @db.VarChar
+  htmlBody     String   @db.Text
+  status       String?  @db.VarChar
+  messageId    String?  @map("message_id") @db.VarChar
+  errorDetails String?  @map("error_details") @db.Text
+  metadata     String?  @db.Text
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   @@index([recipient])
   @@index([createdAt])

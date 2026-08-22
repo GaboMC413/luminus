@@ -102,6 +102,10 @@ export default async function AdminPage() {
     recipient: log.recipient,
     subject: log.subject,
     htmlBody: log.htmlBody,
+    status: log.status || "SUCCESS",
+    messageId: log.messageId || null,
+    errorDetails: log.errorDetails || null,
+    metadata: log.metadata || null,
     createdAt: log.createdAt.toISOString(),
   }));
 
