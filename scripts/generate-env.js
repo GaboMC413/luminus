@@ -1,11 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 
-const target = process.argv[2];
-if (!target) {
-  console.error("Usage: node generate-env.js <path-to-.env.production>");
-  process.exit(1);
-}
+const targetArg = process.argv[2] || ".env.production";
+const targetPath = path.resolve(process.cwd(), targetArg);
 
 const keys = [
   "DATABASE_URL",
@@ -37,7 +34,6 @@ const lines = keys
   .filter((key) => process.env[key] !== undefined && process.env[key] !== "")
   .map((key) => `${key}=${process.env[key]}`);
 
-const resolvedPath = path.resolve(target);
-fs.writeFileSync(resolvedPath, lines.join("\n") + "\n", "utf8");
+fs.writeFileSync(targetPath, lines.join("\n") + "\n", "utf8");
 
-console.log(`[generate-env] Successfully wrote ${lines.length} variables to ${resolvedPath}`);
+console.log(`[generate-env] Successfully wrote ${lines.length} env vars to ${targetPath}`);
