@@ -277,3 +277,88 @@ export async function sendEventRegistrationEmail(
   }
 }
 
+export interface ContactNotificationPayload {
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono?: string;
+  pais?: string;
+  motivo: string;
+  mensaje: string;
+}
+
+const DEFAULT_CONTACT_RECIPIENTS = [
+  "info@luminuslatam.com",
+  "gabo@tribulatam.com",
+  "gabrielmedcap@hotmail.com",
+];
+
+export async function sendContactNotificationEmail(data: ContactNotificationPayload) {
+  const fromEmail = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
+  
+  const envRecipients = process.env.CONTACT_NOTIFICATION_EMAILS
+    ? process.env.CONTACT_NOTIFICATION_EMAILS.split(",").map((e) => e.trim()).filter(Boolean)
+    : null;
+
+  const toAddresses = envRecipients && envRecipients.length > 0 ? envRecipients : DEFAULT_CONTACT_RECIPIENTS;
+
+  const subject = `[LUMINUS Contacto] ${data.motivo} - ${data.nombre} ${data.apellido}`;
+
+  const htmlBody = `
+    <div style="font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
+      <h2 style="font-size: 20px; color: #0f172a; margin-bottom: 16px;">Nuevo Mensaje de Contacto</h2>
+      <p style="margin-bottom: 8px;"><strong>Motivo:</strong> ${data.motivo}</p>
+      <p style="margin-bottom: 8px;"><strong>Nombre:</strong> ${data.nombre} ${data.apellido}</p>
+      <p style="margin-bottom: 8px;"><strong>Email:</strong> ${data.email}</p>
+      <p style="margin-bottom: 8px;"><strong>Teléfono:</strong> ${data.telefono || "No proporcionado"}</p>
+      <p style="margin-bottom: 8px;"><strong>País:</strong> ${data.pais || "No especificado"}</p>
+      <div style="margin-top: 16px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; white-space: pre-wrap;">${data.mensaje}</div>
+    </div>
+  `;
+
+  writeLocalEmailPreview(toAddresses.join(", "), subject, htmlBody);
+
+  if (!isSesConfigured()) {
+    console.log(`[SES DISABLED] Contact notification email for ${toAddresses.join(", ")} generated locally.`);
+    await logSentEmail(toAddresses.join(", "), subject, htmlBody);
+    return { success: true, mode: "local-preview" };
+  }
+
+  const sesClient = getSesClient();
+
+  const command = new SendEmailCommand({
+    Source: fromEmail,
+    Destination: {
+      ToAddresses: toAddresses,
+    },
+    Message: {
+      Subject: {
+        Data: subject,
+        Charset: "UTF-8",
+      },
+      Body: {
+        Html: {
+          Data: htmlBody,
+          Charset: "UTF-8",
+        },
+        Text: {
+          Data: `NUEVO MENSAJE DE CONTACTO:\nMotivo: ${data.motivo}\nNombre: ${data.nombre} ${data.apellido}\nEmail: ${data.email}\nMensaje:\n${data.mensaje}`,
+          Charset: "UTF-8",
+        },
+      },
+    },
+    ConfigurationSetName: "luminus-notificaciones",
+  });
+
+  try {
+    const response = await sesClient.send(command);
+    console.log(`[SES SUCCESS] Contact notification email sent to ${toAddresses.join(", ")}. MessageId: ${response.MessageId}`);
+    await logSentEmail(toAddresses.join(", "), subject, htmlBody);
+    return { success: true, messageId: response.MessageId };
+  } catch (error) {
+    console.error(`[SES ERROR] Failed to send contact notification email:`, error);
+    await logSentEmail(toAddresses.join(", "), subject, htmlBody);
+    throw error;
+  }
+}
+

@@ -18,6 +18,21 @@ function getSesClient() {
   });
 }
 
+async function logSentEmail(recipient: string, subject: string, htmlBody: string) {
+  try {
+    const { prisma } = await import("@/lib/db");
+    await prisma.sentEmailLog.create({
+      data: {
+        recipient,
+        subject,
+        htmlBody,
+      },
+    });
+  } catch (err) {
+    console.error("Failed to log sent email into sent_email_logs:", err);
+  }
+}
+
 export interface ContactNotificationPayload {
   nombre: string;
   apellido: string;
@@ -167,7 +182,14 @@ ${data.mensaje}
     ConfigurationSetName: "luminus-notificaciones",
   });
 
-  return await getSesClient().send(command);
+  try {
+    const res = await getSesClient().send(command);
+    await logSentEmail(toAddresses.join(", "), subject, htmlContent);
+    return res;
+  } catch (err) {
+    await logSentEmail(toAddresses.join(", "), subject, htmlContent);
+    throw err;
+  }
 }
 
 export interface EventRegistrationEmailPayload {
@@ -346,6 +368,13 @@ LUMINUS Latam
     ConfigurationSetName: "luminus-eventos",
   });
 
-  return await getSesClient().send(command);
+  try {
+    const res = await getSesClient().send(command);
+    await logSentEmail(toAddress, subject, htmlContent);
+    return res;
+  } catch (err) {
+    await logSentEmail(toAddress, subject, htmlContent);
+    throw err;
+  }
 }
 

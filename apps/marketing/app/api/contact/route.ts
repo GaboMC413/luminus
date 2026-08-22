@@ -60,19 +60,6 @@ export async function POST(request: Request) {
         mensaje: cleanMensaje,
       });
       emailSuccess = true;
-
-      // 3. Registrar email enviado en SentEmailLog
-      try {
-        await prisma.sentEmailLog.create({
-          data: {
-            recipient: "info@luminuslatam.com",
-            subject: `[LUMINUS Contacto] ${cleanMotivo} - ${cleanNombre} ${cleanApellido}`,
-            htmlBody: `Mensaje de contacto de ${cleanEmail}: ${cleanMensaje.substring(0, 200)}...`,
-          },
-        });
-      } catch (logErr: any) {
-        console.error("[SentEmailLog Error]:", logErr.message || logErr);
-      }
     } catch (err: any) {
       console.error("[AWS SES Error] Error al enviar email de notificación:", err);
       emailError = `${err?.name || "SESError"}: ${err?.message || "Error al enviar correo electrónico"}`;

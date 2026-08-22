@@ -144,19 +144,6 @@ export async function POST(req: Request) {
         console.error("[SES Send Email Error]:", emailErr.message || emailErr);
         emailStatus = "failed";
       }
-
-      // Log sent email in SentEmailLog
-      try {
-        await prisma.sentEmailLog.create({
-          data: {
-            recipient: cleanEmail,
-            subject: `[LUMINUS] Confirmación de inscripción: ${eventTitle || "Evento de Bienestar"}`,
-            htmlBody: `Inscripción ${isResend ? "reenviada" : "enviada"} desde eventos@luminuslatam.com. Estado: ${emailStatus}`,
-          },
-        });
-      } catch (logErr: any) {
-        console.error("[SentEmailLog Error]:", logErr.message || logErr);
-      }
     }
 
     return NextResponse.json({ success: true, alreadyRegistered, emailStatus });
