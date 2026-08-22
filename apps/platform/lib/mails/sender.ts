@@ -219,3 +219,58 @@ export async function sendEmailChangeVerificationEmail(email: string, code: stri
     throw error;
   }
 }
+
+export async function sendEventRegistrationEmail(
+  email: string,
+  options: import("./inscription").EventInscriptionEmailOptions
+) {
+  const fromEmail = "LUMINUS Eventos <eventos@luminuslatam.com>";
+  const { renderEventRegistrationEmailHtml } = await import("./inscription");
+  const htmlBody = renderEventRegistrationEmailHtml(options);
+  const subject = `[LUMINUS] Confirmación de inscripción: ${options.eventTitle || "Evento de Bienestar"}`;
+
+  writeLocalEmailPreview(email, subject, htmlBody);
+
+  if (!isSesConfigured()) {
+    console.log(`[SES DISABLED] Event registration email for ${email} generated locally.`);
+    await logSentEmail(email, subject, htmlBody);
+    return { success: true, mode: "local-preview" };
+  }
+
+  const sesClient = getSesClient();
+
+  const command = new SendEmailCommand({
+    Source: fromEmail,
+    Destination: {
+      ToAddresses: [email],
+    },
+    Message: {
+      Subject: {
+        Data: subject,
+        Charset: "UTF-8",
+      },
+      Body: {
+        Html: {
+          Data: htmlBody,
+          Charset: "UTF-8",
+        },
+        Text: {
+          Data: `Hola ${options.firstName || "Usuario"},\n\nTe has inscripto a la entrevista online "${options.eventTitle || "Evento LUMINUS"}".\n\nPodrás ver el estreno el ${options.eventDate || "Próximamente"} a las ${options.timeText || "18:00 hs (GMT-3)"}.\n\nEquipo de LUMINUS Eventos.`,
+          Charset: "UTF-8",
+        },
+      },
+    },
+  });
+
+  try {
+    const response = await sesClient.send(command);
+    console.log(`[SES SUCCESS] Event registration email sent to ${email} from ${fromEmail}. MessageId: ${response.MessageId}`);
+    await logSentEmail(email, subject, htmlBody);
+    return { success: true, messageId: response.MessageId };
+  } catch (error) {
+    console.error(`[SES ERROR] Failed to send event registration email to ${email}:`, error);
+    await logSentEmail(email, subject, htmlBody);
+    throw error;
+  }
+}
+
