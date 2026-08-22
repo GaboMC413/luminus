@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import fs from "fs";
 import path from "path";
 import { notFound } from "next/navigation";
@@ -13,16 +14,60 @@ interface PageProps {
   };
 }
 
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const event = await getEventBySlug(params.slug);
   if (!event) {
     return {
       title: "Inscripción a Evento | LUMINUS",
     };
   }
+
+  const title = `${event.title} | Inscripción LUMINUS`;
+  const cleanDescription = event.description
+    ? event.description
+        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1")
+        .replace(/\*\*([^*]+)\*\*/g, "$1")
+        .substring(0, 200)
+    : "Un espacio para conectar, aprender y cuidar tu bienestar en Latinoamérica.";
+
+  const domain = process.env.NEXT_PUBLIC_SITE_URL || "https://luminuslatam.com";
+  const eventUrl = `${domain}/proximasfechas/${params.slug}`;
+
+  let coverImageUrl = event.cover_url || `${domain}/logo-mails.png`;
+  if (coverImageUrl.startsWith("/")) {
+    coverImageUrl = `${domain}${coverImageUrl}`;
+  }
+
   return {
-    title: `${event.title} | Inscripción LUMINUS`,
-    description: event.description,
+    title,
+    description: cleanDescription,
+    alternates: {
+      canonical: eventUrl,
+    },
+    openGraph: {
+      title,
+      description: cleanDescription,
+      url: eventUrl,
+      siteName: "LUMINUS",
+      locale: "es_LA",
+      type: "website",
+      images: [
+        {
+          url: coverImageUrl,
+          secureUrl: coverImageUrl,
+          width: 1200,
+          height: 630,
+          type: "image/jpeg",
+          alt: event.title || "Portada de Evento LUMINUS",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: cleanDescription,
+      images: [coverImageUrl],
+    },
   };
 }
 
@@ -55,25 +100,6 @@ async function getEventBySlug(slug: string) {
     }
   } catch (err) {
     console.warn("Could not fetch event from Supabase:", err);
-  }
-
-  if (!event) {
-    try {
-      let jsonPath = path.join(process.cwd(), "data", "youtube_videos.json");
-      if (!fs.existsSync(jsonPath)) {
-        jsonPath = path.join(process.cwd(), "apps", "marketing", "data", "youtube_videos.json");
-      }
-      let allEvents = [];
-      if (fs.existsSync(jsonPath)) {
-        allEvents = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
-      }
-
-      event = allEvents.find(
-        (ev: any) => ev.slug === slug || ev.id === slug || ev.youtube_id === slug
-      );
-    } catch (fsErr) {
-      console.error("Error loading JSON fallback for event slug:", fsErr);
-    }
   }
 
   return event;

@@ -84,7 +84,7 @@ export function UpcomingEventsTimeline({ events }: UpcomingEventsTimelineProps) 
   }, []);
 
   return (
-    <section className="w-full py-8 md:py-12 bg-white flex-1 flex flex-col items-center">
+    <section className="w-full py-14 sm:py-16 md:py-24 bg-white flex-1 flex flex-col items-center">
       <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10 flex flex-col gap-10 md:gap-12">
 
         {/* Header Section */}
@@ -99,8 +99,28 @@ export function UpcomingEventsTimeline({ events }: UpcomingEventsTimelineProps) 
 
         {/* Timeline */}
         {events.length === 0 ? (
-          <div className="w-full py-12 text-center text-slate-500 font-light bg-slate-50 rounded-2xl border border-slate-200">
-            No hay próximos eventos programados por el momento.
+          <div className="w-full py-14 px-6 md:px-12 text-center bg-slate-50/80 rounded-3xl border border-slate-200 flex flex-col items-center justify-center gap-4 my-2">
+            <div className="w-12 h-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-2xs">
+              <span className="material-symbols-outlined text-[24px]">calendar_today</span>
+            </div>
+            <h2 className="text-xl md:text-2xl font-semibold text-slate-900 tracking-tight">
+              Actualmente no hay próximas actividades disponibles
+            </h2>
+            <p className="text-sm md:text-base font-light text-slate-600 max-w-lg leading-relaxed">
+              Muy pronto estaremos compartiendo nuevas charlas, talleres y experiencias LUMINUS. Mientras tanto, puedes explorar nuestras entrevistas y contenidos grabados.
+            </p>
+            <div className="pt-2">
+              <Link
+                href="https://www.youtube.com/@luminus_latam"
+                target="_blank"
+                className="inline-flex items-center justify-center h-12 px-7 bg-black hover:bg-slate-800 text-white font-medium rounded-2xl text-sm transition-colors gap-2 shadow-sm"
+              >
+                <span>Explorar canal de YouTube</span>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="w-full flex flex-col">
