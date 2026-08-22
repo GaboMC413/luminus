@@ -1,9 +1,5 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
-const prisma = globalForPrisma.prisma ?? new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+import { prisma } from "@/lib/events";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,14 +14,14 @@ export async function GET(request: Request) {
       const sample = await prisma.event.findFirst({ select: { id: true, title: true, isUpcoming: true } });
       return NextResponse.json({
         ok: true,
-        databaseUrlConfigured: Boolean(process.env.DATABASE_URL),
+        databaseUrlConfigured: Boolean(process.env.DATABASE_URL || process.env.secrets),
         eventCount: count,
         sampleEvent: sample,
       });
     } catch (err: any) {
       return NextResponse.json({
         ok: false,
-        databaseUrlConfigured: Boolean(process.env.DATABASE_URL),
+        databaseUrlConfigured: Boolean(process.env.DATABASE_URL || process.env.secrets),
         error: err?.message || String(err),
       });
     }

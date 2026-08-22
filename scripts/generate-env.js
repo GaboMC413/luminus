@@ -4,6 +4,17 @@ const path = require("path");
 const targetArg = process.argv[2] || ".env.production";
 const targetPath = path.resolve(process.cwd(), targetArg);
 
+// Parse process.env.secrets provided by AWS Amplify SSM
+if (process.env.secrets) {
+  try {
+    const secretsObj = JSON.parse(process.env.secrets);
+    Object.assign(process.env, secretsObj);
+    console.log("[generate-env] Successfully unpacked process.env.secrets into process.env");
+  } catch (e) {
+    console.warn("[generate-env] Could not parse process.env.secrets JSON:", e);
+  }
+}
+
 const keys = [
   "DATABASE_URL",
   "AUTH_SESSION_SECRET",
