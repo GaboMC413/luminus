@@ -9,19 +9,22 @@ import { SESv2Client } from "@aws-sdk/client-sesv2";
  */
 export function getSesV2Client(): SESv2Client {
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
-  const accessKeyId = process.env.SES_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.SES_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
+  const sesAccessKey = process.env.SES_ACCESS_KEY_ID?.trim();
+  const sesSecretKey = process.env.SES_SECRET_ACCESS_KEY?.trim();
+  const sesSessionToken = process.env.SES_SESSION_TOKEN?.trim();
 
-  if (accessKeyId && secretAccessKey) {
+  // Si existen credenciales explícitas configuradas para SES
+  if (sesAccessKey && sesSecretKey) {
     return new SESv2Client({
       region,
       credentials: {
-        accessKeyId,
-        secretAccessKey,
+        accessKeyId: sesAccessKey,
+        secretAccessKey: sesSecretKey,
+        ...(sesSessionToken && { sessionToken: sesSessionToken }),
       },
     });
   }
 
-  // IAM Compute Role automático de AWS Amplify
+  // De lo contrario, dejar que el SDK v3 utilice automáticamente el Compute IAM Role de AWS Amplify
   return new SESv2Client({ region });
 }
