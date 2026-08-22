@@ -4,7 +4,7 @@ const path = require("path");
 const targetArg = process.argv[2] || ".env.production";
 const targetPath = path.resolve(process.cwd(), targetArg);
 
-// Parse process.env.secrets provided by AWS Amplify SSM
+// Desempacar process.env.secrets inyectado por AWS Amplify SSM
 if (process.env.secrets) {
   try {
     const secretsObj = JSON.parse(process.env.secrets);
