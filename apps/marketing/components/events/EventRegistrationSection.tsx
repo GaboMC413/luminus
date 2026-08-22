@@ -131,6 +131,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const coverUrl = event.coverUrl || event.cover_url || "/images/placeholder-event.jpg";
 
   useEffect(() => {
     setMounted(true);
@@ -181,7 +182,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           email: formData.email,
           eventId: event.id,
           eventTitle: event.title,
-          eventCoverUrl: coverUrl,
+          eventCoverUrl: event.coverUrl || event.cover_url,
           eventDate: event.date,
           timeText: event.time_text,
           speakerName: event.speaker_name,
@@ -222,7 +223,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           city: formData.city,
           eventId: event.id,
           eventTitle: event.title,
-          eventCoverUrl: coverUrl,
+          eventCoverUrl: event.coverUrl || event.cover_url,
           eventDate: event.date,
           timeText: event.time_text,
           speakerName: event.speaker_name,
