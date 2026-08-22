@@ -13,6 +13,7 @@ import {
   renderPasswordResetEmailHtml,
   renderEmailChangeVerificationHtml,
   renderContactNotificationEmailHtml,
+  renderEventRegistrationEmailHtml,
 } from "@/lib/mails";
 
 interface EmailLogsTabProps {
@@ -47,6 +48,19 @@ const templatesData = {
       mensaje: "Hola, me gustaría recibir más información.",
     }),
   },
+  eventRegistration: {
+    name: "Confirmación de Inscripción a Evento (Event Registration)",
+    subject: "[LUMINUS] Confirmación de inscripción: Sexualidad sin tabúes",
+    htmlBody: renderEventRegistrationEmailHtml({
+      firstName: "Gabriel",
+      eventTitle: "Sexualidad sin tabúes: cuerpo, vínculos y comunicación",
+      eventCoverUrl: "https://luminuslatam.com/images/placeholder-event.jpg",
+      eventDate: "2026-09-19T18:00:00.000Z",
+      timeText: "18:00 hs (GMT-3)",
+      speakerName: "Dra. Sofía Martínez",
+      youtubeUrl: "https://www.youtube.com/@luminus_latam",
+    }),
+  },
 };
 
 export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
@@ -56,7 +70,7 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
   const [emailStartDate, setEmailStartDate] = useState("");
   const [emailEndDate, setEmailEndDate] = useState("");
   const [selectedEmailLogId, setSelectedEmailLogId] = useState<string>(emailLogs[0]?.id ?? "");
-  const [selectedTemplate, setSelectedTemplate] = useState<"welcome" | "recovery" | "emailChange" | "contact">("welcome");
+  const [selectedTemplate, setSelectedTemplate] = useState<"welcome" | "recovery" | "emailChange" | "contact" | "eventRegistration">("welcome");
 
   const filteredEmailLogs = useMemo(() => {
     return emailLogs.filter((log) => {
@@ -333,6 +347,17 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
                 }`}
               >
                 Notificación de Contacto
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTemplate("eventRegistration")}
+                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-semibold transition-all cursor-pointer border-none outline-none ${
+                  selectedTemplate === "eventRegistration"
+                    ? "bg-black text-white font-bold"
+                    : "bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+              >
+                Inscripción a Eventos
               </button>
             </div>
           </AdminCard>
