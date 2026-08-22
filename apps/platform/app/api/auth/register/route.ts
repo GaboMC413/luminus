@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     try {
       const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
       await sendWelcomeMessage(prisma, user.id);
-      const { sendWelcomeEmail } = await import("@/lib/email/passwordResetEmail");
+      const { sendWelcomeEmail } = await import("@/lib/mails/sender");
       await sendWelcomeEmail(user.email, user.profile?.firstName || undefined);
     } catch (welcomeError) {
       console.error("Welcome message/email setup failed, proceeding with registration.", welcomeError);

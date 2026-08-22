@@ -42,6 +42,7 @@ export async function POST(request: Request) {
     const key = `resumes/${session.userId}/${randomUUID()}.${extension}`;
     const s3 = new S3Client({
       region,
+      requestChecksumCalculation: "WHEN_REQUIRED",
       credentials: {
         accessKeyId,
         secretAccessKey,
@@ -57,7 +58,13 @@ export async function POST(request: Request) {
         originalfilename: encodeURIComponent(fileName),
       },
     });
-    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 60 });
+    const uploadUrl = await getSignedUrl(s3, command, {
+      expiresIn: 60,
+      unhoistableHeaders: new Set([
+        "x-amz-meta-owner",
+        "x-amz-meta-originalfilename",
+      ]),
+    });
 
     return NextResponse.json({ uploadUrl, key, fileName, contentType, contentLength, owner: session.userId });
   } catch (error: any) {

@@ -8,7 +8,12 @@ import { Button } from "@/components/ui/Button";
 import { formatShortTime, getPresetStartDate } from "../../utils";
 import { AdminCard } from "../AdminDesignSystem";
 
-import { renderWelcomeEmailHtml, renderPasswordResetEmailHtml } from "@/lib/email/templates";
+import {
+  renderWelcomeEmailHtml,
+  renderPasswordResetEmailHtml,
+  renderEmailChangeVerificationHtml,
+  renderContactNotificationEmailHtml,
+} from "@/lib/mails";
 
 interface EmailLogsTabProps {
   emailLogs: AdminEmailLog[];
@@ -28,7 +33,19 @@ const templatesData = {
   emailChange: {
     name: "Confirmar Email (Email Change Verification)",
     subject: "Codigo para confirmar tu email de LUMINUS",
-    htmlBody: renderPasswordResetEmailHtml("654321"),
+    htmlBody: renderEmailChangeVerificationHtml("654321"),
+  },
+  contact: {
+    name: "Notificación de Contacto (Contact Request)",
+    subject: "Nuevo mensaje de contacto de Gabriel Montenegro",
+    htmlBody: renderContactNotificationEmailHtml({
+      nombre: "Gabriel",
+      apellido: "Montenegro",
+      email: "gabrielmedcap@hotmail.com",
+      telefono: "+54 9 11 2345-6789",
+      motivo: "Consulta General / Especialistas",
+      mensaje: "Hola, me gustaría recibir más información.",
+    }),
   },
 };
 
@@ -39,7 +56,7 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
   const [emailStartDate, setEmailStartDate] = useState("");
   const [emailEndDate, setEmailEndDate] = useState("");
   const [selectedEmailLogId, setSelectedEmailLogId] = useState<string>(emailLogs[0]?.id ?? "");
-  const [selectedTemplate, setSelectedTemplate] = useState<"welcome" | "recovery" | "emailChange">("welcome");
+  const [selectedTemplate, setSelectedTemplate] = useState<"welcome" | "recovery" | "emailChange" | "contact">("welcome");
 
   const filteredEmailLogs = useMemo(() => {
     return emailLogs.filter((log) => {
@@ -305,6 +322,17 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
                 }`}
               >
                 Confirmar Email
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTemplate("contact")}
+                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-semibold transition-all cursor-pointer border-none outline-none ${
+                  selectedTemplate === "contact"
+                    ? "bg-black text-white font-bold"
+                    : "bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+              >
+                Notificación de Contacto
               </button>
             </div>
           </AdminCard>
