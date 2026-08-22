@@ -10,6 +10,7 @@ applications:
         build:
           commands:
             - env | grep -E '^(DATABASE_URL|AUTH_|GOOGLE_|COGNITO_|S3_|SES_|EVENT_|ENABLE_|SKIP_)' > .env.production
+            - cd ../..
             - npm run db:generate -w platform
             - npm run build:platform
       artifacts:
@@ -32,7 +33,8 @@ applications:
         build:
           commands:
             - env | grep -E '^(DATABASE_URL|AUTH_|GOOGLE_|COGNITO_|S3_|SES_|EVENT_|ENABLE_|SKIP_)' > .env.production
-            - npm run db:generate -w marketing
+            - cd ../..
+            - npm run db:generate -w platform
             - npm run build:marketing
       artifacts:
         baseDirectory: .next
