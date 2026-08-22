@@ -9,7 +9,7 @@ applications:
             - npm ci --cache .npm --prefer-offline
         build:
           commands:
-            - printf "DATABASE_URL=%s\nAUTH_SESSION_SECRET=%s\nAUTH_BASE_URL=%s\nGOOGLE_CLIENT_ID=%s\nGOOGLE_CLIENT_SECRET=%s\nCOGNITO_DOMAIN=%s\nCOGNITO_REGION=%s\nCOGNITO_CLIENT_ID=%s\nCOGNITO_CLIENT_SECRET=%s\nCOGNITO_USER_POOL_ID=%s\nCOGNITO_ADMIN_ACCESS_KEY_ID=%s\nCOGNITO_ADMIN_SECRET_ACCESS_KEY=%s\nNEXT_PUBLIC_GOOGLE_MAPS_API_KEY=%s\nS3_BUCKET=%s\nS3_REGION=%s\nS3_PUBLIC_BASE_URL=%s\nSES_REGION=%s\nSES_FROM_EMAIL=%s\nEVENT_FROM_EMAIL=%s\nSES_ACCESS_KEY_ID=%s\nSES_SECRET_ACCESS_KEY=%s\nENABLE_RUNTIME_DEBUG=%s\nSKIP_EMAIL_VERIFICATION=%s\n" "$DATABASE_URL" "$AUTH_SESSION_SECRET" "$AUTH_BASE_URL" "$GOOGLE_CLIENT_ID" "$GOOGLE_CLIENT_SECRET" "$COGNITO_DOMAIN" "$COGNITO_REGION" "$COGNITO_CLIENT_ID" "$COGNITO_CLIENT_SECRET" "$COGNITO_USER_POOL_ID" "$COGNITO_ADMIN_ACCESS_KEY_ID" "$COGNITO_ADMIN_SECRET_ACCESS_KEY" "$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY" "$S3_BUCKET" "$S3_REGION" "$S3_PUBLIC_BASE_URL" "$SES_REGION" "$SES_FROM_EMAIL" "$EVENT_FROM_EMAIL" "$SES_ACCESS_KEY_ID" "$SES_SECRET_ACCESS_KEY" "$ENABLE_RUNTIME_DEBUG" "$SKIP_EMAIL_VERIFICATION" > apps/platform/.env.production
+            - node scripts/generate-env.js apps/platform/.env.production
             - npm run db:generate -w platform
             - npm run db:push -w platform
             - npm run db:seed:interests -w platform
@@ -33,7 +33,7 @@ applications:
             - npm ci --cache .npm --prefer-offline
         build:
           commands:
-            - printf "DATABASE_URL=%s\nS3_BUCKET=%s\nS3_REGION=%s\nS3_PUBLIC_BASE_URL=%s\nSES_REGION=%s\nSES_FROM_EMAIL=%s\nEVENT_FROM_EMAIL=%s\n" "$DATABASE_URL" "$S3_BUCKET" "$S3_REGION" "$S3_PUBLIC_BASE_URL" "$SES_REGION" "$SES_FROM_EMAIL" "$EVENT_FROM_EMAIL" > apps/marketing/.env.production
+            - node scripts/generate-env.js apps/marketing/.env.production
             - npm run db:generate -w platform
             - npm run build:marketing
       artifacts:
