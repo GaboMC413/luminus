@@ -60,11 +60,12 @@ function parseClientSecret(rawSecret?: string) {
 function getCognitoClientConfig() {
   const clientId = process.env.COGNITO_CLIENT_ID;
   const clientSecret = parseClientSecret(process.env.COGNITO_CLIENT_SECRET);
-  const domain = process.env.COGNITO_DOMAIN?.trim().replace(/\/$/, "");
+  let domain = process.env.COGNITO_DOMAIN?.trim().replace(/\/$/, "");
 
   if (!clientId || !domain) {
     throw new Error("Cognito OAuth is not configured.");
   }
+  domain = domain.replace(/\/(login|oauth2|logout).*$/i, "");
 
   const cognitoDomain = domain.startsWith("http://") || domain.startsWith("https://")
     ? domain

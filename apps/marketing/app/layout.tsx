@@ -11,13 +11,38 @@ const jakarta = Plus_Jakarta_Sans({
 
 const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyC8oSQoTxkqdQ2otejFMnrGQAU1oeUaZEA";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://luminusbienestar.com";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "LUMINUS | Tu red de bienestar en Latinoamérica",
   description: "Un espacio para conectar, aprender y cuidar tu bienestar. LUMINUS conecta personas, especialistas y espacios de toda Latinoamérica en una misma comunidad.",
   icons: {
     icon: "/ico.png",
     shortcut: "/ico.png",
     apple: "/ico.png",
+  },
+  openGraph: {
+    title: "LUMINUS | Tu red de bienestar en Latinoamérica",
+    description: "Un espacio para conectar, aprender y cuidar tu bienestar. LUMINUS conecta personas, especialistas y espacios de toda Latinoamérica en una misma comunidad.",
+    url: siteUrl,
+    siteName: "LUMINUS",
+    images: [
+      {
+        url: "/logo-mails.png",
+        width: 1200,
+        height: 630,
+        alt: "LUMINUS Bienestar",
+      },
+    ],
+    locale: "es_LA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LUMINUS | Tu red de bienestar en Latinoamérica",
+    description: "Un espacio para conectar, aprender y cuidar tu bienestar.",
+    images: ["/logo-mails.png"],
   },
 };
 

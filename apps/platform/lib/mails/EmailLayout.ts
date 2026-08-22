@@ -1,4 +1,5 @@
 export const WEBSITE_URL = "https://luminuslatam.com";
+export const PLATFORM_APP_URL = "https://app.luminuslatam.com";
 export const LOGO_IMAGE_URL = `${WEBSITE_URL}/logo-mails.jpg`;
 
 export interface EmailLayoutOptions {

@@ -417,6 +417,25 @@ export default async function AdminPage() {
     } : undefined,
   }));
 
+  const contactMessagesRaw = await loadAdminSection("contacto", loadWarnings, () => prisma.contactMessage.findMany({
+    orderBy: {
+      createdAt: "desc",
+    },
+    take: 500,
+  }), []);
+
+  const contactMessages = contactMessagesRaw.map((msg: any) => ({
+    id: msg.id,
+    nombre: msg.nombre,
+    apellido: msg.apellido,
+    email: msg.email,
+    telefono: msg.telefono || null,
+    pais: msg.pais || null,
+    motivo: msg.motivo,
+    mensaje: msg.mensaje,
+    createdAt: msg.createdAt.toISOString(),
+  }));
+
   return (
     <AdminUsersClient
       initialUsers={users}
@@ -431,6 +450,7 @@ export default async function AdminPage() {
       initialSuggestions={suggestions}
       initialEvents={events}
       initialInscriptions={inscriptions}
+      initialContactMessages={contactMessages}
       initialLoadWarnings={loadWarnings}
     />
   );
