@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { sendContactNotificationEmail } from "../../../../../platform/lib/mails/sender";
+import { sendContactNotificationEmail } from "@/lib/ses";
 
 export async function POST(request: Request) {
   try {
