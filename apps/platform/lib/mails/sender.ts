@@ -1,28 +1,10 @@
-import { SendEmailCommand, SESClient } from "@aws-sdk/client-ses";
+import { SendEmailCommand } from "@aws-sdk/client-sesv2";
 import fs from "fs";
 import path from "path";
+import { getSesV2Client } from "./sesClient";
 import { renderPasswordResetEmailHtml } from "./passwordReset";
 import { renderWelcomeEmailHtml } from "./welcome";
 import { renderEmailChangeVerificationHtml } from "./emailChange";
-
-function getSesClient() {
-  const region = process.env.SES_REGION || "us-east-1";
-  const accessKeyId = process.env.SES_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.SES_SECRET_ACCESS_KEY;
-
-  if (accessKeyId && secretAccessKey) {
-    return new SESClient({
-      region,
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
-    });
-  }
-
-  // AWS Amplify IAM Service Role
-  return new SESClient({ region });
-}
 
 function isSesConfigured() {
   return (
@@ -73,6 +55,7 @@ export async function sendPasswordResetEmail(email: string, code: string) {
   const fromEmail = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
   const subject = "Código de recuperación de LUMINUS";
   const htmlBody = renderPasswordResetEmailHtml(code);
+  const textBody = `Tu código de recuperación de contraseña de LUMINUS es: ${code}. Vence en 15 minutos.`;
 
   writeLocalEmailPreview(email, subject, htmlBody);
 
@@ -82,26 +65,28 @@ export async function sendPasswordResetEmail(email: string, code: string) {
     return { success: true, mode: "local-preview", code };
   }
 
-  const sesClient = getSesClient();
+  const sesClient = getSesV2Client();
 
   const command = new SendEmailCommand({
-    Source: fromEmail,
+    FromEmailAddress: fromEmail,
     Destination: {
       ToAddresses: [email],
     },
-    Message: {
-      Subject: {
-        Data: subject,
-        Charset: "UTF-8",
-      },
-      Body: {
-        Html: {
-          Data: htmlBody,
+    Content: {
+      Simple: {
+        Subject: {
+          Data: subject,
           Charset: "UTF-8",
         },
-        Text: {
-          Data: `Tu código de recuperación de contraseña de LUMINUS es: ${code}. Vence en 15 minutos.`,
-          Charset: "UTF-8",
+        Body: {
+          Html: {
+            Data: htmlBody,
+            Charset: "UTF-8",
+          },
+          Text: {
+            Data: textBody,
+            Charset: "UTF-8",
+          },
         },
       },
     },
@@ -124,6 +109,7 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
   const fromEmail = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
   const subject = "¡Te damos la bienvenida a LUMINUS!";
   const htmlBody = renderWelcomeEmailHtml(name);
+  const textBody = `¡Te damos la bienvenida a LUMINUS, ${name}! Nos alegra acompañarte en este espacio de bienestar integral.`;
 
   writeLocalEmailPreview(email, subject, htmlBody);
 
@@ -133,26 +119,28 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
     return { success: true, mode: "local-preview" };
   }
 
-  const sesClient = getSesClient();
+  const sesClient = getSesV2Client();
 
   const command = new SendEmailCommand({
-    Source: fromEmail,
+    FromEmailAddress: fromEmail,
     Destination: {
       ToAddresses: [email],
     },
-    Message: {
-      Subject: {
-        Data: subject,
-        Charset: "UTF-8",
-      },
-      Body: {
-        Html: {
-          Data: htmlBody,
+    Content: {
+      Simple: {
+        Subject: {
+          Data: subject,
           Charset: "UTF-8",
         },
-        Text: {
-          Data: `¡Te damos la bienvenida a LUMINUS, ${name}! Nos alegra acompañarte en este espacio de bienestar integral.`,
-          Charset: "UTF-8",
+        Body: {
+          Html: {
+            Data: htmlBody,
+            Charset: "UTF-8",
+          },
+          Text: {
+            Data: textBody,
+            Charset: "UTF-8",
+          },
         },
       },
     },
@@ -175,6 +163,7 @@ export async function sendEmailChangeVerificationEmail(email: string, code: stri
   const fromEmail = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
   const subject = "Código para confirmar tu email de LUMINUS";
   const htmlBody = renderEmailChangeVerificationHtml(code);
+  const textBody = `Tu código para confirmar tu nuevo correo en LUMINUS es: ${code}. Vence en 15 minutos.`;
 
   writeLocalEmailPreview(email, subject, htmlBody);
 
@@ -184,26 +173,28 @@ export async function sendEmailChangeVerificationEmail(email: string, code: stri
     return { success: true, mode: "local-preview", code };
   }
 
-  const sesClient = getSesClient();
+  const sesClient = getSesV2Client();
 
   const command = new SendEmailCommand({
-    Source: fromEmail,
+    FromEmailAddress: fromEmail,
     Destination: {
       ToAddresses: [email],
     },
-    Message: {
-      Subject: {
-        Data: subject,
-        Charset: "UTF-8",
-      },
-      Body: {
-        Html: {
-          Data: htmlBody,
+    Content: {
+      Simple: {
+        Subject: {
+          Data: subject,
           Charset: "UTF-8",
         },
-        Text: {
-          Data: `Tu código para confirmar tu nuevo correo en LUMINUS es: ${code}. Vence en 15 minutos.`,
-          Charset: "UTF-8",
+        Body: {
+          Html: {
+            Data: htmlBody,
+            Charset: "UTF-8",
+          },
+          Text: {
+            Data: textBody,
+            Charset: "UTF-8",
+          },
         },
       },
     },
@@ -226,10 +217,11 @@ export async function sendEventRegistrationEmail(
   email: string,
   options: import("./inscription").EventInscriptionEmailOptions
 ) {
-  const fromEmail = "LUMINUS Eventos <eventos@luminuslatam.com>";
+  const fromEmail = process.env.EVENT_FROM_EMAIL || "eventos@luminuslatam.com";
   const { renderEventRegistrationEmailHtml } = await import("./inscription");
   const htmlBody = renderEventRegistrationEmailHtml(options);
   const subject = `[LUMINUS] Confirmación de inscripción: ${options.eventTitle || "Evento de Bienestar"}`;
+  const textBody = `Hola ${options.firstName || "Usuario"},\n\nTe has inscripto a la entrevista online "${options.eventTitle || "Evento LUMINUS"}".\n\nPodrás ver el estreno el ${options.eventDate || "Próximamente"} a las ${options.timeText || "18:00 hs (GMT-3)"}.\n\nEquipo de LUMINUS Eventos.`;
 
   writeLocalEmailPreview(email, subject, htmlBody);
 
@@ -239,26 +231,28 @@ export async function sendEventRegistrationEmail(
     return { success: true, mode: "local-preview" };
   }
 
-  const sesClient = getSesClient();
+  const sesClient = getSesV2Client();
 
   const command = new SendEmailCommand({
-    Source: fromEmail,
+    FromEmailAddress: fromEmail,
     Destination: {
       ToAddresses: [email],
     },
-    Message: {
-      Subject: {
-        Data: subject,
-        Charset: "UTF-8",
-      },
-      Body: {
-        Html: {
-          Data: htmlBody,
+    Content: {
+      Simple: {
+        Subject: {
+          Data: subject,
           Charset: "UTF-8",
         },
-        Text: {
-          Data: `Hola ${options.firstName || "Usuario"},\n\nTe has inscripto a la entrevista online "${options.eventTitle || "Evento LUMINUS"}".\n\nPodrás ver el estreno el ${options.eventDate || "Próximamente"} a las ${options.timeText || "18:00 hs (GMT-3)"}.\n\nEquipo de LUMINUS Eventos.`,
-          Charset: "UTF-8",
+        Body: {
+          Html: {
+            Data: htmlBody,
+            Charset: "UTF-8",
+          },
+          Text: {
+            Data: textBody,
+            Charset: "UTF-8",
+          },
         },
       },
     },
@@ -289,13 +283,12 @@ export interface ContactNotificationPayload {
 
 const DEFAULT_CONTACT_RECIPIENTS = [
   "info@luminuslatam.com",
-  "gabo@tribulatam.com",
   "gabrielmedcap@hotmail.com",
 ];
 
 export async function sendContactNotificationEmail(data: ContactNotificationPayload) {
   const fromEmail = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
-  
+
   const envRecipients = process.env.CONTACT_NOTIFICATION_EMAILS
     ? process.env.CONTACT_NOTIFICATION_EMAILS.split(",").map((e) => e.trim()).filter(Boolean)
     : null;
@@ -315,6 +308,7 @@ export async function sendContactNotificationEmail(data: ContactNotificationPayl
       <div style="margin-top: 16px; padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; white-space: pre-wrap;">${data.mensaje}</div>
     </div>
   `;
+  const textBody = `NUEVO MENSAJE DE CONTACTO:\nMotivo: ${data.motivo}\nNombre: ${data.nombre} ${data.apellido}\nEmail: ${data.email}\nMensaje:\n${data.mensaje}`;
 
   writeLocalEmailPreview(toAddresses.join(", "), subject, htmlBody);
 
@@ -324,26 +318,28 @@ export async function sendContactNotificationEmail(data: ContactNotificationPayl
     return { success: true, mode: "local-preview" };
   }
 
-  const sesClient = getSesClient();
+  const sesClient = getSesV2Client();
 
   const command = new SendEmailCommand({
-    Source: fromEmail,
+    FromEmailAddress: fromEmail,
     Destination: {
       ToAddresses: toAddresses,
     },
-    Message: {
-      Subject: {
-        Data: subject,
-        Charset: "UTF-8",
-      },
-      Body: {
-        Html: {
-          Data: htmlBody,
+    Content: {
+      Simple: {
+        Subject: {
+          Data: subject,
           Charset: "UTF-8",
         },
-        Text: {
-          Data: `NUEVO MENSAJE DE CONTACTO:\nMotivo: ${data.motivo}\nNombre: ${data.nombre} ${data.apellido}\nEmail: ${data.email}\nMensaje:\n${data.mensaje}`,
-          Charset: "UTF-8",
+        Body: {
+          Html: {
+            Data: htmlBody,
+            Charset: "UTF-8",
+          },
+          Text: {
+            Data: textBody,
+            Charset: "UTF-8",
+          },
         },
       },
     },
@@ -361,4 +357,3 @@ export async function sendContactNotificationEmail(data: ContactNotificationPayl
     throw error;
   }
 }
-
