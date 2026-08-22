@@ -290,8 +290,19 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
                     {selectedEmailLog.subject}
                   </h2>
 
-                  {/* Colored Status Text (Not a pill) + Copy/View Log Link on the right */}
-                  <div className="flex items-center justify-between gap-3 pt-0.5">
+                  {/* Recipient & Date */}
+                  <div className="text-[12px] text-slate-500 space-y-0.5 pt-0.5 font-sans">
+                    <p>
+                      <span className="font-semibold text-slate-700">Para:</span> {selectedEmailLog.recipient}
+                    </p>
+                    <p>
+                      <span className="font-semibold text-slate-700">Fecha:</span>{" "}
+                      {formatShortTime(selectedEmailLog.createdAt)}
+                    </p>
+                  </div>
+
+                  {/* Colored Status Text + Copy/View Log Link on the right (Below Date) */}
+                  <div className="flex items-center justify-between gap-3 pt-1 border-t border-slate-200/40 mt-1">
                     <div>
                       {selectedEmailLog.status === "FAILED" || (!selectedEmailLog.messageId && selectedEmailLog.status !== "LOCAL_PREVIEW") ? (
                         <span className="text-xs font-bold text-rose-600 flex items-center gap-1.5">
@@ -321,17 +332,6 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
                         <path d="M5 12h14M12 5l7 7-7 7" />
                       </svg>
                     </button>
-                  </div>
-
-                  {/* Recipient & Date */}
-                  <div className="text-[12px] text-slate-500 space-y-0.5 pt-1 font-sans">
-                    <p>
-                      <span className="font-semibold text-slate-700">Para:</span> {selectedEmailLog.recipient}
-                    </p>
-                    <p>
-                      <span className="font-semibold text-slate-700">Fecha:</span>{" "}
-                      {formatShortTime(selectedEmailLog.createdAt)}
-                    </p>
                   </div>
                 </div>
 
