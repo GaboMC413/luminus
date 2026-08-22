@@ -176,7 +176,7 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
                 <SelectInput
                   label="Periodo de fecha"
                   value={emailDatePreset}
-                  onChange={(e) => setEmailDatePreset(e.target.value)}
+                  onSelect={(value) => setEmailDatePreset(value)}
                   options={[
                     { value: "all", label: "Histórico Completo" },
                     { value: "today", label: "Hoy" },
@@ -211,8 +211,7 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
               <div className="md:col-span-3 flex items-center justify-end">
                 {hasActiveFilters && (
                   <Button
-                    variant="soft"
-                    size="sm"
+                    variant="small"
                     onClick={() => {
                       setEmailSearch("");
                       setEmailDatePreset("all");
