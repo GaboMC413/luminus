@@ -11,6 +11,8 @@ import {
   AdminPostulation,
   AdminCategory,
   AdminSuggestion,
+  AdminEvent,
+  AdminEventInscription,
   AdminTab,
 } from "./types";
 import { AdminHeader } from "./components/AdminHeader";
@@ -23,6 +25,7 @@ import { SearchesTab } from "./components/tabs/SearchesTab";
 import { SpecialistsTab } from "./components/tabs/SpecialistsTab";
 import { EmailLogsTab } from "./components/tabs/EmailLogsTab";
 import { CategoriesTab } from "./components/tabs/CategoriesTab";
+import { EventsTab } from "./components/tabs/EventsTab";
 
 export function AdminUsersClient({
   initialUsers,
@@ -35,6 +38,9 @@ export function AdminUsersClient({
   initialPostulations = [],
   initialCategories = [],
   initialSuggestions = [],
+  initialEvents = [],
+  initialInscriptions = [],
+  initialLoadWarnings = [],
 }: {
   initialUsers: AdminUser[];
   initialChats: AdminChat[];
@@ -46,6 +52,9 @@ export function AdminUsersClient({
   initialPostulations: AdminPostulation[];
   initialCategories?: AdminCategory[];
   initialSuggestions?: AdminSuggestion[];
+  initialEvents?: AdminEvent[];
+  initialInscriptions?: AdminEventInscription[];
+  initialLoadWarnings?: string[];
 }) {
   const [users, setUsers] = useState<AdminUser[]>(initialUsers);
   const [chats] = useState<AdminChat[]>(initialChats);
@@ -57,6 +66,8 @@ export function AdminUsersClient({
   const [postulations, setPostulations] = useState<AdminPostulation[]>(initialPostulations);
   const [categories, setCategories] = useState<AdminCategory[]>(initialCategories);
   const [suggestions, setSuggestions] = useState<AdminSuggestion[]>(initialSuggestions);
+  const [events] = useState<AdminEvent[]>(initialEvents);
+  const [inscriptions] = useState<AdminEventInscription[]>(initialInscriptions);
   const [activeTab, setActiveTab] = useState<AdminTab>("usuarios");
 
   // Shared Specialist subtab state
@@ -88,6 +99,13 @@ export function AdminUsersClient({
     <div className="min-h-screen bg-[#F5F7FA] text-slate-950 flex flex-col">
       {/* Top Header Bar */}
       <AdminHeader />
+
+      {initialLoadWarnings.length > 0 && (
+        <div className="border-b border-amber-300 bg-amber-50 px-6 py-3 text-sm text-amber-900">
+          El administrador abrió parcialmente. No se pudieron cargar estas secciones: {initialLoadWarnings.join(", ")}.
+          El detalle técnico quedó registrado para revisión.
+        </div>
+      )}
 
       {/* Main Workspace (Vertical Nav + Active Tab Content) */}
       <div className="flex-1 flex flex-col lg:flex-row min-w-0">
@@ -137,6 +155,10 @@ export function AdminUsersClient({
               setUserSubTab={setUserSubTab}
               setActiveTab={setActiveTab}
             />
+          )}
+
+          {activeTab === "eventos" && (
+            <EventsTab events={events} inscriptions={inscriptions} />
           )}
 
           {activeTab === "emails" && <EmailLogsTab emailLogs={emailLogs} />}

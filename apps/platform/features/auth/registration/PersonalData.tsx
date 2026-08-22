@@ -123,17 +123,33 @@ export function PersonalData({
 
 
 
-  // Initialize birthdate splits from parent state on mount
+  // Initialize birthdate splits from parent state on mount or when updated via autofill
   React.useEffect(() => {
     if (birthdateString) {
-      const parts = birthdateString.split(" / ");
-      if (parts.length === 3) {
-        setBirthDay(parts[0]);
-        setBirthMonth(parts[1]);
-        setBirthYear(parts[2]);
+      if (birthdateString.includes(" / ")) {
+        const parts = birthdateString.split(" / ");
+        if (parts.length === 3) {
+          setBirthDay(parts[0].padStart(2, "0"));
+          setBirthMonth(parts[1].padStart(2, "0"));
+          setBirthYear(parts[2]);
+        }
+      } else if (birthdateString.includes("-")) {
+        const parts = birthdateString.split("-");
+        if (parts.length === 3) {
+          setBirthYear(parts[0]);
+          setBirthMonth(parts[1].padStart(2, "0"));
+          setBirthDay(parts[2].padStart(2, "0"));
+        }
+      } else if (birthdateString.includes("/")) {
+        const parts = birthdateString.split("/");
+        if (parts.length === 3) {
+          setBirthDay(parts[0].padStart(2, "0"));
+          setBirthMonth(parts[1].padStart(2, "0"));
+          setBirthYear(parts[2]);
+        }
       }
     }
-  }, []);
+  }, [birthdateString]);
 
   // Clear photo warning error declaratively when a photo has been uploaded
   React.useEffect(() => {

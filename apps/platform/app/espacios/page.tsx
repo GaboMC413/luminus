@@ -8,7 +8,7 @@ export default function EspaciosPage() {
 
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8 flex flex-col items-center justify-center h-full min-h-0 overflow-hidden">
-      {/* Unified Container: Feels like a single divided div */}
+      {/* Unified Container */}
       <div className="w-full max-w-5xl border border-slate-200/80 rounded-3xl overflow-hidden flex flex-col shadow-none flex-1 h-full min-h-0">
         {/* Banner Image */}
         <div 
@@ -43,7 +43,7 @@ export default function EspaciosPage() {
                 Espacios LUMINUS
               </h4>
               <p className="text-slate-600 text-[12.5px] md:text-[14px] leading-relaxed max-w-[650px]">
-                Próximamente podrás explorar personas, especialistas, clínicas, consultorios y espacios de atención cerca de ti y en toda LATAM.
+                Próximamente podrás explorar personas, especialistas, clínicas y consultorios cerca de ti y en toda LATAM.
               </p>
             </div>
           </div>

@@ -41,8 +41,8 @@ export function formatRelativeTime(timestamp: any): string {
 const NAV_ITEMS = [
   { id: "comunidad", label: "Comunidad", path: "/comunidad", icon: "/Icons/NavBar/comunity inactive.svg", activeIcon: "/Icons/NavBar/community active.svg" },
   { id: "especialistas", label: "Especialistas", path: "/especialistas", icon: "/Icons/NavBar/expert inactive.svg", activeIcon: "/Icons/NavBar/expert active.svg" },
-  { id: "grupos", label: "Grupos", path: "/grupos", icon: "/Icons/NavBar/espacios inactive.svg", activeIcon: "/Icons/NavBar/espacios active.svg" },
   { id: "espacios", label: "Espacios", path: "/espacios", icon: "/Icons/NavBar/map inactive.svg", activeIcon: "/Icons/NavBar/map active.svg" },
+  { id: "grupos", label: "Grupos", path: "/grupos", icon: "/Icons/NavBar/espacios inactive.svg", activeIcon: "/Icons/NavBar/espacios active.svg" },
   { id: "faro", label: "Faro", path: "/faro", icon: "/Icons/NavBar/faro inactive.svg", activeIcon: "/Icons/NavBar/faro active.svg" },
 ];
 
@@ -366,8 +366,9 @@ export function PlatformNavbar() {
   const getActiveTab = () => {
     if (pathname.includes("/comunidad")) return "comunidad";
     if (pathname.includes("/especialistas")) return "especialistas";
-    if (pathname.includes("/grupos")) return "grupos";
     if (pathname.includes("/espacios")) return "espacios";
+    if (pathname.includes("/grupos")) return "grupos";
+    if (pathname.includes("/mapa")) return "espacios";
     if (pathname.includes("/faro")) return "faro";
     if (pathname.includes("/perfil-usuario")) return "perfil-usuario";
     return "";
@@ -457,10 +458,11 @@ export function PlatformNavbar() {
   };
 
   const handleSignOut = async () => {
-    await fetch("/api/auth/logout", {
+    const res = await fetch("/api/auth/logout", {
       method: "POST",
       credentials: "include",
     });
+    const data = await res.json().catch(() => ({}));
 
     // Clear local storage profile details to prevent data bleed when switching users
     const keysToRemove = [
@@ -487,7 +489,11 @@ export function PlatformNavbar() {
     ];
     keysToRemove.forEach(k => localStorage.removeItem(k));
 
-    router.push("/auth/iniciar-sesion");
+    if (data?.cognitoLogoutUrl) {
+      window.location.href = data.cognitoLogoutUrl;
+    } else {
+      router.push("/auth/iniciar-sesion");
+    }
   };
 
   return (

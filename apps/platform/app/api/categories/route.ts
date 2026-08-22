@@ -19,16 +19,18 @@ export async function GET() {
       },
     });
 
-    const result = categories.map((cat) => ({
-      id: cat.id,
-      title: cat.name,
-      slug: cat.slug,
-      icon: cat.icon || "label",
-      iconFilled: cat.iconFilled,
-      color: cat.color || "#3B82F6",
-      bgColor: cat.bgColor || "#DBEAFE",
-      items: cat.interests.map((item) => item.name),
-    }));
+    const result = categories
+      .filter((cat) => cat.name !== "Otro" && cat.name !== "Otros")
+      .map((cat) => ({
+        id: cat.id,
+        title: cat.name,
+        slug: cat.slug,
+        icon: cat.icon || "label",
+        iconFilled: cat.iconFilled,
+        color: cat.color || "#3B82F6",
+        bgColor: cat.bgColor || "#DBEAFE",
+        items: cat.interests.map((item: any) => item.name).filter((name: string) => name !== "Otro" && name !== "Otros"),
+      }));
 
     return NextResponse.json({ categories: result });
   } catch (error) {

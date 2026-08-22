@@ -126,11 +126,10 @@ export default function SpecialistOnboardingPage() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      let uploadedResumeUrl: string | null = null;
+      let uploadedResume: Awaited<ReturnType<typeof uploadResume>> | null = null;
       if (resumeFile) {
         try {
-          const uploadRes = await uploadResume(resumeFile);
-          uploadedResumeUrl = uploadRes.publicUrl;
+          uploadedResume = await uploadResume(resumeFile);
         } catch (uploadErr: any) {
           console.error("Resume upload failed:", uploadErr);
           alert(uploadErr.message || "Error al subir el currículum. Por favor intenta de nuevo.");
@@ -176,7 +175,10 @@ export default function SpecialistOnboardingPage() {
           endTime: endTime || null,
           timeZone: timeZone || null,
         } : null,
-        resumeUrl: uploadedResumeUrl,
+        resumeKey: uploadedResume?.key || null,
+        resumeFileName: uploadedResume?.fileName || null,
+        resumeContentType: uploadedResume?.contentType || null,
+        resumeSize: uploadedResume?.contentLength || null,
         linkedinUrl: linkedinObj?.url || null,
         instagramUrl: instagramObj?.url || null,
         websiteUrl: websiteObj?.url || null,

@@ -652,7 +652,7 @@ export function SpecialistsTab({
                         Documentación
                       </h3>
                       <a
-                        href={selectedSpecialist.resumeUrl}
+                        href={`/api/admin/especialistas/resumes?userId=${encodeURIComponent(selectedSpecialist.userId)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-red-50 hover:bg-red-100 border border-red-100 text-red-700 font-semibold text-xs transition-colors"
@@ -1061,7 +1061,7 @@ export function SpecialistsTab({
                       <span className="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-0.5 font-jakarta">Currículum / CV</span>
                       {selectedPostulation.resumeUrl ? (
                         <a
-                          href={selectedPostulation.resumeUrl}
+                          href={`/api/admin/especialistas/resumes?postulationId=${encodeURIComponent(selectedPostulation.id)}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-xs font-bold text-slate-800 hover:text-black underline cursor-pointer"

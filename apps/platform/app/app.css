@@ -64,6 +64,22 @@
     background-blend-mode: overlay, normal, normal, normal;
   }
 
+  /* LUMINUS SOFT LIGHT GRADIENT (MARKETING HERO STYLE - EXACT 1:1 MATCH) */
+  .luminus-light-gradient {
+    background-color: #ffffff;
+    background-image:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.75) 0%, #ffffff 100%),
+      linear-gradient(90deg, #FF7700 0%, #E855C8 33%, #0450FB 66%, #A8C800 100%);
+  }
+
+  /* LUMINUS SOFT LIGHT GRADIENT FADING TO SLATE-50 (#f8fafc) FOR MOBILE HEADERS */
+  .luminus-light-gradient-slate {
+    background-color: #f8fafc;
+    background-image:
+      linear-gradient(180deg, rgba(248, 250, 252, 0.65) 0%, #f8fafc 100%),
+      linear-gradient(90deg, #FF7700 0%, #E855C8 33%, #0450FB 66%, #A8C800 100%);
+  }
+
   /* HIGH-END TYPOGRAPHY SYSTEM (Tailwind @apply semantic classes, no custom sizing properties) */
   .text-title-display, .text-page-title, .text-profile-name {
     @apply text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 leading-snug;

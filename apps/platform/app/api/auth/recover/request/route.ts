@@ -5,7 +5,7 @@ import {
   hashRecoveryCode,
   isRecoveryDebugEnabled,
 } from "@/lib/auth/recoveryTokens";
-import { sendPasswordResetEmail } from "@/lib/email/passwordResetEmail";
+import { sendPasswordResetEmail } from "@/lib/mails/sender";
 
 export const runtime = "nodejs";
 

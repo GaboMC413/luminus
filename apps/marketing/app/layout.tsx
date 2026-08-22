@@ -14,6 +14,11 @@ const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyC
 export const metadata: Metadata = {
   title: "LUMINUS | Tu red de bienestar en Latinoamérica",
   description: "Un espacio para conectar, aprender y cuidar tu bienestar. LUMINUS conecta personas, especialistas y espacios de toda Latinoamérica en una misma comunidad.",
+  icons: {
+    icon: "/ico.png",
+    shortcut: "/ico.png",
+    apple: "/ico.png",
+  },
 };
 
 export default function RootLayout({

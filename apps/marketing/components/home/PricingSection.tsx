@@ -4,7 +4,7 @@ const PRICING_FEATURES = [
   "Exploración de especialistas",
   "Sesiones introductorias con especialistas",
   "Actividades, entrevistas y novedades",
-  "Espacios de bienestar y mapa (Próximamente)",
+  "Espacios de bienestar (Próximamente)",
   "Grupos tematicos de conversación (Próximamente)",
   "Faro AI, tu asistente de orientación (Próximamente)",
 ];
