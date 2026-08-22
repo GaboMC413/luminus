@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Share2, Check } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { LocationInput } from "@/components/ui/LocationInput";
 import { Button } from "@/components/ui/Button";
 
