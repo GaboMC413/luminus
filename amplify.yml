@@ -34,7 +34,8 @@ applications:
         build:
           commands:
             - printf "DATABASE_URL=%s\nNEXT_PUBLIC_GOOGLE_MAPS_API_KEY=%s\nNEXT_PUBLIC_SUPABASE_URL=%s\nNEXT_PUBLIC_SUPABASE_ANON_KEY=%s\nS3_PUBLIC_BASE_URL=%s\nSES_REGION=%s\nSES_FROM_EMAIL=%s\nEVENT_FROM_EMAIL=%s\nSES_ACCESS_KEY_ID=%s\nSES_SECRET_ACCESS_KEY=%s\n" "$DATABASE_URL" "$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY" "$NEXT_PUBLIC_SUPABASE_URL" "$NEXT_PUBLIC_SUPABASE_ANON_KEY" "$S3_PUBLIC_BASE_URL" "$SES_REGION" "$SES_FROM_EMAIL" "$EVENT_FROM_EMAIL" "$SES_ACCESS_KEY_ID" "$SES_SECRET_ACCESS_KEY" > apps/marketing/.env.production
-            - npm run db:generate -w marketing
+            - cd ../..
+            - npm run db:generate -w platform
             - npm run build:marketing
       artifacts:
         baseDirectory: .next
