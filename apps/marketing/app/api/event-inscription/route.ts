@@ -33,27 +33,32 @@ export async function POST(req: Request) {
     const cleanLastName = lastName ? lastName.trim() : "";
     const cleanCity = city ? city.trim() : null;
 
-    // 1. Resolve Event ID from DB if not provided directly as UUID
+    // 1. Resolve Event ID and event details from DB
     let resolvedEventId: string | null = null;
+    let dbEvent: any = null;
+
     if (eventId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId)) {
       resolvedEventId = eventId;
-    } else if (eventSlug || eventTitle) {
-      try {
-        const foundEvent = await prisma.event.findFirst({
+    }
+
+    try {
+      if (resolvedEventId) {
+        dbEvent = await prisma.event.findUnique({ where: { id: resolvedEventId } });
+      } else if (eventSlug || eventTitle) {
+        dbEvent = await prisma.event.findFirst({
           where: {
             OR: [
               ...(eventSlug ? [{ slug: eventSlug }] : []),
               ...(eventTitle ? [{ title: eventTitle }] : []),
             ],
           },
-          select: { id: true },
         });
-        if (foundEvent) {
-          resolvedEventId = foundEvent.id;
+        if (dbEvent) {
+          resolvedEventId = dbEvent.id;
         }
-      } catch (findErr: any) {
-        console.warn("[Event Lookup Error]:", findErr.message || findErr);
       }
+    } catch (findErr: any) {
+      console.warn("[Event Lookup Error]:", findErr.message || findErr);
     }
 
     // 2. Upsert EventGuest in Database
@@ -126,19 +131,31 @@ export async function POST(req: Request) {
     // Always trigger email for every event registration or confirmation request
     let emailStatus = "sent";
     let emailError: string | undefined = undefined;
+
+    const rawYt = youtubeUrl || body?.youtubeId || null;
+    let finalYoutubeUrl: string | undefined = undefined;
+    if (rawYt && rawYt.trim()) {
+      const trimmed = rawYt.trim();
+      finalYoutubeUrl = (trimmed.startsWith("http://") || trimmed.startsWith("https://")) ? trimmed : `https://www.youtube.com/watch?v=${trimmed}`;
+    } else if (dbEvent?.youtubeId) {
+      finalYoutubeUrl = `https://www.youtube.com/watch?v=${dbEvent.youtubeId}`;
+    } else if (dbEvent?.link && (dbEvent.link.includes("youtube") || dbEvent.link.includes("youtu.be"))) {
+      finalYoutubeUrl = dbEvent.link;
+    }
+
     try {
-      console.log(`[SES START] Procesando envío de email para ${cleanEmail} (evento: ${eventTitle || "Evento LUMINUS"})...`);
+      console.log(`[SES START] Procesando envío de email para ${cleanEmail} (evento: ${eventTitle || dbEvent?.title || "Evento LUMINUS"})...`);
       const emailRes = await sendEventRegistrationEmail({
         firstName: guest.firstName || cleanFirstName || "Invitado",
         lastName: guest.lastName || cleanLastName,
         email: cleanEmail,
-        eventTitle: eventTitle || "Evento de Bienestar LUMINUS",
-        eventCoverUrl,
-        eventDate,
-        timeText,
-        speakerName,
-        youtubeUrl,
-        eventSlug,
+        eventTitle: eventTitle || dbEvent?.title || "Evento de Bienestar LUMINUS",
+        eventCoverUrl: eventCoverUrl || dbEvent?.coverUrl || null,
+        eventDate: eventDate || (dbEvent?.date ? dbEvent.date.toISOString() : null),
+        timeText: timeText || dbEvent?.timeText || null,
+        speakerName: speakerName || dbEvent?.speakerName || null,
+        youtubeUrl: finalYoutubeUrl,
+        eventSlug: eventSlug || dbEvent?.slug || null,
       });
       console.log(`[Event Registration Email Sent]: ${cleanEmail} (resend=${!!isResend}) MessageId:`, (emailRes as any)?.messageId || "local-preview");
     } catch (emailErr: any) {

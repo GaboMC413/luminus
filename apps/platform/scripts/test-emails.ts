@@ -77,6 +77,7 @@ async function runTest() {
         eventDate: "2026-08-28",
         timeText: "18:00 hs (GMT-3)",
         speakerName: "Dra. Sofía Martínez",
+        youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
         eventSlug: "bienestar-emocional-2026",
       });
       console.log("   ✅ ÉXITO MessageId:", res4.messageId || res4.mode);
