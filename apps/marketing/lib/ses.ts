@@ -2,9 +2,9 @@ import {
   sendEventRegistrationEmail as sendPlatformEventRegistrationEmail,
   sendContactNotificationEmail as sendPlatformContactNotificationEmail,
   ContactNotificationPayload,
-} from "../../platform/lib/mails/sender";
+} from "@platform/lib/mails/sender";
 
-export { ContactNotificationPayload };
+export type { ContactNotificationPayload };
 
 export interface EventRegistrationEmailPayload {
   firstName: string;

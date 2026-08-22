@@ -142,16 +142,13 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
 
   const [inscriptionsList, setInscriptionsList] = useState<AdminEventInscription[]>(inscriptions);
   const [deletingInscriptionId, setDeletingInscriptionId] = useState<string | null>(null);
+  const [confirmingInscriptionId, setConfirmingInscriptionId] = useState<string | null>(null);
 
   useEffect(() => {
     setInscriptionsList(inscriptions);
   }, [inscriptions]);
 
   const handleDeleteInscription = async (inscriptionId: string) => {
-    if (!confirm("¿Estás seguro de que deseas eliminar la inscripción de este usuario?")) {
-      return;
-    }
-
     setDeletingInscriptionId(inscriptionId);
     try {
       const res = await fetch(`/api/admin/event-inscriptions/${inscriptionId}`, {
@@ -160,6 +157,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
       const data = await res.json();
       if (res.ok && data.success) {
         setInscriptionsList((prev) => prev.filter((ins) => ins.id !== inscriptionId));
+        setConfirmingInscriptionId(null);
       } else {
         alert(data.error || "No se pudo eliminar la inscripción.");
       }
@@ -702,17 +700,38 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                                   })}
                                 </td>
                                 <td className="py-2.5 px-3 text-right">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDeleteInscription(ins.id)}
-                                    disabled={deletingInscriptionId === ins.id}
-                                    className="opacity-0 group-hover:opacity-100 transition-all duration-150 w-6 h-6 rounded-md text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 cursor-pointer disabled:opacity-50 inline-flex items-center justify-center shrink-0"
-                                    title="Eliminar inscripción"
-                                  >
-                                    <span className="material-symbols-rounded text-[14px] block">
-                                      {deletingInscriptionId === ins.id ? "progress_activity" : "delete"}
-                                    </span>
-                                  </button>
+                                  {confirmingInscriptionId === ins.id ? (
+                                    <div className="inline-flex items-center gap-1 bg-white border border-rose-200 shadow-xs rounded-lg p-1 animate-in fade-in zoom-in-95 duration-150">
+                                      <span className="text-[11px] font-semibold text-rose-600 px-1 whitespace-nowrap">¿Eliminar?</span>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleDeleteInscription(ins.id)}
+                                        disabled={deletingInscriptionId === ins.id}
+                                        className="px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white font-medium text-[11px] rounded-md transition-colors cursor-pointer disabled:opacity-50"
+                                      >
+                                        {deletingInscriptionId === ins.id ? "..." : "Sí"}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setConfirmingInscriptionId(null)}
+                                        disabled={deletingInscriptionId === ins.id}
+                                        className="px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-[11px] rounded-md transition-colors cursor-pointer disabled:opacity-50"
+                                      >
+                                        No
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => setConfirmingInscriptionId(ins.id)}
+                                      className="opacity-0 group-hover:opacity-100 transition-all duration-150 w-5 h-5 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer inline-flex items-center justify-center shrink-0"
+                                      title="Eliminar inscripción"
+                                    >
+                                      <span className="material-symbols-rounded text-[13px] block">
+                                        delete
+                                      </span>
+                                    </button>
+                                  )}
                                 </td>
                               </tr>
                             ))}
