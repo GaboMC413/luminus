@@ -335,7 +335,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
             {/* Card Toolbar: Status Dropdown + Search Input + "+ Nuevo" Button */}
             <div className="p-4 border-b border-slate-200/80 bg-white flex items-center gap-3 shrink-0">
               {/* Filter Dropdown */}
-              <div className="min-w-[145px] shrink-0">
+              <div className="min-w-36 shrink-0">
                 <SelectInput
                   value={eventFilter}
                   options={[
@@ -344,7 +344,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                     { label: `Todos · ${eventsList.length}`, value: "todos" },
                   ]}
                   onSelect={(val) => setEventFilter(val as "proximos" | "pasados" | "todos")}
-                  className="!h-10 text-xs font-bold"
+                  className="h-10! text-xs font-bold"
                 />
               </div>
 
@@ -354,7 +354,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                   value={eventSearch}
                   onChange={(e) => setEventSearch(e.target.value)}
                   placeholder="Buscar por título o speaker"
-                  className="!w-full !h-10 text-xs"
+                  className="w-full! h-10! text-xs"
                 />
               </div>
 
@@ -691,7 +691,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                     placeholder="Ej: Taller de Bienestar Emocional"
                     value={editingEventData.title || ""}
                     onChange={(e) => setEditingEventData({ ...editingEventData, title: e.target.value })}
-                    className="!w-full !h-10 text-xs"
+                    className="w-full! h-10! text-xs"
                   />
                 </div>
 
@@ -705,7 +705,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                       placeholder="Ej: Dra. Sofía Martínez"
                       value={editingEventData.speakerName || ""}
                       onChange={(e) => setEditingEventData({ ...editingEventData, speakerName: e.target.value })}
-                      className="!w-full !h-10 text-xs"
+                      className="w-full! h-10! text-xs"
                     />
                   </div>
                   <div>
@@ -735,7 +735,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                       type="date"
                       value={editingEventData.date ? new Date(editingEventData.date).toISOString().substring(0, 10) : ""}
                       onChange={(e) => setEditingEventData({ ...editingEventData, date: e.target.value })}
-                      className="!w-full !h-10 text-xs"
+                      className="w-full! h-10! text-xs"
                     />
                   </div>
                   <div>
@@ -766,7 +766,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                       placeholder="Ej: En vivo por Zoom / LUMINUS"
                       value={editingEventData.location || ""}
                       onChange={(e) => setEditingEventData({ ...editingEventData, location: e.target.value })}
-                      className="!w-full !h-10 text-xs"
+                      className="w-full! h-10! text-xs"
                     />
                   </div>
                   <div>
@@ -778,7 +778,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                       placeholder="https://www.youtube.com/watch?v=..."
                       value={editingEventData.link || ""}
                       onChange={(e) => setEditingEventData({ ...editingEventData, link: e.target.value })}
-                      className="!w-full !h-10 text-xs"
+                      className="w-full! h-10! text-xs"
                     />
                   </div>
                 </div>
@@ -882,7 +882,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                     type="button"
                     variant="outline"
                     onClick={handleCancelEdit}
-                    className="!h-10 text-xs px-5"
+                    className="h-10! text-xs px-5"
                   >
                     Cancelar
                   </Button>
@@ -890,7 +890,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                     type="submit"
                     variant="primary"
                     disabled={isSubmitting || isUploadingCover}
-                    className="!h-10 text-xs px-6"
+                    className="h-10! text-xs px-6"
                   >
                     {isSubmitting ? "Guardando..." : "Guardar cambios"}
                   </Button>

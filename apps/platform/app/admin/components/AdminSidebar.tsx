@@ -38,7 +38,7 @@ export function AdminSidebar({
   ];
 
   return (
-    <aside className="w-full lg:w-[72px] lg:h-[calc(100vh-64px)] lg:sticky lg:top-[64px] border-b lg:border-b-0 lg:border-r border-slate-200 bg-white flex flex-col items-center py-4 shrink-0 z-30">
+    <aside className="w-full lg:w-18 lg:h-[calc(100vh-64px)] lg:sticky lg:top-16 border-b lg:border-b-0 lg:border-r border-slate-200 bg-white flex flex-col items-center py-4 shrink-0 z-30">
       <nav className="w-full px-3 flex flex-row lg:flex-col items-center justify-center gap-2.5 overflow-x-auto lg:overflow-x-visible">
         {items.map((item) => (
           <div key={item.id} className="relative group flex items-center justify-center">

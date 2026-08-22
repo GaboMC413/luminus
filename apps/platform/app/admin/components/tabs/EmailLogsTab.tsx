@@ -101,7 +101,8 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
     emailEndDate !== "";
 
   return (
-    <div className="mx-auto flex max-w-[1350px] flex-col gap-6 px-6 py-8">
+  return (
+    <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-8">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-[28px] font-bold leading-tight font-jakarta">Mails Enviados</h1>
@@ -138,16 +139,16 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
           {/* Filter Toolbar */}
           <AdminCard className="p-4">
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex-1 min-w-[240px]">
+              <div className="flex-1 min-w-60">
                 <InputField
                   value={emailSearch}
                   onChange={(e) => setEmailSearch(e.target.value)}
                   placeholder="Buscar por email de destinatario o asunto..."
-                  className="!w-full !h-10 text-xs"
+                  className="w-full! h-10! text-xs"
                 />
               </div>
 
-              <div className="min-w-[160px]">
+              <div className="min-w-40">
                 <SelectInput
                   value={emailDatePreset}
                   options={[
@@ -160,26 +161,26 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
                     { label: "Fechas fijas", value: "custom" },
                   ]}
                   onSelect={(val) => setEmailDatePreset(val)}
-                  className="!h-10 text-xs"
+                  className="h-10! text-xs"
                 />
               </div>
 
               {emailDatePreset === "custom" && (
                 <>
-                  <div className="w-[120px]">
+                  <div className="w-30">
                     <InputField
                       type="date"
                       value={emailStartDate}
                       onChange={(e) => setEmailStartDate(e.target.value)}
-                      className="!h-10 text-xs"
+                      className="h-10! text-xs"
                     />
                   </div>
-                  <div className="w-[120px]">
+                  <div className="w-30">
                     <InputField
                       type="date"
                       value={emailEndDate}
                       onChange={(e) => setEmailEndDate(e.target.value)}
-                      className="!h-10 text-xs"
+                      className="h-10! text-xs"
                     />
                   </div>
                 </>
@@ -195,7 +196,7 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
                     setEmailStartDate("");
                     setEmailEndDate("");
                   }}
-                  className="!h-10 shrink-0 text-xs font-semibold"
+                  className="h-10! shrink-0 text-xs font-semibold"
                 >
                   Limpiar filtros
                 </Button>
@@ -211,7 +212,7 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
                 <span>Asunto</span>
                 <span>Fecha</span>
               </div>
-              <div className="max-h-[680px] overflow-y-auto divide-y divide-slate-100">
+              <div className="max-h-170 overflow-y-auto divide-y divide-slate-100">
                 {filteredEmailLogs.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                     <span className="material-symbols-rounded text-[48px] mb-3 text-slate-300">mail</span>
@@ -243,7 +244,7 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
 
             {/* HTML Email Reader side-panel */}
             {selectedEmailLog ? (
-              <AdminCard className="flex flex-col h-[740px]">
+              <AdminCard className="flex flex-col h-185">
                 {/* Header */}
                 <div className="border-b border-slate-200/80 p-5 shrink-0 bg-slate-50/50">
                   <div className="flex flex-col gap-1.5">
@@ -273,7 +274,7 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
                 </div>
               </AdminCard>
             ) : (
-              <AdminCard className="flex items-center justify-center text-slate-400 p-8 text-center h-[740px]">
+              <AdminCard className="flex items-center justify-center text-slate-400 p-8 text-center h-185">
                 <p className="text-sm font-medium">
                   Selecciona un correo del historial para visualizar su contenido.
                 </p>
@@ -338,7 +339,7 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
           </AdminCard>
 
           {/* Right Column: template details & iframe preview */}
-          <AdminCard className="flex flex-col h-[740px]">
+          <AdminCard className="flex flex-col h-185">
             <div className="border-b border-slate-200/80 p-5 shrink-0 bg-slate-50/50">
               <h2 className="text-[16px] font-bold text-slate-900 font-jakarta leading-tight">
                 {templatesData[selectedTemplate].name}
