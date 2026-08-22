@@ -105,30 +105,30 @@ export function EventCard({ item }: EventCardProps) {
   return (
     <div className="w-full h-[390px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col group shadow-none">
 
-      {/* Thumbnail — edge-to-edge, no extra border radius */}
+      {/* Thumbnail — edge-to-edge with matching top rounded corners */}
       {hasVideo && videoLink ? (
         <a
           href={videoLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full aspect-video relative overflow-hidden bg-slate-200 shrink-0 block hover:opacity-95 transition-opacity"
+          className="w-full aspect-video relative overflow-hidden bg-slate-100 shrink-0 block hover:opacity-95 transition-opacity rounded-t-[15px]"
         >
           <Image
             src={thumbUrl}
             alt={item.title}
             fill
-            className="object-cover object-center"
+            className="object-cover object-center rounded-t-[15px]"
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             unoptimized
           />
         </a>
       ) : (
-        <div className="w-full aspect-video relative overflow-hidden bg-slate-200 shrink-0 block">
+        <div className="w-full aspect-video relative overflow-hidden bg-slate-100 shrink-0 block rounded-t-[15px]">
           <Image
             src={thumbUrl}
             alt={item.title}
             fill
-            className="object-cover object-center"
+            className="object-cover object-center rounded-t-[15px]"
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             unoptimized
           />

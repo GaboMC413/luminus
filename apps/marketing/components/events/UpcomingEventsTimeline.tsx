@@ -247,6 +247,7 @@ export function UpcomingEventsTimeline({ events }: UpcomingEventsTimelineProps) 
                           fill
                           sizes="(max-width: 768px) 100vw, 58vw"
                           className="object-cover object-center"
+                          unoptimized
                         />
                       </Link>
                     </div>
