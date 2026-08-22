@@ -139,21 +139,77 @@ export interface EventRegistrationEmailPayload {
   eventSlug?: string | null;
 }
 
+function formatDateSpanish(dateString?: string | null): string {
+  if (!dateString) return "Próximamente";
+  try {
+    const d = new Date(dateString);
+    if (!isNaN(d.getTime())) {
+      const weekday = d.toLocaleDateString("es-ES", { weekday: "long" });
+      const day = d.getDate();
+      const month = d.toLocaleDateString("es-ES", { month: "long" });
+      const capitalizedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+      const capitalizedMonth = month.charAt(0).toUpperCase() + month.slice(1);
+      return `${capitalizedWeekday} ${day} de ${capitalizedMonth}`;
+    }
+  } catch (e) {}
+  return dateString;
+}
+
 export async function sendEventRegistrationEmail(data: EventRegistrationEmailPayload) {
   const fromEmail = process.env.EVENT_FROM_EMAIL || "eventos@luminuslatam.com";
   const subject = `[LUMINUS] Confirmación de inscripción: ${data.eventTitle || "Evento de Bienestar"}`;
   const firstName = data.firstName || "Usuario";
-  const formattedDate = data.eventDate || "Próximamente";
+  const formattedDate = formatDateSpanish(data.eventDate);
   const formattedTime = data.timeText || "18:00 hs (GMT-3)";
   const youtubeLink = data.youtubeUrl || (data.eventSlug ? `https://luminuslatam.com/proximasfechas/${data.eventSlug}` : "https://www.youtube.com/@luminus_latam");
+  const coverImageUrl = data.eventCoverUrl || "https://luminuslatam.com/logo-mails.png";
 
   const htmlBody = `
-    <div style="font-family: sans-serif; padding: 24px; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff;">
-      <h1 style="font-size: 22px; font-weight: 700; color: #0f172a; text-align: center; margin-bottom: 16px;">¡Hola ${firstName}!</h1>
-      <p style="font-size: 15px; color: #334155; text-align: center; margin-bottom: 6px;">Te has inscripto a la entrevista online <strong>${data.eventTitle}</strong>.</p>
-      <p style="font-size: 15px; color: #475569; text-align: center; margin-bottom: 24px;">Podrás ver el estreno el ${formattedDate} a las ${formattedTime}.</p>
-      <div style="text-align: center; margin-bottom: 24px;">
-        <a href="${youtubeLink}" style="display: inline-block; padding: 12px 24px; background-color: #0284c7; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600;">Ver transmisión de YouTube</a>
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 32px 16px; background-color: #f8fafc; margin: 0;">
+      <div style="max-width: 580px; margin: 0 auto; background-color: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+        
+        <!-- Header con Logo LUMINUS -->
+        <div style="padding: 28px 24px; text-align: center; border-b: 1px solid #f1f5f9; background-color: #ffffff;">
+          <img src="https://luminuslatam.com/logo-mails.png" alt="LUMINUS" style="height: 36px; display: inline-block; border: 0;" />
+        </div>
+
+        <div style="padding: 32px 28px;">
+          <h1 style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 12px 0; color: #0f172a; text-align: center;">
+            ¡Hola ${firstName}!
+          </h1>
+
+          <p style="font-size: 15px; line-height: 1.6; color: #334155; margin: 0 0 6px 0; text-align: center;">
+            Te has inscripto a la entrevista online <strong>${data.eventTitle}</strong>.
+          </p>
+
+          <p style="font-size: 15px; line-height: 1.6; color: #475569; margin: 0 0 28px 0; text-align: center;">
+            Podrás ver el estreno el <strong>${formattedDate}</strong> a las <strong>${formattedTime}</strong>.
+          </p>
+
+          <!-- Tarjeta del Evento -->
+          <div style="background-color: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 28px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); text-align: center;">
+            ${coverImageUrl ? `<img src="${coverImageUrl}" alt="${data.eventTitle}" style="width: 100%; max-height: 300px; object-fit: cover; display: block; border: 0; border-top-left-radius: 15px; border-top-right-radius: 15px;" />` : ''}
+            
+            <div style="padding: 24px 20px 28px 20px; text-align: center;">
+              <h2 style="font-size: 20px; font-weight: 700; line-height: 1.3; color: #0f172a; margin: 0 0 8px 0; text-align: center;">
+                ${data.eventTitle}
+              </h2>
+              
+              ${data.speakerName ? `<p style="font-size: 15px; font-weight: 600; color: #334155; margin: 0 0 6px 0; text-align: center;">Con ${data.speakerName}</p>` : ''}
+              
+              <p style="font-size: 14px; font-weight: 500; color: #64748b; margin: 0 0 20px 0; text-align: center;">
+                ${formattedDate} • ${formattedTime}
+              </p>
+              
+              <div style="border-top: 1px solid #f1f5f9; padding-top: 20px; text-align: center;">
+                <a href="${youtubeLink}" target="_blank" style="display: inline-block; background-color: #0f172a; color: #ffffff; text-decoration: none; padding: 13px 26px; border-radius: 12px; font-size: 14px; font-weight: 600; text-align: center;">
+                  Ver transmisión en YouTube
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   `;
@@ -195,11 +251,13 @@ export async function sendEventRegistrationEmail(data: EventRegistrationEmailPay
   });
 
   try {
+    console.log(`[SES START] Enviando correo de confirmación de evento a ${data.email} vía ${fromEmail}...`);
     const response = await sesClient.send(command);
+    console.log(`✅ AWS SES Event Registration Email enviado a ${data.email}. MessageId: ${response.MessageId}`);
     await logSentEmail(data.email, subject, htmlBody);
     return { success: true, messageId: response.MessageId };
-  } catch (error) {
-    console.error(`[SES ERROR] Failed to send event registration email to ${data.email}:`, error);
+  } catch (error: any) {
+    console.error(`❌ AWS SES Error completo al enviar correo a ${data.email}:`, JSON.stringify(error, null, 2));
     await logSentEmail(data.email, subject, htmlBody);
     throw error;
   }

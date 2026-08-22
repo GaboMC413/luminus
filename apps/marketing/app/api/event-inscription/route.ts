@@ -123,27 +123,26 @@ export async function POST(req: Request) {
     }
 
     // 4. Send confirmation email via AWS SES from eventos@luminuslatam.com
-    // Send email on new registrations or on explicit resend requests
+    // Always trigger email for every event registration or confirmation request
     let emailStatus = "sent";
-    if (!alreadyRegistered || isResend) {
-      try {
-        await sendEventRegistrationEmail({
-          firstName: guest.firstName || cleanFirstName || "Invitado",
-          lastName: guest.lastName || cleanLastName,
-          email: cleanEmail,
-          eventTitle: eventTitle || "Evento de Bienestar LUMINUS",
-          eventCoverUrl,
-          eventDate,
-          timeText,
-          speakerName,
-          youtubeUrl,
-          eventSlug,
-        });
-        console.log(`[Event Registration Email Sent]: ${cleanEmail} (resend=${!!isResend}) via eventos@luminuslatam.com`);
-      } catch (emailErr: any) {
-        console.error("[SES Send Email Error]:", emailErr.message || emailErr);
-        emailStatus = "failed";
-      }
+    try {
+      console.log(`[SES START] Procesando envío de email para ${cleanEmail} (evento: ${eventTitle || "Evento LUMINUS"})...`);
+      const emailRes = await sendEventRegistrationEmail({
+        firstName: guest.firstName || cleanFirstName || "Invitado",
+        lastName: guest.lastName || cleanLastName,
+        email: cleanEmail,
+        eventTitle: eventTitle || "Evento de Bienestar LUMINUS",
+        eventCoverUrl,
+        eventDate,
+        timeText,
+        speakerName,
+        youtubeUrl,
+        eventSlug,
+      });
+      console.log(`[Event Registration Email Sent]: ${cleanEmail} (resend=${!!isResend}) MessageId:`, (emailRes as any)?.messageId || "local-preview");
+    } catch (emailErr: any) {
+      console.error("❌ [SES Send Email Error completo]:", JSON.stringify(emailErr, null, 2));
+      emailStatus = "failed";
     }
 
     return NextResponse.json({ success: true, alreadyRegistered, emailStatus });
