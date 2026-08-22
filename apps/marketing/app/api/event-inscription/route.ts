@@ -18,9 +18,10 @@ export async function POST(req: Request) {
       speakerName,
       youtubeUrl,
       eventSlug,
+      isResend,
     } = body || {};
 
-    if (!email || !firstName) {
+    if (!email || (!firstName && !isResend)) {
       return NextResponse.json(
         { success: false, error: "Faltan campos obligatorios (email y nombre)." },
         { status: 400 }
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const cleanFirstName = firstName.trim();
+    const cleanFirstName = firstName ? firstName.trim() : "";
     const cleanLastName = lastName ? lastName.trim() : "";
     const cleanCity = city ? city.trim() : null;
 
@@ -61,14 +62,14 @@ export async function POST(req: Request) {
       guest = await prisma.eventGuest.upsert({
         where: { email: cleanEmail },
         update: {
-          firstName: cleanFirstName,
-          lastName: cleanLastName,
-          city: cleanCity,
+          ...(cleanFirstName ? { firstName: cleanFirstName } : {}),
+          ...(cleanLastName ? { lastName: cleanLastName } : {}),
+          ...(cleanCity ? { city: cleanCity } : {}),
           isGuest: true,
         },
         create: {
           email: cleanEmail,
-          firstName: cleanFirstName,
+          firstName: cleanFirstName || "Invitado",
           lastName: cleanLastName,
           city: cleanCity,
           isGuest: true,
@@ -82,9 +83,23 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3. Upsert EventInscription if resolvedEventId is present
+    // 3. Check & Upsert EventInscription if resolvedEventId is present
+    let alreadyRegistered = false;
     if (guest && resolvedEventId) {
       try {
+        const existingInscription = await prisma.eventInscription.findUnique({
+          where: {
+            eventId_guestId: {
+              eventId: resolvedEventId,
+              guestId: guest.id,
+            },
+          },
+        });
+
+        if (existingInscription) {
+          alreadyRegistered = true;
+        }
+
         await prisma.eventInscription.upsert({
           where: {
             eventId_guestId: {
@@ -107,41 +122,44 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3. Send confirmation email via AWS SES from eventos@luminuslatam.com
+    // 4. Send confirmation email via AWS SES from eventos@luminuslatam.com
+    // Send email on new registrations or on explicit resend requests
     let emailStatus = "sent";
-    try {
-      await sendEventRegistrationEmail({
-        firstName: cleanFirstName,
-        lastName: cleanLastName,
-        email: cleanEmail,
-        eventTitle: eventTitle || "Evento de Bienestar LUMINUS",
-        eventCoverUrl,
-        eventDate,
-        timeText,
-        speakerName,
-        youtubeUrl,
-        eventSlug,
-      });
-      console.log(`[Event Registration Email Sent]: ${cleanEmail} via eventos@luminuslatam.com`);
-    } catch (emailErr: any) {
-      console.error("[SES Send Email Error]:", emailErr.message || emailErr);
-      emailStatus = "failed";
+    if (!alreadyRegistered || isResend) {
+      try {
+        await sendEventRegistrationEmail({
+          firstName: guest.firstName || cleanFirstName || "Invitado",
+          lastName: guest.lastName || cleanLastName,
+          email: cleanEmail,
+          eventTitle: eventTitle || "Evento de Bienestar LUMINUS",
+          eventCoverUrl,
+          eventDate,
+          timeText,
+          speakerName,
+          youtubeUrl,
+          eventSlug,
+        });
+        console.log(`[Event Registration Email Sent]: ${cleanEmail} (resend=${!!isResend}) via eventos@luminuslatam.com`);
+      } catch (emailErr: any) {
+        console.error("[SES Send Email Error]:", emailErr.message || emailErr);
+        emailStatus = "failed";
+      }
+
+      // Log sent email in SentEmailLog
+      try {
+        await prisma.sentEmailLog.create({
+          data: {
+            recipient: cleanEmail,
+            subject: `[LUMINUS] Confirmación de inscripción: ${eventTitle || "Evento de Bienestar"}`,
+            htmlBody: `Inscripción ${isResend ? "reenviada" : "enviada"} desde eventos@luminuslatam.com. Estado: ${emailStatus}`,
+          },
+        });
+      } catch (logErr: any) {
+        console.error("[SentEmailLog Error]:", logErr.message || logErr);
+      }
     }
 
-    // 4. Log sent email in SentEmailLog
-    try {
-      await prisma.sentEmailLog.create({
-        data: {
-          recipient: cleanEmail,
-          subject: `[LUMINUS] Confirmación de inscripción: ${eventTitle || "Evento de Bienestar"}`,
-          htmlBody: `Inscripción enviada desde eventos@luminuslatam.com. Estado: ${emailStatus}`,
-        },
-      });
-    } catch (logErr: any) {
-      console.error("[SentEmailLog Error]:", logErr.message || logErr);
-    }
-
-    return NextResponse.json({ success: true, emailStatus });
+    return NextResponse.json({ success: true, alreadyRegistered, emailStatus });
   } catch (err: any) {
     console.error("[Event Inscription Route Error]:", err.message || err);
     return NextResponse.json(
