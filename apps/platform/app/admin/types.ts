@@ -87,6 +87,10 @@ export type AdminEmailLog = {
   recipient: string;
   subject: string;
   htmlBody: string;
+  status?: string | null;
+  messageId?: string | null;
+  errorDetails?: string | null;
+  metadata?: string | null;
   createdAt: string;
 };
 
