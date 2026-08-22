@@ -164,8 +164,8 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
           <AdminCard className="p-4">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-12 items-end">
               <div className="md:col-span-4">
+                <label className="block text-xs font-medium text-slate-700 mb-1">Buscar correo o asunto</label>
                 <InputField
-                  label="Buscar correo o asunto"
                   placeholder="ej. usuario@mail.com..."
                   value={emailSearch}
                   onChange={(e) => setEmailSearch(e.target.value)}
@@ -190,16 +190,16 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
               {emailDatePreset === "custom" ? (
                 <>
                   <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Desde</label>
                     <InputField
-                      label="Desde"
                       type="date"
                       value={emailStartDate}
                       onChange={(e) => setEmailStartDate(e.target.value)}
                     />
                   </div>
                   <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Hasta</label>
                     <InputField
-                      label="Hasta"
                       type="date"
                       value={emailEndDate}
                       onChange={(e) => setEmailEndDate(e.target.value)}
