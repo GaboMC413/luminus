@@ -109,10 +109,13 @@ export function getCurrentSession() {
   return readSessionToken(cookies().get(SESSION_COOKIE_NAME)?.value);
 }
 
-export async function assertOnboarded() {
+export async function assertOnboarded(redirectToPath?: string) {
   const session = getCurrentSession();
   if (!session) {
-    redirect("/auth/iniciar-sesion");
+    const loginTarget = redirectToPath
+      ? `/auth/iniciar-sesion?redirect=${encodeURIComponent(redirectToPath)}`
+      : "/auth/iniciar-sesion";
+    redirect(loginTarget);
   }
 
   let isOnboarded = false;
@@ -128,7 +131,10 @@ export async function assertOnboarded() {
   }
 
   if (!isOnboarded) {
-    redirect("/auth/registrarse?onboarding=1");
+    const signupTarget = redirectToPath
+      ? `/auth/registrarse?onboarding=1&redirect=${encodeURIComponent(redirectToPath)}`
+      : "/auth/registrarse?onboarding=1";
+    redirect(signupTarget);
   }
 
   return session;

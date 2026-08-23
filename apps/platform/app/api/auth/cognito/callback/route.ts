@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { decodeCognitoIdToken } from "@/lib/auth/cognito-password";
+import { getSafeRedirectUrl } from "@/lib/utils/url";
 
 export const runtime = "nodejs";
 
@@ -18,6 +19,7 @@ type CognitoStartState = {
   state: string;
   provider?: "Google";
   intent?: "signup" | "signin";
+  redirect?: string;
 };
 
 type CognitoIdentityClaim = {
@@ -458,7 +460,13 @@ export async function GET(request: Request) {
       console.error("Failed to log activity in Cognito callback:", logError);
     }
 
-    return redirectTo(requestUrl, user.profile?.isOnboarded ? "/comunidad" : "/auth/registrarse?onboarding=1");
+    const defaultTarget = user.profile?.isOnboarded ? "/comunidad" : "/auth/registrarse?onboarding=1";
+    let redirectTarget = getSafeRedirectUrl(storedState?.redirect, defaultTarget);
+    if (!user.profile?.isOnboarded && storedState?.redirect) {
+      redirectTarget = `/auth/registrarse?onboarding=1&redirect=${encodeURIComponent(storedState.redirect)}`;
+    }
+
+    return redirectTo(requestUrl, redirectTarget);
   } catch (callbackError) {
     console.error("Cognito OAuth callback failed.", callbackError);
     const reason = callbackError instanceof Error ? encodeURIComponent(callbackError.message) : "unknown";

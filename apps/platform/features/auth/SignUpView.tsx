@@ -11,6 +11,7 @@ import Link from "next/link";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
 import { useRouter } from "next/navigation";
 import { COUNTRIES as ALL_COUNTRIES } from "@/utils/countries";
+import { getSafeRedirectUrl } from "@/lib/utils/url";
 
 const formatName = (str?: string) => {
   if (!str) return "";
@@ -49,6 +50,12 @@ function GoogleIcon() {
 export default function SignUpView() {
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const getRedirectTarget = () => {
+    if (typeof window === "undefined") return "/comunidad";
+    const params = new URLSearchParams(window.location.search);
+    return getSafeRedirectUrl(params.get("redirect"));
+  };
 
   // Navigation & Form State
   const [step, setStep] = useState(1);
@@ -226,7 +233,11 @@ export default function SignUpView() {
   };
 
   const handleGoogleSignUp = () => {
-    window.location.href = "/api/auth/cognito/start?provider=google&intent=signup";
+    const target = getRedirectTarget();
+    const googleUrl = target !== "/comunidad"
+      ? `/api/auth/cognito/start?provider=google&intent=signup&redirect=${encodeURIComponent(target)}`
+      : "/api/auth/cognito/start?provider=google&intent=signup";
+    window.location.href = googleUrl;
   };
 
   const isRegistration = step > 1;
@@ -454,7 +465,13 @@ export default function SignUpView() {
 
               <div className="flex flex-col items-center mt-2">
                 <button
-                  onClick={() => router.push("/auth/iniciar-sesion")}
+                  onClick={() => {
+                    const target = getRedirectTarget();
+                    const signInUrl = target !== "/comunidad"
+                      ? `/auth/iniciar-sesion?redirect=${encodeURIComponent(target)}`
+                      : "/auth/iniciar-sesion";
+                    router.push(signInUrl);
+                  }}
                   className="text-slate-500 hover:text-slate-900 text-body-secondary cursor-pointer bg-transparent border-none outline-none"
                 >
                   ¿Ya tienes cuenta? <span className="underline font-semibold text-slate-900">Ingresa</span>
@@ -524,7 +541,7 @@ export default function SignUpView() {
             ) : (
               <PlanSelection
                 onNext={() => {
-                  router.push('/comunidad');
+                  router.push(getRedirectTarget());
                 }}
                 onBack={() => setStep(3)}
                 data={profileData}

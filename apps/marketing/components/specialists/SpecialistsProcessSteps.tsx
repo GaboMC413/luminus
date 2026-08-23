@@ -61,8 +61,8 @@ export function SpecialistsProcessSteps() {
         <div className="flex flex-col items-center gap-6 max-w-[800px] w-full pt-4">
 
           <a
-            href="https://app.luminuslatam.com/auth/registrarse"
-            className="px-8 py-3.5 bg-black hover:bg-slate-800 text-white text-base font-normal rounded-2xl min-w-[280px] transition-colors"
+            href="https://app.luminuslatam.com/especialistas/onboarding"
+            className="flex items-center justify-center text-center px-8 py-3.5 bg-black hover:bg-slate-800 text-white text-base font-normal rounded-2xl w-full sm:w-auto sm:min-w-[280px] transition-colors"
           >
             Comenzar mi aplicación
           </a>

@@ -38,17 +38,49 @@ export function AdminSidebar({
   ];
 
   return (
-    <aside className="w-full lg:w-18 lg:h-[calc(100vh-64px)] lg:sticky lg:top-16 border-b lg:border-b-0 lg:border-r border-slate-200 bg-white flex flex-col items-center py-4 shrink-0 z-30">
-      <nav className="w-full px-3 flex flex-row lg:flex-col items-center justify-center gap-2.5 overflow-x-auto lg:overflow-x-visible">
+    <aside className="w-full lg:w-18 lg:h-[calc(100vh-64px)] lg:sticky lg:top-16 border-b lg:border-b-0 lg:border-r border-slate-200 bg-white flex flex-col items-center shrink-0 z-30">
+      {/* MOBILE NAVIGATION BAR (< lg): Icon-only horizontal scroll */}
+      <div className="w-full lg:hidden flex items-center bg-white border-b border-slate-200 px-3 py-2.5">
+        <nav className="w-full flex items-center justify-start gap-2 overflow-x-auto scrollbar-none py-0.5">
+          {items.map((item) => {
+            const isActive = activeTab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                onClick={item.onClick}
+                aria-label={item.label}
+                title={item.label}
+                className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all cursor-pointer border-none shrink-0 relative ${
+                  isActive
+                    ? "bg-black text-white shadow-sm"
+                    : "bg-slate-100/80 text-slate-500 hover:bg-slate-200 hover:text-slate-950"
+                }`}
+              >
+                <span className="material-symbols-rounded text-[22px]">{item.icon}</span>
+                {item.badge && item.badge > 0 ? (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] font-bold border-2 border-white">
+                    {item.badge}
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* DESKTOP NAVIGATION SIDEBAR (≥ lg) */}
+      <nav className="hidden lg:flex w-full px-3 flex-col items-center justify-center gap-2.5 py-4">
         {items.map((item) => (
           <div key={item.id} className="relative group flex items-center justify-center">
             <button
               onClick={item.onClick}
               aria-label={item.label}
-              className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all border-none outline-none cursor-pointer relative ${activeTab === item.id
-                ? "bg-black text-white shadow-sm"
-                : "bg-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-950"
-                }`}
+              className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all border-none outline-none cursor-pointer relative ${
+                activeTab === item.id
+                  ? "bg-black text-white shadow-sm"
+                  : "bg-transparent text-slate-500 hover:bg-slate-100 hover:text-slate-950"
+              }`}
             >
               <span className="material-symbols-rounded text-[22px]">{item.icon}</span>
               {item.badge && item.badge > 0 ? (

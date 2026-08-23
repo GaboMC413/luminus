@@ -36,6 +36,7 @@ export function UsersTab({
   const [selectedRole, setSelectedRole] = useState<string>(users[0]?.role ?? "USER");
   const [selectedStatus, setSelectedStatus] = useState<string>(users[0]?.status ?? "active");
   const [selectedPlan, setSelectedPlan] = useState<string>(users[0]?.profile?.selectedPlan || "Trial");
+  const [showMobileDetail, setShowMobileDetail] = useState<boolean>(false);
   const [isEditingUser, setIsEditingUser] = useState<boolean>(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -242,7 +243,7 @@ export function UsersTab({
       {/* 2-Column Master-Detail Grid: Symmetrical 32px padding on all 4 sides */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.08fr_1fr] gap-6 items-start flex-1 min-h-0 h-full">
         {/* Left Side: Heading + Unified User-List Card */}
-        <div className="flex flex-col gap-4 min-w-0 h-full overflow-hidden">
+        <div className={`${showMobileDetail ? "hidden lg:flex" : "flex"} flex-col gap-4 min-w-0 h-full overflow-hidden`}>
           {/* Page Heading Area */}
           <div className="shrink-0">
             <h1 className="text-[28px] font-bold leading-tight font-jakarta text-slate-900">
@@ -343,6 +344,7 @@ export function UsersTab({
                         setSelectedPlan(user.profile.selectedPlan || "Trial");
                         setIsEditingUser(false);
                         setMessage("");
+                        setShowMobileDetail(true);
                       }}
                       className={`grid w-full grid-cols-[43%_16%_25%_16%] items-center px-4 py-3.5 text-left text-[14px] transition outline-none cursor-pointer border-y-0 border-r-0 ${active
                         ? "bg-slate-100/90 font-semibold border-l-4 border-slate-900"
@@ -408,7 +410,18 @@ export function UsersTab({
 
         {/* Right Side: Expanded User Detail Panel with Inner Scroll */}
         {selectedUser ? (
-          <AdminCard className="flex flex-col min-w-0 h-full overflow-hidden">
+          <AdminCard className={`${showMobileDetail ? "flex" : "hidden lg:flex"} flex-col min-w-0 h-full overflow-hidden relative`}>
+            {/* Mobile Sticky Back Button Header */}
+            <div className="lg:hidden p-3.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowMobileDetail(false)}
+                className="flex items-center gap-2 text-xs font-bold text-white hover:text-slate-200 cursor-pointer bg-transparent border-none"
+              >
+                <span className="material-symbols-rounded text-[18px]">arrow_back</span>
+                <span>Volver a la lista de usuarios</span>
+              </button>
+            </div>
             {/* Header Profile Summary */}
             <div className="border-b border-slate-200/80 p-6 bg-white shrink-0">
               <div className="flex items-start justify-between gap-4">
