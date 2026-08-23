@@ -88,8 +88,8 @@ export function UpcomingEventsTimeline({ events }: UpcomingEventsTimelineProps) 
       const monthRaw = d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "");
       const month = monthRaw.charAt(0).toUpperCase() + monthRaw.slice(1);
 
-      const weekdayRaw = d.toLocaleDateString("es-ES", { weekday: "short" }).replace(".", "");
-      const weekday = weekdayRaw.toUpperCase();
+      const weekdayRaw = d.toLocaleDateString("es-ES", { weekday: "long" });
+      const weekday = weekdayRaw.charAt(0).toUpperCase() + weekdayRaw.slice(1);
 
       return {
         dayMonth: `${day} ${month}`,
@@ -183,15 +183,9 @@ export function UpcomingEventsTimeline({ events }: UpcomingEventsTimelineProps) 
 
                   {/* Content Column */}
                   <div className={`flex-1 min-w-0 flex flex-col gap-3.5 ${isLast ? 'pb-2' : 'pb-10 md:pb-12'}`}>
-                    <div className="flex items-baseline text-lg sm:text-xl select-none">
-                      <span className="font-semibold text-slate-900 tracking-tight">
-                        {dayMonth}
-                      </span>
-                      {weekday && (
-                        <span className="font-light text-slate-400 ml-2.5 capitalize">
-                          {weekday}
-                        </span>
-                      )}
+                    <div className="flex items-baseline text-lg sm:text-xl font-semibold text-slate-900 tracking-tight select-none">
+                      <span>{dayMonth}</span>
+                      {weekday && <span className="ml-2">{weekday}</span>}
                     </div>
 
                     <div className="w-full bg-slate-50 border border-slate-200 hover:border-slate-300 rounded-2xl overflow-hidden transition-colors flex flex-col md:flex-row md:items-stretch">
