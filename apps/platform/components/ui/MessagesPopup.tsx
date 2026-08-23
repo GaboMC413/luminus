@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { formatMessageBody } from "@/utils/messages";
 
 interface MessageItemProps {
   avatar?: string;
@@ -68,7 +69,7 @@ function MessageItem({ avatar, icon, iconBgColor, title, user, action, date, isU
             </div>
           </div>
           <p className="text-sm leading-snug text-slate-500 group-hover:text-slate-800 transition-colors truncate">
-            {action}
+            {formatMessageBody(action)}
           </p>
         </div>
  

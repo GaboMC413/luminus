@@ -289,7 +289,11 @@ function MessagesContent() {
 
   useEffect(() => {
     if (shouldScrollToBottomRef.current && chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      if (messages.length === 1) {
+        chatContainerRef.current.scrollTop = 0;
+      } else {
+        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      }
       shouldScrollToBottomRef.current = false;
     } else if (scrollPreserveRef.current && chatContainerRef.current) {
       const { height, top } = scrollPreserveRef.current;
@@ -756,7 +760,7 @@ function MessagesContent() {
                         </span>
                       </div>
                       <div className="flex items-center justify-between gap-1.5 min-w-0">
-                        <p className="text-sm text-slate-500 truncate flex-1">{conversation.last_message?.body || "Sin mensajes aun"}</p>
+                        <p className="text-sm text-slate-500 truncate flex-1">{formatMessageBody(conversation.last_message?.body || "Sin mensajes aun")}</p>
                         {conversation.is_muted && (
                           <span className="material-symbols-rounded text-slate-400 text-[16px] shrink-0" title="Silenciado">
                             notifications_off
@@ -770,7 +774,7 @@ function MessagesContent() {
             </div>
 
             {isLoading && isUuid(recipientId) ? (
-              <div className={`flex-col bg-white overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0 relative md:col-span-8 md:rounded-2xl md:border md:border-slate-200 ${
+              <div className={`flex-col bg-white overflow-hidden flex-1 h-full min-h-0 md:flex-initial relative md:col-span-8 md:rounded-2xl md:border md:border-slate-200 ${
                 mobileView === "chat"
                   ? "rounded-none border-none"
                   : "rounded-2xl border border-slate-200"
@@ -820,7 +824,7 @@ function MessagesContent() {
                 </div>
 
                 {/* Skeleton Footer */}
-                <div className="p-3 border-t border-slate-100 bg-white shrink-0 touch-none">
+                <div className="p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] border-t border-slate-100 bg-white shrink-0 touch-none">
                   <div className="h-12 w-full bg-slate-50 rounded-[24px] animate-pulse" />
                 </div>
               </div>
@@ -841,7 +845,7 @@ function MessagesContent() {
                 </button>
               </div>
             ) : (
-              <div className={`flex-col bg-white overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0 relative md:col-span-8 md:rounded-2xl md:border md:border-slate-200 ${
+              <div className={`flex-col bg-white overflow-hidden flex-1 h-full min-h-0 md:flex-initial relative md:col-span-8 md:rounded-2xl md:border md:border-slate-200 ${
                 mobileView === "chat"
                   ? "rounded-none border-none"
                   : "rounded-2xl border border-slate-200"
@@ -1017,7 +1021,7 @@ function MessagesContent() {
                   <div ref={messagesEndRef} />
                 </div>
 
-                <div className="p-3 bg-white shrink-0 border-t border-slate-100 touch-none">
+                <div className="p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] bg-white shrink-0 border-t border-slate-100 touch-none">
                   {isPendingForMe ? (
                     <div className="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-2xl gap-3 border border-slate-100">
                       <p className="text-sm font-medium text-slate-700 text-center">
