@@ -41,7 +41,15 @@ export async function POST(request: Request) {
         .replace(/\s+/g, "-")
         .substring(0, 80) + "-" + Math.random().toString(36).substring(2, 6);
 
-    const dateVal = date ? new Date(date) : null;
+    let dateVal: Date | null = null;
+    if (date) {
+      if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
+        dateVal = new Date(`${date.trim()}T12:00:00.000Z`);
+      } else {
+        const parsed = new Date(date);
+        if (!isNaN(parsed.getTime())) dateVal = parsed;
+      }
+    }
 
     if (id) {
       // Update existing

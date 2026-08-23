@@ -27,12 +27,30 @@ interface EventRegistrationSectionProps {
   event: EventItem;
 }
 
+function parseCalendarDate(dateStr?: string | Date | null): Date | null {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? null : dateStr;
+  const str = String(dateStr).trim();
+  if (!str) return null;
+
+  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    return new Date(year, month, day);
+  }
+
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function formatDateTimeFull(dateString?: string, timeText?: string) {
   const timeStr = cleanTimeString(timeText);
   if (!dateString) return timeStr !== "Hora a confirmar" ? timeStr : "Fecha a confirmar";
   try {
-    const d = new Date(dateString);
-    if (isNaN(d.getTime())) return timeStr;
+    const d = parseCalendarDate(dateString);
+    if (!d) return timeStr;
 
     const weekday = d.toLocaleDateString("es-ES", { weekday: "long" });
     const day = d.getDate();
