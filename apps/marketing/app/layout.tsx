@@ -11,7 +11,7 @@ const jakarta = Plus_Jakarta_Sans({
 
 const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyC8oSQoTxkqdQ2otejFMnrGQAU1oeUaZEA";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://luminusbienestar.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://luminuslatam.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
