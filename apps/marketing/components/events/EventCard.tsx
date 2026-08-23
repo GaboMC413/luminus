@@ -26,11 +26,29 @@ interface EventCardProps {
   item: EventItem;
 }
 
+function parseCalendarDate(dateStr?: string | Date | null): Date | null {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? null : dateStr;
+  const str = String(dateStr).trim();
+  if (!str) return null;
+
+  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    return new Date(year, month, day);
+  }
+
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function formatDate(dateStr?: string): string {
   if (!dateStr) return "";
   try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
+    const d = parseCalendarDate(dateStr);
+    if (!d) return dateStr;
     return d.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
   } catch {
     return dateStr;
@@ -47,8 +65,8 @@ function getYoutubeId(url?: string): string | null {
 function formatUpcomingDateHeader(dateStr?: string, timeText?: string) {
   if (!dateStr) return { tag: "PRÓXIMAMENTE", dateText: "" };
   try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return { tag: "PRÓXIMAMENTE", dateText: dateStr };
+    const d = parseCalendarDate(dateStr);
+    if (!d) return { tag: "PRÓXIMAMENTE", dateText: dateStr };
 
     const weekdayRaw = d.toLocaleDateString("es-ES", { weekday: "long" });
     const weekday = weekdayRaw.charAt(0).toUpperCase() + weekdayRaw.slice(1);
@@ -58,10 +76,9 @@ function formatUpcomingDateHeader(dateStr?: string, timeText?: string) {
     const monthRaw = d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "");
     const month = monthRaw.charAt(0).toUpperCase() + monthRaw.slice(1);
 
-    // Local converted time from Date object (no GMT label)
-    const hours = d.getHours().toString().padStart(2, "0");
-    const minutes = d.getMinutes().toString().padStart(2, "0");
-    const cleanTime = `${hours}:${minutes} hs`;
+    const cleanTime = timeText
+      ? timeText.replace(/\s*\([^)]*GMT[^)]*\)/gi, "").replace(/\s*\([^)]*UTC[^)]*\)/gi, "").trim()
+      : "18:00 hs";
 
     return {
       tag: "PRÓXIMAMENTE",

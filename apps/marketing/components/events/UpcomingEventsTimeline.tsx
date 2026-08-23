@@ -38,43 +38,37 @@ const CATEGORY_COLORS: Record<string, string> = {
   "Terapias Complementarias": "#0FA87A",
 };
 
-function getLumaDateHeader(dateString?: string) {
-  if (!dateString) return { dayMonth: "Próximamente", weekday: "" };
-  try {
-    const d = new Date(dateString);
-    if (isNaN(d.getTime())) return { dayMonth: "Próximamente", weekday: "" };
-    const day = d.getDate();
-    const month = d.toLocaleDateString("es-ES", { month: "short" }).toLowerCase().replace(".", "");
-    const weekday = d.toLocaleDateString("es-ES", { weekday: "long" }).toLowerCase();
-    return { dayMonth: `${day} ${month}`, weekday };
-  } catch {
-    return { dayMonth: "Próximamente", weekday: "" };
+function parseCalendarDate(dateStr?: string | Date | null): Date | null {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? null : dateStr;
+  const str = String(dateStr).trim();
+  if (!str) return null;
+
+  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    return new Date(year, month, day);
   }
+
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
 }
 
 function cleanTimeString(timeText?: string): string {
-  if (!timeText) return "00:00 hs";
+  if (!timeText) return "18:00 hs";
   const cleaned = timeText
     .replace(/\s*\([^)]*GMT[^)]*\)/gi, "")
     .replace(/\s*\([^)]*UTC[^)]*\)/gi, "")
     .replace(/\s*GMT[+-]?\d*/gi, "")
     .replace(/\s*UTC[+-]?\d*/gi, "")
     .trim();
-  return cleaned || "00:00 hs";
+  return cleaned || "18:00 hs";
 }
 
 function getLocalTimeString(dateString?: string, fallbackTime?: string): string {
-  const fallback = cleanTimeString(fallbackTime);
-  if (!dateString) return fallback;
-  try {
-    const d = new Date(dateString);
-    if (isNaN(d.getTime())) return fallback;
-    const hours = d.getHours().toString().padStart(2, "0");
-    const minutes = d.getMinutes().toString().padStart(2, "0");
-    return `${hours}:${minutes} hs`;
-  } catch {
-    return fallback;
-  }
+  return cleanTimeString(fallbackTime);
 }
 
 export function UpcomingEventsTimeline({ events }: UpcomingEventsTimelineProps) {
@@ -84,33 +78,11 @@ export function UpcomingEventsTimeline({ events }: UpcomingEventsTimelineProps) 
     setMounted(true);
   }, []);
 
-  const cleanTimeString = (timeText?: string) => {
-    if (!timeText) return "";
-    return timeText
-      .replace(/\s*\(.*?\)/g, "")
-      .replace(/hs$/i, "hs")
-      .trim();
-  };
-
-  const getLocalTimeString = (dateStr?: string, defaultTimeText?: string) => {
-    if (!dateStr) return cleanTimeString(defaultTimeText);
-    try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return cleanTimeString(defaultTimeText);
-
-      const hours = d.getHours().toString().padStart(2, "0");
-      const minutes = d.getMinutes().toString().padStart(2, "0");
-      return `${hours}:${minutes} hs`;
-    } catch {
-      return cleanTimeString(defaultTimeText);
-    }
-  };
-
   const getLumaDateHeader = (dateStr?: string) => {
     if (!dateStr) return { dayMonth: "", weekday: "" };
     try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return { dayMonth: dateStr, weekday: "" };
+      const d = parseCalendarDate(dateStr);
+      if (!d) return { dayMonth: dateStr, weekday: "" };
 
       const day = d.getDate();
       const monthRaw = d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "");

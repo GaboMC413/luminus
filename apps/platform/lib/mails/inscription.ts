@@ -11,11 +11,29 @@ export interface EventInscriptionEmailOptions {
   eventSlug?: string | null;
 }
 
+function parseCalendarDate(dateStr?: string | Date | null): Date | null {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? null : dateStr;
+  const str = String(dateStr).trim();
+  if (!str) return null;
+
+  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    return new Date(year, month, day);
+  }
+
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 export function formatDateSpanish(dateString?: string | null): string {
   if (!dateString) return "Próximamente";
   try {
-    const d = new Date(dateString);
-    if (!isNaN(d.getTime())) {
+    const d = parseCalendarDate(dateString);
+    if (d && !isNaN(d.getTime())) {
       const weekday = d.toLocaleDateString("es-ES", { weekday: "long" });
       const day = d.getDate();
       const month = d.toLocaleDateString("es-ES", { month: "long" });

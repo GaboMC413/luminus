@@ -72,10 +72,41 @@ function getCategoryBadgeStyle(category?: string | null): string {
   return "bg-slate-100 text-slate-700 border-slate-200";
 }
 
+function parseCalendarDate(dateStr?: string | Date | null): Date | null {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? null : dateStr;
+  const str = String(dateStr).trim();
+  if (!str) return null;
+
+  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    return new Date(year, month, day);
+  }
+
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function formatDateForInput(dateStr?: string | Date | null): string {
+  if (!dateStr) return "";
+  if (typeof dateStr === "string" && /^\d{4}-\d{2}-\d{2}/.test(dateStr.trim())) {
+    return dateStr.trim().substring(0, 10);
+  }
+  const d = parseCalendarDate(dateStr);
+  if (!d) return "";
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 function isUpcomingEvent(ev: Partial<AdminEvent>): boolean {
   if (!ev.date) return Boolean(ev.isUpcoming);
-  const d = new Date(ev.date);
-  if (isNaN(d.getTime())) return Boolean(ev.isUpcoming);
+  const d = parseCalendarDate(ev.date);
+  if (!d) return Boolean(ev.isUpcoming);
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   return d.getTime() >= now.getTime();
@@ -454,14 +485,13 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                         </span>
                       </span>
 
-                      {/* Fecha */}
                       <span className="text-[13px] text-slate-600 font-sans truncate">
                         {ev.date ? (
-                          new Date(ev.date).toLocaleDateString("es-ES", {
+                          parseCalendarDate(ev.date)?.toLocaleDateString("es-ES", {
                             day: "2-digit",
                             month: "2-digit",
                             year: "numeric",
-                          })
+                          }) || "—"
                         ) : (
                           "—"
                         )}
@@ -609,7 +639,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                           label="Fecha y hora"
                           value={
                             selectedEvent.date
-                              ? `${new Date(selectedEvent.date).toLocaleDateString("es-ES", {
+                              ? `${parseCalendarDate(selectedEvent.date)?.toLocaleDateString("es-ES", {
                                   weekday: "long",
                                   day: "numeric",
                                   month: "long",
@@ -797,7 +827,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                     </label>
                     <InputField
                       type="date"
-                      value={editingEventData.date ? new Date(editingEventData.date).toISOString().substring(0, 10) : ""}
+                      value={formatDateForInput(editingEventData.date)}
                       onChange={(e) => setEditingEventData({ ...editingEventData, date: e.target.value })}
                       className="w-full! h-10! text-xs"
                     />
