@@ -13,6 +13,14 @@ interface EventsTabProps {
   inscriptions: AdminEventInscription[];
 }
 
+function TrashIcon({ className = "w-3.5 h-3.5" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+    </svg>
+  );
+}
+
 const EVENT_CATEGORIES = [
   { label: "Crecimiento Personal", value: "Crecimiento Personal" },
   { label: "Bienestar Emocional", value: "Bienestar Emocional" },
@@ -129,6 +137,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
   // Selection & Detail Panel State
   const [selectedEventId, setSelectedEventId] = useState<string>(initialEvents[0]?.id ?? "");
   const [detailSubTab, setDetailSubTab] = useState<"info" | "inscriptos">("info");
+  const [showMobileDetail, setShowMobileDetail] = useState<boolean>(false);
 
   // In-Place Inline Editing State (matching UsersTab)
   const [isEditingEvent, setIsEditingEvent] = useState<boolean>(false);
@@ -227,6 +236,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
       isUpcoming: true,
     });
     setIsEditingEvent(true);
+    setShowMobileDetail(true);
   };
 
   // Cancel inline editing
@@ -382,7 +392,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
       <div className="grid grid-cols-1 lg:grid-cols-[1.08fr_1fr] gap-6 items-start flex-1 min-h-0 h-full">
         
         {/* LEFT COLUMN: Master Events List */}
-        <div className="flex flex-col gap-4 min-w-0 h-full overflow-hidden">
+        <div className={`${showMobileDetail ? "hidden lg:flex" : "flex"} flex-col gap-4 min-w-0 h-full overflow-hidden`}>
           {/* Page Heading Area */}
           <div className="shrink-0">
             <h1 className="text-[28px] font-bold leading-tight font-jakarta text-slate-900">
@@ -458,6 +468,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                       onClick={() => {
                         setSelectedEventId(ev.id);
                         setIsEditingEvent(false);
+                        setShowMobileDetail(true);
                       }}
                       className={`grid w-full grid-cols-[55%_25%_20%] items-center px-4 py-3.5 text-left text-[14px] transition outline-none cursor-pointer border-y-0 border-r-0 ${
                         active
@@ -511,7 +522,19 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
 
         {/* RIGHT COLUMN: Exact Replica of UsersTab Detail Panel Card */}
         {selectedEvent ? (
-          <AdminCard className="flex flex-col min-w-0 h-full overflow-hidden">
+          <AdminCard className={`${showMobileDetail ? "flex" : "hidden lg:flex"} flex-col min-w-0 h-full overflow-hidden relative`}>
+            
+            {/* Mobile Sticky Back Button Header */}
+            <div className="lg:hidden p-3.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowMobileDetail(false)}
+                className="flex items-center gap-2 text-xs font-bold text-white hover:text-slate-200 cursor-pointer bg-transparent border-none"
+              >
+                <span className="material-symbols-rounded text-[18px]">arrow_back</span>
+                <span>Volver a la lista de eventos</span>
+              </button>
+            </div>
             
             {/* Header Profile Summary (matching UsersTab padding & structure) */}
             <div className="border-b border-slate-200/80 p-6 bg-white shrink-0">
@@ -699,14 +722,14 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                         Aún no hay personas inscriptas a este evento.
                       </div>
                     ) : (
-                      <div className="bg-slate-50/50 rounded-xl overflow-hidden border border-slate-100">
+                      <div className="bg-slate-50/50 rounded-xl border border-slate-100">
                         <table className="w-full text-left text-xs border-collapse table-fixed">
                           <thead>
                             <tr className="bg-slate-100/60 border-b border-slate-200/60 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
-                              <th className="py-2.5 px-3 w-[26%]">Persona</th>
-                              <th className="py-2.5 px-3 w-[32%]">Email</th>
-                              <th className="py-2.5 px-3 w-[20%]">Ciudad</th>
-                              <th className="py-2.5 px-3 w-[14%] text-right">Fecha</th>
+                              <th className="py-2.5 px-3 w-[28%]">Persona</th>
+                              <th className="py-2.5 px-3 w-[34%]">Email</th>
+                              <th className="py-2.5 px-3 w-[18%]">Ciudad</th>
+                              <th className="py-2.5 px-3 w-[12%] text-right">Fecha</th>
                               <th className="py-2.5 px-3 w-[8%] text-right"></th>
                             </tr>
                           </thead>
@@ -729,38 +752,57 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                                     year: "numeric",
                                   })}
                                 </td>
-                                <td className="py-2.5 px-3 text-right">
-                                  {confirmingInscriptionId === ins.id ? (
-                                    <div className="inline-flex items-center gap-1 bg-white border border-rose-200 shadow-xs rounded-lg p-1 animate-in fade-in zoom-in-95 duration-150">
-                                      <span className="text-[11px] font-semibold text-rose-600 px-1 whitespace-nowrap">¿Eliminar?</span>
-                                      <button
-                                        type="button"
-                                        onClick={() => handleDeleteInscription(ins.id)}
-                                        disabled={deletingInscriptionId === ins.id}
-                                        className="px-2 py-0.5 bg-rose-600 hover:bg-rose-700 text-white font-medium text-[11px] rounded-md transition-colors cursor-pointer disabled:opacity-50"
-                                      >
-                                        {deletingInscriptionId === ins.id ? "..." : "Sí"}
-                                      </button>
-                                      <button
-                                        type="button"
+                                <td className="py-2.5 px-3 text-right relative">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setConfirmingInscriptionId((prev) => (prev === ins.id ? null : ins.id))
+                                    }
+                                    className="opacity-0 group-hover:opacity-100 transition-all duration-150 w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer inline-flex items-center justify-center shrink-0 border-none bg-transparent"
+                                    title="Eliminar inscripción"
+                                  >
+                                    <TrashIcon className="w-3.5 h-3.5 shrink-0" />
+                                  </button>
+
+                                  {confirmingInscriptionId === ins.id && (
+                                    <>
+                                      {/* Invisible backdrop to dismiss on click outside */}
+                                      <div
+                                        className="fixed inset-0 z-40"
                                         onClick={() => setConfirmingInscriptionId(null)}
-                                        disabled={deletingInscriptionId === ins.id}
-                                        className="px-1.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium text-[11px] rounded-md transition-colors cursor-pointer disabled:opacity-50"
-                                      >
-                                        No
-                                      </button>
-                                    </div>
-                                  ) : (
-                                    <button
-                                      type="button"
-                                      onClick={() => setConfirmingInscriptionId(ins.id)}
-                                      className="opacity-0 group-hover:opacity-100 transition-all duration-150 w-5 h-5 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer inline-flex items-center justify-center shrink-0"
-                                      title="Eliminar inscripción"
-                                    >
-                                      <span className="material-symbols-rounded text-[13px] block">
-                                        delete
-                                      </span>
-                                    </button>
+                                      />
+
+                                      {/* Floating Confirmation Popover */}
+                                      <div className="absolute right-2 top-full mt-1 z-50 bg-white border border-slate-200/90 shadow-none rounded-2xl p-3.5 flex flex-col gap-2.5 min-w-[220px] text-left animate-in fade-in zoom-in-95 duration-150 font-sans">
+                                        <div className="flex flex-col gap-1">
+                                          <span className="text-xs font-bold text-slate-900 leading-tight">
+                                            ¿Deseas realizar esta acción?
+                                          </span>
+                                          <span className="text-xs font-normal text-slate-500 leading-relaxed">
+                                            Se eliminará la inscripción de {ins.guestFirstName} {ins.guestLastName}.
+                                          </span>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 pt-1">
+                                          <button
+                                            type="button"
+                                            onClick={() => handleDeleteInscription(ins.id)}
+                                            disabled={deletingInscriptionId === ins.id}
+                                            className="flex-1 py-1.5 px-3 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs rounded-lg transition-colors cursor-pointer disabled:opacity-50 text-center"
+                                          >
+                                            {deletingInscriptionId === ins.id ? "Eliminando..." : "Aceptar"}
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={() => setConfirmingInscriptionId(null)}
+                                            disabled={deletingInscriptionId === ins.id}
+                                            className="flex-1 py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs rounded-lg transition-colors cursor-pointer disabled:opacity-50 text-center"
+                                          >
+                                            Cancelar
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </>
                                   )}
                                 </td>
                               </tr>

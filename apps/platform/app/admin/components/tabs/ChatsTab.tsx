@@ -13,6 +13,7 @@ interface ChatsTabProps {
 export function ChatsTab({ chats }: ChatsTabProps) {
   const [chatSearch, setChatSearch] = useState("");
   const [selectedChatId, setSelectedChatId] = useState<string>(chats[0]?.id ?? "");
+  const [showMobileDetail, setShowMobileDetail] = useState(false);
 
   const filteredChats = useMemo(() => {
     const query = chatSearch.trim().toLowerCase();
@@ -48,7 +49,7 @@ export function ChatsTab({ chats }: ChatsTabProps) {
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_460px]">
         {/* Left Column: list of chats */}
-        <div className="flex flex-col gap-4">
+        <div className={`${showMobileDetail ? "hidden xl:flex" : "flex"} flex-col gap-4`}>
           <AdminCard className="p-4">
             <InputField
               value={chatSearch}
@@ -80,7 +81,10 @@ export function ChatsTab({ chats }: ChatsTabProps) {
                     <button
                       key={chat.id}
                       type="button"
-                      onClick={() => setSelectedChatId(chat.id)}
+                      onClick={() => {
+                        setSelectedChatId(chat.id);
+                        setShowMobileDetail(true);
+                      }}
                       className={`grid w-full grid-cols-[1fr_1fr_120px] items-center px-4 py-3.5 text-left text-[14px] transition hover:bg-slate-50 outline-none border-none cursor-pointer ${
                         active ? "bg-slate-100/80" : "bg-white"
                       }`}
@@ -137,7 +141,18 @@ export function ChatsTab({ chats }: ChatsTabProps) {
 
         {/* Right Column: Chat Transcript Reader */}
         {selectedChat ? (
-          <AdminCard className="flex flex-col h-[700px]">
+          <AdminCard className={`${showMobileDetail ? "flex" : "hidden xl:flex"} flex-col h-[700px] relative`}>
+            {/* Mobile Sticky Back Button Header */}
+            <div className="xl:hidden p-3.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowMobileDetail(false)}
+                className="flex items-center gap-2 text-xs font-bold text-white hover:text-slate-200 cursor-pointer bg-transparent border-none"
+              >
+                <span className="material-symbols-rounded text-[18px]">arrow_back</span>
+                <span>Volver a la lista de chats</span>
+              </button>
+            </div>
             {/* Header */}
             <div className="border-b border-slate-200/80 p-5 shrink-0 bg-slate-50/50 flex flex-col gap-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
