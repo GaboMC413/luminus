@@ -253,14 +253,13 @@ body.mobile-viewport-height-override div.w-full.h-\[100svh\] {
   body.in-mobile-chat-view main {
     padding-top: 0 !important;
     padding-bottom: 0 !important;
-    height: var(--visual-viewport-height, 100svh) !important;
-    min-height: var(--visual-viewport-height, 100svh) !important;
-    max-height: var(--visual-viewport-height, 100svh) !important;
+    height: var(--visual-viewport-height, 100dvh) !important;
+    min-height: var(--visual-viewport-height, 100dvh) !important;
+    max-height: var(--visual-viewport-height, 100dvh) !important;
     overflow: hidden !important;
   }
   body.in-mobile-chat-view {
     overflow: hidden !important;
-    position: fixed !important;
     width: 100% !important;
     height: 100% !important;
   }

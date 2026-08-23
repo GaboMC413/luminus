@@ -782,8 +782,11 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
               />
               <button
                 onMouseDown={(e) => e.preventDefault()}
-                onTouchStart={handleSendClick}
-                onClick={handleSendClick}
+                onTouchStart={(e) => e.preventDefault()}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSend();
+                }}
                 className={`absolute right-1.5 bottom-1.5 w-10 h-10 rounded-full flex items-center justify-center transition-all border-none ${
                   inputText.trim()
                     ? "text-slate-800"

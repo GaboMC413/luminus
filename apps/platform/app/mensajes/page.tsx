@@ -1069,7 +1069,11 @@ function MessagesContent() {
                           onChange={(event) => setInputText(event.target.value)}
                           onKeyDown={handleKeyDown}
                           onFocus={() => {
-                            // Multiple attempts to scroll after keyboard animation
+                            if (typeof window !== "undefined") {
+                              window.scrollTo(0, 0);
+                              document.body.scrollTop = 0;
+                              document.documentElement.scrollTop = 0;
+                            }
                             const scrollToEnd = () => {
                               if (chatContainerRef.current) {
                                 chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -1077,7 +1081,6 @@ function MessagesContent() {
                             };
                             setTimeout(scrollToEnd, 100);
                             setTimeout(scrollToEnd, 300);
-                            setTimeout(scrollToEnd, 500);
                           }}
                           onBlur={() => {}}
                           placeholder="Escribe un mensaje..."
@@ -1091,8 +1094,11 @@ function MessagesContent() {
                         />
                         <button
                           onMouseDown={(e) => e.preventDefault()}
-                          onTouchStart={handleSendClick}
-                          onClick={handleSendClick}
+                          onTouchStart={(e) => e.preventDefault()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleSend();
+                          }}
                           className={`absolute right-1.5 bottom-1.5 w-10 h-10 rounded-full flex items-center justify-center transition-all border-none ${
                             inputText.trim() && !isSending
                               ? "text-slate-800"
