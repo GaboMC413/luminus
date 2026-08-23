@@ -26,7 +26,7 @@ export function SpecialistsControlBanner() {
             <p className="text-xl lg:text-2xl font-normal text-blue-100 leading-8">
               Facilitamos el contacto entre especialistas y usuarios. Tú defines tus servicios, metodología, horarios, precios y la forma en que trabajas con cada persona.
             </p>
-            <div className="pt-2">
+            <div className="pt-2 w-full sm:w-auto">
               <Link
                 href="/legal/condiciones-especialistas"
                 className="flex sm:inline-flex items-center justify-center py-3.5 px-8 text-base font-normal text-white bg-black hover:bg-slate-800 rounded-2xl text-center w-full sm:w-auto sm:min-w-[260px] transition-colors"

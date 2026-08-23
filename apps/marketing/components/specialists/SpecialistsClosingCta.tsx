@@ -16,16 +16,16 @@ export function SpecialistsClosingCta() {
               LUMINUS reúne profesionales de distintas áreas y enfoques para ampliar las formas de acompañar el bienestar en Latinoamérica. Si quieres integrar la Red, puedes comenzar tu aplicación o conversar con nuestro equipo.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-6 pt-2">
+          <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-4 sm:gap-6 pt-2 w-full">
             <a
-              href="https://app.luminuslatam.com/auth/registrarse"
+              href="https://app.luminuslatam.com/especialistas/onboarding"
               className="flex sm:inline-flex items-center justify-center py-3.5 px-8 text-base font-normal text-slate-950 bg-white hover:bg-slate-100 rounded-2xl text-center w-full sm:w-auto sm:min-w-[240px] transition-colors"
             >
               Aplicar como especialista
             </a>
             <Link
               href="/contacto"
-              className="text-base font-normal text-white hover:text-slate-300 underline leading-6 transition-colors"
+              className="text-base font-normal text-white hover:text-slate-300 underline leading-6 transition-colors text-center w-full sm:w-auto"
             >
               Consultar sobre la Red
             </Link>

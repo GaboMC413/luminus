@@ -31,9 +31,9 @@ export function SpecialistsOverviewCard() {
               </p>
             </div>
 
-            <div className="pt-2">
+            <div className="pt-2 w-full sm:w-auto">
               <a
-                href="https://app.luminuslatam.com/auth/registrarse"
+                href="https://app.luminuslatam.com/especialistas/onboarding"
                 className="flex sm:inline-flex items-center justify-center px-8 py-3.5 bg-black hover:bg-slate-900 text-white text-base font-normal rounded-2xl text-center w-full sm:w-auto sm:min-w-[240px] transition-colors"
               >
                 Aplicar como Especialista
