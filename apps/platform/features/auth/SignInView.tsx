@@ -9,6 +9,8 @@ import Link from "next/link";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
 import { VerificationModal } from "./VerificationModal";
 
+import { getSafeRedirectUrl } from "@/lib/utils/url";
+
 function GoogleIcon() {
   return (
     <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
@@ -42,6 +44,12 @@ export default function SignInView() {
   const [reactivateModalOpen, setReactivateModalOpen] = useState(false);
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
 
+  const getRedirectTarget = () => {
+    if (typeof window === "undefined") return "/comunidad";
+    const params = new URLSearchParams(window.location.search);
+    return getSafeRedirectUrl(params.get("redirect"));
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
 
@@ -67,7 +75,11 @@ export default function SignInView() {
   }, []);
 
   const handleGoogleSignIn = () => {
-    window.location.href = "/api/auth/cognito/start?provider=google&intent=signin";
+    const target = getRedirectTarget();
+    const googleUrl = target !== "/comunidad"
+      ? `/api/auth/cognito/start?provider=google&intent=signin&redirect=${encodeURIComponent(target)}`
+      : "/api/auth/cognito/start?provider=google&intent=signin";
+    window.location.href = googleUrl;
   };
 
   const handleSignIn = async (reactivate = false) => {
@@ -101,7 +113,7 @@ export default function SignInView() {
         return;
       }
 
-      router.push("/comunidad");
+      router.push(getRedirectTarget());
     } catch {
       setMessage({ text: "No pudimos conectar con el servidor.", type: "error" });
     } finally {
@@ -120,7 +132,7 @@ export default function SignInView() {
       try {
         const response = await fetch("/api/auth/reactivate-oauth", { method: "POST" });
         if (response.ok) {
-          router.push("/comunidad");
+          router.push(getRedirectTarget());
         } else {
           setMessage({ text: "No pudimos reactivar tu cuenta de Google. Intenta nuevamente.", type: "error" });
         }
@@ -267,7 +279,13 @@ export default function SignInView() {
 
             <div className="flex flex-col items-center mt-2">
               <button
-                onClick={() => router.push("/auth/registrarse")}
+                onClick={() => {
+                  const target = getRedirectTarget();
+                  const signUpUrl = target !== "/comunidad"
+                    ? `/auth/registrarse?redirect=${encodeURIComponent(target)}`
+                    : "/auth/registrarse";
+                  router.push(signUpUrl);
+                }}
                 className="text-slate-500 hover:text-slate-900 text-body-small cursor-pointer bg-transparent border-none outline-none"
               >
                 ¿Primera vez en LUMINUS? <span className="underline font-semibold text-slate-900">Regístrate gratis</span>
