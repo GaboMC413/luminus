@@ -4,22 +4,23 @@ export function formatMessageBody(text: string): React.ReactNode[] {
   if (!text) return [];
 
   // Regex to match Markdown links: [Text](URL)
-  const markdownLinkRegex = /(\[[^\]]+\]\(https?:\/\/[^\s)]+\))/g;
+  const markdownLinkRegex = /(\[[^\]]+\]\((?:https?:\/\/[^\s)]+|\/[^\s)]+|#[^\s)]+)\))/g;
   
   const parts = text.split(markdownLinkRegex);
 
   return parts.map((part, index) => {
     // Check if the part matches the markdown link pattern
     if (part.startsWith('[') && part.includes('](')) {
-      const match = part.match(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/);
+      const match = part.match(/\[([^\]]+)\]\(((?:https?:\/\/[^\s)]+|\/[^\s)]+|#[^\s)]+))\)/);
       if (match) {
         const [, linkText, url] = match;
+        const isExternal = url.startsWith("http://") || url.startsWith("https://");
         return (
           <a
             key={index}
             href={url}
-            target="_blank"
-            rel="noopener noreferrer"
+            target={isExternal ? "_blank" : undefined}
+            rel={isExternal ? "noopener noreferrer" : undefined}
             className="underline hover:opacity-80 transition-opacity font-semibold break-all"
           >
             {linkText}

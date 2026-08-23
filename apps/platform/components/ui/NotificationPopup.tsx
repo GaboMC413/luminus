@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { formatMessageBody } from "@/utils/messages";
 
 interface NotificationItemProps {
   id: string;
@@ -164,7 +165,7 @@ function NotificationItem({ id, type, avatar, icon, title, user, action, date, i
             }
           >
             {user && user !== "LUMINUS" && <span className="font-semibold text-slate-900 group-hover:underline">{user}: </span>}
-            {action}
+            {formatMessageBody(action)}
           </p>
         </div>
 

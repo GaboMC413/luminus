@@ -249,12 +249,39 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
     return () => clearInterval(interval);
   }, [dbConversationId, userId]);
 
-  // Scroll to bottom when messages change or keyboard state changes
+  const isInitialLoadRef = useRef(true);
+  const userSentMessageRef = useRef(false);
+  const prevMsgCountRef = useRef(0);
+
   useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    isInitialLoadRef.current = true;
+    prevMsgCountRef.current = 0;
+  }, [dbConversationId, userId]);
+
+  // Smart scroll when messages change or keyboard state changes
+  useEffect(() => {
+    const container = chatContainerRef.current;
+    if (!container || isLoadingMessages) return;
+
+    if (messages.length === 1) {
+      if (isInitialLoadRef.current || userSentMessageRef.current) {
+        container.scrollTop = 0;
+      }
+    } else if (messages.length > 1) {
+      const isInitial = isInitialLoadRef.current;
+      const userSent = userSentMessageRef.current;
+      const hasNewMessage = messages.length > prevMsgCountRef.current;
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80;
+
+      if (isInitial || userSent || (hasNewMessage && isNearBottom)) {
+        container.scrollTop = container.scrollHeight;
+      }
     }
-  }, [messages, isKeyboardOpen]);
+
+    isInitialLoadRef.current = false;
+    userSentMessageRef.current = false;
+    prevMsgCountRef.current = messages.length;
+  }, [messages, isKeyboardOpen, isLoadingMessages]);
 
   // Auto focus input on mount
   useEffect(() => {
@@ -289,6 +316,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
         time: new Date(data.message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
 
+      userSentMessageRef.current = true;
       setMessages((prev) => [...prev, newMessage]);
       setInputText("");
       if (textareaRef.current) {
