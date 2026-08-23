@@ -877,12 +877,12 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                   </div>
                 </div>
 
-                {/* Cover Upload Section */}
-                <div className="space-y-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                {/* Cover Upload & URL Section */}
+                <div className="space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
                     Imagen de Portada
                   </label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                     {editingEventData.coverUrl ? (
                       <img
                         src={editingEventData.coverUrl}
@@ -895,7 +895,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                       </div>
                     )}
 
-                    <div className="flex-1 min-w-0 flex items-center gap-3">
+                    <div className="flex-1 min-w-0 w-full flex items-center gap-3">
                       <input
                         type="file"
                         ref={coverFileInputRef}
@@ -911,14 +911,18 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                         className="px-4 h-9 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs whitespace-nowrap"
                       >
                         <span className="material-symbols-rounded text-[16px]">upload</span>
-                        <span>{isUploadingCover ? "Subiendo..." : "Subir portada"}</span>
+                        <span>{isUploadingCover ? "Subiendo..." : "Subir archivo"}</span>
                       </button>
 
-                      {isUploadingCover && (
-                        <span className="text-[11px] font-medium text-amber-600 animate-pulse">
-                          Subiendo archivo...
-                        </span>
-                      )}
+                      <div className="flex-1 min-w-0">
+                        <InputField
+                          type="url"
+                          placeholder="o pega la URL de imagen (https://...)"
+                          value={editingEventData.coverUrl || ""}
+                          onChange={(e) => setEditingEventData({ ...editingEventData, coverUrl: e.target.value })}
+                          className="w-full! h-9! text-xs"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>

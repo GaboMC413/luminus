@@ -14,6 +14,9 @@ import {
   Footer,
 } from "@/components";
 
+export const revalidate = 0;
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Eventos y Actividades | LUMINUS Latam",
   description: "Talleres, charlas en vivo y experiencias diseñadas para acercar el bienestar integral a tu vida. Únete a nuestros encuentros y accede a la videoteca en YouTube.",

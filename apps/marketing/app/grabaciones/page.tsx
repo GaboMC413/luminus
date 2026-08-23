@@ -4,6 +4,9 @@ import { getDbEvents } from "@/lib/events";
 import { Navbar, Footer } from "@/components";
 import { RecordingsGrid } from "@/components/events/RecordingsGrid";
 
+export const revalidate = 0;
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Grabaciones | LUMINUS - Encuentros y Entrevistas",
   description: "Revive los encuentros y entrevistas sobre bienestar de LUMINUS. Mira las grabaciones de conversaciones enriquecedoras con especialistas.",
