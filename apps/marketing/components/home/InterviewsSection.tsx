@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { EventItem } from "../events/EventCard";
+import { normalizeCategory } from "@/lib/events";
 
 interface InterviewsSectionProps {
   events?: EventItem[];
@@ -309,9 +310,13 @@ export function InterviewsSection({
   const sortedItems = [...upcomingItems, ...pastItems];
 
   // Filter items based on active category
-  const filteredItemsRaw = activeCategory === "Todos"
+  const normActiveCategory = normalizeCategory(activeCategory);
+  const filteredItemsRaw = (activeCategory === "Todos" || activeCategory === "Todas las grabaciones")
     ? sortedItems
-    : sortedItems.filter(item => item.category === activeCategory);
+    : sortedItems.filter(item => {
+        const normCat = normalizeCategory(item.category);
+        return normCat === normActiveCategory || item.category === activeCategory;
+      });
 
   // In carousel mode (!isGrid), limit to the 6 most recent items
   const filteredItems = isGrid ? filteredItemsRaw : filteredItemsRaw.slice(0, 6);

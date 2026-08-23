@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { EventCard, EventItem } from "./EventCard";
+import { normalizeCategory } from "@/lib/events";
 
 interface RecordingsGridProps {
   events: EventItem[];
@@ -139,11 +140,13 @@ export function RecordingsGrid({ events, title, subtitle }: RecordingsGridProps)
 
   const isAllCategory = activeCategory === firstCategoryKey || activeCategory === "Todos" || activeCategory === "Todas las grabaciones";
 
+  const normActiveCategory = normalizeCategory(activeCategory);
+
   const filtered = isAllCategory
     ? events
     : events.filter((e) => {
-        const itemCat = e.category === "Actividad Física" ? "Movimiento Físico" : e.category;
-        return itemCat === activeCategory;
+        const itemCat = normalizeCategory(e.category);
+        return itemCat === normActiveCategory || e.category === activeCategory;
       });
 
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;

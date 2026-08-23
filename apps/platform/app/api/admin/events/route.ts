@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 
+function extractYoutubeId(url?: string | null): string | null {
+  if (!url) return null;
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  return match ? match[1] : null;
+}
+
 export async function POST(request: Request) {
   try {
     const session = getCurrentSession();
@@ -51,6 +57,8 @@ export async function POST(request: Request) {
       }
     }
 
+    const finalYoutubeId = youtubeId || extractYoutubeId(link) || null;
+
     if (id) {
       // Update existing
       const updated = await prisma.event.update({
@@ -65,7 +73,7 @@ export async function POST(request: Request) {
           timeText: timeText || null,
           location: location || null,
           coverUrl: coverUrl || null,
-          youtubeId: youtubeId || null,
+          youtubeId: finalYoutubeId,
           link: link || null,
           isUpcoming: Boolean(isUpcoming),
         },
@@ -86,7 +94,7 @@ export async function POST(request: Request) {
           timeText: timeText || null,
           location: location || null,
           coverUrl: coverUrl || null,
-          youtubeId: youtubeId || null,
+          youtubeId: finalYoutubeId,
           link: link || null,
           isUpcoming: isUpcoming !== undefined ? Boolean(isUpcoming) : true,
         },
