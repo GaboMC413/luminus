@@ -158,7 +158,19 @@ export async function POST(request: Request) {
       return savedProfile;
     });
 
+    if (data.isOnboarded === true) {
+      try {
+        const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
+        await sendWelcomeMessage(prisma, session.userId);
+        const { sendWelcomeEmail } = await import("@/lib/mails/sender");
+        await sendWelcomeEmail(session.email, firstName || profile?.firstName || undefined);
+      } catch (welcomeError) {
+        console.error("Welcome message/email trigger during onboarding completion failed:", welcomeError);
+      }
+    }
+
     return NextResponse.json({ profile });
+
   } catch (error) {
     console.error("Onboarding database flow failed.", error);
     return NextResponse.json(

@@ -98,7 +98,41 @@ export function renderEventRegistrationEmailHtml(data: EventInscriptionEmailOpti
         </div>
       </div>
     </div>
+
+    <!-- BANNER OSCURO: Conoce la plataforma de LUMINUS -->
+    <div style="background-color: #000000; border-radius: 20px; overflow: hidden; padding: 0; margin-top: 28px; color: #ffffff; text-align: left;">
+      <table role="presentation" width="100%" border="0" cellspacing="0" cellpadding="0" style="border-collapse: collapse;">
+        <tr>
+          <!-- Imagen a la Izquierda sin padding y más grande -->
+          <td width="210" valign="bottom" align="left" style="padding: 0; margin: 0; line-height: 0; width: 210px;">
+            <img 
+              src="https://luminuslatam.com/Photos/Luminus%20app%20-%20buscar%20especialistas%20y%20comunidad.png" 
+              alt="LUMINUS App" 
+              width="210" 
+              style="width: 210px; max-width: 210px; height: auto; display: block; border: 0; outline: none; margin: 0; padding: 0;" 
+            />
+          </td>
+          
+          <!-- Texto & Botón Blanco a la Derecha -->
+          <td valign="middle" style="padding: 24px 24px 24px 16px; text-align: left;">
+            <h3 style="font-size: 17px; font-weight: 700; color: #ffffff; margin: 0 0 8px 0; line-height: 1.3; text-align: left;">
+              Conoce la plataforma de LUMINUS
+            </h3>
+            <p style="font-size: 13.5px; line-height: 1.5; color: #94a3b8; margin: 0 0 18px 0; text-align: left;">
+              Un espacio para conectar con especialistas, acceder a contenidos y participar de nuevas experiencias pensadas para tu bienestar.
+            </p>
+            <div style="text-align: left;">
+              <a href="https://app.luminuslatam.com/" target="_blank" style="display: inline-block; background-color: #ffffff; color: #0f172a; text-decoration: none; padding: 11px 22px; border-radius: 12px; font-size: 13.5px; font-weight: 700; text-align: center;">
+                Ingresar a la plataforma
+              </a>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
   `;
+
+
 
   return renderEmailLayout({
     title: `[LUMINUS] Confirmación de inscripción: ${eventTitle}`,
