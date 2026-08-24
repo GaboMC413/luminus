@@ -12,7 +12,8 @@
     "db:seed:interests": "node prisma/seed-interests.cjs",
     "db:studio": "prisma studio",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest run"
   },
   "dependencies": {
     "@aws-amplify/ui-react": "^6.5.5",
@@ -41,6 +42,7 @@
     "postcss": "^8.4.31",
     "prisma": "^5.22.0",
     "tailwindcss": "^4.3.0",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "vitest": "^4.1.11"
   }
 }
