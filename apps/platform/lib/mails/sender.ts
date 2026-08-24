@@ -247,7 +247,25 @@ export async function sendPasswordResetEmail(email: string, code: string) {
 }
 
 export async function sendWelcomeEmail(email: string, name: string = "Usuario") {
+  try {
+    const { prisma } = await import("@/lib/db");
+    const existingLog = await prisma.sentEmailLog.findFirst({
+      where: {
+        recipient: email,
+        subject: { contains: "bienvenida" },
+        status: { in: ["SUCCESS", "LOCAL_PREVIEW"] },
+      },
+    });
+    if (existingLog) {
+      console.log(`[SES] Welcome email already sent to ${email}. Skipping duplicate.`);
+      return { success: true, mode: "already-sent" };
+    }
+  } catch (err) {
+    // Proceed if check fails
+  }
+
   const startTime = new Date().toISOString();
+
   const rawFrom = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
   const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM");
   const subject = "¡Te damos la bienvenida a LUMINUS!";

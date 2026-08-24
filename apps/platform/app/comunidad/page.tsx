@@ -162,6 +162,10 @@ function PlatformContent() {
     async function loadCurrentUser() {
       try {
         const res = await fetch("/api/profile");
+        if (res.status === 401 || res.status === 403) {
+          router.replace("/auth/iniciar-sesion");
+          return;
+        }
         if (res.ok) {
           const data = await res.json();
           setCurrentUserProfile(data.profile);
@@ -171,13 +175,17 @@ function PlatformContent() {
       }
     }
     loadCurrentUser();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     async function loadConnections() {
       try {
         setConnectionsLoading(true);
         const res = await fetch("/api/connections");
+        if (res.status === 401 || res.status === 403) {
+          router.replace("/auth/iniciar-sesion");
+          return;
+        }
         if (res.ok) {
           const data = await res.json();
           setUserConnections(data.connections || []);
@@ -189,7 +197,7 @@ function PlatformContent() {
       }
     }
     loadConnections();
-  }, []);
+  }, [router]);
 
   const activeConnections = useMemo(() => {
     const accepted = userConnections.filter((c: any) => c.status === "accepted");
@@ -244,6 +252,10 @@ function PlatformContent() {
       params.set("_t", Date.now().toString());
 
       const res = await fetch(`/api/comunidad?${params.toString()}`, { cache: "no-store" });
+      if (res.status === 401 || res.status === 403) {
+        router.replace("/auth/iniciar-sesion");
+        return;
+      }
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(errData.message || `Error del servidor: ${res.status}`);
@@ -325,36 +337,23 @@ function PlatformContent() {
       <div className="flex-1 w-full max-w-2xl mx-auto px-4 py-16 flex flex-col items-center justify-center min-h-[80vh]">
         <div className="w-full bg-white rounded-2xl p-8 border border-slate-200 shadow-none flex flex-col items-center text-center gap-6">
           <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-700">
-            <span className="material-symbols-outlined text-[28px]">database_off</span>
+            <span className="material-symbols-outlined text-[28px]">wifi_off</span>
           </div>
 
           <div className="flex flex-col gap-2">
             <h2 className="text-[20px] font-bold text-slate-900 font-jakarta">
-              Error de Configuración de Base de Datos
+              Ocurrió un problema de conexión
             </h2>
-            <p className="text-[14px] text-slate-500 max-w-md">
-              {error}
+            <p className="text-[14px] text-slate-500 max-w-md font-sans">
+              No pudimos cargar la información en este momento. Por favor, intenta de nuevo en unos minutos.
             </p>
           </div>
 
-          <div className="w-full bg-slate-50 rounded-2xl p-5 text-left border border-slate-100 flex flex-col gap-3 font-sans">
-            <h3 className="text-[13px] font-semibold text-slate-700 uppercase tracking-wider">
-              ¿Cómo solucionar esto?
-            </h3>
-            <div className="flex flex-col gap-2 text-[13px] text-slate-600">
-              <p>
-                Asegúrate de tener configurado tu archivo de entorno <code>.env.local</code> en <code>apps/platform</code> con la variable de conexión de base de datos activa:
-                <code className="block bg-slate-100 px-3 py-1.5 rounded-lg mt-1 font-mono text-[12px] break-all border border-slate-200">
-                  DATABASE_URL="postgresql://luminus_admin:...@..."
-                </code>
-              </p>
-            </div>
-          </div>
           <button
             onClick={() => window.location.reload()}
-            className="h-11 px-6 bg-black text-white rounded-xl text-[14px] font-bold hover:bg-zinc-800 transition duration-200 cursor-pointer"
+            className="h-11 px-6 bg-black text-white rounded-xl text-[14px] font-bold hover:bg-zinc-800 transition duration-200 cursor-pointer font-jakarta"
           >
-            Reintentar Conexión
+            Reintentar
           </button>
         </div>
       </div>
