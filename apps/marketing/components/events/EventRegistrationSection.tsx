@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Share2, Check } from "lucide-react";
 import { LocationInput } from "@/components/ui/LocationInput";
 import { Button } from "@/components/ui/Button";
+import { trackEventInscription } from "@/lib/meta-pixel";
 
 interface EventItem {
   id?: string;
@@ -271,6 +272,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
         setSubmitError(data.error || "Ocurrió un error al procesar la inscripción.");
       } else {
         console.log("[Inscription Success]:", data);
+        trackEventInscription(event.title, event.slug);
         setIsAlreadyRegistered(!!data.alreadyRegistered);
         setSubmitted(true);
       }
