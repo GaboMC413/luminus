@@ -7,6 +7,7 @@ import { PersonalData } from "./registration/PersonalData";
 import { InterestSelection } from "./registration/InterestSelection";
 import { PlanSelection } from "./registration/PlanSelection";
 import { VerificationModal } from "./VerificationModal";
+import { trackPlatformRegistration } from "@/lib/meta-pixel";
 import Link from "next/link";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
 import { useRouter } from "next/navigation";
@@ -223,6 +224,7 @@ export default function SignUpView() {
         return;
       }
 
+      trackPlatformRegistration("initial");
       setStep(2);
     } catch {
       setMessage({ text: "No pudimos conectar con el servidor.", type: "error" });

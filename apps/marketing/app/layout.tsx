@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
+import { MetaPixel } from "@/components/analytics/MetaPixel";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -58,6 +59,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-25..0&display=block" />
       </head>
       <body className="bg-white text-slate-900 antialiased selection:bg-slate-900 selection:text-white min-h-screen flex flex-col">
+        <MetaPixel />
 
         {/* Google Analytics (gtag.js) */}
         <Script

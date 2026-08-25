@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./app.css";
 import Script from "next/script";
+import { MetaPixel } from "@/components/analytics/MetaPixel";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -81,6 +82,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-25..0&display=block" />
       </head>
       <body className={`${inter.variable} ${jakarta.variable} font-sans antialiased bg-slate-50 text-slate-900`}>
+        <MetaPixel />
 
         {/* Google Analytics (gtag.js) */}
         <Script
