@@ -55,11 +55,11 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${jakarta.variable} font-sans scroll-smooth`}>
       <head>
+        <MetaPixel />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-25..0&display=block" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-25..0&display=block" />
       </head>
       <body className="bg-white text-slate-900 antialiased selection:bg-slate-900 selection:text-white min-h-screen flex flex-col">
-        <MetaPixel />
 
         {/* Google Analytics (gtag.js) */}
         <Script
