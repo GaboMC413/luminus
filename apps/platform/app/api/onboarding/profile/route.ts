@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { parsePhoneNumberFromString, CountryCode } from "libphonenumber-js";
+import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
 
 export const runtime = "nodejs";
 
@@ -75,6 +76,8 @@ export async function POST(request: Request) {
     typeof data.otherInterests === "string" && data.otherInterests.trim()
       ? data.otherInterests.trim()
       : undefined;
+  const rawAvatarUrl = typeof data.avatarUrl === "string" ? data.avatarUrl : undefined;
+  const avatarUrl = await ensureS3AvatarUrl(rawAvatarUrl, session.userId);
 
   try {
     const { prisma } = await import("@/lib/db");
@@ -86,7 +89,7 @@ export async function POST(request: Request) {
           fullName,
           firstName,
           lastName,
-          avatarUrl: typeof data.avatarUrl === "string" ? data.avatarUrl : undefined,
+          avatarUrl,
           city: typeof data.city === "string" ? data.city : undefined,
           country: typeof data.country === "string" ? data.country : undefined,
           phoneNumber,
@@ -100,7 +103,7 @@ export async function POST(request: Request) {
           fullName,
           firstName,
           lastName,
-          avatarUrl: typeof data.avatarUrl === "string" ? data.avatarUrl : undefined,
+          avatarUrl,
           city: typeof data.city === "string" ? data.city : undefined,
           country: typeof data.country === "string" ? data.country : undefined,
           phoneNumber,
