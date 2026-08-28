@@ -7,6 +7,7 @@ import { Share2, Check } from "lucide-react";
 import { LocationInput } from "@/components/ui/LocationInput";
 import { Button } from "@/components/ui/Button";
 import { trackEventInscription } from "@/lib/meta-pixel";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 interface EventItem {
   id?: string;
@@ -185,8 +186,8 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
   const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
-
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const handleOpenModal = () => {
     setSubmitted(false);
@@ -224,6 +225,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           youtubeUrl: event.youtube_id ? `https://www.youtube.com/watch?v=${event.youtube_id}` : null,
           eventSlug: event.slug,
           isResend: true,
+          turnstileToken,
         }),
       });
       const data = await res.json();
@@ -264,6 +266,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           youtubeId: event.youtube_id,
           youtubeUrl: event.youtube_id ? `https://www.youtube.com/watch?v=${event.youtube_id}` : null,
           eventSlug: event.slug,
+          turnstileToken,
         }),
       });
       const data = await res.json();
@@ -676,6 +679,11 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
                     onSelect={({ city }) => setFormData((prev) => ({ ...prev, city }))}
                   />
                 </div>
+
+                <TurnstileWidget
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  onExpire={() => setTurnstileToken(null)}
+                />
 
                 {submitError && (
                   <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-medium text-center">

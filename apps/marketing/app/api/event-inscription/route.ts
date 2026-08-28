@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendEventRegistrationEmail } from "@/lib/ses";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export async function POST(req: Request) {
   try {
@@ -19,7 +20,16 @@ export async function POST(req: Request) {
       youtubeUrl,
       eventSlug,
       isResend,
+      turnstileToken,
     } = body || {};
+
+    const turnstileResult = await verifyTurnstileToken(turnstileToken);
+    if (!turnstileResult.success) {
+      return NextResponse.json(
+        { success: false, error: turnstileResult.error },
+        { status: 400 }
+      );
+    }
 
     if (!email || (!firstName && !isResend)) {
       return NextResponse.json(

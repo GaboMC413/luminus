@@ -20,6 +20,7 @@ const capitalizeName = (value: string) => {
     .join(' ');
 };
 import { uploadAvatar } from '@/lib/uploadAvatar';
+import { trackRegistrationError } from '@/lib/registrationAuditTracker';
 
 const NEUTRAL_COUNTRY = { code: 'XX', dial: '+00', name: 'Seleccionar país', priority: false };
 
@@ -200,8 +201,14 @@ export function PersonalData({
       setAvatarUrl(publicUrl);
       if (errorField === 'photo') setErrorField(null);
       setTempImage(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing image:', error);
+      trackRegistrationError({
+        step: "Paso 2 - Datos Personales (Foto de Perfil)",
+        action: "S3_AVATAR_UPLOAD_FAIL",
+        userName: `${firstName} ${lastName}`.trim(),
+        errorMessage: error?.message || "No pudimos subir tu foto de perfil.",
+      });
       alert('No pudimos subir tu foto. Intenta nuevamente.');
     } finally {
       setUploading(false);

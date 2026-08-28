@@ -13,6 +13,8 @@ import { PlatformFooter } from "@/components/ui/PlatformFooter";
 import { useRouter } from "next/navigation";
 import { COUNTRIES as ALL_COUNTRIES } from "@/utils/countries";
 import { getSafeRedirectUrl } from "@/lib/utils/url";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
+import { trackRegistrationError } from "@/lib/registrationAuditTracker";
 
 const formatName = (str?: string) => {
   if (!str) return "";
@@ -68,6 +70,7 @@ export default function SignUpView() {
   const [showPassword, setShowPassword] = useState(false);
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
   const [verifyEmail, setVerifyEmail] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   // Profile Data State (Preserved across steps)
   const [profileData, setProfileData] = useState({
@@ -209,7 +212,7 @@ export default function SignUpView() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, turnstileToken }),
       });
       const data = await response.json();
 
@@ -220,13 +223,27 @@ export default function SignUpView() {
       }
 
       if (!response.ok) {
+        trackRegistrationError({
+          step: "Paso 1 - Registro de Credenciales",
+          action: "POST /api/auth/register",
+          userEmail: email,
+          statusCode: response.status,
+          errorMessage: data.message ?? "Error en creación de cuenta",
+        });
         setMessage({ text: data.message ?? "No pudimos crear tu cuenta.", type: "error" });
         return;
       }
 
       trackPlatformRegistration("initial");
       setStep(2);
-    } catch {
+    } catch (err: any) {
+      trackRegistrationError({
+        step: "Paso 1 - Registro de Credenciales",
+        action: "POST /api/auth/register (Network/Exception)",
+        userEmail: email,
+        statusCode: "Client/Network Error",
+        errorMessage: err?.message || "No pudimos conectar con el servidor",
+      });
       setMessage({ text: "No pudimos conectar con el servidor.", type: "error" });
     } finally {
       setLoading(false);
@@ -417,6 +434,11 @@ export default function SignUpView() {
                   onTogglePassword={() => setShowPassword(!showPassword)}
                   variant="clean"
                   className={`!bg-white border border-zinc-200/80 focus:border-slate-800 ${message.type === 'error' && (!repeatPassword || password !== repeatPassword) ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
+                />
+
+                <TurnstileWidget
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  onExpire={() => setTurnstileToken(null)}
                 />
 
                 {message.text && (

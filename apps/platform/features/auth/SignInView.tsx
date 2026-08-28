@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
 import { VerificationModal } from "./VerificationModal";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 import { getSafeRedirectUrl } from "@/lib/utils/url";
 
@@ -43,6 +44,7 @@ export default function SignInView() {
   const [showPassword, setShowPassword] = useState(false);
   const [reactivateModalOpen, setReactivateModalOpen] = useState(false);
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const getRedirectTarget = () => {
     if (typeof window === "undefined") return "/comunidad";
@@ -96,7 +98,7 @@ export default function SignInView() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, password, reactivate }),
+        body: JSON.stringify({ email, password, reactivate, turnstileToken }),
       });
       const data = await response.json();
 
@@ -233,6 +235,11 @@ export default function SignInView() {
                   enterKeyHint="go"
                 />
               </div>
+
+              <TurnstileWidget
+                onSuccess={(token) => setTurnstileToken(token)}
+                onExpire={() => setTurnstileToken(null)}
+              />
 
               {message.text && (
                 <p className={`text-left px-0 mt-4 text-body-small font-bold ${message.type === 'error' ? 'text-red-500' : 'text-green-600'} tracking-[-0.03em]`}>

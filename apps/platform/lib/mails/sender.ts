@@ -62,6 +62,24 @@ async function logSentEmail(
         metadata: options?.metadata ? JSON.stringify(options.metadata) : null,
       },
     });
+
+    // Mantener un límite estricto de máximo 100 correos guardados (Auto-prune FIFO)
+    const count = await prisma.sentEmailLog.count();
+    if (count > 100) {
+      const excess = count - 100;
+      const oldestRecords = await prisma.sentEmailLog.findMany({
+        orderBy: { createdAt: "asc" },
+        take: excess,
+        select: { id: true },
+      });
+      if (oldestRecords.length > 0) {
+        await prisma.sentEmailLog.deleteMany({
+          where: {
+            id: { in: oldestRecords.map((r) => r.id) },
+          },
+        });
+      }
+    }
   } catch (err) {
     console.error("Failed to log sent email into sent_email_logs:", err);
   }
@@ -840,3 +858,59 @@ export async function sendContactNotificationEmail(data: ContactNotificationPayl
     throw error;
   }
 }
+
+export async function sendRegistrationErrorAlertEmail(data: {
+  userEmail?: string;
+  userName?: string;
+  step: string;
+  action: string;
+  statusCode?: number | string;
+  errorMessage: string;
+  errorDetails?: string;
+  userAgent?: string;
+  timestamp?: string;
+}) {
+  const alertRecipient = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "info@luminuslatam.com";
+  const { renderRegistrationErrorAlertEmailHtml } = await import("./registrationErrorAlert");
+
+  const timestamp = data.timestamp || new Date().toISOString();
+  const htmlBody = renderRegistrationErrorAlertEmailHtml({
+    ...data,
+    timestamp,
+  });
+
+  const subject = `⚠️ [Alerta Registro] Fallo técnico en ${data.step} (${data.userEmail || "Usuario"})`;
+  const rawFrom = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "info@luminuslatam.com";
+  const fromEmail = formatSenderAddress(rawFrom, "LUMINUS Auditoría");
+
+  const command = new SendEmailCommand({
+    FromEmailAddress: fromEmail,
+    Destination: { ToAddresses: [alertRecipient] },
+    Content: {
+      Simple: {
+        Subject: { Data: subject, Charset: "UTF-8" },
+        Body: {
+          Html: { Data: htmlBody, Charset: "UTF-8" },
+        },
+      },
+    },
+  });
+
+  try {
+    const sesClient = getSesV2Client();
+    const response = await sesClient.send(command);
+    await logSentEmail(alertRecipient, subject, htmlBody, {
+      status: "SUCCESS",
+      messageId: response.MessageId || null,
+    });
+    return { success: true, messageId: response.MessageId };
+  } catch (error: any) {
+    console.error("[SES ERROR] Failed to send registration error alert email:", error);
+    await logSentEmail(alertRecipient, subject, htmlBody, {
+      status: "FAILED",
+      errorDetails: error?.message || String(error),
+    });
+    return { success: false, error: error?.message };
+  }
+}
+

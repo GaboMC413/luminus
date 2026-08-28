@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCognitoErrorMessage, getCognitoErrorStatus, signUpWithCognito } from "@/lib/auth/cognito-password";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { serializeUser, validateAuthInput } from "@/lib/auth/validation";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export const runtime = "nodejs";
 
@@ -11,6 +12,11 @@ export async function POST(request: Request) {
 
   if (!validation.ok) {
     return NextResponse.json({ message: validation.message }, { status: 400 });
+  }
+
+  const turnstileResult = await verifyTurnstileToken(body?.turnstileToken);
+  if (!turnstileResult.success) {
+    return NextResponse.json({ message: turnstileResult.error }, { status: 400 });
   }
 
   try {

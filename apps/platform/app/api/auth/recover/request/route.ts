@@ -6,6 +6,7 @@ import {
   isRecoveryDebugEnabled,
 } from "@/lib/auth/recoveryTokens";
 import { sendPasswordResetEmail } from "@/lib/mails/sender";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export const runtime = "nodejs";
 
@@ -17,6 +18,11 @@ export async function POST(request: Request) {
 
   if (!email) {
     return NextResponse.json({ message: "Por favor, ingresa tu correo electronico." }, { status: 400 });
+  }
+
+  const turnstileResult = await verifyTurnstileToken(body?.turnstileToken);
+  if (!turnstileResult.success) {
+    return NextResponse.json({ message: turnstileResult.error }, { status: 400 });
   }
 
   const code = generateRecoveryCode();
