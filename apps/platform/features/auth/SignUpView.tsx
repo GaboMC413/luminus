@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { COUNTRIES as ALL_COUNTRIES } from "@/utils/countries";
 import { getSafeRedirectUrl } from "@/lib/utils/url";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
+import { trackRegistrationError } from "@/lib/registrationAuditTracker";
 
 const formatName = (str?: string) => {
   if (!str) return "";
@@ -222,13 +223,27 @@ export default function SignUpView() {
       }
 
       if (!response.ok) {
+        trackRegistrationError({
+          step: "Paso 1 - Registro de Credenciales",
+          action: "POST /api/auth/register",
+          userEmail: email,
+          statusCode: response.status,
+          errorMessage: data.message ?? "Error en creación de cuenta",
+        });
         setMessage({ text: data.message ?? "No pudimos crear tu cuenta.", type: "error" });
         return;
       }
 
       trackPlatformRegistration("initial");
       setStep(2);
-    } catch {
+    } catch (err: any) {
+      trackRegistrationError({
+        step: "Paso 1 - Registro de Credenciales",
+        action: "POST /api/auth/register (Network/Exception)",
+        userEmail: email,
+        statusCode: "Client/Network Error",
+        errorMessage: err?.message || "No pudimos conectar con el servidor",
+      });
       setMessage({ text: "No pudimos conectar con el servidor.", type: "error" });
     } finally {
       setLoading(false);
