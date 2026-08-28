@@ -49,3 +49,7 @@ old-repo-temp/
 .tools/
 temp-email.html
 public/temp-email.html
+
+# local backups
+backups/
+apps/backups/

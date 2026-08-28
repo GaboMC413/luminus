@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
 
 export const runtime = "nodejs";
 
@@ -179,7 +180,9 @@ export async function PATCH(request: Request) {
   const intention = pickString(data, "otherInterests", "other_interests", "intention");
   const selectedPlan = pickString(data, "selectedPlan", "selected_plan");
 
-  if (avatarUrl !== undefined) profileData.avatarUrl = avatarUrl;
+  if (avatarUrl !== undefined) {
+    profileData.avatarUrl = await ensureS3AvatarUrl(avatarUrl, session.userId);
+  }
   if (coverUrl !== undefined) profileData.coverUrl = coverUrl;
   if (profession !== undefined) profileData.profession = profession;
   if (city !== undefined) profileData.city = city;
