@@ -238,6 +238,9 @@ export type AdminEventInscription = {
   guestLastName?: string | null;
   guestEmail?: string | null;
   guestCity?: string | null;
+  guestState?: string | null;
+  guestCountry?: string | null;
+  marketingConsent?: boolean;
   createdAt: string;
   user?: {
     email: string;
