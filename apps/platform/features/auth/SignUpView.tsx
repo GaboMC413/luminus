@@ -13,6 +13,7 @@ import { PlatformFooter } from "@/components/ui/PlatformFooter";
 import { useRouter } from "next/navigation";
 import { COUNTRIES as ALL_COUNTRIES } from "@/utils/countries";
 import { getSafeRedirectUrl } from "@/lib/utils/url";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 const formatName = (str?: string) => {
   if (!str) return "";
@@ -68,6 +69,7 @@ export default function SignUpView() {
   const [showPassword, setShowPassword] = useState(false);
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
   const [verifyEmail, setVerifyEmail] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   // Profile Data State (Preserved across steps)
   const [profileData, setProfileData] = useState({
@@ -209,7 +211,7 @@ export default function SignUpView() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, turnstileToken }),
       });
       const data = await response.json();
 
@@ -417,6 +419,11 @@ export default function SignUpView() {
                   onTogglePassword={() => setShowPassword(!showPassword)}
                   variant="clean"
                   className={`!bg-white border border-zinc-200/80 focus:border-slate-800 ${message.type === 'error' && (!repeatPassword || password !== repeatPassword) ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
+                />
+
+                <TurnstileWidget
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  onExpire={() => setTurnstileToken(null)}
                 />
 
                 {message.text && (

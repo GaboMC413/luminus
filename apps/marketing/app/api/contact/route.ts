@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendContactNotificationEmail } from "@/lib/ses";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { nombre, apellido, email, telefono, pais, motivo, mensaje } = body;
+    const { nombre, apellido, email, telefono, pais, motivo, mensaje, turnstileToken } = body;
+
+    const turnstileResult = await verifyTurnstileToken(turnstileToken);
+    if (!turnstileResult.success) {
+      return NextResponse.json(
+        { error: turnstileResult.error },
+        { status: 400 }
+      );
+    }
 
     // Validación de campos requeridos
     if (!nombre || !apellido || !email || !motivo || !mensaje) {

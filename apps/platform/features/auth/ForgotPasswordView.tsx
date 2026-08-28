@@ -6,6 +6,7 @@ import { InputField } from "@/components/ui/InputField";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 export default function ForgotPasswordView() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function ForgotPasswordView() {
   const [timer, setTimer] = useState(180); // 3 minutes in seconds
   const [canResend, setCanResend] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   // Timer logic for resending code
   useEffect(() => {
@@ -54,7 +56,7 @@ export default function ForgotPasswordView() {
       const response = await fetch("/api/auth/recover/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, turnstileToken }),
       });
       const data = await response.json();
 
@@ -226,18 +228,24 @@ export default function ForgotPasswordView() {
               >
                 <div className="flex flex-col gap-3.5">
                   {view === 'email' && (
-                    <InputField
-                      type="email"
-                      placeholder="Correo electrónico"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        if (message.type === 'error') setMessage({ text: "", type: "" });
-                      }}
-                      variant="clean"
-                      className={`!bg-white border border-zinc-200/80 focus:border-slate-800 ${message.type === 'error' && !email ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
-                      enterKeyHint="go"
-                    />
+                    <>
+                      <InputField
+                        type="email"
+                        placeholder="Correo electrónico"
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (message.type === 'error') setMessage({ text: "", type: "" });
+                        }}
+                        variant="clean"
+                        className={`!bg-white border border-zinc-200/80 focus:border-slate-800 ${message.type === 'error' && !email ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
+                        enterKeyHint="go"
+                      />
+                      <TurnstileWidget
+                        onSuccess={(token) => setTurnstileToken(token)}
+                        onExpire={() => setTurnstileToken(null)}
+                      />
+                    </>
                   )}
 
                   {view === 'code' && (
