@@ -240,8 +240,8 @@ export function UsersTab({
         className="hidden"
       />
 
-      {/* 2-Column Master-Detail Grid: Symmetrical 32px padding on all 4 sides */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.08fr_1fr] gap-6 items-start flex-1 min-h-0 h-full">
+      {/* 2-Column Master-Detail Grid: 38% Lista / 62% Panel de Detalle Amplio */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.6fr] gap-6 items-start flex-1 min-h-0 h-full">
         {/* Left Side: Heading + Unified User-List Card */}
         <div className={`${showMobileDetail ? "hidden lg:flex" : "flex"} flex-col gap-4 min-w-0 h-full overflow-hidden`}>
           {/* Page Heading Area */}
