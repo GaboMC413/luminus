@@ -47,6 +47,7 @@ old-repo-temp/
 
 # local tooling
 .tools/
+.local-data/
 temp-email.html
 public/temp-email.html
 
