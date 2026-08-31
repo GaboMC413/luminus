@@ -1,0 +1,11 @@
+[
+  {
+    "campaignId": "cmp_1788139488566_zkptn",
+    "recipientEmail": "test.local.marketing@example.com",
+    "recipientName": "Gabriel Prueba",
+    "status": "SUCCESS",
+    "messageId": "local-msg-test-12345",
+    "id": "log_1788139488569_ki64t",
+    "sentAt": "2026-08-31T01:24:48.569Z"
+  }
+]

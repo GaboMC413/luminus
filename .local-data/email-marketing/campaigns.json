@@ -1,0 +1,17 @@
+[
+  {
+    "id": "cmp_1788139488566_zkptn",
+    "subject": "Boletín de Prueba Local",
+    "fromEmail": "info@luminuslatam.com",
+    "fromName": "LUMINUS LATAM",
+    "htmlContent": "<p>Hola Gabriel Prueba, tu email es test.local.marketing@example.com. Desuscribir: http://localhost:3000/api/admin/email-marketing/unsubscribe?email=test.local.marketing%40example.com</p>",
+    "targetTags": [
+      "Prueba Local"
+    ],
+    "status": "COMPLETED",
+    "sentCount": 0,
+    "failedCount": 0,
+    "totalRecipients": 0,
+    "createdAt": "2026-08-31T01:24:48.566Z"
+  }
+]

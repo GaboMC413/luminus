@@ -1,0 +1,17 @@
+[
+  {
+    "id": "aud_all",
+    "name": "Todos los Contactos",
+    "description": "Base completa de contactos activos y no desuscritos.",
+    "contactCount": 2102,
+    "createdAt": "2026-08-31T03:14:04.438Z"
+  },
+  {
+    "id": "aud_posible_especialista",
+    "name": "Posibles Especialistas",
+    "description": "Contactos etiquetados como Posible Especialista.",
+    "tagFilter": "Posible Especialista",
+    "contactCount": 262,
+    "createdAt": "2026-08-31T03:14:04.457Z"
+  }
+]
