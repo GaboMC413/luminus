@@ -78,6 +78,7 @@ function serializeProfile(user: any) {
       created_at: profile.createdAt?.toISOString?.() ?? user.createdAt?.toISOString?.() ?? "",
       bio: profile.bio ?? "",
       other_interests: profile.intention ?? "",
+      specialistProfile: user.specialistProfile || null,
     },
   };
 }
@@ -102,6 +103,20 @@ export async function GET() {
         },
         profilePrompts: {
           orderBy: { sortOrder: "asc" },
+        },
+        specialistProfile: {
+          include: {
+            courses: {
+              where: { isActive: true },
+            },
+            spaces: {
+              where: { isActive: true },
+              include: {
+                category: true,
+                services: true,
+              },
+            },
+          },
         },
       },
     });

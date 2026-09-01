@@ -52,7 +52,7 @@ describe("/api/profile", () => {
 
       expect(res.status).toBe(401);
       expect(data.message).toBe("No autorizado.");
-      
+
       // Aseguramos que los datos sensibles no fueron consultados
       expect(prisma.user.findUnique).not.toHaveBeenCalled();
     });
@@ -76,10 +76,10 @@ describe("/api/profile", () => {
       vi.mocked(getCurrentSession).mockReturnValue(sessionData as any);
 
       // 2. El atacante intenta enviar un "userId" diferente (ej: "admin-456") en el cuerpo
-      const req = createRequest({ 
+      const req = createRequest({
         first_name: "Hacked",
-        userId: "admin-456", 
-        id: "admin-456" 
+        userId: "admin-456",
+        id: "admin-456"
       });
 
       // 3. Simulamos la transacción de Prisma para que devuelva un perfil básico
@@ -90,10 +90,10 @@ describe("/api/profile", () => {
 
       // 4. Verificamos la regla de oro: Prisma SIEMPRE debió usar "usuario-legitimo-123"
       expect(prisma.$transaction).toHaveBeenCalledTimes(1);
-      
+
       // Obtenemos la función de callback enviada a prisma.$transaction
       const transactionCallback = vi.mocked(prisma.$transaction).mock.calls[0][0];
-      
+
       // Creamos un falso "tx" para ver qué hubiera intentado hacer
       const txMock = {
         userProfile: { upsert: vi.fn() },
@@ -104,7 +104,7 @@ describe("/api/profile", () => {
         user: { findUnique: vi.fn().mockResolvedValue(mockProfile) },
       };
 
-      await transactionCallback(txMock);
+      await transactionCallback(txMock as any);
 
       // AQUI ES DONDE COMPROBAMOS QUE SE EVITÓ EL IDOR:
       // Verificamos que el upsert intentó hacerse para "usuario-legitimo-123", y NO para "admin-456"
@@ -121,16 +121,16 @@ describe("/api/profile", () => {
       const sessionData = { userId: "user-123", email: "test@test.com", role: "USER" };
       vi.mocked(getCurrentSession).mockReturnValue(sessionData as any);
 
-      const req = createRequest({ 
+      const req = createRequest({
         first_name: "Juan",
         last_name: "Pérez",
         profession: "Ingeniero"
       });
 
       // Mock de la transacción exitosa
-      const mockUpdatedUser = { 
-        email: "test@test.com", 
-        profile: { firstName: "Juan", lastName: "Pérez", profession: "Ingeniero" } 
+      const mockUpdatedUser = {
+        email: "test@test.com",
+        profile: { firstName: "Juan", lastName: "Pérez", profession: "Ingeniero" }
       };
       vi.mocked(prisma.$transaction).mockResolvedValue(mockUpdatedUser);
 

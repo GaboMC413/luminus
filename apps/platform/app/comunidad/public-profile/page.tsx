@@ -8,6 +8,7 @@ import { ProfileSidebar } from "@/features/user-profile/components/ProfileSideba
 import { ProfileAboutSection } from "@/features/user-profile/components/ProfileAboutSection";
 import { ProfileInterestsSection } from "@/features/user-profile/components/ProfileInterestsSection";
 import { ProfileCompletionCard } from "@/features/user-profile/components/ProfileCompletionCard";
+import { SpecialistProfileView } from "@/features/user-profile/components/SpecialistProfileView";
 import { Modal } from "@/components/ui/Modal";
 import { PageLoader } from "@/components/ui/PageLoader";
 export default function PublicProfilePage() {
@@ -417,7 +418,27 @@ function PublicProfileContent() {
       />
 
       <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pb-6 md:pb-12">
-        <div className="w-full max-w-6xl mx-auto">
+        {profile.specialistProfile ? (
+          <div className="w-full max-w-3xl mx-auto mt-0 md:-mt-[100px] lg:-mt-[150px] relative z-10">
+            <SpecialistProfileView
+              profile={profile}
+              isPublic={true}
+              onConnect={handleConnect}
+              onDeclineConnect={handleDeclineConnect}
+              onRemoveConnection={handleRemoveConnection}
+              onBlockConnection={handleBlockConnection}
+              connectionLoading={connectionLoading}
+              getConnectionButtonLabel={getConnectionButtonLabel}
+              isConnectionDropdownOpen={isConnectionDropdownOpen}
+              setIsConnectionDropdownOpen={setIsConnectionDropdownOpen}
+              connectionDropdownRefDesktop={connectionDropdownRefDesktop}
+              connectionDropdownRefMobile={connectionDropdownRefMobile}
+              onSendMessage={handleSendMessage}
+              onShareProfile={handleShareProfile}
+            />
+          </div>
+        ) : (
+          <div className="w-full max-w-6xl mx-auto">
           <div className="w-full h-full bg-transparent pt-4 lg:pt-6">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-4 lg:gap-8 items-start">
 
@@ -664,6 +685,7 @@ function PublicProfileContent() {
             </div>
           </div>
         </div>
+        )}
       </div>
 
       <Modal

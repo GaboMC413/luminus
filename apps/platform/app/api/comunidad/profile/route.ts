@@ -38,6 +38,20 @@ export async function GET(request: Request) {
         profilePrompts: {
           orderBy: { sortOrder: "asc" },
         },
+        specialistProfile: {
+          include: {
+            courses: {
+              where: { isActive: true },
+            },
+            spaces: {
+              where: { isActive: true },
+              include: {
+                category: true,
+                services: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -92,6 +106,7 @@ export async function GET(request: Request) {
         connection_status: connection?.status ?? null,
         connection_direction: connection ? (connection.requesterId === session.userId ? "outgoing" : "incoming") : null,
         is_own_profile: id === session.userId,
+        specialistProfile: user.specialistProfile || null,
       }
     });
   } catch (error) {
