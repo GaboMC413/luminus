@@ -17,7 +17,8 @@ export function renderTemplateVariables(
   const lastName = recipient.lastName || "";
   const fullName = `${firstName} ${lastName}`.trim();
   const email = recipient.email;
-  const unsubscribeUrl = `http://localhost:3000/api/admin/email-marketing/unsubscribe?email=${encodeURIComponent(
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://luminuslatam.com";
+  const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(
     email
   )}`;
 
@@ -53,15 +54,29 @@ export async function sendSingleTestEmail(params: {
     const sesClient = getSesV2Client();
     const formattedSender = formatSenderAddress(params.fromEmail, params.fromName);
 
+    // Parsear y validar correos separados por comas o espacios
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const rawEmails = params.toEmail.split(/[,;\s]+/).map((e) => e.trim()).filter(Boolean);
+    const validEmails = rawEmails.filter((e) => emailRegex.test(e));
+
+    if (validEmails.length === 0) {
+      return {
+        success: false,
+        error: "Por favor ingresa una dirección de correo válida (ejemplo: usuario@dominio.com)",
+      };
+    }
+
     const renderedHtml = renderTemplateVariables(params.htmlContent, {
-      email: params.toEmail,
+      email: validEmails[0],
       firstName: "Usuario de Prueba",
       lastName: "Local",
     });
 
+    const configurationSet = process.env.SES_CONFIGURATION_MARKETING || "luminus-marketing";
+
     const command = new SendEmailCommand({
       FromEmailAddress: formattedSender,
-      Destination: { ToAddresses: [params.toEmail] },
+      Destination: { ToAddresses: validEmails },
       Content: {
         Simple: {
           Subject: { Data: `[PRUEBA LOCAL] ${params.subject}`, Charset: "UTF-8" },
@@ -70,6 +85,7 @@ export async function sendSingleTestEmail(params: {
           },
         },
       },
+      ...(configurationSet && { ConfigurationSetName: configurationSet }),
     });
 
     const response = await sesClient.send(command);
@@ -81,21 +97,25 @@ export async function sendSingleTestEmail(params: {
   }
 }
 
-export function injectTracking(html: string, logId: string, baseUrl: string = "http://localhost:3000"): string {
+export function injectTracking(html: string, logId: string): string {
   if (!logId) return html;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://luminuslatam.com";
 
-  // 1. Rewrite <a href="..."> links (avoiding tracking/unsubscribe routes)
-  const trackedHtml = html.replace(/<a\s+(?:[^>]*?\s+)?href=["'](https?:\/\/[^"']+)["']/gi, (match, originalUrl) => {
-    if (originalUrl.includes("/track/") || originalUrl.includes("/unsubscribe")) {
-      return match;
-    }
-    const trackingUrl = `${baseUrl}/api/admin/email-marketing/track/click?logId=${encodeURIComponent(
-      logId
-    )}&url=${encodeURIComponent(originalUrl)}`;
-    return match.replace(originalUrl, trackingUrl);
-  });
+  // 1. Reescribir enlaces solo si está explícitamente habilitado el rastreo de clicks
+  let trackedHtml = html;
+  if (process.env.ENABLE_LINK_TRACKING === "true") {
+    trackedHtml = html.replace(/<a\s+(?:[^>]*?\s+)?href=["'](https?:\/\/[^"']+)["']/gi, (match, originalUrl) => {
+      if (originalUrl.includes("/track/") || originalUrl.includes("/unsubscribe")) {
+        return match;
+      }
+      const trackingUrl = `${baseUrl}/api/admin/email-marketing/track/click?logId=${encodeURIComponent(
+        logId
+      )}&url=${encodeURIComponent(originalUrl)}`;
+      return match.replace(originalUrl, trackingUrl);
+    });
+  }
 
-  // 2. Inject 1x1 open tracking pixel
+  // 2. Inyectar píxel 1x1 para rastrear apertura
   const pixelHtml = `<img src="${baseUrl}/api/admin/email-marketing/track/open?logId=${encodeURIComponent(
     logId
   )}" width="1" height="1" style="display:none;width:1px;height:1px;border:0;" alt="" />`;
@@ -174,7 +194,8 @@ export async function executeCampaignBatchSend(
 
   const sesClient = getSesV2Client();
   const formattedSender = formatSenderAddress(campaign.fromEmail, campaign.fromName);
-  const delayBetweenEmailsMs = options?.delayMs || 250; // 4 emails por segundo por defecto para seguridad
+  const delayBetweenEmailsMs = options?.delayMs !== undefined ? options.delayMs : 100; // 10 emails por segundo (100ms) por defecto
+  const configurationSet = process.env.SES_CONFIGURATION_MARKETING || "luminus-marketing";
 
   let sentCount = 0;
   let failedCount = 0;
@@ -206,6 +227,7 @@ export async function executeCampaignBatchSend(
             },
           },
         },
+        ...(configurationSet && { ConfigurationSetName: configurationSet }),
       });
 
       const res = await sesClient.send(command);

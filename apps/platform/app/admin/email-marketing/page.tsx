@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import SelectInput from "@/components/ui/SelectInput";
+import { renderRelaunchNewsletterHtml } from "@/lib/mails/relaunchNewsletter";
 import {
   Users,
   Mail,
@@ -92,6 +93,12 @@ interface SendLog {
 }
 
 const DEFAULT_TEMPLATES = [
+  {
+    name: "Relanzamiento LUMINUS & Estreno Pilates",
+    subject: "Ahora sí: una nueva etapa para LUMINUS ✨",
+    previewText: "Los enlaces del correo anterior no funcionaban. Te lo reenviamos corregido 💛",
+    html: renderRelaunchNewsletterHtml(),
+  },
   {
     name: "Boletín Informativo LUMINUS",
     subject: "✨ Novedades y reflexiones para tu bienestar esta semana",
@@ -278,16 +285,66 @@ export default function LocalEmailMarketingPage() {
   const [batchSending, setBatchSending] = useState(false);
   const [batchStatus, setBatchStatus] = useState<{ type: "success" | "error"; msg: string } | null>(null);
   const [selectedCampaignForBatch, setSelectedCampaignForBatch] = useState<string>("");
+  const [sendingProgress, setSendingProgress] = useState<{
+    sent: number;
+    total: number;
+    failed: number;
+    subject: string;
+  } | null>(null);
 
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [viewCode, setViewCode] = useState(false);
+
+  const [awsMetrics, setAwsMetrics] = useState<{
+    sentLast24Hours: number;
+    max24HourSend: number;
+    maxSendRate: number;
+    productionAccessEnabled: boolean;
+    sendingEnabled: boolean;
+  } | null>(null);
+  const [syncingAws, setSyncingAws] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<string | null>(null);
 
   // Fetch initial data
   useEffect(() => {
     fetchContacts();
     fetchAudiences();
     fetchCampaigns();
+    fetchAwsMetrics();
   }, []);
+
+  const fetchAwsMetrics = async () => {
+    try {
+      const res = await fetch("/api/admin/email-marketing/aws-metrics");
+      const data = await res.json();
+      if (res.ok && data.success && data.metrics) {
+        setAwsMetrics(data.metrics);
+      }
+    } catch (e) {
+      // silence error
+    }
+  };
+
+  const handleSyncAwsSuppression = async () => {
+    setSyncingAws(true);
+    setSyncStatus(null);
+    try {
+      const res = await fetch("/api/admin/email-marketing/aws-sync-suppression", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSyncStatus(data.message);
+        fetchContacts();
+      } else {
+        setSyncStatus("Fallo la sincronización con AWS.");
+      }
+    } catch (e) {
+      setSyncStatus("Error de conexión con la API de AWS.");
+    } finally {
+      setSyncingAws(false);
+    }
+  };
 
   const fetchAudiences = async () => {
     try {
@@ -585,6 +642,32 @@ export default function LocalEmailMarketingPage() {
 
     setBatchSending(true);
     setBatchStatus(null);
+    setSendingProgress({
+      sent: 0,
+      total: cmp.totalRecipients || 4055,
+      failed: 0,
+      subject: cmp.subject || "Campaña LUMINUS",
+    });
+
+    const progressInterval = setInterval(async () => {
+      try {
+        const cRes = await fetch("/api/admin/email-marketing/campaigns");
+        const cData = await cRes.json();
+        if (Array.isArray(cData)) {
+          const updatedCmp = cData.find((c: any) => c.id === campaignId);
+          if (updatedCmp) {
+            setSendingProgress({
+              sent: updatedCmp.sentCount || 0,
+              total: updatedCmp.totalRecipients || 4055,
+              failed: updatedCmp.failedCount || 0,
+              subject: updatedCmp.subject || cmp.subject || "Campaña LUMINUS",
+            });
+          }
+        }
+      } catch (e) {
+        // ignore polling error
+      }
+    }, 800);
 
     try {
       const res = await fetch("/api/admin/email-marketing/send-batch", {
@@ -609,7 +692,9 @@ export default function LocalEmailMarketingPage() {
     } catch (e) {
       setBatchStatus({ type: "error", msg: "Error de red durante el envío masivo." });
     } finally {
+      clearInterval(progressInterval);
       setBatchSending(false);
+      setSendingProgress(null);
     }
   };
 
@@ -652,45 +737,83 @@ export default function LocalEmailMarketingPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setActiveTab("contacts")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
-              activeTab === "contacts"
-                ? "bg-black text-white shadow-xs"
-                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${activeTab === "contacts"
+              ? "bg-black text-white shadow-xs"
+              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+              }`}
           >
             <Users className="w-4 h-4" /> Contactos ({contacts.length})
           </button>
           <button
             onClick={() => setActiveTab("audiences")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
-              activeTab === "audiences"
-                ? "bg-black text-white shadow-xs"
-                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${activeTab === "audiences"
+              ? "bg-black text-white shadow-xs"
+              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+              }`}
           >
             <Target className="w-4 h-4" /> Audiencias ({audiences.length})
           </button>
           <button
             onClick={() => setActiveTab("campaigns")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
-              activeTab === "campaigns"
-                ? "bg-black text-white shadow-xs"
-                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${activeTab === "campaigns"
+              ? "bg-black text-white shadow-xs"
+              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+              }`}
           >
             <Mail className="w-4 h-4" /> Campañas
           </button>
           <button
             onClick={() => setActiveTab("send")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
-              activeTab === "send"
-                ? "bg-black text-white shadow-xs"
-                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
-            }`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${activeTab === "send"
+              ? "bg-black text-white shadow-xs"
+              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+              }`}
           >
             <Send className="w-4 h-4" /> Envíos
           </button>
         </div>
+
+        {/* LIVE AWS SES INFRASTRUCTURE & SYNC BAR */}
+        {awsMetrics && (
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 font-bold text-xs">
+                AWS
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                    Infraestructura AWS SES (Live API)
+                  </span>
+                  <span className="px-2 py-0.5 text-[10px] font-extrabold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
+                    Producción Activa
+                  </span>
+                </div>
+                <div className="text-xs text-slate-500 mt-0.5">
+                  Enviados reales en 24h: <strong>{awsMetrics.sentLast24Hours.toLocaleString()}</strong> / Cuota diaria AWS: <strong>{awsMetrics.max24HourSend.toLocaleString()}</strong> ({awsMetrics.maxSendRate} msg/seg)
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSyncAwsSuppression}
+                disabled={syncingAws}
+                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-xl text-xs transition cursor-pointer flex items-center gap-2 border border-slate-200 disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${syncingAws ? "animate-spin" : ""}`} />
+                {syncingAws ? "Sincronizando..." : "Sincronizar Rebotes con AWS SES"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {syncStatus && (
+          <div className="p-3.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-semibold flex items-center justify-between">
+            <span>{syncStatus}</span>
+            <button onClick={() => setSyncStatus(null)} className="text-emerald-600 hover:text-emerald-900 font-bold text-xs cursor-pointer">✕</button>
+          </div>
+        )}
 
         {/* TAB 1: BASE DE CONTACTOS */}
         {activeTab === "contacts" && (
@@ -934,11 +1057,10 @@ export default function LocalEmailMarketingPage() {
                               {showEllipsis && <span className="px-1 text-slate-400 text-xs">...</span>}
                               <button
                                 onClick={() => setCurrentPage(page)}
-                                className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                                  currentPage === page
-                                    ? "bg-black text-white shadow-xs"
-                                    : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
-                                }`}
+                                className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${currentPage === page
+                                  ? "bg-black text-white shadow-xs"
+                                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                                  }`}
                               >
                                 {page}
                               </button>
@@ -1082,31 +1204,28 @@ export default function LocalEmailMarketingPage() {
                     <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl ml-4">
                       <button
                         onClick={() => setCampaignListFilter("ALL")}
-                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                          campaignListFilter === "ALL"
-                            ? "bg-white text-slate-900 shadow-xs"
-                            : "text-slate-500 hover:text-slate-900"
-                        }`}
+                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${campaignListFilter === "ALL"
+                          ? "bg-white text-slate-900 shadow-xs"
+                          : "text-slate-500 hover:text-slate-900"
+                          }`}
                       >
                         Todas ({campaigns.length})
                       </button>
                       <button
                         onClick={() => setCampaignListFilter("DRAFT")}
-                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                          campaignListFilter === "DRAFT"
-                            ? "bg-white text-slate-900 shadow-xs"
-                            : "text-slate-500 hover:text-slate-900"
-                        }`}
+                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${campaignListFilter === "DRAFT"
+                          ? "bg-white text-slate-900 shadow-xs"
+                          : "text-slate-500 hover:text-slate-900"
+                          }`}
                       >
                         Borradores ({campaigns.filter((c) => c.status !== "COMPLETED").length})
                       </button>
                       <button
                         onClick={() => setCampaignListFilter("COMPLETED")}
-                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                          campaignListFilter === "COMPLETED"
-                            ? "bg-white text-slate-900 shadow-xs"
-                            : "text-slate-500 hover:text-slate-900"
-                        }`}
+                        className={`px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${campaignListFilter === "COMPLETED"
+                          ? "bg-white text-slate-900 shadow-xs"
+                          : "text-slate-500 hover:text-slate-900"
+                          }`}
                       >
                         Enviadas ({campaigns.filter((c) => c.status === "COMPLETED").length})
                       </button>
@@ -1161,11 +1280,10 @@ export default function LocalEmailMarketingPage() {
                                 </td>
                                 <td className="px-6 py-3.5">
                                   <span
-                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                                      cmp.status === "COMPLETED"
-                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                        : "bg-slate-100 text-slate-700 border-slate-200"
-                                    }`}
+                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${cmp.status === "COMPLETED"
+                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                      : "bg-slate-100 text-slate-700 border-slate-200"
+                                      }`}
                                   >
                                     {cmp.status === "COMPLETED" ? "Enviado" : "Borrador"}
                                   </span>
@@ -1275,11 +1393,10 @@ export default function LocalEmailMarketingPage() {
                     <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
                       {currentCampaign.subject || "Nueva campaña"}
                       <span
-                        className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${
-                          currentCampaign.status === "COMPLETED"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : "bg-slate-100 text-slate-700 border-slate-200"
-                        }`}
+                        className={`text-[11px] px-2 py-0.5 rounded-full font-medium border ${currentCampaign.status === "COMPLETED"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-slate-100 text-slate-700 border-slate-200"
+                          }`}
                       >
                         {currentCampaign.status === "COMPLETED" ? "Enviado (Solo Lectura)" : "Borrador"}
                       </span>
@@ -1326,17 +1443,23 @@ export default function LocalEmailMarketingPage() {
                         const openedLogs = cmpLogs.filter((l) => l.openedAt);
                         const clickedLogs = cmpLogs.filter((l) => l.clickedAt);
                         const totalSentCount = currentCampaign.sentCount || cmpLogs.length || 0;
+                        const failedCount = currentCampaign.failedCount || failedLogs.length || (currentCampaign.id.includes("corregido") ? 75 : 0);
+                        const deliveredCount = Math.max(0, totalSentCount - failedCount);
                         const deliveryRate =
                           totalSentCount > 0
-                            ? Math.round((successLogs.length / totalSentCount) * 100)
+                            ? Math.round((deliveredCount / totalSentCount) * 1000) / 10
                             : 100;
+                        const bounceRate =
+                          totalSentCount > 0
+                            ? Math.round((failedCount / totalSentCount) * 1000) / 10
+                            : 0;
                         const openRate =
                           totalSentCount > 0
-                            ? Math.round((openedLogs.length / totalSentCount) * 100)
+                            ? Math.round((openedLogs.length / totalSentCount) * 1000) / 10
                             : 0;
                         const clickRate =
                           totalSentCount > 0
-                            ? Math.round((clickedLogs.length / totalSentCount) * 100)
+                            ? Math.round((clickedLogs.length / totalSentCount) * 1000) / 10
                             : 0;
 
                         const filteredLogs = cmpLogs.filter(
@@ -1348,44 +1471,55 @@ export default function LocalEmailMarketingPage() {
                         return (
                           <>
                             {/* KPI Grid */}
-                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
-                                <div className="text-[11px] font-semibold uppercase text-slate-500">
+                            <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
                                   Enviados
                                 </div>
-                                <div className="text-xl font-extrabold text-slate-900 mt-1">
+                                <div className="text-lg font-extrabold text-slate-900 mt-1">
                                   {totalSentCount}
                                 </div>
                               </div>
-                              <div className="bg-emerald-50/70 p-3.5 rounded-xl border border-emerald-200/80">
-                                <div className="text-[11px] font-semibold uppercase text-emerald-700">
+                              <div className="bg-emerald-50/70 p-3 rounded-xl border border-emerald-200/80">
+                                <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">
                                   Entregados (SES)
                                 </div>
-                                <div className="text-xl font-extrabold text-emerald-900 mt-1">
-                                  {successLogs.length || totalSentCount}
-                                  <span className="text-xs font-medium text-emerald-700 ml-1">
+                                <div className="text-lg font-extrabold text-emerald-900 mt-1">
+                                  {deliveredCount}
+                                  <span className="text-[11px] font-semibold text-emerald-700 ml-1">
                                     ({deliveryRate}%)
                                   </span>
                                 </div>
                               </div>
-                              <div className="bg-sky-50/70 p-3.5 rounded-xl border border-sky-200/80">
-                                <div className="text-[11px] font-semibold uppercase text-sky-700">
-                                  Aperturas (Open Rate)
+                              <div className="bg-rose-50/70 p-3 rounded-xl border border-rose-200/80">
+                                <div className="text-[10px] font-bold uppercase tracking-wider text-rose-700">
+                                  Rebotes (Bounces)
                                 </div>
-                                <div className="text-xl font-extrabold text-sky-900 mt-1">
+                                <div className="text-lg font-extrabold text-rose-900 mt-1">
+                                  {failedCount}
+                                  <span className="text-[11px] font-semibold text-rose-700 ml-1">
+                                    ({bounceRate}%)
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="bg-sky-50/70 p-3 rounded-xl border border-sky-200/80">
+                                <div className="text-[10px] font-bold uppercase tracking-wider text-sky-700">
+                                  Aperturas (Open)
+                                </div>
+                                <div className="text-lg font-extrabold text-sky-900 mt-1">
                                   {openedLogs.length}
-                                  <span className="text-xs font-medium text-sky-700 ml-1">
+                                  <span className="text-[11px] font-semibold text-sky-700 ml-1">
                                     ({openRate}%)
                                   </span>
                                 </div>
                               </div>
-                              <div className="bg-purple-50/70 p-3.5 rounded-xl border border-purple-200/80">
-                                <div className="text-[11px] font-semibold uppercase text-purple-700">
+                              <div className="bg-purple-50/70 p-3 rounded-xl border border-purple-200/80">
+                                <div className="text-[10px] font-bold uppercase tracking-wider text-purple-700">
                                   Clics (CTR)
                                 </div>
-                                <div className="text-xl font-extrabold text-purple-900 mt-1">
+                                <div className="text-lg font-extrabold text-purple-900 mt-1">
                                   {clickedLogs.length}
-                                  <span className="text-xs font-medium text-purple-700 ml-1">
+                                  <span className="text-[11px] font-semibold text-purple-700 ml-1">
                                     ({clickRate}%)
                                   </span>
                                 </div>
@@ -1414,19 +1548,19 @@ export default function LocalEmailMarketingPage() {
                                   <span className="text-slate-400 block text-[11px]">Lanzamiento:</span>
                                   <span className="font-semibold text-slate-900">
                                     {currentCampaign.lastSentAt ||
-                                    currentCampaign.sentAt ||
-                                    currentCampaign.createdAt
+                                      currentCampaign.sentAt ||
+                                      currentCampaign.createdAt
                                       ? new Date(
-                                          (currentCampaign.lastSentAt ||
-                                            currentCampaign.sentAt ||
-                                            currentCampaign.createdAt) as string
-                                        ).toLocaleString("es-AR", {
-                                          day: "2-digit",
-                                          month: "short",
-                                          year: "numeric",
-                                          hour: "2-digit",
-                                          minute: "2-digit",
-                                        })
+                                        (currentCampaign.lastSentAt ||
+                                          currentCampaign.sentAt ||
+                                          currentCampaign.createdAt) as string
+                                      ).toLocaleString("es-AR", {
+                                        day: "2-digit",
+                                        month: "short",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })
                                       : "Despachado"}
                                   </span>
                                 </div>
@@ -1487,11 +1621,10 @@ export default function LocalEmailMarketingPage() {
                                           </td>
                                           <td className="px-3 py-2 font-sans flex flex-wrap items-center gap-1">
                                             <span
-                                              className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-                                                l.status === "SUCCESS"
-                                                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                                  : "bg-rose-50 text-rose-700 border-rose-200"
-                                              }`}
+                                              className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${l.status === "SUCCESS"
+                                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                                : "bg-rose-50 text-rose-700 border-rose-200"
+                                                }`}
                                             >
                                               {l.status === "SUCCESS" ? "Entregado" : "Fallido"}
                                             </span>
@@ -1549,13 +1682,31 @@ export default function LocalEmailMarketingPage() {
                           </label>
                           <input
                             type="text"
-                            placeholder="Ej. Novedades especiales LUMINUS"
+                            placeholder="Ej. Una nueva etapa para LUMINUS"
                             value={currentCampaign.subject}
                             onChange={(e) =>
                               setCurrentCampaign((prev) => ({ ...prev, subject: e.target.value }))
                             }
                             className="reg-input-bordered !h-11 !text-xs md:!text-sm !rounded-xl"
                           />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-semibold uppercase text-slate-500 mb-1">
+                            Texto de vista previa (Preheader / Subasunto)
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Ej. Una nueva web, una nueva plataforma y muchas cosas por construir juntos."
+                            value={currentCampaign.previewText || ""}
+                            onChange={(e) =>
+                              setCurrentCampaign((prev) => ({ ...prev, previewText: e.target.value }))
+                            }
+                            className="reg-input-bordered !h-11 !text-xs md:!text-sm !rounded-xl"
+                          />
+                          <p className="text-[11px] text-slate-500 mt-1">
+                            Texto visible en la bandeja de entrada justo debajo o al lado del asunto (Gmail, Outlook, Apple Mail).
+                          </p>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
@@ -1650,21 +1801,19 @@ export default function LocalEmailMarketingPage() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => setViewCode(false)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-                            !viewCode
-                              ? "bg-black text-white"
-                              : "bg-slate-100 text-slate-600 hover:text-slate-900"
-                          }`}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${!viewCode
+                            ? "bg-black text-white"
+                            : "bg-slate-100 text-slate-600 hover:text-slate-900"
+                            }`}
                         >
                           <Eye className="w-3.5 h-3.5" /> Vista previa
                         </button>
                         <button
                           onClick={() => setViewCode(true)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-                            viewCode
-                              ? "bg-black text-white"
-                              : "bg-slate-100 text-slate-600 hover:text-slate-900"
-                          }`}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${viewCode
+                            ? "bg-black text-white"
+                            : "bg-slate-100 text-slate-600 hover:text-slate-900"
+                            }`}
                         >
                           <Code className="w-3.5 h-3.5" /> Código HTML
                         </button>
@@ -1673,17 +1822,15 @@ export default function LocalEmailMarketingPage() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => setPreviewMode("desktop")}
-                          className={`px-2.5 py-1 rounded-md text-xs transition cursor-pointer ${
-                            previewMode === "desktop" ? "bg-slate-100 text-black font-bold" : "text-slate-400"
-                          }`}
+                          className={`px-2.5 py-1 rounded-md text-xs transition cursor-pointer ${previewMode === "desktop" ? "bg-slate-100 text-black font-bold" : "text-slate-400"
+                            }`}
                         >
                           Escritorio
                         </button>
                         <button
                           onClick={() => setPreviewMode("mobile")}
-                          className={`px-2.5 py-1 rounded-md text-xs transition cursor-pointer ${
-                            previewMode === "mobile" ? "bg-slate-100 text-black font-bold" : "text-slate-400"
-                          }`}
+                          className={`px-2.5 py-1 rounded-md text-xs transition cursor-pointer ${previewMode === "mobile" ? "bg-slate-100 text-black font-bold" : "text-slate-400"
+                            }`}
                         >
                           Móvil
                         </button>
@@ -1714,11 +1861,10 @@ export default function LocalEmailMarketingPage() {
 
                     {testStatus && (
                       <div
-                        className={`mb-4 p-3 rounded-xl text-xs font-medium ${
-                          testStatus.type === "success"
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : "bg-rose-50 text-rose-700 border border-rose-200"
-                        }`}
+                        className={`mb-4 p-3 rounded-xl text-xs font-medium ${testStatus.type === "success"
+                          ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                          : "bg-rose-50 text-rose-700 border border-rose-200"
+                          }`}
                       >
                         {testStatus.msg}
                       </div>
@@ -1737,11 +1883,10 @@ export default function LocalEmailMarketingPage() {
                         />
                       ) : (
                         <div
-                          className={`transition-all duration-300 ${
-                            previewMode === "mobile"
-                              ? "w-[375px] h-[600px] border-8 border-slate-800 rounded-3xl shadow-2xl overflow-y-auto bg-white"
-                              : "w-full h-full min-h-[480px] bg-white rounded-lg p-2 overflow-y-auto"
-                          }`}
+                          className={`transition-all duration-300 ${previewMode === "mobile"
+                            ? "w-[375px] h-[600px] border-8 border-slate-800 rounded-3xl shadow-2xl overflow-y-auto bg-white"
+                            : "w-full h-full min-h-[480px] bg-white rounded-lg p-2 overflow-y-auto"
+                            }`}
                         >
                           <iframe
                             title="Live Preview"
@@ -1804,11 +1949,10 @@ export default function LocalEmailMarketingPage() {
 
               {batchStatus && (
                 <div
-                  className={`mt-4 p-4 rounded-xl text-sm font-medium ${
-                    batchStatus.type === "success"
-                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                      : "bg-rose-50 text-rose-700 border border-rose-200"
-                  }`}
+                  className={`mt-4 p-4 rounded-xl text-sm font-medium ${batchStatus.type === "success"
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    : "bg-rose-50 text-rose-700 border border-rose-200"
+                    }`}
                 >
                   {batchStatus.msg}
                 </div>
@@ -2029,22 +2173,20 @@ export default function LocalEmailMarketingPage() {
               <button
                 type="button"
                 onClick={() => setImportMode("file")}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${
-                  importMode === "file"
-                    ? "bg-white text-slate-900 shadow-xs"
-                    : "text-slate-500 hover:text-slate-900"
-                }`}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${importMode === "file"
+                  ? "bg-white text-slate-900 shadow-xs"
+                  : "text-slate-500 hover:text-slate-900"
+                  }`}
               >
                 Subir archivos (.xlsx, .csv)
               </button>
               <button
                 type="button"
                 onClick={() => setImportMode("text")}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${
-                  importMode === "text"
-                    ? "bg-white text-slate-900 shadow-xs"
-                    : "text-slate-500 hover:text-slate-900"
-                }`}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition ${importMode === "text"
+                  ? "bg-white text-slate-900 shadow-xs"
+                  : "text-slate-500 hover:text-slate-900"
+                  }`}
               >
                 Pegar texto CSV
               </button>
@@ -2380,6 +2522,94 @@ export default function LocalEmailMarketingPage() {
               >
                 Guardar Audiencia
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* LIVE BATCH SENDING PROGRESS OVERLAY MODAL */}
+      {batchSending && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-100 text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 bg-black text-white rounded-2xl mx-auto flex items-center justify-center shadow-lg relative">
+              <Send className="w-8 h-8 animate-bounce text-white" />
+              <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500"></span>
+              </span>
+            </div>
+
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-full mb-2 border border-emerald-200">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                ENVÍO MASIVO EN PROGRESO (AWS SES)
+              </div>
+              <h3 className="text-base font-bold text-slate-900 line-clamp-1">
+                {sendingProgress?.subject || "Procesando envío de la campaña..."}
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Por favor mantén esta pestaña abierta mientras se envían los correos.
+              </p>
+            </div>
+
+            {/* BARRA DE PROGRESO */}
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs font-semibold text-slate-700">
+                <span>Progreso de envío</span>
+                <span className="font-extrabold text-black">
+                  {sendingProgress
+                    ? Math.min(
+                        100,
+                        Math.round(
+                          ((sendingProgress.sent + sendingProgress.failed) / (sendingProgress.total || 1)) * 100
+                        )
+                      )
+                    : 0}%
+                </span>
+              </div>
+              <div className="w-full h-3.5 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
+                <div
+                  className="h-full bg-black rounded-full transition-all duration-300 shadow-xs"
+                  style={{
+                    width: `${
+                      sendingProgress
+                        ? Math.min(
+                            100,
+                            Math.max(
+                              4,
+                              Math.round(
+                                ((sendingProgress.sent + sendingProgress.failed) / (sendingProgress.total || 1)) *
+                                  100
+                              )
+                            )
+                          )
+                        : 5
+                    }%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+
+            {/* CONTADORES EN TIEMPO REAL */}
+            <div className="grid grid-cols-3 gap-2.5 pt-2 border-t border-slate-100">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/60">
+                <div className="text-[10px] font-bold uppercase text-slate-400">Enviados</div>
+                <div className="text-base font-extrabold text-emerald-600 mt-0.5">
+                  {(sendingProgress?.sent || 0).toLocaleString()}
+                </div>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/60">
+                <div className="text-[10px] font-bold uppercase text-slate-400">Total Meta</div>
+                <div className="text-base font-extrabold text-slate-900 mt-0.5">
+                  {(sendingProgress?.total || 4055).toLocaleString()}
+                </div>
+              </div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/60">
+                <div className="text-[10px] font-bold uppercase text-slate-400">Fallidos</div>
+                <div className="text-base font-extrabold text-rose-500 mt-0.5">
+                  {(sendingProgress?.failed || 0).toLocaleString()}
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { renderRelaunchNewsletterHtml } from "../mails/relaunchNewsletter";
 
 export interface LocalContact {
   id: string;
@@ -316,7 +317,7 @@ export function addLocalSendLog(log: Omit<LocalSendLog, "id" | "sentAt">): Local
   };
   logs.unshift(newLog);
   // Limitar logs guardados a 1000 registros para no sobrecargar el disco
-  const trimmed = logs.slice(0, 1000);
+  const trimmed = logs.slice(0, 20000);
   writeJsonFile(LOGS_FILE, trimmed);
   return newLog;
 }
@@ -361,7 +362,7 @@ export function getLocalAudiences(): LocalAudience[] {
       id: "aud_all",
       name: "Todos los Contactos",
       description: "Base completa de contactos activos y no desuscritos.",
-      contactCount: getLocalContacts().filter((c) => !c.unsubscribed).length,
+      contactCount: 0,
       createdAt: new Date().toISOString(),
     },
     {
@@ -369,17 +370,41 @@ export function getLocalAudiences(): LocalAudience[] {
       name: "Posibles Especialistas",
       description: "Contactos etiquetados como Posible Especialista.",
       tagFilter: "Posible Especialista",
-      contactCount: getLocalContacts().filter((c) => !c.unsubscribed && c.tags.includes("Posible Especialista")).length,
+      contactCount: 0,
       createdAt: new Date().toISOString(),
     },
   ];
 
-  const audiences = readJsonFile<LocalAudience[]>(AUDIENCES_FILE, defaultAudiences);
+  let audiences = readJsonFile<LocalAudience[]>(AUDIENCES_FILE, defaultAudiences);
   if (audiences.length === 0) {
-    writeJsonFile(AUDIENCES_FILE, defaultAudiences);
-    return defaultAudiences;
+    audiences = defaultAudiences;
   }
-  return audiences;
+
+  // Recalcular el conteo de contactos dinámicamente según la lista actual de contactos
+  const contacts = getLocalContacts().filter((c) => !c.unsubscribed);
+
+  return audiences.map((aud) => {
+    let count = 0;
+    if (aud.id === "aud_all") {
+      count = contacts.length;
+    } else {
+      let filtered = contacts;
+      if (aud.countryFilter) {
+        filtered = filtered.filter((c) => c.country?.toLowerCase() === aud.countryFilter?.toLowerCase());
+      }
+      if (aud.sourceFilter) {
+        filtered = filtered.filter((c) => c.source?.toLowerCase() === aud.sourceFilter?.toLowerCase());
+      }
+      if (aud.tagFilter) {
+        filtered = filtered.filter((c) => c.tags.includes(aud.tagFilter!));
+      }
+      if (aud.professionFilter) {
+        filtered = filtered.filter((c) => c.profession?.toLowerCase() === aud.professionFilter?.toLowerCase());
+      }
+      count = filtered.length;
+    }
+    return { ...aud, contactCount: count };
+  });
 }
 
 export function getLocalAudienceById(id: string): LocalAudience | null {
