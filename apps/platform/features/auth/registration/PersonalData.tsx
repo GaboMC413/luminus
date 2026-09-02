@@ -229,7 +229,6 @@ export function PersonalData({
 
     const finalBirthdate = (birthDay || birthMonth || birthYear) ? `${paddedDay} / ${paddedMonth} / ${fullYear}` : "";
 
-    if (!avatarUrl) { setErrorField('photo'); return; }
     if (!firstName) { setErrorField('firstName'); return; }
     if (!lastName) { setErrorField('lastName'); return; }
     if (!gender) { setErrorField('gender'); return; }
@@ -311,10 +310,9 @@ export function PersonalData({
             disabled={uploading}
             className="mb-2"
           >
-            {uploading ? 'Cargando...' : 'Subir Foto'}
+            {uploading ? 'Cargando...' : 'Subir Foto (Opcional)'}
           </Button>
         </div>
-        {errorField === 'photo' && <p className="text-[#FF3D3D] text-[12px] font-bold">Sube una foto de perfil</p>}
       </div>
 
       {/* Fields Container */}
