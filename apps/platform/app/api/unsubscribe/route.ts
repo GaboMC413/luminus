@@ -52,3 +52,43 @@ export async function GET(req: Request) {
     headers: { "Content-Type": "text/html; charset=utf-8" },
   });
 }
+
+export async function POST(req: Request) {
+  const { searchParams } = new URL(req.url);
+  let email = searchParams.get("email");
+
+  if (!email) {
+    try {
+      const body = await req.formData();
+      email = body.get("email")?.toString() || null;
+    } catch {
+      // Body format wasn't formData
+    }
+  }
+
+  if (email) {
+    const contacts = getLocalContacts();
+    const contact = contacts.find((c) => c.email.toLowerCase() === email!.toLowerCase().trim());
+
+    if (contact) {
+      saveLocalContact({
+        ...contact,
+        unsubscribed: true,
+        tags: Array.from(new Set([...(contact.tags || []), "desuscrito", "one-click-unsubscribe"])),
+        notes: `${contact.notes || ""}\n[One-Click Unsubscribe] Desuscrito vía cliente de correo (RFC 8058).`.trim(),
+      });
+    } else {
+      saveLocalContact({
+        email,
+        firstName: "Contacto",
+        lastName: "Desuscrito",
+        tags: ["desuscrito", "one-click-unsubscribe"],
+        unsubscribed: true,
+        source: "One-Click Unsubscribe",
+      });
+    }
+  }
+
+  return new NextResponse("OK", { status: 200 });
+}
+

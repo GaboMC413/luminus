@@ -94,12 +94,29 @@ export function calculateCampaignMetrics(campaignId: string): CalculatedCampaign
 export async function fetchLiveAwsSuppressionList(): Promise<Array<{ email: string; reason: string; date: string }>> {
   try {
     const ses = getSesV2Client();
-    const res = await ses.send(new ListSuppressedDestinationsCommand({ PageSize: 100 }));
-    return (res.SuppressedDestinationSummaries || []).map((item) => ({
-      email: item.EmailAddress || "",
-      reason: item.Reason || "BOUNCE",
-      date: item.LastUpdateTime ? new Date(item.LastUpdateTime).toISOString() : new Date().toISOString(),
-    }));
+    const items: Array<{ email: string; reason: string; date: string }> = [];
+    let nextToken: string | undefined = undefined;
+
+    do {
+      const res = await ses.send(
+        new ListSuppressedDestinationsCommand({
+          PageSize: 100,
+          NextToken: nextToken,
+        })
+      );
+      if (res.SuppressedDestinationSummaries) {
+        for (const item of res.SuppressedDestinationSummaries) {
+          items.push({
+            email: item.EmailAddress || "",
+            reason: item.Reason || "BOUNCE",
+            date: item.LastUpdateTime ? new Date(item.LastUpdateTime).toISOString() : new Date().toISOString(),
+          });
+        }
+      }
+      nextToken = res.NextToken;
+    } while (nextToken);
+
+    return items;
   } catch (e) {
     console.error("[AWS SES SUPPRESSION FETCH ERROR]:", e);
     return [];

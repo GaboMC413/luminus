@@ -17072,9 +17072,12 @@
     "email": "jarapan69@yahoo.com",
     "firstName": "Paula Andrea Jaña Caballero",
     "lastName": "",
-    "tags": [],
-    "unsubscribed": false,
-    "notes": "",
+    "tags": [
+      "desuscrito",
+      "complaint"
+    ],
+    "unsubscribed": true,
+    "notes": "[AWS SES Sync] Suprimido automáticamente por Reporte de Abuso / Queja en Yahoo/Gmail el 1/9/2026.",
     "createdAt": "2026-08-31T01:45:50.372Z",
     "country": "",
     "city": "",
@@ -44389,9 +44392,12 @@
     "city": "",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
-    "unsubscribed": false,
-    "notes": "Suscrito: 2025-11-18 12:34:41 | Enviados: 3 | Abiertos: 0 | Clics: 0",
+    "tags": [
+      "desuscrito",
+      "complaint"
+    ],
+    "unsubscribed": true,
+    "notes": "Suscrito: 2025-11-18 12:34:41 | Enviados: 3 | Abiertos: 0 | Clics: 0\n[AWS SES Sync] Suprimido automáticamente por Reporte de Abuso / Queja en Yahoo/Gmail el 2/9/2026.",
     "createdAt": "2026-09-01T21:42:59.163Z"
   },
   {
@@ -50197,9 +50203,12 @@
     "city": "",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
-    "unsubscribed": false,
-    "notes": "Suscrito: 2025-11-18 12:30:37 | Enviados: 3 | Abiertos: 1 | Clics: 0",
+    "tags": [
+      "desuscrito",
+      "complaint"
+    ],
+    "unsubscribed": true,
+    "notes": "Suscrito: 2025-11-18 12:30:37 | Enviados: 3 | Abiertos: 1 | Clics: 0\n[AWS SES Sync] Suprimido automáticamente por Reporte de Abuso / Queja en Yahoo/Gmail el 2/9/2026.",
     "createdAt": "2026-09-01T21:42:59.165Z"
   },
   {

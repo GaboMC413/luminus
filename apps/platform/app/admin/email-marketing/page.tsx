@@ -176,13 +176,14 @@ export default function LocalEmailMarketingPage() {
   const [selectedTagFilter, setSelectedTagFilter] = useState<string>("ALL");
   const [selectedCountryFilter, setSelectedCountryFilter] = useState<string>("ALL");
   const [selectedSourceFilter, setSelectedSourceFilter] = useState<string>("ALL");
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("ALL");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 50;
 
   // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCountryFilter, selectedSourceFilter, selectedTagFilter]);
+  }, [searchQuery, selectedCountryFilter, selectedSourceFilter, selectedTagFilter, selectedStatusFilter]);
 
   // File / CSV Import State
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -708,8 +709,14 @@ export default function LocalEmailMarketingPage() {
     const matchesTag = selectedTagFilter === "ALL" || c.tags.includes(selectedTagFilter);
     const matchesCountry = selectedCountryFilter === "ALL" || c.country === selectedCountryFilter;
     const matchesSource = selectedSourceFilter === "ALL" || c.source === selectedSourceFilter;
+    const matchesStatus =
+      selectedStatusFilter === "ALL" ||
+      (selectedStatusFilter === "ACTIVE" && !c.unsubscribed) ||
+      (selectedStatusFilter === "UNSUBSCRIBED" && c.unsubscribed) ||
+      (selectedStatusFilter === "COMPLAINT" && c.tags?.includes("complaint")) ||
+      (selectedStatusFilter === "BOUNCED" && c.tags?.includes("bounced"));
 
-    return matchesTag && matchesCountry && matchesSource;
+    return matchesTag && matchesCountry && matchesSource && matchesStatus;
   });
 
   const totalFiltered = filteredContacts.length;
@@ -802,7 +809,7 @@ export default function LocalEmailMarketingPage() {
                 className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-xl text-xs transition cursor-pointer flex items-center gap-2 border border-slate-200 disabled:opacity-50"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${syncingAws ? "animate-spin" : ""}`} />
-                {syncingAws ? "Sincronizando..." : "Sincronizar Rebotes con AWS SES"}
+                {syncingAws ? "Sincronizando..." : "Sincronizar Supresiones con AWS SES"}
               </button>
             </div>
           </div>
@@ -822,6 +829,20 @@ export default function LocalEmailMarketingPage() {
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
               {/* Selectors Group */}
               <div className="flex flex-wrap items-center gap-2.5">
+                <SelectInput
+                  value={selectedStatusFilter}
+                  options={[
+                    { label: "Todos los estados", value: "ALL" },
+                    { label: "Activos únicamente", value: "ACTIVE" },
+                    { label: "Desuscritos / Suprimidos", value: "UNSUBSCRIBED" },
+                    { label: "Quejas de Abuso (Spam)", value: "COMPLAINT" },
+                    { label: "Rebotes (Bounces)", value: "BOUNCED" },
+                  ]}
+                  onSelect={(val) => setSelectedStatusFilter(val)}
+                  placeholder="Todos los estados"
+                  className="w-full sm:w-[190px]"
+                />
+
                 <SelectInput
                   value={selectedCountryFilter}
                   options={[
@@ -983,9 +1004,28 @@ export default function LocalEmailMarketingPage() {
                           </td>
                           <td className="px-6 py-3.5">
                             {c.unsubscribed ? (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-rose-50 text-rose-700 border border-rose-200 font-medium">
-                                Desuscrito
-                              </span>
+                              c.tags?.includes("complaint") ? (
+                                <span
+                                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-rose-100 text-rose-800 border border-rose-300 font-semibold cursor-help"
+                                  title={c.notes || "Queja por spam en Yahoo/Gmail"}
+                                >
+                                  Queja / Abuso
+                                </span>
+                              ) : c.tags?.includes("bounced") ? (
+                                <span
+                                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-amber-100 text-amber-800 border border-amber-300 font-semibold cursor-help"
+                                  title={c.notes || "Rebote de entrega en AWS SES"}
+                                >
+                                  Rebote (Bounce)
+                                </span>
+                              ) : (
+                                <span
+                                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-rose-50 text-rose-700 border border-rose-200 font-medium cursor-help"
+                                  title={c.notes || "Desuscrito manualmente o vía link"}
+                                >
+                                  Desuscrito
+                                </span>
+                              )
                             ) : (
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
                                 Activo

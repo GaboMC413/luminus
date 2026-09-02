@@ -28,43 +28,113 @@ export async function getAwsSesAccountMetrics(): Promise<AwsAccountMetrics | nul
   }
 }
 
-export async function syncAwsSuppressionListToLocalContacts(): Promise<{
+export interface SuppressionSyncResult {
   syncedCount: number;
   totalSuppressed: number;
-}> {
+  complaintsCount: number;
+  bouncesCount: number;
+}
+
+export async function syncAwsSuppressionListToLocalContacts(): Promise<SuppressionSyncResult> {
   try {
     const sesClient = getSesV2Client();
-    const response = await sesClient.send(new ListSuppressedDestinationsCommand({ PageSize: 100 }));
-    
-    const summaries = response.SuppressedDestinationSummaries || [];
-    const suppressedEmails = new Set(summaries.map((s) => s.EmailAddress?.toLowerCase().trim()).filter(Boolean));
+    const suppressedMap = new Map<string, { reason: string; date?: string }>();
 
-    if (suppressedEmails.size === 0) {
-      return { syncedCount: 0, totalSuppressed: 0 };
+    let nextToken: string | undefined = undefined;
+
+    do {
+      const response = await sesClient.send(
+        new ListSuppressedDestinationsCommand({
+          PageSize: 100,
+          NextToken: nextToken,
+        })
+      );
+
+      const summaries = response.SuppressedDestinationSummaries || [];
+      for (const summary of summaries) {
+        if (summary.EmailAddress) {
+          const emailNorm = summary.EmailAddress.toLowerCase().trim();
+          suppressedMap.set(emailNorm, {
+            reason: summary.Reason || "BOUNCE",
+            date: summary.LastUpdateTime ? new Date(summary.LastUpdateTime).toLocaleDateString("es-AR") : undefined,
+          });
+        }
+      }
+
+      nextToken = response.NextToken;
+    } while (nextToken);
+
+    if (suppressedMap.size === 0) {
+      return { syncedCount: 0, totalSuppressed: 0, complaintsCount: 0, bouncesCount: 0 };
     }
 
+    let complaintsCount = 0;
+    let bouncesCount = 0;
+    suppressedMap.forEach(({ reason }) => {
+      if (reason.toUpperCase() === "COMPLAINT") {
+        complaintsCount++;
+      } else {
+        bouncesCount++;
+      }
+    });
+
     const contacts = getLocalContacts();
+    const existingEmails = new Set(contacts.map((c) => c.email.toLowerCase().trim()));
     let syncedCount = 0;
 
+    // Actualizar contactos existentes que estén en la lista de supresión
     contacts.forEach((c) => {
-      if (suppressedEmails.has(c.email.toLowerCase().trim())) {
-        if (!c.unsubscribed) {
+      const emailNorm = c.email.toLowerCase().trim();
+      const suppressedInfo = suppressedMap.get(emailNorm);
+
+      if (suppressedInfo) {
+        const isComplaint = suppressedInfo.reason.toUpperCase() === "COMPLAINT";
+        const reasonTag = isComplaint ? "complaint" : "bounced";
+        const newTags = Array.from(new Set([...(c.tags || []), "desuscrito", reasonTag]));
+        const reasonText = isComplaint ? "Reporte de Abuso / Queja en Yahoo/Gmail" : "Rebote de entrega (Bounce)";
+        const noteDetail = `[AWS SES Sync] Suprimido automáticamente por ${reasonText}${suppressedInfo.date ? ` el ${suppressedInfo.date}` : ""}.`;
+
+        if (!c.unsubscribed || !c.tags?.includes(reasonTag)) {
           saveLocalContact({
             ...c,
             unsubscribed: true,
-            tags: Array.from(new Set([...(c.tags || []), "bounced"])),
+            tags: newTags,
+            notes: c.notes ? `${c.notes}\n${noteDetail}` : noteDetail,
           });
           syncedCount++;
         }
       }
     });
 
+    // Guardar direcciones suprimidas que aún no existen en contactos locales para proteger envíos futuros
+    suppressedMap.forEach(({ reason, date }, email) => {
+      if (!existingEmails.has(email)) {
+        const isComplaint = reason.toUpperCase() === "COMPLAINT";
+        const reasonTag = isComplaint ? "complaint" : "bounced";
+        const reasonText = isComplaint ? "Reporte de Abuso / Queja" : "Rebote (Bounce)";
+
+        saveLocalContact({
+          email,
+          firstName: "Contacto",
+          lastName: "Suprimido (AWS)",
+          tags: ["desuscrito", reasonTag, "AWS SES"],
+          unsubscribed: true,
+          source: "AWS SES Suppression Sync",
+          notes: `[AWS SES Sync] Registrado automáticamente por ${reasonText}${date ? ` el ${date}` : ""}.`,
+        });
+        syncedCount++;
+      }
+    });
+
     return {
       syncedCount,
-      totalSuppressed: suppressedEmails.size,
+      totalSuppressed: suppressedMap.size,
+      complaintsCount,
+      bouncesCount,
     };
   } catch (error) {
     console.error("[AWS SES SUPPRESSION SYNC ERROR]:", error);
-    return { syncedCount: 0, totalSuppressed: 0 };
+    return { syncedCount: 0, totalSuppressed: 0, complaintsCount: 0, bouncesCount: 0 };
   }
 }
+
