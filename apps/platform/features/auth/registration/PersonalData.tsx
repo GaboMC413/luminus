@@ -310,7 +310,7 @@ export function PersonalData({
             disabled={uploading}
             className="mb-2"
           >
-            {uploading ? 'Cargando...' : 'Subir Foto (Opcional)'}
+            {uploading ? 'Cargando...' : 'Subir Foto'}
           </Button>
         </div>
       </div>
