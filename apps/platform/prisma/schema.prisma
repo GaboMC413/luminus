@@ -559,23 +559,25 @@ model SentEmailLog {
 }
 
 model Event {
-  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  youtubeId   String?            @unique @map("youtube_id") @db.VarChar
-  slug        String?            @unique @db.VarChar
-  title       String             @db.VarChar
-  description String             @db.Text
-  date        DateTime?          @db.Timestamptz
-  timeText    String?            @map("time_text") @db.VarChar
-  location    String?            @db.VarChar
-  speakerName String?            @map("speaker_name") @db.VarChar
-  speakerBio  String?            @map("speaker_bio") @db.Text
-  category    String?            @db.VarChar
-  coverUrl    String?            @map("cover_url") @db.VarChar
-  link        String?            @db.VarChar
-  isUpcoming  Boolean            @default(true) @map("is_upcoming")
-  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  inscriptions EventInscription[]
+  id                     String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  youtubeId              String?            @unique @map("youtube_id") @db.VarChar
+  slug                   String?            @unique @db.VarChar
+  title                  String             @db.VarChar
+  description            String             @db.Text
+  date                   DateTime?          @db.Timestamptz
+  timeText               String?            @map("time_text") @db.VarChar
+  location               String?            @db.VarChar
+  speakerName            String?            @map("speaker_name") @db.VarChar
+  speakerBio             String?            @map("speaker_bio") @db.Text
+  category               String?            @db.VarChar
+  coverUrl               String?            @map("cover_url") @db.VarChar
+  link                   String?            @db.VarChar
+  isUpcoming             Boolean            @default(true) @map("is_upcoming")
+  liveNotificationSent   Boolean            @default(false) @map("live_notification_sent")
+  liveNotificationSentAt DateTime?          @map("live_notification_sent_at") @db.Timestamptz
+  createdAt              DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt              DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  inscriptions           EventInscription[]
 
   @@map("events")
 }
@@ -598,13 +600,15 @@ model EventGuest {
 }
 
 model EventInscription {
-  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  eventId   String     @map("event_id") @db.Uuid
-  guestId   String     @map("guest_id") @db.Uuid
-  attended  Boolean    @default(false)
-  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz
-  event     Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  guest     EventGuest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  id                 String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId            String     @map("event_id") @db.Uuid
+  guestId            String     @map("guest_id") @db.Uuid
+  attended           Boolean    @default(false)
+  notifiedLiveAt     DateTime?  @map("notified_live_at") @db.Timestamptz
+  notifiedLiveStatus String?    @default("pending") @map("notified_live_status") @db.VarChar
+  createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  event              Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest              EventGuest @relation(fields: [guestId], references: [id], onDelete: Cascade)
 
   @@unique([eventId, guestId])
   @@index([eventId])
