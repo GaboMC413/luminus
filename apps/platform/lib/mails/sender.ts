@@ -699,6 +699,266 @@ export async function sendEventRegistrationEmail(
   }
 }
 
+export async function sendEventLiveNotificationEmail(
+  email: string,
+  options: import("./inscription").EventInscriptionEmailOptions
+) {
+  const startTime = new Date().toISOString();
+  const rawFrom = process.env.EVENT_FROM_EMAIL || "eventos@luminuslatam.com";
+  const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM Eventos");
+  const { renderEventLiveEmailHtml } = await import("./inscription");
+  const htmlBody = renderEventLiveEmailHtml(options);
+  let youtubeLink = "https://www.youtube.com/@luminus_latam";
+  if (options.youtubeUrl && options.youtubeUrl.trim()) {
+    const rawYt = options.youtubeUrl.trim();
+    youtubeLink = (rawYt.startsWith("http://") || rawYt.startsWith("https://")) ? rawYt : `https://www.youtube.com/watch?v=${rawYt}`;
+  }
+  const subject = `[LUMINUS] ¡Ya está online!: ${options.eventTitle || "Evento de Bienestar"}`;
+  const textBody = `Hola ${options.firstName || "Usuario"},\n\nEl evento "${options.eventTitle || "Evento LUMINUS"}" ya está online y disponible para ver.\n\nVer Evento Ahora: ${youtubeLink}\n\nEquipo de LUMINUS Eventos.`;
+  const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
+  const configurationSet = process.env.SES_CONFIGURATION_EVENTOS || "luminus-eventos";
+
+  writeLocalEmailPreview(email, subject, htmlBody);
+
+  const baseMetadata: any = {
+    sender: fromEmail,
+    region,
+    configurationSet,
+    recipients: [email],
+    timeline: [
+      { step: "Solicitud de notificación evento en vivo recibida", timestamp: startTime, success: true },
+      { step: "Plantilla de evento en vivo renderizada", timestamp: new Date().toISOString(), details: `Evento: ${options.eventTitle || "S/T"}`, success: true },
+    ],
+  };
+
+  if (!isSesConfigured()) {
+    const endTime = new Date().toISOString();
+    console.log(`[SES DISABLED] Event live notification email for ${email} generated locally.`);
+    baseMetadata.timeline.push({
+      step: "Entorno Local (SES Desactivado)",
+      timestamp: endTime,
+      details: "Correo grabado en preview local",
+      success: true,
+    });
+    baseMetadata.rawLog = buildRawLog({
+      action: "Notificación Evento en Vivo",
+      recipient: email,
+      sender: fromEmail,
+      subject,
+      region,
+      configurationSet,
+      status: "LOCAL_PREVIEW",
+      startTime,
+      endTime,
+    });
+    await logSentEmail(email, subject, htmlBody, {
+      status: "LOCAL_PREVIEW",
+      metadata: baseMetadata,
+    });
+    return { success: true, mode: "local-preview" };
+  }
+
+  const sesClient = getSesV2Client();
+
+  const command = new SendEmailCommand({
+    FromEmailAddress: fromEmail,
+    Destination: { ToAddresses: [email] },
+    Content: {
+      Simple: {
+        Subject: { Data: subject, Charset: "UTF-8" },
+        Body: {
+          Html: { Data: htmlBody, Charset: "UTF-8" },
+          Text: { Data: textBody, Charset: "UTF-8" },
+        },
+      },
+    },
+    ...(configurationSet && { ConfigurationSetName: configurationSet }),
+  });
+
+  try {
+    baseMetadata.timeline.push({
+      step: "Comando AWS SES despachado",
+      timestamp: new Date().toISOString(),
+      details: `Region: ${region}${configurationSet ? `, ConfigSet: ${configurationSet}` : ""}`,
+      success: true,
+    });
+    const response = await sesClient.send(command);
+    const endTime = new Date().toISOString();
+    console.log(`[SES SUCCESS] Event live notification sent to ${email} from ${fromEmail}. MessageId: ${response.MessageId}`);
+
+    baseMetadata.timeline.push({
+      step: "Respuesta de AWS SES recibida exitosamente",
+      timestamp: endTime,
+      details: `MessageId: ${response.MessageId}`,
+      success: true,
+    });
+    baseMetadata.rawLog = buildRawLog({
+      action: "Notificación Evento en Vivo",
+      recipient: email,
+      sender: fromEmail,
+      subject,
+      region,
+      configurationSet,
+      status: "SUCCESS",
+      messageId: response.MessageId || null,
+      startTime,
+      endTime,
+    });
+
+    await logSentEmail(email, subject, htmlBody, {
+      status: "SUCCESS",
+      messageId: response.MessageId || null,
+      metadata: baseMetadata,
+    });
+    return { success: true, messageId: response.MessageId };
+  } catch (error: any) {
+    const endTime = new Date().toISOString();
+    const errorMsg = error?.message || String(error);
+    console.error(`[SES ERROR] Failed to send event live notification to ${email}:`, error);
+
+    baseMetadata.timeline.push({
+      step: "Fallo al despachar en AWS SES",
+      timestamp: endTime,
+      details: `${error?.name || "SESError"}: ${errorMsg}`,
+      success: false,
+    });
+    baseMetadata.rawLog = buildRawLog({
+      action: "Notificación Evento en Vivo",
+      recipient: email,
+      sender: fromEmail,
+      subject,
+      region,
+      configurationSet,
+      status: "FAILED",
+      errorDetails: `${error?.name || "SESError"}: ${errorMsg}`,
+      startTime,
+      endTime,
+    });
+
+    await logSentEmail(email, subject, htmlBody, {
+      status: "FAILED",
+      errorDetails: `${error?.name || "SESError"}: ${errorMsg}`,
+      metadata: baseMetadata,
+    });
+    throw error;
+  }
+}
+
+export async function sendBatchEventLiveNotifications(
+  eventId: string,
+  batchSize: number = 10
+) {
+  const { prisma } = await import("@/lib/db");
+
+  const event = await prisma.event.findUnique({
+    where: { id: eventId },
+  });
+
+  if (!event) {
+    throw new Error("Evento no encontrado");
+  }
+
+  const pendingInscriptions = await prisma.eventInscription.findMany({
+    where: {
+      eventId: eventId,
+      notifiedLiveAt: null,
+    },
+    include: {
+      guest: true,
+    },
+  });
+
+  if (pendingInscriptions.length === 0) {
+    if (!event.liveNotificationSent) {
+      await prisma.event.update({
+        where: { id: eventId },
+        data: {
+          liveNotificationSent: true,
+          liveNotificationSentAt: new Date(),
+        },
+      });
+    }
+    return {
+      success: true,
+      totalNotified: 0,
+      totalPending: 0,
+      message: "No hay inscriptos pendientes de notificar.",
+    };
+  }
+
+  let finalYoutubeUrl: string | undefined = undefined;
+  if (event.youtubeId) {
+    finalYoutubeUrl = `https://www.youtube.com/watch?v=${event.youtubeId}`;
+  } else if (event.link) {
+    finalYoutubeUrl = event.link;
+  }
+
+  let sentCount = 0;
+  let failedCount = 0;
+
+  for (let i = 0; i < pendingInscriptions.length; i += batchSize) {
+    const batch = pendingInscriptions.slice(i, i + batchSize);
+
+    await Promise.all(
+      batch.map(async (inscription) => {
+        const guestEmail = inscription.guest?.email;
+        if (!guestEmail) return;
+
+        try {
+          await sendEventLiveNotificationEmail(guestEmail, {
+            firstName: inscription.guest?.firstName || "Invitado",
+            eventTitle: event.title,
+            eventCoverUrl: event.coverUrl,
+            eventDate: event.date ? event.date.toISOString() : null,
+            timeText: event.timeText,
+            speakerName: event.speakerName,
+            youtubeUrl: finalYoutubeUrl,
+            eventSlug: event.slug,
+          });
+
+          await prisma.eventInscription.update({
+            where: { id: inscription.id },
+            data: {
+              notifiedLiveAt: new Date(),
+              notifiedLiveStatus: "sent",
+            },
+          });
+          sentCount++;
+        } catch (err: any) {
+          console.error(`Error enviando notificación a ${guestEmail}:`, err);
+          await prisma.eventInscription.update({
+            where: { id: inscription.id },
+            data: {
+              notifiedLiveStatus: "failed",
+            },
+          });
+          failedCount++;
+        }
+      })
+    );
+
+    if (i + batchSize < pendingInscriptions.length) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+  }
+
+  await prisma.event.update({
+    where: { id: eventId },
+    data: {
+      liveNotificationSent: true,
+      liveNotificationSentAt: new Date(),
+    },
+  });
+
+  return {
+    success: true,
+    totalNotified: sentCount,
+    totalFailed: failedCount,
+    totalProcessed: pendingInscriptions.length,
+  };
+}
+
+
 export interface ContactNotificationPayload {
   nombre: string;
   apellido: string;

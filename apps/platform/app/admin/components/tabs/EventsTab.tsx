@@ -185,6 +185,42 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
   const [deletingInscriptionId, setDeletingInscriptionId] = useState<string | null>(null);
   const [confirmingInscriptionId, setConfirmingInscriptionId] = useState<string | null>(null);
 
+  const [isNotifyingLive, setIsNotifyingLive] = useState<boolean>(false);
+  const [showNotifyLiveConfirmModal, setShowNotifyLiveConfirmModal] = useState<boolean>(false);
+  const [notifySuccessMessage, setNotifySuccessMessage] = useState<string | null>(null);
+
+  const handleNotifyLive = async () => {
+    if (!selectedEvent) return;
+    setIsNotifyingLive(true);
+    setNotifySuccessMessage(null);
+    try {
+      const res = await fetch(`/api/admin/events/${selectedEvent.id}/notify-live`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setEventsList((prev) =>
+          prev.map((ev) =>
+            ev.id === selectedEvent.id
+              ? { ...ev, liveNotificationSent: true, liveNotificationSentAt: new Date().toISOString() }
+              : ev
+          )
+        );
+        setShowNotifyLiveConfirmModal(false);
+        setNotifySuccessMessage(
+          `Notificación enviada con éxito a ${data.totalNotified || 0} inscriptos.`
+        );
+      } else {
+        alert(data.error || "Error al enviar las notificaciones.");
+      }
+    } catch (err) {
+      console.error("Error notifying live event:", err);
+      alert("Error de red al notificar evento.");
+    } finally {
+      setIsNotifyingLive(false);
+    }
+  };
+
   useEffect(() => {
     setInscriptionsList(inscriptions);
   }, [inscriptions]);
@@ -709,6 +745,42 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                         )}
                       </div>
                     </div>
+
+                    {/* Live Notification Card */}
+                    <div className="bg-slate-900 text-white rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                            Notificación de Evento Online
+                          </h4>
+                          {selectedEvent.liveNotificationSent && (
+                            <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
+                              Notificado
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[12.5px] text-slate-300 mt-1 leading-snug">
+                          {selectedEvent.liveNotificationSent
+                            ? `Se envió el aviso a los inscriptos (${selectedEvent.liveNotificationSentAt ? parseCalendarDate(selectedEvent.liveNotificationSentAt)?.toLocaleDateString("es-ES") : "anteriormente"}).`
+                            : `Envía un correo electrónico masivo a los ${selectedEventInscriptions.length} inscriptos avisando que el evento está online.`}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowNotifyLiveConfirmModal(true)}
+                        disabled={isNotifyingLive || selectedEventInscriptions.length === 0}
+                        className="px-4 py-2.5 bg-white hover:bg-slate-100 disabled:opacity-50 text-slate-900 font-bold rounded-xl text-xs transition-colors shrink-0 cursor-pointer whitespace-nowrap"
+                      >
+                        Notificar Evento Online
+                      </button>
+                    </div>
+
+                    {notifySuccessMessage && (
+                      <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold p-3.5 rounded-xl flex items-center gap-2">
+                        <span className="material-symbols-rounded text-[18px]">check_circle</span>
+                        <span>{notifySuccessMessage}</span>
+                      </div>
+                    )}
                   </>
                 )}
 
@@ -764,6 +836,11 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                                     <div className="font-mono text-[11px] text-slate-500 font-normal">
                                       {ins.guestEmail}
                                     </div>
+                                    {ins.notifiedLiveAt && (
+                                      <div className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 mt-0.5">
+                                        <span>Notificado en vivo</span>
+                                      </div>
+                                    )}
                                   </td>
                                   <td className="py-2.5 px-3 text-slate-700 text-xs">
                                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -1159,6 +1236,47 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
               </div>
             );
           })()}
+        </Modal>
+      )}
+
+      {/* Confirmation Modal for Live Notification */}
+      {showNotifyLiveConfirmModal && selectedEvent && (
+        <Modal
+          isOpen={showNotifyLiveConfirmModal}
+          onClose={() => setShowNotifyLiveConfirmModal(false)}
+          title="Notificar Evento Online"
+          maxWidth="max-w-md"
+        >
+          <div className="flex flex-col gap-4 p-1 text-sm">
+            <p className="text-slate-600 leading-relaxed">
+              ¿Estás seguro de que deseas enviar el correo de aviso de evento en vivo a los{" "}
+              <strong className="text-slate-900 font-bold">{selectedEventInscriptions.length} inscriptos</strong> del evento{" "}
+              <strong className="text-slate-900 font-bold">"{selectedEvent.title}"</strong>?
+            </p>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-600 space-y-1.5">
+              <p>• Los mails se enviarán en lotes de 10 destinatarios desde <strong>eventos@luminuslatam.com</strong>.</p>
+              <p>• Quienes ya hayan recibido la notificación no recibirán un correo duplicado.</p>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+              <Button
+                variant="outline"
+                onClick={() => setShowNotifyLiveConfirmModal(false)}
+                disabled={isNotifyingLive}
+                className="h-10 text-xs px-4"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleNotifyLive}
+                disabled={isNotifyingLive}
+                className="h-10 text-xs px-5 bg-slate-900 hover:bg-slate-800 text-white font-bold"
+              >
+                {isNotifyingLive ? "Enviando..." : "Confirmar y Enviar Mails"}
+              </Button>
+            </div>
+          </div>
         </Modal>
       )}
     </div>
