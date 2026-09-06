@@ -18,17 +18,16 @@ if (fs.existsSync(envPath)) {
   });
 }
 
-import { sendEventLiveNotificationEmail } from "../lib/mails/sender";
+import { sendEventRegistrationEmail } from "../lib/mails/sender";
 
-async function testLiveEmail() {
-  console.log("🚀 Enviando prueba de notificación de evento en vivo vía AWS SES...");
+async function testRegistrationEmail() {
+  console.log("🚀 Enviando prueba de correo de confirmación de inscripción vía AWS SES...");
   console.log("Remitente (From):", process.env.EVENT_FROM_EMAIL || "eventos@luminuslatam.com");
 
   const recipients = ["gabrielmedcap@hotmail.com", "gabrielmedcap@gmail.com"];
 
   const { prisma } = await import("../lib/db");
   
-  // Intentar buscar evento en la base de datos de Viviana o el último evento creado
   let dbEvent = await prisma.event.findFirst({
     where: {
       OR: [
@@ -63,7 +62,7 @@ async function testLiveEmail() {
   for (const email of recipients) {
     console.log(`\n📧 Enviando correo de prueba a: ${email}...`);
     try {
-      const result = await sendEventLiveNotificationEmail(email, {
+      const result = await sendEventRegistrationEmail(email, {
         firstName: "Gabriel",
         eventTitle,
         eventCoverUrl: coverUrl,
@@ -80,4 +79,4 @@ async function testLiveEmail() {
   }
 }
 
-testLiveEmail().then(() => process.exit(0));
+testRegistrationEmail().then(() => process.exit(0));

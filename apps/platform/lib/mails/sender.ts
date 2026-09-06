@@ -568,8 +568,8 @@ export async function sendEventRegistrationEmail(
     const rawYt = options.youtubeUrl.trim();
     youtubeLink = (rawYt.startsWith("http://") || rawYt.startsWith("https://")) ? rawYt : `https://www.youtube.com/watch?v=${rawYt}`;
   }
-  const subject = `[LUMINUS] Confirmación de inscripción: ${options.eventTitle || "Evento de Bienestar"}`;
-  const textBody = `Hola ${options.firstName || "Usuario"},\n\nTe has inscripto a la entrevista online "${options.eventTitle || "Evento LUMINUS"}".\n\nPodrás ver el estreno el ${options.eventDate || "Próximamente"} a las ${options.timeText || "18:00 hs (GMT-3)"}.\n\nVer en YouTube: ${youtubeLink}\n\nEquipo de LUMINUS Eventos.`;
+  const subject = `Confirmación de inscripción: ${options.eventTitle || "Evento de Bienestar"}`;
+  const textBody = `Hola ${options.firstName || "Usuario"},\n\nTe has inscripto a la entrevista online "${options.eventTitle || "Evento LUMINUS"}".\n\nPodrás ver el estreno el ${options.eventDate || "Próximamente"}.\n\nVer en YouTube: ${youtubeLink}\n\nEquipo de LUMINUS Eventos.`;
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
   const configurationSet = process.env.SES_CONFIGURATION_EVENTOS || "luminus-eventos";
 
@@ -713,7 +713,9 @@ export async function sendEventLiveNotificationEmail(
     const rawYt = options.youtubeUrl.trim();
     youtubeLink = (rawYt.startsWith("http://") || rawYt.startsWith("https://")) ? rawYt : `https://www.youtube.com/watch?v=${rawYt}`;
   }
-  const subject = `[LUMINUS] ¡Ya está online!: ${options.eventTitle || "Evento de Bienestar"}`;
+  const subject = options.speakerName
+    ? `Ya puedes ver la entrevista con ${options.speakerName}`
+    : `Ya puedes ver la entrevista`;
   const textBody = `Hola ${options.firstName || "Usuario"},\n\nEl evento "${options.eventTitle || "Evento LUMINUS"}" ya está online y disponible para ver.\n\nVer Evento Ahora: ${youtubeLink}\n\nEquipo de LUMINUS Eventos.`;
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
   const configurationSet = process.env.SES_CONFIGURATION_EVENTOS || "luminus-eventos";
