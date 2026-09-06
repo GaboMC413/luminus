@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
+import { IntroSessionScheduler } from "./IntroSessionScheduler";
 
 interface SpecialistProfileViewProps {
   profile: any;
@@ -37,6 +38,7 @@ export function SpecialistProfileView({
   onShareProfile,
 }: SpecialistProfileViewProps) {
   const [activeTab, setActiveTab] = useState("sobre-mi");
+  const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
   const specialist = profile.specialistProfile;
 
   const fullName = `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
@@ -44,15 +46,32 @@ export function SpecialistProfileView({
 
   const hasCourses = specialist?.courses?.length > 0;
   const hasSpaces = specialist?.spaces?.length > 0;
-
-  const handleBookSession = () => {
-    if (specialist?.websiteUrl) {
-      window.open(specialist.websiteUrl, "_blank");
-    }
-  };
+  const availability = (specialist?.spaces || []).flatMap((space: any) => space.availability || []);
+  const isGabrielLocalPreview = profile.id === "7247f3d1-d084-438b-b511-a26096ba1c28";
+  const localPreviewAvailability = isGabrielLocalPreview
+    ? [{ dayOfWeek: 4, startTime: "17:00", endTime: "23:00", isActive: true }]
+    : [0, 1, 2, 3, 4].map((dayOfWeek) => ({
+        dayOfWeek,
+        startTime: "09:00",
+        endTime: "18:00",
+        isActive: true,
+      }));
+  const effectiveAvailability = availability.length > 0
+    ? availability
+    : process.env.NODE_ENV !== "production"
+      ? localPreviewAvailability
+      : [];
+  const hasAvailability = effectiveAvailability.length > 0;
 
   return (
     <div className="w-full h-full bg-transparent pt-4 lg:pt-6 pb-24">
+      {isSchedulerOpen && (
+        <IntroSessionScheduler
+          specialistName={profile.first_name || "el especialista"}
+          availability={effectiveAvailability}
+          onClose={() => setIsSchedulerOpen(false)}
+        />
+      )}
       {/* Main Specialist Card */}
       <div className="bg-white rounded-3xl border border-slate-200 p-6 flex flex-col gap-6 shadow-sm">
         {/* Top Section: Avatar & Action Buttons */}
@@ -243,9 +262,9 @@ export function SpecialistProfileView({
             <span className="material-symbols-outlined text-[20px]">mail</span>
             Contactar a {profile.first_name}
           </Button>
-          {specialist?.websiteUrl && (
+          {hasAvailability && (
             <Button
-              onClick={handleBookSession}
+              onClick={() => setIsSchedulerOpen(true)}
               variant="outline"
               className="w-full h-12 flex items-center justify-center gap-2 font-bold rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50"
             >

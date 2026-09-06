@@ -1,195 +1,221 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
+import { PageLoader } from "@/components/ui/PageLoader";
 
-interface AppStatusData {
+type Specialist = {
+  id: string;
+  name: string;
+  avatar: string;
+  city: string;
+  country: string;
+  specialty: string;
+};
+
+type ApplicationStatus = {
   hasApplication: boolean;
   status: string | null;
-  createdAt?: string | null;
-  email?: string | null;
+};
+
+function SpecialistCard({ specialist }: { specialist: Specialist }) {
+  const router = useRouter();
+  const [imageError, setImageError] = useState(false);
+  const location = [specialist.city, specialist.country].filter(Boolean).join(", ");
+
+  return (
+    <article
+      className="group flex min-h-[220px] cursor-pointer flex-col items-center rounded-2xl border border-slate-200 bg-white px-3 py-4 text-center transition-colors hover:border-slate-400"
+      onClick={() => {
+        router.push(`/comunidad/public-profile?id=${encodeURIComponent(specialist.id)}`);
+      }}
+    >
+      <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 sm:h-20 sm:w-20">
+        {specialist.avatar && !imageError ? (
+          <img
+            src={specialist.avatar}
+            alt={specialist.name}
+            className="h-full w-full object-cover"
+            onError={() => setImageError(true)}
+          />
+        ) : (
+          <span className="material-symbols-outlined text-[42px] text-slate-300">person</span>
+        )}
+      </div>
+
+      <h2 className="mt-3 line-clamp-1 text-sm font-semibold text-slate-950 sm:text-base">
+        {specialist.name}
+      </h2>
+      <p className="mt-1 line-clamp-1 min-h-5 text-xs text-slate-500 sm:text-sm">
+        {location || "Ubicación no especificada"}
+      </p>
+      <p className="mt-3 line-clamp-2 font-jakarta text-sm font-bold text-fuchsia-500">
+        {specialist.specialty}
+      </p>
+      <span className="mt-auto pt-3 text-xs font-semibold text-slate-500 transition-colors group-hover:text-slate-900">
+        Ver especialista
+      </span>
+    </article>
+  );
 }
 
 export default function EspecialistasPage() {
   const router = useRouter();
-  const [appStatus, setAppStatus] = useState<AppStatusData | null>(null);
-  const [loadingStatus, setLoadingStatus] = useState(true);
+  const [specialists, setSpecialists] = useState<Specialist[]>([]);
+  const [application, setApplication] = useState<ApplicationStatus | null>(null);
+  const [query, setQuery] = useState("");
+  const [country, setCountry] = useState("");
+  const [specialty, setSpecialty] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    async function checkStatus() {
-      try {
-        const res = await fetch("/api/especialistas/application-status");
-        if (res.ok) {
-          const data = await res.json();
-          setAppStatus(data);
-        }
-      } catch (err) {
-        console.error("Error fetching application status:", err);
-      } finally {
-        setLoadingStatus(false);
-      }
-    }
-    checkStatus();
+    Promise.all([
+      fetch("/api/especialistas", { cache: "no-store" }),
+      fetch("/api/especialistas/application-status", { cache: "no-store" }),
+    ])
+      .then(async ([directoryResponse, statusResponse]) => {
+        if (!directoryResponse.ok) throw new Error("No pudimos cargar los especialistas.");
+        const directory = await directoryResponse.json();
+        setSpecialists(directory.specialists || []);
+        if (statusResponse.ok) setApplication(await statusResponse.json());
+      })
+      .catch((err) => setError(err.message || "No pudimos cargar los especialistas."))
+      .finally(() => setLoading(false));
   }, []);
 
-  const isUnderReview = appStatus?.status === "pending_review";
+  const countries = useMemo(
+    () => Array.from(new Set(specialists.map((item) => item.country).filter(Boolean))).sort(),
+    [specialists],
+  );
+  const specialties = useMemo(
+    () => Array.from(new Set(specialists.map((item) => item.specialty).filter(Boolean))).sort(),
+    [specialists],
+  );
+
+  const visibleSpecialists = useMemo(() => {
+    const normalizedQuery = query.trim().toLocaleLowerCase("es");
+    return specialists.filter((item) => {
+      const matchesQuery = !normalizedQuery || [item.name, item.city, item.country, item.specialty]
+        .some((value) => value.toLocaleLowerCase("es").includes(normalizedQuery));
+      return matchesQuery && (!country || item.country === country) && (!specialty || item.specialty === specialty);
+    });
+  }, [specialists, query, country, specialty]);
+
+  const hasFilters = Boolean(country || specialty);
+  const isPending = application?.status === "pending_review";
+
+  if (loading) return <PageLoader className="min-h-[70vh]" />;
 
   return (
-    <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-6 md:py-6 flex flex-col gap-6 font-sans">
-      {/* Upcoming Section: Compact, horizontal alert-style banner */}
-      <div className="w-full bg-white border border-slate-200/80 rounded-3xl p-4 md:p-6 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 md:gap-6 shadow-none">
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 w-full md:w-auto">
-          {/* Icon container */}
-          <div className="w-12 h-12 md:w-20 md:h-20 bg-slate-50 border border-slate-200 rounded-xl md:rounded-2xl flex items-center justify-center shrink-0">
-            <div
-              style={{
-                maskImage: "url('/Icons/NavBar/expert active.svg')",
-                WebkitMaskImage: "url('/Icons/NavBar/expert active.svg')",
-                maskSize: "contain",
-                WebkitMaskSize: "contain",
-                maskRepeat: "no-repeat",
-                WebkitMaskRepeat: "no-repeat",
-                maskPosition: "center",
-                WebkitMaskPosition: "center",
-              }}
-              className="w-6 h-6 md:w-10 md:h-10 bg-black"
-            />
-          </div>
-          <div className="flex flex-col text-left gap-0.5 md:gap-1">
-            <span className="text-[9px] md:text-[11px] font-semibold tracking-widest text-slate-400 font-jakarta uppercase">
-              PRÓXIMAMENTE
-            </span>
-            <h4 className="text-[15px] md:text-[16px] font-bold text-slate-800 font-jakarta">
-              Especialistas LUMINUS
-            </h4>
-            <p className="text-slate-500 text-[12.5px] md:text-[13.5px] leading-relaxed max-w-[650px]">
-              Explora y conecta con profesionales del bienestar, agenda sesiones y realiza un seguimiento personalizado para tu proceso.
-            </p>
-          </div>
-        </div>
+    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-3 pb-8 pt-4 font-sans sm:px-6 md:gap-6 md:py-6">
+      {isPending && (
+        <section className="order-[-3] rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+          <strong>Tu aplicación está en revisión.</strong>{" "}
+          <button className="underline" onClick={() => router.push("/especialistas/onboarding")}>Ver estado</button>
+        </section>
+      )}
 
-        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto shrink-0">
-          <Button
-            variant="secondary"
-            onClick={() => router.push("/comunidad")}
-            className="w-full md:!w-auto px-5 h-10 md:h-11 text-sm font-semibold shrink-0 flex items-center justify-center gap-1.5 group cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 border-none"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              className="text-slate-500 group-hover:text-slate-800 transition-colors"
-            >
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            <span className="text-slate-600 group-hover:text-slate-800 transition-colors">Volver a la Comunidad</span>
-          </Button>
-        </div>
+      <div className="order-[-2] relative flex items-center gap-2">
+        <span className="material-symbols-outlined pointer-events-none absolute left-4 text-[21px] text-slate-500">search</span>
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Buscar especialistas"
+          className="h-12 min-w-0 flex-1 rounded-xl border border-slate-300 bg-white pl-12 pr-4 text-sm outline-none transition focus:border-slate-500"
+        />
+        <button
+          type="button"
+          aria-label="Mostrar filtros"
+          onClick={() => setShowFilters((current) => !current)}
+          className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border bg-white transition ${showFilters || hasFilters ? "border-slate-700 text-slate-950" : "border-slate-300 text-slate-600"}`}
+        >
+          <span className="material-symbols-outlined">tune</span>
+          {hasFilters && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-fuchsia-500" />}
+        </button>
       </div>
 
-      {/* Main Banner: Render full-width Status Card if application is under review, otherwise render standard promo CTA with image */}
-      {loadingStatus ? (
-        <div className="w-full bg-white border border-slate-200 rounded-2xl p-8 flex items-center justify-center text-slate-400">
-          <span className="animate-spin material-symbols-rounded text-[24px]">
-            progress_activity
-          </span>
-        </div>
-      ) : isUnderReview ? (
-        /* Full-width Under Review Status Card (No image) */
-        <div className="w-full bg-gradient-to-br from-wellness-sage-100/10 via-white to-wellness-clay-100/20 border border-slate-200 hover:border-wellness-sage-300/80 rounded-2xl p-6 md:p-8 flex flex-col gap-5 relative overflow-hidden transition-all duration-500">
-          {/* Decorative background glow */}
-          <div className="absolute right-0 top-0 w-64 h-64 bg-wellness-sage-200/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute left-0 bottom-0 w-64 h-64 bg-wellness-clay-200/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="flex flex-col gap-2 relative z-10">
-            <span className="text-slate-500 text-[12px] font-bold font-jakarta tracking-wider uppercase">
-              Tu aplicación está en revisión
-            </span>
-            <h2 className="text-2xl md:text-3xl font-bold font-jakarta text-slate-900 tracking-tight leading-tight">
-              Estamos revisando tu perfil profesional
-            </h2>
-            <p className="text-slate-600 text-[14px] leading-relaxed max-w-3xl font-normal mt-1">
-              Tu aplicación como especialista fue enviada correctamente y actualmente está siendo evaluada por nuestro Consejo de Expertos. Te notificaremos por correo electrónico cuando haya una actualización.
-            </p>
-          </div>
-
-          {/* Status Badge & Actions */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pt-2 relative z-10">
-            <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-[13px] font-bold font-jakarta select-none">
-              <span className="material-symbols-rounded text-[18px]">schedule</span>
-              <span>Aplicación en revisión</span>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => router.push("/especialistas/onboarding")}
-              className="text-[13px] font-bold font-jakarta text-slate-700 hover:text-black transition-colors underline decoration-1 underline-offset-4 bg-transparent border-none cursor-pointer"
-            >
-              Ver estado de mi aplicación
+      {showFilters && (
+        <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:grid-cols-2">
+          <label className="flex flex-col gap-1.5 text-xs font-semibold text-slate-600">
+            País
+            <select value={country} onChange={(event) => setCountry(event.target.value)} className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-800">
+              <option value="">Todos los países</option>
+              {countries.map((item) => <option key={item}>{item}</option>)}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1.5 text-xs font-semibold text-slate-600">
+            Especialidad
+            <select value={specialty} onChange={(event) => setSpecialty(event.target.value)} className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-800">
+              <option value="">Todas las especialidades</option>
+              {specialties.map((item) => <option key={item}>{item}</option>)}
+            </select>
+          </label>
+          {hasFilters && (
+            <button type="button" onClick={() => { setCountry(""); setSpecialty(""); }} className="justify-self-start text-xs font-semibold text-slate-600 underline sm:col-span-2">
+              Limpiar filtros
             </button>
-          </div>
-        </div>
+          )}
+        </section>
+      )}
+
+      {error ? (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-700">{error}</div>
+      ) : visibleSpecialists.length ? (
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-5 lg:grid-cols-4">
+          {visibleSpecialists.map((specialist) => <SpecialistCard key={specialist.id} specialist={specialist} />)}
+        </section>
       ) : (
-        /* Standard Promo CTA with Image */
-        <div className="w-full bg-gradient-to-br from-wellness-sage-100/10 via-white to-wellness-clay-100/20 border border-slate-200 hover:border-wellness-sage-300/80 rounded-2xl p-6 flex flex-col md:flex-row gap-8 relative overflow-hidden items-center transition-all duration-500">
-          <div className="absolute right-0 top-0 w-64 h-64 bg-wellness-sage-200/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute left-0 bottom-0 w-64 h-64 bg-wellness-clay-200/10 rounded-full blur-3xl pointer-events-none" />
+        <section className="rounded-2xl border border-slate-200 bg-white p-10 text-center">
+          <span className="material-symbols-outlined text-4xl text-slate-300">person_search</span>
+          <h2 className="mt-2 font-semibold text-slate-900">No encontramos especialistas</h2>
+          <p className="mt-1 text-sm text-slate-500">Prueba con otra búsqueda o limpia los filtros.</p>
+        </section>
+      )}
 
-          {/* Left Column: Image */}
-          <div className="w-full md:w-[420px] lg:w-[480px] shrink-0 relative z-10">
-            <img
-              src="/specialsitsLUMINUS.png"
-              alt="Especialistas LUMINUS"
-              className="w-full h-auto object-cover rounded-2xl border border-slate-200"
-            />
-          </div>
+      {!application?.hasApplication && (
+        <section className="relative flex w-full flex-col gap-6 overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-wellness-sage-100/10 via-white to-wellness-clay-100/20 p-5 md:p-8">
+          <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-wellness-sage-200/10 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 left-0 h-64 w-64 rounded-full bg-wellness-clay-200/10 blur-3xl" />
 
-          {/* Right Column: Content */}
-          <div className="flex-1 w-full flex flex-col gap-6 relative z-10">
-            <div className="flex flex-col gap-4">
-              <span className="text-slate-500 text-[14px] font-medium">
-                ¿Eres un especialista en bienestar?
-              </span>
-              <h2 className="text-2xl md:text-3xl font-bold font-jakarta text-slate-900 tracking-tight leading-tight">
+          <div className="relative z-10 flex w-full flex-1 flex-col gap-5">
+            <div className="flex flex-col gap-3">
+              <span className="text-sm font-medium text-slate-500">¿Eres un especialista en bienestar?</span>
+              <h2 className="font-jakarta text-2xl font-bold leading-tight tracking-tight text-slate-900 md:text-3xl">
                 Haz visible tu forma de acompañar
               </h2>
-              <p className="text-slate-600 text-[14px] leading-relaxed max-w-3xl font-normal">
+              <p className="max-w-3xl text-sm leading-relaxed text-slate-600">
                 LUMINUS reúne a personas que están explorando bienestar, cambio personal, salud integral y nuevas formas de vivir con más conciencia. Tu lugar como especialista no es solo aparecer en una lista, sino ayudar a que más personas encuentren orientación clara, humana y confiable.
               </p>
             </div>
 
-            {/* Small closing line */}
-            <div className="flex gap-3 items-stretch">
-              <div className="w-[2px] rounded-full luminus-gradient shrink-0" />
-              <p className="text-[13px] text-slate-500 font-medium font-jakarta italic">
-                "Un espacio para mostrar quién eres, cómo trabajas y qué puedes aportar."
+            <div className="flex items-stretch gap-3">
+              <div className="luminus-gradient w-[2px] shrink-0 rounded-full" />
+              <p className="font-jakarta text-[13px] font-medium italic text-slate-500">
+                “Un espacio para mostrar quién eres, cómo trabajas y qué puedes aportar.”
               </p>
             </div>
 
-            {/* Buttons Section */}
-            <div className="flex flex-col sm:flex-row items-center gap-6 pt-2">
-              <Button
-                variant="primary"
+            <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+              <button
+                type="button"
                 onClick={() => router.push("/especialistas/onboarding")}
-                className="w-full md:!w-auto px-6 font-semibold text-sm bg-black text-white hover:bg-zinc-900"
+                className="w-full rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-zinc-900 sm:w-auto"
               >
                 Aplicar como Especialista
-              </Button>
+              </button>
               <a
                 href="https://luminuslatam.com/especialistas"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[13px] font-semibold font-jakarta text-slate-500 hover:text-black transition-colors underline decoration-1 underline-offset-4"
+                className="font-jakarta text-[13px] font-semibold text-slate-500 underline underline-offset-4 transition-colors hover:text-black"
               >
                 Ver más acerca del programa
               </a>
             </div>
           </div>
-        </div>
+        </section>
       )}
     </div>
   );

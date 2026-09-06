@@ -48,6 +48,10 @@ export async function GET(request: Request) {
               include: {
                 category: true,
                 services: true,
+                availability: {
+                  where: { isActive: true },
+                  orderBy: { dayOfWeek: "asc" },
+                },
               },
             },
           },
