@@ -1,6 +1,30 @@
 [
   {
     "campaignId": "cmp_viviana_1788832131088",
+    "recipientEmail": "gabrielmedcap@hotmail.com",
+    "recipientName": "Usuario de Prueba",
+    "status": "SUCCESS",
+    "id": "f6e49692-d3ee-48de-ad81-5eb3226a2360",
+    "sentAt": "2026-09-08T03:13:44.260Z"
+  },
+  {
+    "campaignId": "cmp_viviana_1788832131088",
+    "recipientEmail": "gabrielmedcap@gmail.com",
+    "recipientName": "Usuario de Prueba",
+    "status": "SUCCESS",
+    "id": "707395fb-0ff8-416c-8b02-c1573f57cf2b",
+    "sentAt": "2026-09-08T03:13:41.801Z"
+  },
+  {
+    "campaignId": "cmp_test_preview",
+    "recipientEmail": "gabrielmedcap@gmail.com",
+    "recipientName": "Usuario de Prueba",
+    "status": "SUCCESS",
+    "id": "4deb9971-20d1-4015-9a90-555f4d468499",
+    "sentAt": "2026-09-08T03:06:53.963Z"
+  },
+  {
+    "campaignId": "cmp_viviana_1788832131088",
     "recipientEmail": "gabrielmedcap@gmail.com",
     "recipientName": "Usuario de Prueba",
     "status": "SUCCESS",

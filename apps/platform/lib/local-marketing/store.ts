@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { renderRelaunchNewsletterHtml } from "../mails/relaunchNewsletter";
+import { renderVivianaNewsletterHtml } from "../mails/vivianaNewsletter";
 
 export interface LocalContact {
   id: string;
@@ -268,7 +269,16 @@ export function bulkImportContacts(
 // ==========================================
 
 export function getLocalCampaigns(): LocalCampaign[] {
-  return readJsonFile<LocalCampaign[]>(CAMPAIGNS_FILE, []);
+  const campaigns = readJsonFile<LocalCampaign[]>(CAMPAIGNS_FILE, []);
+  return campaigns.map((c) => {
+    if (c.id === "cmp_viviana_1788832131088" && c.status === "DRAFT") {
+      return {
+        ...c,
+        htmlContent: renderVivianaNewsletterHtml(),
+      };
+    }
+    return c;
+  });
 }
 
 export function getLocalCampaignById(id: string): LocalCampaign | null {
@@ -355,7 +365,7 @@ export function addLocalSendLog(log: Omit<LocalSendLog, "id" | "sentAt">): Local
   const logs = getLocalSendLogs();
   const newLog: LocalSendLog = {
     ...log,
-    id: `log_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+    id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `log_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
     sentAt: new Date().toISOString(),
   };
   logs.unshift(newLog);

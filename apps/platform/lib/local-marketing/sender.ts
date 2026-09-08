@@ -1,5 +1,6 @@
 import { SendEmailCommand } from "@aws-sdk/client-sesv2";
 import { getSesV2Client } from "../mails/sesClient";
+import { prisma } from "../db";
 import {
   getLocalContacts,
   getLocalCampaignById,
@@ -116,6 +117,22 @@ export async function sendSingleTestEmail(params: {
       const response = await sesClient.send(command);
       if (response.MessageId) {
         messageIds.push(response.MessageId);
+      }
+
+      // Sincronizar log en la base de datos de PostgreSQL para trazabilidad de aperturas/clics
+      try {
+        await prisma.sentEmailLog.create({
+          data: {
+            id: log.id,
+            recipient: email,
+            subject: `[PRUEBA LOCAL] ${params.subject}`,
+            htmlBody: trackedHtml,
+            status: "SUCCESS",
+            messageId: response.MessageId || null,
+          },
+        });
+      } catch (dbErr) {
+        console.warn("[Test Email Send] PostgreSQL DB log sync warning:", dbErr);
       }
     }
 
@@ -283,6 +300,21 @@ export async function executeCampaignBatchSend(
       const res = await sesClient.send(command);
       sentCount++;
       log.messageId = res.MessageId;
+
+      try {
+        await prisma.sentEmailLog.create({
+          data: {
+            id: log.id,
+            recipient: contact.email,
+            subject: renderedSubject,
+            htmlBody: trackedHtml,
+            status: "SUCCESS",
+            messageId: res.MessageId || null,
+          },
+        });
+      } catch (dbErr) {
+        // Silently catch duplicate or db connection warning
+      }
     } catch (err: any) {
       failedCount++;
       const errorMsg = err?.message || String(err);
