@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { getDbEvents } from "@/lib/events";
+import { getDbEvents, checkIsUpcoming } from "@/lib/events";
 import { Navbar, Footer } from "@/components";
 import { RecordingsGrid } from "@/components/events/RecordingsGrid";
 
@@ -41,11 +41,7 @@ export default async function GrabacionesListingPage() {
   // Filter: recorded past events with a YouTube video
   const now = new Date();
   const recordedEvents = events.filter((item: any) => {
-    if (item.isUpcoming === true || item.is_upcoming === true) return false;
-    if (item.date) {
-      const d = new Date(item.date);
-      if (!isNaN(d.getTime()) && d > now) return false;
-    }
+    if (checkIsUpcoming(item)) return false;
     const youtubeId = item.youtubeId || item.youtube_id;
     const link = item.link || "";
     const hasYoutubeVideo = Boolean(
