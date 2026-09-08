@@ -129,7 +129,25 @@ function writeJsonFile<T>(filePath: string, data: T): void {
 // ==========================================
 
 export function getLocalContacts(): LocalContact[] {
-  return readJsonFile<LocalContact[]>(CONTACTS_FILE, []);
+  const contacts = readJsonFile<LocalContact[]>(CONTACTS_FILE, []);
+  return contacts.sort((a, b) => {
+    let timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    let timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+
+    if (isNaN(timeA) || timeA === 0) {
+      const matchA = a.id?.match(/^cnt_(\d+)_/);
+      timeA = matchA ? parseInt(matchA[1], 10) : 0;
+    }
+    if (isNaN(timeB) || timeB === 0) {
+      const matchB = b.id?.match(/^cnt_(\d+)_/);
+      timeB = matchB ? parseInt(matchB[1], 10) : 0;
+    }
+
+    if (timeA !== timeB) {
+      return timeB - timeA;
+    }
+    return (b.id || "").localeCompare(a.id || "");
+  });
 }
 
 export function saveLocalContact(

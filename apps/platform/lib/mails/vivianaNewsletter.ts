@@ -29,7 +29,7 @@ export function renderVivianaNewsletterHtml(options?: {
   </div>
 
   <!-- INTRODUCCIÓN DE GABRIEL -->
-  <div style="font-size: 16px; line-height: 1.65; color: #334155; margin-bottom: 32px;">
+  <div style="font-size: 18px; line-height: 1.7; color: #334155; margin-bottom: 32px;">
     <p style="margin: 0 0 16px 0;">Hola <strong>${nombre}</strong>, espero que estés muy bien.</p>
     
     <p style="margin: 0 0 16px 0;">
@@ -41,8 +41,8 @@ export function renderVivianaNewsletterHtml(options?: {
     </p>
     
     <div style="border-left: 3px solid #000000; padding-left: 14px; margin-top: 20px;">
-      <p style="margin: 0; font-weight: 700; color: #0f172a; font-size: 15px;">Gabriel</p>
-      <p style="margin: 2px 0 0 0; font-size: 13px; color: #64748b; font-style: italic;">Director General de LUMINUS</p>
+      <p style="margin: 0; font-weight: 700; color: #0f172a; font-size: 16px;">Gabriel</p>
+      <p style="margin: 2px 0 0 0; font-size: 14px; color: #64748b; font-style: italic;">Director General de LUMINUS</p>
     </div>
   </div>
 
@@ -51,7 +51,7 @@ export function renderVivianaNewsletterHtml(options?: {
   <!-- SECCIÓN 1: VIVIANA PAGLIAROLI -->
   <div style="margin-bottom: 36px;">
     <h1 style="font-size: 22px; font-weight: 800; color: #0f172a; margin: 0 0 20px 0; line-height: 1.3; text-align: center;">
-      5 ideas que nos dejó Viviana Pagliaroli
+      5 ideas sobre pilates que nos dejó Viviana Pagliaroli
     </h1>
 
     <!-- FOTO DE VIVIANA -->
@@ -61,11 +61,11 @@ export function renderVivianaNewsletterHtml(options?: {
       </a>
     </div>
 
-    <p style="font-size: 15px; line-height: 1.6; color: #334155; margin: 0 0 20px 0;">
+    <p style="font-size: 17px; line-height: 1.65; color: #334155; margin: 0 0 20px 0;">
       El domingo publicamos una nueva entrevista de LUMINUS con <strong>Viviana Pagliaroli</strong>, profesora de Educación Física e instructora de Pilates con más de 17 años de experiencia. Conversamos sobre pilates y cómo cuidar el cuerpo pensando también en el futuro.
     </p>
 
-    <p style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 16px 0;">
+    <p style="font-size: 17px; font-weight: 700; color: #0f172a; margin: 0 0 16px 0;">
       Estas son cinco ideas que nos dejó la charla:
     </p>
 
@@ -73,46 +73,46 @@ export function renderVivianaNewsletterHtml(options?: {
     <div style="background-color: #f8fafc; border-radius: 16px; padding: 24px; margin-bottom: 24px; border: 1px solid #f1f5f9;">
       
       <div style="margin-bottom: 18px;">
-        <p style="margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #0f172a;">
+        <p style="margin: 0 0 4px 0; font-size: 17px; font-weight: 700; color: #0f172a;">
           1. Pilates no es solo una práctica suave
         </p>
-        <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #475569;">
+        <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #475569;">
           Puede ser un entrenamiento muy completo, combinando fuerza, movilidad, flexibilidad y control corporal, con ejercicios adaptados a cada persona.
         </p>
       </div>
 
       <div style="margin-bottom: 18px;">
-        <p style="margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #0f172a;">
+        <p style="margin: 0 0 4px 0; font-size: 17px; font-weight: 700; color: #0f172a;">
           2. No hay una edad ideal para empezar
         </p>
-        <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #475569;">
+        <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #475569;">
           El método puede acompañar a personas de distintas edades, condiciones físicas y objetivos, desde mejorar la movilidad hasta mantenerse activas o aliviar molestias.
         </p>
       </div>
 
       <div style="margin-bottom: 18px;">
-        <p style="margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #0f172a;">
+        <p style="margin: 0 0 4px 0; font-size: 17px; font-weight: 700; color: #0f172a;">
           3. Muchas veces el cambio se siente antes de verse
         </p>
-        <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #475569;">
+        <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #475569;">
           Más movilidad, menos molestias y una nueva forma de percibir el cuerpo pueden aparecer antes que cualquier transformación estética.
         </p>
       </div>
 
       <div style="margin-bottom: 18px;">
-        <p style="margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #0f172a;">
+        <p style="margin: 0 0 4px 0; font-size: 17px; font-weight: 700; color: #0f172a;">
           4. Entrenar hoy también es cuidar el cuerpo de mañana
         </p>
-        <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #475569;">
+        <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #475569;">
           La fuerza y la movilidad que desarrollamos hoy pueden ayudarnos a conservar autonomía y libertad de movimiento con el paso de los años.
         </p>
       </div>
 
       <div>
-        <p style="margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #0f172a;">
+        <p style="margin: 0 0 4px 0; font-size: 17px; font-weight: 700; color: #0f172a;">
           5. La constancia hace la diferencia
         </p>
-        <p style="margin: 0; font-size: 14px; line-height: 1.5; color: #475569;">
+        <p style="margin: 0; font-size: 16px; line-height: 1.6; color: #475569;">
           Más que buscar resultados rápidos, la clave está en sostener la práctica y darle al cuerpo el tiempo necesario para adaptarse.
         </p>
       </div>
@@ -142,15 +142,15 @@ export function renderVivianaNewsletterHtml(options?: {
       </a>
     </div>
 
-    <p style="font-size: 15px; line-height: 1.6; color: #334155; margin: 0 0 16px 0;">
+    <p style="font-size: 17px; line-height: 1.65; color: #334155; margin: 0 0 16px 0;">
       Hace pocos días presentamos la nueva plataforma de LUMINUS, un espacio que estamos construyendo para conectar a nuestra comunidad con especialistas, actividades y nuevas formas de cuidar el bienestar.
     </p>
 
-    <p style="font-size: 15px; line-height: 1.6; color: #334155; margin: 0 0 16px 0;">
+    <p style="font-size: 17px; line-height: 1.65; color: #334155; margin: 0 0 16px 0;">
       <strong>Registrarte es gratis.</strong> Ya puedes crear tu perfil, conocer a otros integrantes de la comunidad y descubrir especialistas de distintas áreas.
     </p>
 
-    <p style="font-size: 15px; line-height: 1.6; color: #334155; margin: 0 0 24px 0;">
+    <p style="font-size: 17px; line-height: 1.65; color: #334155; margin: 0 0 24px 0;">
       Y esto es solo el comienzo: seguimos desarrollando nuevas funciones y herramientas para que LUMINUS sea cada vez más útil para quienes forman parte de la red.
     </p>
 
@@ -166,10 +166,10 @@ export function renderVivianaNewsletterHtml(options?: {
   
   <!-- FOOTER OFICIAL -->
   <div style="text-align: center; max-width: 500px; margin: 0 auto; padding: 0;">
-    <p style="font-size: 15px; font-weight: 700; margin: 0 0 8px 0; line-height: 1.4; color: #0f172a; text-align: center;">
+    <p style="font-size: 16px; font-weight: 700; margin: 0 0 8px 0; line-height: 1.4; color: #0f172a; text-align: center;">
       Una red para conectar, aprender y cuidar tu bienestar.
     </p>
-    <p style="font-size: 14px; line-height: 1.5; color: #475569; margin: 0 0 22px 0; text-align: center;">
+    <p style="font-size: 15px; line-height: 1.5; color: #475569; margin: 0 0 22px 0; text-align: center;">
       Conectamos personas y especialistas de distintas áreas en un mismo espacio para compartir experiencias, acceder a nuevas perspectivas y encontrar formas de cuidar el bienestar que se adapten a cada persona y momento de su vida.
     </p>
 

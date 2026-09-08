@@ -1,5 +1,21 @@
 [
   {
+    "campaignId": "cmp_viviana_1788832131088",
+    "recipientEmail": "gabrielmedcap@gmail.com",
+    "recipientName": "Usuario de Prueba",
+    "status": "SUCCESS",
+    "id": "log_1788834869989_6smc4",
+    "sentAt": "2026-09-08T02:34:29.989Z"
+  },
+  {
+    "campaignId": "cmp_viviana_1788832131088",
+    "recipientEmail": "gabrielmedcap@hotmail.com",
+    "recipientName": "Usuario de Prueba",
+    "status": "SUCCESS",
+    "id": "log_1788834869148_0zvls",
+    "sentAt": "2026-09-08T02:34:29.148Z"
+  },
+  {
     "id": "log_cmp2_0_0cv90",
     "campaignId": "cmp_relanzamiento_corregido_2026",
     "recipientEmail": "sandra.mahecha@meds.cl",
