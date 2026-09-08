@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const id = searchParams.get("id");
   const rawUrl = searchParams.get("url") || searchParams.get("target");
 
-  let targetUrl = "https://luminus.com.ar";
+  let targetUrl = "https://luminuslatam.com";
 
   if (rawUrl) {
     try {
