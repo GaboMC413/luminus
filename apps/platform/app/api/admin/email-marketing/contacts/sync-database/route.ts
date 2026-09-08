@@ -91,7 +91,8 @@ export async function POST(request: Request) {
       contactMap.set(emailClean, updated);
     }
 
-    // 4. Sync Event Guests (Current & Past Events)
+    // 4. Sync Event Guests (ONLY Past Events - exclude upcoming event registrants)
+    const now = new Date();
     const guests = await prisma.eventGuest.findMany({
       include: {
         inscriptions: {
@@ -109,6 +110,15 @@ export async function POST(request: Request) {
 
     for (const g of guests) {
       if (!g.email || !g.email.includes("@")) continue;
+
+      // Filter inscriptions to include only past events
+      const pastInscriptions = (g.inscriptions || []).filter(
+        (ins) => ins.event?.date && new Date(ins.event.date) < now
+      );
+
+      // Exclude guests who have no past event registrations (i.e. only registered to upcoming events or no events)
+      if (pastInscriptions.length === 0) continue;
+
       const emailClean = g.email.toLowerCase().trim();
       eventGuestsCount++;
 
@@ -118,16 +128,14 @@ export async function POST(request: Request) {
         unsubscribedSet.has(emailClean) ||
         bouncedSet.has(emailClean);
 
-      // Event specific tags
-      const eventTags: string[] = ["Inscripto a Eventos"];
-      if (g.inscriptions && g.inscriptions.length > 0) {
-        g.inscriptions.forEach((ins) => {
-          if (ins.event?.title) {
-            const shortTitle = ins.event.title.substring(0, 30);
-            eventTags.push(`Evento: ${shortTitle}`);
-          }
-        });
-      }
+      // Event specific tags for past events
+      const eventTags: string[] = ["Inscripto a Eventos Pasados"];
+      pastInscriptions.forEach((ins) => {
+        if (ins.event?.title) {
+          const shortTitle = ins.event.title.substring(0, 30);
+          eventTags.push(`Evento: ${shortTitle}`);
+        }
+      });
 
       const tags = Array.from(
         new Set([
@@ -147,7 +155,7 @@ export async function POST(request: Request) {
         source: existing?.source || "Eventos LUMINUS",
         tags,
         unsubscribed: isUnsub || Boolean(existing?.unsubscribed),
-        notes: existing?.notes || "Sincronizado automáticamente desde inscripciones a eventos.",
+        notes: existing?.notes || "Sincronizado automáticamente desde inscripciones a eventos pasados.",
       });
 
       contactMap.set(emailClean, updated);

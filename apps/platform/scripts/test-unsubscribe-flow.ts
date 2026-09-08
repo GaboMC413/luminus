@@ -96,7 +96,7 @@ async function main() {
 
   const campaign = prepareCampaignEmail({
     recipientEmail: testEmail,
-    htmlContent: '<html><body><a href="https://luminus.com.ar/proximasfechas">Ver Eventos</a></body></html>',
+    htmlContent: '<html><body><a href="https://luminuslatam.com/proximasfechas">Ver Eventos</a></body></html>',
     emailLogId: sentLog.id,
   });
 

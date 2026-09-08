@@ -56,6 +56,7 @@ export async function sendSingleTestEmail(params: {
   fromEmail: string;
   fromName: string;
   htmlContent: string;
+  campaignId?: string;
 }): Promise<{ success: boolean; messageId?: string; error?: string }> {
   try {
     const sesClient = getSesV2Client();
@@ -73,30 +74,52 @@ export async function sendSingleTestEmail(params: {
       };
     }
 
-    const renderedHtml = renderTemplateVariables(params.htmlContent, {
-      email: validEmails[0],
-      firstName: "Usuario de Prueba",
-      lastName: "Local",
-    });
-
     const configurationSet = process.env.SES_CONFIGURATION_MARKETING || "luminus-marketing";
+    const messageIds: string[] = [];
 
-    const command = new SendEmailCommand({
-      FromEmailAddress: formattedSender,
-      Destination: { ToAddresses: validEmails },
-      Content: {
-        Simple: {
-          Subject: { Data: `[PRUEBA LOCAL] ${params.subject}`, Charset: "UTF-8" },
-          Body: {
-            Html: { Data: renderedHtml, Charset: "UTF-8" },
+    for (const email of validEmails) {
+      const renderedHtml = renderTemplateVariables(params.htmlContent, {
+        email,
+        firstName: "Usuario de Prueba",
+        lastName: "Local",
+      });
+
+      // Registrar log de envío para obtener ID de trazabilidad de píxeles y clics
+      const log = addLocalSendLog({
+        campaignId: params.campaignId || "cmp_test_preview",
+        recipientEmail: email,
+        recipientName: "Usuario de Prueba",
+        status: "SUCCESS",
+      });
+
+      const trackedHtml = injectTracking(renderedHtml, log.id);
+      const { apiUrl, mailtoUrl } = generateUnsubscribeUrls(email);
+
+      const command = new SendEmailCommand({
+        FromEmailAddress: formattedSender,
+        Destination: { ToAddresses: [email] },
+        Content: {
+          Simple: {
+            Subject: { Data: `[PRUEBA LOCAL] ${params.subject}`, Charset: "UTF-8" },
+            Body: {
+              Html: { Data: trackedHtml, Charset: "UTF-8" },
+            },
+            Headers: [
+              { Name: "List-Unsubscribe", Value: `<${apiUrl}>, <${mailtoUrl}>` },
+              { Name: "List-Unsubscribe-Post", Value: "List-Unsubscribe=One-Click" },
+            ],
           },
         },
-      },
-      ...(configurationSet && { ConfigurationSetName: configurationSet }),
-    });
+        ...(configurationSet && { ConfigurationSetName: configurationSet }),
+      });
 
-    const response = await sesClient.send(command);
-    return { success: true, messageId: response.MessageId };
+      const response = await sesClient.send(command);
+      if (response.MessageId) {
+        messageIds.push(response.MessageId);
+      }
+    }
+
+    return { success: true, messageId: messageIds.join(", ") };
   } catch (err: any) {
     const errorMsg = err?.message || String(err);
     console.error("[LOCAL EMAIL MARKETING TEST ERROR]:", err);

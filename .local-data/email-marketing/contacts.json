@@ -5581,7 +5581,9 @@
     "firstName": "María",
     "lastName": "Gahan",
     "tags": [
-      "Posible Especialista"
+      "Posible Especialista",
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
     ],
     "unsubscribed": false,
     "notes": "Profesión/Cargo: terapeuta | Ciudad: Castelar | [Import CSV] Suscrito: 2025-11-18 12:36:26 | Enviados: 3 | Abiertos: 0 | Clics: 0",
@@ -12830,14 +12832,17 @@
   {
     "id": "cnt_1788140750296_5g45p",
     "email": "claudia.carcamo.e@gmail.com",
-    "firstName": "Claudia Carcamo Espinoza",
-    "lastName": "",
-    "tags": [],
+    "firstName": "Claudia",
+    "lastName": "Cárcamo Espinoza",
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
+    ],
     "unsubscribed": false,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:18:58 | Enviados: 4 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-08-31T01:45:50.296Z",
-    "country": "",
-    "city": "",
+    "country": "Chile",
+    "city": "San Antonio, Chile",
     "profession": "",
     "source": "Meta Ads"
   },
@@ -28751,14 +28756,20 @@
     "email": "gabrielmedcap@gmail.com",
     "firstName": "Gabriel",
     "lastName": "Medero",
-    "tags": [],
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado",
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
     "unsubscribed": false,
-    "notes": "",
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
     "createdAt": "2026-08-31T01:48:22.140Z",
     "country": "Uruguay",
     "city": "Durazno",
     "profession": "",
-    "source": ""
+    "source": "Plataforma LUMINUS"
   },
   {
     "id": "cnt_1788142344673_4ruco",
@@ -28798,11 +28809,13 @@
     "firstName": "Patricia",
     "lastName": "Romagnoli",
     "country": "Uruguay",
-    "city": "Montevideo",
+    "city": "Montevideo, Departamento de Montevideo",
     "profession": "Terapeuta Holístico / Coach",
     "source": "Expertos LUMINUS",
     "tags": [
-      "Posible Especialista"
+      "Posible Especialista",
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
     ],
     "unsubscribed": false,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:40:38 | Enviados: 4 | Abiertos: 4 | Clics: 0",
@@ -29374,11 +29387,13 @@
     "firstName": "Adriana",
     "lastName": "Esmoris",
     "country": "Uruguay",
-    "city": "El Pinar",
+    "city": "Canelones, Departamento de Canelones",
     "profession": "Gestión / Administración / Profesional",
     "source": "Expertos LUMINUS",
     "tags": [
-      "Posible Especialista"
+      "Posible Especialista",
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
     ],
     "unsubscribed": false,
     "notes": "[Import CSV] Suscrito: 2025-12-03 12:14:16 | Enviados: 2 | Abiertos: 0 | Clics: 0",
@@ -31820,13 +31835,16 @@
   {
     "id": "cnt_1788298979158_4broy",
     "email": "lilinoli@hotmail.com",
-    "firstName": "",
+    "firstName": "Usuario",
     "lastName": "",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
+    ],
     "unsubscribed": false,
     "notes": "Suscrito: 2025-12-03 12:17:14 | Enviados: 6 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.158Z"
@@ -35448,13 +35466,16 @@
   {
     "id": "cnt_1788298979158_k1h0s",
     "email": "anaicos@hotmail.com",
-    "firstName": "",
-    "lastName": "",
-    "country": "",
-    "city": "",
+    "firstName": "Anaí",
+    "lastName": "Costa",
+    "country": "Uruguay",
+    "city": "Minas, Departamento de Lavalleja",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
+    ],
     "unsubscribed": false,
     "notes": "Suscrito: 2025-11-30 13:30:29 | Enviados: 7 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.158Z"
@@ -47923,13 +47944,16 @@
   {
     "id": "cnt_1788298979164_vfm9n",
     "email": "emamartorell@yahoo.com.ar",
-    "firstName": "",
-    "lastName": "",
-    "country": "",
-    "city": "",
+    "firstName": "Ema",
+    "lastName": "Martorell",
+    "country": "Argentina",
+    "city": "Moreno, Provincia de Buenos Aires",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
+    ],
     "unsubscribed": false,
     "notes": "Suscrito: 2025-11-18 12:32:24 | Enviados: 4 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.164Z"
@@ -49045,13 +49069,16 @@
   {
     "id": "cnt_1788298979164_hm66f",
     "email": "scsarli@hotmail.com",
-    "firstName": "",
-    "lastName": "",
-    "country": "",
-    "city": "",
+    "firstName": "Sandra",
+    "lastName": "Sarli",
+    "country": "Uruguay",
+    "city": "Tupambaé, Departamento de Cerro Largo",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
+    ],
     "unsubscribed": false,
     "notes": "Suscrito: 2025-11-18 12:30:37 | Enviados: 3 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.164Z"
@@ -57483,14 +57510,18 @@
     "id": "cnt_1788298979167_azlni",
     "email": "gabrielmedcap@hotmail.com",
     "firstName": "Gabriel",
-    "lastName": "Medero Capotte",
+    "lastName": "Medero",
     "country": "",
-    "city": "",
+    "city": "Durazno",
     "profession": "",
-    "source": "",
-    "tags": [],
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
     "unsubscribed": false,
-    "notes": "",
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
     "createdAt": "2026-09-01T21:42:59.167Z"
   },
   {
@@ -57498,27 +57529,581 @@
     "email": "yoana.aristimuno@gmail.com",
     "firstName": "Yoana",
     "lastName": "Aristimuño",
-    "country": "",
-    "city": "",
+    "country": "Uruguay",
+    "city": "Montevideo, Departamento de Montevideo",
     "profession": "",
-    "source": "",
-    "tags": [],
+    "source": "Plataforma LUMINUS",
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
+    ],
     "unsubscribed": false,
-    "notes": "",
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
     "createdAt": "2026-09-01T22:46:32.143Z"
   },
   {
     "id": "cnt_1788302825813_8ozub",
     "email": "martinoneilferrari@gmail.com",
     "firstName": "Martin",
-    "lastName": "O'neil",
+    "lastName": "O'Neil",
+    "country": "Uruguay",
+    "city": "Montevideo, Departamento de Montevideo",
+    "profession": "",
+    "source": "Plataforma LUMINUS",
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado",
+      "Inscripto a Eventos"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
+    "createdAt": "2026-09-01T22:47:05.814Z"
+  },
+  {
+    "id": "cnt_1788830760849_llzno",
+    "email": "testari@test.com",
+    "firstName": "Ari_prueba",
+    "lastName": "Ari_prueba",
+    "country": "Uruguay",
+    "city": "Montevideo, Departamento de Montevideo",
+    "profession": "",
+    "source": "Plataforma LUMINUS",
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
+    "createdAt": "2026-09-08T01:26:00.849Z"
+  },
+  {
+    "id": "cnt_1788830760934_mjxxy",
+    "email": "mariabelenprevello@gmail.com",
+    "firstName": "Maria Belen",
+    "lastName": "Pozzi",
+    "country": "Uruguay",
+    "city": "Montevideo, Departamento de Montevideo",
+    "profession": "",
+    "source": "Plataforma LUMINUS",
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
+    "createdAt": "2026-09-08T01:26:00.934Z"
+  },
+  {
+    "id": "cnt_1788830760964_v085l",
+    "email": "dora.rusch@hospitaitaliano.org.ar",
+    "firstName": "Usuario",
+    "lastName": "",
     "country": "",
     "city": "",
     "profession": "",
-    "source": "",
-    "tags": [],
+    "source": "Plataforma LUMINUS",
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
+    ],
     "unsubscribed": false,
-    "notes": "",
-    "createdAt": "2026-09-01T22:47:05.814Z"
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
+    "createdAt": "2026-09-08T01:26:00.964Z"
+  },
+  {
+    "id": "cnt_1788830761029_j32fa",
+    "email": "artenics01@gmail.com",
+    "firstName": "Artenics",
+    "lastName": "D",
+    "country": "Argentina",
+    "city": "Buenos Aires, Ciudad Autónoma de Buenos Aires",
+    "profession": "",
+    "source": "Plataforma LUMINUS",
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
+    "createdAt": "2026-09-08T01:26:01.029Z"
+  },
+  {
+    "id": "cnt_1788830761088_qffpi",
+    "email": "dra.sztern@gmail.com",
+    "firstName": "Florencia",
+    "lastName": "Sztern",
+    "country": "Uruguay",
+    "city": "Montevideo, Departamento de Montevideo",
+    "profession": "",
+    "source": "Plataforma LUMINUS",
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
+    "createdAt": "2026-09-08T01:26:01.088Z"
+  },
+  {
+    "id": "cnt_1788830761128_t5bdl",
+    "email": "caroduarte1978@gmail.com",
+    "firstName": "Ana Carolina",
+    "lastName": "Duarte Costa",
+    "country": "Uruguay",
+    "city": "Montevideo, Departamento de Montevideo",
+    "profession": "",
+    "source": "Plataforma LUMINUS",
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
+    "createdAt": "2026-09-08T01:26:01.128Z"
+  },
+  {
+    "id": "cnt_1788830761155_2idy7",
+    "email": "fatimalorenita1609@hotmail.com",
+    "firstName": "Fátima",
+    "lastName": "Flores Velasco Ep. Mathieu",
+    "country": "Reunión",
+    "city": "La Réunion, Francia",
+    "profession": "",
+    "source": "Plataforma LUMINUS",
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
+    "createdAt": "2026-09-08T01:26:01.155Z"
+  },
+  {
+    "id": "cnt_1788830761180_xhgui",
+    "email": "luciaabulafia@gmail.com",
+    "firstName": "Lucía",
+    "lastName": "Abulafia",
+    "country": "Uruguay",
+    "city": "Montevideo, Departamento de Montevideo",
+    "profession": "",
+    "source": "Plataforma LUMINUS",
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
+    "createdAt": "2026-09-08T01:26:01.180Z"
+  },
+  {
+    "id": "cnt_1788830761206_q0zn2",
+    "email": "romix.uy@gmail.com",
+    "firstName": "Usuario",
+    "lastName": "",
+    "country": "",
+    "city": "",
+    "profession": "",
+    "source": "Plataforma LUMINUS",
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
+    "createdAt": "2026-09-08T01:26:01.206Z"
+  },
+  {
+    "id": "cnt_1788830761283_7z6th",
+    "email": "psic.mateogarcia@gmail.com",
+    "firstName": "Mateo",
+    "lastName": "García",
+    "country": "Uruguay",
+    "city": "Lascano, Departamento de Rocha",
+    "profession": "",
+    "source": "Plataforma LUMINUS",
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
+    "createdAt": "2026-09-08T01:26:01.283Z"
+  },
+  {
+    "id": "cnt_1788830761362_kpfgm",
+    "email": "vivipagliaroli@gmail.com",
+    "firstName": "Viviana",
+    "lastName": "Pagliaroli",
+    "country": "Argentina",
+    "city": "Marcos juarez",
+    "profession": "",
+    "source": "Plataforma LUMINUS",
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado",
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
+    "createdAt": "2026-09-08T01:26:01.362Z"
+  },
+  {
+    "id": "cnt_1788830761420_syddq",
+    "email": "info@luminuslatam.com",
+    "firstName": "LUMINUS",
+    "lastName": "Medero Capotte",
+    "country": "",
+    "city": "Carindale, Brisbane",
+    "profession": "",
+    "source": "Plataforma LUMINUS",
+    "tags": [
+      "Plataforma LUMINUS",
+      "Usuario Registrado",
+      "Inscripto a Eventos"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
+    "createdAt": "2026-09-08T01:26:01.420Z"
+  },
+  {
+    "id": "cnt_1788830762355_4zpkz",
+    "email": "anaclarapittadupre@gmail.com",
+    "firstName": "Ana Clara",
+    "lastName": "Pittamiglio",
+    "country": "",
+    "city": "Carmelo",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Sexualidad sin tabúes: cuerpo,"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.355Z"
+  },
+  {
+    "id": "cnt_1788830762384_1h59n",
+    "email": "gabo@tribulatam.com",
+    "firstName": "Gabriel",
+    "lastName": "Medero",
+    "country": "",
+    "city": "Buenos Aires, Ciudad Autónoma de Buenos Aires",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.384Z"
+  },
+  {
+    "id": "cnt_1788830762456_z609q",
+    "email": "tonarellirosario@gmail.com",
+    "firstName": "Rosario",
+    "lastName": "Tonarelli",
+    "country": "",
+    "city": "Las Parejas, Santa Fe",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.456Z"
+  },
+  {
+    "id": "cnt_1788830762485_11jag",
+    "email": "ana_salazar68@hotmail.com",
+    "firstName": "Ana",
+    "lastName": "Salazar",
+    "country": "",
+    "city": "Bell Ville",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.485Z"
+  },
+  {
+    "id": "cnt_1788830762516_cw47q",
+    "email": "anitittarelli@gmail.com",
+    "firstName": "Ana Lía",
+    "lastName": "Tittarelli",
+    "country": "",
+    "city": "Leones, Córdoba",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.516Z"
+  },
+  {
+    "id": "cnt_1788830762540_5lfyy",
+    "email": "sofiagabrielatrejo@gmail.com",
+    "firstName": "Sofía",
+    "lastName": "Trejo",
+    "country": "",
+    "city": "Córdoba",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.540Z"
+  },
+  {
+    "id": "cnt_1788830762563_1ma4a",
+    "email": "deabated@gmail.com",
+    "firstName": "Daniela",
+    "lastName": "DEABATE",
+    "country": "",
+    "city": "Justiniano Posse",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.563Z"
+  },
+  {
+    "id": "cnt_1788830762583_0uyf2",
+    "email": "artevani1976@gmail.com",
+    "firstName": "Vanina",
+    "lastName": "Ariaudo",
+    "country": "",
+    "city": "Las Parejas",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.583Z"
+  },
+  {
+    "id": "cnt_1788830762603_5ogja",
+    "email": "miriamgomezb18@gmail.com",
+    "firstName": "Miriam",
+    "lastName": "Gomez",
+    "country": "",
+    "city": "Corral de Bustos",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.603Z"
+  },
+  {
+    "id": "cnt_1788830762634_lofei",
+    "email": "patridelbianco@gmail.com",
+    "firstName": "PATRICIA",
+    "lastName": "DEL BIANCO",
+    "country": "",
+    "city": "Marcos Juárez",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.634Z"
+  },
+  {
+    "id": "cnt_1788830762693_1q2m2",
+    "email": "marielavico@gmail.com",
+    "firstName": "Mariela",
+    "lastName": "VICO",
+    "country": "",
+    "city": "Marcos Juárez",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.693Z"
+  },
+  {
+    "id": "cnt_1788830762723_sbgj8",
+    "email": "patribazan3@gmail.com",
+    "firstName": "Patricia",
+    "lastName": "Bazan",
+    "country": "",
+    "city": "General Roca provincia de Córdoba",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.723Z"
+  },
+  {
+    "id": "cnt_1788830762757_dv5j5",
+    "email": "marisagonzalez61@hotmail.com",
+    "firstName": "Marisa",
+    "lastName": "Gonzalez",
+    "country": "",
+    "city": "Marcos Juárez",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.757Z"
+  },
+  {
+    "id": "cnt_1788830762779_d7qt7",
+    "email": "romanoariana1@gmail.com",
+    "firstName": "Ariana",
+    "lastName": "Romano",
+    "country": "",
+    "city": "Marcos Juárez",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.779Z"
+  },
+  {
+    "id": "cnt_1788830762802_apqfb",
+    "email": "carislorenzo76@gmail.com",
+    "firstName": "Carina",
+    "lastName": "Lorenzo",
+    "country": "",
+    "city": "Marcos Juárez",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.802Z"
+  },
+  {
+    "id": "cnt_1788830762829_g8fe5",
+    "email": "luanarivas004@gmail.com",
+    "firstName": "Luana",
+    "lastName": "Rivas",
+    "country": "",
+    "city": "Marcos Juárez",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.829Z"
+  },
+  {
+    "id": "cnt_1788830762858_3lr53",
+    "email": "brendagabutto1@gmail.com",
+    "firstName": "Brenda",
+    "lastName": "Gabutto",
+    "country": "",
+    "city": "Marcos Juárez",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.858Z"
+  },
+  {
+    "id": "cnt_1788830762886_2ko3j",
+    "email": "angelesivi11@gmail.com",
+    "firstName": "Ivi",
+    "lastName": "Gano",
+    "country": "",
+    "city": "Marcos Juárez",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.886Z"
+  },
+  {
+    "id": "cnt_1788830762916_qf07n",
+    "email": "luisinabartoloni@gmail.com",
+    "firstName": "Luisina",
+    "lastName": "Bartoloni",
+    "country": "",
+    "city": "Córdoba",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Eventos",
+      "Evento: Pilates más allá de la estétic",
+      "Inscripto a Eventos Pasados"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
+    "createdAt": "2026-09-08T01:26:02.916Z"
   }
 ]

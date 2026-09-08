@@ -64,8 +64,31 @@ export interface LocalSendLog {
   clickCount?: number;
 }
 
-// Direccion de almacenamiento aislada en .local-data/email-marketing/
-const DATA_DIR = path.join(process.cwd(), "..", "..", ".local-data", "email-marketing");
+function getLocalDataDir(): string {
+  let curr = process.cwd();
+  for (let i = 0; i < 5; i++) {
+    const candidate = path.join(curr, ".local-data", "email-marketing");
+    if (fs.existsSync(candidate) || fs.existsSync(path.join(curr, ".local-data"))) {
+      return candidate;
+    }
+    const parent = path.dirname(curr);
+    if (parent === curr) break;
+    curr = parent;
+  }
+  curr = __dirname;
+  for (let i = 0; i < 5; i++) {
+    const candidate = path.join(curr, ".local-data", "email-marketing");
+    if (fs.existsSync(candidate) || fs.existsSync(path.join(curr, ".local-data"))) {
+      return candidate;
+    }
+    const parent = path.dirname(curr);
+    if (parent === curr) break;
+    curr = parent;
+  }
+  return path.resolve(process.cwd(), "..", "..", ".local-data", "email-marketing");
+}
+
+const DATA_DIR = getLocalDataDir();
 const CONTACTS_FILE = path.join(DATA_DIR, "contacts.json");
 const CAMPAIGNS_FILE = path.join(DATA_DIR, "campaigns.json");
 const LOGS_FILE = path.join(DATA_DIR, "logs.json");

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import SelectInput from "@/components/ui/SelectInput";
 import { renderRelaunchNewsletterHtml } from "@/lib/mails/relaunchNewsletter";
+import { renderVivianaNewsletterHtml } from "@/lib/mails/vivianaNewsletter";
 import {
   Users,
   Mail,
@@ -93,6 +94,12 @@ interface SendLog {
 }
 
 const DEFAULT_TEMPLATES = [
+  {
+    name: "Newsletter Semanal: Viviana Pagliaroli & Nueva Plataforma",
+    subject: "Algo para llevarte esta semana",
+    previewText: "Una conversación, cinco ideas y novedades de LUMINUS.",
+    html: renderVivianaNewsletterHtml(),
+  },
   {
     name: "Relanzamiento LUMINUS & Estreno Pilates",
     subject: "Ahora sí: una nueva etapa para LUMINUS ✨",
@@ -771,80 +778,86 @@ export default function LocalEmailMarketingPage() {
 
       {/* Main Content Area */}
       <main className="max-w-7xl mx-auto p-4 sm:p-8 space-y-6">
-        {/* Navigation Tabs Bar */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setActiveTab("contacts")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${activeTab === "contacts"
-              ? "bg-black text-white shadow-xs"
-              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
-              }`}
-          >
-            <Users className="w-4 h-4" /> Contactos ({contacts.length})
-          </button>
-          <button
-            onClick={() => setActiveTab("audiences")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${activeTab === "audiences"
-              ? "bg-black text-white shadow-xs"
-              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
-              }`}
-          >
-            <Target className="w-4 h-4" /> Audiencias ({audiences.length})
-          </button>
-          <button
-            onClick={() => setActiveTab("campaigns")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${activeTab === "campaigns"
-              ? "bg-black text-white shadow-xs"
-              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
-              }`}
-          >
-            <Mail className="w-4 h-4" /> Campañas
-          </button>
-          <button
-            onClick={() => setActiveTab("send")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${activeTab === "send"
-              ? "bg-black text-white shadow-xs"
-              : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
-              }`}
-          >
-            <Send className="w-4 h-4" /> Envíos
-          </button>
-        </div>
-
-        {/* LIVE AWS SES INFRASTRUCTURE & SYNC BAR */}
-        {awsMetrics && (
-          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 font-bold text-xs">
-                AWS
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                    Infraestructura AWS SES (Live API)
-                  </span>
-                  <span className="px-2 py-0.5 text-[10px] font-extrabold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
-                    Producción Activa
-                  </span>
-                </div>
-                <div className="text-xs text-slate-500 mt-0.5">
-                  Enviados reales en 24h: <strong>{awsMetrics.sentLast24Hours.toLocaleString()}</strong> / Cuota diaria AWS: <strong>{awsMetrics.max24HourSend.toLocaleString()}</strong> ({awsMetrics.maxSendRate} msg/seg)
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleSyncAwsSuppression}
-                disabled={syncingAws}
-                className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold px-4 py-2 rounded-xl text-xs transition cursor-pointer flex items-center gap-2 border border-slate-200 disabled:opacity-50"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${syncingAws ? "animate-spin" : ""}`} />
-                {syncingAws ? "Sincronizando..." : "Sincronizar Supresiones con AWS SES"}
-              </button>
-            </div>
+        {/* Navigation Tabs & Top Right Actions Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setActiveTab("contacts")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${activeTab === "contacts"
+                ? "bg-black text-white shadow-xs"
+                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+            >
+              <Users className="w-4 h-4" /> Contactos ({contacts.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("audiences")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${activeTab === "audiences"
+                ? "bg-black text-white shadow-xs"
+                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+            >
+              <Target className="w-4 h-4" /> Audiencias ({audiences.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("campaigns")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${activeTab === "campaigns"
+                ? "bg-black text-white shadow-xs"
+                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+            >
+              <Mail className="w-4 h-4" /> Campañas
+            </button>
+            <button
+              onClick={() => setActiveTab("send")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer ${activeTab === "send"
+                ? "bg-black text-white shadow-xs"
+                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+            >
+              <Send className="w-4 h-4" /> Envíos
+            </button>
           </div>
-        )}
+
+          {/* Top Right Actions Group */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              onClick={() => {
+                setEditingContact(null);
+                setContactForm({
+                  email: "",
+                  firstName: "",
+                  lastName: "",
+                  country: "",
+                  city: "",
+                  profession: "",
+                  source: "",
+                  tags: "",
+                  notes: "",
+                });
+                setIsAddContactOpen(true);
+              }}
+              className="flex items-center gap-1.5 bg-black hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all shadow-xs cursor-pointer h-10"
+            >
+              <Plus className="w-4 h-4" /> Nuevo contacto
+            </button>
+            <button
+              onClick={() => setIsImportOpen(true)}
+              className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all shadow-xs cursor-pointer h-10"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Importar lista
+            </button>
+            <button
+              onClick={handleSyncDatabase}
+              disabled={isSyncingDatabase}
+              className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all shadow-xs cursor-pointer h-10 disabled:opacity-50"
+              title="Sincronizar usuarios de la plataforma, inscriptos a eventos pasados y desuscritos"
+            >
+              <RefreshCw className={`w-4 h-4 ${isSyncingDatabase ? "animate-spin" : ""}`} />
+              {isSyncingDatabase ? "Sincronizando..." : "Actualizar Base"}
+            </button>
+          </div>
+        </div>
 
         {syncStatus && (
           <div className="p-3.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-semibold flex items-center justify-between">
@@ -857,7 +870,7 @@ export default function LocalEmailMarketingPage() {
         {activeTab === "contacts" && (
           <div className="space-y-6">
             {/* Top Actions & Multi-Filter Bar */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
               {/* Selectors Group */}
               <div className="flex flex-wrap items-center gap-2.5">
                 <SelectInput
@@ -906,45 +919,6 @@ export default function LocalEmailMarketingPage() {
                   placeholder="Todas las etiquetas"
                   className="w-full sm:w-[190px]"
                 />
-              </div>
-
-              {/* Action Buttons Group */}
-              <div className="flex items-center gap-2.5">
-                <button
-                  onClick={() => {
-                    setEditingContact(null);
-                    setContactForm({
-                      email: "",
-                      firstName: "",
-                      lastName: "",
-                      country: "",
-                      city: "",
-                      profession: "",
-                      source: "",
-                      tags: "",
-                      notes: "",
-                    });
-                    setIsAddContactOpen(true);
-                  }}
-                  className="flex items-center gap-1.5 bg-black hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all shadow-xs cursor-pointer h-11"
-                >
-                  <Plus className="w-4 h-4" /> Nuevo contacto
-                </button>
-                <button
-                  onClick={() => setIsImportOpen(true)}
-                  className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all shadow-xs cursor-pointer h-11"
-                >
-                  <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Importar lista
-                </button>
-                <button
-                  onClick={handleSyncDatabase}
-                  disabled={isSyncingDatabase}
-                  className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all shadow-xs cursor-pointer h-11 disabled:opacity-50"
-                  title="Sincronizar usuarios de la plataforma, inscriptos a eventos pasados/actuales y desuscritos"
-                >
-                  <RefreshCw className={`w-4 h-4 ${isSyncingDatabase ? "animate-spin" : ""}`} />
-                  {isSyncingDatabase ? "Sincronizando..." : "Actualizar Base"}
-                </button>
               </div>
             </div>
 

@@ -21,7 +21,7 @@
  * 
  *   // 3. Send using AWS SES SendEmailCommand
  *   await sesClient.send(new SendEmailCommand({
- *     FromEmailAddress: "novedades@luminus.com.ar",
+ *     FromEmailAddress: "info@luminuslatam.com",
  *     Destination: { ToAddresses: [email] },
  *     Content: {
  *       Simple: {
@@ -90,7 +90,7 @@ export function getBaseUrl(): string {
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
     process.env.SITE_URL ||
-    "https://luminus.com.ar";
+    "https://luminuslatam.com";
   return url.replace(/\/+$/, "");
 }
 
