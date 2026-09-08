@@ -85,6 +85,7 @@ export default async function AdminPage() {
         id: true,
         recipient: true,
         subject: true,
+        htmlBody: true,
         status: true,
         messageId: true,
         errorDetails: true,
@@ -402,6 +403,9 @@ export default async function AdminPage() {
     guestLastName: ins.guest?.lastName || ins.guestLastName || null,
     guestEmail: ins.guest?.email || ins.guestEmail || null,
     guestCity: ins.guest?.city || ins.guestCity || null,
+    guestState: ins.guest?.state || ins.guestState || null,
+    guestCountry: ins.guest?.country || ins.guestCountry || null,
+    marketingConsent: ins.guest?.marketingConsent ?? true,
     createdAt: ins.createdAt.toISOString(),
     user: ins.user ? {
       email: ins.user.email,

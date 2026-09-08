@@ -239,8 +239,8 @@ export function SpecialistsTab({
 
   return (
     <div className="w-full p-6 md:p-8 h-[calc(100vh-64px)] overflow-hidden flex flex-col box-border">
-      {/* 2-Column Master-Detail Grid: Identical structure and top-alignment to UsersTab */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.08fr_1fr] gap-6 items-start flex-1 min-h-0 h-full">
+      {/* 2-Column Master-Detail Grid: 38% Lista / 62% Panel de Detalle Amplio */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.6fr] gap-6 items-start flex-1 min-h-0 h-full">
         {/* Left Side: Heading + Unified List Card */}
         <div className={`${showMobileDetail ? "hidden lg:flex" : "flex"} flex-col gap-4 min-w-0 h-full overflow-hidden`}>
           {/* Page Heading Area inside Left Column */}

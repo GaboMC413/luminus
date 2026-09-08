@@ -336,7 +336,7 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
                 <div className="flex-1 bg-[#F8FAFC] p-4 overflow-hidden flex flex-col">
                   <iframe
                     title="Visualización de Mail"
-                    srcDoc={selectedEmailLog.htmlBody}
+                    srcDoc={selectedEmailLog.htmlBody || `<div style="font-family: system-ui, -apple-system, sans-serif; padding: 40px 20px; text-align: center; color: #64748b; background-color: #ffffff;"><div style="font-size: 32px; margin-bottom: 12px;">📧</div><h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 16px;">Vista previa no disponible</h3><p style="margin: 0; font-size: 13px;">El cuerpo de este correo no fue almacenado o fue registrado en modo plano.</p></div>`}
                     className="w-full h-full border border-slate-200 rounded-xl bg-white shadow-sm flex-1"
                     sandbox="allow-same-origin"
                   />

@@ -15,7 +15,7 @@ export function TurnstileWidget({
   onSuccess,
   onError,
   onExpire,
-  className = "my-3 flex justify-center",
+  className = "my-0 flex justify-center overflow-hidden min-h-0 h-0 w-0 opacity-0",
   theme = "light",
 }: TurnstileWidgetProps) {
   const turnstileRef = useRef<TurnstileInstance | null>(null);
@@ -31,7 +31,8 @@ export function TurnstileWidget({
         onExpire={onExpire}
         options={{
           theme: theme,
-          size: "normal",
+          size: "invisible",
+          appearance: "interaction-only",
         }}
       />
     </div>

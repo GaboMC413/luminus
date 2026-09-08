@@ -226,6 +226,8 @@ export type AdminEvent = {
   coverUrl: string | null;
   link: string | null;
   isUpcoming: boolean;
+  liveNotificationSent?: boolean;
+  liveNotificationSentAt?: string | null;
   createdAt: string;
   inscriptionsCount?: number;
 };
@@ -238,6 +240,11 @@ export type AdminEventInscription = {
   guestLastName?: string | null;
   guestEmail?: string | null;
   guestCity?: string | null;
+  guestState?: string | null;
+  guestCountry?: string | null;
+  marketingConsent?: boolean;
+  notifiedLiveAt?: string | null;
+  notifiedLiveStatus?: string | null;
   createdAt: string;
   user?: {
     email: string;

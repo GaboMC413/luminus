@@ -62,6 +62,10 @@ export async function GET(request: Request) {
       status: "active",
       profile: {
         isOnboarded: true,
+        avatarUrl: {
+          not: null,
+          notIn: ["", " "],
+        },
       },
     };
 

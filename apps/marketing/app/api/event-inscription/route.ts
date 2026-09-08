@@ -41,7 +41,13 @@ export async function POST(req: Request) {
     const cleanEmail = email.trim().toLowerCase();
     const cleanFirstName = firstName ? firstName.trim() : "";
     const cleanLastName = lastName ? lastName.trim() : "";
-    const cleanCity = city ? city.trim() : null;
+    
+    // Parse location string into city, state, country
+    const rawLoc = body?.location || city;
+    const parts = rawLoc ? String(rawLoc).split(",").map((p: string) => p.trim()).filter(Boolean) : [];
+    const parsedCity = parts.length > 0 ? parts[0] : null;
+    const parsedState = parts.length >= 3 ? parts.slice(1, -1).join(", ") : (parts.length === 2 ? parts[1] : null);
+    const parsedCountry = parts.length >= 3 ? parts[parts.length - 1] : null;
 
     // 1. Resolve Event ID and event details from DB
     let resolvedEventId: string | null = null;
@@ -79,14 +85,18 @@ export async function POST(req: Request) {
         update: {
           ...(cleanFirstName ? { firstName: cleanFirstName } : {}),
           ...(cleanLastName ? { lastName: cleanLastName } : {}),
-          ...(cleanCity ? { city: cleanCity } : {}),
+          ...(parsedCity ? { city: parsedCity } : {}),
+          ...(parsedState ? { state: parsedState } : {}),
+          ...(parsedCountry ? { country: parsedCountry } : {}),
           isGuest: true,
         },
         create: {
           email: cleanEmail,
           firstName: cleanFirstName || "Invitado",
           lastName: cleanLastName,
-          city: cleanCity,
+          city: parsedCity,
+          state: parsedState,
+          country: parsedCountry,
           isGuest: true,
         },
       });

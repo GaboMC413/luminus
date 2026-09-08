@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { EventItem } from "../events/EventCard";
-import { normalizeCategory } from "@/lib/events";
+import { normalizeCategory, checkIsUpcoming } from "@/lib/events";
 
 interface InterviewsSectionProps {
   events?: EventItem[];
@@ -261,9 +261,7 @@ export function InterviewsSection({
   // 1. Upcoming events (is_upcoming === true OR date >= now)
   const upcomingMap = new Map<string, EventItem>();
   baseItems.forEach((item) => {
-    const isUpcoming =
-      item.is_upcoming === true ||
-      (item.is_upcoming !== false && item.date && !isNaN(new Date(item.date).getTime()) && new Date(item.date) >= now);
+    const isUpcoming = checkIsUpcoming(item);
 
     if (isUpcoming) {
       const key = item.slug || item.id || item.youtube_id;
@@ -282,9 +280,7 @@ export function InterviewsSection({
   // 2. Past recordings (has YouTube video + date < now)
   const pastMap = new Map<string, EventItem>();
   baseItems.forEach((item) => {
-    const isUpcoming =
-      item.is_upcoming === true ||
-      (item.is_upcoming !== false && item.date && !isNaN(new Date(item.date).getTime()) && new Date(item.date) >= now);
+    const isUpcoming = checkIsUpcoming(item);
 
     if (!isUpcoming) {
       const hasYoutubeVideo = Boolean(
@@ -386,9 +382,7 @@ export function InterviewsSection({
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10 max-w-[1440px] mx-auto px-4 md:px-10">
               {paginatedItems.map((item) => {
                 const ytId = item.youtube_id || getYoutubeId(item.link) || '';
-                const isUpcomingEvent =
-                  item.is_upcoming === true ||
-                  (item.is_upcoming !== false && item.date && !isNaN(new Date(item.date).getTime()) && new Date(item.date) >= now);
+                const isUpcomingEvent = checkIsUpcoming(item);
 
                 const upcomingHeader = isUpcomingEvent
                   ? formatUpcomingDateHeader(item.date, item.time_text)
@@ -586,9 +580,7 @@ export function InterviewsSection({
               />
               {filteredItems.map((item) => {
                 const ytId = item.youtube_id || getYoutubeId(item.link) || '';
-                const isUpcomingEvent =
-                  item.is_upcoming === true ||
-                  (item.is_upcoming !== false && item.date && !isNaN(new Date(item.date).getTime()) && new Date(item.date) >= now);
+                const isUpcomingEvent = checkIsUpcoming(item);
 
                 const upcomingHeader = isUpcomingEvent
                   ? formatUpcomingDateHeader(item.date, item.time_text)

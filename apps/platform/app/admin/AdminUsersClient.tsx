@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   AdminUser,
   AdminChat,
@@ -72,7 +73,24 @@ export function AdminUsersClient({
   const [suggestions, setSuggestions] = useState<AdminSuggestion[]>(initialSuggestions);
   const [events] = useState<AdminEvent[]>(initialEvents);
   const [inscriptions] = useState<AdminEventInscription[]>(initialInscriptions);
-  const [activeTab, setActiveTab] = useState<AdminTab>("usuarios");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const tabFromUrl = (searchParams.get("tab") as AdminTab) || "usuarios";
+  const [activeTab, setActiveTabState] = useState<AdminTab>(tabFromUrl);
+
+  useEffect(() => {
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTabState(tabFromUrl);
+    }
+  }, [tabFromUrl]);
+
+  const handleTabChange = (newTab: AdminTab) => {
+    setActiveTabState(newTab);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", newTab);
+    router.replace(`/admin?${params.toString()}`, { scroll: false });
+  };
 
   // Shared Specialist subtab state
   const [specialistSubTab, setSpecialistSubTab] = useState<"lista" | "postulaciones">("lista");
@@ -116,7 +134,7 @@ export function AdminUsersClient({
         {/* Navigation Sidebar */}
         <AdminSidebar
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleTabChange}
           pendingSuggestionsCount={pendingSuggestionsCount}
           onSelectCategories={fetchCategoriesData}
         />
@@ -128,7 +146,7 @@ export function AdminUsersClient({
               users={users}
               specialists={specialists}
               setUsers={setUsers}
-              setActiveTab={setActiveTab}
+              setActiveTab={handleTabChange}
               setSelectedSpecialistUserId={setSelectedSpecialistUserId}
               setSpecialistSubTab={setSpecialistSubTab}
             />
@@ -157,7 +175,7 @@ export function AdminUsersClient({
               setSelectedSpecialistUserId={setSelectedSpecialistUserId}
               setSelectedId={setSelectedId}
               setUserSubTab={setUserSubTab}
-              setActiveTab={setActiveTab}
+              setActiveTab={handleTabChange}
             />
           )}
 
