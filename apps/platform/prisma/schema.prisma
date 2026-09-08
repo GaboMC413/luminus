@@ -543,17 +543,23 @@ model SpecialistAvailability {
 }
 
 model SentEmailLog {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  recipient    String   @db.VarChar
-  subject      String   @db.VarChar
-  htmlBody     String   @db.Text
-  status       String?  @db.VarChar
-  messageId    String?  @map("message_id") @db.VarChar
-  errorDetails String?  @map("error_details") @db.Text
-  metadata     String?  @db.Text
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipient    String    @db.VarChar
+  subject      String    @db.VarChar
+  htmlBody     String    @db.Text
+  status       String?   @db.VarChar
+  messageId    String?   @map("message_id") @db.VarChar
+  errorDetails String?   @map("error_details") @db.Text
+  metadata     String?   @db.Text
+  openedAt     DateTime? @map("opened_at") @db.Timestamptz
+  openCount    Int       @default(0) @map("open_count")
+  clickedAt    DateTime? @map("clicked_at") @db.Timestamptz
+  clickCount   Int       @default(0) @map("click_count")
+  bounceType   String?   @map("bounce_type") @db.VarChar
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   @@index([recipient])
+  @@index([messageId])
   @@index([createdAt])
   @@map("sent_email_logs")
 }
@@ -630,5 +636,16 @@ model ContactMessage {
   @@index([email])
   @@index([createdAt])
   @@map("contact_messages")
+}
+
+model UnsubscribedEmail {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String   @unique @db.VarChar
+  reason    String?  @db.VarChar
+  source    String?  @default("newsletter") @db.VarChar
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([email])
+  @@map("unsubscribed_emails")
 }
 

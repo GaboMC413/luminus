@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { checkIsUpcoming } from "@/lib/events";
 
 export interface EventItem {
   id?: string;
@@ -112,7 +113,7 @@ function isSpeakerNameValid(speakerName?: string, title?: string) {
 export function EventCard({ item }: EventCardProps) {
   const ytId = item.youtube_id || getYoutubeId(item.link) || "";
   const thumbUrl = item.coverUrl || item.cover_url || "/placeholder-video.jpg";
-  const isUpcoming = item.is_upcoming === true || (Boolean(item.date) && !isNaN(new Date(item.date!).getTime()) && new Date(item.date!) >= new Date());
+  const isUpcoming = checkIsUpcoming(item);
   const upcomingHeader = isUpcoming ? formatUpcomingDateHeader(item.date, item.time_text) : { tag: "", dateText: "" };
   const displayDate = isUpcoming ? upcomingHeader.dateText : (item.date ? formatDate(item.date) : item.publishTimeText || "");
   const videoLink = item.link || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : undefined);

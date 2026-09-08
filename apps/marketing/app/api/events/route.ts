@@ -42,20 +42,29 @@ export async function GET(request: Request) {
       return NextResponse.json(event);
     }
 
-    const now = new Date();
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
     let where: Record<string, unknown> = {};
 
     if (type === "upcoming") {
       where = {
+        isUpcoming: true,
         OR: [
-          { isUpcoming: true },
-          { date: { gte: now } },
+          { date: null },
+          { date: { gte: startOfToday } },
         ],
       };
     } else if (type === "past") {
       where = {
-        isUpcoming: false,
-        date: { lt: now },
+        OR: [
+          { isUpcoming: false },
+          {
+            AND: [
+              { date: { not: null } },
+              { date: { lt: startOfToday } },
+            ],
+          },
+        ],
       };
     }
 

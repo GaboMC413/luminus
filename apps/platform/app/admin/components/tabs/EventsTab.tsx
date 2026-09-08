@@ -112,6 +112,7 @@ function formatDateForInput(dateStr?: string | Date | null): string {
 }
 
 function isUpcomingEvent(ev: Partial<AdminEvent>): boolean {
+  if (ev.isUpcoming === false) return false;
   if (!ev.date) return Boolean(ev.isUpcoming);
   const d = parseCalendarDate(ev.date);
   if (!d) return Boolean(ev.isUpcoming);

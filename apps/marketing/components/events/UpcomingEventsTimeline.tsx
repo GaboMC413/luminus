@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { checkIsUpcoming } from "@/lib/events";
 
 interface EventItem {
   id?: string;
@@ -101,13 +102,7 @@ export function UpcomingEventsTimeline({ events }: UpcomingEventsTimelineProps) 
   };
 
   const upcomingList = events
-    .filter((e) => {
-      if (e.is_upcoming === true) return true;
-      if (e.is_upcoming === false) return false;
-      if (!e.date) return false;
-      const d = new Date(e.date);
-      return !isNaN(d.getTime()) && d >= new Date();
-    })
+    .filter((e) => checkIsUpcoming(e))
     .sort((a, b) => {
       const dateA = a.date ? new Date(a.date).getTime() : 0;
       const dateB = b.date ? new Date(b.date).getTime() : 0;
