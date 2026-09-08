@@ -3,6 +3,8 @@ import path from "path";
 import { renderRelaunchNewsletterHtml } from "../mails/relaunchNewsletter";
 import { renderVivianaNewsletterHtml } from "../mails/vivianaNewsletter";
 
+export type ContactStatus = "ACTIVE" | "UNSUBSCRIBED" | "BOUNCED";
+
 export interface LocalContact {
   id: string;
   email: string;
@@ -13,7 +15,10 @@ export interface LocalContact {
   profession?: string;
   source?: string;
   tags: string[];
+  status?: ContactStatus;
   unsubscribed: boolean;
+  bounced?: boolean;
+  bounceReason?: string;
   notes?: string;
   createdAt: string;
 }
@@ -152,25 +157,46 @@ export function getLocalContacts(): LocalContact[] {
 }
 
 export function saveLocalContact(
-  contactData: Omit<LocalContact, "id" | "createdAt" | "unsubscribed"> & { id?: string; unsubscribed?: boolean }
+  contactData: Omit<LocalContact, "id" | "createdAt" | "unsubscribed"> & {
+    id?: string;
+    unsubscribed?: boolean;
+    bounced?: boolean;
+    status?: ContactStatus;
+    bounceReason?: string;
+  }
 ): LocalContact {
   const contacts = getLocalContacts();
   const emailNormalized = contactData.email.trim().toLowerCase();
 
   const existingIndex = contacts.findIndex((c) => c.email.toLowerCase() === emailNormalized);
 
-  if (existingIndex >= 0) {
+  const existing = existingIndex >= 0 ? contacts[existingIndex] : null;
+
+  const isBounced = contactData.bounced ?? existing?.bounced ?? false;
+  const isUnsub = contactData.unsubscribed ?? existing?.unsubscribed ?? false;
+
+  let computedStatus: ContactStatus = contactData.status || existing?.status || "ACTIVE";
+  if (isBounced || contactData.bounced) {
+    computedStatus = "BOUNCED";
+  } else if (isUnsub || contactData.unsubscribed) {
+    computedStatus = "UNSUBSCRIBED";
+  }
+
+  if (existingIndex >= 0 && existing) {
     const updatedContact: LocalContact = {
-      ...contacts[existingIndex],
+      ...existing,
       firstName: contactData.firstName.trim(),
       lastName: contactData.lastName.trim(),
-      country: contactData.country !== undefined ? contactData.country : contacts[existingIndex].country,
-      city: contactData.city !== undefined ? contactData.city : contacts[existingIndex].city,
-      profession: contactData.profession !== undefined ? contactData.profession : contacts[existingIndex].profession,
-      source: contactData.source !== undefined ? contactData.source : contacts[existingIndex].source,
+      country: contactData.country !== undefined ? contactData.country : existing.country,
+      city: contactData.city !== undefined ? contactData.city : existing.city,
+      profession: contactData.profession !== undefined ? contactData.profession : existing.profession,
+      source: contactData.source !== undefined ? contactData.source : existing.source,
       tags: Array.from(new Set(contactData.tags || [])),
-      unsubscribed: contactData.unsubscribed ?? contacts[existingIndex].unsubscribed,
-      notes: contactData.notes ?? contacts[existingIndex].notes,
+      status: computedStatus,
+      unsubscribed: computedStatus === "UNSUBSCRIBED" || isUnsub,
+      bounced: computedStatus === "BOUNCED" || isBounced,
+      bounceReason: contactData.bounceReason ?? existing.bounceReason,
+      notes: contactData.notes ?? existing.notes,
     };
     contacts[existingIndex] = updatedContact;
     writeJsonFile(CONTACTS_FILE, contacts);
@@ -186,7 +212,10 @@ export function saveLocalContact(
       profession: contactData.profession || "",
       source: contactData.source || "",
       tags: Array.from(new Set(contactData.tags || [])),
-      unsubscribed: contactData.unsubscribed ?? false,
+      status: computedStatus,
+      unsubscribed: computedStatus === "UNSUBSCRIBED" || Boolean(isUnsub),
+      bounced: computedStatus === "BOUNCED" || Boolean(isBounced),
+      bounceReason: contactData.bounceReason || "",
       notes: contactData.notes || "",
       createdAt: new Date().toISOString(),
     };
@@ -433,8 +462,10 @@ export function getLocalAudiences(): LocalAudience[] {
     audiences = defaultAudiences;
   }
 
-  // Recalcular el conteo de contactos dinámicamente según la lista actual de contactos
-  const contacts = getLocalContacts().filter((c) => !c.unsubscribed);
+  // Recalcular el conteo de contactos dinámicamente según los contactos ACTIVOS
+  const contacts = getLocalContacts().filter(
+    (c) => (c.status ? c.status === "ACTIVE" : !c.unsubscribed && !c.bounced)
+  );
 
   return audiences.map((aud) => {
     let count = 0;

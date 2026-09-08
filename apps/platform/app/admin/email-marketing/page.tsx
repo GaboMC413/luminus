@@ -30,7 +30,10 @@ import {
   BarChart3,
   Target,
   Filter,
+  X,
 } from "lucide-react";
+
+type ContactStatus = "ACTIVE" | "UNSUBSCRIBED" | "BOUNCED";
 
 interface Contact {
   id: string;
@@ -42,7 +45,10 @@ interface Contact {
   profession?: string;
   source?: string;
   tags: string[];
+  status?: ContactStatus;
   unsubscribed: boolean;
+  bounced?: boolean;
+  bounceReason?: string;
   notes?: string;
   createdAt: string;
 }
@@ -200,6 +206,17 @@ export default function LocalEmailMarketingPage() {
   const [csvText, setCsvText] = useState("");
   const [isSyncingDatabase, setIsSyncingDatabase] = useState(false);
 
+  // Sync Audit Modal state
+  const [syncResultModal, setSyncResultModal] = useState<{
+    newContactsCount: number;
+    updatedContactsCount: number;
+    platformUsersCount: number;
+    eventGuestsCount: number;
+    unsubscribedCount: number;
+    bouncedCount: number;
+    totalContacts: number;
+  } | null>(null);
+
   const handleSyncDatabase = async () => {
     setIsSyncingDatabase(true);
     try {
@@ -208,14 +225,15 @@ export default function LocalEmailMarketingPage() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        alert(
-          `🎉 ¡Base de datos sincronizada con éxito!\n` +
-          `• ${data.platformUsersCount} usuarios de la plataforma procesados.\n` +
-          `• ${data.eventGuestsCount} inscriptos a eventos procesados.\n` +
-          `• ${data.unsubscribedCount} desuscritos actualizados.\n` +
-          `• ${data.bouncedCount} rebotes/quejas actualizados.\n` +
-          `Total en la base: ${data.totalContacts} contactos.`
-        );
+        setSyncResultModal({
+          newContactsCount: data.newContactsCount || 0,
+          updatedContactsCount: data.updatedContactsCount || 0,
+          platformUsersCount: data.platformUsersCount || 0,
+          eventGuestsCount: data.eventGuestsCount || 0,
+          unsubscribedCount: data.unsubscribedCount || 0,
+          bouncedCount: data.bouncedCount || 0,
+          totalContacts: data.totalContacts || 0,
+        });
         fetchContacts();
         fetchAudiences();
       } else {
@@ -747,12 +765,16 @@ export default function LocalEmailMarketingPage() {
     const matchesTag = selectedTagFilter === "ALL" || c.tags.includes(selectedTagFilter);
     const matchesCountry = selectedCountryFilter === "ALL" || c.country === selectedCountryFilter;
     const matchesSource = selectedSourceFilter === "ALL" || c.source === selectedSourceFilter;
+
+    const isBounced = c.status === "BOUNCED" || Boolean(c.bounced);
+    const isUnsubscribed = (c.status === "UNSUBSCRIBED" || Boolean(c.unsubscribed)) && !isBounced;
+    const isActive = c.status === "ACTIVE" || (!isBounced && !isUnsubscribed);
+
     const matchesStatus =
       selectedStatusFilter === "ALL" ||
-      (selectedStatusFilter === "ACTIVE" && !c.unsubscribed) ||
-      (selectedStatusFilter === "UNSUBSCRIBED" && c.unsubscribed) ||
-      (selectedStatusFilter === "COMPLAINT" && c.tags?.includes("complaint")) ||
-      (selectedStatusFilter === "BOUNCED" && c.tags?.includes("bounced"));
+      (selectedStatusFilter === "ACTIVE" && isActive) ||
+      (selectedStatusFilter === "UNSUBSCRIBED" && isUnsubscribed) ||
+      (selectedStatusFilter === "BOUNCED" && isBounced);
 
     return matchesTag && matchesCountry && matchesSource && matchesStatus;
   });
@@ -977,6 +999,14 @@ export default function LocalEmailMarketingPage() {
                                 : "Sin nombre registrado"}
                             </div>
                             <div className="text-slate-500 text-xs font-mono">{c.email}</div>
+                            {(c.status === "BOUNCED" || c.bounced) && (c.bounceReason || c.notes) && (
+                              <div
+                                className="text-[11px] font-mono text-rose-600 mt-0.5 max-w-md truncate"
+                                title={c.bounceReason || c.notes}
+                              >
+                                ⚠️ {c.bounceReason || c.notes}
+                              </div>
+                            )}
                           </td>
                           <td className="px-6 py-3.5 text-xs font-medium text-slate-700">
                             {c.country || c.city ? (
@@ -1017,29 +1047,20 @@ export default function LocalEmailMarketingPage() {
                             </div>
                           </td>
                           <td className="px-6 py-3.5">
-                            {c.unsubscribed ? (
-                              c.tags?.includes("complaint") ? (
-                                <span
-                                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-rose-100 text-rose-800 border border-rose-300 font-semibold cursor-help"
-                                  title={c.notes || "Queja por spam en Yahoo/Gmail"}
-                                >
-                                  Queja / Abuso
-                                </span>
-                              ) : c.tags?.includes("bounced") ? (
-                                <span
-                                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-amber-100 text-amber-800 border border-amber-300 font-semibold cursor-help"
-                                  title={c.notes || "Rebote de entrega en AWS SES"}
-                                >
-                                  Rebote (Bounce)
-                                </span>
-                              ) : (
-                                <span
-                                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-rose-50 text-rose-700 border border-rose-200 font-medium cursor-help"
-                                  title={c.notes || "Desuscrito manualmente o vía link"}
-                                >
-                                  Desuscrito
-                                </span>
-                              )
+                            {c.status === "BOUNCED" || c.bounced ? (
+                              <span
+                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-rose-100 text-rose-800 border border-rose-300 font-semibold cursor-help"
+                                title={c.bounceReason || c.notes || "Casilla llena o correo rebotado en AWS SES"}
+                              >
+                                Rebotado (Bounce)
+                              </span>
+                            ) : c.status === "UNSUBSCRIBED" || c.unsubscribed ? (
+                              <span
+                                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-amber-100 text-amber-800 border border-amber-300 font-medium cursor-help"
+                                title={c.notes || "Desuscrito voluntariamente o vía enlace en pie de correo"}
+                              >
+                                Desuscrito
+                              </span>
                             ) : (
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
                                 Activo
@@ -2530,7 +2551,7 @@ export default function LocalEmailMarketingPage() {
 
               {/* Dynamic matching count indicator */}
               {(() => {
-                let matched = contacts.filter((c) => !c.unsubscribed);
+                let matched = contacts.filter((c) => (c.status ? c.status === "ACTIVE" : !c.unsubscribed && !c.bounced));
                 if (newAudience.countryFilter) {
                   matched = matched.filter(
                     (c) => c.country?.toLowerCase() === newAudience.countryFilter.toLowerCase()
@@ -2664,6 +2685,94 @@ export default function LocalEmailMarketingPage() {
                   {(sendingProgress?.failed || 0).toLocaleString()}
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE RESULTADO DE AUDITORÍA Y SINCRONIZACIÓN BD */}
+      {syncResultModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                  <RefreshCw className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 text-base">Auditoría de Sincronización</h3>
+                  <p className="text-xs text-slate-500">Resumen de cambios aplicados a la base local</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSyncResultModal(null)}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-2.5 text-xs">
+              <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-100 flex items-center justify-between">
+                <span className="font-medium text-emerald-900 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500"></span> Nuevos contactos añadidos:
+                </span>
+                <span className="font-extrabold text-emerald-700 text-sm">
+                  +{syncResultModal.newContactsCount}
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                <span className="font-medium text-slate-700 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-500"></span> Contactos actualizados:
+                </span>
+                <span className="font-extrabold text-slate-900 text-sm">
+                  {syncResultModal.updatedContactsCount}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div className="text-slate-400 text-[10px] uppercase font-bold">Usuarios Plataforma</div>
+                  <div className="font-extrabold text-slate-800 text-sm mt-0.5">
+                    {syncResultModal.platformUsersCount}
+                  </div>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100">
+                  <div className="text-slate-400 text-[10px] uppercase font-bold">Inscriptos Eventos</div>
+                  <div className="font-extrabold text-slate-800 text-sm mt-0.5">
+                    {syncResultModal.eventGuestsCount}
+                  </div>
+                </div>
+                <div className="p-3 rounded-2xl bg-amber-50/60 border border-amber-100">
+                  <div className="text-amber-600 text-[10px] uppercase font-bold">Desuscritos</div>
+                  <div className="font-extrabold text-amber-900 text-sm mt-0.5">
+                    {syncResultModal.unsubscribedCount}
+                  </div>
+                </div>
+                <div className="p-3 rounded-2xl bg-rose-50/60 border border-rose-100">
+                  <div className="text-rose-600 text-[10px] uppercase font-bold">Rebotados (Bounces)</div>
+                  <div className="font-extrabold text-rose-900 text-sm mt-0.5">
+                    {syncResultModal.bouncedCount}
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-900 text-white flex items-center justify-between mt-2">
+                <span className="font-medium text-slate-300">Total contactos en la base:</span>
+                <span className="font-black text-base text-emerald-400">
+                  {syncResultModal.totalContacts.toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <button
+                onClick={() => setSyncResultModal(null)}
+                className="w-full py-3 bg-black hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+              >
+                Entendido
+              </button>
             </div>
           </div>
         </div>

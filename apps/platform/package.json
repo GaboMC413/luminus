@@ -13,6 +13,7 @@
     "db:studio": "prisma studio",
     "start": "next start",
     "lint": "next lint",
+    "send:campaign": "npx tsx scripts/send-campaign.ts",
     "test": "vitest run"
   },
   "dependencies": {

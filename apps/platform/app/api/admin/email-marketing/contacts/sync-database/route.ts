@@ -4,6 +4,7 @@ import {
   getLocalContacts,
   saveLocalContact,
   LocalContact,
+  ContactStatus,
 } from "@/lib/local-marketing/store";
 import { syncAwsSuppressionListToLocalContacts } from "@/lib/local-marketing/awsSesAnalytics";
 
@@ -16,6 +17,8 @@ export async function POST(request: Request) {
     let eventGuestsCount = 0;
     let unsubscribedCount = 0;
     let bouncedCount = 0;
+    let newContactsCount = 0;
+    let updatedContactsCount = 0;
 
     // 1. Fetch Explicit Unsubscribes from Database
     const unsubscribedRecords = await prisma.unsubscribedEmail.findMany({
@@ -64,6 +67,12 @@ export async function POST(request: Request) {
       platformUsersCount++;
 
       const existing = contactMap.get(emailClean);
+      if (existing) {
+        updatedContactsCount++;
+      } else {
+        newContactsCount++;
+      }
+
       const isUnsub = unsubscribedSet.has(emailClean) || bouncedSet.has(emailClean);
 
       const tags = Array.from(
@@ -71,14 +80,13 @@ export async function POST(request: Request) {
           ...(existing?.tags || []),
           "Plataforma LUMINUS",
           "Usuario Registrado",
-          ...(isUnsub ? ["desuscrito"] : []),
         ])
       );
 
       const updated = saveLocalContact({
         id: existing?.id,
         email: emailClean,
-        firstName: u.profile?.firstName || existing?.firstName || "Usuario",
+        firstName: u.profile?.firstName || existing?.firstName || "",
         lastName: u.profile?.lastName || existing?.lastName || "",
         country: u.profile?.country || existing?.country || undefined,
         city: u.profile?.city || existing?.city || undefined,
@@ -123,39 +131,59 @@ export async function POST(request: Request) {
       eventGuestsCount++;
 
       const existing = contactMap.get(emailClean);
-      const isUnsub =
-        g.marketingConsent === false ||
-        unsubscribedSet.has(emailClean) ||
-        bouncedSet.has(emailClean);
+      if (existing) {
+        updatedContactsCount++;
+      } else {
+        newContactsCount++;
+      }
 
-      // Event specific tags for past events
-      const eventTags: string[] = ["Inscripto a Eventos Pasados"];
-      pastInscriptions.forEach((ins) => {
-        if (ins.event?.title) {
-          const shortTitle = ins.event.title.substring(0, 30);
-          eventTags.push(`Evento: ${shortTitle}`);
+      const isBounced = bouncedSet.has(emailClean);
+      const isUnsub = g.marketingConsent === false || unsubscribedSet.has(emailClean);
+
+      const status: ContactStatus = isBounced
+        ? "BOUNCED"
+        : isUnsub
+        ? "UNSUBSCRIBED"
+        : existing?.status || "ACTIVE";
+
+      const eventTitles = pastInscriptions.map((ins) => ins.event?.title).filter(Boolean);
+      let notes = existing?.notes || "";
+      if (eventTitles.length > 0) {
+        for (const title of eventTitles) {
+          if (!notes.includes(title!)) {
+            notes = notes
+              ? `${notes}\n[Inscripto a Evento]: "${title}"`
+              : `[Inscripto a Evento]: "${title}"`;
+          }
         }
-      });
+      }
 
-      const tags = Array.from(
-        new Set([
-          ...(existing?.tags || []),
-          ...eventTags,
-          ...(isUnsub ? ["desuscrito"] : []),
-        ])
+      // Filter out technical status tags and legacy event tags
+      const cleanExistingTags = (existing?.tags || []).filter(
+        (t) =>
+          t !== "desuscrito" &&
+          t !== "bounced" &&
+          t !== "rebote-ses" &&
+          t !== "Inscripto a Eventos" &&
+          t !== "Inscripto a Eventos Pasados" &&
+          !t.startsWith("Evento:")
       );
+
+      const tags = Array.from(new Set([...cleanExistingTags, "Inscripto a Evento"]));
 
       const updated = saveLocalContact({
         id: existing?.id,
         email: emailClean,
-        firstName: g.firstName || existing?.firstName || "Suscriptor",
+        firstName: g.firstName || existing?.firstName || "",
         lastName: g.lastName || existing?.lastName || "",
         country: g.country || existing?.country || undefined,
         city: g.city || existing?.city || undefined,
         source: existing?.source || "Eventos LUMINUS",
         tags,
-        unsubscribed: isUnsub || Boolean(existing?.unsubscribed),
-        notes: existing?.notes || "Sincronizado automáticamente desde inscripciones a eventos pasados.",
+        status,
+        unsubscribed: status === "UNSUBSCRIBED",
+        bounced: status === "BOUNCED",
+        notes: notes || "Sincronizado automáticamente desde inscripciones a eventos pasados.",
       });
 
       contactMap.set(emailClean, updated);
@@ -166,11 +194,13 @@ export async function POST(request: Request) {
       const existing = contactMap.get(emailClean);
       if (existing) {
         unsubscribedCount++;
-        const tags = Array.from(new Set([...(existing.tags || []), "desuscrito"]));
+        const cleanTags = (existing.tags || []).filter((t) => t !== "desuscrito" && t !== "bounced");
         const updated = saveLocalContact({
           ...existing,
+          status: "UNSUBSCRIBED",
           unsubscribed: true,
-          tags,
+          bounced: false,
+          tags: cleanTags,
         });
         contactMap.set(emailClean, updated);
       }
@@ -180,11 +210,13 @@ export async function POST(request: Request) {
       const existing = contactMap.get(emailClean);
       if (existing) {
         bouncedCount++;
-        const tags = Array.from(new Set([...(existing.tags || []), "desuscrito", "rebote-ses"]));
+        const cleanTags = (existing.tags || []).filter((t) => t !== "desuscrito" && t !== "bounced" && t !== "rebote-ses");
         const updated = saveLocalContact({
           ...existing,
-          unsubscribed: true,
-          tags,
+          status: "BOUNCED",
+          bounced: true,
+          unsubscribed: false,
+          tags: cleanTags,
         });
         contactMap.set(emailClean, updated);
       }
@@ -199,12 +231,14 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
+      newContactsCount,
+      updatedContactsCount,
       platformUsersCount,
       eventGuestsCount,
       unsubscribedCount: unsubscribedSet.size,
       bouncedCount: bouncedSet.size,
       totalContacts: contactMap.size,
-      message: "Base de datos sincronizada exitosamente con el motor de email marketing.",
+      message: "Base de datos sincronizada exitosamente.",
     });
   } catch (error: any) {
     console.error("[Sync Database API Error]:", error);

@@ -20,23 +20,49 @@ export function renderTemplateVariables(
   template: string,
   recipient: { email: string; firstName?: string; lastName?: string }
 ): string {
-  const firstName = recipient.firstName || "Suscriptor";
-  const lastName = recipient.lastName || "";
-  const fullName = `${firstName} ${lastName}`.trim();
+  const rawFirstName = (recipient.firstName || "").trim();
+  const rawLastName = (recipient.lastName || "").trim();
+
+  const isGeneric =
+    rawFirstName.toLowerCase() === "suscriptor" ||
+    rawFirstName.toLowerCase() === "contacto" ||
+    rawFirstName.toLowerCase() === "usuario";
+  const hasFirstName = rawFirstName.length > 0 && !isGeneric;
+
+  const firstName = hasFirstName ? rawFirstName : "";
+  const lastName = rawLastName;
+  const fullName = hasFirstName ? `${firstName} ${lastName}`.trim() : "";
   const email = recipient.email;
+
   const baseUrl = getBaseUrl();
   const token = generateUnsubscribeToken(email);
   const unsubscribeUrl = `${baseUrl}/desuscribir?email=${encodeURIComponent(
     email
   )}&token=${encodeURIComponent(token)}`;
 
-  return template
-    .replace(/\{\{\s*nombre\s*\}\}/gi, firstName)
-    .replace(/\{\{\s*firstName\s*\}\}/gi, firstName)
+  let result = template;
+
+  if (hasFirstName) {
+    result = result
+      .replace(/\{\{\s*nombre\s*\}\}/gi, firstName)
+      .replace(/\{\{\s*firstName\s*\}\}/gi, firstName)
+      .replace(/\{\{\s*nombre_completo\s*\}\}/gi, fullName)
+      .replace(/\{\{\s*fullName\s*\}\}/gi, fullName);
+  } else {
+    // Si no hay nombre: "Hola {{nombre}}," -> "Hola," | "¡Hola {{nombre}}!" -> "¡Hola!"
+    result = result
+      .replace(/Hola\s+\{\{\s*(?:nombre|firstName)\s*\}\}\s*,/gi, "Hola,")
+      .replace(/Hola\s+\{\{\s*(?:nombre|firstName)\s*\}\}/gi, "Hola")
+      .replace(/¡Hola\s+\{\{\s*(?:nombre|firstName)\s*\}\}!/gi, "¡Hola!")
+      .replace(/\{\{\s*nombre\s*\}\}/gi, "")
+      .replace(/\{\{\s*firstName\s*\}\}/gi, "")
+      .replace(/\{\{\s*nombre_completo\s*\}\}/gi, "")
+      .replace(/\{\{\s*fullName\s*\}\}/gi, "");
+  }
+
+  return result
     .replace(/\{\{\s*apellido\s*\}\}/gi, lastName)
     .replace(/\{\{\s*lastName\s*\}\}/gi, lastName)
-    .replace(/\{\{\s*nombre_completo\s*\}\}/gi, fullName)
-    .replace(/\{\{\s*fullName\s*\}\}/gi, fullName)
     .replace(/\{\{\s*email\s*\}\}/gi, email)
     .replace(/\{\{\s*link_desuscripcion\s*\}\}/gi, unsubscribeUrl)
     .replace(/\{\{\s*unsubscribeUrl\s*\}\}/gi, unsubscribeUrl);
@@ -179,7 +205,18 @@ export function injectTracking(html: string, logId: string): string {
 
 export async function executeCampaignBatchSend(
   campaignId: string,
-  options?: { delayMs?: number }
+  options?: {
+    delayMs?: number;
+    onProgress?: (info: {
+      sent: number;
+      failed: number;
+      total: number;
+      percentage: number;
+      currentEmail: string;
+      status: "SUCCESS" | "FAILED";
+      error?: string;
+    }) => void;
+  }
 ): Promise<{ success: boolean; sent: number; failed: number; total: number }> {
   const campaign = getLocalCampaignById(campaignId);
   if (!campaign) {
@@ -187,8 +224,10 @@ export async function executeCampaignBatchSend(
   }
 
   const allContacts = getLocalContacts();
-  // Filtrar destinatarios activos (no desuscritos)
-  let recipients = allContacts.filter((c) => !c.unsubscribed && c.email.includes("@"));
+  // Filtrar destinatarios activos (excluir desuscritos y rebotados)
+  let recipients = allContacts.filter(
+    (c) => (c.status ? c.status === "ACTIVE" : !c.unsubscribed && !c.bounced) && c.email.includes("@")
+  );
 
   // Filtrar por Audiencia si la campaña especifica audienceId
   if (campaign.audienceId && campaign.audienceId !== "aud_all") {
@@ -245,7 +284,7 @@ export async function executeCampaignBatchSend(
 
   const sesClient = getSesV2Client();
   const formattedSender = formatSenderAddress(campaign.fromEmail, campaign.fromName);
-  const delayBetweenEmailsMs = options?.delayMs !== undefined ? options.delayMs : 100; // 10 emails por segundo (100ms) por defecto
+  const delayBetweenEmailsMs = options?.delayMs !== undefined ? options.delayMs : 100;
   const configurationSet = process.env.SES_CONFIGURATION_MARKETING || "luminus-marketing";
 
   let sentCount = 0;
@@ -275,7 +314,6 @@ export async function executeCampaignBatchSend(
     });
 
     const trackedHtml = injectTracking(renderedHtml, log.id);
-
     const { apiUrl } = generateUnsubscribeUrls(contact.email);
 
     try {
@@ -321,6 +359,22 @@ export async function executeCampaignBatchSend(
       console.error(`[LOCAL CAMPAIGN SEND ERROR] Email: ${contact.email}:`, errorMsg);
       log.status = "FAILED";
       log.error = errorMsg;
+
+      // Auto-marcar como BOUNCED
+      try {
+        const { saveLocalContact } = await import("./store");
+        saveLocalContact({
+          ...contact,
+          status: "BOUNCED",
+          bounced: true,
+          bounceReason: errorMsg,
+        });
+        await prisma.unsubscribedEmail.upsert({
+          where: { email: contact.email },
+          create: { email: contact.email, reason: `BOUNCE_SEND_ERROR: ${errorMsg.substring(0, 100)}` },
+          update: { reason: `BOUNCE_SEND_ERROR: ${errorMsg.substring(0, 100)}` },
+        });
+      } catch (e) {}
     }
 
     // Actualizar progreso parcial en la campaña
@@ -336,6 +390,19 @@ export async function executeCampaignBatchSend(
       sentCount,
       failedCount,
     });
+
+    const percentage = Number((((i + 1) / recipients.length) * 100).toFixed(1));
+    if (options?.onProgress) {
+      options.onProgress({
+        sent: sentCount,
+        failed: failedCount,
+        total: recipients.length,
+        percentage,
+        currentEmail: contact.email,
+        status: log.status,
+        error: log.error,
+      });
+    }
 
     // Retardo pequeño entre envíos
     if (i < recipients.length - 1 && delayBetweenEmailsMs > 0) {

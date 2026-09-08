@@ -41,7 +41,7 @@ export function renderVivianaNewsletterHtml(options?: {
     </p>
 
     <div style="margin-top: 20px; text-align: right;">
-      <p style="margin: 0; font-weight: 600; color: #000000; font-size: 16px;">Gabriel Medero</p>
+      <p style="margin: 0; font-weight: bold; color: #000000; font-size: 16px;">Gabriel Medero</p>
       <p style="margin: 2px 0 0 0; font-size: 14px; font-weight: normal; font-style: italic; color: #000000;">Director General de LUMINUS</p>
     </div>
   </div>
@@ -50,7 +50,7 @@ export function renderVivianaNewsletterHtml(options?: {
 
   <!-- SECCIÓN 1: VIVIANA PAGLIAROLI -->
   <div style="margin-bottom: 36px;">
-    <h1 style="font-size: 22px; font-weight: 600; color: #000000; margin: 0 0 20px 0; line-height: 1.3;">
+    <h1 style="font-size: 22px; font-weight: bold; color: #000000; margin: 0 0 20px 0; line-height: 1.3;">
       5 ideas sobre pilates que nos dejó Viviana Pagliaroli
     </h1>
 
@@ -67,7 +67,7 @@ export function renderVivianaNewsletterHtml(options?: {
 
     <!-- LISTA DE 5 IDEAS DIRECTAS EN EL CUERPO (SIN FONDO CONTENEDOR) -->
     <div style="margin-bottom: 18px;">
-      <p style="margin: 0 0 4px 0; font-size: 16px; font-weight: 600; color: #000000;">
+      <p style="margin: 0 0 4px 0; font-size: 16px; font-weight: bold; color: #000000;">
         1. Pilates no es solo una práctica suave
       </p>
       <p style="margin: 0; font-size: 16px; font-weight: normal; line-height: 1.6; color: #000000;">
@@ -76,7 +76,7 @@ export function renderVivianaNewsletterHtml(options?: {
     </div>
 
     <div style="margin-bottom: 18px;">
-      <p style="margin: 0 0 4px 0; font-size: 16px; font-weight: 600; color: #000000;">
+      <p style="margin: 0 0 4px 0; font-size: 16px; font-weight: bold; color: #000000;">
         2. No hay una edad ideal para empezar
       </p>
       <p style="margin: 0; font-size: 16px; font-weight: normal; line-height: 1.6; color: #000000;">
@@ -85,7 +85,7 @@ export function renderVivianaNewsletterHtml(options?: {
     </div>
 
     <div style="margin-bottom: 18px;">
-      <p style="margin: 0 0 4px 0; font-size: 16px; font-weight: 600; color: #000000;">
+      <p style="margin: 0 0 4px 0; font-size: 16px; font-weight: bold; color: #000000;">
         3. Muchas veces el cambio se siente antes de verse
       </p>
       <p style="margin: 0; font-size: 16px; font-weight: normal; line-height: 1.6; color: #000000;">
@@ -94,7 +94,7 @@ export function renderVivianaNewsletterHtml(options?: {
     </div>
 
     <div style="margin-bottom: 18px;">
-      <p style="margin: 0 0 4px 0; font-size: 16px; font-weight: 600; color: #000000;">
+      <p style="margin: 0 0 4px 0; font-size: 16px; font-weight: bold; color: #000000;">
         4. Entrenar hoy también es cuidar el cuerpo de mañana
       </p>
       <p style="margin: 0; font-size: 16px; font-weight: normal; line-height: 1.6; color: #000000;">
@@ -103,7 +103,7 @@ export function renderVivianaNewsletterHtml(options?: {
     </div>
 
     <div style="margin-bottom: 24px;">
-      <p style="margin: 0 0 4px 0; font-size: 16px; font-weight: 600; color: #000000;">
+      <p style="margin: 0 0 4px 0; font-size: 16px; font-weight: bold; color: #000000;">
         5. La constancia hace la diferencia
       </p>
       <p style="margin: 0; font-size: 16px; font-weight: normal; line-height: 1.6; color: #000000;">
@@ -127,8 +127,8 @@ export function renderVivianaNewsletterHtml(options?: {
 
   <!-- SECCIÓN 2: NUEVA PLATAFORMA LUMINUS -->
   <div style="margin-bottom: 36px;">
-    <h2 style="font-size: 22px; font-weight: 600; color: #000000; margin: 0 0 20px 0; line-height: 1.3;">
-      Una nueva etapa de LUMINUS ya está en marcha
+    <h2 style="font-size: 22px; font-weight: bold; color: #000000; margin: 0 0 20px 0; line-height: 1.3;">
+      La nueva plataforma de LUMINUS ya está disponible
     </h2>
 
     <!-- CAPTURA DE LA PLATAFORMA -->
@@ -139,11 +139,15 @@ export function renderVivianaNewsletterHtml(options?: {
     </div>
 
     <p style="font-size: 16px; line-height: 1.6; color: #000000; margin: 0 0 16px 0;">
-      Hace pocos días presentamos la nueva plataforma de LUMINUS, un espacio que estamos construyendo para conectar a nuestra comunidad con especialistas, actividades y nuevas formas de cuidar el bienestar.
+      Creamos un espacio para que puedas encontrar nuevas formas de cuidar tu bienestar y conectar con personas que comparten tus intereses.
     </p>
 
     <p style="font-size: 16px; line-height: 1.6; color: #000000; margin: 0 0 16px 0;">
-      Registrarte es gratis. Ya puedes crear tu perfil, conocer a otros integrantes de la comunidad y descubrir especialistas de distintas áreas.
+      Dentro de la plataforma puedes crear tu perfil, conocer a otros integrantes de la comunidad y descubrir especialistas de distintas áreas, con información sobre su experiencia y enfoque para que puedas encontrar opciones que se adapten mejor a lo que buscas.
+    </p>
+
+    <p style="font-size: 16px; font-weight: bold; line-height: 1.6; color: #000000; margin: 0 0 16px 0;">
+      Registrarte es gratis y te permite empezar a explorar la red desde hoy.
     </p>
 
     <p style="font-size: 16px; line-height: 1.6; color: #000000; margin: 0 0 24px 0;">
