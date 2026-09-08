@@ -191,6 +191,35 @@ export default function LocalEmailMarketingPage() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
   const [csvText, setCsvText] = useState("");
+  const [isSyncingDatabase, setIsSyncingDatabase] = useState(false);
+
+  const handleSyncDatabase = async () => {
+    setIsSyncingDatabase(true);
+    try {
+      const res = await fetch("/api/admin/email-marketing/contacts/sync-database", {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert(
+          `🎉 ¡Base de datos sincronizada con éxito!\n` +
+          `• ${data.platformUsersCount} usuarios de la plataforma procesados.\n` +
+          `• ${data.eventGuestsCount} inscriptos a eventos procesados.\n` +
+          `• ${data.unsubscribedCount} desuscritos actualizados.\n` +
+          `• ${data.bouncedCount} rebotes/quejas actualizados.\n` +
+          `Total en la base: ${data.totalContacts} contactos.`
+        );
+        fetchContacts();
+        fetchAudiences();
+      } else {
+        alert(data.error || "No se pudo sincronizar la base de datos.");
+      }
+    } catch (err) {
+      alert("Error de conexión al sincronizar la base de datos.");
+    } finally {
+      setIsSyncingDatabase(false);
+    }
+  };
 
   const handleFileUploadImport = async () => {
     if (!selectedFiles || selectedFiles.length === 0) {
@@ -906,6 +935,15 @@ export default function LocalEmailMarketingPage() {
                   className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-xl font-semibold text-xs transition-all shadow-xs cursor-pointer h-11"
                 >
                   <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Importar lista
+                </button>
+                <button
+                  onClick={handleSyncDatabase}
+                  disabled={isSyncingDatabase}
+                  className="flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-xl font-semibold text-xs transition-all shadow-xs cursor-pointer h-11 disabled:opacity-50"
+                  title="Sincronizar usuarios de la plataforma, inscriptos a eventos pasados/actuales y desuscritos"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isSyncingDatabase ? "animate-spin" : ""}`} />
+                  {isSyncingDatabase ? "Sincronizando..." : "Actualizar Base"}
                 </button>
               </div>
             </div>
