@@ -1,5 +1,5 @@
 import { getSesV2Client } from "@/lib/mails/sesClient";
-import { ListSuppressedDestinationsCommand, GetAccountCommand } = "@aws-sdk/client-sesv2";
+import { ListSuppressedDestinationsCommand, GetAccountCommand } from "@aws-sdk/client-sesv2";
 import { getLocalCampaigns, saveLocalCampaign, getLocalContacts, saveLocalContact } from "@/lib/local-marketing/store";
 
 export interface AwsSesEventPayload {
@@ -71,10 +71,10 @@ export function calculateCampaignMetrics(campaignId: string): CalculatedCampaign
   const deliveredCount = Math.max(0, sentCount - bouncedCount);
   const deliveryRate = sentCount > 0 ? Math.round((deliveredCount / sentCount) * 1000) / 10 : 100;
 
-  const openedCount = campaign?.openedCount || 0;
+  const openedCount = (campaign as any)?.openedCount || 0;
   const openRate = deliveredCount > 0 ? Math.round((openedCount / deliveredCount) * 1000) / 10 : 0;
 
-  const clickedCount = campaign?.clickedCount || 0;
+  const clickedCount = (campaign as any)?.clickedCount || 0;
   const clickRate = deliveredCount > 0 ? Math.round((clickedCount / deliveredCount) * 1000) / 10 : 0;
 
   return {
@@ -98,7 +98,7 @@ export async function fetchLiveAwsSuppressionList(): Promise<Array<{ email: stri
     let nextToken: string | undefined = undefined;
 
     do {
-      const res = await ses.send(
+      const res: any = await ses.send(
         new ListSuppressedDestinationsCommand({
           PageSize: 100,
           NextToken: nextToken,

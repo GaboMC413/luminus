@@ -9,6 +9,12 @@ import {
   LocalContact,
 } from "./store";
 
+import {
+  generateUnsubscribeToken,
+  generateUnsubscribeUrls,
+  getBaseUrl,
+} from "../../scripts/local-unsubscribe-helper";
+
 export function renderTemplateVariables(
   template: string,
   recipient: { email: string; firstName?: string; lastName?: string }
@@ -17,10 +23,11 @@ export function renderTemplateVariables(
   const lastName = recipient.lastName || "";
   const fullName = `${firstName} ${lastName}`.trim();
   const email = recipient.email;
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://luminuslatam.com";
-  const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(
+  const baseUrl = getBaseUrl();
+  const token = generateUnsubscribeToken(email);
+  const unsubscribeUrl = `${baseUrl}/desuscribir?email=${encodeURIComponent(
     email
-  )}`;
+  )}&token=${encodeURIComponent(token)}`;
 
   return template
     .replace(/\{\{\s*nombre\s*\}\}/gi, firstName)
@@ -99,16 +106,20 @@ export async function sendSingleTestEmail(params: {
 
 export function injectTracking(html: string, logId: string): string {
   if (!logId) return html;
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://luminuslatam.com";
+  const baseUrl = getBaseUrl();
 
-  // 1. Reescribir enlaces solo si está explícitamente habilitado el rastreo de clicks
+  // 1. Reescribir enlaces para rastreo de clicks
   let trackedHtml = html;
-  if (process.env.ENABLE_LINK_TRACKING === "true") {
+  if (process.env.ENABLE_LINK_TRACKING !== "false") {
     trackedHtml = html.replace(/<a\s+(?:[^>]*?\s+)?href=["'](https?:\/\/[^"']+)["']/gi, (match, originalUrl) => {
-      if (originalUrl.includes("/track/") || originalUrl.includes("/unsubscribe")) {
+      if (
+        originalUrl.includes("/track/") ||
+        originalUrl.includes("/unsubscribe") ||
+        originalUrl.includes("/desuscribir")
+      ) {
         return match;
       }
-      const trackingUrl = `${baseUrl}/api/admin/email-marketing/track/click?logId=${encodeURIComponent(
+      const trackingUrl = `${baseUrl}/api/track/click?id=${encodeURIComponent(
         logId
       )}&url=${encodeURIComponent(originalUrl)}`;
       return match.replace(originalUrl, trackingUrl);
@@ -116,7 +127,7 @@ export function injectTracking(html: string, logId: string): string {
   }
 
   // 2. Inyectar píxel 1x1 para rastrear apertura
-  const pixelHtml = `<img src="${baseUrl}/api/admin/email-marketing/track/open?logId=${encodeURIComponent(
+  const pixelHtml = `<img src="${baseUrl}/api/track/open?id=${encodeURIComponent(
     logId
   )}" width="1" height="1" style="display:none;width:1px;height:1px;border:0;" alt="" />`;
 
@@ -200,6 +211,16 @@ export async function executeCampaignBatchSend(
   let sentCount = 0;
   let failedCount = 0;
 
+  const { generateUnsubscribeUrls, filterUnsubscribedEmails } = await import(
+    "../../scripts/local-unsubscribe-helper"
+  );
+
+  // Filter out emails unsubscribed in PostgreSQL database
+  const eligibleEmails = new Set(
+    await filterUnsubscribedEmails(recipients.map((r) => r.email))
+  );
+  recipients = recipients.filter((c) => eligibleEmails.has(c.email.toLowerCase().trim()));
+
   for (let i = 0; i < recipients.length; i++) {
     const contact = recipients[i];
     const renderedHtml = renderTemplateVariables(campaign.htmlContent, contact);
@@ -215,6 +236,8 @@ export async function executeCampaignBatchSend(
 
     const trackedHtml = injectTracking(renderedHtml, log.id);
 
+    const { apiUrl } = generateUnsubscribeUrls(contact.email);
+
     try {
       const command = new SendEmailCommand({
         FromEmailAddress: formattedSender,
@@ -225,6 +248,10 @@ export async function executeCampaignBatchSend(
             Body: {
               Html: { Data: trackedHtml, Charset: "UTF-8" },
             },
+            Headers: [
+              { Name: "List-Unsubscribe", Value: `<${apiUrl}>` },
+              { Name: "List-Unsubscribe-Post", Value: "List-Unsubscribe=One-Click" },
+            ],
           },
         },
         ...(configurationSet && { ConfigurationSetName: configurationSet }),

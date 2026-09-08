@@ -261,6 +261,8 @@ export default function LocalEmailMarketingPage() {
     lastSentAt?: string;
     createdAt?: string;
     sentCount?: number;
+    failedCount?: number;
+    totalRecipients?: number;
     totalTarget?: number;
   }>({
     subject: "",
@@ -1483,7 +1485,7 @@ export default function LocalEmailMarketingPage() {
                         const openedLogs = cmpLogs.filter((l) => l.openedAt);
                         const clickedLogs = cmpLogs.filter((l) => l.clickedAt);
                         const totalSentCount = currentCampaign.sentCount || cmpLogs.length || 0;
-                        const failedCount = currentCampaign.failedCount || failedLogs.length || (currentCampaign.id.includes("corregido") ? 75 : 0);
+                        const failedCount = currentCampaign.failedCount || failedLogs.length || (currentCampaign.id?.includes("corregido") ? 75 : 0);
                         const deliveredCount = Math.max(0, totalSentCount - failedCount);
                         const deliveryRate =
                           totalSentCount > 0

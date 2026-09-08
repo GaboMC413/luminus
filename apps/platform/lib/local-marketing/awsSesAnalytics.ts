@@ -43,7 +43,7 @@ export async function syncAwsSuppressionListToLocalContacts(): Promise<Suppressi
     let nextToken: string | undefined = undefined;
 
     do {
-      const response = await sesClient.send(
+      const response: any = await sesClient.send(
         new ListSuppressedDestinationsCommand({
           PageSize: 100,
           NextToken: nextToken,

@@ -42,6 +42,8 @@ export interface LocalCampaign {
   status: "DRAFT" | "SENDING" | "COMPLETED" | "PAUSED";
   sentCount: number;
   failedCount: number;
+  openedCount?: number;
+  clickedCount?: number;
   totalRecipients: number;
   createdAt: string;
   lastSentAt?: string;
