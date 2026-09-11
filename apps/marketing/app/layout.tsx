@@ -16,24 +16,26 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://luminuslatam.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "LUMINUS | Tu red de bienestar en Latinoamérica",
-  description: "Un espacio para conectar, aprender y cuidar tu bienestar. LUMINUS conecta personas, especialistas y espacios de toda Latinoamérica en una misma comunidad.",
+  title: "LUMINUS LATAM | Una red para conectar, aprender y cuidar tu bienestar",
+  description: "Conecta con especialistas de distintas disciplinas, descubre espacios y participa en actividades para acompañar tu bienestar en Latinoamérica.",
   icons: {
     icon: "/ico.png",
     shortcut: "/ico.png",
     apple: "/ico.png",
   },
   openGraph: {
-    title: "LUMINUS | Tu red de bienestar en Latinoamérica",
-    description: "Un espacio para conectar, aprender y cuidar tu bienestar. LUMINUS conecta personas, especialistas y espacios de toda Latinoamérica en una misma comunidad.",
+    title: "LUMINUS LATAM | Una red para conectar, aprender y cuidar tu bienestar",
+    description: "Conecta con especialistas de distintas disciplinas, descubre espacios y participa en actividades para acompañar tu bienestar en Latinoamérica.",
     url: siteUrl,
-    siteName: "LUMINUS",
+    siteName: "LUMINUS LATAM",
     images: [
       {
-        url: "/logo-mails.png",
+        url: "/luminus_platform.jpg",
+        secureUrl: `${siteUrl}/luminus_platform.jpg`,
         width: 1200,
         height: 630,
-        alt: "LUMINUS Bienestar",
+        type: "image/jpeg",
+        alt: "LUMINUS LATAM | Una red para conectar, aprender y cuidar tu bienestar",
       },
     ],
     locale: "es_LA",
@@ -41,9 +43,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "LUMINUS | Tu red de bienestar en Latinoamérica",
-    description: "Un espacio para conectar, aprender y cuidar tu bienestar.",
-    images: ["/logo-mails.png"],
+    title: "LUMINUS LATAM | Una red para conectar, aprender y cuidar tu bienestar",
+    description: "Conecta con especialistas de distintas disciplinas, descubre espacios y participa en actividades para acompañar tu bienestar en Latinoamérica.",
+    images: ["/luminus_platform.jpg"],
   },
 };
 

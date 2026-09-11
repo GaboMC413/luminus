@@ -17,8 +17,40 @@ import {
   Footer,
 } from "@/components";
 
+import type { Metadata } from "next";
+
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "LUMINUS LATAM | Una red para conectar, aprender y cuidar tu bienestar",
+  description: "Conecta con especialistas de distintas disciplinas, descubre espacios y participa en actividades para acompañar tu bienestar en Latinoamérica.",
+  alternates: { canonical: "https://luminuslatam.com" },
+  openGraph: {
+    title: "LUMINUS LATAM | Una red para conectar, aprender y cuidar tu bienestar",
+    description: "Conecta con especialistas de distintas disciplinas, descubre espacios y participa en actividades para acompañar tu bienestar en Latinoamérica.",
+    url: "https://luminuslatam.com",
+    siteName: "LUMINUS LATAM",
+    images: [
+      {
+        url: "/luminus_platform.jpg",
+        secureUrl: "https://luminuslatam.com/luminus_platform.jpg",
+        width: 1200,
+        height: 630,
+        type: "image/jpeg",
+        alt: "LUMINUS LATAM | Una red para conectar, aprender y cuidar tu bienestar",
+      },
+    ],
+    locale: "es_LA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LUMINUS LATAM | Una red para conectar, aprender y cuidar tu bienestar",
+    description: "Conecta con especialistas de distintas disciplinas, descubre espacios y participa en actividades para acompañar tu bienestar en Latinoamérica.",
+    images: ["/luminus_platform.jpg"],
+  },
+};
 
 export default async function Home() {
   let dbEvents: any[] = [];
