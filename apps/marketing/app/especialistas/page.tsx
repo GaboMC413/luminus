@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import fs from "fs";
 import path from "path";
 import { getDbEvents } from "@/lib/events";
@@ -18,9 +19,34 @@ import {
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Para Especialistas | LUMINUS - Red Profesional de Bienestar",
-  description: "Desarrolla tu práctica profesional dentro de LUMINUS. Da visibilidad a tu trabajo, ofrece sesiones introductorias y conecta con personas en toda Latinoamérica.",
+export const metadata: Metadata = {
+  title: "Forma parte de la Red de Especialistas | LUMINUS LATAM",
+  description: "Presenta tu trabajo, ofrece sesiones introductorias y conecta con personas en toda Latinoamérica sin perder tu independencia. Postularte hoy es simple y sin costo.",
+  alternates: { canonical: "https://luminuslatam.com/especialistas" },
+  openGraph: {
+    title: "Forma parte de la Red de Especialistas | LUMINUS LATAM",
+    description: "Presenta tu trabajo, ofrece sesiones introductorias y conecta con personas en toda Latinoamérica sin perder tu independencia. Postularte hoy es simple y sin costo.",
+    url: "https://luminuslatam.com/especialistas",
+    siteName: "LUMINUS LATAM",
+    images: [
+      {
+        url: "/og-especialistas.png",
+        secureUrl: "https://luminuslatam.com/og-especialistas.png",
+        width: 1200,
+        height: 630,
+        type: "image/png",
+        alt: "Forma parte de la Red de Especialistas | LUMINUS LATAM",
+      },
+    ],
+    locale: "es_LA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Forma parte de la Red de Especialistas | LUMINUS LATAM",
+    description: "Presenta tu trabajo, ofrece sesiones introductorias y conecta con personas en toda Latinoamérica sin perder tu independencia. Postularte hoy es simple y sin costo.",
+    images: ["/og-especialistas.png"],
+  },
 };
 
 export default async function SpecialistsPage() {

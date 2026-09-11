@@ -35,39 +35,66 @@ function getImageMimeType(url: string): string {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const event = await getEventBySlug(params.slug);
   if (!event) {
-    return { title: "Inscripción a Evento | LUMINUS" };
+    return { title: "Inscripción a Evento | LUMINUS LATAM" };
   }
 
-  const title = `${event.title} | LUMINUS Eventos`;
-  const cleanDescription = event.description
+  const title = `${event.title} | LUMINUS LATAM`;
+
+  const speakerName = event.speaker_name || event.speakerName;
+  const isSpeakerValid =
+    speakerName &&
+    !["Especialista LUMINUS", "Especialistas LUMINUS", "Especialista", "LUMINUS"].includes(speakerName.trim());
+  const cleanSpeaker = isSpeakerValid
+    ? (speakerName.trim().startsWith("Con ") ? speakerName.trim().slice(4) : speakerName.trim())
+    : "";
+
+  let cleanDescription = event.description
     ? event.description
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1")
         .replace(/\*\*([^*]+)\*\*/g, "$1")
         .replace(/\*([^*]+)\*/g, "$1")
         .replace(/\n+/g, " ")
         .trim()
-        .substring(0, 200)
-    : "Un espacio para conectar, aprender y cuidar tu bienestar en Latinoamérica.";
+    : "";
+
+  if (cleanDescription.length > 140) {
+    cleanDescription = cleanDescription.substring(0, 140).trim() + "...";
+  }
+
+  const formattedDesc = cleanDescription
+    ? cleanDescription.endsWith(".") || cleanDescription.endsWith("...")
+      ? cleanDescription
+      : `${cleanDescription}.`
+    : "";
+
+  const socialDescription = cleanSpeaker
+    ? `Con ${cleanSpeaker}.${formattedDesc ? ` ${formattedDesc}` : ""} Inscribirme ahora.`
+    : formattedDesc
+    ? `${formattedDesc} Inscribirme ahora.`
+    : "Participa de este encuentro en LUMINUS LATAM. Inscribirme ahora.";
 
   const domain = (process.env.NEXT_PUBLIC_SITE_URL || "https://luminuslatam.com").replace(/\/$/, "");
   const eventUrl = `${domain}/proximasfechas/${params.slug}`;
 
-  const rawCover = event.coverUrl || event.cover_url || "/logo-mails.png";
-  const coverImageUrl = rawCover.startsWith("http://") || rawCover.startsWith("https://")
-    ? rawCover
-    : `${domain}${rawCover.startsWith("/") ? "" : "/"}${rawCover}`;
+  const rawCover = event.coverUrl || event.cover_url;
+  const fallbackCover = `${domain}/luminus_events.jpg`;
+  const coverImageUrl = rawCover
+    ? (rawCover.startsWith("http://") || rawCover.startsWith("https://")
+        ? rawCover
+        : `${domain}${rawCover.startsWith("/") ? "" : "/"}${rawCover}`)
+    : fallbackCover;
 
   const imageMimeType = getImageMimeType(coverImageUrl);
 
   return {
     title,
-    description: cleanDescription,
+    description: socialDescription,
     alternates: { canonical: eventUrl },
     openGraph: {
       title,
-      description: cleanDescription,
+      description: socialDescription,
       url: eventUrl,
-      siteName: "LUMINUS",
+      siteName: "LUMINUS LATAM",
       locale: "es_LA",
       type: "website",
       images: [
@@ -77,14 +104,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           width: 1200,
           height: 630,
           type: imageMimeType,
-          alt: event.title || "Portada de Evento LUMINUS",
+          alt: event.title || "Entrevistas y Encuentros | LUMINUS LATAM",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
       title,
-      description: cleanDescription,
+      description: socialDescription,
       images: [coverImageUrl],
     },
   };

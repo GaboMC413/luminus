@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { getDbEvents } from "@/lib/events";
 import { Navbar, Footer } from "@/components";
 import { UpcomingEventsTimeline } from "@/components/events/UpcomingEventsTimeline";
@@ -6,9 +7,34 @@ import { PastEventsGrid } from "@/components/events/PastEventsGrid";
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Próximas Fechas | LUMINUS - Encuentros y Talleres",
-  description: "Descubre y reserva tu lugar para los próximos talleres, encuentros y conversaciones en vivo sobre bienestar en LUMINUS.",
+export const metadata: Metadata = {
+  title: "Próximas Fechas | LUMINUS LATAM",
+  description: "Conoce las próximas charlas en vivo, entrevistas y talleres con especialistas del bienestar. Participa y reserva tu lugar.",
+  alternates: { canonical: "https://luminuslatam.com/proximasfechas" },
+  openGraph: {
+    title: "Próximas Fechas | LUMINUS LATAM",
+    description: "Conoce las próximas charlas en vivo, entrevistas y talleres con especialistas del bienestar. Participa y reserva tu lugar.",
+    url: "https://luminuslatam.com/proximasfechas",
+    siteName: "LUMINUS LATAM",
+    images: [
+      {
+        url: "/luminus_events.jpg",
+        secureUrl: "https://luminuslatam.com/luminus_events.jpg",
+        width: 1200,
+        height: 630,
+        type: "image/jpeg",
+        alt: "Próximas Fechas | LUMINUS LATAM",
+      },
+    ],
+    locale: "es_LA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Próximas Fechas | LUMINUS LATAM",
+    description: "Conoce las próximas charlas en vivo, entrevistas y talleres con especialistas del bienestar. Participa y reserva tu lugar.",
+    images: ["/luminus_events.jpg"],
+  },
 };
 
 function deduplicateEvents(events: any[]) {

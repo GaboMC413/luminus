@@ -5,8 +5,38 @@ import { Footer } from "@/components/layout/Footer";
 import { CategorizedFaqs } from "@/components/faqs/CategorizedFaqs";
 
 export const metadata: Metadata = {
-  title: "Preguntas Frecuentes | LUMINUS Latam",
-  description: "Respuestas claras a las dudas más comunes sobre la plataforma LUMINUS, membresías y la Red de Especialistas.",
+  title: "Preguntas Frecuentes | LUMINUS LATAM",
+  description:
+    "Respuestas claras a las dudas más comunes sobre la plataforma LUMINUS, membresías y la Red de Especialistas.",
+  alternates: {
+    canonical: "https://luminuslatam.com/preguntas-frecuentes",
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_LA",
+    url: "https://luminuslatam.com/preguntas-frecuentes",
+    siteName: "LUMINUS LATAM",
+    title: "Preguntas Frecuentes | LUMINUS LATAM",
+    description:
+      "Respuestas claras a las dudas más comunes sobre la plataforma LUMINUS, membresías y la Red de Especialistas.",
+    images: [
+      {
+        url: "https://luminuslatam.com/luminus_platform.jpg",
+        secureUrl: "https://luminuslatam.com/luminus_platform.jpg",
+        width: 1200,
+        height: 630,
+        type: "image/jpeg",
+        alt: "LUMINUS LATAM - Preguntas Frecuentes",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Preguntas Frecuentes | LUMINUS LATAM",
+    description:
+      "Respuestas claras a las dudas más comunes sobre la plataforma LUMINUS, membresías y la Red de Especialistas.",
+    images: ["https://luminuslatam.com/luminus_platform.jpg"],
+  },
 };
 
 export default function FaqsPage() {
