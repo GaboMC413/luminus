@@ -2,7 +2,7 @@ import Image from "next/image";
 
 export function SpecialistsOverviewCard() {
   return (
-    <section className="w-full py-16 md:py-24 bg-white">
+    <section className="w-full pt-16 md:pt-24 pb-8 md:pb-12 bg-white">
       <div className="max-w-[1440px] mx-auto px-4 md:px-10">
 
         <div className="w-full flex flex-col lg:flex-row min-h-[640px] rounded-3xl overflow-hidden border border-slate-200/80 shadow-xs">
@@ -13,23 +13,25 @@ export function SpecialistsOverviewCard() {
               src="/Photos/Luminus app - directorio y perfil especialista.png"
               alt="Directorio y Perfil Especialista LUMINUS"
               fill
-              className="object-cover object-center lg:object-left-bottom"
+              className="object-cover object-center"
               sizes="(max-width: 1024px) 100vw, 50vw"
               priority
             />
           </div>
 
           {/* Right 50% Column: Primary Tangerine Content Block */}
-          <div className="w-full lg:w-1/2 bg-luminus-tangerine text-white p-8 md:p-14 lg:p-16 flex flex-col justify-center items-start gap-8">
-            <h2 className="text-3xl sm:text-4xl lg:text-heading-4 font-normal tracking-tight text-white">
-              Ser Especialista LUMINUS
+          <div className="w-full lg:w-1/2 bg-luminus-tangerine text-white p-8 md:p-12 lg:p-14 flex flex-col justify-center items-start gap-6">
+            <h2 className="text-3xl sm:text-4xl lg:text-heading-4 font-normal tracking-tight text-white leading-tight">
+              Ser parte de la red suma valor a tu propuesta profesional
             </h2>
 
-            <div className="flex flex-col gap-4 text-white/95">
-              <p className="text-xl lg:text-2xl font-normal leading-8">
-                Presenta tu formación y experiencia dentro de una red que reúne profesionales de distintas disciplinas. Participa además en iniciativas que permiten acercar tu práctica a la comunidad.
-              </p>
-            </div>
+            <p className="text-lg font-normal text-white leading-snug">
+              Sumarte a LUMINUS te permite mostrar tu trabajo dentro de una plataforma dedicada al bienestar, sin perder tu identidad ni la independencia con la que llevas adelante tu práctica.
+            </p>
+
+            <p className="text-lg font-normal text-white leading-snug">
+              Estar en la red hace que más personas puedan encontrarte, conocer mejor tu enfoque y llegar a ti con una idea más clara de lo que ofreces. Eso se traduce en más oportunidades para ganar visibilidad, generar nuevas consultas y potenciar tu actividad profesional.
+            </p>
 
             <div className="pt-2 w-full sm:w-auto">
               <a
