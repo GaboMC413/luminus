@@ -888,7 +888,7 @@ function MessagesContent() {
                       <h2 className="text-base font-semibold text-slate-900 leading-none truncate" title={selectedConv.participant.name}>
                         {selectedConv.participant.name}
                       </h2>
-                      {selectedConv.participant.name !== "LUMINUS" && (
+                      {selectedConv.participant.name?.toLowerCase() !== "luminus" && selectedConv.participant.id !== "50d13047-bab8-44f1-9541-a821113845cc" && selectedConv.participant.id !== "mock-luminus" && (
                         <Link
                           href={`/comunidad/public-profile?id=${selectedConv.participant.id}`}
                           className="h-8 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer font-jakarta flex items-center justify-center shrink-0 text-decoration-none border-none outline-none"
@@ -899,7 +899,7 @@ function MessagesContent() {
                     </div>
                   </div>
 
-                  {selectedConv.participant.name !== "LUMINUS" && (
+                  {selectedConv.participant.name?.toLowerCase() !== "luminus" && selectedConv.participant.id !== "50d13047-bab8-44f1-9541-a821113845cc" && selectedConv.participant.id !== "mock-luminus" && (
                     <div className="relative" ref={chatMenuRef}>
                       <button
                         onClick={() => setIsChatMenuOpen(!isChatMenuOpen)}
@@ -942,7 +942,7 @@ function MessagesContent() {
                             }}
                             className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                           >
-                            <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">report</span>
+                            <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">flag</span>
                             <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Reportar usuario</span>
                           </button>
                         </div>
@@ -1154,7 +1154,7 @@ function MessagesContent() {
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <span className="material-symbols-rounded text-[18px]">report</span>
+                  <span className="material-symbols-rounded text-[18px]">flag</span>
                   <span>Reportar</span>
                 </>
               )}

@@ -30,7 +30,7 @@ export function SpecialistsOverviewCard() {
             </p>
 
             <p className="text-lg font-normal text-white leading-snug">
-              Estar en la red hace que más personas puedan encontrarte, conocer mejor tu enfoque y llegar a ti con una idea más clara de lo que ofreces. Eso se traduce en más oportunidades para ganar visibilidad, generar nuevas consultas y potenciar tu actividad profesional.
+              Estar en la red hace que más personas puedan encontrarte, conocer tu enfoque y entender mejor lo que ofreces. Eso se traduce en más visibilidad, nuevas consultas y más oportunidades para hacer crecer tu actividad profesional.
             </p>
 
             <div className="pt-2 w-full sm:w-auto">

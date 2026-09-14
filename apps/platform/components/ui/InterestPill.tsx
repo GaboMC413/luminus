@@ -52,6 +52,7 @@ export const InterestPill = ({ interest, className = "", size = "md" }: Interest
 
   // Find the category for this interest to get the consistent style
   let category = categoriesToSearch.find((cat: any) =>
+    cat.title?.toLowerCase() === interest.toLowerCase() ||
     (cat.items || []).some((item: string) => item.toLowerCase() === interest.toLowerCase())
   );
 

@@ -52,6 +52,12 @@ function getCognitoUsername(user: CognitoManagedUser) {
 }
 
 function isSystemUser(user: CognitoManagedUser) {
+  const hasCognitoIdentity = user.identities?.some(
+    (identity) => identity.provider === "cognito" && !identity.providerSubject.startsWith("system:")
+  );
+  if (hasCognitoIdentity) {
+    return false;
+  }
   return user.cognitoSub.startsWith("system:");
 }
 

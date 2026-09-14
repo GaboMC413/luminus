@@ -6,6 +6,7 @@ interface AdminSidebarProps {
   activeTab: AdminTab;
   setActiveTab: (tab: AdminTab) => void;
   pendingSuggestionsCount: number;
+  pendingPostsCount?: number;
   onSelectCategories?: () => void;
 }
 
@@ -13,11 +14,19 @@ export function AdminSidebar({
   activeTab,
   setActiveTab,
   pendingSuggestionsCount,
+  pendingPostsCount = 0,
   onSelectCategories,
 }: AdminSidebarProps) {
   const items = [
     { id: "usuarios" as AdminTab, label: "Usuarios", icon: "account_circle", onClick: () => setActiveTab("usuarios") },
     { id: "especialistas" as AdminTab, label: "Especialistas", icon: "heart_smile", onClick: () => setActiveTab("especialistas") },
+    {
+      id: "publicaciones" as AdminTab,
+      label: "Publicaciones",
+      icon: "post",
+      badge: pendingPostsCount,
+      onClick: () => setActiveTab("publicaciones"),
+    },
     {
       id: "categorias" as AdminTab,
       label: "Categorías",

@@ -28,6 +28,8 @@ import { EmailLogsTab } from "./components/tabs/EmailLogsTab";
 import { CategoriesTab } from "./components/tabs/CategoriesTab";
 import { EventsTab } from "./components/tabs/EventsTab";
 import { ContactTab } from "./components/tabs/ContactTab";
+import { PostsTab } from "./components/tabs/PostsTab";
+import { PostItem } from "@/components/community/mockPostsData";
 
 export function AdminUsersClient({
   initialUsers,
@@ -104,6 +106,95 @@ export function AdminUsersClient({
     return suggestions.filter((s) => s.status === "pending").length;
   }, [suggestions]);
 
+  // Community Posts state for validation
+  const [communityPosts, setCommunityPosts] = useState<PostItem[]>([]);
+
+  const fetchCommunityPosts = async () => {
+    try {
+      const res = await fetch(`/api/admin/posts?_t=${Date.now()}`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setCommunityPosts(data.posts || []);
+      }
+    } catch (err) {
+      console.error("Error loading admin community posts:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCommunityPosts();
+  }, []);
+
+  const pendingPostsCount = useMemo(() => {
+    return communityPosts.filter((p) => p.status === "pending").length;
+  }, [communityPosts]);
+
+  const handleValidatePost = async (postId: string) => {
+    setCommunityPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId ? { ...p, status: "approved" as const } : p
+      )
+    );
+    try {
+      await fetch("/api/admin/posts", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: postId, status: "approved" }),
+      });
+    } catch (err) {
+      console.error("Error validating post:", err);
+      fetchCommunityPosts();
+    }
+  };
+
+  const handleRejectPost = async (postId: string) => {
+    setCommunityPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId ? { ...p, status: "rejected" as const } : p
+      )
+    );
+    try {
+      await fetch("/api/admin/posts", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: postId, status: "rejected" }),
+      });
+    } catch (err) {
+      console.error("Error rejecting post:", err);
+      fetchCommunityPosts();
+    }
+  };
+
+  const handlePausePost = async (postId: string) => {
+    setCommunityPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId ? { ...p, status: "pending" as const } : p
+      )
+    );
+    try {
+      await fetch("/api/admin/posts", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: postId, status: "pending" }),
+      });
+    } catch (err) {
+      console.error("Error pausing post:", err);
+      fetchCommunityPosts();
+    }
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    setCommunityPosts((prev) => prev.filter((p) => p.id !== postId));
+    try {
+      await fetch(`/api/comunidad/posts/${postId}`, {
+        method: "DELETE",
+      });
+    } catch (err) {
+      console.error("Error deleting post:", err);
+      fetchCommunityPosts();
+    }
+  };
+
   async function fetchCategoriesData() {
     try {
       const res = await fetch("/api/admin/categories");
@@ -136,6 +227,7 @@ export function AdminUsersClient({
           activeTab={activeTab}
           setActiveTab={handleTabChange}
           pendingSuggestionsCount={pendingSuggestionsCount}
+          pendingPostsCount={pendingPostsCount}
           onSelectCategories={fetchCategoriesData}
         />
 
@@ -176,6 +268,17 @@ export function AdminUsersClient({
               setSelectedId={setSelectedId}
               setUserSubTab={setUserSubTab}
               setActiveTab={handleTabChange}
+            />
+          )}
+
+          {activeTab === "publicaciones" && (
+            <PostsTab
+              posts={communityPosts}
+              setPosts={setCommunityPosts}
+              onValidatePost={handleValidatePost}
+              onRejectPost={handleRejectPost}
+              onPausePost={handlePausePost}
+              onDeletePost={handleDeletePost}
             />
           )}
 

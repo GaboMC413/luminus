@@ -555,7 +555,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                 </span>
               )}
             </h4>
-            {userId && name !== "LUMINUS" && (
+            {userId && name?.toLowerCase() !== "luminus" && userId !== "50d13047-bab8-44f1-9541-a821113845cc" && userId !== "mock-luminus" && (
               <Link
                 href={`/comunidad/public-profile?id=${userId}`}
                 className="h-8 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer font-jakarta flex items-center justify-center shrink-0 text-decoration-none border-none outline-none"
@@ -569,7 +569,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
         {/* Action icons */}
         <div className="flex items-center gap-1.5">
           {/* Options Menu */}
-          {name !== "LUMINUS" && (
+          {name?.toLowerCase() !== "luminus" && userId !== "50d13047-bab8-44f1-9541-a821113845cc" && userId !== "mock-luminus" && (
             <div className="relative flex items-center" ref={menuRef}>
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -613,7 +613,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                     }}
                     className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                   >
-                    <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">report</span>
+                    <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">flag</span>
                     <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Reportar usuario</span>
                   </button>
                 </div>
@@ -835,7 +835,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <span className="material-symbols-rounded text-[18px]">report</span>
+                  <span className="material-symbols-rounded text-[18px]">flag</span>
                   <span>Reportar</span>
                 </>
               )}

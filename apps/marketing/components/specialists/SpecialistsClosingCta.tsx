@@ -13,7 +13,7 @@ export function SpecialistsClosingCta() {
           </h2>
           <div className="flex flex-col gap-3 text-xl font-normal text-slate-300 leading-relaxed">
             <p>
-              Aplica hoy para sumarte a la plataforma que impulsa y conecta distintas formas de cuidar el bienestar en Latinoamérica.
+              Aplica hoy para sumarte a la plataforma que impulsa y conecta las distintas formas de cuidar el bienestar en Latinoamérica.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-4 sm:gap-6 pt-2 w-full">
