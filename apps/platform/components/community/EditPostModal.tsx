@@ -865,58 +865,65 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
             </div>
           )}
 
-          {/* 4. Action Buttons: Imagen & Video (50% / 50% on same line without 'agregar' or 'youtube') */}
-          <div className="pt-2 grid grid-cols-2 gap-2.5 sm:gap-3 w-full">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageFileChange}
-              className="hidden"
-            />
+          {/* 4. Action Strip: "Agregar a tu publicación" with Luminus palette icons */}
+          <div className="mt-1 w-full px-4 py-2.5 sm:py-3 rounded-2xl border border-slate-200 bg-white flex items-center justify-between">
+            <span className="text-sm font-semibold text-slate-800 font-jakarta select-none">
+              Agregar a tu publicación
+            </span>
 
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="h-11 px-3 sm:px-4 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs sm:text-sm font-semibold font-jakarta border border-slate-200 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98] w-full"
-              title="Adjuntar una imagen a la publicación"
-            >
-              <svg
-                className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-slate-700 shrink-0"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-                <circle cx="9" cy="9" r="2" />
-                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-              </svg>
-              <span className="truncate">Imagen</span>
-            </button>
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {/* Hidden file input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageFileChange}
+                className="hidden"
+              />
 
-            <button
-              type="button"
-              onClick={handleOpenYoutubeModal}
-              className="h-11 px-3 sm:px-4 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs sm:text-sm font-semibold font-jakarta border border-slate-200 transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-[0.98] w-full"
-              title="Compartir video de YouTube"
-            >
-              <svg
-                className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-slate-700 shrink-0"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+              {/* Imagen button */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-all cursor-pointer border-none hover:scale-105 active:scale-95"
+                title="Agregar foto o imagen"
               >
-                <rect width="20" height="15" x="2" y="4.5" rx="3" ry="3" />
-                <polygon points="10 9 15 12 10 15" fill="currentColor" />
-              </svg>
-              <span className="truncate">Video</span>
-            </button>
+                <svg
+                  className="w-6 h-6 shrink-0"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                  <circle cx="9" cy="9" r="2" />
+                  <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                </svg>
+              </button>
+
+              {/* Video button */}
+              <button
+                type="button"
+                onClick={handleOpenYoutubeModal}
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center bg-[#FF4B4B]/10 hover:bg-[#FF4B4B]/20 text-[#FF4B4B] transition-all cursor-pointer border-none hover:scale-105 active:scale-95"
+                title="Agregar video de YouTube"
+              >
+                <svg
+                  className="w-6 h-6 shrink-0"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect width="20" height="15" x="2" y="4.5" rx="3" ry="3" />
+                  <polygon points="10 9 15 12 10 15" fill="currentColor" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </Modal>
