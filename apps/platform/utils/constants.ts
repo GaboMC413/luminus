@@ -35,6 +35,37 @@ export const INTEREST_CATEGORIES = [
   { icon: 'spa', iconFilled: true, title: 'Terapias Complementarias', color: '#14B8A6', bgColor: '#CCFBF1', items: ['Acupuntura', 'Ayurveda', 'Reiki', 'Masajes', 'Aromaterapia', 'Reflexología', 'Sonoterapia', 'Terapia floral'] }
 ];
 
+export const ADMIN_COMMUNITY_CATEGORIES = [
+  {
+    title: "Anuncios",
+    color: "#475569",
+    bgColor: "#F1F5F9",
+    borderColor: "#E2E8F0",
+    items: [] as string[],
+  },
+  {
+    title: "Novedades",
+    color: "#475569",
+    bgColor: "#F1F5F9",
+    borderColor: "#E2E8F0",
+    items: [] as string[],
+  },
+  {
+    title: "Eventos",
+    color: "#475569",
+    bgColor: "#F1F5F9",
+    borderColor: "#E2E8F0",
+    items: [] as string[],
+  },
+  {
+    title: "Equipo LUMINUS",
+    color: "#475569",
+    bgColor: "#F1F5F9",
+    borderColor: "#E2E8F0",
+    items: [] as string[],
+  },
+];
+
 export const SPACE_TYPE_OPTIONS_CONFIG = [
   {
     value: "Consultorio",

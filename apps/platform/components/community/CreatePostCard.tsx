@@ -4,8 +4,7 @@ import React, { useState, useRef } from "react";
 import { PostItem } from "./mockPostsData";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { InputField } from "@/components/ui/InputField";
-import { INTEREST_CATEGORIES } from "@/utils/constants";
+import { INTEREST_CATEGORIES, ADMIN_COMMUNITY_CATEGORIES } from "@/utils/constants";
 import { uploadPostImage, validatePostImageFile } from "@/lib/uploadPostImage";
 
 interface CreatePostCardProps {
@@ -242,7 +241,13 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
 
   const userAvatar = currentUserProfile?.profile_picture_url;
 
-  const activeCategoryObj = INTEREST_CATEGORIES.find(
+  const isAdmin = Boolean(
+    currentUserProfile?.role === "ADMIN" ||
+    currentUserProfile?.role === "admin" ||
+    (typeof window !== "undefined" && localStorage.getItem("luminus_user_role") === "ADMIN")
+  );
+
+  const activeCategoryObj = [...INTEREST_CATEGORIES, ...ADMIN_COMMUNITY_CATEGORIES].find(
     (cat) => cat.title === selectedCategory
   );
 
@@ -440,10 +445,10 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
               onClick={handleSubmit}
               disabled={
                 isUploadingImage ||
-                !selectedCategory ||
+                (!isAdmin && !selectedCategory) ||
                 (!postText.trim() && !postTitle.trim() && !imagePreview && !youtubeId)
               }
-              title={!selectedCategory ? "Selecciona una categoría para publicar" : undefined}
+              title={!isAdmin && !selectedCategory ? "Selecciona una categoría para publicar" : undefined}
               className="w-full sm:flex-1 !h-11 !text-[13px] !font-medium !rounded-[12px]"
             >
               Publicar
@@ -469,7 +474,7 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
               className="w-full h-12 px-4 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 focus:border-slate-400 flex items-center justify-between text-base font-normal font-sans text-left transition-colors cursor-pointer outline-none"
             >
               <span className={`text-base font-normal font-sans ${selectedCategory ? "text-slate-700" : "text-slate-400"}`}>
-                {selectedCategory || "Seleccionar categoría"}
+                {selectedCategory || (isAdmin ? "Seleccionar categoría (Opcional)" : "Seleccionar categoría")}
               </span>
               <svg
                 width="12"
@@ -489,7 +494,64 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
             </button>
 
             {isCategoryOpen && (
-              <div className="absolute top-[calc(100%+5px)] left-0 w-full bg-white rounded-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in duration-150 max-h-[280px] overflow-y-auto custom-scrollbar">
+              <div className="absolute top-[calc(100%+5px)] left-0 w-full bg-white rounded-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in duration-150 max-h-[300px] overflow-y-auto custom-scrollbar shadow-lg">
+                {isAdmin && (
+                  <>
+                    {/* Clear selection */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategory(null);
+                        setSelectedAreas([]);
+                        setShowTagPills(false);
+                        setIsCategoryOpen(false);
+                      }}
+                      className={`w-full px-4 py-2.5 text-left text-sm font-sans flex items-center justify-between hover:bg-slate-50 transition-colors border-none bg-transparent cursor-pointer ${
+                        selectedCategory === null ? "font-medium text-slate-900 bg-slate-100/70" : "text-slate-500"
+                      }`}
+                    >
+                      <span>Sin categoría (General)</span>
+                      {selectedCategory === null && (
+                        <span className="material-symbols-outlined text-[18px] text-slate-700">check</span>
+                      )}
+                    </button>
+
+                    {/* Section header: Institucional / Equipo */}
+                    <div className="px-4 pt-2.5 pb-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider font-jakarta bg-slate-50/60 border-t border-slate-100">
+                      Institucional / Equipo
+                    </div>
+
+                    {ADMIN_COMMUNITY_CATEGORIES.map((cat) => {
+                      const isSelected = selectedCategory === cat.title;
+                      return (
+                        <button
+                          key={cat.title}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCategory(cat.title);
+                            setSelectedAreas([]);
+                            setShowTagPills(false);
+                            setIsCategoryOpen(false);
+                          }}
+                          className={`w-full px-4 py-2.5 text-left text-base font-normal font-sans flex items-center justify-between hover:bg-slate-50 hover:text-slate-800 transition-colors border-none bg-transparent cursor-pointer ${
+                            isSelected ? "font-medium text-slate-900 bg-slate-100" : "text-slate-600"
+                          }`}
+                        >
+                          <span>{cat.title}</span>
+                          {isSelected && (
+                            <span className="material-symbols-outlined text-[18px] text-slate-800">check</span>
+                          )}
+                        </button>
+                      );
+                    })}
+
+                    {/* Section header: Temáticas de Bienestar */}
+                    <div className="px-4 pt-2.5 pb-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider font-jakarta bg-slate-50/60 border-t border-slate-100">
+                      Temáticas de Bienestar
+                    </div>
+                  </>
+                )}
+
                 {INTEREST_CATEGORIES.map((cat, idx) => {
                   const isSelected = selectedCategory === cat.title;
                   return (
@@ -502,9 +564,9 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
                         setShowTagPills(true);
                         setIsCategoryOpen(false);
                       }}
-                      className={`w-full px-4 py-2.5 text-left text-base font-normal font-sans flex items-center justify-between hover:bg-slate-50 hover:text-slate-800 transition-colors border-none bg-transparent cursor-pointer ${idx === 0 ? "first:rounded-t-2xl" : ""
-                        } ${isSelected ? "font-medium text-emerald-700 bg-emerald-50/50" : "text-slate-500"
-                        }`}
+                      className={`w-full px-4 py-2.5 text-left text-base font-normal font-sans flex items-center justify-between hover:bg-slate-50 hover:text-slate-800 transition-colors border-none bg-transparent cursor-pointer ${
+                        !isAdmin && idx === 0 ? "first:rounded-t-2xl" : ""
+                      } ${isSelected ? "font-medium text-emerald-700 bg-emerald-50/50" : "text-slate-500"}`}
                     >
                       <span>{cat.title}</span>
                       {isSelected && (

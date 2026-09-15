@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { PostItem } from "./mockPostsData";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
-import { INTEREST_CATEGORIES } from "@/utils/constants";
+import { INTEREST_CATEGORIES, ADMIN_COMMUNITY_CATEGORIES } from "@/utils/constants";
 import { uploadPostImage, validatePostImageFile } from "@/lib/uploadPostImage";
 
 interface EditPostModalProps {
@@ -322,7 +322,12 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
     setSavedRange(null);
   };
 
-  const activeCategoryObj = INTEREST_CATEGORIES.find((cat) => cat.title === selectedCategory);
+  const isAdmin = Boolean(
+    post.isAuthorAdmin ||
+    (typeof window !== "undefined" && localStorage.getItem("luminus_user_role") === "ADMIN")
+  );
+
+  const activeCategoryObj = [...INTEREST_CATEGORIES, ...ADMIN_COMMUNITY_CATEGORIES].find((cat) => cat.title === selectedCategory);
 
   const handleRemoveImage = () => {
     if (imagePreview && imagePreview.startsWith("blob:")) {
@@ -360,8 +365,8 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
     try {
       const result = await uploadPostImage(
         file,
-        (status) => setUploadProgressText(status),
-        (percent) => setUploadProgress(percent)
+        (status: string) => setUploadProgressText(status),
+        (percent: number) => setUploadProgress(percent)
       );
       setUploadedImageUrl(result.publicUrl);
     } catch (err: any) {
@@ -400,7 +405,7 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (isUploadingImage) return;
-    if (!selectedCategory) return;
+    if (!isAdmin && !selectedCategory) return;
 
     const rawHtml = editorRef.current ? editorRef.current.innerHTML : postText;
     const markdownContent = htmlToMarkdown(rawHtml);
@@ -409,14 +414,15 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
     const finalImageUrl = uploadedImageUrl || imagePreview || undefined;
     if (!trimmed && !trimmedTitle && !finalImageUrl && !youtubeId) return;
 
-    const allAreas =
-      selectedAreas.length > 0 ? [selectedCategory, ...selectedAreas] : [selectedCategory];
+    const allAreas = selectedCategory
+      ? (selectedAreas.length > 0 ? [selectedCategory, ...selectedAreas] : [selectedCategory])
+      : [];
 
     const updatedPost: PostItem = {
       ...post,
       title: trimmedTitle || undefined,
       content: trimmed,
-      area: selectedCategory,
+      area: selectedCategory || undefined,
       areas: allAreas,
       imageUrl: finalImageUrl,
       youtubeId: youtubeId || undefined,
@@ -456,10 +462,10 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
               onClick={handleSave}
               disabled={
                 isUploadingImage ||
-                !selectedCategory ||
+                (!isAdmin && !selectedCategory) ||
                 (!postText.trim() && !postTitle.trim() && !imagePreview && !youtubeId)
               }
-              title={!selectedCategory ? "Selecciona una categoría para publicar" : undefined}
+              title={!isAdmin && !selectedCategory ? "Selecciona una categoría para publicar" : undefined}
               className="w-full sm:flex-1 !h-11 !text-[13px] !font-medium !rounded-[12px]"
             >
               Guardar
@@ -489,7 +495,7 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                   selectedCategory ? "text-slate-700" : "text-slate-400"
                 }`}
               >
-                {selectedCategory || "Seleccionar categoría"}
+                {selectedCategory || (isAdmin ? "Seleccionar categoría (Opcional)" : "Seleccionar categoría")}
               </span>
               <svg
                 width="12"
@@ -511,7 +517,64 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
             </button>
 
             {isCategoryOpen && (
-              <div className="absolute top-[calc(100%+5px)] left-0 w-full bg-white rounded-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in duration-150 max-h-[280px] overflow-y-auto custom-scrollbar">
+              <div className="absolute top-[calc(100%+5px)] left-0 w-full bg-white rounded-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in duration-150 max-h-[300px] overflow-y-auto custom-scrollbar shadow-lg">
+                {isAdmin && (
+                  <>
+                    {/* Clear selection */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedCategory(null);
+                        setSelectedAreas([]);
+                        setShowTagPills(false);
+                        setIsCategoryOpen(false);
+                      }}
+                      className={`w-full px-4 py-2.5 text-left text-sm font-sans flex items-center justify-between hover:bg-slate-50 transition-colors border-none bg-transparent cursor-pointer ${
+                        selectedCategory === null ? "font-medium text-slate-900 bg-slate-100/70" : "text-slate-500"
+                      }`}
+                    >
+                      <span>Sin categoría (General)</span>
+                      {selectedCategory === null && (
+                        <span className="material-symbols-outlined text-[18px] text-slate-700">check</span>
+                      )}
+                    </button>
+
+                    {/* Section header: Institucional / Equipo */}
+                    <div className="px-4 pt-2.5 pb-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider font-jakarta bg-slate-50/60 border-t border-slate-100">
+                      Institucional / Equipo
+                    </div>
+
+                    {ADMIN_COMMUNITY_CATEGORIES.map((cat) => {
+                      const isSelected = selectedCategory === cat.title;
+                      return (
+                        <button
+                          key={cat.title}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCategory(cat.title);
+                            setSelectedAreas([]);
+                            setShowTagPills(false);
+                            setIsCategoryOpen(false);
+                          }}
+                          className={`w-full px-4 py-2.5 text-left text-base font-normal font-sans flex items-center justify-between hover:bg-slate-50 hover:text-slate-800 transition-colors border-none bg-transparent cursor-pointer ${
+                            isSelected ? "font-medium text-slate-900 bg-slate-100" : "text-slate-600"
+                          }`}
+                        >
+                          <span>{cat.title}</span>
+                          {isSelected && (
+                            <span className="material-symbols-outlined text-[18px] text-slate-800">check</span>
+                          )}
+                        </button>
+                      );
+                    })}
+
+                    {/* Section header: Temáticas de Bienestar */}
+                    <div className="px-4 pt-2.5 pb-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider font-jakarta bg-slate-50/60 border-t border-slate-100">
+                      Temáticas de Bienestar
+                    </div>
+                  </>
+                )}
+
                 {INTEREST_CATEGORIES.map((cat, idx) => {
                   const isSelected = selectedCategory === cat.title;
                   return (
@@ -525,7 +588,7 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                         setIsCategoryOpen(false);
                       }}
                       className={`w-full px-4 py-2.5 text-left text-base font-normal font-sans flex items-center justify-between hover:bg-slate-50 hover:text-slate-800 transition-colors border-none bg-transparent cursor-pointer ${
-                        idx === 0 ? "first:rounded-t-2xl" : ""
+                        !isAdmin && idx === 0 ? "first:rounded-t-2xl" : ""
                       } ${
                         isSelected
                           ? "font-medium text-emerald-700 bg-emerald-50/50"
