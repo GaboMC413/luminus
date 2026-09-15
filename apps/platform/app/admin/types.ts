@@ -276,6 +276,7 @@ export type AdminTab =
   | "logs"
   | "busquedas"
   | "especialistas"
+  | "publicaciones"
   | "emails"
   | "categorias"
   | "eventos"

@@ -31,7 +31,7 @@ const QUEST_CONFIG: Record<string, { label: string; actionUrl: string; icon: str
   },
   connect: {
     label: "Envía una solicitud de conexión",
-    actionUrl: "/comunidad",
+    actionUrl: "/comunidad/miembros",
     icon: "person_add",
   },
 };
@@ -60,7 +60,7 @@ const CELEBRATION_COPY: Record<string, { title: string; body: string; actionUrl:
   connect: {
     title: "Has enviado tu primera solicitud",
     body: "¡Has dado el primer paso para construir tu red! En LUMINUS, cada conexión fortalece nuestra red de apoyo. Conectar te permite intercambiar perspectivas, compartir bienestar y no caminar solo.",
-    actionUrl: "/comunidad",
+    actionUrl: "/comunidad/miembros",
   },
 };
 

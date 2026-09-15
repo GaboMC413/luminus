@@ -18,16 +18,23 @@ interface UserCardProps {
     name: string;
     location: string;
     avatar: string;
-    interests: string[];
+    interests?: string[];
     categories?: CategoryInfo[];
   };
+  actionMenu?: React.ReactNode;
 }
 
-export function UserCard({ user }: UserCardProps) {
+export function UserCard({ user, actionMenu }: UserCardProps) {
   const router = useRouter();
   const [imgError, setImgError] = React.useState(false);
 
+  const isOfficial =
+    user.name?.toLowerCase() === "luminus" ||
+    user.id === "50d13047-bab8-44f1-9541-a821113845cc" ||
+    user.id === "mock-luminus";
+
   const handleViewProfile = () => {
+    if (isOfficial) return;
     router.push(`/comunidad/public-profile?id=${encodeURIComponent(user.id)}`);
   };
 
@@ -63,9 +70,19 @@ export function UserCard({ user }: UserCardProps) {
 
   return (
     <div
-      onClick={handleViewProfile}
-      className="bg-white rounded-2xl p-3 md:p-4 flex flex-col items-center gap-2.5 md:gap-3 border border-slate-200 transition-all group hover:border-slate-300 shadow-none cursor-pointer"
+      onClick={isOfficial ? undefined : handleViewProfile}
+      className={`relative bg-white rounded-2xl p-3 md:p-4 flex flex-col items-center gap-2.5 md:gap-3 border border-slate-200 transition-all ${
+        isOfficial ? "cursor-default select-none shadow-none" : "group hover:border-slate-300 shadow-none cursor-pointer"
+      }`}
     >
+      {actionMenu && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="absolute top-2.5 right-2.5 z-10"
+        >
+          {actionMenu}
+        </div>
+      )}
       <div className="w-[64px] h-[64px] sm:w-[72px] sm:h-[72px] md:w-[80px] md:h-[80px] rounded-[16px] sm:rounded-[18px] md:rounded-[22px] overflow-hidden bg-slate-50 shrink-0 border border-transparent group-hover:border-slate-200 transition-colors relative flex items-center justify-center">
         {hasAvatar ? (
           <img
@@ -108,15 +125,17 @@ export function UserCard({ user }: UserCardProps) {
         ))}
       </div>
 
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handleViewProfile();
-        }}
-        className="text-xs font-semibold text-slate-500 hover:text-slate-900 hover:underline transition-colors shrink-0 cursor-pointer bg-transparent border-none outline-none font-jakarta"
-      >
-        Ver perfil
-      </button>
+      {!isOfficial && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleViewProfile();
+          }}
+          className="text-xs font-semibold text-slate-500 hover:text-slate-900 hover:underline transition-colors shrink-0 cursor-pointer bg-transparent border-none outline-none font-jakarta"
+        >
+          Ver perfil
+        </button>
+      )}
     </div>
   );
 }
