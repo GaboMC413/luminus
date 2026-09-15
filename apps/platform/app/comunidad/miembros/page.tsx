@@ -9,17 +9,6 @@ import { Button } from "@/components/ui/Button";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { PageLoader } from "@/components/ui/PageLoader";
 
-const CATEGORIES_MAPPING = {
-  "Crecimiento Personal": ["Autoconocimiento", "Propósito", "Hábitos", "Creatividad", "Emprendimiento", "Desarrollo profesional"],
-  "Bienestar Emocional": ["Autocuidado", "Autoestima", "Inteligencia emocional", "Gestión del estrés", "Resiliencia", "Salud mental"],
-  "Salud Integral": ["Sueño", "Longevidad", "Salud digestiva", "Salud hormonal", "Prevención", "Bienestar corporal"],
-  "Movimiento Físico": ["Entrenamiento", "Running", "Yoga", "Pilates", "Danza", "Senderismo", "Ciclismo", "Natación"],
-  "Nutrición": ["Alimentación consciente", "Alimentación vegetal", "Nutrición deportiva", "Cocina", "Suplementación"],
-  "Espiritualidad": ["Meditación", "Mindfulness", "Respiración", "Filosofía", "Naturaleza", "Desarrollo espiritual"],
-  "Vínculos": ["Pareja", "Familia", "Amistad", "Crianza", "Sexualidad", "Comunidad", "Comunicación"],
-  "Terapias Complementarias": ["Acupuntura", "Ayurveda", "Reiki", "Masajes", "Aromaterapia", "Reflexología", "Sonoterapia", "Terapia floral"]
-};
-
 export default function MiembrosPage() {
   return (
     <Suspense fallback={<PageLoader className="h-screen" />}>
@@ -38,13 +27,11 @@ function MiembrosContent() {
   const [appliedFilters, setAppliedFilters] = useState({
     country: "",
     city: "",
-    category: "Todas las categorías",
     selectedInterests: [] as string[],
   });
   const [tempFilters, setTempFilters] = useState({
     country: "",
     city: "",
-    category: "Todas las categorías",
     selectedInterests: [] as string[],
   });
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -102,23 +89,9 @@ function MiembrosContent() {
   const interestsWithResults = filterOptions.interests;
   const availableCities = filterOptions.cities;
 
-  const categoriesWithResults = useMemo(() => {
-    const categoriesSet = new Set<string>();
-    Object.entries(CATEGORIES_MAPPING).forEach(([categoryName, categoryInterests]) => {
-      const hasAnyMatch = categoryInterests.some(ci => 
-        interestsWithResults.some(ai => ai.toLowerCase() === ci.toLowerCase())
-      );
-      if (hasAnyMatch) {
-        categoriesSet.add(categoryName);
-      }
-    });
-    return Array.from(categoriesSet).sort();
-  }, [interestsWithResults]);
-
   const hasActiveFilters = 
     appliedFilters.country !== "" ||
     appliedFilters.city !== "" ||
-    appliedFilters.category !== "Todas las categorías" ||
     appliedFilters.selectedInterests.length > 0;
 
   const handleToggleFilters = () => {
@@ -139,7 +112,6 @@ function MiembrosContent() {
     const cleared = {
       country: "",
       city: "",
-      category: "Todas las categorías",
       selectedInterests: [],
     };
     setTempFilters(cleared);
@@ -180,9 +152,6 @@ function MiembrosContent() {
       if (appliedSearchQuery) params.set("query", appliedSearchQuery);
       if (appliedFilters.country) params.set("country", appliedFilters.country);
       if (appliedFilters.city) params.set("city", appliedFilters.city);
-      if (appliedFilters.category && appliedFilters.category !== "Todas las categorías") {
-        params.set("category", appliedFilters.category);
-      }
       if (appliedFilters.selectedInterests.length > 0) {
         params.set("interests", appliedFilters.selectedInterests.join(","));
       }
@@ -319,44 +288,38 @@ function MiembrosContent() {
             placeholder="Cualquier ciudad"
             preventScrollOnOpen={isMobile}
           />
-
-          <SelectInput
-            label="Categoría"
-            value={tempFilters.category}
-            options={[
-              { label: "Todas las categorías", value: "Todas las categorías" },
-              ...categoriesWithResults.map(cat => ({ label: cat, value: cat })),
-            ]}
-            onSelect={(val) => setTempFilters({ ...tempFilters, category: val, selectedInterests: [] })}
-            placeholder="Todas las categorías"
-            preventScrollOnOpen={isMobile}
-          />
         </div>
 
-        {/* Dynamic specific interest checkboxes */}
+        {/* Dynamic Interest Pills */}
         <div className="flex flex-col gap-2">
-          <label className="text-xs font-semibold text-slate-700 font-jakarta">Temas de interés</label>
-          <div className={`flex flex-wrap gap-1.5 ${isMobile ? "" : "max-h-[140px] overflow-y-auto pr-1 custom-scrollbar"}`}>
-            {(() => {
-              let availableInterests: string[] = [];
-              if (tempFilters.category && tempFilters.category !== "Todas las categorías") {
-                const categoryInterests = CATEGORIES_MAPPING[tempFilters.category as keyof typeof CATEGORIES_MAPPING] || [];
-                availableInterests = categoryInterests.filter(interest => 
-                  interestsWithResults.some(active => active.toLowerCase() === interest.toLowerCase())
-                );
-              } else {
-                availableInterests = interestsWithResults;
-              }
+          <div className="flex items-center justify-between">
+            <label className="text-label ml-1">
+              Tema de interés
+              {tempFilters.selectedInterests.length > 0 && (
+                <span className="ml-1.5 text-[11px] font-normal text-slate-400 normal-case">
+                  ({tempFilters.selectedInterests.length} seleccionado{tempFilters.selectedInterests.length > 1 ? "s" : ""})
+                </span>
+              )}
+            </label>
+            {tempFilters.selectedInterests.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setTempFilters({ ...tempFilters, selectedInterests: [] })}
+                className="text-[11px] text-slate-400 hover:text-slate-800 underline border-none bg-transparent cursor-pointer p-0 font-jakarta transition-colors"
+              >
+                Desmarcar todos
+              </button>
+            )}
+          </div>
 
-              if (availableInterests.length === 0) {
-                return (
-                  <p className="text-[11px] text-slate-400 py-2 w-full text-center">
-                    No hay temas de interés con resultados para esta selección.
-                  </p>
-                );
-              }
-
-              return availableInterests.map(interest => {
+          {/* Interactive Pills with visible internal scrollbar */}
+          <div className="flex flex-wrap gap-1.5 max-h-[155px] overflow-y-auto visible-scrollbar pr-2 p-0.5">
+            {interestsWithResults.length === 0 ? (
+              <p className="text-xs text-slate-400 py-3 w-full text-center font-sans">
+                No hay temas de interés disponibles.
+              </p>
+            ) : (
+              interestsWithResults.map((interest) => {
                 const isChecked = tempFilters.selectedInterests.includes(interest);
                 return (
                   <button
@@ -364,22 +327,24 @@ function MiembrosContent() {
                     type="button"
                     onClick={() => {
                       const nextSelected = isChecked
-                        ? tempFilters.selectedInterests.filter(i => i !== interest)
+                        ? tempFilters.selectedInterests.filter((i) => i !== interest)
                         : [...tempFilters.selectedInterests, interest];
                       setTempFilters({ ...tempFilters, selectedInterests: nextSelected });
                     }}
-                    className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border cursor-pointer select-none flex items-center gap-1 ${
+                    className={`h-7 px-3 rounded-full text-xs font-medium font-jakarta transition-all border cursor-pointer select-none flex items-center gap-1.5 shrink-0 ${
                       isChecked
-                        ? "bg-black text-white border-black"
-                        : "bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:text-black"
+                        ? "bg-slate-900 text-white border-slate-900 shadow-none"
+                        : "bg-white text-slate-600 border-slate-200 hover:border-slate-400 hover:text-slate-900"
                     }`}
                   >
-                    {isChecked && <span className="material-symbols-outlined text-[13px]">check</span>}
-                    {interest}
+                    {isChecked && (
+                      <span className="material-symbols-rounded text-[13px]">check</span>
+                    )}
+                    <span>{interest}</span>
                   </button>
                 );
-              });
-            })()}
+              })
+            )}
           </div>
         </div>
       </>
@@ -417,7 +382,7 @@ function MiembrosContent() {
   };
 
   return (
-    <div className="w-full flex-1 flex flex-col bg-slate-50 min-h-0 overflow-visible">
+    <div className="w-full flex-1 flex flex-col bg-slate-50 min-h-[calc(100vh-64px)] overflow-visible">
       <div className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-6 pt-4 pb-12 md:py-6 flex flex-col min-h-0 overflow-visible">
 
         {/* Header: Back Arrow + Title */}
@@ -432,8 +397,8 @@ function MiembrosContent() {
           <h1 className="text-xl md:text-2xl text-slate-900 font-semibold font-jakarta">Miembros</h1>
         </div>
 
-        {/* Search & Filter Section */}
-        <div className="flex flex-col sticky top-0 z-40 bg-slate-50 pb-4 gap-3 w-full">
+        {/* Search & Filter Section (Sticky below 64px navbar) */}
+        <div className="flex flex-col sticky top-[64px] z-30 bg-slate-50 pb-4 gap-3 w-full">
           <div className="flex items-center gap-3 w-full relative">
             {/* Search Bar */}
             <div className="flex-1 min-w-0 h-11 md:h-12 px-3.5 bg-white rounded-xl border border-slate-200 flex items-center gap-3 focus-within:border-black transition-colors relative">
@@ -513,7 +478,6 @@ function MiembrosContent() {
               >
                 <span className="material-symbols-outlined text-[20px]">manage_search</span>
                 <span>Buscar por filtros</span>
-                {hasActiveFilters && <span className="w-2 h-2 rounded-full bg-violet-400 shrink-0" />}
               </button>
 
               {/* Mobile Filter Button */}
@@ -528,13 +492,13 @@ function MiembrosContent() {
                 <span className="material-symbols-outlined text-[22px]">manage_search</span>
               </button>
 
-              {/* Desktop Filter Dropdown (NO SHADOWS: shadow-none, clean border) */}
+              {/* Desktop Filter Dropdown (clean border, auto-height with max-height to ensure actions footer is always visible) */}
               {showFilters && (
                 <div 
                   ref={desktopDropdownRef}
-                  className="hidden md:flex absolute top-[56px] right-0 w-[410px] bg-white rounded-2xl border border-zinc-200 shadow-none z-50 flex flex-col overflow-hidden animate-in slide-in-from-top-2 duration-150"
+                  className="hidden md:flex absolute top-[56px] right-0 w-[410px] max-h-[calc(100vh-140px)] bg-white rounded-2xl border border-zinc-200 shadow-none z-50 flex flex-col overflow-hidden animate-in slide-in-from-top-2 duration-150"
                 >
-                  <div className="p-5 flex flex-col gap-4 overflow-y-auto custom-scrollbar max-h-[460px]">
+                  <div className="p-5 flex flex-col gap-4 overflow-y-auto custom-scrollbar flex-1 min-h-0">
                     {renderFilterFields(false)}
                   </div>
                   <div className="px-5 py-3 bg-slate-50 border-t border-zinc-100 flex items-center justify-between gap-3 shrink-0">
@@ -594,18 +558,6 @@ function MiembrosContent() {
                     <span>Ciudad: {appliedFilters.city.split(',')[0]}</span>
                     <button 
                       onClick={() => setAppliedFilters({ ...appliedFilters, city: "" })}
-                      className="w-4 h-4 rounded-full flex items-center justify-center text-slate-400 hover:text-black border-none bg-transparent cursor-pointer ml-0.5"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                )}
-
-                {appliedFilters.category && appliedFilters.category !== "Todas las categorías" && (
-                  <div className="flex items-center gap-1 px-2.5 py-1 rounded-xl bg-slate-100 border border-slate-200/80 text-xs font-semibold text-slate-700">
-                    <span>Categoría: {appliedFilters.category}</span>
-                    <button 
-                      onClick={() => setAppliedFilters({ ...appliedFilters, category: "Todas las categorías", selectedInterests: [] })}
                       className="w-4 h-4 rounded-full flex items-center justify-center text-slate-400 hover:text-black border-none bg-transparent cursor-pointer ml-0.5"
                     >
                       ✕
