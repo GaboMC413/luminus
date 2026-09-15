@@ -380,6 +380,9 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
       return;
     }
 
+    if (imagePreview && imagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreview);
+    }
     const localUrl = URL.createObjectURL(file);
     setImagePreview(localUrl);
     setUploadedImageUrl(null);
@@ -432,12 +435,18 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
     e.preventDefault();
     if (isUploadingImage) return;
     if (!isAdmin && !selectedCategory) return;
+    if (imagePreview && imagePreview.startsWith("blob:") && !uploadedImageUrl) {
+      setImageError("Por favor espera a que la imagen termine de subirse o vuelve a seleccionarla.");
+      return;
+    }
 
     const rawHtml = editorRef.current ? editorRef.current.innerHTML : postText;
     const markdownContent = htmlToMarkdown(rawHtml);
     const trimmed = markdownContent.trim();
     const trimmedTitle = postTitle.trim();
-    const finalImageUrl = uploadedImageUrl || imagePreview || undefined;
+    const finalImageUrl =
+      uploadedImageUrl ||
+      (imagePreview && !imagePreview.startsWith("blob:") ? imagePreview : undefined);
     if (!trimmed && !trimmedTitle && !finalImageUrl && !youtubeId) return;
 
     const allAreas: string[] = [];
@@ -495,6 +504,7 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
               onClick={handleSave}
               disabled={
                 isUploadingImage ||
+                Boolean(imagePreview && imagePreview.startsWith("blob:") && !uploadedImageUrl) ||
                 (!isAdmin && !selectedCategory) ||
                 (!postText.trim() && !postTitle.trim() && !imagePreview && !youtubeId)
               }

@@ -37,7 +37,7 @@ export function RecentMembersCard({ members, loading, onViewAllMembers }: Recent
   return (
     <div className="bg-white rounded-2xl border border-zinc-200 p-5 flex flex-col gap-4 shadow-none">
       {/* Header */}
-      <h4 className="text-base font-bold text-slate-900 font-jakarta">Últimos miembros</h4>
+      <h4 className="text-base font-bold text-slate-900 font-jakarta">Nuevos miembros</h4>
 
       {/* Members list */}
       {loading && members.length === 0 ? (

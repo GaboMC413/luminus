@@ -63,15 +63,19 @@ export async function POST(request: Request) {
     const accessKeyId =
       process.env.S3_STORAGE_ACCESS_KEY_ID?.trim() ||
       process.env.S3_FEED_ACCESS_KEY_ID?.trim() ||
+      process.env.S3_AVATAR_ACCESS_KEY_ID?.trim() ||
+      process.env.SES_ACCESS_KEY_ID?.trim() ||
       process.env.AWS_ACCESS_KEY_ID?.trim();
 
     const secretAccessKey =
       process.env.S3_STORAGE_SECRET_ACCESS_KEY?.trim() ||
       process.env.S3_FEED_SECRET_ACCESS_KEY?.trim() ||
+      process.env.S3_AVATAR_SECRET_ACCESS_KEY?.trim() ||
+      process.env.SES_SECRET_ACCESS_KEY?.trim() ||
       process.env.AWS_SECRET_ACCESS_KEY?.trim();
 
-    if (!accessKeyId || !secretAccessKey) {
-      console.error("[Post Image Upload Route]: Missing S3_STORAGE_ACCESS_KEY_ID or AWS_ACCESS_KEY_ID");
+    if (!bucket) {
+      console.error("[Post Image Upload Route]: Missing S3 bucket configuration");
       return NextResponse.json(
         { message: "El servicio de almacenamiento no está configurado." },
         { status: 500 }
@@ -83,7 +87,9 @@ export async function POST(request: Request) {
 
     const s3 = new S3Client({
       region,
-      credentials: { accessKeyId, secretAccessKey },
+      ...(accessKeyId && secretAccessKey
+        ? { credentials: { accessKeyId, secretAccessKey } }
+        : {}),
     });
 
     const command = new PutObjectCommand({
