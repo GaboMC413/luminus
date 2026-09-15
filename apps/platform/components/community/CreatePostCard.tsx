@@ -284,6 +284,9 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
     }
 
     // 2. Instant local preview
+    if (imagePreview && imagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreview);
+    }
     const localUrl = URL.createObjectURL(file);
     setImagePreview(localUrl);
     setUploadedImageUrl(null);
@@ -338,12 +341,16 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
     e.preventDefault();
     if (isUploadingImage) return;
     if (!isAdmin && !selectedCategory) return;
+    if (imagePreview && !uploadedImageUrl) {
+      setImageError("Por favor espera a que la imagen termine de subirse o vuelve a seleccionarla.");
+      return;
+    }
 
     const rawHtml = editorRef.current ? editorRef.current.innerHTML : postText;
     const markdownContent = htmlToMarkdown(rawHtml);
     const trimmed = markdownContent.trim();
     const trimmedTitle = postTitle.trim();
-    const finalImageUrl = uploadedImageUrl || imagePreview || undefined;
+    const finalImageUrl = uploadedImageUrl || undefined;
     if (!trimmed && !trimmedTitle && !finalImageUrl && !youtubeId) return;
 
     const allAreas: string[] = [];
@@ -462,6 +469,7 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
               onClick={handleSubmit}
               disabled={
                 isUploadingImage ||
+                Boolean(imagePreview && !uploadedImageUrl) ||
                 (!isAdmin && !selectedCategory) ||
                 (!postText.trim() && !postTitle.trim() && !imagePreview && !youtubeId)
               }

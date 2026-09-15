@@ -120,12 +120,12 @@ function PlatformContent() {
     return userConnections.filter((c: any) => c.status === "pending" && c.direction === "incoming").length;
   }, [userConnections]);
 
-  // Fetch Latest 10 Members for the right sidebar
+  // Fetch Latest 5 Members for the right sidebar
   useEffect(() => {
     async function fetchLatestMembers() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/comunidad?limit=10&_t=${Date.now()}`, { cache: "no-store" });
+        const res = await fetch(`/api/comunidad?limit=5&_t=${Date.now()}`, { cache: "no-store" });
         if (res.status === 401 || res.status === 403) {
           router.replace("/auth/iniciar-sesion");
           return;
@@ -402,9 +402,6 @@ function PlatformContent() {
             <h1 className="text-[28px] font-bold leading-tight font-jakarta text-slate-900">
               Comunidad
             </h1>
-            <p className="mt-0.5 text-[14px] text-slate-500 font-sans">
-              Un espacio para descubrir, compartir e interactuar con otros miembros.
-            </p>
           </div>
 
           {/* 1. Create Post Input (with mobile quick action square buttons) */}

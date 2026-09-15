@@ -54,8 +54,6 @@ export async function processAndCompressPostImage(
     const objectUrl = URL.createObjectURL(file);
 
     img.onload = async () => {
-      URL.revokeObjectURL(objectUrl);
-
       let width = img.naturalWidth || img.width;
       let height = img.naturalHeight || img.height;
 
@@ -84,6 +82,7 @@ export async function processAndCompressPostImage(
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = "high";
       ctx.drawImage(img, 0, 0, width, height);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
 
       // Iterative compression quality loop to guarantee < 1 MB
       const qualitySteps = [0.85, 0.75, 0.65, 0.50, 0.35];
@@ -126,7 +125,7 @@ export async function processAndCompressPostImage(
     };
 
     img.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
       reject(new Error("No se pudo leer la imagen seleccionada."));
     };
 
