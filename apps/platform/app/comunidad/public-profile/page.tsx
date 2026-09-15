@@ -419,7 +419,7 @@ function PublicProfileContent() {
 
       <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pb-6 md:pb-12">
         {profile.specialistProfile ? (
-          <div className="w-full max-w-3xl mx-auto mt-0 md:-mt-[100px] lg:-mt-[150px] relative z-10">
+          <div className="w-full max-w-6xl mx-auto">
             <SpecialistProfileView
               profile={profile}
               isPublic={true}
