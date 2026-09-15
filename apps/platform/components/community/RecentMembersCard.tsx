@@ -68,7 +68,7 @@ export function RecentMembersCard({ members, loading, onViewAllMembers }: Recent
               >
                 <div className="flex items-center gap-3 min-w-0">
                   {/* Avatar */}
-                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/80 group-hover:border-slate-300 transition-colors flex items-center justify-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-100 group-hover:border-slate-200 transition-colors duration-200 flex items-center justify-center shrink-0">
                     {hasAvatar ? (
                       <img
                         src={member.avatar}

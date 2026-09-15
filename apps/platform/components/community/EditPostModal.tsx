@@ -158,9 +158,19 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
   const [tempYoutubeUrl, setTempYoutubeUrl] = useState("");
   const [youtubeId, setYoutubeId] = useState<string | null>(post.youtubeId || null);
 
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(post.area || null);
+  const initialAdminCat = ADMIN_COMMUNITY_CATEGORIES.find(
+    (c) => c.title === post.area || (post.areas || []).includes(c.title)
+  )?.title || null;
+
+  const initialThematicCat = INTEREST_CATEGORIES.find(
+    (c) => c.title === post.area || (post.areas || []).includes(c.title)
+  )?.title || null;
+
+  const [selectedAdminCategory, setSelectedAdminCategory] = useState<string | null>(initialAdminCat);
+  const [isAdminCategoryOpen, setIsAdminCategoryOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(initialThematicCat);
   const [selectedAreas, setSelectedAreas] = useState<string[]>(
-    (post.areas || []).filter((a) => a !== post.area)
+    (post.areas || []).filter((a) => a !== initialAdminCat && a !== initialThematicCat)
   );
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [showTagPills, setShowTagPills] = useState(Boolean(post.areas && post.areas.length > 0));
@@ -174,6 +184,7 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
   const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
+  const adminCategoryDropdownRef = useRef<HTMLDivElement>(null);
 
   // Sync state with post props when modal opens or post changes
   useEffect(() => {
@@ -186,8 +197,20 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
       setYoutubeUrl(
         post.youtubeUrl || (post.youtubeId ? `https://www.youtube.com/watch?v=${post.youtubeId}` : "")
       );
-      setSelectedCategory(post.area || null);
-      setSelectedAreas((post.areas || []).filter((a) => a !== post.area));
+
+      const adminCat = ADMIN_COMMUNITY_CATEGORIES.find(
+        (c) => c.title === post.area || (post.areas || []).includes(c.title)
+      )?.title || null;
+
+      const thematicCat = INTEREST_CATEGORIES.find(
+        (c) => c.title === post.area || (post.areas || []).includes(c.title)
+      )?.title || null;
+
+      setSelectedAdminCategory(adminCat);
+      setSelectedCategory(thematicCat);
+      setSelectedAreas(
+        (post.areas || []).filter((a) => a !== adminCat && a !== thematicCat)
+      );
       setShowTagPills(Boolean(post.areas && post.areas.length > 0));
       setImageError(null);
 
@@ -204,6 +227,9 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
     const handleClickOutside = (event: MouseEvent) => {
       if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target as Node)) {
         setIsCategoryOpen(false);
+      }
+      if (adminCategoryDropdownRef.current && !adminCategoryDropdownRef.current.contains(event.target as Node)) {
+        setIsAdminCategoryOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -414,15 +440,22 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
     const finalImageUrl = uploadedImageUrl || imagePreview || undefined;
     if (!trimmed && !trimmedTitle && !finalImageUrl && !youtubeId) return;
 
-    const allAreas = selectedCategory
-      ? (selectedAreas.length > 0 ? [selectedCategory, ...selectedAreas] : [selectedCategory])
-      : [];
+    const allAreas: string[] = [];
+    if (selectedAdminCategory) allAreas.push(selectedAdminCategory);
+    if (selectedCategory) allAreas.push(selectedCategory);
+    for (const area of selectedAreas) {
+      if (!allAreas.includes(area)) {
+        allAreas.push(area);
+      }
+    }
+
+    const mainCategory = selectedAdminCategory || selectedCategory || undefined;
 
     const updatedPost: PostItem = {
       ...post,
       title: trimmedTitle || undefined,
       content: trimmed,
-      area: selectedCategory || undefined,
+      area: mainCategory,
       areas: allAreas,
       imageUrl: finalImageUrl,
       youtubeId: youtubeId || undefined,
@@ -483,78 +516,68 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
             className="w-full h-12 px-4 rounded-2xl border border-slate-200 focus:border-slate-400 focus:outline-none text-base font-normal font-sans text-slate-700 placeholder:text-slate-400 transition-colors bg-white"
           />
 
-          {/* 2. Seleccionar categoría */}
-          <div ref={categoryDropdownRef} className="relative w-full">
-            <button
-              type="button"
-              onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-              className="w-full h-12 px-4 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 focus:border-slate-400 flex items-center justify-between text-base font-normal font-sans text-left transition-colors cursor-pointer outline-none"
-            >
-              <span
-                className={`text-base font-normal font-sans ${
-                  selectedCategory ? "text-slate-700" : "text-slate-400"
-                }`}
-              >
-                {selectedCategory || (isAdmin ? "Seleccionar categoría (Opcional)" : "Seleccionar categoría")}
-              </span>
-              <svg
-                width="12"
-                height="8"
-                viewBox="0 0 12 8"
-                fill="none"
-                className={`transition-transform duration-200 shrink-0 ${
-                  selectedCategory ? "text-slate-600" : "text-slate-400"
-                } ${isCategoryOpen ? "rotate-180" : ""}`}
-              >
-                <path
-                  d="M1.5 2L6 6.5L10.5 2"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
+          {/* 2. Selectores de Categoría */}
+          {isAdmin ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {/* Selector Institucional */}
+              <div ref={adminCategoryDropdownRef} className="relative w-full">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAdminCategoryOpen(!isAdminCategoryOpen);
+                    setIsCategoryOpen(false);
+                  }}
+                  className="w-full h-12 px-4 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 focus:border-slate-400 flex items-center justify-between text-base font-normal font-sans text-left transition-colors cursor-pointer outline-none"
+                >
+                  <span className={`text-sm sm:text-base font-normal font-sans truncate ${selectedAdminCategory ? "text-slate-800 font-medium" : "text-slate-400"}`}>
+                    {selectedAdminCategory || "Categoría institucional"}
+                  </span>
+                  <svg
+                    width="12"
+                    height="8"
+                    viewBox="0 0 12 8"
+                    fill="none"
+                    className={`transition-transform duration-200 shrink-0 ${selectedAdminCategory ? "text-slate-600" : "text-slate-400"} ${isAdminCategoryOpen ? "rotate-180" : ""}`}
+                  >
+                    <path
+                      d="M1.5 2L6 6.5L10.5 2"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
 
-            {isCategoryOpen && (
-              <div className="absolute top-[calc(100%+5px)] left-0 w-full bg-white rounded-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in duration-150 max-h-[300px] overflow-y-auto custom-scrollbar shadow-lg">
-                {isAdmin && (
-                  <>
-                    {/* Clear selection */}
+                {isAdminCategoryOpen && (
+                  <div className="absolute top-[calc(100%+5px)] left-0 w-full bg-white rounded-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in duration-150 max-h-[260px] overflow-y-auto custom-scrollbar shadow-none">
                     <button
                       type="button"
                       onClick={() => {
-                        setSelectedCategory(null);
-                        setSelectedAreas([]);
-                        setShowTagPills(false);
-                        setIsCategoryOpen(false);
+                        setSelectedAdminCategory(null);
+                        setIsAdminCategoryOpen(false);
                       }}
                       className={`w-full px-4 py-2.5 text-left text-sm font-sans flex items-center justify-between hover:bg-slate-50 transition-colors border-none bg-transparent cursor-pointer ${
-                        selectedCategory === null ? "font-medium text-slate-900 bg-slate-100/70" : "text-slate-500"
+                        selectedAdminCategory === null ? "font-medium text-slate-900 bg-slate-100/70" : "text-slate-500"
                       }`}
                     >
-                      <span>Sin categoría (General)</span>
-                      {selectedCategory === null && (
+                      <span>Sin categoría institucional</span>
+                      {selectedAdminCategory === null && (
                         <span className="material-symbols-outlined text-[18px] text-slate-700">check</span>
                       )}
                     </button>
 
-                    {/* Section header: Institucional / Equipo */}
-                    <div className="px-4 pt-2.5 pb-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider font-jakarta bg-slate-50/60 border-t border-slate-100">
-                      Institucional / Equipo
-                    </div>
+                    <div className="border-t border-slate-100" />
 
                     {ADMIN_COMMUNITY_CATEGORIES.map((cat) => {
-                      const isSelected = selectedCategory === cat.title;
+                      const isSelected = selectedAdminCategory === cat.title;
                       return (
                         <button
                           key={cat.title}
                           type="button"
                           onClick={() => {
-                            setSelectedCategory(cat.title);
-                            setSelectedAreas([]);
-                            setShowTagPills(false);
-                            setIsCategoryOpen(false);
+                            setSelectedAdminCategory(cat.title);
+                            setIsAdminCategoryOpen(false);
                           }}
                           className={`w-full px-4 py-2.5 text-left text-base font-normal font-sans flex items-center justify-between hover:bg-slate-50 hover:text-slate-800 transition-colors border-none bg-transparent cursor-pointer ${
                             isSelected ? "font-medium text-slate-900 bg-slate-100" : "text-slate-600"
@@ -567,46 +590,146 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                         </button>
                       );
                     })}
-
-                    {/* Section header: Temáticas de Bienestar */}
-                    <div className="px-4 pt-2.5 pb-1 text-[11px] font-bold text-slate-400 uppercase tracking-wider font-jakarta bg-slate-50/60 border-t border-slate-100">
-                      Temáticas de Bienestar
-                    </div>
-                  </>
+                  </div>
                 )}
+              </div>
 
-                {INTEREST_CATEGORIES.map((cat, idx) => {
-                  const isSelected = selectedCategory === cat.title;
-                  return (
+              {/* Selector de Temática */}
+              <div ref={categoryDropdownRef} className="relative w-full">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCategoryOpen(!isCategoryOpen);
+                    setIsAdminCategoryOpen(false);
+                  }}
+                  className="w-full h-12 px-4 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 focus:border-slate-400 flex items-center justify-between text-base font-normal font-sans text-left transition-colors cursor-pointer outline-none"
+                >
+                  <span className={`text-sm sm:text-base font-normal font-sans truncate ${selectedCategory ? "text-slate-800 font-medium" : "text-slate-400"}`}>
+                    {selectedCategory || "Temática"}
+                  </span>
+                  <svg
+                    width="12"
+                    height="8"
+                    viewBox="0 0 12 8"
+                    fill="none"
+                    className={`transition-transform duration-200 shrink-0 ${selectedCategory ? "text-slate-600" : "text-slate-400"} ${isCategoryOpen ? "rotate-180" : ""}`}
+                  >
+                    <path
+                      d="M1.5 2L6 6.5L10.5 2"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+
+                {isCategoryOpen && (
+                  <div className="absolute top-[calc(100%+5px)] left-0 w-full bg-white rounded-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in duration-150 max-h-[260px] overflow-y-auto custom-scrollbar shadow-none">
                     <button
-                      key={cat.title}
                       type="button"
                       onClick={() => {
-                        setSelectedCategory(cat.title);
+                        setSelectedCategory(null);
                         setSelectedAreas([]);
-                        setShowTagPills(true);
+                        setShowTagPills(false);
                         setIsCategoryOpen(false);
                       }}
-                      className={`w-full px-4 py-2.5 text-left text-base font-normal font-sans flex items-center justify-between hover:bg-slate-50 hover:text-slate-800 transition-colors border-none bg-transparent cursor-pointer ${
-                        !isAdmin && idx === 0 ? "first:rounded-t-2xl" : ""
-                      } ${
-                        isSelected
-                          ? "font-medium text-emerald-700 bg-emerald-50/50"
-                          : "text-slate-500"
+                      className={`w-full px-4 py-2.5 text-left text-sm font-sans flex items-center justify-between hover:bg-slate-50 transition-colors border-none bg-transparent cursor-pointer ${
+                        selectedCategory === null ? "font-medium text-slate-900 bg-slate-100/70" : "text-slate-500"
                       }`}
                     >
-                      <span>{cat.title}</span>
-                      {isSelected && (
-                        <span className="material-symbols-outlined text-[18px] text-emerald-600">
-                          check
-                        </span>
+                      <span>Sin temática</span>
+                      {selectedCategory === null && (
+                        <span className="material-symbols-outlined text-[18px] text-slate-700">check</span>
                       )}
                     </button>
-                  );
-                })}
+
+                    <div className="border-t border-slate-100" />
+
+                    {INTEREST_CATEGORIES.map((cat) => {
+                      const isSelected = selectedCategory === cat.title;
+                      return (
+                        <button
+                          key={cat.title}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCategory(cat.title);
+                            setSelectedAreas([]);
+                            setShowTagPills(true);
+                            setIsCategoryOpen(false);
+                          }}
+                          className={`w-full px-4 py-2.5 text-left text-base font-normal font-sans flex items-center justify-between hover:bg-slate-50 hover:text-slate-800 transition-colors border-none bg-transparent cursor-pointer ${
+                            isSelected ? "font-medium text-emerald-700 bg-emerald-50/50" : "text-slate-500"
+                          }`}
+                        >
+                          <span>{cat.title}</span>
+                          {isSelected && (
+                            <span className="material-symbols-outlined text-[18px] text-emerald-600">check</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            /* Selector único para miembros no admin */
+            <div ref={categoryDropdownRef} className="relative w-full">
+              <button
+                type="button"
+                onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+                className="w-full h-12 px-4 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 focus:border-slate-400 flex items-center justify-between text-base font-normal font-sans text-left transition-colors cursor-pointer outline-none"
+              >
+                <span className={`text-base font-normal font-sans ${selectedCategory ? "text-slate-700" : "text-slate-400"}`}>
+                  {selectedCategory || "Seleccionar temática"}
+                </span>
+                <svg
+                  width="12"
+                  height="8"
+                  viewBox="0 0 12 8"
+                  fill="none"
+                  className={`transition-transform duration-200 shrink-0 ${selectedCategory ? "text-slate-600" : "text-slate-400"} ${isCategoryOpen ? "rotate-180" : ""}`}
+                >
+                  <path
+                    d="M1.5 2L6 6.5L10.5 2"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+
+              {isCategoryOpen && (
+                <div className="absolute top-[calc(100%+5px)] left-0 w-full bg-white rounded-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in duration-150 max-h-[280px] overflow-y-auto custom-scrollbar shadow-none">
+                  {INTEREST_CATEGORIES.map((cat, idx) => {
+                    const isSelected = selectedCategory === cat.title;
+                    return (
+                      <button
+                        key={cat.title}
+                        type="button"
+                        onClick={() => {
+                          setSelectedCategory(cat.title);
+                          setSelectedAreas([]);
+                          setShowTagPills(true);
+                          setIsCategoryOpen(false);
+                        }}
+                        className={`w-full px-4 py-2.5 text-left text-base font-normal font-sans flex items-center justify-between hover:bg-slate-50 hover:text-slate-800 transition-colors border-none bg-transparent cursor-pointer ${
+                          idx === 0 ? "first:rounded-t-2xl" : ""
+                        } ${isSelected ? "font-medium text-emerald-700 bg-emerald-50/50" : "text-slate-500"}`}
+                      >
+                        <span>{cat.title}</span>
+                        {isSelected && (
+                          <span className="material-symbols-outlined text-[18px] text-emerald-600">check</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* 3. Main Writing Card Container */}
           <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col focus-within:border-slate-400 transition-colors">
@@ -944,15 +1067,15 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                 className="hidden"
               />
 
-              {/* Imagen button */}
+              {/* Imagen pill button */}
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-all cursor-pointer border-none hover:scale-105 active:scale-95"
+                className="h-9 sm:h-10 px-3 sm:px-3.5 rounded-full flex items-center gap-1.5 sm:gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-all cursor-pointer border-none active:scale-95 select-none"
                 title="Agregar foto o imagen"
               >
                 <svg
-                  className="w-6 h-6 shrink-0"
+                  className="w-5 h-5 shrink-0"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -964,17 +1087,20 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                   <circle cx="9" cy="9" r="2" />
                   <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
                 </svg>
+                <span className="text-xs sm:text-[13px] font-semibold font-jakarta text-emerald-700">
+                  Imagen
+                </span>
               </button>
 
-              {/* Video button */}
+              {/* Video pill button */}
               <button
                 type="button"
                 onClick={handleOpenYoutubeModal}
-                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center bg-[#FF4B4B]/10 hover:bg-[#FF4B4B]/20 text-[#FF4B4B] transition-all cursor-pointer border-none hover:scale-105 active:scale-95"
+                className="h-9 sm:h-10 px-3 sm:px-3.5 rounded-full flex items-center gap-1.5 sm:gap-2 bg-rose-50 hover:bg-rose-100 text-[#FF4B4B] transition-all cursor-pointer border-none active:scale-95 select-none"
                 title="Agregar video de YouTube"
               >
                 <svg
-                  className="w-6 h-6 shrink-0"
+                  className="w-5 h-5 shrink-0"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -985,6 +1111,9 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                   <rect width="20" height="15" x="2" y="4.5" rx="3" ry="3" />
                   <polygon points="10 9 15 12 10 15" fill="currentColor" />
                 </svg>
+                <span className="text-xs sm:text-[13px] font-semibold font-jakarta text-[#FF4B4B]">
+                  Video
+                </span>
               </button>
             </div>
           </div>

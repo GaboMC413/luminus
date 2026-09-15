@@ -57,13 +57,6 @@ export const ADMIN_COMMUNITY_CATEGORIES = [
     borderColor: "#E2E8F0",
     items: [] as string[],
   },
-  {
-    title: "Equipo LUMINUS",
-    color: "#475569",
-    bgColor: "#F1F5F9",
-    borderColor: "#E2E8F0",
-    items: [] as string[],
-  },
 ];
 
 export const SPACE_TYPE_OPTIONS_CONFIG = [

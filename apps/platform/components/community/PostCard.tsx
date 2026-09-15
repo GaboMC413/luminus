@@ -434,31 +434,17 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
 
   return (
     <article className="bg-white rounded-2xl border border-zinc-200 overflow-hidden flex flex-col shadow-none transition-all">
-      {/* Pinned Badge Header */}
-      {post.isPinned && (
-        <div className="bg-slate-50/80 border-b border-slate-100 px-4 sm:px-5 py-2 flex items-center gap-2 text-slate-500 select-none">
-          <span className="material-symbols-rounded text-slate-600 text-[16px] rotate-45">
-            push_pin
-          </span>
-          <span className="text-xs font-semibold text-slate-600 font-jakarta">
-            Publicación fijada
-          </span>
-        </div>
-      )}
-
       {/* 1. Header: Author info and Post date */}
-      <div className="p-4 sm:p-5 flex items-center justify-between gap-3">
+      <div className="px-4 pt-3.5 pb-2.5 sm:px-5 sm:pt-4 sm:pb-3 flex items-center justify-between gap-3">
         <div
           onClick={isOfficialAccount ? undefined : handlePostAuthorClick}
-          className={`flex items-center gap-3 min-w-0 ${
-            isOfficialAccount ? "cursor-default select-none" : "cursor-pointer group/author"
-          }`}
+          className={`flex items-center gap-3 min-w-0 ${isOfficialAccount ? "cursor-default select-none" : "cursor-pointer group/author"
+            }`}
           title={isOfficialAccount ? undefined : `Ver perfil de ${post.authorName}`}
         >
           {/* Author avatar */}
-          <div className={`w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/80 flex items-center justify-center shrink-0 transition-all ${
-            isOfficialAccount ? "" : "group-hover/author:ring-2 group-hover/author:ring-slate-300"
-          }`}>
+          <div className={`w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-100 flex items-center justify-center shrink-0 transition-colors duration-200 ${isOfficialAccount ? "" : "group-hover/author:border-slate-200"
+            }`}>
             {post.authorAvatar && !avatarError ? (
               <img
                 src={post.authorAvatar}
@@ -474,9 +460,8 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
           {/* Author details */}
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-sm font-bold text-slate-900 font-jakarta truncate ${
-                isOfficialAccount ? "" : "group-hover/author:underline"
-              }`}>
+              <span className={`text-sm font-bold text-slate-900 font-jakarta truncate ${isOfficialAccount ? "" : "group-hover/author:underline"
+                }`}>
                 {post.authorName}
               </span>
               {post.isOfficial && (
@@ -497,101 +482,111 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
           </div>
         </div>
 
-        {/* Post Options Menu */}
-        {!hideActions && (
-          <div ref={postMenuRef} className="relative shrink-0 flex items-center">
-          <button
-            type="button"
-            onClick={() => setShowPostMenu((prev) => !prev)}
-            className={`flex items-center justify-center w-8 h-8 rounded-full transition-all border-none cursor-pointer bg-transparent ${
-              showPostMenu ? "bg-slate-100" : "hover:bg-slate-50"
-            }`}
-            aria-label="Opciones"
-            title="Opciones"
-          >
-            <span className="material-symbols-rounded text-slate-400 hover:text-black transition-colors text-[20px]">
-              more_vert
-            </span>
-          </button>
+        {/* Post Actions & Pin Indicator */}
+        <div className="flex items-center gap-1 shrink-0">
+          {post.isPinned && (
+            <div
+              className="flex items-center justify-center w-8 h-8 text-slate-400 select-none"
+              title="Publicación fijada"
+            >
+              <span className="material-symbols-rounded text-slate-400 text-[18px] rotate-45">
+                push_pin
+              </span>
+            </div>
+          )}
 
-          {showPostMenu && (
-            <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] shadow-none animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-              {isAdmin && isAuthorAdmin && onTogglePin && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPostMenu(false);
-                    onTogglePin(post.id);
-                  }}
-                  className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left border-b border-slate-100"
-                >
-                  <span className={`material-symbols-rounded text-[18px] transition-colors ${
-                    post.isPinned ? "text-violet-600 group-hover:text-violet-700" : "text-slate-500 group-hover:text-slate-900"
-                  }`}>
-                    push_pin
-                  </span>
-                  <span className={`font-semibold transition-colors ${
-                    post.isPinned ? "text-violet-700 group-hover:text-violet-800" : "text-slate-500 group-hover:text-slate-900"
-                  }`}>
-                    {post.isPinned ? "Desfijar publicación" : "Fijar publicación"}
-                  </span>
-                </button>
-              )}
-              {isPostAuthor ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowPostMenu(false);
-                      setIsEditModalOpen(true);
-                    }}
-                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
-                  >
-                    <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900 text-[18px] transition-colors">
-                      edit
-                    </span>
-                    <span className="font-semibold text-slate-500 group-hover:text-slate-900 transition-colors">
-                      Editar
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowPostMenu(false);
-                      setIsDeleteConfirmOpen(true);
-                    }}
-                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
-                  >
-                    <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">
-                      delete
-                    </span>
-                    <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">
-                      Eliminar
-                    </span>
-                  </button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPostMenu(false);
-                    setReportTarget({ type: "post", id: post.id, author: post.authorName });
-                    setIsReportModalOpen(true);
-                  }}
-                  className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
-                >
-                  <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">
-                    flag
-                  </span>
-                  <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">
-                    Reportar
-                  </span>
-                </button>
+          {!hideActions && (
+            <div ref={postMenuRef} className="relative flex items-center">
+              <button
+                type="button"
+                onClick={() => setShowPostMenu((prev) => !prev)}
+                className={`flex items-center justify-center w-8 h-8 rounded-full transition-all border-none cursor-pointer bg-transparent ${showPostMenu ? "bg-slate-100" : "hover:bg-slate-50"
+                  }`}
+                aria-label="Opciones"
+                title="Opciones"
+              >
+                <span className="material-symbols-rounded text-slate-400 hover:text-black transition-colors text-[20px]">
+                  more_vert
+                </span>
+              </button>
+
+              {showPostMenu && (
+                <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] shadow-none animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                  {isAdmin && isAuthorAdmin && onTogglePin && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPostMenu(false);
+                        onTogglePin(post.id);
+                      }}
+                      className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left border-b border-slate-100"
+                    >
+                      <span className={`material-symbols-rounded text-[18px] transition-colors ${post.isPinned ? "text-violet-600 group-hover:text-violet-700" : "text-slate-500 group-hover:text-slate-900"
+                        }`}>
+                        push_pin
+                      </span>
+                      <span className={`font-semibold transition-colors ${post.isPinned ? "text-violet-700 group-hover:text-violet-800" : "text-slate-500 group-hover:text-slate-900"
+                        }`}>
+                        {post.isPinned ? "Desfijar publicación" : "Fijar publicación"}
+                      </span>
+                    </button>
+                  )}
+                  {isPostAuthor ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowPostMenu(false);
+                          setIsEditModalOpen(true);
+                        }}
+                        className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                      >
+                        <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900 text-[18px] transition-colors">
+                          edit
+                        </span>
+                        <span className="font-semibold text-slate-500 group-hover:text-slate-900 transition-colors">
+                          Editar
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowPostMenu(false);
+                          setIsDeleteConfirmOpen(true);
+                        }}
+                        className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                      >
+                        <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">
+                          delete
+                        </span>
+                        <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">
+                          Eliminar
+                        </span>
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPostMenu(false);
+                        setReportTarget({ type: "post", id: post.id, author: post.authorName });
+                        setIsReportModalOpen(true);
+                      }}
+                      className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                    >
+                      <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">
+                        flag
+                      </span>
+                      <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">
+                        Reportar
+                      </span>
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           )}
         </div>
-        )}
       </div>
 
       {/* 2. Content Order: MEDIA FIRST (YouTube video or Image if present) */}
@@ -631,9 +626,8 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
       <div className="px-4 sm:px-5 pb-3 text-sm text-slate-700 font-sans leading-relaxed">
         <div
           ref={contentRef}
-          className={`relative overflow-hidden transition-all duration-300 ${
-            !isExpanded ? (hasMedia ? "max-h-[50px]" : "max-h-[165px]") : "max-h-none"
-          }`}
+          className={`relative overflow-hidden transition-all duration-300 ${!isExpanded ? (hasMedia ? "max-h-[50px]" : "max-h-[165px]") : "max-h-none"
+            }`}
         >
           {renderFormattedContent(post.content)}
           {!isExpanded && hasOverflow && (
@@ -662,17 +656,17 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
 
       {/* 4. Action Buttons: Like & Comment (Icon + Number only, no text) */}
       {!hideActions && (
-        <div className="px-4 sm:px-5 py-2.5 border-t border-b border-zinc-100 flex items-center gap-1.5 bg-slate-50/40">
+        <div className={`p-1.5 sm:p-2 border-t border-zinc-100 flex items-center gap-1.5 ${showComments ? "border-b border-zinc-100 bg-slate-50/40" : ""
+          }`}>
           {/* Like button */}
           <button
             type="button"
             onClick={handleToggleLike}
             aria-label={isLiked ? "Ya no me gusta" : "Me gusta"}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold font-jakarta transition-all cursor-pointer border-none select-none ${
-              isLiked
-                ? "bg-rose-50 text-rose-600 font-bold"
-                : "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-            }`}
+            className={`flex items-center gap-1.5 p-1.5 rounded-lg text-xs font-semibold font-jakarta transition-all cursor-pointer border-none select-none ${isLiked
+              ? "bg-rose-50 text-rose-600 font-bold"
+              : "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              }`}
           >
             <span
               className="material-symbols-outlined text-[19px]"
@@ -694,11 +688,10 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
             type="button"
             onClick={() => setShowComments((prev) => !prev)}
             aria-label="Comentarios"
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold font-jakarta transition-all cursor-pointer border-none select-none ${
-              showComments
-                ? "bg-slate-200/60 text-slate-900 font-bold"
-                : "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-            }`}
+            className={`flex items-center gap-1.5 p-1.5 rounded-lg text-xs font-semibold font-jakarta transition-all cursor-pointer border-none select-none ${showComments
+              ? "bg-slate-200/60 text-slate-900 font-bold"
+              : "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              }`}
           >
             <span className="material-symbols-outlined text-[19px]">chat_bubble_outline</span>
             {comments.length > 0 && (
@@ -712,7 +705,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
 
       {/* 5. Comments Section */}
       {!hideActions && showComments && (
-        <div className="px-4 sm:px-5 py-3.5 bg-slate-50/70 flex flex-col gap-3">
+        <div className="px-4 sm:px-5 py-3 bg-slate-50/70 flex flex-col gap-3">
           {/* List of existing comments (Read mode with actions) */}
           {comments.length > 0 && (
             <div className="flex flex-col gap-4">
@@ -742,9 +735,8 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
                     {/* Avatar */}
                     <div
                       onClick={isOfficialComment ? undefined : (e) => handleCommentAuthorClick(e, comment)}
-                      className={`w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/80 flex items-center justify-center shrink-0 transition-all ${
-                        isOfficialComment ? "cursor-default" : "cursor-pointer hover:ring-2 hover:ring-slate-300"
-                      }`}
+                      className={`w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-100 flex items-center justify-center shrink-0 transition-colors duration-200 ${isOfficialComment ? "cursor-default" : "cursor-pointer hover:border-slate-200"
+                        }`}
                       title={isOfficialComment ? undefined : `Ver perfil de ${comment.authorName}`}
                     >
                       {comment.authorAvatar ? (
@@ -763,9 +755,8 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
                       <div className="flex items-baseline gap-2 flex-wrap leading-tight">
                         <span
                           onClick={isOfficialComment ? undefined : (e) => handleCommentAuthorClick(e, comment)}
-                          className={`text-xs font-bold text-slate-900 font-sans ${
-                            isOfficialComment ? "cursor-default select-none" : "cursor-pointer hover:underline"
-                          }`}
+                          className={`text-xs font-bold text-slate-900 font-sans ${isOfficialComment ? "cursor-default select-none" : "cursor-pointer hover:underline"
+                            }`}
                           title={isOfficialComment ? undefined : `Ver perfil de ${comment.authorName}`}
                         >
                           {comment.authorName}
