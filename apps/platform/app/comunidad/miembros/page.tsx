@@ -94,6 +94,11 @@ function MiembrosContent() {
     appliedFilters.city !== "" ||
     appliedFilters.selectedInterests.length > 0;
 
+  const hasSelectedTempFilters = 
+    Boolean(tempFilters.country) ||
+    Boolean(tempFilters.city) ||
+    tempFilters.selectedInterests.length > 0;
+
   const handleToggleFilters = () => {
     if (!showFilters) {
       setTempFilters({ ...appliedFilters });
@@ -184,12 +189,10 @@ function MiembrosContent() {
     }
   }
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setAppliedSearchQuery(searchQuery.trim());
-    }, 350);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+  const handleExecuteSearch = () => {
+    setAppliedSearchQuery(searchQuery.trim());
+    setSuggestions([]);
+  };
 
   useEffect(() => {
     fetchUsers(null);
@@ -372,7 +375,12 @@ function MiembrosContent() {
           <button
             type="button"
             onClick={handleApplyFilters}
-            className="h-9 px-4 bg-black hover:bg-zinc-900 text-white font-medium text-xs rounded-xl transition-colors cursor-pointer border-none font-jakarta"
+            disabled={!hasSelectedTempFilters}
+            className={`h-9 px-4 font-medium text-xs rounded-xl transition-all border-none font-jakarta ${
+              hasSelectedTempFilters
+                ? "bg-black hover:bg-zinc-900 text-white cursor-pointer"
+                : "bg-slate-100 text-slate-400 cursor-not-allowed"
+            }`}
           >
             Aplicar
           </button>
@@ -401,43 +409,66 @@ function MiembrosContent() {
         <div className="flex flex-col sticky top-[64px] z-30 bg-slate-50 pb-4 gap-3 w-full">
           <div className="flex items-center gap-3 w-full relative">
             {/* Search Bar */}
-            <div className="flex-1 min-w-0 h-11 md:h-12 px-3.5 bg-white rounded-xl border border-slate-200 flex items-center gap-3 focus-within:border-black transition-colors relative">
-              <span className="material-symbols-rounded text-[20px] text-slate-400">search</span>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setSearchQuery(val);
-                    if (val !== selectedSuggestion) {
-                      setSelectedSuggestion(null);
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      setAppliedSearchQuery(searchQuery);
-                      setSuggestions([]);
-                    }
-                  }}
-                  placeholder="Buscar por ciudad, país o temas de interés"
-                  className="flex-1 min-w-0 bg-transparent border-none text-sm font-normal text-slate-800 placeholder:text-slate-400 focus:outline-none"
-                />
+            <div className="flex-1 min-w-0 h-11 md:h-12 px-3.5 bg-white rounded-xl border border-slate-200 flex items-center gap-2.5 focus-within:border-black transition-colors relative">
+              <button
+                type="button"
+                onClick={handleExecuteSearch}
+                disabled={!searchQuery.trim()}
+                className={`flex items-center justify-center p-0 border-none bg-transparent shrink-0 transition-colors ${
+                  searchQuery.trim() ? "text-slate-700 hover:text-black cursor-pointer" : "text-slate-400 cursor-default"
+                }`}
+                title="Buscar"
+              >
+                <span className="material-symbols-rounded text-[20px]">search</span>
+              </button>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSearchQuery(val);
+                  if (val !== selectedSuggestion) {
+                    setSelectedSuggestion(null);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleExecuteSearch();
+                  }
+                }}
+                placeholder="Buscar por ciudad, país o temas de interés"
+                className="flex-1 min-w-0 bg-transparent border-none text-sm font-normal text-slate-800 placeholder:text-slate-400 focus:outline-none"
+              />
 
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setAppliedSearchQuery("");
-                      setSelectedSuggestion(null);
-                      setSuggestions([]);
-                    }}
-                    className="p-1 hover:bg-slate-100 rounded-full transition-colors border-none bg-transparent cursor-pointer text-slate-400 hover:text-slate-700 flex items-center justify-center"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">close</span>
-                  </button>
-                )}
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setAppliedSearchQuery("");
+                    setSelectedSuggestion(null);
+                    setSuggestions([]);
+                  }}
+                  className="p-1 hover:bg-slate-100 rounded-full transition-colors border-none bg-transparent cursor-pointer text-slate-400 hover:text-slate-700 flex items-center justify-center shrink-0"
+                  title="Limpiar búsqueda"
+                >
+                  <span className="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={handleExecuteSearch}
+                disabled={!searchQuery.trim()}
+                className={`hidden sm:flex h-8 px-3.5 items-center justify-center text-xs font-semibold rounded-lg transition-all border-none shrink-0 font-jakarta ${
+                  searchQuery.trim()
+                    ? "bg-black hover:bg-zinc-800 text-white cursor-pointer shadow-none"
+                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                }`}
+              >
+                Buscar
+              </button>
 
                 {/* Suggestions */}
                 {suggestions.length > 0 && (

@@ -75,26 +75,36 @@ export async function GET() {
 
     const serialized: any[] = notifications.map(serializeNotification);
 
-    // Calculate onboarding quests progress and inject onboarding quests checklist (always visible, custom message when completed)
-    const onboardingData = await getOnboardingQuests(session.userId);
-    const isCompleted = onboardingData.progressPercentage === 100;
-    
-    const progressItem = {
-      id: "onboarding-progress",
-      type: "onboarding-progress",
-      title: isCompleted ? "¡Destellos Completados!" : "Tus Primeros Destellos",
-      user: "LUMINUS",
-      avatar: "/iso-logo-black.svg",
-      action: isCompleted
-        ? "¡Felicitaciones! Has completado todas tus misiones iniciales de bienestar. Tu camino en LUMINUS está listo para brillar."
-        : "Enciende tu luz. Completa estas 5 misiones iniciales para conectar y guiar tu camino de bienestar.",
-      action_url: "",
-      date: new Date().toISOString(),
-      isUnread: !isCompleted,
-      quests: onboardingData.quests,
-      progressPercentage: onboardingData.progressPercentage,
-    };
-    serialized.unshift(progressItem);
+    // Calculate onboarding quests progress - only inject if NOT completed and NOT dismissed
+    const isDismissed = await prisma.notification.findFirst({
+      where: {
+        userId: session.userId,
+        type: "onboarding_progress_dismissed",
+      },
+    });
+
+    if (!isDismissed) {
+      const onboardingData = await getOnboardingQuests(session.userId);
+      const isCompleted = onboardingData.progressPercentage === 100;
+      
+      // If completed (100%), close and hide permanently
+      if (!isCompleted) {
+        const progressItem = {
+          id: "onboarding-progress",
+          type: "onboarding-progress",
+          title: "Tus Primeros Destellos",
+          user: "LUMINUS",
+          avatar: "/iso-logo-black.svg",
+          action: "Enciende tu luz. Completa estas 5 misiones iniciales para conectar y guiar tu camino de bienestar.",
+          action_url: "",
+          date: new Date().toISOString(),
+          isUnread: true,
+          quests: onboardingData.quests,
+          progressPercentage: onboardingData.progressPercentage,
+        };
+        serialized.unshift(progressItem);
+      }
+    }
 
     return NextResponse.json({
       notifications: serialized,
@@ -162,6 +172,34 @@ export async function DELETE(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const notificationId = searchParams.get("id") || "";
+
+  // Support single-time dismissal for onboarding-progress
+  if (notificationId === "onboarding-progress") {
+    try {
+      const { prisma } = await import("@/lib/db");
+      const existing = await prisma.notification.findFirst({
+        where: {
+          userId: session.userId,
+          type: "onboarding_progress_dismissed",
+        },
+      });
+      if (!existing) {
+        await prisma.notification.create({
+          data: {
+            userId: session.userId,
+            type: "onboarding_progress_dismissed",
+            title: "Destellos Descartados",
+            body: "El usuario descartó los destellos iniciales",
+            readAt: new Date(),
+          },
+        });
+      }
+      return NextResponse.json({ ok: true });
+    } catch (error) {
+      console.error("Failed to dismiss onboarding progress.", error);
+      return NextResponse.json({ message: "No se pudo descartar los destellos." }, { status: 500 });
+    }
+  }
 
   if (!isUuid(notificationId)) {
     return NextResponse.json({ message: "Notificacion invalida." }, { status: 400 });

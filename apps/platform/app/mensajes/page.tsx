@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -10,7 +10,7 @@ import { formatRelativeTime } from "@/components/ui/PlatformNavbar";
 import { isUuid } from "@/utils/validation";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { DotSpinner } from "@/components/ui/DotSpinner";
-import { formatMessageBody, formatShortTime } from "@/utils/messages";
+import { formatMessageBody, formatShortTime, formatChatDateDivider } from "@/utils/messages";
 
 type Conversation = {
   id: string;
@@ -167,6 +167,71 @@ function MessagesContent() {
     };
   }, []);
 
+  const [isRefreshingMessages, setIsRefreshingMessages] = useState(false);
+
+  const loadMessages = useCallback(async (isManual = false) => {
+    if (!selectedId) return;
+
+    if (isManual) {
+      setIsRefreshingMessages(true);
+    }
+
+    try {
+      setError(null);
+      const response = await fetch(`/api/messages/conversations/${selectedId}/messages`, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "No pudimos cargar la conversacion.");
+      }
+
+      const data = await response.json();
+      const incomingMessages = data.messages || [];
+
+      setMessages((prev) => {
+        if (prev.length === 0 || prev[0].conversation_id !== selectedId) {
+          shouldScrollToBottomRef.current = true;
+          return incomingMessages;
+        }
+
+        const dbMsgIds = new Set(incomingMessages.map((m: any) => m.id));
+        // Retain local sent messages that are not yet returned by the DB poll
+        const localOnlyMessages = prev.filter(
+          (m) => !dbMsgIds.has(m.id) && m.sender_id !== selectedConv?.participant?.id
+        );
+        const combined = [...incomingMessages, ...localOnlyMessages];
+
+        const container = chatContainerRef.current;
+        const isNearBottom = container
+          ? container.scrollHeight - container.scrollTop - container.clientHeight < 100
+          : true;
+        if (isNearBottom) {
+          shouldScrollToBottomRef.current = true;
+        }
+
+        // Sort chronologically ascending
+        return combined.sort(
+          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+      });
+
+      setNextCursor((prevCursor) => (prevCursor === null ? data.nextCursor : prevCursor));
+      setHasMore((prevHasMore) => (prevHasMore === false ? data.hasMore : prevHasMore));
+      setConnection((prevConn: any) => (prevConn === null ? data.connection : data.connection));
+      setOtherLastReadAt(data.otherLastReadAt || null);
+    } catch (err: any) {
+      setError(err.message || "No pudimos cargar la conversacion.");
+    } finally {
+      setIsLoadingMessages(false);
+      if (isManual) {
+        setIsRefreshingMessages(false);
+      }
+    }
+  }, [selectedId, selectedConv?.participant?.id]);
+
+  // Load conversation messages on selection (pure event-driven, 0 idle polling)
   useEffect(() => {
     if (!selectedId) {
       setMessages([]);
@@ -179,69 +244,8 @@ function MessagesContent() {
     }
 
     setIsLoadingMessages(true);
-
-    async function loadMessages() {
-      try {
-        setError(null);
-        const response = await fetch(`/api/messages/conversations/${selectedId}/messages`, {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
-          throw new Error(data.message || "No pudimos cargar la conversacion.");
-        }
-
-        const data = await response.json();
-        const incomingMessages = data.messages || [];
-
-        setMessages((prev) => {
-          if (prev.length === 0 || prev[0].conversation_id !== selectedId) {
-            shouldScrollToBottomRef.current = true;
-            return incomingMessages;
-          }
-
-          const dbMsgIds = new Set(incomingMessages.map((m: any) => m.id));
-          // Retain local sent messages that are not yet returned by the DB poll
-          const localOnlyMessages = prev.filter(
-            (m) => !dbMsgIds.has(m.id) && m.sender_id !== selectedConv?.participant?.id
-          );
-          const combined = [...incomingMessages, ...localOnlyMessages];
-
-          const container = chatContainerRef.current;
-          const isNearBottom = container
-            ? container.scrollHeight - container.scrollTop - container.clientHeight < 100
-            : true;
-          if (isNearBottom) {
-            shouldScrollToBottomRef.current = true;
-          }
-
-          // Sort chronologically ascending
-          return combined.sort(
-            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          );
-        });
-
-        setNextCursor((prevCursor) => (prevCursor === null ? data.nextCursor : prevCursor));
-        setHasMore((prevHasMore) => (prevHasMore === false ? data.hasMore : prevHasMore));
-        setConnection((prevConn: any) => (prevConn === null ? data.connection : data.connection));
-        setOtherLastReadAt(data.otherLastReadAt || null);
-        window.dispatchEvent(new Event("luminus_messages_update"));
-      } catch (err: any) {
-        setError(err.message || "No pudimos cargar la conversacion.");
-      } finally {
-        setIsLoadingMessages(false);
-      }
-    }
-
     loadMessages();
-
-    // Poll for new messages/status every 10 seconds while chat is active
-    const pollInterval = setInterval(loadMessages, 10000);
-    return () => {
-      clearInterval(pollInterval);
-    };
-  }, [selectedId, selectedConv?.participant?.id]);
+  }, [selectedId, loadMessages]);
 
   async function loadMoreMessages() {
     if (isLoadingMore || !hasMore || !nextCursor || !selectedId) return;
@@ -661,16 +665,16 @@ function MessagesContent() {
 
   return (
     <div 
-      className="w-full flex-1 flex flex-col bg-slate-50 min-h-0 lg:h-[calc(100vh-80px)] overflow-hidden"
+      className="w-full flex-1 flex flex-col bg-slate-50 min-h-0 md:h-full overflow-hidden"
       style={{ height: dynamicHeight }}
     >
       <div className={`flex-1 w-full max-w-7xl mx-auto flex flex-col min-h-0 overflow-hidden ${
         mobileView === "chat"
-          ? "px-0 py-0 md:px-6 md:py-6"
-          : "px-4 md:px-6 py-4 md:py-6"
+          ? "px-0 py-0 md:px-6 md:py-4"
+          : "px-4 md:px-6 py-4 md:py-4"
       }`}>
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden">
-          <div className={`items-center gap-3 mb-4 md:mb-6 shrink-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
+          <div className={`items-center gap-3 mb-3 md:mb-4 shrink-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
             <button
               onClick={() => router.back()}
               className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900 cursor-pointer"
@@ -708,7 +712,7 @@ function MessagesContent() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto thin-scrollbar p-2 flex flex-col gap-2">
+              <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar p-2 flex flex-col gap-2">
                 {isLoading && (
                   <div className="p-8 flex justify-center items-center"><DotSpinner size={24} color="black" /></div>
                 )}
@@ -811,7 +815,7 @@ function MessagesContent() {
                 </div>
 
                 {/* Skeleton Body */}
-                <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-4 bg-white overscroll-contain">
+                <div className="flex-1 min-h-0 overflow-y-auto p-3 flex flex-col gap-4 bg-white overscroll-contain">
                   <div className="flex flex-col items-start gap-1">
                     <div className="w-[50%] h-10 bg-slate-50 rounded-xl rounded-tl-none animate-pulse" />
                   </div>
@@ -951,7 +955,7 @@ function MessagesContent() {
                   )}
                 </div>
 
-                <div ref={chatContainerRef} onScroll={handleScroll} onClick={handleChatContainerClick} className="flex-1 overflow-y-auto p-3 thin-scrollbar flex flex-col gap-0.5 bg-white overscroll-contain">
+                <div ref={chatContainerRef} onScroll={handleScroll} onClick={handleChatContainerClick} className="flex-1 min-h-0 overflow-y-auto p-3 thin-scrollbar flex flex-col gap-0.5 bg-white overscroll-contain">
                   {isLoadingMore && (
                     <div className="flex justify-center py-2">
                       <span className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></span>
@@ -982,39 +986,52 @@ function MessagesContent() {
                   ) : (
                     messages.map((message, index) => {
                       const isMine = message.sender_id !== selectedConv.participant.id;
-                      const isConsecutive = index > 0 && (messages[index - 1].sender_id !== selectedConv.participant.id) === isMine;
+                      const prevMsg = index > 0 ? messages[index - 1] : null;
+                      const prevDateStr = prevMsg ? new Date(prevMsg.created_at).toDateString() : null;
+                      const currentDateStr = new Date(message.created_at).toDateString();
+                      const showDateDivider = prevDateStr !== currentDateStr;
+
+                      const isConsecutive = !showDateDivider && index > 0 && (messages[index - 1].sender_id !== selectedConv.participant.id) === isMine;
                       const isLastMessage = index === messages.length - 1;
                       return (
-                        <div
-                          key={message.id}
-                          className={`flex flex-col ${isMine ? "items-end" : "items-start"} ${isConsecutive ? "mt-0.5" : "mt-2 first:mt-0"}`}
-                        >
-                          <div
-                            className={`max-w-[85%] pl-4 pr-12 pt-2.5 pb-3 text-sm leading-relaxed relative min-w-[75px] ${isMine
-                              ? `bg-black text-white font-medium ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tr-none"}`
-                              : `bg-slate-100 border border-slate-100 text-slate-800 ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tl-none"}`
-                              }`}
-                          >
-                            <span className="block break-words whitespace-pre-wrap">{formatMessageBody(message.body)}</span>
-                            <span 
-                              className={`absolute bottom-1 right-2.5 text-[9px] font-sans font-normal select-none pointer-events-none ${
-                                isMine ? "text-white/60" : "text-slate-400"
-                              }`}
-                            >
-                              {formatShortTime(message.created_at)}
-                            </span>
-                          </div>
-                          {isLastMessage && isMine && (
-                            <span className="text-[10px] text-slate-400 mt-1 mr-1 font-semibold select-none">
-                              {(() => {
-                                if (!otherLastReadAt) return "Enviado";
-                                const msgDate = new Date(message.created_at);
-                                const readDate = new Date(otherLastReadAt);
-                                return readDate >= msgDate ? "Visto" : "Enviado";
-                              })()}
-                            </span>
+                        <React.Fragment key={message.id}>
+                          {showDateDivider && (
+                            <div className="flex justify-center my-3 select-none">
+                              <span className="px-3.5 py-1 rounded-full bg-slate-100 border border-slate-200/80 text-[11px] font-semibold text-slate-500 font-sans tracking-tight shadow-none">
+                                {formatChatDateDivider(message.created_at)}
+                              </span>
+                            </div>
                           )}
-                        </div>
+                          <div
+                            className={`flex flex-col ${isMine ? "items-end" : "items-start"} ${isConsecutive ? "mt-0.5" : "mt-2 first:mt-0"}`}
+                          >
+                            <div
+                              className={`max-w-[85%] pl-4 pr-12 pt-2.5 pb-3 text-sm leading-relaxed relative min-w-[75px] ${isMine
+                                ? `bg-black text-white font-medium ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tr-none"}`
+                                : `bg-slate-100 border border-slate-100 text-slate-800 ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tl-none"}`
+                                }`}
+                            >
+                              <span className="block break-words whitespace-pre-wrap">{formatMessageBody(message.body)}</span>
+                              <span 
+                                className={`absolute bottom-1 right-2.5 text-[9px] font-sans font-normal select-none pointer-events-none ${
+                                  isMine ? "text-white/60" : "text-slate-400"
+                                }`}
+                              >
+                                {formatShortTime(message.created_at)}
+                              </span>
+                            </div>
+                            {isLastMessage && isMine && (
+                              <span className="text-[10px] text-slate-400 mt-1 mr-1 font-semibold select-none">
+                                {(() => {
+                                  if (!otherLastReadAt) return "Enviado";
+                                  const msgDate = new Date(message.created_at);
+                                  const readDate = new Date(otherLastReadAt);
+                                  return readDate >= msgDate ? "Visto" : "Enviado";
+                                })()}
+                              </span>
+                            )}
+                          </div>
+                        </React.Fragment>
                       );
                     })
                   )}
