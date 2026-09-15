@@ -113,4 +113,31 @@ export function EmptyProfileButton({ label, icon, className = "", ...props }: Em
   );
 }
 
+// --- SQUARE ICON BUTTON COMPONENT ---
+// Used for compact, icon-only square actions (e.g. mobile headers and toolbars)
+export interface SquareButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  icon: string;
+  variant?: 'outline' | 'secondary' | 'primary';
+}
+
+export const SquareButton = React.forwardRef<HTMLButtonElement, SquareButtonProps>(
+  function SquareButton({ icon, variant = 'outline', className = '', ...props }, ref) {
+    const variants = {
+      outline: "bg-white text-slate-500 hover:text-slate-800 border-zinc-200/80 hover:border-slate-400 hover:bg-slate-50/80",
+      secondary: "bg-slate-100 text-slate-500 hover:text-slate-800 border-transparent hover:bg-slate-200",
+      primary: "bg-black text-white hover:bg-zinc-900 border-transparent",
+    };
+
+    return (
+      <button
+        ref={ref}
+        {...props}
+        className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl border flex items-center justify-center shrink-0 transition-all duration-200 active:scale-[0.98] cursor-pointer select-none outline-none ${variants[variant]} ${className}`}
+      >
+        <span className="material-symbols-outlined text-[20px] select-none leading-none flex items-center justify-center">{icon}</span>
+      </button>
+    );
+  }
+);
+
 export default Button;

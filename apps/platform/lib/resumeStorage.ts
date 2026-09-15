@@ -10,11 +10,15 @@ export const ALLOWED_RESUME_CONTENT_TYPES = new Set([
 export const MAX_RESUME_SIZE_BYTES = 10 * 1024 * 1024;
 
 export function getS3Config() {
-  const bucket = process.env.S3_BUCKET?.trim();
-  const region = process.env.S3_REGION?.trim() || "us-east-1";
-  const publicBaseUrl = process.env.S3_PUBLIC_BASE_URL?.trim();
-
-  if (!bucket) throw new Error("S3_BUCKET is not configured.");
+  let bucket = process.env.S3_STORAGE_BUCKET?.trim() || process.env.S3_BUCKET?.trim() || "luminus-storage-prod-905418193825-us-east-1-an";
+  if (bucket === "luminus-storage-prod") {
+    bucket = "luminus-storage-prod-905418193825-us-east-1-an";
+  }
+  const region = process.env.S3_STORAGE_REGION?.trim() || process.env.S3_REGION?.trim() || "us-east-1";
+  let publicBaseUrl = process.env.S3_STORAGE_PUBLIC_BASE_URL?.trim() || process.env.S3_PUBLIC_BASE_URL?.trim();
+  if (publicBaseUrl && publicBaseUrl.includes("luminus-storage-prod.s3")) {
+    publicBaseUrl = publicBaseUrl.replace("luminus-storage-prod.s3", "luminus-storage-prod-905418193825-us-east-1-an.s3");
+  }
 
   return { bucket, region, publicBaseUrl };
 }

@@ -62,6 +62,18 @@ export function normalizeEvent(ev: any) {
   };
 }
 
+export function checkIsUpcoming(item?: { is_upcoming?: boolean; isUpcoming?: boolean; date?: string | Date | null } | null): boolean {
+  if (!item) return false;
+  const isUpcomingFlag = item.isUpcoming !== undefined ? item.isUpcoming : item.is_upcoming;
+  if (isUpcomingFlag === false) return false;
+  if (!item.date) return Boolean(isUpcomingFlag ?? true);
+  const d = new Date(item.date);
+  if (isNaN(d.getTime())) return Boolean(isUpcomingFlag ?? true);
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+  return d.getTime() >= startOfToday.getTime();
+}
+
 export async function getDbEvents(options?: { type?: "upcoming" | "past"; slug?: string; id?: string }) {
   try {
     if (options?.slug || options?.id) {
@@ -73,20 +85,29 @@ export async function getDbEvents(options?: { type?: "upcoming" | "past"; slug?:
       return event ? normalizeEvent(event) : null;
     }
 
-    const now = new Date();
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
     let where: Record<string, unknown> = {};
 
     if (options?.type === "upcoming") {
       where = {
+        isUpcoming: true,
         OR: [
-          { isUpcoming: true },
-          { date: { gte: now } },
+          { date: null },
+          { date: { gte: startOfToday } },
         ],
       };
     } else if (options?.type === "past") {
       where = {
-        isUpcoming: false,
-        date: { lt: now },
+        OR: [
+          { isUpcoming: false },
+          {
+            AND: [
+              { date: { not: null } },
+              { date: { lt: startOfToday } },
+            ],
+          },
+        ],
       };
     }
 

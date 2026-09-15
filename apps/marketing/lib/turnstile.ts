@@ -6,15 +6,15 @@ export async function verifyTurnstileToken(
     return { success: true };
   }
 
-  if (!token) {
-    return { success: false, error: "Por favor, completa la verificación de seguridad (anti-bot)." };
-  }
-
   const secretKey = process.env.TURNSTILE_SECRET_KEY;
 
   if (!secretKey) {
-    console.warn("⚠️ TURNSTILE_SECRET_KEY no está configurado. Permitiendo bypass en desarrollo.");
+    console.warn("⚠️ TURNSTILE_SECRET_KEY no está configurado. Omitiendo verificación.");
     return { success: true };
+  }
+
+  if (!token) {
+    return { success: false, error: "Por favor, completa la verificación de seguridad (anti-bot)." };
   }
 
   try {

@@ -10,6 +10,7 @@ interface SelectInputProps {
   onSelect: (value: string) => void;
   placeholder?: string;
   variant?: 'clean' | 'bordered';
+  size?: 'sm' | 'md';
   className?: string;
   error?: boolean;
   disabled?: boolean;
@@ -25,6 +26,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
   onSelect,
   placeholder = 'Selecciona',
   variant = 'bordered',
+  size = 'md',
   className = '',
   error = false,
   disabled = false,
@@ -194,17 +196,17 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
             }}
             onMouseEnter={() => setHighlightedIndex(index)}
             className={`
-              px-4 py-2.5 cursor-pointer transition-colors w-full block border-b border-slate-100 last:border-none
+              ${size === 'sm' ? 'px-3 py-2 text-xs' : 'px-4 py-2.5'} cursor-pointer transition-colors w-full block border-b border-slate-100 last:border-none
               ${isSelected ? 'bg-emerald-50/40 text-black' : ''}
               ${isHighlighted ? 'bg-slate-50 text-black' : 'text-slate-600'}
             `}
           >
             <div className="flex flex-col gap-0.5 min-w-0">
-              <span className={`text-[13px] md:text-[14px] ${isSelected ? 'font-bold text-emerald-800' : 'font-semibold text-slate-900'} font-jakarta truncate`}>
+              <span className={`${size === 'sm' ? 'text-xs' : 'text-[13px] md:text-[14px]'} ${isSelected ? 'font-bold text-emerald-800' : 'font-semibold text-slate-900'} font-jakarta truncate`}>
                 {optLabel}
               </span>
               {optDescription && (
-                <span className="text-[11px] md:text-[12px] text-slate-500 font-sans leading-snug whitespace-normal">
+                <span className={`${size === 'sm' ? 'text-[10px]' : 'text-[11px] md:text-[12px]'} text-slate-500 font-sans leading-snug whitespace-normal`}>
                   {optDescription}
                 </span>
               )}
@@ -299,19 +301,19 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
           }
         }}
         className={`
-          ${variantClass} px-4 flex items-center cursor-pointer transition-all duration-300 group outline-none w-full min-w-0
+          ${variantClass} ${size === 'sm' ? '!h-9 !px-3 !rounded-xl' : 'px-4'} flex items-center cursor-pointer transition-all duration-300 group outline-none w-full min-w-0
           ${error ? '!border-[#FF3D3D]' : 'focus:border-slate-800'}
           ${isOpen ? 'border-slate-800' : ''}
           ${disabled ? `${disabledOpacity ? 'opacity-50' : ''} cursor-not-allowed` : ''}
         `}
       >
-        <span className={`${!value ? '!text-slate-400' : 'text-zinc-900'} text-[13px] md:text-base font-normal truncate select-none min-w-0 flex-1`}>
+        <span className={`${!value ? '!text-slate-400' : 'text-zinc-900'} ${size === 'sm' ? '!text-xs' : 'text-[13px] md:text-base'} font-normal truncate select-none min-w-0 flex-1`}>
           {currentOptionLabel || placeholder}
         </span>
         {!disabled && (
           <svg
-            width="10"
-            height="6"
+            width={size === 'sm' ? "8" : "10"}
+            height={size === 'sm' ? "5" : "6"}
             viewBox="0 0 10 6"
             fill="none"
             className={`ml-auto shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}

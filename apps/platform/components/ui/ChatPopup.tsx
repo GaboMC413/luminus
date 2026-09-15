@@ -7,7 +7,7 @@ import Link from "next/link";
 import Modal from "@/components/ui/Modal";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { isUuid } from "@/utils/validation";
-import { formatMessageBody, formatShortTime } from "@/utils/messages";
+import { formatMessageBody, formatShortTime, formatChatDateDivider } from "@/utils/messages";
 
 interface Message {
   id: string | number;
@@ -204,50 +204,47 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
     loadDbChat();
   }, [userId]);
 
-  // Poll for new messages while chat is active
-  useEffect(() => {
-    if (!dbConversationId || !userId) return;
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-    const pollMessages = async () => {
-      try {
-        const msgRes = await fetch(`/api/messages/conversations/${dbConversationId}/messages`, {
-          cache: "no-store",
-        });
+  // Manual refresh messages on demand (event-driven, 0 idle polling)
+  const handleRefresh = async () => {
+    if (!dbConversationId || !userId || isRefreshing) return;
+    try {
+      setIsRefreshing(true);
+      const msgRes = await fetch(`/api/messages/conversations/${dbConversationId}/messages`, {
+        cache: "no-store",
+      });
 
-        if (!msgRes.ok) {
-          console.error("Failed to poll DB messages");
-          return;
-        }
-
-        const msgData = await msgRes.json();
-        setOtherLastReadAt(msgData.otherLastReadAt || null);
-        setConnection(msgData.connection || null);
-        const dbMsgs = (msgData.messages || []).map((m: any) => ({
-          id: m.id,
-          text: m.body,
-          sender: m.sender_id === userId ? "other" : "me",
-          createdAt: m.created_at,
-          time: formatShortTime(m.created_at),
-        }));
-
-        setMessages((prev) => {
-          const dbMsgIds = new Set(dbMsgs.map((m: any) => String(m.id)));
-          // Keep local sent messages that are not yet returned by the DB poll
-          const localOnlyMessages = prev.filter((m) => !dbMsgIds.has(String(m.id)) && m.sender === "me");
-          const combined = [...dbMsgs, ...localOnlyMessages];
-          // Sort chronologically ascending
-          return combined.sort(
-            (a, b) => new Date(a.createdAt || "").getTime() - new Date(b.createdAt || "").getTime()
-          );
-        });
-      } catch (err) {
-        console.error("Error polling DB messages inside popup:", err);
+      if (!msgRes.ok) {
+        console.error("Failed to refresh DB messages");
+        return;
       }
-    };
 
-    const interval = setInterval(pollMessages, 5000);
-    return () => clearInterval(interval);
-  }, [dbConversationId, userId]);
+      const msgData = await msgRes.json();
+      setOtherLastReadAt(msgData.otherLastReadAt || null);
+      setConnection(msgData.connection || null);
+      const dbMsgs = (msgData.messages || []).map((m: any) => ({
+        id: m.id,
+        text: m.body,
+        sender: m.sender_id === userId ? "other" : "me",
+        createdAt: m.created_at,
+        time: formatShortTime(m.created_at),
+      }));
+
+      setMessages((prev) => {
+        const dbMsgIds = new Set(dbMsgs.map((m: any) => String(m.id)));
+        const localOnlyMessages = prev.filter((m) => !dbMsgIds.has(String(m.id)) && m.sender === "me");
+        const combined = [...dbMsgs, ...localOnlyMessages];
+        return combined.sort(
+          (a, b) => new Date(a.createdAt || "").getTime() - new Date(b.createdAt || "").getTime()
+        );
+      });
+    } catch (err) {
+      console.error("Error refreshing DB messages inside popup:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const isInitialLoadRef = useRef(true);
   const userSentMessageRef = useRef(false);
@@ -555,7 +552,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                 </span>
               )}
             </h4>
-            {userId && name !== "LUMINUS" && (
+            {userId && name?.toLowerCase() !== "luminus" && userId !== "50d13047-bab8-44f1-9541-a821113845cc" && userId !== "mock-luminus" && (
               <Link
                 href={`/comunidad/public-profile?id=${userId}`}
                 className="h-8 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer font-jakarta flex items-center justify-center shrink-0 text-decoration-none border-none outline-none"
@@ -569,7 +566,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
         {/* Action icons */}
         <div className="flex items-center gap-1.5">
           {/* Options Menu */}
-          {name !== "LUMINUS" && (
+          {name?.toLowerCase() !== "luminus" && userId !== "50d13047-bab8-44f1-9541-a821113845cc" && userId !== "mock-luminus" && (
             <div className="relative flex items-center" ref={menuRef}>
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -613,7 +610,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                     }}
                     className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                   >
-                    <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">report</span>
+                    <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">flag</span>
                     <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Reportar usuario</span>
                   </button>
                 </div>
@@ -671,41 +668,54 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
         ) : (
           <div className="flex flex-col gap-0.5">
             {messages.map((msg, index) => {
-              const isConsecutive = index > 0 && messages[index - 1].sender === msg.sender;
+              const prevMsg = index > 0 ? messages[index - 1] : null;
+              const prevDateStr = prevMsg?.createdAt ? new Date(prevMsg.createdAt).toDateString() : null;
+              const currentDateStr = msg.createdAt ? new Date(msg.createdAt).toDateString() : null;
+              const showDateDivider = prevDateStr !== currentDateStr;
+
+              const isConsecutive = !showDateDivider && index > 0 && messages[index - 1].sender === msg.sender;
               const isLastMessage = index === messages.length - 1;
               const isMine = msg.sender === "me";
               return (
-                <div 
-                  key={msg.id} 
-                  className={`flex flex-col ${isMine ? "items-end" : "items-start"} ${isConsecutive ? "mt-0.5" : "mt-2 first:mt-0"}`}
-                >
-                  <div
-                    className={`max-w-[90%] pl-4 pr-12 pt-2.5 pb-3 text-sm leading-relaxed relative min-w-[75px] ${
-                      isMine
-                        ? `bg-black text-white font-medium ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tr-none"}`
-                        : `bg-slate-100 text-slate-800 border border-slate-100 ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tl-none"}`
-                    }`}
+                <React.Fragment key={msg.id}>
+                  {showDateDivider && (
+                    <div className="flex justify-center my-3 select-none">
+                      <span className="px-3.5 py-1 rounded-full bg-slate-100 border border-slate-200/80 text-[11px] font-semibold text-slate-500 font-sans tracking-tight shadow-none">
+                        {formatChatDateDivider(msg.createdAt)}
+                      </span>
+                    </div>
+                  )}
+                  <div 
+                    className={`flex flex-col ${isMine ? "items-end" : "items-start"} ${isConsecutive ? "mt-0.5" : "mt-2 first:mt-0"}`}
                   >
-                    <span className="block break-words whitespace-pre-wrap">{formatMessageBody(msg.text)}</span>
-                    <span 
-                      className={`absolute bottom-1 right-2.5 text-[9px] font-sans font-normal select-none pointer-events-none ${
-                        isMine ? "text-white/60" : "text-slate-400"
+                    <div
+                      className={`max-w-[90%] pl-4 pr-12 pt-2.5 pb-3 text-sm leading-relaxed relative min-w-[75px] ${
+                        isMine
+                          ? `bg-black text-white font-medium ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tr-none"}`
+                          : `bg-slate-100 text-slate-800 border border-slate-100 ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tl-none"}`
                       }`}
                     >
-                      {msg.time}
-                    </span>
+                      <span className="block break-words whitespace-pre-wrap">{formatMessageBody(msg.text)}</span>
+                      <span 
+                        className={`absolute bottom-1 right-2.5 text-[9px] font-sans font-normal select-none pointer-events-none ${
+                          isMine ? "text-white/60" : "text-slate-400"
+                        }`}
+                      >
+                        {msg.time}
+                      </span>
+                    </div>
+                    {isLastMessage && isMine && (
+                      <span className="text-[10px] text-slate-400 mt-1 mr-1 font-semibold select-none">
+                        {(() => {
+                          if (!otherLastReadAt || !msg.createdAt) return "Enviado";
+                          const msgDate = new Date(msg.createdAt);
+                          const readDate = new Date(otherLastReadAt);
+                          return readDate >= msgDate ? "Visto" : "Enviado";
+                        })()}
+                      </span>
+                    )}
                   </div>
-                  {isLastMessage && isMine && (
-                    <span className="text-[10px] text-slate-400 mt-1 mr-1 font-semibold select-none">
-                      {(() => {
-                        if (!otherLastReadAt || !msg.createdAt) return "Enviado";
-                        const msgDate = new Date(msg.createdAt);
-                        const readDate = new Date(otherLastReadAt);
-                        return readDate >= msgDate ? "Visto" : "Enviado";
-                      })()}
-                    </span>
-                  )}
-                </div>
+                </React.Fragment>
               );
             })}
             <div ref={messagesEndRef} />
@@ -835,7 +845,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <span className="material-symbols-rounded text-[18px]">report</span>
+                  <span className="material-symbols-rounded text-[18px]">flag</span>
                   <span>Reportar</span>
                 </>
               )}

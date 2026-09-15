@@ -70,6 +70,7 @@ export default function SignUpView() {
   const [showPassword, setShowPassword] = useState(false);
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
   const [verifyEmail, setVerifyEmail] = useState("");
+  const [existingAccountEmail, setExistingAccountEmail] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   // Profile Data State (Preserved across steps)
@@ -222,7 +223,14 @@ export default function SignUpView() {
         return;
       }
 
+      if (response.status === 409) {
+        setExistingAccountEmail(email);
+        setMessage({ text: "", type: "" });
+        return;
+      }
+
       if (!response.ok) {
+        setExistingAccountEmail(null);
         trackRegistrationError({
           step: "Paso 1 - Registro de Credenciales",
           action: "POST /api/auth/register",
@@ -440,6 +448,23 @@ export default function SignUpView() {
                   onSuccess={(token) => setTurnstileToken(token)}
                   onExpire={() => setTurnstileToken(null)}
                 />
+
+                {existingAccountEmail && (
+                  <div className="p-4 bg-amber-50/80 border border-amber-200/80 rounded-2xl text-left my-2 space-y-2.5">
+                    <div className="text-amber-950 font-bold text-sm">
+                      ¡Hola de nuevo!
+                    </div>
+                    <p className="text-xs text-amber-900 leading-relaxed font-medium">
+                      Ya tienes una cuenta registrada con <strong className="font-semibold">{existingAccountEmail}</strong>.
+                    </p>
+                    <Link
+                      href={`/login?email=${encodeURIComponent(existingAccountEmail)}${getRedirectTarget() !== "/comunidad" ? `&redirect=${encodeURIComponent(getRedirectTarget())}` : ""}`}
+                      className="inline-flex items-center justify-center w-full py-2.5 px-4 bg-black hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                    >
+                      Iniciar sesión
+                    </Link>
+                  </div>
+                )}
 
                 {message.text && (
                   <p className={`text-left px-0 mt-2 text-xs sm:text-sm font-bold ${message.type === 'error' ? 'text-red-500' : 'text-green-600'} tracking-tight`}>

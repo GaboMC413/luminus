@@ -38,18 +38,46 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "La portada debe pesar menos de 5 MB." }, { status: 400 });
     }
 
-    const bucket = process.env.S3_BUCKET;
-    const region = process.env.S3_REGION || "us-east-1";
-    const publicBaseUrl = process.env.S3_PUBLIC_BASE_URL;
+    let bucket =
+      process.env.S3_STORAGE_BUCKET?.trim() ||
+      process.env.S3_BUCKET?.trim() ||
+      "luminus-storage-prod-905418193825-us-east-1-an";
 
-    if (!bucket) {
-      throw new Error("S3_BUCKET is not configured.");
+    if (bucket === "luminus-storage-prod") {
+      bucket = "luminus-storage-prod-905418193825-us-east-1-an";
     }
+
+    const region =
+      process.env.S3_STORAGE_REGION?.trim() ||
+      process.env.S3_REGION?.trim() ||
+      "us-east-1";
+
+    let publicBaseUrl =
+      process.env.S3_STORAGE_PUBLIC_BASE_URL?.trim() ||
+      process.env.S3_PUBLIC_BASE_URL?.trim();
+
+    if (publicBaseUrl && publicBaseUrl.includes("luminus-storage-prod.s3")) {
+      publicBaseUrl = publicBaseUrl.replace("luminus-storage-prod.s3", "luminus-storage-prod-905418193825-us-east-1-an.s3");
+    }
+
+    const accessKeyId =
+      process.env.S3_STORAGE_ACCESS_KEY_ID?.trim() ||
+      process.env.AWS_ACCESS_KEY_ID?.trim() ||
+      process.env.SES_ACCESS_KEY_ID?.trim();
+
+    const secretAccessKey =
+      process.env.S3_STORAGE_SECRET_ACCESS_KEY?.trim() ||
+      process.env.AWS_SECRET_ACCESS_KEY?.trim() ||
+      process.env.SES_SECRET_ACCESS_KEY?.trim();
 
     const key = `events/covers/${randomUUID()}.${extensionForContentType(contentType)}`;
 
-    // Uses IAM Amplify Service Role — no credentials needed
-    const s3 = new S3Client({ region });
+    const s3 = new S3Client({
+      region,
+      ...(accessKeyId && secretAccessKey
+        ? { credentials: { accessKeyId, secretAccessKey } }
+        : {}),
+    });
 
     const command = new PutObjectCommand({
       Bucket: bucket,

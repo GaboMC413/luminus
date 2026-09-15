@@ -226,6 +226,8 @@ export type AdminEvent = {
   coverUrl: string | null;
   link: string | null;
   isUpcoming: boolean;
+  liveNotificationSent?: boolean;
+  liveNotificationSentAt?: string | null;
   createdAt: string;
   inscriptionsCount?: number;
 };
@@ -241,6 +243,8 @@ export type AdminEventInscription = {
   guestState?: string | null;
   guestCountry?: string | null;
   marketingConsent?: boolean;
+  notifiedLiveAt?: string | null;
+  notifiedLiveStatus?: string | null;
   createdAt: string;
   user?: {
     email: string;
@@ -272,6 +276,7 @@ export type AdminTab =
   | "logs"
   | "busquedas"
   | "especialistas"
+  | "publicaciones"
   | "emails"
   | "categorias"
   | "eventos"

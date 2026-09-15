@@ -104,7 +104,7 @@ describe("/api/profile", () => {
         user: { findUnique: vi.fn().mockResolvedValue(mockProfile) },
       };
 
-      await transactionCallback(txMock as any);
+      await (transactionCallback as any)(txMock);
 
       // AQUI ES DONDE COMPROBAMOS QUE SE EVITÓ EL IDOR:
       // Verificamos que el upsert intentó hacerse para "usuario-legitimo-123", y NO para "admin-456"

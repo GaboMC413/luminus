@@ -79,7 +79,42 @@ export function FaqAccordionList({ faqs, twoColumns = false, className = "" }: F
         {isOpen && (
           <div className="pb-5 pt-1 text-slate-600 text-sm sm:text-base leading-relaxed flex flex-col gap-3 font-normal">
             {faq.paragraphs.map((p, idx) => (
-              <p key={idx}>{renderParagraphText(p)}</p>
+              <div key={idx} className="flex flex-col gap-3">
+                <p>{renderParagraphText(p)}</p>
+                {idx === 0 && faq.areas && faq.areas.length > 0 && (
+                  <div className="flex flex-wrap gap-2 pt-1 pb-1">
+                    {faq.areas.map((area) => (
+                      <span
+                        key={area.title}
+                        className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium border"
+                        style={{
+                          color: area.color,
+                          borderColor: `${area.color}40`,
+                          backgroundColor: `${area.color}10`,
+                        }}
+                      >
+                        {area.icon && (
+                          <div
+                            style={{
+                              backgroundColor: area.color,
+                              maskImage: `url('${area.icon}')`,
+                              WebkitMaskImage: `url('${area.icon}')`,
+                              maskRepeat: "no-repeat",
+                              WebkitMaskRepeat: "no-repeat",
+                              maskPosition: "center",
+                              WebkitMaskPosition: "center",
+                              maskSize: "contain",
+                              WebkitMaskSize: "contain",
+                            }}
+                            className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0"
+                          />
+                        )}
+                        <span>{area.title}</span>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         )}

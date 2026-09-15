@@ -1,5 +1,5 @@
 import React from 'react';
-import { INTEREST_CATEGORIES } from '@/utils/constants';
+import { INTEREST_CATEGORIES, ADMIN_COMMUNITY_CATEGORIES } from '@/utils/constants';
 
 interface InterestPillProps {
   interest: string;
@@ -48,10 +48,12 @@ export const InterestPill = ({ interest, className = "", size = "md" }: Interest
     }
   }, []);
 
-  const categoriesToSearch = dbCategories.length > 0 ? dbCategories : INTEREST_CATEGORIES;
+  const baseCategories = dbCategories.length > 0 ? dbCategories : INTEREST_CATEGORIES;
+  const categoriesToSearch = [...baseCategories, ...ADMIN_COMMUNITY_CATEGORIES];
 
   // Find the category for this interest to get the consistent style
   let category = categoriesToSearch.find((cat: any) =>
+    cat.title?.toLowerCase() === interest.toLowerCase() ||
     (cat.items || []).some((item: string) => item.toLowerCase() === interest.toLowerCase())
   );
 
@@ -64,6 +66,7 @@ export const InterestPill = ({ interest, className = "", size = "md" }: Interest
 
   const color = category ? category.color : '#94A3B8'; // Default slate-400
   const bgColor = category?.bgColor || `${color}10`;
+  const borderColor = category?.borderColor || `${color}40`;
 
   const heightClass = size === 'sm' ? 'h-7 px-2.5' : 'h-9 px-4';
   const textClass = size === 'sm' ? 'text-[11px]' : 'text-[12px] md:text-[14px]';
@@ -74,7 +77,7 @@ export const InterestPill = ({ interest, className = "", size = "md" }: Interest
       style={{
         backgroundColor: bgColor,
         color: color,
-        borderColor: `${color}40`  // ~25% opacity for border
+        borderColor: borderColor
       }}
     >
       <span className={`${textClass} font-medium text-center line-clamp-1 truncate font-sans select-none`}>

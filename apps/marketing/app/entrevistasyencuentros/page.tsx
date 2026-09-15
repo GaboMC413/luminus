@@ -18,8 +18,33 @@ export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Eventos y Actividades | LUMINUS Latam",
-  description: "Talleres, charlas en vivo y experiencias diseñadas para acercar el bienestar integral a tu vida. Únete a nuestros encuentros y accede a la videoteca en YouTube.",
+  title: "Entrevistas y Encuentros | LUMINUS LATAM",
+  description: "Participa en conversaciones en vivo, talleres y contenidos grabados junto a especialistas de toda la región. Nuevas miradas sobre el bienestar.",
+  alternates: { canonical: "https://luminuslatam.com/entrevistasyencuentros" },
+  openGraph: {
+    title: "Entrevistas y Encuentros | LUMINUS LATAM",
+    description: "Participa en conversaciones en vivo, talleres y contenidos grabados junto a especialistas de toda la región. Nuevas miradas sobre el bienestar.",
+    url: "https://luminuslatam.com/entrevistasyencuentros",
+    siteName: "LUMINUS LATAM",
+    images: [
+      {
+        url: "/luminus_events.jpg",
+        secureUrl: "https://luminuslatam.com/luminus_events.jpg",
+        width: 1200,
+        height: 630,
+        type: "image/jpeg",
+        alt: "Entrevistas y Encuentros | LUMINUS LATAM",
+      },
+    ],
+    locale: "es_LA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Entrevistas y Encuentros | LUMINUS LATAM",
+    description: "Participa en conversaciones en vivo, talleres y contenidos grabados junto a especialistas de toda la región. Nuevas miradas sobre el bienestar.",
+    images: ["/luminus_events.jpg"],
+  },
 };
 
 export default async function EntrevistasYEncuentrosPage() {

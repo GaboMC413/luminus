@@ -4,8 +4,38 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
-  title: "Política de Privacidad | LUMINUS Latam",
-  description: "Explica detalladamente cómo recopilamos, utilizamos, protegemos y gestionamos tus datos personales dentro de LUMINUS.",
+  title: "Política de Privacidad | LUMINUS LATAM",
+  description:
+    "Explica detalladamente cómo recopilamos, utilizamos, protegemos y gestionamos tus datos personales dentro de LUMINUS.",
+  alternates: {
+    canonical: "https://luminuslatam.com/legal/privacidad",
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_LA",
+    url: "https://luminuslatam.com/legal/privacidad",
+    siteName: "LUMINUS LATAM",
+    title: "Política de Privacidad | LUMINUS LATAM",
+    description:
+      "Explica detalladamente cómo recopilamos, utilizamos, protegemos y gestionamos tus datos personales dentro de LUMINUS.",
+    images: [
+      {
+        url: "https://luminuslatam.com/luminus_platform.jpg",
+        secureUrl: "https://luminuslatam.com/luminus_platform.jpg",
+        width: 1200,
+        height: 630,
+        type: "image/jpeg",
+        alt: "LUMINUS LATAM - Política de Privacidad",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Política de Privacidad | LUMINUS LATAM",
+    description:
+      "Explica detalladamente cómo recopilamos, utilizamos, protegemos y gestionamos tus datos personales dentro de LUMINUS.",
+    images: ["https://luminuslatam.com/luminus_platform.jpg"],
+  },
 };
 
 export default function PrivacyPage() {

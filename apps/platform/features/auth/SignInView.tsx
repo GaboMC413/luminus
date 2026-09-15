@@ -56,6 +56,11 @@ export default function SignInView() {
     window.scrollTo(0, 0);
 
     const params = new URLSearchParams(window.location.search);
+    const emailParam = params.get("email");
+    if (emailParam) {
+      setEmail(emailParam.trim());
+    }
+
     if (params.get("error") === "google_config" || params.get("error") === "cognito_config") {
       setMessage({
         text: "Google todavia no esta configurado en este entorno.",

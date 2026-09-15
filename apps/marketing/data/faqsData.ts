@@ -1,7 +1,14 @@
+export interface FaqArea {
+  title: string;
+  color: string;
+  icon?: string;
+}
+
 export interface FaqItem {
   id: string;
   question: string;
   paragraphs: string[];
+  areas?: FaqArea[];
 }
 
 export interface FaqCategory {
@@ -10,6 +17,49 @@ export interface FaqCategory {
   description: string;
   faqs: FaqItem[];
 }
+
+export const WELLNESS_AREAS: FaqArea[] = [
+  {
+    title: "Crecimiento Personal",
+    color: "#F0A500",
+    icon: "/Icons/sunny_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
+  },
+  {
+    title: "Bienestar Emocional",
+    color: "#E855C8",
+    icon: "/Icons/mood_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
+  },
+  {
+    title: "Salud Integral",
+    color: "#0450FB",
+    icon: "/Icons/ecg_heart_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
+  },
+  {
+    title: "Movimiento Físico",
+    color: "#E63946",
+    icon: "/Icons/exercise_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
+  },
+  {
+    title: "Nutrición",
+    color: "#A8C800",
+    icon: "/Icons/nutrition_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
+  },
+  {
+    title: "Espiritualidad",
+    color: "#6D28D9",
+    icon: "/Icons/self_improvement_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
+  },
+  {
+    title: "Vínculos y Relaciones",
+    color: "#FF7700",
+    icon: "/Icons/join_inner_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
+  },
+  {
+    title: "Terapias Complementarias",
+    color: "#0FA87A",
+    icon: "/Icons/spa_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
+  },
+];
 
 export const FAQ_CATEGORIES: FaqCategory[] = [
   {
@@ -107,9 +157,10 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "esp-1",
         question: "¿Quién puede postularse como Especialista LUMINUS?",
         paragraphs: [
-          "Pueden postularse profesionales con formación y trayectoria en salud, bienestar emocional, nutrición, movimiento, crecimiento personal, vínculos y terapias complementarias.",
+          "Pueden postularse profesionales con formación y trayectoria en las distintas áreas del bienestar que integran la red:",
           "Cada postulación se revisa de forma individual evaluando la información profesional, la experiencia y la coherencia con los criterios de la Red de Especialistas.",
         ],
+        areas: WELLNESS_AREAS,
       },
       {
         id: "esp-2",

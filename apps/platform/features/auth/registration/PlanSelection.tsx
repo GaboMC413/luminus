@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
+import { trackRegistrationError } from '@/lib/registrationAuditTracker';
 
 export function PlanSelection({
   onNext,
@@ -37,8 +38,14 @@ export function PlanSelection({
       localStorage.setItem("luminus_profile_plan", "Trial");
       localStorage.setItem("luminus_onboarding_completed", "true");
       if (onNext) onNext();
-    } catch {
+    } catch (err: any) {
       setIsSaving(false);
+      trackRegistrationError({
+        step: "Paso 4 - Selección de Plan / Finalización Onboarding",
+        action: "POST /api/onboarding/profile",
+        userName: `${data?.firstName || ""} ${data?.lastName || ""}`.trim(),
+        errorMessage: err?.message || "Falló el guardado del perfil de onboarding.",
+      });
       alert("No pudimos iniciar tu prueba. Intenta nuevamente.");
     }
   };

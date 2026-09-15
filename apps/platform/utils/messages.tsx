@@ -88,3 +88,51 @@ export function formatShortTime(dateStr: string): string {
   if (isNaN(date.getTime())) return "";
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
+
+export function formatChatDateDivider(dateStr?: string | Date | null): string {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return "";
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const msgDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+  const diffMs = today.getTime() - msgDay.getTime();
+  const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) {
+    return "Hoy";
+  }
+
+  if (diffDays === 1) {
+    return "Ayer";
+  }
+
+  // Within the last 6 days: show the weekday (e.g. Domingo, Lunes, Martes, etc.)
+  if (diffDays > 1 && diffDays <= 6) {
+    const dayNames = [
+      "Domingo",
+      "Lunes",
+      "Martes",
+      "Miércoles",
+      "Jueves",
+      "Viernes",
+      "Sábado"
+    ];
+    return dayNames[date.getDay()];
+  }
+
+  // More than 6 days: show the date
+  const dayNumber = date.getDate();
+  const monthNames = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
+  ];
+  const monthName = monthNames[date.getMonth()];
+
+  return date.getFullYear() === now.getFullYear()
+    ? `${dayNumber} de ${monthName}`
+    : `${dayNumber} de ${monthName} de ${date.getFullYear()}`;
+}
+

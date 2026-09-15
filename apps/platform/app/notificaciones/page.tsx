@@ -388,6 +388,7 @@ function NotificationsContent() {
                             quests={n.quests || []}
                             progressPercentage={n.progressPercentage || 0}
                             onClose={() => {}}
+                            onDismiss={() => deleteNotification(n.id)}
                           />
                         </div>
                       );

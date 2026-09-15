@@ -1,15 +1,41 @@
+import type { Metadata } from "next";
 import fs from "fs";
 import path from "path";
-import { getDbEvents } from "@/lib/events";
+import { getDbEvents, checkIsUpcoming } from "@/lib/events";
 import { Navbar, Footer } from "@/components";
 import { RecordingsGrid } from "@/components/events/RecordingsGrid";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Grabaciones | LUMINUS - Encuentros y Entrevistas",
-  description: "Revive los encuentros y entrevistas sobre bienestar de LUMINUS. Mira las grabaciones de conversaciones enriquecedoras con especialistas.",
+export const metadata: Metadata = {
+  title: "Grabaciones | LUMINUS LATAM",
+  description: "Accede a la videoteca completa de conversaciones, entrevistas y actividades grabadas con especialistas en bienestar.",
+  alternates: { canonical: "https://luminuslatam.com/grabaciones" },
+  openGraph: {
+    title: "Grabaciones | LUMINUS LATAM",
+    description: "Accede a la videoteca completa de conversaciones, entrevistas y actividades grabadas con especialistas en bienestar.",
+    url: "https://luminuslatam.com/grabaciones",
+    siteName: "LUMINUS LATAM",
+    images: [
+      {
+        url: "/luminus_events.jpg",
+        secureUrl: "https://luminuslatam.com/luminus_events.jpg",
+        width: 1200,
+        height: 630,
+        type: "image/jpeg",
+        alt: "Grabaciones | LUMINUS LATAM",
+      },
+    ],
+    locale: "es_LA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Grabaciones | LUMINUS LATAM",
+    description: "Accede a la videoteca completa de conversaciones, entrevistas y actividades grabadas con especialistas en bienestar.",
+    images: ["/luminus_events.jpg"],
+  },
 };
 
 export default async function GrabacionesListingPage() {
@@ -41,11 +67,7 @@ export default async function GrabacionesListingPage() {
   // Filter: recorded past events with a YouTube video
   const now = new Date();
   const recordedEvents = events.filter((item: any) => {
-    if (item.isUpcoming === true || item.is_upcoming === true) return false;
-    if (item.date) {
-      const d = new Date(item.date);
-      if (!isNaN(d.getTime()) && d > now) return false;
-    }
+    if (checkIsUpcoming(item)) return false;
     const youtubeId = item.youtubeId || item.youtube_id;
     const link = item.link || "";
     const hasYoutubeVideo = Boolean(

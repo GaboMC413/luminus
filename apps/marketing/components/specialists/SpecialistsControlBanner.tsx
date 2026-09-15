@@ -19,19 +19,27 @@ export function SpecialistsControlBanner() {
           </div>
 
           {/* Center Cobalt Blue Card (50% Width) */}
-          <div className="w-full lg:w-2/4 bg-luminus-cobalt text-white rounded-3xl p-8 md:p-14 lg:p-16 flex flex-col justify-center gap-6">
-            <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-white">
-              Mantienes el control sobre tu actividad profesional
+          <div className="w-full lg:w-2/4 bg-luminus-cobalt text-white rounded-3xl p-8 md:p-12 lg:p-14 flex flex-col justify-center items-center text-center gap-6">
+            <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-white text-center">
+              Trabajas con la misma libertad de siempre
             </h2>
-            <p className="text-xl lg:text-2xl font-normal text-blue-100 leading-8">
-              Facilitamos el contacto entre especialistas y usuarios. Tú defines tus servicios, metodología, horarios, precios y la forma en que trabajas con cada persona.
-            </p>
-            <div className="pt-2 w-full sm:w-auto">
+            <div className="flex flex-col gap-4 text-center max-w-[580px]">
+              <p className="text-base sm:text-lg font-normal text-blue-100 leading-relaxed">
+                Te facilitamos el contacto con nuevas personas, pero tú mantienes el control de tu actividad. Defines tus servicios, horarios, precios y cómo continuar cada vínculo profesional.
+              </p>
+              <p className="text-base sm:text-lg font-normal text-blue-100 leading-relaxed">
+                No intervenimos en tu forma de trabajar, en los acuerdos que establezcas ni en la relación con cada persona.{" "}
+                <strong className="font-semibold">
+                  Tampoco cobramos comisiones por las consultas o servicios que surjan a través de la plataforma.
+                </strong>
+              </p>
+            </div>
+            <div className="pt-2 w-full flex justify-center">
               <Link
                 href="/legal/condiciones-especialistas"
                 className="flex sm:inline-flex items-center justify-center py-3.5 px-8 text-base font-normal text-white bg-black hover:bg-slate-800 rounded-2xl text-center w-full sm:w-auto sm:min-w-[260px] transition-colors"
               >
-                Ver Condiciones para Especialistas
+                Ver condiciones para especialistas
               </Link>
             </div>
           </div>

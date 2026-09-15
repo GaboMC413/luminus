@@ -211,9 +211,10 @@ interface OnboardingProgressCardProps {
   quests: any[];
   progressPercentage: number;
   onClose: () => void;
+  onDismiss?: () => void;
 }
 
-export function OnboardingProgressCard({ quests, progressPercentage, onClose }: OnboardingProgressCardProps) {
+export function OnboardingProgressCard({ quests, progressPercentage, onClose, onDismiss }: OnboardingProgressCardProps) {
   const router = useRouter();
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -239,9 +240,24 @@ export function OnboardingProgressCard({ quests, progressPercentage, onClose }: 
             <span className="text-xs text-slate-400 font-medium">Enciende tu luz en LUMINUS</span>
           </div>
         </div>
-        <span className={`material-symbols-rounded text-slate-400 text-[20px] transition-transform duration-200 shrink-0 ${isExpanded ? "rotate-180" : ""}`}>
-          keyboard_arrow_down
-        </span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {onDismiss && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDismiss();
+              }}
+              className="p-1 hover:bg-slate-200/60 rounded-full transition-colors text-slate-400 hover:text-black border-none bg-transparent cursor-pointer flex items-center justify-center"
+              title="Descartar destellos"
+            >
+              <span className="material-symbols-rounded text-[18px]">close</span>
+            </button>
+          )}
+          <span className={`material-symbols-rounded text-slate-400 text-[20px] transition-transform duration-200 shrink-0 ${isExpanded ? "rotate-180" : ""}`}>
+            keyboard_arrow_down
+          </span>
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -342,6 +358,7 @@ export function NotificationPopup({ isOpen, onClose, notifications, onMarkRead, 
                   quests={notification.quests}
                   progressPercentage={notification.progressPercentage}
                   onClose={onClose}
+                  onDismiss={() => onDelete(notification.id)}
                 />
               );
             }

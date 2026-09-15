@@ -62,15 +62,22 @@ export async function GET(request: Request) {
       status: "active",
       profile: {
         isOnboarded: true,
+        avatarUrl: {
+          not: null,
+          notIn: ["", " "],
+        },
       },
     };
 
+    const cleanCategory = (category && category !== "Todas las categorías") ? category : "";
+    const andConditions: any[] = [];
+
     if (country) {
-      where.profile.country = country;
+      andConditions.push({ profile: { country: { equals: country, mode: "insensitive" } } });
     }
 
     if (city) {
-      where.profile.city = city;
+      andConditions.push({ profile: { city: { equals: city, mode: "insensitive" } } });
     }
 
     if (query) {
@@ -86,42 +93,47 @@ export async function GET(request: Request) {
         console.error("Failed to log community search:", logError);
       }
 
-      where.OR = [
-        { profile: { fullName: { contains: query, mode: "insensitive" } } },
-        { profile: { firstName: { contains: query, mode: "insensitive" } } },
-        { profile: { lastName: { contains: query, mode: "insensitive" } } },
-        { profile: { profession: { contains: query, mode: "insensitive" } } },
-        { profile: { country: { contains: query, mode: "insensitive" } } },
-        { profile: { city: { contains: query, mode: "insensitive" } } },
-        { interests: { some: { interest: { name: { contains: query, mode: "insensitive" } } } } },
-      ];
+      andConditions.push({
+        OR: [
+          { profile: { fullName: { contains: query, mode: "insensitive" } } },
+          { profile: { firstName: { contains: query, mode: "insensitive" } } },
+          { profile: { lastName: { contains: query, mode: "insensitive" } } },
+          { profile: { profession: { contains: query, mode: "insensitive" } } },
+          { profile: { country: { contains: query, mode: "insensitive" } } },
+          { profile: { city: { contains: query, mode: "insensitive" } } },
+          { interests: { some: { interest: { name: { contains: query, mode: "insensitive" } } } } },
+        ],
+      });
     }
 
-    const interestFilters: any[] = [];
+    if (cleanCategory) {
+      andConditions.push({
+        interests: {
+          some: {
+            interest: {
+              category: {
+                name: { equals: cleanCategory, mode: "insensitive" },
+              },
+            },
+          },
+        },
+      });
+    }
+
     if (interestList.length > 0) {
-      interestFilters.push({
-        some: {
-          interest: {
-            name: { in: interestList, mode: "insensitive" }
-          }
-        }
+      andConditions.push({
+        interests: {
+          some: {
+            interest: {
+              name: { in: interestList, mode: "insensitive" },
+            },
+          },
+        },
       });
     }
-    if (category) {
-      interestFilters.push({
-        some: {
-          interest: {
-            category: {
-              name: { equals: category, mode: "insensitive" }
-            }
-          }
-        }
-      });
-    }
-    if (interestFilters.length > 0) {
-      where.interests = {
-        AND: interestFilters
-      };
+
+    if (andConditions.length > 0) {
+      where.AND = andConditions;
     }
 
     let cursorUser = null;

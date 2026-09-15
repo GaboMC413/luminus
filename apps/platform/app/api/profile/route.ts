@@ -61,7 +61,9 @@ function serializeProfile(user: any) {
 
   return {
     email: user.email,
+    role: user.role ?? "USER",
     profile: {
+      role: user.role ?? "USER",
       first_name: profile.firstName ?? "",
       last_name: profile.lastName ?? "",
       city: profile.city ?? "",
