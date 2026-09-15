@@ -33,11 +33,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "La imagen debe pesar menos de 3 MB." }, { status: 400 });
   }
 
-  const bucket = process.env.S3_AVATAR_BUCKET || process.env.S3_BUCKET;
+  let bucket = process.env.S3_AVATAR_BUCKET || process.env.S3_BUCKET || "luminus-dev-avatars";
+  if (bucket === "luminus-storage-prod") {
+    bucket = "luminus-storage-prod-905418193825-us-east-1-an";
+  }
   const region = process.env.S3_AVATAR_REGION || process.env.S3_REGION || "us-east-1";
-  const publicBaseUrl = process.env.S3_AVATAR_PUBLIC_BASE_URL || process.env.S3_PUBLIC_BASE_URL;
-  const accessKeyId = process.env.S3_AVATAR_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
-  const secretAccessKey = process.env.S3_AVATAR_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
+  let publicBaseUrl = process.env.S3_AVATAR_PUBLIC_BASE_URL || process.env.S3_PUBLIC_BASE_URL;
+  if (publicBaseUrl && publicBaseUrl.includes("luminus-storage-prod.s3")) {
+    publicBaseUrl = publicBaseUrl.replace("luminus-storage-prod.s3", "luminus-storage-prod-905418193825-us-east-1-an.s3");
+  }
+  const accessKeyId = process.env.S3_AVATAR_ACCESS_KEY_ID || process.env.S3_STORAGE_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.S3_AVATAR_SECRET_ACCESS_KEY || process.env.S3_STORAGE_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
 
   if (!bucket) {
     return NextResponse.json({ message: "S3_AVATAR_BUCKET no está configurado." }, { status: 500 });

@@ -43,11 +43,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const bucket =
+    let bucket =
       process.env.S3_STORAGE_BUCKET?.trim() ||
       process.env.S3_FEED_BUCKET?.trim() ||
       process.env.S3_BUCKET?.trim() ||
       "luminus-storage-prod-905418193825-us-east-1-an";
+
+    // Auto-correct truncated name if configured in env
+    if (bucket === "luminus-storage-prod") {
+      bucket = "luminus-storage-prod-905418193825-us-east-1-an";
+    }
 
     const region =
       process.env.S3_STORAGE_REGION?.trim() ||
@@ -55,10 +60,14 @@ export async function POST(request: Request) {
       process.env.S3_REGION?.trim() ||
       "us-east-1";
 
-    const publicBaseUrl =
+    let publicBaseUrl =
       process.env.S3_STORAGE_PUBLIC_BASE_URL?.trim() ||
       process.env.S3_FEED_PUBLIC_BASE_URL?.trim() ||
       process.env.S3_PUBLIC_BASE_URL?.trim();
+
+    if (publicBaseUrl && publicBaseUrl.includes("luminus-storage-prod.s3")) {
+      publicBaseUrl = publicBaseUrl.replace("luminus-storage-prod.s3", "luminus-storage-prod-905418193825-us-east-1-an.s3");
+    }
 
     const accessKeyId =
       process.env.S3_STORAGE_ACCESS_KEY_ID?.trim() ||
