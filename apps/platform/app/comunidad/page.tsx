@@ -349,7 +349,7 @@ function PlatformContent() {
                     onClick={() => router.push(`/comunidad/public-profile?id=${conn.user.id}`)}
                     className="relative group cursor-pointer"
                   >
-                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-50 border border-slate-200/80 group-hover:border-slate-400 transition-all duration-200 flex items-center justify-center shrink-0 group-hover:-translate-y-0.5">
+                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 group-hover:border-slate-200 transition-colors duration-200 flex items-center justify-center shrink-0">
                       {conn.user.avatar ? (
                         <img
                           src={conn.user.avatar}
