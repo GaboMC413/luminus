@@ -22,10 +22,11 @@ interface PostCardProps {
   currentUserProfile?: any;
   onDeletePost?: (postId: string) => void;
   onEditPost?: (updatedPost: PostItem) => void;
+  onTogglePin?: (postId: string) => void;
   hideActions?: boolean;
 }
 
-export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, hideActions }: PostCardProps) {
+export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, onTogglePin, hideActions }: PostCardProps) {
   const router = useRouter();
   const [isLiked, setIsLiked] = useState(post.isLiked || false);
   const [likesCount, setLikesCount] = useState<number>(post.likesCount || 0);
@@ -126,6 +127,21 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, h
 
   const isOfficialAccount = Boolean(
     post.isOfficial ||
+    post.authorName?.toLowerCase() === "luminus" ||
+    post.authorId === "mock-luminus" ||
+    post.authorId === "50d13047-bab8-44f1-9541-a821113845cc"
+  );
+
+  const isAdmin = Boolean(
+    currentUserProfile?.role === "ADMIN" ||
+    currentUserProfile?.role === "admin" ||
+    (typeof window !== "undefined" && localStorage.getItem("luminus_user_role") === "ADMIN")
+  );
+
+  const isAuthorAdmin = Boolean(
+    post.isAuthorAdmin ||
+    post.isOfficial ||
+    (isPostAuthor && isAdmin) ||
     post.authorName?.toLowerCase() === "luminus" ||
     post.authorId === "mock-luminus" ||
     post.authorId === "50d13047-bab8-44f1-9541-a821113845cc"
@@ -418,6 +434,18 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, h
 
   return (
     <article className="bg-white rounded-2xl border border-zinc-200 overflow-hidden flex flex-col shadow-none transition-all">
+      {/* Pinned Badge Header */}
+      {post.isPinned && (
+        <div className="bg-slate-50/80 border-b border-slate-100 px-4 sm:px-5 py-2 flex items-center gap-2 text-slate-500 select-none">
+          <span className="material-symbols-rounded text-slate-600 text-[16px] rotate-45">
+            push_pin
+          </span>
+          <span className="text-xs font-semibold text-slate-600 font-jakarta">
+            Publicación fijada
+          </span>
+        </div>
+      )}
+
       {/* 1. Header: Author info and Post date */}
       <div className="p-4 sm:p-5 flex items-center justify-between gap-3">
         <div
@@ -488,6 +516,27 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, h
 
           {showPostMenu && (
             <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] shadow-none animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+              {isAdmin && isAuthorAdmin && onTogglePin && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPostMenu(false);
+                    onTogglePin(post.id);
+                  }}
+                  className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left border-b border-slate-100"
+                >
+                  <span className={`material-symbols-rounded text-[18px] transition-colors ${
+                    post.isPinned ? "text-violet-600 group-hover:text-violet-700" : "text-slate-500 group-hover:text-slate-900"
+                  }`}>
+                    push_pin
+                  </span>
+                  <span className={`font-semibold transition-colors ${
+                    post.isPinned ? "text-violet-700 group-hover:text-violet-800" : "text-slate-500 group-hover:text-slate-900"
+                  }`}>
+                    {post.isPinned ? "Desfijar publicación" : "Fijar publicación"}
+                  </span>
+                </button>
+              )}
               {isPostAuthor ? (
                 <>
                   <button

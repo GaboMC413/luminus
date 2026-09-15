@@ -672,6 +672,8 @@ model CommunityPost {
   category   String?                @db.VarChar
   tags       String[]               @default([]) @db.VarChar
   status     PostStatus             @default(pending)
+  isPinned   Boolean                @default(false) @map("is_pinned")
+  pinnedAt   DateTime?              @map("pinned_at") @db.Timestamptz
   createdAt  DateTime               @default(now()) @map("created_at") @db.Timestamptz
   updatedAt  DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -681,6 +683,7 @@ model CommunityPost {
 
   @@index([userId])
   @@index([status])
+  @@index([isPinned])
   @@index([createdAt])
   @@map("community_posts")
 }

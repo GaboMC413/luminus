@@ -27,6 +27,9 @@ export interface PostItem {
   areas?: string[];
   content: string;
   status?: "approved" | "pending" | "rejected";
+  isPinned?: boolean;
+  pinnedAt?: string;
+  isAuthorAdmin?: boolean;
   likesCount?: number;
   isLiked?: boolean;
   comments: PostComment[];

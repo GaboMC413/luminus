@@ -46,7 +46,10 @@ function PlatformContent() {
   }, []);
 
   const publicPosts = useMemo(
-    () => posts.filter((p) => p.status === "approved" || !p.status),
+    () =>
+      posts
+        .filter((p) => p.status === "approved" || !p.status)
+        .sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0)),
     [posts]
   );
 
@@ -159,11 +162,12 @@ function PlatformContent() {
 
       if (res.ok) {
         const data = await res.json();
-        setPostNotice(
-          "¡Tu publicación ha sido enviada con éxito! Está en revisión antes de publicarse en la comunidad."
-        );
         if (data.post && (data.post.status === "approved" || !data.post.status)) {
           setPosts((prev) => [data.post, ...prev]);
+        } else {
+          setPostNotice(
+            "¡Tu publicación ha sido enviada con éxito! Está en revisión antes de publicarse en la comunidad."
+          );
         }
       } else {
         const errData = await res.json().catch(() => null);
@@ -172,6 +176,57 @@ function PlatformContent() {
     } catch (err) {
       console.error("Error creating community post:", err);
       alert("Error al conectar con el servidor para publicar.");
+    }
+  };
+
+  const handleTogglePin = async (postId: string) => {
+    const currentPost = posts.find((p) => p.id === postId);
+    const willBePinned = !currentPost?.isPinned;
+
+    // Optimistic update: single pinned post rule
+    setPosts((prev) =>
+      prev.map((p) => {
+        if (p.id === postId) {
+          return {
+            ...p,
+            isPinned: willBePinned,
+            pinnedAt: willBePinned ? new Date().toISOString() : undefined,
+          };
+        }
+        if (willBePinned && p.isPinned) {
+          // Unpin previous pinned post
+          return { ...p, isPinned: false, pinnedAt: undefined };
+        }
+        return p;
+      })
+    );
+
+    try {
+      const res = await fetch(`/api/comunidad/posts/${postId}/pin`, {
+        method: "PATCH",
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.post) {
+          setPosts((prev) =>
+            prev.map((p) => {
+              if (p.id === postId) return data.post;
+              if (data.post.isPinned && p.isPinned) {
+                return { ...p, isPinned: false, pinnedAt: undefined };
+              }
+              return p;
+            })
+          );
+        }
+      } else {
+        const errData = await res.json().catch(() => null);
+        alert(errData?.message || "No se pudo actualizar el estado de fijado.");
+        fetchPosts();
+      }
+    } catch (err) {
+      console.error("Error toggling pin status:", err);
+      fetchPosts();
     }
   };
 
@@ -401,6 +456,7 @@ function PlatformContent() {
                   currentUserProfile={currentUserProfile}
                   onDeletePost={handleDeletePost}
                   onEditPost={handleEditPost}
+                  onTogglePin={handleTogglePin}
                 />
               ))
             )}

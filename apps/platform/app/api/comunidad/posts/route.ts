@@ -19,6 +19,7 @@ export async function GET() {
           select: {
             id: true,
             email: true,
+            role: true,
             profile: {
               select: {
                 fullName: true,
@@ -38,6 +39,7 @@ export async function GET() {
               select: {
                 id: true,
                 email: true,
+                role: true,
                 profile: {
                   select: {
                     fullName: true,
@@ -60,7 +62,10 @@ export async function GET() {
           },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: [
+        { isPinned: "desc" },
+        { createdAt: "desc" },
+      ],
     });
 
     const posts = rawPosts.map((p) => serializePost(p, session?.userId));
@@ -101,6 +106,8 @@ export async function POST(request: Request) {
       );
     }
 
+    const initialStatus = session.role === "ADMIN" ? "approved" : "pending";
+
     const newPost = await prisma.communityPost.create({
       data: {
         userId: session.userId,
@@ -112,13 +119,14 @@ export async function POST(request: Request) {
         youtubeId: youtubeId || null,
         category: category || null,
         tags: Array.isArray(tags) ? tags : [],
-        status: "pending",
+        status: initialStatus,
       },
       include: {
         user: {
           select: {
             id: true,
             email: true,
+            role: true,
             profile: {
               select: {
                 fullName: true,

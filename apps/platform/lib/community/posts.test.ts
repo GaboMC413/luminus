@@ -79,11 +79,40 @@ describe("serializePost", () => {
     expect(serialized.area).toBe("Salud Mental");
     expect(serialized.areas).toEqual(["Salud Mental", "Bienestar"]);
     expect(serialized.status).toBe("approved");
+    expect(serialized.isPinned).toBe(false);
+    expect(serialized.pinnedAt).toBeUndefined();
+    expect(serialized.isAuthorAdmin).toBe(false);
     expect(serialized.likesCount).toBe(1);
     expect(serialized.isLiked).toBe(true);
 
     expect(serialized.comments.length).toBe(1);
     expect(serialized.comments[0].authorName).toBe("María Gómez");
     expect(serialized.comments[0].content).toBe("Excelente aporte!");
+  });
+
+  it("correctly handles pinned post with admin author", () => {
+    const pinnedDate = new Date("2026-09-14T20:00:00.000Z");
+    const rawPost = {
+      id: "admin-post-1",
+      userId: "admin-123",
+      content: "Anuncio importante",
+      status: "approved",
+      isPinned: true,
+      pinnedAt: pinnedDate,
+      createdAt: new Date(),
+      user: {
+        role: "ADMIN",
+        email: "admin@luminus.com",
+        profile: {
+          firstName: "Admin",
+          lastName: "Luminus",
+        },
+      },
+    };
+
+    const serialized = serializePost(rawPost);
+    expect(serialized.isPinned).toBe(true);
+    expect(serialized.pinnedAt).toBe("2026-09-14T20:00:00.000Z");
+    expect(serialized.isAuthorAdmin).toBe(true);
   });
 });
