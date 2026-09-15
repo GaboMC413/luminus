@@ -1,16 +1,5 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { INTEREST_CATEGORIES } from '@/utils/constants';
-
-interface CategoryInfo {
-  id?: string;
-  name?: string;
-  title?: string;
-  icon?: string;
-  iconFilled?: boolean;
-  color?: string;
-  bgColor?: string;
-}
 
 interface UserCardProps {
   user: {
@@ -19,7 +8,7 @@ interface UserCardProps {
     location: string;
     avatar: string;
     interests?: string[];
-    categories?: CategoryInfo[];
+    categories?: any[];
   };
   actionMenu?: React.ReactNode;
 }
@@ -46,27 +35,6 @@ export function UserCard({ user, actionMenu }: UserCardProps) {
   };
 
   const hasAvatar = user.avatar && !imgError;
-
-  const categoriesToRender = React.useMemo(() => {
-    if (user.categories && user.categories.length > 0) {
-      return user.categories;
-    }
-    const uniqueCatsMap = new Map<string, CategoryInfo>();
-    (user.interests || []).forEach((interestName) => {
-      const cat = INTEREST_CATEGORIES.find((c) =>
-        c.items.some((item) => item.toLowerCase() === interestName.toLowerCase())
-      );
-      if (cat && !uniqueCatsMap.has(cat.title)) {
-        uniqueCatsMap.set(cat.title, {
-          name: cat.title,
-          icon: cat.icon,
-          iconFilled: cat.iconFilled,
-          color: cat.color,
-        });
-      }
-    });
-    return Array.from(uniqueCatsMap.values());
-  }, [user.categories, user.interests]);
 
   return (
     <div
@@ -100,29 +68,19 @@ export function UserCard({ user, actionMenu }: UserCardProps) {
         )}
       </div>
 
-      <div className="flex flex-col items-center gap-0.5 md:gap-1 text-center">
-        <h3 className="text-sm md:text-base font-semibold text-slate-900 leading-tight line-clamp-1 font-jakarta px-1">
+      <div className="flex flex-col items-center gap-0.5 text-center w-full min-w-0">
+        <h3
+          className="text-sm font-bold text-slate-900 leading-snug truncate w-full font-jakarta px-0.5"
+          title={user.name}
+        >
           {user.name}
         </h3>
-        <p className="text-xs md:text-sm font-medium text-slate-500 font-sans tracking-wide">
+        <p
+          className="text-xs font-medium text-slate-500 font-sans truncate w-full px-0.5"
+          title={formatLocation(user.location)}
+        >
           {formatLocation(user.location)}
         </p>
-      </div>
-
-      <div className="w-full flex flex-wrap items-center justify-center gap-2 md:gap-2.5 py-1 min-h-[34px] my-auto">
-        {categoriesToRender.map((cat, i) => (
-          <span
-            key={i}
-            className="material-symbols-outlined text-[22px] md:text-[25px] transition-transform hover:scale-110 select-none cursor-pointer"
-            style={{
-              color: cat.color || "#3B82F6",
-              fontVariationSettings: cat.iconFilled !== false ? "'FILL' 1" : undefined,
-            }}
-            title={cat.name || cat.title || "Categoría"}
-          >
-            {cat.icon || "label"}
-          </span>
-        ))}
       </div>
 
       {!isOfficial && (
@@ -131,7 +89,7 @@ export function UserCard({ user, actionMenu }: UserCardProps) {
             e.stopPropagation();
             handleViewProfile();
           }}
-          className="text-xs font-semibold text-slate-500 hover:text-slate-900 hover:underline transition-colors shrink-0 cursor-pointer bg-transparent border-none outline-none font-jakarta"
+          className="text-xs font-semibold text-slate-500 hover:text-slate-900 hover:underline transition-colors shrink-0 cursor-pointer bg-transparent border-none outline-none font-jakarta mt-auto pt-1"
         >
           Ver perfil
         </button>

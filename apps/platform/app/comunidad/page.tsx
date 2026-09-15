@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { Suspense } from "react";
 import { PageLoader } from "@/components/ui/PageLoader";
@@ -8,6 +8,8 @@ import { PostItem } from "@/components/community/mockPostsData";
 import { CreatePostCard } from "@/components/community/CreatePostCard";
 import { PostCard } from "@/components/community/PostCard";
 import { RecentMembersCard } from "@/components/community/RecentMembersCard";
+import { MobileMembersCarousel } from "@/components/community/MobileMembersCarousel";
+import { UpcomingEventsCarousel, EventItem as CommunityEventItem } from "@/components/community/UpcomingEventsCarousel";
 import { SquareButton } from "@/components/ui/Button";
 
 export default function PlatformPage() {
@@ -53,9 +55,19 @@ function PlatformContent() {
     [posts]
   );
 
-  // Latest Community Members (for right sidebar)
+  // Identify index of the highlighted/pinned post (or the first post as fallback)
+  const highlightedIndex = useMemo(() => {
+    const pinnedIdx = publicPosts.findIndex((p) => p.isPinned);
+    return pinnedIdx !== -1 ? pinnedIdx : 0;
+  }, [publicPosts]);
+
+  // Latest Community Members (for right sidebar and mobile carousel)
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Upcoming Events state (for feed carousel)
+  const [events, setEvents] = useState<CommunityEventItem[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
 
   // User Profile & Connections state
   const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
@@ -120,12 +132,12 @@ function PlatformContent() {
     return userConnections.filter((c: any) => c.status === "pending" && c.direction === "incoming").length;
   }, [userConnections]);
 
-  // Fetch Latest 5 Members for the right sidebar
+  // Fetch Latest 10 Members for right sidebar and mobile carousel
   useEffect(() => {
     async function fetchLatestMembers() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/comunidad?limit=5&_t=${Date.now()}`, { cache: "no-store" });
+        const res = await fetch(`/api/comunidad?limit=10&_t=${Date.now()}`, { cache: "no-store" });
         if (res.status === 401 || res.status === 403) {
           router.replace("/auth/iniciar-sesion");
           return;
@@ -142,6 +154,25 @@ function PlatformContent() {
     }
     fetchLatestMembers();
   }, [router]);
+
+  // Fetch Upcoming Events for the feed carousel
+  useEffect(() => {
+    async function fetchEvents() {
+      try {
+        setEventsLoading(true);
+        const res = await fetch(`/api/events?_t=${Date.now()}`, { cache: "no-store" });
+        if (res.ok) {
+          const data = await res.json();
+          setEvents(data.events || []);
+        }
+      } catch (err) {
+        console.error("Error al cargar eventos en la comunidad:", err);
+      } finally {
+        setEventsLoading(false);
+      }
+    }
+    fetchEvents();
+  }, []);
 
   const handleAddPost = async (newPost: PostItem) => {
     try {
@@ -434,7 +465,7 @@ function PlatformContent() {
             </div>
           </div>
 
-          {/* 2. Posts Stream (Only Validated/Approved posts) */}
+          {/* 2. Posts Stream & Embedded Carousels in Exact 5-Slot Order */}
           <div className="flex flex-col gap-4">
             {postsLoading ? (
               <div className="bg-white rounded-2xl border border-zinc-200 p-8 flex flex-col items-center justify-center gap-3 text-slate-400 font-sans">
@@ -442,20 +473,61 @@ function PlatformContent() {
                 <span className="text-xs font-medium">Cargando publicaciones...</span>
               </div>
             ) : publicPosts.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-zinc-200 p-8 text-center text-slate-400 font-sans text-xs sm:text-sm">
-                No hay publicaciones visibles en la comunidad en este momento.
+              <div className="flex flex-col gap-4">
+                <div className="md:hidden">
+                  <MobileMembersCarousel members={users} loading={loading} />
+                </div>
+                <UpcomingEventsCarousel events={events} loading={eventsLoading} />
+                <div className="bg-white rounded-2xl border border-zinc-200 p-8 text-center text-slate-400 font-sans text-xs sm:text-sm">
+                  No hay publicaciones visibles en la comunidad en este momento.
+                </div>
               </div>
             ) : (
-              publicPosts.map((post) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  currentUserProfile={currentUserProfile}
-                  onDeletePost={handleDeletePost}
-                  onEditPost={handleEditPost}
-                  onTogglePin={handleTogglePin}
-                />
-              ))
+              <>
+                {/* Slot 1: Highlighted / Pinned Post (or first post) */}
+                {publicPosts[0] && (
+                  <PostCard
+                    key={publicPosts[0].id}
+                    post={publicPosts[0]}
+                    currentUserProfile={currentUserProfile}
+                    onDeletePost={handleDeletePost}
+                    onEditPost={handleEditPost}
+                    onTogglePin={handleTogglePin}
+                  />
+                )}
+
+                {/* Slot 2: New Members Carousel (Mobile only) */}
+                <div className="md:hidden">
+                  <MobileMembersCarousel members={users} loading={loading} />
+                </div>
+
+                {/* Slot 3: User Most Recent Post (Post #2) */}
+                {publicPosts[1] && (
+                  <PostCard
+                    key={publicPosts[1].id}
+                    post={publicPosts[1]}
+                    currentUserProfile={currentUserProfile}
+                    onDeletePost={handleDeletePost}
+                    onEditPost={handleEditPost}
+                    onTogglePin={handleTogglePin}
+                  />
+                )}
+
+                {/* Slot 4: Próximas Actividades Carousel */}
+                <UpcomingEventsCarousel events={events} loading={eventsLoading} />
+
+                {/* Slot 5: Remaining User Posts (Newest first) */}
+                {publicPosts.slice(2).map((post) => (
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    currentUserProfile={currentUserProfile}
+                    onDeletePost={handleDeletePost}
+                    onEditPost={handleEditPost}
+                    onTogglePin={handleTogglePin}
+                  />
+                ))}
+              </>
             )}
           </div>
         </main>
