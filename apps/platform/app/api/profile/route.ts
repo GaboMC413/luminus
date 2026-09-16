@@ -201,10 +201,12 @@ export async function PATCH(request: Request) {
   try {
     const { prisma } = await import("@/lib/db");
 
-    const existingProfile = await prisma.userProfile.findUnique({
-      where: { userId: session.userId },
-      select: { avatarUrl: true },
-    });
+    const existingProfile = prisma.userProfile?.findUnique
+      ? await prisma.userProfile.findUnique({
+          where: { userId: session.userId },
+          select: { avatarUrl: true },
+        })
+      : null;
 
     const user = await prisma.$transaction(async (tx: any) => {
       await tx.userProfile.upsert({
