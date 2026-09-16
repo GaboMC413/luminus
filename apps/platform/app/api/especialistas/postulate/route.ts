@@ -104,6 +104,18 @@ export async function POST(request: Request) {
       },
     });
 
+    // Mark user profile as onboarded so assertOnboarded allows access to /comunidad
+    await prisma.userProfile.upsert({
+      where: { userId: session.userId },
+      create: {
+        userId: session.userId,
+        isOnboarded: true,
+      },
+      update: {
+        isOnboarded: true,
+      },
+    });
+
     return NextResponse.json({ ok: true, postulation });
   } catch (error) {
     console.error("Failed to submit application:", error);

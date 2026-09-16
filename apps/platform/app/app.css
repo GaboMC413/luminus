@@ -76,8 +76,11 @@
   .luminus-light-gradient-slate {
     background-color: #f8fafc;
     background-image:
-      linear-gradient(180deg, rgba(248, 250, 252, 0.65) 0%, #f8fafc 100%),
+      linear-gradient(180deg, rgba(248, 250, 252, 0.45) 0%, #f8fafc 60%, #f8fafc 100%),
       linear-gradient(90deg, #FF7700 0%, #E855C8 33%, #0450FB 66%, #A8C800 100%);
+    background-repeat: no-repeat;
+    border: none !important;
+    box-shadow: none !important;
   }
 
   /* HIGH-END TYPOGRAPHY SYSTEM (Tailwind @apply semantic classes, no custom sizing properties) */

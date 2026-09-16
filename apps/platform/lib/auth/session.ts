@@ -126,6 +126,30 @@ export async function assertOnboarded(redirectToPath?: string) {
       select: { isOnboarded: true },
     });
     isOnboarded = !!profile?.isOnboarded;
+
+    // Si todavía no figura como onboarded, verificar si ya envió postulación de especialista
+    // o tiene perfil de especialista. En ese caso ya completó su flujo y no debe ir al onboarding de usuario.
+    if (!isOnboarded) {
+      const [specialistPostulation, specialistProfile] = await Promise.all([
+        prisma.specialistPostulation.findFirst({
+          where: { userId: session.userId },
+          select: { id: true },
+        }),
+        prisma.specialistProfile.findUnique({
+          where: { userId: session.userId },
+          select: { userId: true },
+        }),
+      ]);
+
+      if (specialistPostulation || specialistProfile) {
+        await prisma.userProfile.upsert({
+          where: { userId: session.userId },
+          create: { userId: session.userId, isOnboarded: true },
+          update: { isOnboarded: true },
+        });
+        isOnboarded = true;
+      }
+    }
   } catch (error) {
     console.error("Database check failed in assertOnboarded:", error);
   }

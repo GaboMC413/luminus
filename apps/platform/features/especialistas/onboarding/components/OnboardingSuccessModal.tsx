@@ -4,7 +4,15 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 
-export function OnboardingSuccessModal() {
+interface OnboardingSuccessModalProps {
+  buttonText?: string;
+  redirectUrl?: string;
+}
+
+export function OnboardingSuccessModal({
+  buttonText,
+  redirectUrl,
+}: OnboardingSuccessModalProps = {}) {
   const router = useRouter();
 
   return (
@@ -14,33 +22,33 @@ export function OnboardingSuccessModal() {
           Aplicación enviada
         </h1>
         <p className="text-[15px] font-semibold text-slate-700 font-jakarta">
-          Gracias por aplicar como especialista en LUMINUS.
+          Gracias por aplicar como Especialista en LUMINUS.
         </p>
       </div>
 
       <div className="text-[14px] text-slate-600 leading-relaxed font-sans max-w-[480px] flex flex-col gap-4 mt-1">
         <p>
-          Recibimos correctamente tu información. Nuestro Consejo de Expertos revisará tu perfil, formación, experiencia y enfoque profesional para evaluar tu incorporación a la red.
-        </p>
-
-        <p>
-          Este proceso nos permite conocer mejor tu trayectoria y asegurar que los especialistas de LUMINUS mantengan los criterios profesionales de la comunidad.
+          Recibimos tu información y nuestro Consejo de Expertos revisará tu perfil. Mientras tanto, te invitamos a recorrer la plataforma y descubrir los contenidos, espacios y propuestas que forman parte de la red.
         </p>
 
         <p className="text-[13px] text-slate-500 font-medium">
-          Te enviaremos un correo electrónico cuando tu aplicación sea aprobada, rechazada o necesitemos información adicional.
+          Te avisaremos por correo cuando tu perfil sea validado.
         </p>
-
-
       </div>
 
       <div className="flex flex-col items-center gap-3 mt-4 w-full sm:w-auto">
         <Button
-          onClick={() => router.push("/especialistas")}
+          onClick={() => {
+            if (typeof window !== "undefined") {
+              window.location.href = redirectUrl || "/comunidad";
+            } else {
+              router.push(redirectUrl || "/comunidad");
+            }
+          }}
           variant="primary"
-          className="w-full sm:!w-auto px-8 !h-12 bg-slate-900 text-white hover:bg-black font-bold font-jakarta text-[13px] tracking-wide !rounded-xl"
+          className="w-full sm:!w-auto px-8 !h-12 bg-slate-900 text-white hover:bg-black font-bold font-jakarta text-[13px] tracking-wide !rounded-xl cursor-pointer"
         >
-          Volver a Especialistas
+          {buttonText || "Descubrir la plataforma"}
         </Button>
 
         <button
