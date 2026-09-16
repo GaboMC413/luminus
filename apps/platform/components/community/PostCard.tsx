@@ -662,7 +662,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
           <button
             type="button"
             onClick={() => setIsExpanded((prev) => !prev)}
-            className="mt-3.5 text-xs text-slate-400 hover:text-slate-600 font-sans border-none bg-transparent p-0 cursor-pointer select-none transition-colors block"
+            className="mt-3.5 text-base font-medium text-slate-500 hover:text-slate-800 font-sans border-none bg-transparent p-0 cursor-pointer select-none transition-colors block"
           >
             {isExpanded ? "Ver menos" : "Ver más"}
           </button>
