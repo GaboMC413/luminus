@@ -22,6 +22,7 @@ function serializeNotification(notification: any) {
       profession: "work",
       bio: "article_person",
       interests: "format_quote",
+      user_interests: "interests",
       cover: "photo_prints",
       connect: "person_add",
     };
@@ -33,6 +34,7 @@ function serializeNotification(notification: any) {
         profession: "Has indicado tu profesión",
         bio: "Has escrito tu biografía",
         interests: "Has compartido tus reflexiones",
+        user_interests: "Has seleccionado tus temas de interés",
         cover: "Has personalizado tu foto de portada",
         connect: "Has enviado tu primera solicitud",
       };
@@ -75,7 +77,7 @@ export async function GET() {
 
     const serialized: any[] = notifications.map(serializeNotification);
 
-    // Calculate onboarding quests progress - only inject if NOT completed and NOT dismissed
+    // Calculate onboarding quests progress
     const isDismissed = await prisma.notification.findFirst({
       where: {
         userId: session.userId,
@@ -86,23 +88,29 @@ export async function GET() {
     if (!isDismissed) {
       const onboardingData = await getOnboardingQuests(session.userId);
       const isCompleted = onboardingData.progressPercentage === 100;
-      
-      // If completed (100%), close and hide permanently
+
+      const progressItem = {
+        id: "onboarding-progress",
+        type: "onboarding-progress",
+        title: "Tus Primeros Destellos",
+        user: "LUMINUS",
+        avatar: "/iso-logo-black.svg",
+        action: isCompleted
+          ? "¡Felicitaciones! Has completado todos tus destellos iniciales y encendido tu luz en LUMINUS."
+          : `Enciende tu luz. Completa estas ${onboardingData.quests.length} misiones iniciales para conectar y guiar tu camino de bienestar.`,
+        action_url: "",
+        date: new Date().toISOString(),
+        isUnread: !isCompleted,
+        quests: onboardingData.quests,
+        progressPercentage: onboardingData.progressPercentage,
+      };
+
       if (!isCompleted) {
-        const progressItem = {
-          id: "onboarding-progress",
-          type: "onboarding-progress",
-          title: "Tus Primeros Destellos",
-          user: "LUMINUS",
-          avatar: "/iso-logo-black.svg",
-          action: "Enciende tu luz. Completa estas 5 misiones iniciales para conectar y guiar tu camino de bienestar.",
-          action_url: "",
-          date: new Date().toISOString(),
-          isUnread: true,
-          quests: onboardingData.quests,
-          progressPercentage: onboardingData.progressPercentage,
-        };
+        // Pinned at the top when in progress
         serialized.unshift(progressItem);
+      } else {
+        // Kept visible but NOT pinned at top when completed
+        serialized.push(progressItem);
       }
     }
 

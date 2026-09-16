@@ -85,7 +85,7 @@ export function RecentMembersCard({ members, loading, onViewAllMembers }: Recent
 
                   {/* Name & Location */}
                   <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold text-slate-900 group-hover:underline truncate font-jakarta">
+                    <span className="text-xs font-bold text-slate-900 group-hover:text-slate-600 transition-colors truncate font-jakarta">
                       {member.name}
                     </span>
                     <span className="text-[11px] text-slate-400 truncate font-sans">

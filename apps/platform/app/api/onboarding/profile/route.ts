@@ -81,6 +81,13 @@ export async function POST(request: Request) {
 
   try {
     const { prisma } = await import("@/lib/db");
+
+    const existingProfile = await prisma.userProfile.findUnique({
+      where: { userId: session.userId },
+      select: { isOnboarded: true },
+    });
+    const wasAlreadyOnboarded = Boolean(existingProfile?.isOnboarded);
+
     const profile = await prisma.$transaction(async (tx: any) => {
       const savedProfile = await tx.userProfile.upsert({
         where: { userId: session.userId },
@@ -161,7 +168,7 @@ export async function POST(request: Request) {
       return savedProfile;
     });
 
-    if (data.isOnboarded === true) {
+    if (data.isOnboarded === true && !wasAlreadyOnboarded) {
       try {
         const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
         await sendWelcomeMessage(prisma, session.userId);
