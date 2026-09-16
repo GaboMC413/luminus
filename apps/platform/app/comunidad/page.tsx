@@ -277,10 +277,43 @@ function PlatformContent() {
     }
   };
 
-  const handleEditPost = (updatedPost: PostItem) => {
+  const handleEditPost = async (updatedPost: PostItem) => {
+    // Optimistic update
     setPosts((prev) =>
       prev.map((p) => (p.id === updatedPost.id ? updatedPost : p))
     );
+
+    try {
+      const res = await fetch(`/api/comunidad/posts/${updatedPost.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: updatedPost.title,
+          content: updatedPost.content,
+          imageUrl: updatedPost.imageUrl,
+          imageAlt: updatedPost.imageAlt,
+          youtubeUrl: updatedPost.youtubeUrl,
+          youtubeId: updatedPost.youtubeId,
+          category: updatedPost.area,
+          tags: updatedPost.areas,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.post) {
+          setPosts((prev) =>
+            prev.map((p) => (p.id === updatedPost.id ? data.post : p))
+          );
+        }
+      } else {
+        const errData = await res.json().catch(() => null);
+        alert(errData?.message || "No se pudo actualizar la publicación.");
+      }
+    } catch (err) {
+      console.error("Error updating community post:", err);
+      alert("Error al conectar con el servidor para actualizar.");
+    }
   };
 
   if (!currentUserProfile && loading) {
