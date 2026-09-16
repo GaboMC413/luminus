@@ -55,13 +55,8 @@
 
   /* LUMINUS SIGNATURE GRADIENT BACKGROUND */
   .luminus-gradient {
-    background-color: rgb(155, 150, 150);
-    background-image:
-      radial-gradient(circle at 90.65% 7.69%, hsla(299, 100%, 75%, 0.9) 0%, transparent 51%),
-      radial-gradient(circle at 74.35% 88.25%, hsla(222, 97%, 50%, 0.8) 0%, transparent 62%),
-      radial-gradient(circle at 33.5% 79.7%, hsla(67, 100%, 45%, 0.8) 0%, transparent 72%),
-      radial-gradient(circle at 21.02% 16.96%, hsla(28, 100%, 50%, 0.8) 5%, transparent 59%);
-    background-blend-mode: overlay, normal, normal, normal;
+    background-color: #0450FB;
+    background-image: linear-gradient(135deg, #FF7700 0%, #E855C8 33%, #0450FB 66%, #A8C800 100%);
   }
 
   /* LUMINUS SOFT LIGHT GRADIENT (MARKETING HERO STYLE - EXACT 1:1 MATCH) */

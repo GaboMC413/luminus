@@ -319,6 +319,10 @@ export async function PATCH(request: Request) {
         const r4 = await checkAndTriggerQuestCompletion(session.userId, "cover");
         if (r4) newlyCompletedQuests.push(r4);
       }
+      if (shouldUpdateInterests) {
+        const r5 = await checkAndTriggerQuestCompletion(session.userId, "user_interests");
+        if (r5) newlyCompletedQuests.push(r5);
+      }
     } catch (questError) {
       console.error("Failed to check onboarding quests completion status:", questError);
     }

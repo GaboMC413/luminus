@@ -385,7 +385,7 @@ function NetworkContent() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-semibold text-slate-900 truncate font-jakarta group-hover:underline">
+                        <h4 className="text-sm font-semibold text-slate-900 truncate font-jakarta group-hover:text-slate-600 transition-colors">
                           {conn.user.name}
                         </h4>
                         <p className="text-xs text-slate-400 font-medium truncate mt-0.5">

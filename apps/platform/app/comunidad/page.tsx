@@ -11,6 +11,7 @@ import { RecentMembersCard } from "@/components/community/RecentMembersCard";
 import { MobileMembersCarousel } from "@/components/community/MobileMembersCarousel";
 import { UpcomingEventsCarousel, EventItem as CommunityEventItem } from "@/components/community/UpcomingEventsCarousel";
 import { SquareButton } from "@/components/ui/Button";
+import { SuccessModal } from "@/components/ui/SuccessModal";
 
 export default function PlatformPage() {
   return (
@@ -26,7 +27,7 @@ function PlatformContent() {
   // Feed Posts state (synced with database - only real approved posts)
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
-  const [postNotice, setPostNotice] = useState<string | null>(null);
+  const [postNotice, setPostNotice] = useState<{ title: string; message: string } | null>(null);
 
   const fetchPosts = async () => {
     try {
@@ -195,10 +196,15 @@ function PlatformContent() {
         const data = await res.json();
         if (data.post && (data.post.status === "approved" || !data.post.status)) {
           setPosts((prev) => [data.post, ...prev]);
+          setPostNotice({
+            title: "¡Publicación creada!",
+            message: "Tu publicación ya está disponible para toda la comunidad.",
+          });
         } else {
-          setPostNotice(
-            "¡Tu publicación ha sido enviada con éxito! Está en revisión antes de publicarse en la comunidad."
-          );
+          setPostNotice({
+            title: "¡Publicación enviada!",
+            message: "Tu publicación ha sido enviada con éxito y está en revisión antes de publicarse en la comunidad.",
+          });
         }
       } else {
         const errData = await res.json().catch(() => null);
@@ -305,6 +311,10 @@ function PlatformContent() {
           setPosts((prev) =>
             prev.map((p) => (p.id === updatedPost.id ? data.post : p))
           );
+          setPostNotice({
+            title: "¡Publicación actualizada!",
+            message: "Los cambios en tu publicación se guardaron correctamente.",
+          });
         }
       } else {
         const errData = await res.json().catch(() => null);
@@ -366,7 +376,7 @@ function PlatformContent() {
             <div className="p-4 flex flex-col items-center text-center gap-3">
               <div className="flex flex-col items-center gap-1 w-full">
                 <h3
-                  className="text-lg font-bold text-slate-900 leading-snug line-clamp-1 hover:underline cursor-pointer font-jakarta"
+                  className="text-lg font-bold text-slate-900 leading-snug line-clamp-1 hover:text-slate-600 transition-colors cursor-pointer font-jakarta"
                   onClick={() => router.push("/perfil-usuario")}
                 >
                   {currentUserProfile
@@ -444,23 +454,6 @@ function PlatformContent() {
         {/* COLUMN 2 (CENTER): Community Announcements & Posts Feed                   */}
         {/* ========================================================================= */}
         <main className="flex-1 min-w-0 max-w-2xl flex flex-col gap-4">
-          {/* Notice banner after post creation */}
-          {postNotice && (
-            <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 px-4 py-3 rounded-2xl flex items-center justify-between gap-3 text-xs font-medium font-sans">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-rounded text-emerald-600 text-base">check_circle</span>
-                <span>{postNotice}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPostNotice(null)}
-                className="text-emerald-700 hover:text-emerald-900 border-none bg-transparent cursor-pointer p-0 text-sm font-bold"
-              >
-                ✕
-              </button>
-            </div>
-          )}
-
           {/* Section Heading: Exact admin style */}
           <div className="shrink-0 pt-0.5">
             <h1 className="text-[28px] font-bold leading-tight font-jakarta text-slate-900">
@@ -576,6 +569,18 @@ function PlatformContent() {
           />
         </aside>
       </div>
+
+      {/* Floating Confirmation Popup (does not break page layout) */}
+      <SuccessModal
+        isOpen={Boolean(postNotice)}
+        onClose={() => setPostNotice(null)}
+        title={postNotice?.title || "¡Publicación enviada!"}
+        message={postNotice?.message || ""}
+        buttonText="Entendido"
+        eyebrow="Comunidad LUMINUS"
+        celebrate={true}
+        autoCloseMs={6000}
+      />
     </div>
   );
 }
