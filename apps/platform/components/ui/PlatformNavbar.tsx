@@ -497,7 +497,7 @@ export function PlatformNavbar() {
   return (
     <>
       {/* Desktop Header */}
-      <header className="fixed top-0 left-0 w-full bg-white border-b border-slate-200 z-50 h-[64px] px-6 lg:px-8 flex items-center justify-between">
+      <header className="fixed top-0 left-0 w-full bg-white border-b border-slate-200 z-[100] h-[64px] px-6 lg:px-8 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <Link href="/">
             <img src="/logo-luminus-black.svg" alt="Luminus" className="hidden sm:block h-[20px] cursor-pointer" />
@@ -640,7 +640,10 @@ export function PlatformNavbar() {
             </button>
 
           {isProfileDropdownOpen && (
-            <div className="fixed right-6 top-[64px] sm:absolute sm:right-0 sm:top-auto sm:mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+            <div
+              style={{ backgroundColor: "#ffffff" }}
+              className="fixed right-6 top-[64px] sm:absolute sm:right-0 sm:top-auto sm:mt-2 w-52 !bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] shadow-xl shadow-slate-900/10 animate-in zoom-in-95 duration-150 origin-top-right"
+            >
               <Link
                 href="/perfil-usuario"
                 onClick={() => setIsProfileDropdownOpen(false)}
@@ -683,7 +686,7 @@ export function PlatformNavbar() {
 
       {/* Mobile Nav - Fixed Bottom */}
       {showMobileNavbar && (
-        <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 z-50 animate-in slide-in-from-bottom duration-200">
+        <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 z-[100] animate-in slide-in-from-bottom duration-200">
           <div className="max-w-md mx-auto h-[64px] px-6 flex justify-between items-center pb-[env(safe-area-inset-bottom)]">
             {NAV_ITEMS.map((tab) => {
               const isActive = activeTab === tab.id;

@@ -64,10 +64,10 @@ export function SpecialistsProcessSteps() {
         <div className="flex flex-col items-center gap-6 max-w-[800px] w-full pt-4">
 
           <a
-            href="https://app.luminuslatam.com/especialistas/onboarding"
+            href="https://app.luminuslatam.com/auth/registrarse/especialista"
             className="flex items-center justify-center text-center px-8 py-3.5 bg-black hover:bg-slate-800 text-white text-base font-normal rounded-2xl w-full sm:w-auto sm:min-w-[280px] transition-colors"
           >
-            Comenzar mi aplicación
+            Registrarme como Especialista
           </a>
           <p className="text-body-medium font-normal text-slate-900 leading-relaxed">
             La Red de Especialistas está formada por profesionales cuyos perfiles revisamos de manera individual. Para cada incorporación consideramos la formación, trayectoria y área de trabajo, con el objetivo de construir una red confiable y diversa.

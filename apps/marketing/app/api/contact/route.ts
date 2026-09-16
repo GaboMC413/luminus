@@ -69,9 +69,20 @@ export async function POST(request: Request) {
         mensaje: cleanMensaje,
       });
       emailSuccess = true;
+      console.log(`[API Contact] Notificación por email enviada exitosamente para ${cleanEmail}`);
     } catch (err: any) {
-      console.error("[AWS SES Error] Error al enviar email de notificación:", err);
+      console.error("[AWS SES Error] Error al enviar email de notificación:", err?.message || err);
       emailError = `${err?.name || "SESError"}: ${err?.message || "Error al enviar correo electrónico"}`;
+    }
+
+    if (!dbSuccess && !emailSuccess) {
+      return NextResponse.json(
+        {
+          error: "No pudimos procesar tu mensaje en este momento. Por favor intenta de nuevo más tarde o escríbenos directamente a info@luminuslatam.com.",
+          details: { dbError, emailError },
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({

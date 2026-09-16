@@ -502,7 +502,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
           )}
 
           {!hideActions && (isAdmin || !isAuthorAdmin) && (
-            <div ref={postMenuRef} className="relative z-50 flex items-center">
+            <div ref={postMenuRef} className={`relative flex items-center ${showPostMenu ? "z-30" : "z-0"}`}>
               <button
                 type="button"
                 onClick={() => setShowPostMenu((prev) => !prev)}
@@ -519,8 +519,8 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
 
               {showPostMenu && (
                 <div
-                  style={{ boxShadow: "none" }}
-                  className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-slate-200/90 rounded-2xl overflow-hidden z-[100] shadow-none animate-in fade-in zoom-in-95 duration-150 origin-top-right"
+                  style={{ backgroundColor: "#ffffff" }}
+                  className="absolute right-0 top-full mt-1.5 w-52 !bg-white border border-slate-200/90 rounded-2xl overflow-hidden z-[50] shadow-xl shadow-slate-900/10 animate-in zoom-in-95 duration-150 origin-top-right"
                 >
                   {isAdmin && isAuthorAdmin && onTogglePin && (
                     <button
