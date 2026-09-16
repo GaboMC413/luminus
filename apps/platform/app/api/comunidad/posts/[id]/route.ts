@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { deleteS3FileByUrl } from "@/lib/storage/s3FileCleanup";
 
 export const runtime = "nodejs";
 
@@ -22,7 +23,7 @@ export async function DELETE(
   try {
     const post = await prisma.communityPost.findUnique({
       where: { id: postId },
-      select: { userId: true },
+      select: { userId: true, imageUrl: true },
     });
 
     if (!post) {
@@ -31,6 +32,14 @@ export async function DELETE(
 
     if (post.userId !== session.userId && session.role !== "ADMIN") {
       return NextResponse.json({ message: "Permisos insuficientes." }, { status: 403 });
+    }
+
+    // Clean up post image in S3 if present
+    if (post.imageUrl) {
+      await deleteS3FileByUrl(post.imageUrl, {
+        expectedUserId: post.userId,
+        expectedFolder: "feed",
+      });
     }
 
     await prisma.communityPost.delete({

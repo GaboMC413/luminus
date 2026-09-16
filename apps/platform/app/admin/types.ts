@@ -3,6 +3,7 @@ export type AdminUser = {
   email: string;
   role: "USER" | "ADMIN";
   status: "active" | "disabled" | "deleted";
+  isGhost?: boolean;
   emailVerified: boolean;
   authProvider: string;
   createdAt: string | null;

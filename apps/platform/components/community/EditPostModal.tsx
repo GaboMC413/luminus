@@ -356,6 +356,13 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
   const activeCategoryObj = [...INTEREST_CATEGORIES, ...ADMIN_COMMUNITY_CATEGORIES].find((cat) => cat.title === selectedCategory);
 
   const handleRemoveImage = () => {
+    if (uploadedImageUrl) {
+      fetch("/api/uploads/post-image", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: uploadedImageUrl }),
+      }).catch((err) => console.warn("Failed to delete discarded image from S3:", err));
+    }
     if (imagePreview && imagePreview.startsWith("blob:")) {
       URL.revokeObjectURL(imagePreview);
     }
@@ -470,6 +477,14 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
       youtubeId: youtubeId || undefined,
       youtubeUrl: youtubeUrl || undefined,
     };
+
+    if (post.imageUrl && finalImageUrl !== post.imageUrl) {
+      fetch("/api/uploads/post-image", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: post.imageUrl }),
+      }).catch((err) => console.warn("Failed to delete superseded post image from S3:", err));
+    }
 
     onSavePost(updatedPost);
     onClose();

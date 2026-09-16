@@ -168,16 +168,16 @@ export function UpcomingEventsCarousel({ events, loading }: UpcomingEventsCarous
       {/* Carousel Wrapper */}
       <div className="relative w-full group/carousel">
 
-        {/* Horizontal Carousel (Starts at post margin, scrolls until screen edge, ends with margin) */}
+        {/* Horizontal Carousel (Mobile: edge bleed; Desktop: strictly contained within post margins) */}
         <div
           ref={carouselRef}
-          className="flex items-stretch gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory custom-scrollbar -mx-4 px-4 sm:-mx-6 sm:px-6 scroll-px-4 sm:scroll-px-6 py-1"
+          className="flex items-stretch gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory custom-scrollbar -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 scroll-px-4 sm:scroll-px-6 md:scroll-px-0 py-1"
         >
           {loading && events.length === 0 ? (
             [...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className="w-[280px] sm:w-[320px] h-[315px] sm:h-[330px] shrink-0 snap-start bg-white rounded-2xl border border-slate-200 p-4 flex flex-col gap-3 animate-pulse"
+                className="w-[280px] sm:w-[320px] h-[340px] sm:h-[365px] shrink-0 snap-start bg-white rounded-2xl border border-slate-200 p-4 flex flex-col gap-3 animate-pulse"
               >
                 <div className="w-full aspect-video rounded-xl bg-slate-100" />
                 <div className="w-32 h-3 bg-slate-100 rounded" />
@@ -197,7 +197,7 @@ export function UpcomingEventsCarousel({ events, loading }: UpcomingEventsCarous
               return (
                 <div
                   key={event.id || event.title}
-                  className="w-[280px] sm:w-[320px] h-[315px] sm:h-[330px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col shrink-0 snap-start group shadow-none"
+                  className="w-[280px] sm:w-[320px] h-[340px] sm:h-[365px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col shrink-0 snap-start group shadow-none"
                 >
                   {/* 1. Cover image linking to marketing in new tab */}
                   <a
@@ -214,8 +214,8 @@ export function UpcomingEventsCarousel({ events, loading }: UpcomingEventsCarous
                   </a>
 
                   {/* 2. Card body */}
-                  <div className="w-full flex-1 p-3.5 sm:p-4 flex flex-col justify-between items-start gap-2">
-                    <div className="w-full flex flex-col gap-1.5">
+                  <div className="w-full flex-1 p-3.5 sm:p-4 flex flex-col justify-between items-start gap-2 min-h-0">
+                    <div className="w-full flex flex-col gap-1.5 shrink-0">
                       {/* Date header */}
                       <div className="w-full flex justify-start items-center gap-1.5 text-xs font-medium truncate h-4">
                         <span className="font-bold text-slate-900 tracking-tight shrink-0 font-jakarta">
@@ -249,7 +249,7 @@ export function UpcomingEventsCarousel({ events, loading }: UpcomingEventsCarous
                     </div>
 
                     {/* 3. Divider & Action: Inscribirme -> */}
-                    <div className="inline-flex justify-start items-center mt-auto pt-2.5 border-t border-slate-100 w-full">
+                    <div className="inline-flex justify-start items-center mt-auto pt-2.5 border-t border-slate-100 w-full shrink-0">
                       <a
                         href={cardHref}
                         target="_blank"

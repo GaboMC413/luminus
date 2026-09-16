@@ -433,7 +433,11 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
   };
 
   return (
-    <article className="bg-white rounded-2xl border border-zinc-200 overflow-hidden flex flex-col shadow-none transition-all">
+    <article
+      className={`bg-white rounded-2xl border border-zinc-200 flex flex-col shadow-none transition-all ${
+        showPostMenu ? "relative z-40 overflow-visible" : "overflow-hidden"
+      }`}
+    >
       {/* 1. Header: Author info and Post date */}
       <div className="px-4 pt-3.5 pb-2.5 sm:px-5 sm:pt-4 sm:pb-3 flex items-center justify-between gap-3">
         <div
@@ -496,7 +500,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
           )}
 
           {!hideActions && (
-            <div ref={postMenuRef} className="relative flex items-center">
+            <div ref={postMenuRef} className="relative z-50 flex items-center">
               <button
                 type="button"
                 onClick={() => setShowPostMenu((prev) => !prev)}
@@ -511,7 +515,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
               </button>
 
               {showPostMenu && (
-                <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] shadow-none animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-slate-200/90 rounded-2xl overflow-hidden z-[100] shadow-xl shadow-slate-900/10 animate-in fade-in zoom-in-95 duration-150 origin-top-right">
                   {isAdmin && isAuthorAdmin && onTogglePin && (
                     <button
                       type="button"
@@ -521,12 +525,10 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
                       }}
                       className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left border-b border-slate-100"
                     >
-                      <span className={`material-symbols-rounded text-[18px] transition-colors ${post.isPinned ? "text-violet-600 group-hover:text-violet-700" : "text-slate-500 group-hover:text-slate-900"
-                        }`}>
-                        push_pin
+                      <span className="material-symbols-rounded text-[18px] text-slate-500 group-hover:text-slate-900 transition-colors rotate-45">
+                        {post.isPinned ? "keep_off" : "push_pin"}
                       </span>
-                      <span className={`font-semibold transition-colors ${post.isPinned ? "text-violet-700 group-hover:text-violet-800" : "text-slate-500 group-hover:text-slate-900"
-                        }`}>
+                      <span className="font-semibold text-slate-500 group-hover:text-slate-900 transition-colors">
                         {post.isPinned ? "Desfijar publicación" : "Fijar publicación"}
                       </span>
                     </button>
