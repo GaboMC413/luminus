@@ -77,7 +77,16 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
     setComments(post.comments || []);
   }, [post.id, post.comments]);
 
-  const rawLocation = post.authorLocation || (post.authorRole && post.authorRole !== "Miembro" ? post.authorRole : "Montevideo, Uruguay");
+  const isOfficialAccount = Boolean(
+    post.isOfficial ||
+    post.authorName?.toLowerCase() === "luminus" ||
+    post.authorId === "mock-luminus" ||
+    post.authorId === "50d13047-bab8-44f1-9541-a821113845cc"
+  );
+
+  const rawLocation = isOfficialAccount
+    ? "Cuenta Oficial"
+    : post.authorLocation || (post.authorRole && post.authorRole !== "Miembro" ? post.authorRole : "Montevideo, Uruguay");
   const authorSubtitle = formatCityCountry(rawLocation);
 
   const hasMedia = Boolean(post.youtubeId || (post.imageUrl && !imgError));
@@ -124,13 +133,6 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
   } else if (userCity || userCountry) {
     currentUserLocation = userCity || userCountry;
   }
-
-  const isOfficialAccount = Boolean(
-    post.isOfficial ||
-    post.authorName?.toLowerCase() === "luminus" ||
-    post.authorId === "mock-luminus" ||
-    post.authorId === "50d13047-bab8-44f1-9541-a821113845cc"
-  );
 
   const isAdmin = Boolean(
     currentUserProfile?.role === "ADMIN" ||
@@ -880,14 +882,14 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
         onClose={() => setIsDeleteConfirmOpen(false)}
         title="¿Eliminar publicación?"
         maxWidth="400px"
-        footerClassName="px-5 py-3.5 border-t border-zinc-100 flex items-center gap-3 w-full"
+        footerClassName="px-5 py-3.5 border-t border-zinc-100 flex flex-row items-center gap-2.5 w-full"
         footer={
           <>
             <Button
               variant="secondary"
               type="button"
               onClick={() => setIsDeleteConfirmOpen(false)}
-              className="flex-1 !h-11 !text-[13px] !font-medium !rounded-[12px]"
+              className="flex-1 !h-9 sm:!h-10 !text-xs sm:!text-[13px] !font-medium !rounded-[12px]"
             >
               Cancelar
             </Button>
@@ -897,7 +899,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
                 setIsDeleteConfirmOpen(false);
                 onDeletePost?.(post.id);
               }}
-              className="flex-1 !h-11 !text-[13px] !font-medium !bg-rose-600 hover:!bg-rose-700 !text-white !rounded-[12px]"
+              className="flex-1 !h-9 sm:!h-10 !text-xs sm:!text-[13px] !font-medium !bg-rose-600 hover:!bg-rose-700 !text-white !rounded-[12px]"
             >
               Eliminar
             </Button>

@@ -418,16 +418,24 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
     };
 
     onAddPost(newPost);
-    handleResetAndCloseModal();
+    clearStateAndClose();
   };
 
-  const handleResetAndCloseModal = () => {
+  const clearStateAndClose = () => {
     setPostTitle("");
     setPostText("");
     if (editorRef.current) {
       editorRef.current.innerHTML = "";
     }
-    handleRemoveImage();
+    if (imagePreview && imagePreview.startsWith("blob:")) {
+      URL.revokeObjectURL(imagePreview);
+    }
+    setImagePreview(null);
+    setUploadedImageUrl(null);
+    setIsUploadingImage(false);
+    setUploadProgressText("");
+    setImageError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
     setYoutubeId(null);
     setYoutubeUrl("");
     setSelectedAdminCategory(null);
@@ -437,6 +445,11 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
     setShowTagPills(false);
     setIsCategoryOpen(false);
     setIsModalOpen(false);
+  };
+
+  const handleResetAndCloseModal = () => {
+    handleRemoveImage();
+    clearStateAndClose();
   };
 
   return (

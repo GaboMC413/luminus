@@ -359,21 +359,21 @@ export function PostsTab({
         onClose={() => setIsDeleteModalOpen(false)}
         title="¿Eliminar publicación?"
         maxWidth="420px"
-        footerClassName="px-5 py-3.5 border-t border-zinc-100 flex items-center gap-3 w-full"
+        footerClassName="px-5 py-3.5 border-t border-zinc-100 flex flex-row items-center gap-2.5 w-full"
         footer={
           <>
             <Button
               variant="secondary"
               type="button"
               onClick={() => setIsDeleteModalOpen(false)}
-              className="flex-1 !h-11 !text-[13px] !font-medium !rounded-[12px]"
+              className="flex-1 !h-9 sm:!h-10 !text-xs sm:!text-[13px] !font-medium !rounded-[12px]"
             >
               Cancelar
             </Button>
             <Button
               type="button"
               onClick={handleDeleteConfirm}
-              className="flex-1 !h-11 !text-[13px] !font-medium !bg-rose-600 hover:!bg-rose-700 !text-white !rounded-[12px]"
+              className="flex-1 !h-9 sm:!h-10 !text-xs sm:!text-[13px] !font-medium !bg-rose-600 hover:!bg-rose-700 !text-white !rounded-[12px]"
             >
               Eliminar
             </Button>

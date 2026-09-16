@@ -356,7 +356,9 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
   const activeCategoryObj = [...INTEREST_CATEGORIES, ...ADMIN_COMMUNITY_CATEGORIES].find((cat) => cat.title === selectedCategory);
 
   const handleRemoveImage = () => {
-    if (uploadedImageUrl) {
+    // Only delete from S3 immediately if it's a newly uploaded image in this edit session.
+    // The original post.imageUrl will be safely deleted in handleSave() only if the edit is confirmed.
+    if (uploadedImageUrl && uploadedImageUrl !== post.imageUrl) {
       fetch("/api/uploads/post-image", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
