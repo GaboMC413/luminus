@@ -237,7 +237,7 @@ export default function SpecialistOnboardingPage() {
         <div 
           className={`flex-grow flex flex-col items-center pt-4 pb-6 md:py-6 px-4 md:px-6 ${(step === 6 || isUnderReview) ? "justify-center" : ""}`}
         >
-          <div className="w-full max-w-[580px] flex flex-col">
+          <div className="w-full max-w-[580px] flex flex-col my-auto">
             {checkingStatus ? (
               <div className="flex items-center justify-center py-20">
                 <span className="animate-spin material-symbols-rounded text-slate-400 text-[28px]">

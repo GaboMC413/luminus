@@ -501,13 +501,14 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
             </div>
           )}
 
-          {!hideActions && (
-            <div ref={postMenuRef} className="relative z-50 flex items-center">
+          {!hideActions && (isAdmin || !isAuthorAdmin) && (
+            <div ref={postMenuRef} className={`relative flex items-center ${showPostMenu ? "z-30" : "z-0"}`}>
               <button
                 type="button"
                 onClick={() => setShowPostMenu((prev) => !prev)}
-                className={`flex items-center justify-center w-8 h-8 rounded-full transition-all border-none cursor-pointer bg-transparent ${showPostMenu ? "bg-slate-100" : "hover:bg-slate-50"
-                  }`}
+                className={`flex items-center justify-center w-8 h-8 rounded-full transition-all border-none cursor-pointer bg-transparent ${
+                  showPostMenu ? "bg-slate-100" : "hover:bg-slate-50"
+                }`}
                 aria-label="Opciones"
                 title="Opciones"
               >
@@ -517,7 +518,10 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
               </button>
 
               {showPostMenu && (
-                <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-slate-200/90 rounded-2xl overflow-hidden z-[100] shadow-xl shadow-slate-900/10 animate-in fade-in zoom-in-95 duration-150 origin-top-right">
+                <div
+                  style={{ backgroundColor: "#ffffff" }}
+                  className="absolute right-0 top-full mt-1.5 w-52 !bg-white border border-slate-200/90 rounded-2xl overflow-hidden z-[50] shadow-xl shadow-slate-900/10 animate-in zoom-in-95 duration-150 origin-top-right"
+                >
                   {isAdmin && isAuthorAdmin && onTogglePin && (
                     <button
                       type="button"
@@ -535,7 +539,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
                       </span>
                     </button>
                   )}
-                  {isPostAuthor ? (
+                  {isPostAuthor || (isAdmin && isAuthorAdmin) ? (
                     <>
                       <button
                         type="button"
@@ -568,6 +572,22 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
                         </span>
                       </button>
                     </>
+                  ) : isAdmin ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPostMenu(false);
+                        setIsDeleteConfirmOpen(true);
+                      }}
+                      className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                    >
+                      <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">
+                        delete
+                      </span>
+                      <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">
+                        Eliminar
+                      </span>
+                    </button>
                   ) : (
                     <button
                       type="button"
@@ -882,6 +902,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
         onClose={() => setIsDeleteConfirmOpen(false)}
         title="¿Eliminar publicación?"
         maxWidth="400px"
+        containerClassName="shadow-none"
         footerClassName="px-5 py-3.5 border-t border-zinc-100 flex flex-row items-center gap-2.5 w-full"
         footer={
           <>

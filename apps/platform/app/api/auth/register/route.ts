@@ -39,7 +39,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const cognitoUser = await signUpWithCognito(validation.email, validation.password);
+    let cognitoUser;
+    try {
+      cognitoUser = await signUpWithCognito(validation.email, validation.password);
+    } catch (cognitoError: any) {
+      if (cognitoError?.code === "UsernameExistsException") {
+        const { adminDeleteCognitoUser } = await import("@/lib/auth/cognito-admin");
+        await adminDeleteCognitoUser(validation.email);
+        cognitoUser = await signUpWithCognito(validation.email, validation.password);
+      } else {
+        throw cognitoError;
+      }
+    }
     
     // Si el bypass local/dev está activo o ya está confirmado (ej. por SSO), autoconfirmar
     if (!cognitoUser.userConfirmed && process.env.SKIP_EMAIL_VERIFICATION === "true") {
@@ -101,11 +112,14 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ user: serializeUser(user) }, { status: 201 });
-  } catch (error) {
-    console.error("Cognito registration flow failed.", error);
+  } catch (error: any) {
+    console.error("Cognito registration flow failed:", error);
+    const cognitoMsg = getCognitoErrorMessage(error, "");
+    const rawMsg = error?.message || error?.toString?.() || "";
+    const finalMessage = cognitoMsg || rawMsg || "No pudimos crear tu cuenta en este momento.";
     return NextResponse.json(
-      { message: getCognitoErrorMessage(error, "No pudimos crear tu cuenta en este momento.") },
-      { status: getCognitoErrorStatus(error) },
+      { message: finalMessage },
+      { status: getCognitoErrorStatus(error, 500) },
     );
   }
 }

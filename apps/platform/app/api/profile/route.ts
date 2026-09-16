@@ -81,6 +81,8 @@ function serializeProfile(user: any) {
       created_at: profile.createdAt?.toISOString?.() ?? user.createdAt?.toISOString?.() ?? "",
       bio: profile.bio ?? "",
       other_interests: profile.intention ?? "",
+      isOnboarded: profile.isOnboarded ?? false,
+      is_onboarded: profile.isOnboarded ?? false,
     },
   };
 }

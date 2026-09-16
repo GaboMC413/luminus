@@ -186,8 +186,8 @@ export default function SignInView() {
       {/* 2. Right Form Pane - No shadows, no borders, plain elements on slate-50 */}
       <div className="flex-1 flex flex-col bg-slate-50 min-h-0 h-full overflow-hidden pt-14 lg:pt-0">
 
-        {/* Mobile Header: Logo (only visible on mobile) */}
-        <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-light-gradient-slate border-b-0 flex items-center justify-center shrink-0 z-50">
+        {/* Mobile Header: Logo (only visible on mobile, no border, no line) */}
+        <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 bg-slate-50 flex items-center justify-center shrink-0 z-50 border-none shadow-none">
           <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
             <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[20px]" />
           </Link>

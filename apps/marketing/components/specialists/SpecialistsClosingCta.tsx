@@ -18,10 +18,10 @@ export function SpecialistsClosingCta() {
           </div>
           <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-4 sm:gap-6 pt-2 w-full">
             <a
-              href="https://app.luminuslatam.com/especialistas/onboarding"
+              href="https://app.luminuslatam.com/auth/registrarse/especialista"
               className="flex sm:inline-flex items-center justify-center py-3.5 px-8 text-base font-normal text-slate-950 bg-white hover:bg-slate-100 rounded-2xl text-center w-full sm:w-auto sm:min-w-[240px] transition-colors"
             >
-              Aplicar como especialista
+              Registrarme como Especialista
             </a>
           </div>
         </div>

@@ -463,7 +463,14 @@ export async function GET(request: Request) {
     const defaultTarget = user.profile?.isOnboarded ? "/comunidad" : "/auth/registrarse?onboarding=1";
     let redirectTarget = getSafeRedirectUrl(storedState?.redirect, defaultTarget);
     if (!user.profile?.isOnboarded && storedState?.redirect) {
-      redirectTarget = `/auth/registrarse?onboarding=1&redirect=${encodeURIComponent(storedState.redirect)}`;
+      if (
+        storedState.redirect.includes("/auth/registrarse/especialista") ||
+        storedState.redirect.includes("/especialistas")
+      ) {
+        redirectTarget = storedState.redirect;
+      } else {
+        redirectTarget = `/auth/registrarse?onboarding=1&redirect=${encodeURIComponent(storedState.redirect)}`;
+      }
     }
 
     return redirectTo(requestUrl, redirectTarget);

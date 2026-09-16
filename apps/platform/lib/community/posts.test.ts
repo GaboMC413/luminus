@@ -2,14 +2,17 @@ import { describe, it, expect } from "vitest";
 import { formatPostDate, serializePost } from "./posts";
 
 describe("formatPostDate", () => {
-  it("formats recent date correctly", () => {
+  it("formats current year date correctly", () => {
     const now = new Date();
-    expect(formatPostDate(now)).toBe("Recién");
+    const day = now.getDate();
+    const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    const month = months[now.getMonth()];
+    expect(formatPostDate(now)).toBe(`${day} de ${month}`);
   });
 
-  it("formats minutes ago correctly", () => {
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    expect(formatPostDate(fiveMinutesAgo)).toBe("Hace 5 minutos");
+  it("formats previous year date correctly", () => {
+    const pastDate = new Date(2023, 4, 15);
+    expect(formatPostDate(pastDate)).toBe("15 de may de 2023");
   });
 
   it("handles null or empty date gracefully", () => {

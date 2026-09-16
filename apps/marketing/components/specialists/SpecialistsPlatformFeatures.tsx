@@ -3,33 +3,33 @@ import Image from "next/image";
 const PLATFORM_FEATURES = [
   {
     icon: "business_center",
-    title: "Tener un perfil profesional",
-    desc: "Presentar tu experiencia, formación, enfoque y servicios de forma clara.",
+    title: "Presenta tu perfil profesional",
+    desc: "Haz visible tu experiencia, especialidad y enfoque de trabajo.",
   },
   {
     icon: "calendar_check",
-    title: "Ofrecer sesiones introductorias",
-    desc: "Habilitar encuentros breves de 15 minutos para facilitar un primer contacto con nuevas personas.",
-  },
-  {
-    icon: "chair",
-    title: "Publicar tus espacios de atención",
-    desc: "Mostrar tu consultorio, clínica o centro y facilitar que las personas puedan encontrarlo.",
+    title: "Agenda sesiones introductorias",
+    desc: "Coordina encuentros breves para un primer acercamiento.",
   },
   {
     icon: "groups",
-    title: "Crear grupos temáticos",
-    desc: "Abrir espacios de intercambio sobre temas vinculados con tu especialidad.",
+    title: "Crea grupos temáticos",
+    desc: "Abre espacios para compartir experiencias y recursos.",
+  },
+  {
+    icon: "chair",
+    title: "Suma tu espacio a la red",
+    desc: "Publica tu consultorio, clínica o espacio de bienestar.",
   },
   {
     icon: "books_movies_and_music",
-    title: "Ofrecer cursos y capacitaciones",
-    desc: "Publicar talleres, cursos y otras propuestas formativas dentro de la plataforma.",
+    title: "Ofrece cursos y capacitaciones",
+    desc: "Acerca tus propuestas formativas a la comunidad.",
   },
   {
     icon: "mic",
-    title: "Participar en entrevistas",
-    desc: "Compartir tu experiencia y conocimientos en entrevistas producidas por LUMINUS.",
+    title: "Participa en entrevistas",
+    desc: "Comparte tu mirada profesional y amplía tu visibilidad.",
   },
 ];
 
@@ -55,7 +55,7 @@ export function SpecialistsPlatformFeatures() {
 
           <div className="flex flex-col gap-3">
             <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-white">
-              Todo lo que puedes hacer en LUMINUS
+              Herramientas para desarrollar tu práctica
             </h2>
           </div>
 
@@ -81,6 +81,16 @@ export function SpecialistsPlatformFeatures() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Black CTA Button */}
+          <div className="pt-2 w-full sm:w-auto">
+            <a
+              href="https://app.luminuslatam.com/auth/registrarse/especialista"
+              className="flex sm:inline-flex items-center justify-center px-8 py-3.5 bg-black hover:bg-slate-900 text-white text-base font-normal rounded-2xl text-center w-full sm:w-auto sm:min-w-[240px] transition-colors shadow-none cursor-pointer"
+            >
+              Registrarme como Especialista
+            </a>
           </div>
 
         </div>
