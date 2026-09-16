@@ -66,6 +66,7 @@ model User {
   role                     UserRole                  @default(USER)
   status                   UserStatus                @default(active)
   tier                     UserTier                  @default(FREE)
+  isGhost                  Boolean                   @default(false) @map("is_ghost")
   trialExpiresAt           DateTime?                 @map("trial_expires_at") @db.Timestamptz
   lastLoginAt              DateTime?                 @map("last_login_at") @db.Timestamptz
   createdAt                DateTime                  @default(now()) @map("created_at") @db.Timestamptz

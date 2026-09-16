@@ -6,10 +6,17 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
-    // Only return active upcoming events
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Only return active upcoming events whose date is today or in the future
     const events = await prisma.event.findMany({
       where: {
         isUpcoming: true,
+        OR: [
+          { date: { gte: today } },
+          { date: null },
+        ],
       },
       orderBy: { date: "asc" },
       select: {

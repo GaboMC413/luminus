@@ -296,7 +296,7 @@ function NetworkContent() {
                             e.stopPropagation();
                             setOpenMenuConnectionId(openMenuConnectionId === conn.id ? null : conn.id);
                           }}
-                          className="w-8 h-8 rounded-full bg-white/90 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-black transition-colors cursor-pointer border border-slate-200/80 shadow-sm"
+                          className="w-8 h-8 rounded-full bg-white/90 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-black transition-colors cursor-pointer border border-slate-200/80 shadow-none"
                           title="Opciones"
                         >
                           <span className="material-symbols-rounded text-[18px]">more_vert</span>
@@ -305,7 +305,7 @@ function NetworkContent() {
                         {openMenuConnectionId === conn.id && (
                           <div
                             onClick={(e) => e.stopPropagation()}
-                            className="absolute right-0 mt-1.5 w-48 bg-white border border-slate-200 rounded-2xl overflow-hidden z-50 shadow-none animate-in fade-in zoom-in-95 duration-150 origin-top-right"
+                            className="absolute right-0 mt-1.5 w-48 bg-white border border-slate-200/90 rounded-2xl overflow-hidden z-50 shadow-xl shadow-slate-900/10 animate-in fade-in zoom-in-95 duration-150 origin-top-right"
                           >
                             <button
                               onClick={() => {

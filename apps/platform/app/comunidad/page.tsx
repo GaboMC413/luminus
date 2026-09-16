@@ -137,7 +137,7 @@ function PlatformContent() {
     async function fetchLatestMembers() {
       try {
         setLoading(true);
-        const res = await fetch(`/api/comunidad?limit=10&_t=${Date.now()}`, { cache: "no-store" });
+        const res = await fetch(`/api/comunidad?limit=12&_t=${Date.now()}`, { cache: "no-store" });
         if (res.status === 401 || res.status === 403) {
           router.replace("/auth/iniciar-sesion");
           return;

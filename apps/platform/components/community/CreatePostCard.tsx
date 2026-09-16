@@ -258,6 +258,13 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
   );
 
   const handleRemoveImage = () => {
+    if (uploadedImageUrl) {
+      fetch("/api/uploads/post-image", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageUrl: uploadedImageUrl }),
+      }).catch((err) => console.warn("Failed to delete discarded image from S3:", err));
+    }
     if (imagePreview && imagePreview.startsWith("blob:")) {
       URL.revokeObjectURL(imagePreview);
     }
@@ -324,7 +331,15 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
     if (id) {
       setYoutubeId(id);
       setYoutubeUrl(tempYoutubeUrl.trim());
-      // If adding youtube video, clear image
+      // If adding youtube video, clear image and clean from S3
+      if (uploadedImageUrl) {
+        fetch("/api/uploads/post-image", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageUrl: uploadedImageUrl }),
+        }).catch((err) => console.warn("Failed to delete image when switching to YouTube:", err));
+        setUploadedImageUrl(null);
+      }
       setImagePreview(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }

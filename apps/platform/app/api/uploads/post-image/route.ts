@@ -72,15 +72,15 @@ export async function POST(request: Request) {
     const accessKeyId =
       process.env.S3_STORAGE_ACCESS_KEY_ID?.trim() ||
       process.env.S3_FEED_ACCESS_KEY_ID?.trim() ||
+      process.env.S3_ACCESS_KEY_ID?.trim() ||
       process.env.S3_AVATAR_ACCESS_KEY_ID?.trim() ||
-      process.env.SES_ACCESS_KEY_ID?.trim() ||
       process.env.AWS_ACCESS_KEY_ID?.trim();
 
     const secretAccessKey =
       process.env.S3_STORAGE_SECRET_ACCESS_KEY?.trim() ||
       process.env.S3_FEED_SECRET_ACCESS_KEY?.trim() ||
+      process.env.S3_SECRET_ACCESS_KEY?.trim() ||
       process.env.S3_AVATAR_SECRET_ACCESS_KEY?.trim() ||
-      process.env.SES_SECRET_ACCESS_KEY?.trim() ||
       process.env.AWS_SECRET_ACCESS_KEY?.trim();
 
     if (!bucket) {
@@ -120,5 +120,33 @@ export async function POST(request: Request) {
       { message: err?.message || "Error al obtener autorización de subida." },
       { status: 500 }
     );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const session = getCurrentSession();
+
+    if (!session || !session.userId) {
+      return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+    }
+
+    const body = await request.json().catch(() => null);
+    const imageUrl = typeof body?.imageUrl === "string" ? body.imageUrl : "";
+
+    if (!imageUrl) {
+      return NextResponse.json({ message: "URL de imagen no provista." }, { status: 400 });
+    }
+
+    const { deleteS3FileByUrl } = await import("@/lib/storage/s3FileCleanup");
+    const deleted = await deleteS3FileByUrl(imageUrl, {
+      expectedUserId: session.userId,
+      expectedFolder: "feed",
+    });
+
+    return NextResponse.json({ success: true, deleted });
+  } catch (err: any) {
+    console.error("[S3 Post Image Delete Route Error]:", err);
+    return NextResponse.json({ message: "Error al eliminar la imagen." }, { status: 500 });
   }
 }

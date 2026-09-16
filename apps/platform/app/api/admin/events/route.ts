@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { deleteS3FileByUrl } from "@/lib/storage/s3FileCleanup";
 
 function extractYoutubeId(url?: string | null): string | null {
   if (!url) return null;
@@ -60,6 +61,12 @@ export async function POST(request: Request) {
     const finalYoutubeId = youtubeId || extractYoutubeId(link) || null;
 
     if (id) {
+      // Find existing event to track previous cover
+      const existingEvent = await prisma.event.findUnique({
+        where: { id },
+        select: { coverUrl: true },
+      });
+
       // Update existing
       const updated = await prisma.event.update({
         where: { id },
@@ -78,6 +85,17 @@ export async function POST(request: Request) {
           isUpcoming: Boolean(isUpcoming),
         },
       });
+
+      // If coverUrl changed, check if previous cover can be safely deleted from S3
+      if (existingEvent?.coverUrl && existingEvent.coverUrl !== (coverUrl || null)) {
+        const inUseCount = await prisma.event.count({
+          where: { coverUrl: existingEvent.coverUrl, NOT: { id } },
+        });
+        if (inUseCount === 0) {
+          await deleteS3FileByUrl(existingEvent.coverUrl, { expectedFolder: "events/covers" });
+        }
+      }
+
       return NextResponse.json({ success: true, event: updated });
     } else {
       // Create new
@@ -119,6 +137,20 @@ export async function DELETE(request: Request) {
 
     if (!id) {
       return NextResponse.json({ error: "ID de evento no proporcionado." }, { status: 400 });
+    }
+
+    const existingEvent = await prisma.event.findUnique({
+      where: { id },
+      select: { coverUrl: true },
+    });
+
+    if (existingEvent?.coverUrl) {
+      const inUseCount = await prisma.event.count({
+        where: { coverUrl: existingEvent.coverUrl, NOT: { id } },
+      });
+      if (inUseCount === 0) {
+        await deleteS3FileByUrl(existingEvent.coverUrl, { expectedFolder: "events/covers" });
+      }
     }
 
     await prisma.event.delete({

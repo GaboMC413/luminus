@@ -36,6 +36,7 @@ export function UsersTab({
   const [selectedRole, setSelectedRole] = useState<string>(users[0]?.role ?? "USER");
   const [selectedStatus, setSelectedStatus] = useState<string>(users[0]?.status ?? "active");
   const [selectedPlan, setSelectedPlan] = useState<string>(users[0]?.profile?.selectedPlan || "Trial");
+  const [selectedIsGhost, setSelectedIsGhost] = useState<boolean>(users[0]?.isGhost ?? false);
   const [showMobileDetail, setShowMobileDetail] = useState<boolean>(false);
   const [isEditingUser, setIsEditingUser] = useState<boolean>(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
@@ -159,10 +160,11 @@ export function UsersTab({
 
     const role = (formData.get("role") as "USER" | "ADMIN") || selectedUser.role;
     const status = (formData.get("status") as "active" | "disabled" | "deleted") || selectedUser.status;
+    const isGhost = formData.get("isGhost") === "true";
 
     const payload = {
       id: selectedUser.id,
-      userData: { role, status },
+      userData: { role, status, isGhost },
       profileData: {
         firstName: String(formData.get("firstName") || ""),
         lastName: String(formData.get("lastName") || ""),
@@ -199,6 +201,7 @@ export function UsersTab({
               ...item,
               role,
               status,
+              isGhost,
               profile: {
                 ...item.profile,
                 ...payload.profileData,
@@ -342,6 +345,7 @@ export function UsersTab({
                         setSelectedRole(user.role);
                         setSelectedStatus(user.status);
                         setSelectedPlan(user.profile.selectedPlan || "Trial");
+                        setSelectedIsGhost(user.isGhost ?? false);
                         setIsEditingUser(false);
                         setMessage("");
                         setShowMobileDetail(true);
@@ -376,9 +380,19 @@ export function UsersTab({
                           )}
                         </span>
                         <span className="min-w-0 pr-1">
-                          <span className={`block truncate ${active ? "font-bold text-slate-950" : "font-semibold text-slate-900"}`}>
-                            {fieldValue(
-                              user.profile.fullName || `${user.profile.firstName} ${user.profile.lastName}`
+                          <span className="flex items-center gap-1.5 truncate">
+                            <span className={`truncate ${active ? "font-bold text-slate-950" : "font-semibold text-slate-900"}`}>
+                              {fieldValue(
+                                user.profile.fullName || `${user.profile.firstName} ${user.profile.lastName}`
+                              )}
+                            </span>
+                            {user.isGhost && (
+                              <span
+                                className="material-symbols-rounded text-slate-400 text-[14px] shrink-0"
+                                title="Usuario fantasma (oculto en comunidad)"
+                              >
+                                visibility_off
+                              </span>
                             )}
                           </span>
                           <span className="block truncate text-[12px] text-slate-500">{user.email}</span>
@@ -520,6 +534,15 @@ export function UsersTab({
                       <AdminBadge variant="plan">
                         {selectedUser.profile.selectedPlan ? selectedUser.profile.selectedPlan : "Trial"}
                       </AdminBadge>
+
+                      {selectedUser.isGhost && (
+                        <AdminBadge variant="ghost">
+                          <span className="material-symbols-rounded text-[12px] mr-1 inline-block align-middle">
+                            visibility_off
+                          </span>
+                          Fantasma
+                        </AdminBadge>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -532,6 +555,7 @@ export function UsersTab({
                         setSelectedRole(selectedUser.role);
                         setSelectedStatus(selectedUser.status);
                         setSelectedPlan(selectedUser.profile.selectedPlan || "Trial");
+                        setSelectedIsGhost(selectedUser.isGhost ?? false);
                       }
                       setIsEditingUser((prev) => !prev);
                     }}
@@ -773,6 +797,34 @@ export function UsersTab({
                         options={membershipOptions}
                         className="!h-9 text-xs"
                       />
+                    </div>
+
+                    {/* Usuario Fantasma Toggle */}
+                    <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200/80 mt-1">
+                      <div className="flex flex-col gap-0.5 pr-2">
+                        <span className="text-xs font-bold text-slate-800 font-jakarta flex items-center gap-1.5">
+                          <span className="material-symbols-rounded text-slate-500 text-[16px]">visibility_off</span>
+                          Usuario fantasma
+                        </span>
+                        <span className="text-[11px] text-slate-400 font-sans">
+                          Oculto en comunidad y listados de miembros. Solo puede publicar y enviar mensajes.
+                        </span>
+                      </div>
+                      <input type="hidden" name="isGhost" value={selectedIsGhost ? "true" : "false"} />
+                      <button
+                        type="button"
+                        onClick={() => setSelectedIsGhost((prev) => !prev)}
+                        className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors border-none shrink-0 ${
+                          selectedIsGhost ? "bg-slate-900" : "bg-slate-200"
+                        }`}
+                        title={selectedIsGhost ? "Desactivar modo fantasma" : "Activar modo fantasma"}
+                      >
+                        <div
+                          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                            selectedIsGhost ? "translate-x-5" : "translate-x-0"
+                          }`}
+                        />
+                      </button>
                     </div>
                   </div>
                 </div>

@@ -13,15 +13,17 @@ export function RecentMembersCard({ members, loading, onViewAllMembers }: Recent
   const router = useRouter();
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({});
 
-  // Display only the first 10 members, excluding official LUMINUS account
-  const recent10 = members
+  // Display only the first 6 members with photos, excluding ghost & official accounts
+  const recentMembers = members
     .filter(
       (m) =>
+        !m.isGhost &&
         m.id !== "50d13047-bab8-44f1-9541-a821113845cc" &&
         m.id !== "mock-luminus" &&
-        m.name?.toLowerCase() !== "luminus"
+        m.name?.toLowerCase() !== "luminus" &&
+        Boolean(m.avatar && typeof m.avatar === "string" && m.avatar.trim() && !imgErrors[m.id])
     )
-    .slice(0, 10);
+    .slice(0, 6);
 
   const handleAvatarError = (userId: string) => {
     setImgErrors((prev) => ({ ...prev, [userId]: true }));
@@ -52,13 +54,13 @@ export function RecentMembersCard({ members, loading, onViewAllMembers }: Recent
             </div>
           ))}
         </div>
-      ) : recent10.length === 0 ? (
+      ) : recentMembers.length === 0 ? (
         <p className="text-xs text-slate-400 py-3 text-center font-sans">
           No hay miembros registrados aún.
         </p>
       ) : (
         <div className="flex flex-col gap-1">
-          {recent10.map((member) => {
+          {recentMembers.map((member) => {
             const hasAvatar = member.avatar && !imgErrors[member.id];
             return (
               <div

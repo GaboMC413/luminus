@@ -22,6 +22,10 @@ export async function GET(request: Request) {
       by: ["country"],
       where: {
         isOnboarded: true,
+        user: {
+          status: "active",
+          isGhost: false,
+        },
         country: {
           not: null,
           notIn: [""],
@@ -32,6 +36,10 @@ export async function GET(request: Request) {
     // Group cities of active onboarded users
     const cityWhere: any = {
       isOnboarded: true,
+      user: {
+        status: "active",
+        isGhost: false,
+      },
       city: {
         not: null,
         notIn: [""],

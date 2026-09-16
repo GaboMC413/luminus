@@ -13,6 +13,7 @@ export function serializeAdminUser(user: any) {
     email: user.email,
     role: user.role,
     status: user.status,
+    isGhost: user.isGhost ?? false,
     emailVerified: user.emailVerified,
     authProvider: user.authProvider,
     createdAt: toDate(user.createdAt),
@@ -103,7 +104,7 @@ export function normalizeAdminUserPatch(input: unknown) {
     return { ok: false as const, message: "Usuario invalido." };
   }
 
-  const userData: { role?: UserRole; status?: UserStatus } = {};
+  const userData: { role?: UserRole; status?: UserStatus; isGhost?: boolean } = {};
   const profileData: Record<string, string | boolean | Date | null> = {};
 
   if (body.role === "USER" || body.role === "ADMIN") {
@@ -112,6 +113,10 @@ export function normalizeAdminUserPatch(input: unknown) {
 
   if (body.status === "active" || body.status === "disabled" || body.status === "deleted") {
     userData.status = body.status;
+  }
+
+  if (typeof body.isGhost === "boolean") {
+    userData.isGhost = body.isGhost;
   }
 
   const profileFields = [
