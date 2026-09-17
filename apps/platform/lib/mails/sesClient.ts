@@ -9,11 +9,11 @@ import { SESv2Client } from "@aws-sdk/client-sesv2";
  */
 export function getSesV2Client(): SESv2Client {
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
-  const sesAccessKey = process.env.SES_ACCESS_KEY_ID?.trim();
-  const sesSecretKey = process.env.SES_SECRET_ACCESS_KEY?.trim();
-  const sesSessionToken = process.env.SES_SESSION_TOKEN?.trim();
+  const sesAccessKey = (process.env.SES_ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID)?.trim();
+  const sesSecretKey = (process.env.SES_SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY)?.trim();
+  const sesSessionToken = (process.env.SES_SESSION_TOKEN || process.env.AWS_SESSION_TOKEN)?.trim();
 
-  // Si existen credenciales explícitas configuradas para SES
+  // Si existen credenciales explícitas configuradas para SES / AWS
   if (sesAccessKey && sesSecretKey) {
     return new SESv2Client({
       region,

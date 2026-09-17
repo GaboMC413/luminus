@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import SelectInput from "@/components/ui/SelectInput";
+import { renderBelenNewsletterHtml } from "@/lib/mails/belenNewsletter";
 import { renderRelaunchNewsletterHtml } from "@/lib/mails/relaunchNewsletter";
 import { renderVivianaNewsletterHtml } from "@/lib/mails/vivianaNewsletter";
 import {
@@ -99,23 +100,30 @@ interface SendLog {
   clickCount?: number;
 }
 
-const DEFAULT_TEMPLATES = [
-  {
-    name: "Newsletter Semanal: Viviana Pagliaroli & Nueva Plataforma",
-    subject: "Algo para llevarte esta semana",
-    previewText: "Una conversación, cinco ideas y novedades de LUMINUS.",
-    html: renderVivianaNewsletterHtml(),
-  },
-  {
-    name: "Relanzamiento LUMINUS & Estreno Pilates",
-    subject: "Ahora sí: una nueva etapa para LUMINUS ✨",
-    previewText: "Los enlaces del correo anterior no funcionaban. Te lo reenviamos corregido 💛",
-    html: renderRelaunchNewsletterHtml(),
-  },
-  {
-    name: "Boletín Informativo LUMINUS",
-    subject: "✨ Novedades y reflexiones para tu bienestar esta semana",
-    html: `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+function getDefaultTemplates() {
+  return [
+    {
+      name: "Newsletter Semanal: Belén Pittamiglio (Sexualidad sin tabúes) & Nuevo Feed",
+      subject: "Nuevas conversaciones y nuevas formas de participar en LUMINUS",
+      previewText: "Este domingo estrenamos una nueva entrevista con Belén Pittamiglio y te presentamos el nuevo feed de la red.",
+      html: renderBelenNewsletterHtml(),
+    },
+    {
+      name: "Newsletter Semanal: Viviana Pagliaroli & Nueva Plataforma",
+      subject: "Algo para llevarte esta semana",
+      previewText: "Una conversación, cinco ideas y novedades de LUMINUS.",
+      html: renderVivianaNewsletterHtml(),
+    },
+    {
+      name: "Relanzamiento LUMINUS & Estreno Pilates",
+      subject: "Ahora sí: una nueva etapa para LUMINUS ✨",
+      previewText: "Los enlaces del correo anterior no funcionaban. Te lo reenviamos corregido 💛",
+      html: renderRelaunchNewsletterHtml(),
+    },
+    {
+      name: "Boletín Informativo LUMINUS",
+      subject: "✨ Novedades y reflexiones para tu bienestar esta semana",
+      html: `<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
   <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; padding: 32px 24px; text-align: center;">
     <h1 style="margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px; color: #38bdf8;">LUMINUS LATAM</h1>
     <p style="margin-top: 8px; font-size: 14px; color: #94a3b8;">Espacio de Bienestar Integral & Desarrollo Personal</p>
@@ -137,11 +145,11 @@ const DEFAULT_TEMPLATES = [
     <p style="margin: 0;"><a href="{{link_desuscripcion}}" style="color: #0284c7; text-decoration: underline;">Desuscribirme de estos correos</a></p>
   </div>
 </div>`,
-  },
-  {
-    name: "Invitación a Evento / Taller",
-    subject: "🗓️ Quedan pocos lugares: Taller Exclusivo de Salud Integral",
-    html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+    },
+    {
+      name: "Invitación a Evento / Taller",
+      subject: "🗓️ Quedan pocos lugares: Taller Exclusivo de Salud Integral",
+      html: `<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
   <div style="background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%); color: #ffffff; padding: 36px 24px; text-align: center;">
     <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Invitación Especial</span>
     <h1 style="margin: 16px 0 0 0; font-size: 24px;">Taller de Salud Integral & Mindset</h1>
@@ -162,8 +170,9 @@ const DEFAULT_TEMPLATES = [
     <a href="{{link_desuscripcion}}" style="color: #4f46e5;">Desuscribirme</a>
   </div>
 </div>`,
-  },
-];
+    },
+  ];
+}
 
 export default function LocalEmailMarketingPage() {
   // Contacts State
@@ -185,18 +194,19 @@ export default function LocalEmailMarketingPage() {
     notes: "",
   });
 
-  // Filter and Pagination states
+  // Filter, Search, Sort and Pagination states
   const [selectedTagFilter, setSelectedTagFilter] = useState<string>("ALL");
   const [selectedCountryFilter, setSelectedCountryFilter] = useState<string>("ALL");
   const [selectedSourceFilter, setSelectedSourceFilter] = useState<string>("ALL");
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("ALL");
+  const [sortBy, setSortBy] = useState<"recent" | "oldest" | "name_asc" | "email_asc">("recent");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 50;
 
   // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCountryFilter, selectedSourceFilter, selectedTagFilter, selectedStatusFilter]);
+  }, [searchQuery, selectedCountryFilter, selectedSourceFilter, selectedTagFilter, selectedStatusFilter, sortBy]);
 
   // File / CSV Import State
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -214,6 +224,9 @@ export default function LocalEmailMarketingPage() {
     eventGuestsCount: number;
     unsubscribedCount: number;
     bouncedCount: number;
+    awsSuppressedCount?: number;
+    awsComplaintsCount?: number;
+    awsBouncesCount?: number;
     totalContacts: number;
   } | null>(null);
 
@@ -232,6 +245,9 @@ export default function LocalEmailMarketingPage() {
           eventGuestsCount: data.eventGuestsCount || 0,
           unsubscribedCount: data.unsubscribedCount || 0,
           bouncedCount: data.bouncedCount || 0,
+          awsSuppressedCount: data.awsSuppressedCount || 0,
+          awsComplaintsCount: data.awsComplaintsCount || 0,
+          awsBouncesCount: data.awsBouncesCount || 0,
           totalContacts: data.totalContacts || 0,
         });
         fetchContacts();
@@ -323,7 +339,7 @@ export default function LocalEmailMarketingPage() {
     previewText: "",
     fromEmail: "info@luminuslatam.com",
     fromName: "LUMINUS LATAM",
-    htmlContent: DEFAULT_TEMPLATES[0].html,
+    htmlContent: getDefaultTemplates()[0].html,
     targetTags: [],
     audienceId: "aud_all",
     audienceName: "Todos los Contactos",
@@ -432,8 +448,21 @@ export default function LocalEmailMarketingPage() {
       const res = await fetch("/api/admin/email-marketing/campaigns");
       if (res.ok) {
         const data = await res.json();
-        setCampaigns(data.campaigns || []);
+        const list = data.campaigns || [];
+        setCampaigns(list);
         setLogs(data.logs || []);
+        const belen = list.find((c: any) => c.id === "cmp_belen_pittamiglio_2026");
+        if (belen) {
+          setCurrentCampaign((prev) => {
+            if (!prev.id || prev.id === "cmp_belen_pittamiglio_2026") {
+              return {
+                ...belen,
+                previewText: belen.previewText || "",
+              };
+            }
+            return prev;
+          });
+        }
       }
     } catch (e) {
       console.error("Error fetching campaigns:", e);
@@ -710,21 +739,20 @@ export default function LocalEmailMarketingPage() {
       try {
         const cRes = await fetch("/api/admin/email-marketing/campaigns");
         const cData = await cRes.json();
-        if (Array.isArray(cData)) {
-          const updatedCmp = cData.find((c: any) => c.id === campaignId);
-          if (updatedCmp) {
-            setSendingProgress({
-              sent: updatedCmp.sentCount || 0,
-              total: updatedCmp.totalRecipients || 4055,
-              failed: updatedCmp.failedCount || 0,
-              subject: updatedCmp.subject || cmp.subject || "Campaña LUMINUS",
-            });
-          }
+        const cmpList = Array.isArray(cData) ? cData : (cData.campaigns || []);
+        const updatedCmp = cmpList.find((c: any) => c.id === campaignId);
+        if (updatedCmp) {
+          setSendingProgress({
+            sent: updatedCmp.sentCount || 0,
+            total: updatedCmp.totalRecipients || cmp.totalRecipients || 4055,
+            failed: updatedCmp.failedCount || 0,
+            subject: updatedCmp.subject || cmp.subject || "Campaña LUMINUS",
+          });
         }
       } catch (e) {
         // ignore polling error
       }
-    }, 800);
+    }, 500);
 
     try {
       const res = await fetch("/api/admin/email-marketing/send-batch", {
@@ -762,6 +790,18 @@ export default function LocalEmailMarketingPage() {
   const allProfessions = Array.from(new Set(contacts.map((c) => c.profession).filter(Boolean))) as string[];
 
   const filteredContacts = contacts.filter((c) => {
+    const query = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      !query ||
+      c.email.toLowerCase().includes(query) ||
+      (c.firstName && c.firstName.toLowerCase().includes(query)) ||
+      (c.lastName && c.lastName.toLowerCase().includes(query)) ||
+      (c.country && c.country.toLowerCase().includes(query)) ||
+      (c.city && c.city.toLowerCase().includes(query)) ||
+      (c.profession && c.profession.toLowerCase().includes(query)) ||
+      (c.tags && c.tags.some((t) => t.toLowerCase().includes(query))) ||
+      (c.notes && c.notes.toLowerCase().includes(query));
+
     const matchesTag = selectedTagFilter === "ALL" || c.tags.includes(selectedTagFilter);
     const matchesCountry = selectedCountryFilter === "ALL" || c.country === selectedCountryFilter;
     const matchesSource = selectedSourceFilter === "ALL" || c.source === selectedSourceFilter;
@@ -776,13 +816,37 @@ export default function LocalEmailMarketingPage() {
       (selectedStatusFilter === "UNSUBSCRIBED" && isUnsubscribed) ||
       (selectedStatusFilter === "BOUNCED" && isBounced);
 
-    return matchesTag && matchesCountry && matchesSource && matchesStatus;
+    return matchesSearch && matchesTag && matchesCountry && matchesSource && matchesStatus;
   });
 
-  const totalFiltered = filteredContacts.length;
+  const sortedContacts = [...filteredContacts].sort((a, b) => {
+    if (sortBy === "recent") {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (timeA !== timeB) return timeB - timeA;
+      return (b.id || "").localeCompare(a.id || "");
+    }
+    if (sortBy === "oldest") {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      if (timeA !== timeB) return timeA - timeB;
+      return (a.id || "").localeCompare(b.id || "");
+    }
+    if (sortBy === "name_asc") {
+      const nameA = `${a.firstName || ""} ${a.lastName || ""}`.trim().toLowerCase();
+      const nameB = `${b.firstName || ""} ${b.lastName || ""}`.trim().toLowerCase();
+      return nameA.localeCompare(nameB);
+    }
+    if (sortBy === "email_asc") {
+      return a.email.toLowerCase().localeCompare(b.email.toLowerCase());
+    }
+    return 0;
+  });
+
+  const totalFiltered = sortedContacts.length;
   const totalPages = Math.ceil(totalFiltered / itemsPerPage) || 1;
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedContacts = filteredContacts.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedContacts = sortedContacts.slice(startIndex, startIndex + itemsPerPage);
 
   return (
     <div className="min-h-screen bg-[#F5F7FA] text-slate-900 font-sans antialiased">
@@ -892,9 +956,47 @@ export default function LocalEmailMarketingPage() {
         {activeTab === "contacts" && (
           <div className="space-y-6">
             {/* Top Actions & Multi-Filter Bar */}
-            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+              {/* Search & Sort Bar */}
+              <div className="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center justify-between">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por nombre, correo, país o etiqueta..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-10 pr-8 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs placeholder:text-slate-400 focus:outline-none focus:border-slate-400 focus:bg-white transition"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400 font-medium whitespace-nowrap">Ordenar por:</span>
+                  <SelectInput
+                    value={sortBy}
+                    options={[
+                      { label: "Más recientes primero", value: "recent" },
+                      { label: "Más antiguos primero", value: "oldest" },
+                      { label: "Nombre (A - Z)", value: "name_asc" },
+                      { label: "Email (A - Z)", value: "email_asc" },
+                    ]}
+                    onSelect={(val: any) => setSortBy(val)}
+                    placeholder="Ordenar por"
+                    className="w-full sm:w-[190px]"
+                  />
+                </div>
+              </div>
+
               {/* Selectors Group */}
-              <div className="flex flex-wrap items-center gap-2.5">
+              <div className="flex flex-wrap items-center gap-2.5 pt-2 border-t border-slate-100">
                 <SelectInput
                   value={selectedStatusFilter}
                   options={[
@@ -973,6 +1075,7 @@ export default function LocalEmailMarketingPage() {
                   <thead className="bg-slate-50/80 text-slate-500 uppercase text-[11px] font-semibold tracking-wider border-b border-slate-200">
                     <tr>
                       <th className="px-6 py-3.5">Contacto</th>
+                      <th className="px-6 py-3.5">Fecha</th>
                       <th className="px-6 py-3.5">Ubicación</th>
                       <th className="px-6 py-3.5">Profesión</th>
                       <th className="px-6 py-3.5">Origen</th>
@@ -984,7 +1087,7 @@ export default function LocalEmailMarketingPage() {
                   <tbody className="divide-y divide-slate-100">
                     {paginatedContacts.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-6 py-12 text-center text-slate-400">
+                        <td colSpan={8} className="px-6 py-12 text-center text-slate-400">
                           <Users className="w-10 h-10 mx-auto mb-3 opacity-30 text-slate-400" />
                           No se encontraron contactos con los filtros seleccionados.
                         </td>
@@ -1005,6 +1108,25 @@ export default function LocalEmailMarketingPage() {
                                 title={c.bounceReason || c.notes}
                               >
                                 ⚠️ {c.bounceReason || c.notes}
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-6 py-3.5 text-xs text-slate-500 whitespace-nowrap">
+                            <div className="font-medium text-slate-800">
+                              {c.createdAt
+                                ? new Date(c.createdAt).toLocaleDateString("es-AR", {
+                                    day: "2-digit",
+                                    month: "short",
+                                    year: "numeric",
+                                  })
+                                : "-"}
+                            </div>
+                            {c.createdAt && (
+                              <div className="text-[10px] text-slate-400">
+                                {new Date(c.createdAt).toLocaleTimeString("es-AR", {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
                               </div>
                             )}
                           </td>
@@ -1746,9 +1868,37 @@ export default function LocalEmailMarketingPage() {
                   ) : (
                     /* EDIT FORM FOR DRAFTS */
                     <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-6">
-                      <h2 className="text-base font-bold text-slate-900 border-b border-slate-200 pb-3">
-                        Configuración de la Campaña
-                      </h2>
+                      <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                        <h2 className="text-base font-bold text-slate-900">
+                          Configuración de la Campaña
+                        </h2>
+                        <div className="flex items-center gap-2">
+                          <select
+                            onChange={(e) => {
+                              const templates = getDefaultTemplates();
+                              const idx = parseInt(e.target.value, 10);
+                              if (!isNaN(idx) && templates[idx]) {
+                                const selected = templates[idx];
+                                setCurrentCampaign((prev) => ({
+                                  ...prev,
+                                  subject: selected.subject || prev.subject,
+                                  previewText: selected.previewText || prev.previewText,
+                                  htmlContent: selected.html,
+                                }));
+                              }
+                            }}
+                            className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-medium text-slate-700 cursor-pointer hover:bg-slate-100"
+                            defaultValue=""
+                          >
+                            <option value="" disabled>📋 Cargar Plantilla...</option>
+                            {getDefaultTemplates().map((tmpl, idx) => (
+                              <option key={idx} value={idx}>
+                                {tmpl.name}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
 
                       <div className="space-y-4">
                         <div>
@@ -2421,7 +2571,7 @@ export default function LocalEmailMarketingPage() {
                       setCurrentCampaign({
                         id: `campaign_${Date.now()}`,
                         subject: tmpl.subject,
-                        previewText: "",
+                        previewText: tmpl.previewText || "",
                         fromName: "LUMINUS LATAM",
                         fromEmail: "info@luminuslatam.com",
                         htmlContent: tmpl.html,
@@ -2745,18 +2895,29 @@ export default function LocalEmailMarketingPage() {
                   </div>
                 </div>
                 <div className="p-3 rounded-2xl bg-amber-50/60 border border-amber-100">
-                  <div className="text-amber-600 text-[10px] uppercase font-bold">Desuscritos</div>
+                  <div className="text-amber-600 text-[10px] uppercase font-bold">Desuscritos (Total)</div>
                   <div className="font-extrabold text-amber-900 text-sm mt-0.5">
                     {syncResultModal.unsubscribedCount}
                   </div>
                 </div>
                 <div className="p-3 rounded-2xl bg-rose-50/60 border border-rose-100">
-                  <div className="text-rose-600 text-[10px] uppercase font-bold">Rebotados (Bounces)</div>
+                  <div className="text-rose-600 text-[10px] uppercase font-bold">Rebotados (Total)</div>
                   <div className="font-extrabold text-rose-900 text-sm mt-0.5">
                     {syncResultModal.bouncedCount}
                   </div>
                 </div>
               </div>
+
+              {(syncResultModal.awsSuppressedCount !== undefined && syncResultModal.awsSuppressedCount > 0) && (
+                <div className="p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-100 flex items-center justify-between">
+                  <span className="font-medium text-indigo-900 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500"></span> Supresiones AWS SES:
+                  </span>
+                  <span className="font-extrabold text-indigo-700 text-xs">
+                    {syncResultModal.awsSuppressedCount} ({syncResultModal.awsBouncesCount || 0} rebotes, {syncResultModal.awsComplaintsCount || 0} quejas)
+                  </span>
+                </div>
+              )}
 
               <div className="p-4 rounded-2xl bg-slate-900 text-white flex items-center justify-between mt-2">
                 <span className="font-medium text-slate-300">Total contactos en la base:</span>

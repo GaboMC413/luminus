@@ -90,16 +90,29 @@ export async function syncAwsSuppressionListToLocalContacts(): Promise<Suppressi
       if (suppressedInfo) {
         const isComplaint = suppressedInfo.reason.toUpperCase() === "COMPLAINT";
         const reasonTag = isComplaint ? "complaint" : "bounced";
-        const newTags = Array.from(new Set([...(c.tags || []), "desuscrito", reasonTag]));
+        const primaryTag = isComplaint ? "desuscrito" : "bounced";
+        const cleanTags = (c.tags || []).filter(
+          (t) => t !== "desuscrito" && t !== "bounced" && t !== "rebote-ses" && t !== "complaint"
+        );
+        const newTags = Array.from(new Set([...cleanTags, primaryTag, reasonTag]));
         const reasonText = isComplaint ? "Reporte de Abuso / Queja en Yahoo/Gmail" : "Rebote de entrega (Bounce)";
         const noteDetail = `[AWS SES Sync] Suprimido automáticamente por ${reasonText}${suppressedInfo.date ? ` el ${suppressedInfo.date}` : ""}.`;
 
-        if (!c.unsubscribed || !c.tags?.includes(reasonTag)) {
+        const targetStatus = isComplaint ? "UNSUBSCRIBED" : "BOUNCED";
+        const shouldUpdate =
+          c.status !== targetStatus ||
+          c.unsubscribed !== isComplaint ||
+          c.bounced !== !isComplaint ||
+          !c.tags?.includes(reasonTag);
+
+        if (shouldUpdate) {
           saveLocalContact({
             ...c,
-            unsubscribed: true,
+            status: targetStatus,
+            unsubscribed: isComplaint,
+            bounced: !isComplaint,
             tags: newTags,
-            notes: c.notes ? `${c.notes}\n${noteDetail}` : noteDetail,
+            notes: c.notes && !c.notes.includes("[AWS SES Sync]") ? `${c.notes}\n${noteDetail}` : noteDetail,
           });
           syncedCount++;
         }
@@ -111,14 +124,17 @@ export async function syncAwsSuppressionListToLocalContacts(): Promise<Suppressi
       if (!existingEmails.has(email)) {
         const isComplaint = reason.toUpperCase() === "COMPLAINT";
         const reasonTag = isComplaint ? "complaint" : "bounced";
+        const primaryTag = isComplaint ? "desuscrito" : "bounced";
         const reasonText = isComplaint ? "Reporte de Abuso / Queja" : "Rebote (Bounce)";
 
         saveLocalContact({
           email,
           firstName: "Contacto",
           lastName: "Suprimido (AWS)",
-          tags: ["desuscrito", reasonTag, "AWS SES"],
-          unsubscribed: true,
+          tags: [primaryTag, reasonTag, "AWS SES"],
+          status: isComplaint ? "UNSUBSCRIBED" : "BOUNCED",
+          unsubscribed: isComplaint,
+          bounced: !isComplaint,
           source: "AWS SES Suppression Sync",
           notes: `[AWS SES Sync] Registrado automáticamente por ${reasonText}${date ? ` el ${date}` : ""}.`,
         });

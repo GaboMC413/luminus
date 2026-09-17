@@ -7,6 +7,7 @@ import {
   getLocalAudienceById,
   saveLocalCampaign,
   addLocalSendLog,
+  getLocalSendLogs,
   LocalContact,
 } from "./store";
 
@@ -213,7 +214,7 @@ export async function executeCampaignBatchSend(
       total: number;
       percentage: number;
       currentEmail: string;
-      status: "SUCCESS" | "FAILED";
+      status: "SUCCESS" | "FAILED" | "SKIPPED";
       error?: string;
     }) => void;
   }
@@ -300,8 +301,22 @@ export async function executeCampaignBatchSend(
   );
   recipients = recipients.filter((c) => eligibleEmails.has(c.email.toLowerCase().trim()));
 
+  // Evitar re-envíos duplicados: excluir contactos que ya recibieron esta campaña con éxito
+  const existingLogs = getLocalSendLogs(campaign.id);
+  const alreadyDeliveredSet = new Set(
+    existingLogs
+      .filter((l) => l.status === "SUCCESS")
+      .map((l) => l.recipientEmail.toLowerCase().trim())
+  );
+
   for (let i = 0; i < recipients.length; i++) {
     const contact = recipients[i];
+
+    if (alreadyDeliveredSet.has(contact.email.toLowerCase().trim())) {
+      sentCount++;
+      continue;
+    }
+
     const renderedHtml = renderTemplateVariables(campaign.htmlContent, contact);
     const renderedSubject = renderTemplateVariables(campaign.subject, contact);
 

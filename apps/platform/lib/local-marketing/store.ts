@@ -20,7 +20,7 @@ export interface LocalContact {
   bounced?: boolean;
   bounceReason?: string;
   notes?: string;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface LocalAudience {
@@ -72,26 +72,16 @@ export interface LocalSendLog {
 
 function getLocalDataDir(): string {
   let curr = process.cwd();
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 6; i++) {
     const candidate = path.join(curr, ".local-data", "email-marketing");
-    if (fs.existsSync(candidate) || fs.existsSync(path.join(curr, ".local-data"))) {
+    if (fs.existsSync(path.join(candidate, "contacts.json")) || fs.existsSync(candidate)) {
       return candidate;
     }
     const parent = path.dirname(curr);
     if (parent === curr) break;
     curr = parent;
   }
-  curr = __dirname;
-  for (let i = 0; i < 5; i++) {
-    const candidate = path.join(curr, ".local-data", "email-marketing");
-    if (fs.existsSync(candidate) || fs.existsSync(path.join(curr, ".local-data"))) {
-      return candidate;
-    }
-    const parent = path.dirname(curr);
-    if (parent === curr) break;
-    curr = parent;
-  }
-  return path.resolve(process.cwd(), "..", "..", ".local-data", "email-marketing");
+  return path.resolve(process.cwd(), ".local-data", "email-marketing");
 }
 
 const DATA_DIR = getLocalDataDir();
@@ -100,33 +90,27 @@ const CAMPAIGNS_FILE = path.join(DATA_DIR, "campaigns.json");
 const LOGS_FILE = path.join(DATA_DIR, "logs.json");
 const AUDIENCES_FILE = path.join(DATA_DIR, "audiences.json");
 
-function ensureDirExists() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-}
-
 function readJsonFile<T>(filePath: string, defaultValue: T): T {
   try {
-    ensureDirExists();
     if (!fs.existsSync(filePath)) {
-      fs.writeFileSync(filePath, JSON.stringify(defaultValue, null, 2), "utf8");
+      fs.mkdirSync(path.dirname(filePath), { recursive: true });
+      fs.writeFileSync(filePath, JSON.stringify(defaultValue, null, 2), "utf-8");
       return defaultValue;
     }
-    const content = fs.readFileSync(filePath, "utf8");
+    const content = fs.readFileSync(filePath, "utf-8");
     return JSON.parse(content) as T;
   } catch (error) {
-    console.error(`Error reading local JSON file at ${filePath}:`, error);
+    console.error(`Error reading ${filePath}:`, error);
     return defaultValue;
   }
 }
 
 function writeJsonFile<T>(filePath: string, data: T): void {
   try {
-    ensureDirExists();
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf8");
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), "utf-8");
   } catch (error) {
-    console.error(`Error writing local JSON file at ${filePath}:`, error);
+    console.error(`Error writing ${filePath}:`, error);
   }
 }
 
@@ -157,12 +141,13 @@ export function getLocalContacts(): LocalContact[] {
 }
 
 export function saveLocalContact(
-  contactData: Omit<LocalContact, "id" | "createdAt" | "unsubscribed"> & {
+  contactData: Omit<LocalContact, "id" | "unsubscribed" | "createdAt"> & {
     id?: string;
     unsubscribed?: boolean;
     bounced?: boolean;
     status?: ContactStatus;
     bounceReason?: string;
+    createdAt?: string;
   }
 ): LocalContact {
   const contacts = getLocalContacts();
@@ -197,6 +182,7 @@ export function saveLocalContact(
       bounced: computedStatus === "BOUNCED" || isBounced,
       bounceReason: contactData.bounceReason ?? existing.bounceReason,
       notes: contactData.notes ?? existing.notes,
+      createdAt: contactData.createdAt || existing.createdAt || new Date().toISOString(),
     };
     contacts[existingIndex] = updatedContact;
     writeJsonFile(CONTACTS_FILE, contacts);
@@ -217,7 +203,7 @@ export function saveLocalContact(
       bounced: computedStatus === "BOUNCED" || Boolean(isBounced),
       bounceReason: contactData.bounceReason || "",
       notes: contactData.notes || "",
-      createdAt: new Date().toISOString(),
+      createdAt: contactData.createdAt || new Date().toISOString(),
     };
     contacts.push(newContact);
     writeJsonFile(CONTACTS_FILE, contacts);
@@ -298,16 +284,7 @@ export function bulkImportContacts(
 // ==========================================
 
 export function getLocalCampaigns(): LocalCampaign[] {
-  const campaigns = readJsonFile<LocalCampaign[]>(CAMPAIGNS_FILE, []);
-  return campaigns.map((c) => {
-    if (c.id === "cmp_viviana_1788832131088" && c.status === "DRAFT") {
-      return {
-        ...c,
-        htmlContent: renderVivianaNewsletterHtml(),
-      };
-    }
-    return c;
-  });
+  return readJsonFile<LocalCampaign[]>(CAMPAIGNS_FILE, []);
 }
 
 export function getLocalCampaignById(id: string): LocalCampaign | null {

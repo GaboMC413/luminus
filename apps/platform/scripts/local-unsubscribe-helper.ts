@@ -72,16 +72,20 @@ export function verifyUnsubscribeToken(email: string, token: string): boolean {
   }
 }
 
-export function generateUnsubscribeUrls(email: string) {
-  const cleanEmail = normalizeEmail(email);
-  const token = generateUnsubscribeToken(cleanEmail);
+export function generateUnsubscribeUrls(email: string): {
+  unsubscribeUrl: string;
+  apiUrl: string;
+  mailtoUrl: string;
+} {
   const baseUrl = getBaseUrl();
-
+  const token = generateUnsubscribeToken(email);
+  const cleanEmail = normalizeEmail(email);
   const query = `email=${encodeURIComponent(cleanEmail)}&token=${encodeURIComponent(token)}`;
 
   return {
     unsubscribeUrl: `${baseUrl}/desuscribir?${query}`,
     apiUrl: `${baseUrl}/api/unsubscribe?${query}`,
+    mailtoUrl: `mailto:unsubscribe@luminuslatam.com?subject=Unsubscribe%20${encodeURIComponent(cleanEmail)}`,
   };
 }
 
