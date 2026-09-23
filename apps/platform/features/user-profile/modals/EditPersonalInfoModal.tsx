@@ -146,8 +146,8 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
       }
     }
 
-    if (!formData.city || !formData.country) {
-      setLocationError("Selecciona una ciudad de la lista de sugerencias");
+    if (!formData.city || !formData.city.trim()) {
+      setLocationError("Ingresa tu ciudad");
       return;
     }
 
@@ -222,9 +222,10 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
           <LocationInput
             ref={cityRef}
             label="Ciudad"
+            placeholder="Ingresa tu ciudad"
             defaultValue={formData.city}
             onSelect={({ city, country }) => {
-              setFormData(prev => ({ ...prev, city, country }));
+              setFormData(prev => ({ ...prev, city, country: country || prev.country }));
               setLocationError("");
             }}
             autoFocus={initialFocusField === 'city'}

@@ -40,6 +40,11 @@ function parseCalendarDate(dateStr?: string | Date | null): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
+const MONTH_NAMES_ES = [
+  "ene", "feb", "mar", "abr", "may", "jun",
+  "jul", "ago", "sep", "oct", "nov", "dic"
+];
+
 function formatUpcomingDateHeader(dateStr?: string | Date | null, timeText?: string) {
   if (!dateStr) return { tag: "PRÓXIMAMENTE", dateText: "" };
   try {
@@ -49,8 +54,7 @@ function formatUpcomingDateHeader(dateStr?: string | Date | null, timeText?: str
     const weekdayRaw = d.toLocaleDateString("es-ES", { weekday: "long" });
     const weekday = weekdayRaw.charAt(0).toUpperCase() + weekdayRaw.slice(1);
     const day = d.getDate();
-    const monthRaw = d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "");
-    const month = monthRaw.charAt(0).toUpperCase() + monthRaw.slice(1);
+    const month = MONTH_NAMES_ES[d.getMonth()];
 
     const cleanTime = timeText
       ? timeText.replace(/\s*\([^)]*GMT[^)]*\)/gi, "").replace(/\s*\([^)]*UTC[^)]*\)/gi, "").trim()

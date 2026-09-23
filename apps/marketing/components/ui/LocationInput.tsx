@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { sortLatamFirst } from '@/utils/locationUtils';
 
 interface LocationInputProps {
   defaultValue?: string;
@@ -15,7 +16,7 @@ interface LocationInputProps {
 export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputProps>(({
   defaultValue = '',
   onSelect,
-  placeholder = 'Ciudad',
+  placeholder = 'Ingresa tu ciudad',
   className = '',
   label,
   required = false
@@ -30,12 +31,18 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
   const [mounted, setMounted] = useState(false);
   const autocompleteServiceRef = useRef<any>(null);
 
-  useEffect(() => {
-    setMounted(true);
-    // Initialize Google Places Autocomplete service if google maps is loaded globally
+  const getAutocompleteService = () => {
+    if (autocompleteServiceRef.current) return autocompleteServiceRef.current;
     if (typeof window !== 'undefined' && (window as any).google?.maps?.places) {
       autocompleteServiceRef.current = new (window as any).google.maps.places.AutocompleteService();
+      return autocompleteServiceRef.current;
     }
+    return null;
+  };
+
+  useEffect(() => {
+    setMounted(true);
+    getAutocompleteService();
     return () => setMounted(false);
   }, []);
 
@@ -65,38 +72,62 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       if (rect) {
+        const vHeight = typeof window !== 'undefined' && window.visualViewport
+          ? window.visualViewport.height
+          : window.innerHeight;
+
+        const preferredMaxHeight = 240;
+        const spaceBelow = vHeight - rect.bottom - 12;
+        const spaceAbove = rect.top - 12;
+
+        let top: number | undefined = rect.bottom + 4;
+        let bottom: number | undefined = undefined;
+        let maxHeight = preferredMaxHeight;
+
+        // Open upwards if space below is tight (< 160px) and space above is larger
+        if (spaceBelow < 160 && spaceAbove > spaceBelow) {
+          top = undefined;
+          bottom = vHeight - rect.top + 4;
+          maxHeight = Math.min(preferredMaxHeight, Math.max(spaceAbove, 120));
+        } else {
+          maxHeight = Math.min(preferredMaxHeight, Math.max(spaceBelow, 120));
+        }
+
         setCoords({
-          top: rect.bottom + 4,
+          top,
+          bottom,
           left: rect.left,
           width: rect.width,
-          maxHeight: 240
+          maxHeight
         });
       }
     }
   };
 
   const fetchPredictions = (inputVal: string) => {
-    if (!inputVal || inputVal.length < 2) {
+    if (!inputVal || inputVal.trim().length < 2) {
       setPredictions([]);
       setIsOpen(false);
       return;
     }
 
-    if (typeof window !== 'undefined' && (window as any).google?.maps?.places) {
-      if (!autocompleteServiceRef.current) {
-        autocompleteServiceRef.current = new (window as any).google.maps.places.AutocompleteService();
-      }
-      autocompleteServiceRef.current.getPlacePredictions(
-        { input: inputVal, types: ['(cities)'] },
+    const service = getAutocompleteService();
+    if (service) {
+      service.getPlacePredictions(
+        { input: inputVal.trim(), types: ['(cities)'] },
         (results: any[], status: string) => {
-          if (status === 'OK' && results) {
+          if (status === 'OK' && results && results.length > 0) {
             const formatted = results.map((item) => ({
               place_id: item.place_id,
               description: item.description,
               main_text: item.structured_formatting?.main_text || item.description.split(',')[0],
               secondary_text: item.structured_formatting?.secondary_text || item.description.split(',').slice(1).join(',')
             }));
-            setPredictions(formatted);
+
+            // Prioritize Latin American results
+            const sorted = sortLatamFirst(formatted);
+
+            setPredictions(sorted);
             setIsOpen(true);
             updateCoords();
           } else {
@@ -105,17 +136,42 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
           }
         }
       );
+    } else {
+      setPredictions([]);
+      setIsOpen(false);
     }
   };
 
+  React.useLayoutEffect(() => {
+    if (isOpen && predictions.length > 0) {
+      updateCoords();
+      const handleScroll = () => updateCoords();
+      window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', updateCoords);
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', updateCoords);
+      }
+      return () => {
+        window.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('resize', updateCoords);
+        if (window.visualViewport) {
+          window.visualViewport.removeEventListener('resize', updateCoords);
+        }
+      };
+    }
+  }, [isOpen, predictions.length]);
+
   const handleSelect = (description: string, main_text?: string, secondary_text?: string) => {
     let cityOnly = main_text || description.split(',')[0].trim();
+    let countryOnly = '';
     if (secondary_text) {
-      const secondPart = secondary_text.split(',')[0].trim();
+      const parts = secondary_text.split(',').map(s => s.trim());
+      countryOnly = parts[parts.length - 1] || '';
+      const secondPart = parts[0];
       cityOnly = `${cityOnly}, ${secondPart}`;
     }
     setValue(cityOnly);
-    onSelect({ city: cityOnly });
+    onSelect({ city: cityOnly, country: countryOnly });
     setIsOpen(false);
     setHighlightedIndex(-1);
   };
@@ -126,12 +182,13 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
       style={{
         position: 'fixed',
         top: coords.top !== undefined ? `${coords.top}px` : 'auto',
+        bottom: coords.bottom !== undefined ? `${coords.bottom}px` : 'auto',
         left: `${coords.left}px`,
         width: `${coords.width}px`,
         maxHeight: `${coords.maxHeight}px`,
         zIndex: 10000,
       }}
-      className="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-y-auto pr-1 animate-in fade-in duration-150 py-1"
+      className="bg-white rounded-2xl border border-slate-200 shadow-2xl overflow-y-auto pr-1 animate-in fade-in duration-150 py-1"
     >
       {predictions.map((p, index) => (
         <div
@@ -172,8 +229,13 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
           fetchPredictions(nextVal);
         }}
         onFocus={() => {
-          if (value && value.length >= 2) {
+          if (value && value.trim().length >= 2) {
             fetchPredictions(value);
+          }
+          if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            setTimeout(() => {
+              containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 150);
           }
         }}
         onKeyDown={(e) => {
@@ -200,3 +262,4 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
 });
 
 LocationInput.displayName = 'LocationInput';
+export default LocationInput;

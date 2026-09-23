@@ -127,8 +127,8 @@ export function EditableField({
 
       await onSave?.(normalized, extraValue);
     } else {
-      if (isLocation && (!currentValue || !extraValue)) {
-        setValidationError("Selecciona una ciudad de la lista de sugerencias");
+      if (isLocation && !currentValue?.trim()) {
+        setValidationError("Ingresa tu ciudad");
         return;
       }
       await onSave?.(currentValue, extraValue);
@@ -173,11 +173,14 @@ export function EditableField({
           ) : isLocation ? (
             <div className="flex flex-col gap-2 w-full">
               <LocationInput
+                placeholder="Ingresa tu ciudad"
                 defaultValue={currentValue}
                 onSelect={({ city: selCity, country: selCountry }) => {
                   if (isEditing) {
                     setCurrentValue(selCity);
-                    setExtraValue(selCountry);
+                    if (selCountry) {
+                      setExtraValue(selCountry);
+                    }
                     setValidationError("");
                   }
                 }}
