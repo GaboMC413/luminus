@@ -530,8 +530,8 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
 
       {/* Interactive Registration Modal */}
       {isOpenModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-[500px] bg-white rounded-2xl p-6 sm:p-7 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-200 text-left">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-[500px] max-h-[92dvh] overflow-y-auto overscroll-contain bg-white rounded-2xl p-6 sm:p-7 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-200 text-left my-auto">
 
             {/* Close Button */}
             <button
@@ -673,7 +673,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
                   {/* Ciudad */}
                   <LocationInput
                     label="Ciudad *"
-                    placeholder="Ciudad"
+                    placeholder="Ingresa tu ciudad"
                     required
                     defaultValue={formData.city}
                     onSelect={({ city }) => setFormData((prev) => ({ ...prev, city }))}

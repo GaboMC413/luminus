@@ -6,6 +6,7 @@ import usePlacesAutocomplete, {
   getGeocode,
 } from "use-places-autocomplete";
 import { InputField } from './InputField';
+import { sortLatamFirst } from '@/utils/locationUtils';
 
 interface LocationInputProps {
   defaultValue?: string;
@@ -21,7 +22,7 @@ interface LocationInputProps {
 export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputProps>(({
   defaultValue = '',
   onSelect,
-  placeholder = 'Busca tu ciudad',
+  placeholder = 'Ingresa tu ciudad',
   variant = 'bordered',
   className = '',
   label,
@@ -51,6 +52,11 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
     requestOptions: { types: ["(cities)"] },
     debounce: 300,
   });
+
+  // Reorder predictions: LatAm countries first, then rest of the world
+  const sortedSuggestions = React.useMemo(() => {
+    return sortLatamFirst(suggestions);
+  }, [suggestions]);
 
   const instanceIdRef = useRef(Math.random().toString(36).substring(2, 9));
   const lastResolvedValueRef = useRef(defaultValue);
@@ -92,26 +98,26 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       if (rect) {
-        const preferredMaxHeight = 280; // Show suggestions list comfortably
-        const spaceBelow = window.innerHeight - rect.bottom - 16; // 16px safe margin from viewport bottom
-        const spaceAbove = rect.top - 16; // 16px safe margin from viewport top
+        const vHeight = typeof window !== 'undefined' && window.visualViewport
+          ? window.visualViewport.height
+          : window.innerHeight;
+
+        const preferredMaxHeight = 260;
+        const spaceBelow = vHeight - rect.bottom - 12;
+        const spaceAbove = rect.top - 12;
 
         let top: number | undefined = rect.bottom + 4;
         let bottom: number | undefined = undefined;
         let maxHeight = preferredMaxHeight;
 
-        // Last-resort fallback: only open upwards if space below is extremely tight (less than 120px)
-        // AND space above is larger than space below.
-        if (spaceBelow < 120 && spaceAbove > spaceBelow) {
+        // Open upwards if space below is tight (< 160px) and space above is larger
+        if (spaceBelow < 160 && spaceAbove > spaceBelow) {
           top = undefined;
-          bottom = window.innerHeight - rect.top + 4;
-          maxHeight = Math.min(preferredMaxHeight, spaceAbove);
+          bottom = vHeight - rect.top + 4;
+          maxHeight = Math.min(preferredMaxHeight, Math.max(spaceAbove, 120));
         } else {
-          maxHeight = Math.min(preferredMaxHeight, spaceBelow);
+          maxHeight = Math.min(preferredMaxHeight, Math.max(spaceBelow, 120));
         }
-
-        // Fallback safety
-        maxHeight = Math.max(maxHeight, 100);
 
         setCoords({
           top,
@@ -125,11 +131,10 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
   };
 
   React.useLayoutEffect(() => {
-    if (status === "OK") {
+    if (status === "OK" && sortedSuggestions.length > 0) {
       updateCoords();
       const openedAt = Date.now();
       const handleScroll = (event: Event) => {
-        // Ignore scroll events that happen within 500ms of suggestions opening (e.g. from mobile keyboard opening or smooth scrollIntoView)
         if (Date.now() - openedAt < 500) {
           return;
         }
@@ -140,22 +145,28 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
       };
       window.addEventListener('scroll', handleScroll, true);
       window.addEventListener('resize', updateCoords);
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', updateCoords);
+      }
       
       // Auto-scroll so dropdown suggestions are fully visible above mobile keyboard
       if (typeof window !== 'undefined' && window.innerWidth < 768) {
         setTimeout(() => {
-          containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 100);
       }
 
       return () => {
         window.removeEventListener('scroll', handleScroll, true);
         window.removeEventListener('resize', updateCoords);
+        if (window.visualViewport) {
+          window.visualViewport.removeEventListener('resize', updateCoords);
+        }
       };
     } else {
       setCoords(null);
     }
-  }, [status]);
+  }, [status, sortedSuggestions.length]);
 
   useEffect(() => {
     if (defaultValue !== value) {
@@ -180,7 +191,7 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
 
     try {
       const results = await getGeocode({ address: description });
-      const addressComponents = results[0].address_components;
+      const addressComponents = results[0]?.address_components || [];
       const countryComp = addressComponents.find((c: any) => c.types.includes('country'));
 
       onSelect({
@@ -192,6 +203,12 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
       setHighlightedIndex(-1);
     } catch (error) {
       console.error("Error getting geocode: ", error);
+      // Fallback in case getGeocode fails: still provide city
+      onSelect({
+        city: formatted,
+        country: '',
+      });
+      setHighlightedIndex(-1);
     }
   };
 
@@ -208,21 +225,21 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
         maxHeight: `${coords.maxHeight}px`,
         zIndex: 10000,
       }}
-      className="bg-white rounded-[12px] outline outline-1 outline-zinc-200 overflow-y-auto overscroll-contain pr-1 animate-in fade-in duration-200"
+      className="bg-white rounded-[12px] outline outline-1 outline-zinc-200 overflow-y-auto overscroll-contain pr-1 animate-in fade-in duration-200 shadow-xl"
     >
-      {suggestions.map(({ place_id, description, structured_formatting }, index) => (
+      {sortedSuggestions.map(({ place_id, description, structured_formatting }, index) => (
         <div
           key={place_id}
-          onClick={() => handleSelect(description, structured_formatting.main_text, structured_formatting.secondary_text)}
+          onClick={() => handleSelect(description, structured_formatting?.main_text, structured_formatting?.secondary_text)}
           onMouseEnter={() => setHighlightedIndex(index)}
           className={`px-4 py-2.5 cursor-pointer transition flex flex-col min-w-0 ${highlightedIndex === index ? 'bg-slate-50' : 'hover:bg-slate-50'}`}
         >
           <span className="text-black text-body text-secondary truncate whitespace-nowrap">
-            {structured_formatting.main_text}
-            {structured_formatting.secondary_text ? `, ${structured_formatting.secondary_text.split(',')[0]}` : ''}
+            {structured_formatting?.main_text || description.split(',')[0]}
+            {structured_formatting?.secondary_text ? `, ${structured_formatting.secondary_text.split(',')[0]}` : ''}
           </span>
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">
-            {structured_formatting.secondary_text ? structured_formatting.secondary_text.split(',').pop()?.trim() : ''}
+            {structured_formatting?.secondary_text ? structured_formatting.secondary_text.split(',').pop()?.trim() : ''}
           </span>
         </div>
       ))}
@@ -251,32 +268,27 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
         onFocus={() => {
           window.dispatchEvent(new CustomEvent('luminus-select-open', { detail: { id: instanceIdRef.current } }));
           if (typeof window !== 'undefined' && window.innerWidth < 768) {
-            // First quick scroll attempt (for fast devices/browsers)
             setTimeout(() => {
-              containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }, 150);
-            // Second delayed scroll attempt (once soft keyboard is fully open and viewport resized)
-            setTimeout(() => {
-              containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 450);
           }
         }}
         onKeyDown={(e) => {
-          if (status !== "OK" || suggestions.length === 0) return;
+          if (status !== "OK" || sortedSuggestions.length === 0) return;
 
           if (e.key === 'ArrowDown') {
             e.preventDefault();
-            setHighlightedIndex(prev => (prev + 1) % suggestions.length);
+            setHighlightedIndex(prev => (prev + 1) % sortedSuggestions.length);
           } else if (e.key === 'ArrowUp') {
             e.preventDefault();
-            setHighlightedIndex(prev => (prev - 1 + suggestions.length) % suggestions.length);
+            setHighlightedIndex(prev => (prev - 1 + sortedSuggestions.length) % sortedSuggestions.length);
           } else if (e.key === 'Enter') {
             e.preventDefault();
-            const s = highlightedIndex >= 0 ? suggestions[highlightedIndex] : suggestions[0];
+            const s = highlightedIndex >= 0 ? sortedSuggestions[highlightedIndex] : sortedSuggestions[0];
             handleSelect(
               s.description,
-              s.structured_formatting.main_text,
-              s.structured_formatting.secondary_text
+              s.structured_formatting?.main_text,
+              s.structured_formatting?.secondary_text
             );
           }
         }}
@@ -287,7 +299,7 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
         autoFocus={autoFocus}
       />
 
-      {status === "OK" && mounted && coords && createPortal(suggestionsDropdown, document.body)}
+      {status === "OK" && mounted && coords && sortedSuggestions.length > 0 && createPortal(suggestionsDropdown, document.body)}
     </div>
   );
 });
