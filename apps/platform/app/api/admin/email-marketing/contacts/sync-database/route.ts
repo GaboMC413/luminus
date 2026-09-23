@@ -144,8 +144,7 @@ export async function POST(request: Request) {
       contactMap.set(emailClean, updated);
     }
 
-    // 4. Sync Event Guests (ONLY Past Events - exclude upcoming event registrants)
-    const now = new Date();
+    // 4. Sync Event Guests (Include all event registrants)
     const guests = await prisma.eventGuest.findMany({
       include: {
         inscriptions: {
@@ -163,14 +162,6 @@ export async function POST(request: Request) {
 
     for (const g of guests) {
       if (!g.email || !g.email.includes("@")) continue;
-
-      // Filter inscriptions to include only past events
-      const pastInscriptions = (g.inscriptions || []).filter(
-        (ins) => ins.event?.date && new Date(ins.event.date) < now
-      );
-
-      // Exclude guests who have no past event registrations (i.e. only registered to upcoming events or no events)
-      if (pastInscriptions.length === 0) continue;
 
       const emailClean = g.email.toLowerCase().trim();
       eventGuestsCount++;
@@ -191,7 +182,7 @@ export async function POST(request: Request) {
         ? "UNSUBSCRIBED"
         : existing?.status || "ACTIVE";
 
-      const eventTitles = pastInscriptions.map((ins) => ins.event?.title).filter(Boolean);
+      const eventTitles = (g.inscriptions || []).map((ins) => ins.event?.title).filter(Boolean);
       let notes = existing?.notes || "";
       if (eventTitles.length > 0) {
         for (const title of eventTitles) {
@@ -216,6 +207,10 @@ export async function POST(request: Request) {
 
       const tags = Array.from(new Set([...cleanExistingTags, "Inscripto a Evento"]));
 
+      const guestCreatedAt = g.createdAt
+        ? new Date(g.createdAt).toISOString()
+        : existing?.createdAt || new Date().toISOString();
+
       const updated = saveLocalContact({
         id: existing?.id,
         email: emailClean,
@@ -228,7 +223,8 @@ export async function POST(request: Request) {
         status,
         unsubscribed: status === "UNSUBSCRIBED",
         bounced: status === "BOUNCED",
-        notes: notes || "Sincronizado automáticamente desde inscripciones a eventos pasados.",
+        notes: notes || "Sincronizado automáticamente desde inscripciones a eventos.",
+        createdAt: guestCreatedAt,
       });
 
       contactMap.set(emailClean, updated);

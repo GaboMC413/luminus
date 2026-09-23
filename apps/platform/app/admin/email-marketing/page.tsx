@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import SelectInput from "@/components/ui/SelectInput";
+import { renderBelenEducacionSexualNewsletterHtml } from "@/lib/mails/belenEducacionSexualNewsletter";
 import { renderBelenNewsletterHtml } from "@/lib/mails/belenNewsletter";
 import { renderRelaunchNewsletterHtml } from "@/lib/mails/relaunchNewsletter";
 import { renderVivianaNewsletterHtml } from "@/lib/mails/vivianaNewsletter";
@@ -102,6 +103,12 @@ interface SendLog {
 
 function getDefaultTemplates() {
   return [
+    {
+      name: "Newsletter Semanal: Belén Pittamiglio (Educación Sexual) & Plataforma",
+      subject: "[LUMINUS NEWS] Algo para llevarte esta semana",
+      previewText: "Una mirada sobre educación sexual, vínculos y bienestar.",
+      html: renderBelenEducacionSexualNewsletterHtml(),
+    },
     {
       name: "Newsletter Semanal: Belén Pittamiglio (Sexualidad sin tabúes) & Nuevo Feed",
       subject: "Nuevas conversaciones y nuevas formas de participar en LUMINUS",

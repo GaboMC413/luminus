@@ -4,3 +4,4 @@ export * from "./inscription";
 export * from "./contact";
 export * from "./passwordReset";
 export * from "./emailChange";
+export * from "./belenEducacionSexualNewsletter";

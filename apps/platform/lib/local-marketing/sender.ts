@@ -301,7 +301,19 @@ export async function executeCampaignBatchSend(
   );
   recipients = recipients.filter((c) => eligibleEmails.has(c.email.toLowerCase().trim()));
 
-  // Evitar re-envíos duplicados: excluir contactos que ya recibieron esta campaña con éxito
+  // 1. DEDUPLICACIÓN ESTRICTA: Garantizar que cada email aparezca una sola vez en la lista de destinatarios
+  const seenEmails = new Set<string>();
+  const uniqueRecipients: typeof recipients = [];
+  for (const c of recipients) {
+    const normalized = c.email.toLowerCase().trim();
+    if (!seenEmails.has(normalized)) {
+      seenEmails.add(normalized);
+      uniqueRecipients.push(c);
+    }
+  }
+  recipients = uniqueRecipients;
+
+  // 2. Evitar re-envíos duplicados: excluir contactos que ya recibieron esta campaña con éxito
   const existingLogs = getLocalSendLogs(campaign.id);
   const alreadyDeliveredSet = new Set(
     existingLogs
@@ -311,11 +323,15 @@ export async function executeCampaignBatchSend(
 
   for (let i = 0; i < recipients.length; i++) {
     const contact = recipients[i];
+    const normalizedEmail = contact.email.toLowerCase().trim();
 
-    if (alreadyDeliveredSet.has(contact.email.toLowerCase().trim())) {
+    if (alreadyDeliveredSet.has(normalizedEmail)) {
       sentCount++;
       continue;
     }
+
+    // Registrar en el set inmediatamente para evitar cualquier duplicado en la misma sesión
+    alreadyDeliveredSet.add(normalizedEmail);
 
     const renderedHtml = renderTemplateVariables(campaign.htmlContent, contact);
     const renderedSubject = renderTemplateVariables(campaign.subject, contact);
