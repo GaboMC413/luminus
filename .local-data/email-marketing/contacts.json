@@ -1,5 +1,231 @@
 [
   {
+    "id": "cnt_1790887758712_rn8n5",
+    "email": "marylinevora@gmail.com",
+    "firstName": "Marylin",
+    "lastName": "Ev",
+    "country": "",
+    "city": "Lavalleja",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "status": "ACTIVE",
+    "unsubscribed": false,
+    "bounced": false,
+    "bounceReason": "",
+    "notes": "[Inscripto a Evento]: \"Verse bien, sentirse bien: otra mirada sobre la medicina estética\"",
+    "createdAt": "2026-10-01T20:33:49.097Z"
+  },
+  {
+    "id": "cnt_1790887758671_rs67g",
+    "email": "kafe.26@hotmail.com",
+    "firstName": "Karina",
+    "lastName": "Ferreira",
+    "country": "",
+    "city": "Montevideo",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "status": "ACTIVE",
+    "unsubscribed": false,
+    "bounced": false,
+    "bounceReason": "",
+    "notes": "[Inscripto a Evento]: \"Verse bien, sentirse bien: otra mirada sobre la medicina estética\"",
+    "createdAt": "2026-09-30T00:42:39.051Z"
+  },
+  {
+    "id": "cnt_1790887758636_uyo6d",
+    "email": "vericlau@hotmail.es",
+    "firstName": "Claudia",
+    "lastName": "Izquierdo",
+    "country": "",
+    "city": "Montevideo",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "status": "ACTIVE",
+    "unsubscribed": false,
+    "bounced": false,
+    "bounceReason": "",
+    "notes": "[Inscripto a Evento]: \"Verse bien, sentirse bien: otra mirada sobre la medicina estética\"",
+    "createdAt": "2026-09-28T03:05:13.632Z"
+  },
+  {
+    "id": "cnt_1790887758606_hlqyi",
+    "email": "manehidalgo3@gmail.com",
+    "firstName": "Martha",
+    "lastName": "Hidalgo",
+    "country": "",
+    "city": "Montevideo",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "status": "ACTIVE",
+    "unsubscribed": false,
+    "bounced": false,
+    "bounceReason": "",
+    "notes": "[Inscripto a Evento]: \"Verse bien, sentirse bien: otra mirada sobre la medicina estética\"",
+    "createdAt": "2026-09-28T02:36:34.819Z"
+  },
+  {
+    "id": "cnt_1788140750287_jsfqr",
+    "email": "sheilaacevedo50@gmail.com",
+    "firstName": "Sheila",
+    "lastName": "Acevedo",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Import CSV] Suscrito: 2025-11-18 12:18:57 | Enviados: 3 | Abiertos: 0 | Clics: 0\n[Inscripto a Evento]: \"Verse bien, sentirse bien: otra mirada sobre la medicina estética\"",
+    "createdAt": "2026-09-27T22:55:50.948Z",
+    "country": "",
+    "city": "Salto",
+    "profession": "",
+    "source": "Meta Ads",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1790887758529_kn4ue",
+    "email": "sdecam@hotmail.com",
+    "firstName": "Sandra de Castro",
+    "lastName": "Martinez",
+    "country": "",
+    "city": "Montevideo",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "status": "ACTIVE",
+    "unsubscribed": false,
+    "bounced": false,
+    "bounceReason": "",
+    "notes": "[Inscripto a Evento]: \"Verse bien, sentirse bien: otra mirada sobre la medicina estética\"",
+    "createdAt": "2026-09-27T22:02:22.649Z"
+  },
+  {
+    "id": "cnt_1790887758491_6h8h4",
+    "email": "jucaisbelleza@gmail.com",
+    "firstName": "Judith",
+    "lastName": "Cababie",
+    "country": "",
+    "city": "Montevideo",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "status": "ACTIVE",
+    "unsubscribed": false,
+    "bounced": false,
+    "bounceReason": "",
+    "notes": "[Inscripto a Evento]: \"Verse bien, sentirse bien: otra mirada sobre la medicina estética\"",
+    "createdAt": "2026-09-24T18:04:21.491Z"
+  },
+  {
+    "id": "cnt_1790887758460_hr0ae",
+    "email": "marcemarcast@gmail.com",
+    "firstName": "Marcela",
+    "lastName": "Martínez Castillo",
+    "country": "",
+    "city": "Montevideo",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "status": "ACTIVE",
+    "unsubscribed": false,
+    "bounced": false,
+    "bounceReason": "",
+    "notes": "[Inscripto a Evento]: \"Verse bien, sentirse bien: otra mirada sobre la medicina estética\"",
+    "createdAt": "2026-09-24T12:37:22.192Z"
+  },
+  {
+    "id": "cnt_1788298979158_oxl8h",
+    "email": "selamonega@gmail.com",
+    "firstName": "Silvia",
+    "lastName": "",
+    "country": "Argentina",
+    "city": "",
+    "profession": "",
+    "source": "Subscribers Active CSV",
+    "tags": [
+      "Usuario Plataforma"
+    ],
+    "unsubscribed": false,
+    "notes": "Suscrito: 2025-12-03 12:14:15 | Enviados: 2 | Abiertos: 2 | Clics: 1",
+    "createdAt": "2026-09-23T13:59:41.308Z",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1790887758435_ocagb",
+    "email": "ynegrinc@gmail.com",
+    "firstName": "Yairan",
+    "lastName": "Negrin",
+    "country": "",
+    "city": "Montevideo",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "status": "ACTIVE",
+    "unsubscribed": false,
+    "bounced": false,
+    "bounceReason": "",
+    "notes": "[Inscripto a Evento]: \"Verse bien, sentirse bien: otra mirada sobre la medicina estética\"",
+    "createdAt": "2026-09-23T13:24:39.196Z"
+  },
+  {
+    "id": "cnt_1790887758406_317ea",
+    "email": "dra.elisamartinez@gmail.com",
+    "firstName": "elisa",
+    "lastName": "martínez",
+    "country": "",
+    "city": "Salto",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "status": "ACTIVE",
+    "unsubscribed": false,
+    "bounced": false,
+    "bounceReason": "",
+    "notes": "[Inscripto a Evento]: \"Verse bien, sentirse bien: otra mirada sobre la medicina estética\"",
+    "createdAt": "2026-09-23T03:45:00.180Z"
+  },
+  {
+    "id": "cnt_1790887758368_lfmyg",
+    "email": "veroquirque@hotmail.com",
+    "firstName": "Veronica",
+    "lastName": "Quirque",
+    "country": "",
+    "city": "Montevideo",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "status": "ACTIVE",
+    "unsubscribed": false,
+    "bounced": false,
+    "bounceReason": "",
+    "notes": "[Inscripto a Evento]: \"Verse bien, sentirse bien: otra mirada sobre la medicina estética\"",
+    "createdAt": "2026-09-22T22:46:49.331Z"
+  },
+  {
     "id": "cnt_1790118938121_oirau",
     "email": "psic.claudiacalderon@gmail.com",
     "firstName": "Claudia",
@@ -17,6 +243,25 @@
     "bounceReason": "",
     "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
     "createdAt": "2026-09-22T01:49:52.620Z"
+  },
+  {
+    "id": "cnt_1790887758336_srmul",
+    "email": "eveelyngomez@hotmail.com",
+    "firstName": "Evelyn",
+    "lastName": "Gómez",
+    "country": "",
+    "city": "Montevideo",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "status": "ACTIVE",
+    "unsubscribed": false,
+    "bounced": false,
+    "bounceReason": "",
+    "notes": "[Inscripto a Evento]: \"Verse bien, sentirse bien: otra mirada sobre la medicina estética\"",
+    "createdAt": "2026-09-22T00:48:46.600Z"
   },
   {
     "id": "cnt_1790118939705_xsg4q",
@@ -2504,11 +2749,14 @@
     "city": "",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
-    "unsubscribed": false,
-    "notes": "Suscrito: 2025-11-18 12:28:49 | Enviados: 3 | Abiertos: 0 | Clics: 0",
+    "tags": [
+      "desuscrito",
+      "complaint"
+    ],
+    "unsubscribed": true,
+    "notes": "[Queja / Complaint AWS SES] Registrado el 2026-09-22 20:38:08. Omitido permanentemente.",
     "createdAt": "2026-09-01T21:42:59.166Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -2876,10 +3124,10 @@
     "profession": "",
     "source": "Subscribers Active CSV",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "Suscrito: 2025-11-18 12:26:19 | Enviados: 3 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.166Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -3778,10 +4026,10 @@
     "profession": "",
     "source": "Subscribers Active CSV",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "Suscrito: 2025-11-18 12:26:19 | Enviados: 3 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.166Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -6351,12 +6599,15 @@
     "city": "",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
+    "tags": [
+      "bounced",
+      "transient-bounce"
+    ],
     "unsubscribed": false,
-    "notes": "Suscrito: 2025-11-18 12:30:37 | Enviados: 3 | Abiertos: 0 | Clics: 0",
+    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 20:40:12 en envío anterior. Omitido de campañas.",
     "createdAt": "2026-09-01T21:42:59.165Z",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true
   },
   {
     "id": "cnt_1788298979165_pva9r",
@@ -7513,10 +7764,10 @@
     "profession": "",
     "source": "Subscribers Active CSV",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "Suscrito: 2025-11-18 12:30:36 | Enviados: 3 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.165Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -10975,10 +11226,10 @@
     "profession": "",
     "source": "Subscribers Active CSV",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "Suscrito: 2025-11-18 12:32:24 | Enviados: 3 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.164Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -14050,10 +14301,10 @@
     "profession": "",
     "source": "Subscribers Active CSV",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "Suscrito: 2025-11-18 12:33:35 | Enviados: 3 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.163Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -15273,10 +15524,10 @@
     "profession": "",
     "source": "Subscribers Active CSV",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "Suscrito: 2025-11-18 12:33:35 | Enviados: 3 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.163Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -16108,10 +16359,10 @@
     "profession": "",
     "source": "Subscribers Active CSV",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "Suscrito: 2025-11-18 12:34:41 | Enviados: 3 | Abiertos: 1 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.163Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -16692,10 +16943,10 @@
     "profession": "",
     "source": "Subscribers Active CSV",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "Suscrito: 2025-11-18 12:34:41 | Enviados: 3 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.163Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -20261,10 +20512,10 @@
     "profession": "",
     "source": "Subscribers Active CSV",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "Suscrito: 2025-11-18 12:36:27 | Enviados: 3 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.162Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -20292,12 +20543,15 @@
     "city": "",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
+    "tags": [
+      "bounced",
+      "transient-bounce"
+    ],
     "unsubscribed": false,
-    "notes": "Suscrito: 2025-11-18 12:36:27 | Enviados: 3 | Abiertos: 0 | Clics: 0",
+    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 20:47:31 en envío anterior. Omitido de campañas.",
     "createdAt": "2026-09-01T21:42:59.162Z",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true
   },
   {
     "id": "cnt_1788298979162_bvdvg",
@@ -22444,10 +22698,10 @@
     "profession": "",
     "source": "Subscribers Active CSV",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "Suscrito: 2025-11-18 14:26:40 | Enviados: 6 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.160Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -23149,10 +23403,10 @@
     "profession": "",
     "source": "Subscribers Active CSV",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "Suscrito: 2025-11-23 13:22:53 | Enviados: 7 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.159Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -26061,10 +26315,10 @@
     "profession": "",
     "source": "Subscribers Active CSV",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "Suscrito: 2025-12-03 12:14:15 | Enviados: 2 | Abiertos: 2 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.158Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -26365,10 +26619,10 @@
     "profession": "",
     "source": "Subscribers Active CSV",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "Suscrito: 2025-12-03 12:14:15 | Enviados: 2 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.158Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -26541,10 +26795,10 @@
     "profession": "",
     "source": "Subscribers Active CSV",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "Suscrito: 2025-12-03 12:14:16 | Enviados: 2 | Abiertos: 2 | Clics: 0",
     "createdAt": "2026-09-01T21:42:59.158Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -27416,22 +27670,6 @@
     "tags": [],
     "unsubscribed": false,
     "notes": "Suscrito: 2025-12-03 12:17:14 | Enviados: 6 | Abiertos: 0 | Clics: 0",
-    "createdAt": "2026-09-01T21:42:59.158Z",
-    "status": "ACTIVE",
-    "bounced": false
-  },
-  {
-    "id": "cnt_1788298979158_oxl8h",
-    "email": "selamonega@gmail.com",
-    "firstName": "Silvia",
-    "lastName": "",
-    "country": "Argentina",
-    "city": "",
-    "profession": "",
-    "source": "Subscribers Active CSV",
-    "tags": [],
-    "unsubscribed": false,
-    "notes": "Suscrito: 2025-12-03 12:14:15 | Enviados: 2 | Abiertos: 2 | Clics: 1",
     "createdAt": "2026-09-01T21:42:59.158Z",
     "status": "ACTIVE",
     "bounced": false
@@ -28645,12 +28883,15 @@
     "city": "",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
+    "tags": [
+      "bounced",
+      "transient-bounce"
+    ],
     "unsubscribed": false,
-    "notes": "Suscrito: 2025-12-03 12:14:15 | Enviados: 2 | Abiertos: 2 | Clics: 0",
+    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 20:51:46 en envío anterior. Omitido de campañas.",
     "createdAt": "2026-09-01T21:42:59.158Z",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true
   },
   {
     "id": "cnt_1788298979158_fcpsz",
@@ -32489,10 +32730,10 @@
     "tags": [
       "Posible Especialista"
     ],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "",
     "createdAt": "2026-08-31T02:12:24.694Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -32797,10 +33038,10 @@
     "tags": [
       "Posible Especialista"
     ],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-12-03 12:14:15 | Enviados: 2 | Abiertos: 2 | Clics: 0",
     "createdAt": "2026-08-31T02:12:24.690Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -32869,10 +33110,10 @@
     "tags": [
       "Posible Especialista"
     ],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:29:45 | Enviados: 3 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-08-31T02:12:24.689Z",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -34126,16 +34367,19 @@
     "email": "inostrozapry28@gmail.com",
     "firstName": "Pry Inostroza",
     "lastName": "",
-    "tags": [],
+    "tags": [
+      "bounced",
+      "transient-bounce"
+    ],
     "unsubscribed": false,
-    "notes": "[Import CSV] Suscrito: 2025-11-18 12:37:16 | Enviados: 3 | Abiertos: 0 | Clics: 0",
+    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 20:54:29 en envío anterior. Omitido de campañas.",
     "createdAt": "2026-08-31T01:48:21.989Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true
   },
   {
     "id": "cnt_1788140901989_5zdx3",
@@ -34643,14 +34887,14 @@
     "firstName": "Soto Nancy Nancy",
     "lastName": "",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:37:16 | Enviados: 3 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-08-31T01:48:21.957Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -35365,14 +35609,14 @@
     "tags": [
       "Posible Especialista"
     ],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:37:15 | Enviados: 3 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-08-31T01:48:21.941Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -35655,16 +35899,19 @@
     "email": "pazmarcelo57@gmail.com",
     "firstName": "Marcelo Edgardo Paz",
     "lastName": "",
-    "tags": [],
+    "tags": [
+      "bounced",
+      "transient-bounce"
+    ],
     "unsubscribed": false,
-    "notes": "[Import CSV] Suscrito: 2025-11-18 12:37:15 | Enviados: 3 | Abiertos: 0 | Clics: 0",
+    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 20:55:18 en envío anterior. Omitido de campañas.",
     "createdAt": "2026-08-31T01:48:21.934Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true
   },
   {
     "id": "cnt_1788140901934_dcf1b",
@@ -36009,14 +36256,14 @@
     "firstName": "Paola",
     "lastName": "",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:37:15 | Enviados: 3 | Abiertos: 1 | Clics: 0",
     "createdAt": "2026-08-31T01:48:21.928Z",
     "country": "United States",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -36738,14 +36985,14 @@
     "firstName": "Valeria",
     "lastName": "",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:37:15 | Enviados: 3 | Abiertos: 2 | Clics: 0",
     "createdAt": "2026-08-31T01:48:21.912Z",
     "country": "United States",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -37092,14 +37339,14 @@
     "firstName": "Ruth Lemos",
     "lastName": "",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:37:15 | Enviados: 3 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-08-31T01:48:21.906Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -37476,14 +37723,14 @@
     "firstName": "Maria Cristina Wanzo Giacosa",
     "lastName": "",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:37:15 | Enviados: 3 | Abiertos: 2 | Clics: 1",
     "createdAt": "2026-08-31T01:48:21.898Z",
     "country": "Argentina",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -40117,14 +40364,14 @@
     "firstName": "Victoria Desayunos",
     "lastName": "",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:37:15 | Enviados: 3 | Abiertos: 1 | Clics: 0",
     "createdAt": "2026-08-31T01:48:21.833Z",
     "country": "United States",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -40245,14 +40492,14 @@
     "firstName": "Alba Haydée.",
     "lastName": "",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:37:15 | Enviados: 3 | Abiertos: 3 | Clics: 0",
     "createdAt": "2026-08-31T01:48:21.830Z",
     "country": "United States",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -40507,14 +40754,14 @@
     "firstName": "Ana",
     "lastName": "",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:37:15 | Enviados: 3 | Abiertos: 1 | Clics: 0",
     "createdAt": "2026-08-31T01:48:21.825Z",
     "country": "Argentina",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -40603,14 +40850,14 @@
     "firstName": "Lucía Coronel",
     "lastName": "",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:37:15 | Enviados: 3 | Abiertos: 1 | Clics: 1",
     "createdAt": "2026-08-31T01:48:21.824Z",
     "country": "Spain",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -42734,16 +42981,19 @@
     "email": "valdezsandra464@gmail.com",
     "firstName": "Sandra Valdez",
     "lastName": "",
-    "tags": [],
+    "tags": [
+      "bounced",
+      "transient-bounce"
+    ],
     "unsubscribed": false,
-    "notes": "Ciudad: Río Grande | [Import CSV] Suscrito: 2025-11-18 12:37:16 | Enviados: 3 | Abiertos: 0 | Clics: 0",
+    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 20:58:53 en envío anterior. Omitido de campañas.",
     "createdAt": "2026-08-31T01:48:21.771Z",
     "country": "Argentina",
     "city": "Río Grande",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true
   },
   {
     "id": "cnt_1788140750489_u797e",
@@ -43869,14 +44119,14 @@
     "firstName": "Rossana",
     "lastName": "Ferraro",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:19:08 | Enviados: 3 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-08-31T01:45:50.459Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -44686,14 +44936,14 @@
     "firstName": "Viviana",
     "lastName": "C Cassulo",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:19:07 | Enviados: 3 | Abiertos: 3 | Clics: 1",
     "createdAt": "2026-08-31T01:45:50.439Z",
     "country": "Argentina",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -46668,16 +46918,19 @@
     "email": "pia.barrientos.g@gmail.com",
     "firstName": "Ps.",
     "lastName": "Pía Barrientos",
-    "tags": [],
+    "tags": [
+      "bounced",
+      "transient-bounce"
+    ],
     "unsubscribed": false,
-    "notes": "[Import CSV] Suscrito: 2025-11-18 12:19:04 | Enviados: 3 | Abiertos: 0 | Clics: 0",
+    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 21:00:50 en envío anterior. Omitido de campañas.",
     "createdAt": "2026-08-31T01:45:50.385Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true
   },
   {
     "id": "cnt_1788140750384_ys91v",
@@ -52123,16 +52376,19 @@
     "email": "verofortini444@gmail.com",
     "firstName": "Vero",
     "lastName": "Fortini",
-    "tags": [],
+    "tags": [
+      "bounced",
+      "transient-bounce"
+    ],
     "unsubscribed": false,
-    "notes": "[Import CSV] Suscrito: 2025-11-18 12:18:58 | Enviados: 3 | Abiertos: 0 | Clics: 0",
+    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 21:03:31 en envío anterior. Omitido de campañas.",
     "createdAt": "2026-08-31T01:45:50.295Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true
   },
   {
     "id": "cnt_1788140750295_3gz52",
@@ -52252,14 +52508,14 @@
     "firstName": "Alberto Carlos Ferrari",
     "lastName": "",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "",
     "createdAt": "2026-08-31T01:45:50.293Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -52714,22 +52970,6 @@
     "bounced": false
   },
   {
-    "id": "cnt_1788140750287_jsfqr",
-    "email": "sheilaacevedo50@gmail.com",
-    "firstName": "Shei",
-    "lastName": "Acevedo",
-    "tags": [],
-    "unsubscribed": false,
-    "notes": "[Import CSV] Suscrito: 2025-11-18 12:18:57 | Enviados: 3 | Abiertos: 0 | Clics: 0",
-    "createdAt": "2026-08-31T01:45:50.287Z",
-    "country": "",
-    "city": "",
-    "profession": "",
-    "source": "Meta Ads",
-    "status": "ACTIVE",
-    "bounced": false
-  },
-  {
     "id": "cnt_1788140750287_f3nro",
     "email": "andreaperezdoc@yahoo.com.ar",
     "firstName": "Andrea",
@@ -52767,14 +53007,14 @@
     "firstName": "Lucia Maciel",
     "lastName": "",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "",
     "createdAt": "2026-08-31T01:45:50.287Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -55040,14 +55280,14 @@
     "firstName": "Nela Rocha",
     "lastName": "",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "",
     "createdAt": "2026-08-31T01:45:50.263Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -55251,14 +55491,14 @@
     "firstName": "Gabriela",
     "lastName": "Antivero",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:18:56 | Enviados: 7 | Abiertos: 1 | Clics: 1",
     "createdAt": "2026-08-31T01:45:50.262Z",
     "country": "Argentina",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -55700,14 +55940,14 @@
     "firstName": "Franco",
     "lastName": "(mandar X Email)",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:18:56 | Enviados: 7 | Abiertos: 2 | Clics: 1",
     "createdAt": "2026-08-31T01:45:50.258Z",
     "country": "Argentina",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -55795,16 +56035,19 @@
     "email": "andreillapilla77@gmail.com",
     "firstName": "Andrerubio",
     "lastName": "Pardo",
-    "tags": [],
+    "tags": [
+      "bounced",
+      "transient-bounce"
+    ],
     "unsubscribed": false,
-    "notes": "[Import CSV] Suscrito: 2025-11-18 12:18:56 | Enviados: 7 | Abiertos: 0 | Clics: 0",
+    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 21:05:31 en envío anterior. Omitido de campañas.",
     "createdAt": "2026-08-31T01:45:50.257Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true
   },
   {
     "id": "cnt_1788140750257_hdc6i",
@@ -56302,14 +56545,14 @@
     "firstName": "Juandpabloz",
     "lastName": "",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "",
     "createdAt": "2026-08-31T01:45:50.254Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -57301,14 +57544,14 @@
     "firstName": "Hilda Andersen",
     "lastName": "",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "",
     "createdAt": "2026-08-31T01:45:50.247Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -57668,7 +57911,7 @@
       "complaint"
     ],
     "unsubscribed": true,
-    "notes": "Profesión/Cargo: ceo | Ciudad: Santa fe | [Import CSV] Suscrito: 2025-11-18 12:40:54 | Enviados: 3 | Abiertos: 0 | Clics: 0\n[AWS SES Sync] Suprimido automáticamente por Reporte de Abuso / Queja en Yahoo/Gmail el 18/9/2026.",
+    "notes": "[Queja / Complaint AWS SES] Registrado el 2026-09-17 14:52:21. Omitido permanentemente.",
     "createdAt": "2026-08-31T01:39:53.609Z",
     "country": "Estados Unidos",
     "city": "Santa fe",
@@ -58779,16 +59022,19 @@
     "email": "caceresv824@gmail.com",
     "firstName": "Verónica",
     "lastName": "Evelin Cáceres",
-    "tags": [],
+    "tags": [
+      "bounced",
+      "transient-bounce"
+    ],
     "unsubscribed": false,
-    "notes": "Profesión/Cargo: hshdhd | Ciudad: Juan José Castelli",
+    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 21:06:56 en envío anterior. Omitido de campañas.",
     "createdAt": "2026-08-31T01:39:53.595Z",
     "country": "Argentina",
     "city": "Juan José Castelli",
     "profession": "",
     "source": "HubSpot",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true
   },
   {
     "id": "cnt_1788140393594_idfny",
@@ -58917,14 +59163,14 @@
     "firstName": "Sol",
     "lastName": "Par",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "Profesión/Cargo: gerente | Ciudad: santa fe | [Import CSV] Suscrito: 2025-11-18 12:40:54 | Enviados: 3 | Abiertos: 0 | Clics: 0",
     "createdAt": "2026-08-31T01:39:53.593Z",
     "country": "Argentina",
     "city": "santa fe",
     "profession": "Gestión / Administración / Profesional",
     "source": "HubSpot",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -62086,14 +62332,14 @@
     "firstName": "Elba",
     "lastName": "León Mora",
     "tags": [],
-    "unsubscribed": false,
+    "unsubscribed": true,
     "notes": "[Import CSV] Suscrito: 2025-11-18 12:40:53 | Enviados: 3 | Abiertos: 2 | Clics: 0",
     "createdAt": "2026-08-31T01:39:53.564Z",
     "country": "Colombia",
     "city": "Bogotá",
     "profession": "",
     "source": "HubSpot",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {

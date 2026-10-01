@@ -16,28 +16,42 @@ import { getLocalCampaignById, getLocalContacts, getLocalAudienceById } from "..
 import { executeCampaignBatchSend } from "../lib/local-marketing/sender";
 
 // 1. Cargar variables de entorno de apps/platform/.env.local
-const envPath = path.join(__dirname, "..", ".env.local");
-if (fs.existsSync(envPath)) {
-  const envConfig = fs.readFileSync(envPath, "utf8");
-  for (const line of envConfig.split("\n")) {
-    const trimmed = line.trim();
-    if (trimmed && !trimmed.startsWith("#") && trimmed.includes("=")) {
-      const idx = trimmed.indexOf("=");
-      const key = trimmed.substring(0, idx).trim();
-      const val = trimmed.substring(idx + 1).trim().replace(/^["']|["']$/g, "");
-      if (!process.env[key]) {
-        process.env[key] = val;
+function loadEnv() {
+  const envFiles = [
+    path.resolve(process.cwd(), ".env.local"),
+    path.resolve(process.cwd(), ".env"),
+    path.resolve(__dirname, "..", ".env.local"),
+    path.resolve(__dirname, "..", "..", "..", ".env.local"),
+  ];
+  for (const envPath of envFiles) {
+    if (fs.existsSync(envPath)) {
+      const envConfig = fs.readFileSync(envPath, "utf8");
+      for (const line of envConfig.split("\n")) {
+        const trimmed = line.trim();
+        if (trimmed && !trimmed.startsWith("#") && trimmed.includes("=")) {
+          const idx = trimmed.indexOf("=");
+          const key = trimmed.substring(0, idx).trim();
+          let val = trimmed.substring(idx + 1).trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.substring(1, val.length - 1);
+          }
+          if (!process.env[key]) {
+            process.env[key] = val;
+          }
+        }
       }
     }
   }
 }
+
+loadEnv();
 
 async function main() {
   const args = process.argv.slice(2);
   const isDryRun = args.includes("--dry-run");
   const autoConfirm = args.includes("--yes") || args.includes("-y");
 
-  let campaignId = "cmp_viviana_1788832131088"; // Por defecto la campaña activa
+  let campaignId = "cmp_octubre_3_conversaciones_2026"; // Por defecto la campaña de octubre
   const argCampaign = args.find((a) => a.startsWith("--campaign-id="));
   if (argCampaign) {
     campaignId = argCampaign.split("=")[1].trim();
@@ -97,11 +111,26 @@ async function main() {
     console.warn("⚠️ Advertencia al consultar lista de desuscritos en DB:", err?.message || err);
   }
 
-  console.log(`👥 Destinatarios:   ${eligibleCount} contactos activos elegibles`);
+  // Deduplicación estricta en memoria
+  const seenEmails = new Set<string>();
+  const uniqueRecipients: typeof recipients = [];
+  for (const r of recipients) {
+    const norm = r.email.toLowerCase().trim();
+    if (!seenEmails.has(norm)) {
+      seenEmails.add(norm);
+      uniqueRecipients.push(r);
+    }
+  }
+  recipients = uniqueRecipients;
+  eligibleCount = recipients.length;
+
+  console.log(`👥 Destinatarios ÚNICOS:   ${eligibleCount} contactos activos elegibles`);
+  console.log(`⚡ Tasa de envío configurada: 10 emails/segundo (100ms delay por lote)`);
+  console.log(`⏱️  Tiempo estimado:          ~${Math.ceil(eligibleCount / 10 / 60)} minutos (${Math.ceil(eligibleCount / 10)} segundos)`);
 
   if (isDryRun) {
     console.log("\n🧪 Modo [--dry-run] activo. NO se realizaron envíos reales.");
-    console.log("   Todo está listo para cuando decidas realizar el envío.");
+    console.log("   Todo está verificado y listo para cuando decidas realizar el envío.");
     console.log("\n=======================================================\n");
     process.exit(0);
   }
@@ -114,7 +143,7 @@ async function main() {
   if (!autoConfirm) {
     console.log("\n-------------------------------------------------------");
     console.log(`⚠️ ATENCIÓN: Se enviarán ${eligibleCount} correos reales vía AWS SES.`);
-    console.log("   Para confirmar el envío, vuelve a ejecutar el comando con el flag --yes:");
+    console.log("   Para confirmar el envío real, ejecuta:");
     console.log(`   npx tsx scripts/send-campaign.ts --yes`);
     console.log("-------------------------------------------------------\n");
     process.exit(0);

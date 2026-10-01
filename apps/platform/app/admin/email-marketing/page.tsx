@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import SelectInput from "@/components/ui/SelectInput";
 import { renderBelenEducacionSexualNewsletterHtml } from "@/lib/mails/belenEducacionSexualNewsletter";
+import { renderOctoberEventsNewsletterHtml } from "@/lib/mails/octoberEventsNewsletter";
 import { renderBelenNewsletterHtml } from "@/lib/mails/belenNewsletter";
 import { renderRelaunchNewsletterHtml } from "@/lib/mails/relaunchNewsletter";
 import { renderVivianaNewsletterHtml } from "@/lib/mails/vivianaNewsletter";
@@ -101,8 +102,13 @@ interface SendLog {
   clickCount?: number;
 }
 
-function getDefaultTemplates() {
-  return [
+const DEFAULT_TEMPLATES = [
+    {
+      name: "Calendario de Octubre: 3 Conversaciones de Bienestar",
+      subject: "Octubre en LUMINUS: 3 nuevas conversaciones para tu bienestar",
+      previewText: "Medicina estética consciente, vínculos y emociones, y terapia de flotación en LUMINUS.",
+      html: renderOctoberEventsNewsletterHtml(),
+    },
     {
       name: "Newsletter Semanal: Belén Pittamiglio (Educación Sexual) & Plataforma",
       subject: "[LUMINUS NEWS] Algo para llevarte esta semana",
@@ -179,6 +185,9 @@ function getDefaultTemplates() {
 </div>`,
     },
   ];
+
+function getDefaultTemplates() {
+  return DEFAULT_TEMPLATES;
 }
 
 export default function LocalEmailMarketingPage() {
@@ -1547,29 +1556,18 @@ export default function LocalEmailMarketingPage() {
                                       <Eye className="w-3.5 h-3.5" /> Ver
                                     </button>
                                   ) : (
-                                    <>
-                                      <button
-                                        onClick={() => {
-                                          setCurrentCampaign({
-                                            ...cmp,
-                                            previewText: cmp.previewText || "",
-                                          });
-                                          setCampaignViewMode("editor");
-                                        }}
-                                        className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-700 transition cursor-pointer shadow-xs"
-                                      >
-                                        Editar
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          setSelectedCampaignForBatch(cmp.id);
-                                          setActiveTab("send");
-                                        }}
-                                        className="px-3 py-1.5 rounded-lg bg-black text-white hover:bg-slate-800 text-xs font-semibold transition cursor-pointer shadow-xs"
-                                      >
-                                        Enviar
-                                      </button>
-                                    </>
+                                    <button
+                                      onClick={() => {
+                                        setCurrentCampaign({
+                                          ...cmp,
+                                          previewText: cmp.previewText || "",
+                                        });
+                                        setCampaignViewMode("editor");
+                                      }}
+                                      className="px-3.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 text-xs font-semibold text-slate-700 transition cursor-pointer shadow-xs inline-flex items-center gap-1"
+                                    >
+                                      <Edit2 className="w-3.5 h-3.5" /> Editar
+                                    </button>
                                   )}
                                 </td>
                               </tr>
