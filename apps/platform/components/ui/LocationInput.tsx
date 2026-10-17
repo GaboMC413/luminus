@@ -13,9 +13,13 @@ interface LocationInputProps {
   placeholder?: string;
   variant?: 'clean' | 'bordered';
   className?: string;
+  inputClassName?: string;
   label?: string;
   disabled?: boolean;
   autoFocus?: boolean;
+  name?: string;
+  id?: string;
+  autoComplete?: string;
 }
 
 export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputProps>(({
@@ -24,9 +28,13 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
   placeholder = 'Busca tu ciudad',
   variant = 'bordered',
   className = '',
+  inputClassName = '',
   label,
   disabled = false,
-  autoFocus
+  autoFocus,
+  name = 'luminus_location_search',
+  id = 'luminus_location_search',
+  autoComplete = 'off',
 }, ref) => {
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [coords, setCoords] = useState<{
@@ -233,8 +241,11 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
       {label && <label className="text-label ml-1">{label}</label>}
       <InputField
         ref={ref}
+        id={id}
+        name={name}
         placeholder={placeholder}
         value={value}
+        className={inputClassName}
         onChange={(e) => {
           const nextValue = e.target.value;
 
@@ -277,7 +288,10 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
         }}
         disabled={disabled}
         variant={variant}
-        autoComplete="new-password"
+        autoComplete={autoComplete}
+        data-lpignore="true"
+        data-1p-ignore="true"
+        data-form-type="other"
         enterKeyHint="next"
         autoFocus={autoFocus}
       />

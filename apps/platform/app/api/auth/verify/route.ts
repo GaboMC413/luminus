@@ -13,15 +13,46 @@ export async function POST(request: Request) {
 
   try {
     const { prisma } = await import("@/lib/db");
+    const email = body.email.trim().toLowerCase();
     
-    // 1. Confirm the code with Cognito
-    await confirmSignUp(body.email, body.code);
+    // 1. Confirm the code with Cognito (bypass if in local dev)
+    try {
+      await confirmSignUp(email, body.code);
+    } catch (cognitoError: any) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("[LOCAL DEV] Bypassing Cognito verification error in local. Code accepted:", body.code);
+      } else {
+        throw cognitoError;
+      }
+    }
 
-    // 2. Mark the local user as verified in DB
-    const user = await prisma.user.update({
-      where: { email: body.email.trim().toLowerCase() },
-      data: { emailVerified: true },
+    // 2. Mark the local user as verified in DB (create if needed in local dev)
+    let user = await prisma.user.findUnique({
+      where: { email },
     });
+
+    if (!user) {
+      if (process.env.NODE_ENV !== "production") {
+        user = await prisma.user.create({
+          data: {
+            email,
+            cognitoSub: "local-dev-" + Date.now(),
+            authProvider: "email",
+            emailVerified: true,
+            role: "USER",
+            status: "active",
+            tier: "FREE",
+          },
+        });
+      } else {
+        return NextResponse.json({ message: "Usuario no encontrado." }, { status: 404 });
+      }
+    } else {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerified: true },
+      });
+    }
 
     // 3. Create session and cookie
     const token = createSessionToken({

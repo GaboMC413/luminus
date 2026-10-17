@@ -49,3 +49,9 @@ old-repo-temp/
 .tools/
 temp-email.html
 public/temp-email.html
+
+# local data, backups & generated tooling
+.local-data/
+apps/backups/
+graphify-out/
+.codex/

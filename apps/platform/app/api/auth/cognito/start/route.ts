@@ -11,6 +11,7 @@ type CognitoStartState = {
   state: string;
   provider?: "Google";
   intent?: "signup" | "signin";
+  plan?: "membership" | "free";
 };
 
 function getPublicOrigin(requestUrl: URL) {
@@ -38,6 +39,8 @@ export async function GET(request: Request) {
   const provider = providerParam === "google" ? "Google" : undefined;
   const intentParam = url.searchParams.get("intent")?.trim().toLowerCase();
   const intent: "signup" | "signin" = intentParam === "signup" ? "signup" : "signin";
+  const planParam = url.searchParams.get("plan")?.trim().toLowerCase();
+  const plan: "membership" | "free" | undefined = planParam === "membership" || planParam === "free" ? planParam : undefined;
 
   if (!clientId || !cognitoDomain) {
     console.error("Cognito OAuth start failed: Cognito domain or client id is not configured.");
@@ -46,7 +49,7 @@ export async function GET(request: Request) {
   }
 
   const state = randomBytes(24).toString("base64url");
-  const statePayload: CognitoStartState = { state, provider, intent };
+  const statePayload: CognitoStartState = { state, provider, intent, plan };
   const redirectUri = `${origin}/api/auth/cognito/callback`;
 
   cookies().set(COGNITO_STATE_COOKIE, JSON.stringify(statePayload), {

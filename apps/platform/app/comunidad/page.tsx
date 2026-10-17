@@ -9,6 +9,7 @@ import { UserCard } from "@/components/ui/UserCard";
 import { Button, ProfileButton } from "@/components/ui/Button";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { PageLoader } from "@/components/ui/PageLoader";
+import { WelcomeBanner } from "@/features/membership/WelcomeBanner";
 
 const CATEGORIES_MAPPING = {
   "Crecimiento Personal": ["Autoconocimiento", "Propósito", "Hábitos", "Creatividad", "Emprendimiento", "Desarrollo profesional"],
@@ -917,6 +918,8 @@ function PlatformContent() {
             onScroll={handleScroll}
             className="flex-1 w-full overflow-y-auto custom-scrollbar pb-0 md:pb-12"
           >
+            <WelcomeBanner userProfile={currentUserProfile} />
+
             {loading ? (
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 w-full">
                 {[...Array(8)].map((_, idx) => (

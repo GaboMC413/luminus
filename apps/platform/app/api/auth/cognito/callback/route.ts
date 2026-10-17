@@ -18,6 +18,7 @@ type CognitoStartState = {
   state: string;
   provider?: "Google";
   intent?: "signup" | "signin";
+  plan?: "membership" | "free";
 };
 
 type CognitoIdentityClaim = {
@@ -457,7 +458,15 @@ export async function GET(request: Request) {
       console.error("Failed to log activity in Cognito callback:", logError);
     }
 
-    return redirectTo(requestUrl, user.profile?.isOnboarded ? "/comunidad" : "/auth/registrarse?onboarding=1");
+    if (storedState?.plan === "membership" && user.tier !== "BASIC") {
+      return redirectTo(requestUrl, "/membresia/pago");
+    }
+
+    if (!user.profile?.isOnboarded) {
+      return redirectTo(requestUrl, "/perfil/completar");
+    }
+
+    return redirectTo(requestUrl, "/comunidad");
   } catch (callbackError) {
     console.error("Cognito OAuth callback failed.", callbackError);
     const reason = callbackError instanceof Error ? encodeURIComponent(callbackError.message) : "unknown";

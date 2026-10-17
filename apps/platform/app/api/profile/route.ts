@@ -75,6 +75,8 @@ function serializeProfile(user: any) {
       phone_number: profile.phoneNumber ?? "",
       selected_plan: profile.selectedPlan ?? "Mensual",
       created_at: profile.createdAt?.toISOString?.() ?? user.createdAt?.toISOString?.() ?? "",
+      member_since: user.memberSince?.toISOString?.() ?? null,
+      tier: user.tier ?? "FREE",
       bio: profile.bio ?? "",
       other_interests: profile.intention ?? "",
     },
