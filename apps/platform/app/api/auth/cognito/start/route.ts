@@ -1,6 +1,7 @@
 import { randomBytes } from "crypto";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { getSafeRedirectUrl } from "@/lib/utils/url";
 
 export const runtime = "nodejs";
 
@@ -12,6 +13,7 @@ type CognitoStartState = {
   provider?: "Google";
   intent?: "signup" | "signin";
   plan?: "membership" | "free";
+  redirect?: string;
 };
 
 function getPublicOrigin(requestUrl: URL) {
@@ -19,11 +21,12 @@ function getPublicOrigin(requestUrl: URL) {
 }
 
 function getCognitoDomain() {
-  const domain = process.env.COGNITO_DOMAIN?.trim().replace(/\/$/, "");
+  let domain = process.env.COGNITO_DOMAIN?.trim().replace(/\/$/, "");
 
   if (!domain) {
     return null;
   }
+  domain = domain.replace(/\/(login|oauth2|logout).*$/i, "");
 
   return domain.startsWith("http://") || domain.startsWith("https://")
     ? domain
@@ -41,6 +44,8 @@ export async function GET(request: Request) {
   const intent: "signup" | "signin" = intentParam === "signup" ? "signup" : "signin";
   const planParam = url.searchParams.get("plan")?.trim().toLowerCase();
   const plan: "membership" | "free" | undefined = planParam === "membership" || planParam === "free" ? planParam : undefined;
+  const redirectParam = url.searchParams.get("redirect");
+  const targetRedirect = getSafeRedirectUrl(redirectParam, "");
 
   if (!clientId || !cognitoDomain) {
     console.error("Cognito OAuth start failed: Cognito domain or client id is not configured.");
@@ -49,7 +54,13 @@ export async function GET(request: Request) {
   }
 
   const state = randomBytes(24).toString("base64url");
-  const statePayload: CognitoStartState = { state, provider, intent, plan };
+  const statePayload: CognitoStartState = {
+    state,
+    provider,
+    intent,
+    ...(plan ? { plan } : {}),
+    ...(targetRedirect ? { redirect: targetRedirect } : {}),
+  };
   const redirectUri = `${origin}/api/auth/cognito/callback`;
 
   cookies().set(COGNITO_STATE_COOKIE, JSON.stringify(statePayload), {

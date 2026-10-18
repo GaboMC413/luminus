@@ -4,8 +4,35 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
-  title: "Condiciones para Especialistas | LUMINUS Latam",
+  title: "Condiciones para Especialistas | LUMINUS LATAM",
   description: "Regula la postulación, admisión, participación y permanencia de los especialistas dentro de la red LUMINUS.",
+  alternates: {
+    canonical: "https://luminuslatam.com/legal/condiciones-especialistas",
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_LA",
+    url: "https://luminuslatam.com/legal/condiciones-especialistas",
+    siteName: "LUMINUS LATAM",
+    title: "Condiciones para Especialistas | LUMINUS LATAM",
+    description: "Regula la postulación, admisión, participación y permanencia de los especialistas dentro de la red LUMINUS.",
+    images: [
+      {
+        url: "https://luminuslatam.com/og-especialistas.png",
+        secureUrl: "https://luminuslatam.com/og-especialistas.png",
+        width: 1200,
+        height: 630,
+        type: "image/png",
+        alt: "LUMINUS LATAM - Condiciones para Especialistas",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Condiciones para Especialistas | LUMINUS LATAM",
+    description: "Regula la postulación, admisión, participación y permanencia de los especialistas dentro de la red LUMINUS.",
+    images: ["https://luminuslatam.com/og-especialistas.png"],
+  },
 };
 
 export default function CondicionesEspecialistasPage() {

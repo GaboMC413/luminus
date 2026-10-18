@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
+import { MetaPixel } from "@/components/analytics/MetaPixel";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -11,28 +12,30 @@ const jakarta = Plus_Jakarta_Sans({
 
 const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyC8oSQoTxkqdQ2otejFMnrGQAU1oeUaZEA";
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://luminusbienestar.com";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://luminuslatam.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "LUMINUS | Tu red de bienestar en Latinoamérica",
-  description: "Un espacio para conectar, aprender y cuidar tu bienestar. LUMINUS conecta personas, especialistas y espacios de toda Latinoamérica en una misma comunidad.",
+  title: "LUMINUS LATAM | Una red para conectar, aprender y cuidar tu bienestar",
+  description: "Conecta con especialistas de distintas disciplinas, descubre espacios y participa en actividades para acompañar tu bienestar en Latinoamérica.",
   icons: {
     icon: "/ico.png",
     shortcut: "/ico.png",
     apple: "/ico.png",
   },
   openGraph: {
-    title: "LUMINUS | Tu red de bienestar en Latinoamérica",
-    description: "Un espacio para conectar, aprender y cuidar tu bienestar. LUMINUS conecta personas, especialistas y espacios de toda Latinoamérica en una misma comunidad.",
+    title: "LUMINUS LATAM | Una red para conectar, aprender y cuidar tu bienestar",
+    description: "Conecta con especialistas de distintas disciplinas, descubre espacios y participa en actividades para acompañar tu bienestar en Latinoamérica.",
     url: siteUrl,
-    siteName: "LUMINUS",
+    siteName: "LUMINUS LATAM",
     images: [
       {
-        url: "/logo-mails.png",
+        url: "/luminus_platform.jpg",
+        secureUrl: `${siteUrl}/luminus_platform.jpg`,
         width: 1200,
         height: 630,
-        alt: "LUMINUS Bienestar",
+        type: "image/jpeg",
+        alt: "LUMINUS LATAM | Una red para conectar, aprender y cuidar tu bienestar",
       },
     ],
     locale: "es_LA",
@@ -40,9 +43,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "LUMINUS | Tu red de bienestar en Latinoamérica",
-    description: "Un espacio para conectar, aprender y cuidar tu bienestar.",
-    images: ["/logo-mails.png"],
+    title: "LUMINUS LATAM | Una red para conectar, aprender y cuidar tu bienestar",
+    description: "Conecta con especialistas de distintas disciplinas, descubre espacios y participa en actividades para acompañar tu bienestar en Latinoamérica.",
+    images: ["/luminus_platform.jpg"],
   },
 };
 
@@ -54,12 +57,31 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${jakarta.variable} font-sans scroll-smooth`}>
       <head>
+        <MetaPixel />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-25..0&display=block" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-25..0&display=block" />
       </head>
       <body className="bg-white text-slate-900 antialiased selection:bg-slate-900 selection:text-white min-h-screen flex flex-col">
+
+        {/* Google Analytics (gtag.js) */}
         <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places&language=es`}
+          src="https://www.googletagmanager.com/gtag/js?id=G-1H9DDE1V0C"
+          strategy="afterInteractive"
+        />
+        <Script
+          id="google-analytics"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-1H9DDE1V0C');
+            `,
+          }}
+        />
+        <Script
+          src={`https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places&language=es&loading=async`}
           strategy="afterInteractive"
         />
         {children}

@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import fs from "fs";
-import path from "path";
 import { notFound } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { getDbEvents } from "@/lib/events";
 import { Navbar, EventRegistrationSection, Footer } from "@/components";
 
 export const revalidate = 0;
@@ -14,41 +12,89 @@ interface PageProps {
   };
 }
 
+async function getEventBySlug(slug: string): Promise<any | null> {
+  const bySlug = await getDbEvents({ slug });
+  if (bySlug) return bySlug;
+
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+  if (isUuid) {
+    const byId = await getDbEvents({ id: slug });
+    if (byId) return byId;
+  }
+  return null;
+}
+
+function getImageMimeType(url: string): string {
+  const cleanUrl = url.split("?")[0].toLowerCase();
+  if (cleanUrl.endsWith(".png")) return "image/png";
+  if (cleanUrl.endsWith(".webp")) return "image/webp";
+  if (cleanUrl.endsWith(".svg")) return "image/svg+xml";
+  return "image/jpeg";
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const event = await getEventBySlug(params.slug);
   if (!event) {
-    return {
-      title: "Inscripción a Evento | LUMINUS",
-    };
+    return { title: "Inscripción a Evento | LUMINUS LATAM" };
   }
 
-  const title = `${event.title} | Inscripción LUMINUS`;
-  const cleanDescription = event.description
+  const title = `${event.title} | LUMINUS LATAM`;
+
+  const speakerName = event.speaker_name || event.speakerName;
+  const isSpeakerValid =
+    speakerName &&
+    !["Especialista LUMINUS", "Especialistas LUMINUS", "Especialista", "LUMINUS"].includes(speakerName.trim());
+  const cleanSpeaker = isSpeakerValid
+    ? (speakerName.trim().startsWith("Con ") ? speakerName.trim().slice(4) : speakerName.trim())
+    : "";
+
+  let cleanDescription = event.description
     ? event.description
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, "$1")
         .replace(/\*\*([^*]+)\*\*/g, "$1")
-        .substring(0, 200)
-    : "Un espacio para conectar, aprender y cuidar tu bienestar en Latinoamérica.";
+        .replace(/\*([^*]+)\*/g, "$1")
+        .replace(/\n+/g, " ")
+        .trim()
+    : "";
 
-  const domain = process.env.NEXT_PUBLIC_SITE_URL || "https://luminuslatam.com";
+  if (cleanDescription.length > 140) {
+    cleanDescription = cleanDescription.substring(0, 140).trim() + "...";
+  }
+
+  const formattedDesc = cleanDescription
+    ? cleanDescription.endsWith(".") || cleanDescription.endsWith("...")
+      ? cleanDescription
+      : `${cleanDescription}.`
+    : "";
+
+  const socialDescription = cleanSpeaker
+    ? `Con ${cleanSpeaker}.${formattedDesc ? ` ${formattedDesc}` : ""} Inscribirme ahora.`
+    : formattedDesc
+    ? `${formattedDesc} Inscribirme ahora.`
+    : "Participa de este encuentro en LUMINUS LATAM. Inscribirme ahora.";
+
+  const domain = (process.env.NEXT_PUBLIC_SITE_URL || "https://luminuslatam.com").replace(/\/$/, "");
   const eventUrl = `${domain}/proximasfechas/${params.slug}`;
 
-  let coverImageUrl = event.cover_url || `${domain}/logo-mails.png`;
-  if (coverImageUrl.startsWith("/")) {
-    coverImageUrl = `${domain}${coverImageUrl}`;
-  }
+  const rawCover = event.coverUrl || event.cover_url;
+  const fallbackCover = `${domain}/luminus_events.jpg`;
+  const coverImageUrl = rawCover
+    ? (rawCover.startsWith("http://") || rawCover.startsWith("https://")
+        ? rawCover
+        : `${domain}${rawCover.startsWith("/") ? "" : "/"}${rawCover}`)
+    : fallbackCover;
+
+  const imageMimeType = getImageMimeType(coverImageUrl);
 
   return {
     title,
-    description: cleanDescription,
-    alternates: {
-      canonical: eventUrl,
-    },
+    description: socialDescription,
+    alternates: { canonical: eventUrl },
     openGraph: {
       title,
-      description: cleanDescription,
+      description: socialDescription,
       url: eventUrl,
-      siteName: "LUMINUS",
+      siteName: "LUMINUS LATAM",
       locale: "es_LA",
       type: "website",
       images: [
@@ -57,52 +103,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           secureUrl: coverImageUrl,
           width: 1200,
           height: 630,
-          type: "image/jpeg",
-          alt: event.title || "Portada de Evento LUMINUS",
+          type: imageMimeType,
+          alt: event.title || "Entrevistas y Encuentros | LUMINUS LATAM",
         },
       ],
     },
     twitter: {
       card: "summary_large_image",
       title,
-      description: cleanDescription,
+      description: socialDescription,
       images: [coverImageUrl],
     },
   };
-}
-
-async function getEventBySlug(slug: string) {
-  let event = null;
-
-  try {
-    if (supabase) {
-      // 1. Try querying by slug first
-      const { data: dataBySlug } = await supabase
-        .from("events")
-        .select("*")
-        .eq("slug", slug)
-        .maybeSingle();
-
-      if (dataBySlug) {
-        event = dataBySlug;
-      } else {
-        // 2. Only query by id if slug is a valid UUID string
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
-        if (isUuid) {
-          const { data: dataById } = await supabase
-            .from("events")
-            .select("*")
-            .eq("id", slug)
-            .maybeSingle();
-          if (dataById) event = dataById;
-        }
-      }
-    }
-  } catch (err) {
-    console.warn("Could not fetch event from Supabase:", err);
-  }
-
-  return event;
 }
 
 export default async function DynamicEventRegistrationPage({ params }: PageProps) {

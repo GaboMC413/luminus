@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { supabase } from "@/lib/supabase";
+import { getDbEvents } from "@/lib/events";
 import {
   Navbar,
   Hero,
@@ -17,26 +17,52 @@ import {
   Footer,
 } from "@/components";
 
+import type { Metadata } from "next";
+
+export const revalidate = 0;
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "LUMINUS LATAM | Una red para conectar, aprender y cuidar tu bienestar",
+  description: "Conecta con especialistas de distintas disciplinas, descubre espacios y participa en actividades para acompañar tu bienestar en Latinoamérica.",
+  alternates: { canonical: "https://luminuslatam.com" },
+  openGraph: {
+    title: "LUMINUS LATAM | Una red para conectar, aprender y cuidar tu bienestar",
+    description: "Conecta con especialistas de distintas disciplinas, descubre espacios y participa en actividades para acompañar tu bienestar en Latinoamérica.",
+    url: "https://luminuslatam.com",
+    siteName: "LUMINUS LATAM",
+    images: [
+      {
+        url: "/luminus_platform.jpg",
+        secureUrl: "https://luminuslatam.com/luminus_platform.jpg",
+        width: 1200,
+        height: 630,
+        type: "image/jpeg",
+        alt: "LUMINUS LATAM | Una red para conectar, aprender y cuidar tu bienestar",
+      },
+    ],
+    locale: "es_LA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LUMINUS LATAM | Una red para conectar, aprender y cuidar tu bienestar",
+    description: "Conecta con especialistas de distintas disciplinas, descubre espacios y participa en actividades para acompañar tu bienestar en Latinoamérica.",
+    images: ["/luminus_platform.jpg"],
+  },
+};
 
 export default async function Home() {
-  let supabaseEvents: any[] = [];
+  let dbEvents: any[] = [];
   let jsonEvents: any[] = [];
 
-  try {
-    if (supabase) {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .order("date", { ascending: true });
-
-      if (data && data.length > 0) {
-        supabaseEvents = data;
-      }
-    }
-  } catch (err) {
-    console.warn("[Home] Could not connect to Supabase:", err);
+  // 1. Fetch from DB
+  const rawDb = await getDbEvents();
+  if (Array.isArray(rawDb) && rawDb.length > 0) {
+    dbEvents = rawDb;
   }
 
+  // 2. Fetch local JSON events fallback
   try {
     let jsonPath = path.join(process.cwd(), "apps", "marketing", "data", "youtube_videos.json");
     if (!fs.existsSync(jsonPath)) {
@@ -49,7 +75,23 @@ export default async function Home() {
     console.warn("[Home] Error reading youtube_videos.json:", fsErr);
   }
 
-  const events = [...supabaseEvents, ...jsonEvents];
+  // Deduplicate: DB events take priority over jsonEvents
+  const dbKeys = new Set<string>();
+  dbEvents.forEach((item) => {
+    const youtubeId = item.youtubeId || item.youtube_id;
+    if (youtubeId) dbKeys.add(youtubeId);
+    if (item.slug) dbKeys.add(item.slug);
+    if (item.title) dbKeys.add(item.title.trim().toLowerCase());
+  });
+
+  const filteredJsonEvents = jsonEvents.filter((item) => {
+    if (item.youtube_id && dbKeys.has(item.youtube_id)) return false;
+    if (item.slug && dbKeys.has(item.slug)) return false;
+    if (item.title && dbKeys.has(item.title.trim().toLowerCase())) return false;
+    return true;
+  });
+
+  const events = [...dbEvents, ...filteredJsonEvents];
 
   return (
     <div className="w-full min-h-screen bg-white text-slate-900 font-sans flex flex-col antialiased">

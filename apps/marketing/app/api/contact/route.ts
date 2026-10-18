@@ -1,21 +1,20 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { prisma } from "@/lib/db";
 import { sendContactNotificationEmail } from "@/lib/ses";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "";
-
-const supabaseServer = supabaseUrl && supabaseKey
-  ? createClient(supabaseUrl, supabaseKey)
-  : null;
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { nombre, apellido, email, telefono, pais, motivo, mensaje } = body;
+    const { nombre, apellido, email, telefono, pais, motivo, mensaje, turnstileToken } = body;
+
+    const turnstileResult = await verifyTurnstileToken(turnstileToken);
+    if (!turnstileResult.success) {
+      return NextResponse.json(
+        { error: turnstileResult.error },
+        { status: 400 }
+      );
+    }
 
     // Validación de campos requeridos
     if (!nombre || !apellido || !email || !motivo || !mensaje) {
@@ -25,31 +24,34 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Guardar en Supabase
+    const cleanNombre = nombre.trim();
+    const cleanApellido = apellido.trim();
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanTelefono = telefono ? telefono.trim() : null;
+    const cleanPais = pais ? pais.trim() : null;
+    const cleanMotivo = motivo.trim();
+    const cleanMensaje = mensaje.trim();
+
+    // 1. Guardar mensaje de contacto en PostgreSQL via Prisma
     let dbSuccess = false;
     let dbError = null;
 
-    if (supabaseServer) {
-      const { error } = await supabaseServer.from("contact_messages").insert([
-        {
-          nombre: nombre.trim(),
-          apellido: apellido.trim(),
-          email: email.trim(),
-          telefono: telefono ? telefono.trim() : null,
-          pais: pais ? pais.trim() : null,
-          motivo: motivo.trim(),
-          mensaje: mensaje.trim(),
+    try {
+      await prisma.contactMessage.create({
+        data: {
+          nombre: cleanNombre,
+          apellido: cleanApellido,
+          email: cleanEmail,
+          telefono: cleanTelefono,
+          pais: cleanPais,
+          motivo: cleanMotivo,
+          mensaje: cleanMensaje,
         },
-      ]);
-
-      if (error) {
-        console.error("[Supabase Error] Error al guardar contacto:", error);
-        dbError = error.message;
-      } else {
-        dbSuccess = true;
-      }
-    } else {
-      console.warn("[Supabase Warning] Cliente de Supabase no configurado.");
+      });
+      dbSuccess = true;
+    } catch (err: any) {
+      console.error("[Database Contact Error]:", err.message || err);
+      dbError = err.message || "Error al guardar mensaje en la base de datos.";
     }
 
     // 2. Enviar notificación por AWS SES
@@ -58,23 +60,29 @@ export async function POST(request: Request) {
 
     try {
       await sendContactNotificationEmail({
-        nombre: nombre.trim(),
-        apellido: apellido.trim(),
-        email: email.trim(),
-        telefono: telefono ? telefono.trim() : undefined,
-        pais: pais ? pais.trim() : undefined,
-        motivo: motivo.trim(),
-        mensaje: mensaje.trim(),
+        nombre: cleanNombre,
+        apellido: cleanApellido,
+        email: cleanEmail,
+        telefono: cleanTelefono || undefined,
+        pais: cleanPais || undefined,
+        motivo: cleanMotivo,
+        mensaje: cleanMensaje,
       });
       emailSuccess = true;
+      console.log(`[API Contact] Notificación por email enviada exitosamente para ${cleanEmail}`);
     } catch (err: any) {
-      console.error("[AWS SES Error] Error detallado al enviar email de notificación:", {
-        name: err?.name,
-        message: err?.message,
-        code: err?.code,
-        metadata: err?.$metadata,
-      });
+      console.error("[AWS SES Error] Error al enviar email de notificación:", err?.message || err);
       emailError = `${err?.name || "SESError"}: ${err?.message || "Error al enviar correo electrónico"}`;
+    }
+
+    if (!dbSuccess && !emailSuccess) {
+      return NextResponse.json(
+        {
+          error: "No pudimos procesar tu mensaje en este momento. Por favor intenta de nuevo más tarde o escríbenos directamente a info@luminuslatam.com.",
+          details: { dbError, emailError },
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({

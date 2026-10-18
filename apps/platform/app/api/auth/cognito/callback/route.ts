@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { decodeCognitoIdToken } from "@/lib/auth/cognito-password";
+import { getSafeRedirectUrl } from "@/lib/utils/url";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,7 @@ type CognitoStartState = {
   provider?: "Google";
   intent?: "signup" | "signin";
   plan?: "membership" | "free";
+  redirect?: string;
 };
 
 type CognitoIdentityClaim = {
@@ -61,11 +63,12 @@ function parseClientSecret(rawSecret?: string) {
 function getCognitoClientConfig() {
   const clientId = process.env.COGNITO_CLIENT_ID;
   const clientSecret = parseClientSecret(process.env.COGNITO_CLIENT_SECRET);
-  const domain = process.env.COGNITO_DOMAIN?.trim().replace(/\/$/, "");
+  let domain = process.env.COGNITO_DOMAIN?.trim().replace(/\/$/, "");
 
   if (!clientId || !domain) {
     throw new Error("Cognito OAuth is not configured.");
   }
+  domain = domain.replace(/\/(login|oauth2|logout).*$/i, "");
 
   const cognitoDomain = domain.startsWith("http://") || domain.startsWith("https://")
     ? domain
@@ -418,16 +421,7 @@ export async function GET(request: Request) {
       });
     }
 
-    if (isNewUser) {
-      try {
-        const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
-        await sendWelcomeMessage(prisma, user.id);
-        const { sendWelcomeEmail } = await import("@/lib/email/passwordResetEmail");
-        await sendWelcomeEmail(user.email, user.profile?.firstName || undefined);
-      } catch (welcomeError) {
-        console.error("Welcome message setup failed, proceeding with Cognito registration.", welcomeError);
-      }
-    }
+    // Welcome email and message will be sent when the user completes onboarding in /api/onboarding/profile
 
     const token = createSessionToken({
       userId: user.id,
@@ -463,10 +457,18 @@ export async function GET(request: Request) {
     }
 
     if (!user.profile?.isOnboarded) {
+      if (
+        storedState?.redirect &&
+        (storedState.redirect.includes("/auth/registrarse/especialista") ||
+          storedState.redirect.includes("/especialistas"))
+      ) {
+        return redirectTo(requestUrl, storedState.redirect);
+      }
       return redirectTo(requestUrl, "/perfil/completar");
     }
 
-    return redirectTo(requestUrl, "/comunidad");
+    const redirectTarget = getSafeRedirectUrl(storedState?.redirect, "/comunidad");
+    return redirectTo(requestUrl, redirectTarget);
   } catch (callbackError) {
     console.error("Cognito OAuth callback failed.", callbackError);
     const reason = callbackError instanceof Error ? encodeURIComponent(callbackError.message) : "unknown";

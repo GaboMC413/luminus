@@ -6,6 +6,7 @@ interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   onTogglePassword?: () => void;
   textAlign?: 'left' | 'center' | 'right';
   enterKeyHint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
+  rightIcon?: React.ReactNode;
 }
 
 export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({ 
@@ -15,6 +16,7 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({
   showPassword, 
   onTogglePassword,
   textAlign = 'left',
+  rightIcon,
   ...props 
 }, ref) => {
   
@@ -35,8 +37,13 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({
         {...props}
         ref={ref}
         type={inputType}
-        className={`${variantClass} ${alignmentClasses[textAlign]} ${className} ${isPassword && onTogglePassword ? 'pr-14' : ''} text-black disabled:text-slate-500 placeholder:text-slate-400`}
+        className={`${variantClass} ${alignmentClasses[textAlign]} ${className} ${isPassword && onTogglePassword ? 'pr-14' : rightIcon ? 'pr-12' : ''} text-black disabled:text-slate-500 placeholder:text-slate-400`}
       />
+      {rightIcon && !isPassword && (
+        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
+          {rightIcon}
+        </div>
+      )}
       {isPassword && onTogglePassword && (
         <button 
           type="button"

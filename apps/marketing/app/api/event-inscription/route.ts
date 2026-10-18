@@ -1,20 +1,11 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { prisma } from "@/lib/db";
 import { sendEventRegistrationEmail } from "@/lib/ses";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "";
-
-const supabaseServer = supabaseUrl && supabaseKey
-  ? createClient(supabaseUrl, supabaseKey)
-  : null;
-
-export async function POST(request: Request) {
+export async function POST(req: Request) {
   try {
-    const body = await request.json();
+    const body = await req.json();
     const {
       firstName,
       lastName,
@@ -26,112 +17,183 @@ export async function POST(request: Request) {
       eventDate,
       timeText,
       speakerName,
-      youtubeId,
       youtubeUrl,
       eventSlug,
-    } = body;
+      isResend,
+      turnstileToken,
+    } = body || {};
 
-    // Validation
-    if (!firstName || !lastName || !email || !eventTitle) {
+    const turnstileResult = await verifyTurnstileToken(turnstileToken);
+    if (!turnstileResult.success) {
       return NextResponse.json(
-        { error: "Nombre, apellido, email y título del evento son obligatorios." },
+        { success: false, error: turnstileResult.error },
         { status: 400 }
       );
     }
 
-    // 1. Save in Supabase
-    let dbSuccess = false;
-    let dbError = null;
+    if (!email || (!firstName && !isResend)) {
+      return NextResponse.json(
+        { success: false, error: "Faltan campos obligatorios (email y nombre)." },
+        { status: 400 }
+      );
+    }
 
-    if (supabaseServer) {
-      try {
-        const { data: contactData, error: contactError } = await supabaseServer
-          .from("contacts")
-          .upsert(
-            {
-              first_name: firstName.trim(),
-              last_name: lastName.trim(),
-              email: email.trim(),
-              city: city ? city.trim() : null,
-              marketing_consent: true,
-            },
-            { onConflict: "email" }
-          )
-          .select()
-          .single();
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanFirstName = firstName ? firstName.trim() : "";
+    const cleanLastName = lastName ? lastName.trim() : "";
+    
+    // Parse location string into city, state, country
+    const rawLoc = body?.location || city;
+    const parts = rawLoc ? String(rawLoc).split(",").map((p: string) => p.trim()).filter(Boolean) : [];
+    const parsedCity = parts.length > 0 ? parts[0] : null;
+    const parsedState = parts.length >= 3 ? parts.slice(1, -1).join(", ") : (parts.length === 2 ? parts[1] : null);
+    const parsedCountry = parts.length >= 3 ? parts[parts.length - 1] : null;
 
-        if (contactError) {
-          console.warn("[Supabase Warning] Contact upsert error:", contactError.message);
-          dbError = contactError.message;
-        } else {
-          dbSuccess = true;
-          const contactId = contactData?.id;
+    // 1. Resolve Event ID and event details from DB
+    let resolvedEventId: string | null = null;
+    let dbEvent: any = null;
 
-          if (contactId && eventId) {
-            const { error: inscriptionError } = await supabaseServer
-              .from("event_inscriptions")
-              .insert({
-                contact_id: contactId,
-                event_id: eventId,
-                attended: false,
-              });
+    if (eventId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId)) {
+      resolvedEventId = eventId;
+    }
 
-            if (inscriptionError) {
-              console.warn("[Supabase Warning] Inscription insert error:", inscriptionError.message);
-            }
-          }
+    try {
+      if (resolvedEventId) {
+        dbEvent = await prisma.event.findUnique({ where: { id: resolvedEventId } });
+      } else if (eventSlug || eventTitle) {
+        dbEvent = await prisma.event.findFirst({
+          where: {
+            OR: [
+              ...(eventSlug ? [{ slug: eventSlug }] : []),
+              ...(eventTitle ? [{ title: eventTitle }] : []),
+            ],
+          },
+        });
+        if (dbEvent) {
+          resolvedEventId = dbEvent.id;
         }
-      } catch (err: any) {
-        console.warn("[Supabase Error]:", err?.message);
-        dbError = err?.message;
+      }
+    } catch (findErr: any) {
+      console.warn("[Event Lookup Error]:", findErr.message || findErr);
+    }
+
+    // 2. Upsert EventGuest in Database
+    let guest = null;
+    try {
+      guest = await prisma.eventGuest.upsert({
+        where: { email: cleanEmail },
+        update: {
+          ...(cleanFirstName ? { firstName: cleanFirstName } : {}),
+          ...(cleanLastName ? { lastName: cleanLastName } : {}),
+          ...(parsedCity ? { city: parsedCity } : {}),
+          ...(parsedState ? { state: parsedState } : {}),
+          ...(parsedCountry ? { country: parsedCountry } : {}),
+          isGuest: true,
+        },
+        create: {
+          email: cleanEmail,
+          firstName: cleanFirstName || "Invitado",
+          lastName: cleanLastName,
+          city: parsedCity,
+          state: parsedState,
+          country: parsedCountry,
+          isGuest: true,
+        },
+      });
+    } catch (dbErr: any) {
+      console.error("[Database EventGuest Error]:", dbErr.message || dbErr);
+      return NextResponse.json(
+        { success: false, error: "Error de base de datos al guardar los datos de la persona." },
+        { status: 500 }
+      );
+    }
+
+    // 3. Check & Upsert EventInscription if resolvedEventId is present
+    let alreadyRegistered = false;
+    if (guest && resolvedEventId) {
+      try {
+        const existingInscription = await prisma.eventInscription.findUnique({
+          where: {
+            eventId_guestId: {
+              eventId: resolvedEventId,
+              guestId: guest.id,
+            },
+          },
+        });
+
+        if (existingInscription) {
+          alreadyRegistered = true;
+        }
+
+        await prisma.eventInscription.upsert({
+          where: {
+            eventId_guestId: {
+              eventId: resolvedEventId,
+              guestId: guest.id,
+            },
+          },
+          update: {},
+          create: {
+            eventId: resolvedEventId,
+            guestId: guest.id,
+          },
+        });
+      } catch (insErr: any) {
+        console.error("[Database EventInscription Error]:", insErr.message || insErr);
+        return NextResponse.json(
+          { success: false, error: "Error de base de datos al vincular la inscripción." },
+          { status: 500 }
+        );
       }
     }
 
-    // 2. Send confirmation email via AWS SES
-    let emailSuccess = false;
-    let emailError = null;
+    // 4. Send confirmation email via AWS SES from eventos@luminuslatam.com
+    // Always trigger email for every event registration or confirmation request
+    let emailStatus = "sent";
+    let emailError: string | undefined = undefined;
 
-    // Format Youtube URL if not explicitly provided
-    const finalYoutubeUrl =
-      youtubeUrl ||
-      (youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : null);
+    const rawYt = youtubeUrl || body?.youtubeId || null;
+    let finalYoutubeUrl: string | undefined = undefined;
+    if (rawYt && rawYt.trim()) {
+      const trimmed = rawYt.trim();
+      finalYoutubeUrl = (trimmed.startsWith("http://") || trimmed.startsWith("https://")) ? trimmed : `https://www.youtube.com/watch?v=${trimmed}`;
+    } else if (dbEvent?.youtubeId) {
+      finalYoutubeUrl = `https://www.youtube.com/watch?v=${dbEvent.youtubeId}`;
+    } else if (dbEvent?.link && (dbEvent.link.includes("youtube") || dbEvent.link.includes("youtu.be"))) {
+      finalYoutubeUrl = dbEvent.link;
+    }
 
     try {
-      await sendEventRegistrationEmail({
-        firstName: firstName.trim(),
-        lastName: lastName ? lastName.trim() : undefined,
-        email: email.trim(),
-        eventTitle: eventTitle.trim(),
-        eventCoverUrl: eventCoverUrl || null,
-        eventDate: eventDate || null,
-        timeText: timeText || null,
-        speakerName: speakerName || null,
+      console.log(`[SES START] Procesando envío de email para ${cleanEmail} (evento: ${eventTitle || dbEvent?.title || "Evento LUMINUS"})...`);
+      const emailRes = await sendEventRegistrationEmail({
+        firstName: guest.firstName || cleanFirstName || "Invitado",
+        lastName: guest.lastName || cleanLastName,
+        email: cleanEmail,
+        eventTitle: eventTitle || dbEvent?.title || "Evento de Bienestar LUMINUS",
+        eventCoverUrl: eventCoverUrl || dbEvent?.coverUrl || null,
+        eventDate: eventDate || (dbEvent?.date ? dbEvent.date.toISOString() : null),
+        timeText: timeText || dbEvent?.timeText || null,
+        speakerName: speakerName || dbEvent?.speakerName || null,
         youtubeUrl: finalYoutubeUrl,
-        eventSlug: eventSlug || null,
+        eventSlug: eventSlug || dbEvent?.slug || null,
       });
-      emailSuccess = true;
-    } catch (err: any) {
-      console.error("[AWS SES Event Email Error]:", {
-        name: err?.name,
-        message: err?.message,
-        code: err?.code,
-      });
-      emailError = `${err?.name || "SESError"}: ${err?.message || "Error enviando correo"}`;
+      console.log(`[Event Registration Email Sent]: ${cleanEmail} (resend=${!!isResend}) MessageId:`, (emailRes as any)?.messageId || "local-preview");
+    } catch (emailErr: any) {
+      console.error("❌ Error enviando email de confirmación:", JSON.stringify(emailErr, null, 2));
+      emailStatus = "failed";
+      emailError = emailErr?.message || String(emailErr);
     }
 
     return NextResponse.json({
       success: true,
-      dbSaved: dbSuccess,
-      emailSent: emailSuccess,
-      warnings: {
-        ...(dbError ? { dbError } : {}),
-        ...(emailError ? { emailError } : {}),
-      },
+      alreadyRegistered,
+      emailStatus,
+      ...(emailError ? { emailError } : {}),
     });
-  } catch (error: any) {
-    console.error("[API Event Inscription Error]:", error);
+  } catch (err: any) {
+    console.error("[Event Inscription Route Error]:", err.message || err);
     return NextResponse.json(
-      { error: "Ocurrió un error interno procesando la inscripción." },
+      { success: false, error: err.message || "Error al procesar la inscripción." },
       { status: 500 }
     );
   }

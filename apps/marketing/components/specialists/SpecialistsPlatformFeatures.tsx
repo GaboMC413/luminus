@@ -37,22 +37,22 @@ export function SpecialistsPlatformFeatures() {
   return (
     <section className="w-full bg-luminus-magenta text-white overflow-hidden">
       <div className="max-w-[1440px] mx-auto flex flex-col lg:flex-row items-stretch min-h-[640px]">
-        
-        {/* Left Column: Full-Bleed Image */}
-        <div className="w-full lg:w-1/2 min-h-[360px] lg:min-h-[640px] relative bg-luminus-magenta-light">
+
+        {/* Left Column: Image (40% width to give 2-col grid more space) */}
+        <div className="w-full lg:w-[40%] xl:w-[38%] min-h-[360px] lg:min-h-[640px] relative bg-luminus-magenta-light">
           <Image
             src="/Photos/Tres personas de pie sonriendo.png"
             alt="Herramientas para desarrollar tu práctica LUMINUS"
             fill
             className="object-cover"
-            sizes="(max-width: 1024px) 100vw, 50vw"
+            sizes="(max-width: 1024px) 100vw, 40vw"
             priority
           />
         </div>
 
-        {/* Right Column: Title & 6 Features Grid */}
-        <div className="w-full lg:w-1/2 p-8 md:p-14 lg:p-16 flex flex-col justify-center gap-8">
-          
+        {/* Right Column: Title & 6 Features Grid (60% width) */}
+        <div className="w-full lg:w-[60%] xl:w-[62%] p-8 md:p-12 lg:p-14 xl:p-16 flex flex-col justify-center gap-8">
+
           <div className="flex flex-col gap-3">
             <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-white">
               Herramientas para desarrollar tu práctica
@@ -60,7 +60,7 @@ export function SpecialistsPlatformFeatures() {
           </div>
 
           {/* 6 Features Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 xl:gap-x-12 gap-y-7 pt-2">
             {PLATFORM_FEATURES.map((item, index) => (
               <div key={index} className="flex items-start gap-3.5">
                 <span
@@ -81,6 +81,16 @@ export function SpecialistsPlatformFeatures() {
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* Black CTA Button */}
+          <div className="pt-2 w-full sm:w-auto">
+            <a
+              href="https://app.luminuslatam.com/auth/registrarse/especialista"
+              className="flex sm:inline-flex items-center justify-center px-8 py-3.5 bg-black hover:bg-slate-900 text-white text-base font-normal rounded-2xl text-center w-full sm:w-auto sm:min-w-[240px] transition-colors shadow-none cursor-pointer"
+            >
+              Registrarme como Especialista
+            </a>
           </div>
 
         </div>

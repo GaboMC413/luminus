@@ -1,7 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    externalDir: true,
+  },
+  env: {
+    DATABASE_URL: process.env.DATABASE_URL,
+  },
   images: {
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.amazonaws.com',
+        pathname: '/**',
+      },
       {
         protocol: 'https',
         hostname: 'i.ytimg.com',
@@ -17,12 +28,12 @@ const nextConfig = {
   webpack: (config, { dev }) => {
     if (dev) {
       config.watchOptions = {
-        poll: 1000, // Check for changes every second
-        aggregateTimeout: 300, // Delay before rebuilding
+        poll: 1000,
+        aggregateTimeout: 300,
       };
     }
     return config;
   },
-}
+};
 
 module.exports = nextConfig;

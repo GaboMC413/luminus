@@ -12,31 +12,31 @@ const DISCIPLINES = [
   {
     title: "Bienestar Emocional",
     color: "#E855C8",
-    description: "Psicología, psicoterapia y enfoques orientados a comprender, expresar y gestionar las emociones.",
+    description: "Psicología, psicoterapia y otros abordajes orientados al cuidado y la comprensión del bienestar emocional.",
     icon: "/Icons/mood_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Salud Integral",
     color: "#0450FB",
-    description: "Medicina, fisioterapia y otras disciplinas vinculadas a la prevención, el cuidado y la salud integral.",
+    description: "Medicina, fisioterapia y otras disciplinas vinculadas con la prevención, el cuidado y la salud.",
     icon: "/Icons/ecg_heart_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Movimiento Físico",
     color: "#E63946",
-    description: "Entrenamiento, movilidad y prácticas corporales orientadas a desarrollar y cuidar el cuerpo.",
+    description: "Entrenamiento, movilidad y prácticas corporales orientadas al movimiento, la fuerza y el cuidado del cuerpo.",
     icon: "/Icons/exercise_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Nutrición",
     color: "#A8C800",
-    description: "Nutrición y acompañamiento profesional relacionado con la alimentación y los hábitos.",
+    description: "Nutrición y acompañamiento profesional en alimentación, hábitos y bienestar.",
     icon: "/Icons/nutrition_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
     title: "Espiritualidad",
     color: "#6D28D9",
-    description: "Meditación, mindfulness y prácticas orientadas al autoconocimiento, la conciencia y el desarrollo interior.",
+    description: "Meditación, mindfulness y otras prácticas vinculadas con el autoconocimiento, la conciencia y el desarrollo interior.",
     icon: "/Icons/self_improvement_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
   {
@@ -48,7 +48,7 @@ const DISCIPLINES = [
   {
     title: "Terapias Complementarias",
     color: "#0FA87A",
-    description: "Prácticas complementarias que incorporan diferentes enfoques para acompañar el bienestar.",
+    description: "Disciplinas y prácticas complementarias que aportan otras formas de acompañar el bienestar.",
     icon: "/Icons/spa_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
   },
 ];
@@ -102,7 +102,7 @@ export function SpecialistsDisciplines() {
       <div className="w-full max-w-[1440px] mx-auto px-4 md:px-10">
         <div className="flex flex-col items-center text-center gap-4 max-w-[960px] mx-auto">
           <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
-            Profesionales con enfoques y recorridos que abordan el bienestar desde diferentes perspectivas.
+            Especialistas que trabajan el bienestar desde distintas áreas.
           </h2>
         </div>
       </div>

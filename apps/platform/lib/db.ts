@@ -1,5 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 
+if (!process.env.DATABASE_URL) {
+  console.error("❌ DATABASE_URL no está definida en runtime");
+}
+
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };

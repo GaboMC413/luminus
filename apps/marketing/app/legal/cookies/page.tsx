@@ -4,8 +4,38 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
-  title: "Política de Cookies | LUMINUS Latam",
-  description: "Detalla el uso de cookies y tecnologías de seguimiento destinadas a optimizar y personalizar tu experiencia de navegación.",
+  title: "Política de Cookies | LUMINUS LATAM",
+  description:
+    "Detalla el uso de cookies y tecnologías de seguimiento destinadas a optimizar y personalizar tu experiencia de navegación.",
+  alternates: {
+    canonical: "https://luminuslatam.com/legal/cookies",
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_LA",
+    url: "https://luminuslatam.com/legal/cookies",
+    siteName: "LUMINUS LATAM",
+    title: "Política de Cookies | LUMINUS LATAM",
+    description:
+      "Detalla el uso de cookies y tecnologías de seguimiento destinadas a optimizar y personalizar tu experiencia de navegación.",
+    images: [
+      {
+        url: "https://luminuslatam.com/luminus_platform.jpg",
+        secureUrl: "https://luminuslatam.com/luminus_platform.jpg",
+        width: 1200,
+        height: 630,
+        type: "image/jpeg",
+        alt: "LUMINUS LATAM - Política de Cookies",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Política de Cookies | LUMINUS LATAM",
+    description:
+      "Detalla el uso de cookies y tecnologías de seguimiento destinadas a optimizar y personalizar tu experiencia de navegación.",
+    images: ["https://luminuslatam.com/luminus_platform.jpg"],
+  },
 };
 
 export default function CookiesPage() {

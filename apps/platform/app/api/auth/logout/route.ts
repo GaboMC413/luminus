@@ -4,8 +4,9 @@ import { clearSessionCookie } from "@/lib/auth/session";
 export const runtime = "nodejs";
 
 function getCognitoDomain() {
-  const domain = process.env.COGNITO_DOMAIN?.trim().replace(/\/$/, "");
+  let domain = process.env.COGNITO_DOMAIN?.trim().replace(/\/$/, "");
   if (!domain) return null;
+  domain = domain.replace(/\/(login|oauth2|logout).*$/i, "");
   return domain.startsWith("http://") || domain.startsWith("https://") ? domain : `https://${domain}`;
 }
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCognitoErrorMessage, getCognitoErrorStatus, signUpWithCognito } from "@/lib/auth/cognito-password";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { serializeUser, validateAuthInput } from "@/lib/auth/validation";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export const runtime = "nodejs";
 
@@ -11,6 +12,11 @@ export async function POST(request: Request) {
 
   if (!validation.ok) {
     return NextResponse.json({ message: validation.message }, { status: 400 });
+  }
+
+  const turnstileResult = await verifyTurnstileToken(body?.turnstileToken);
+  if (!turnstileResult.success) {
+    return NextResponse.json({ message: turnstileResult.error }, { status: 400 });
   }
 
   try {
@@ -33,7 +39,18 @@ export async function POST(request: Request) {
       );
     }
 
-    const cognitoUser = await signUpWithCognito(validation.email, validation.password);
+    let cognitoUser;
+    try {
+      cognitoUser = await signUpWithCognito(validation.email, validation.password);
+    } catch (cognitoError: any) {
+      if (cognitoError?.code === "UsernameExistsException") {
+        const { adminDeleteCognitoUser } = await import("@/lib/auth/cognito-admin");
+        await adminDeleteCognitoUser(validation.email);
+        cognitoUser = await signUpWithCognito(validation.email, validation.password);
+      } else {
+        throw cognitoError;
+      }
+    }
     
     // Si el bypass local/dev está activo o ya está confirmado (ej. por SSO), autoconfirmar
     if (!cognitoUser.userConfirmed && process.env.SKIP_EMAIL_VERIFICATION === "true") {
@@ -63,14 +80,7 @@ export async function POST(request: Request) {
       include: { profile: true },
     });
 
-    try {
-      const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
-      await sendWelcomeMessage(prisma, user.id);
-      const { sendWelcomeEmail } = await import("@/lib/email/passwordResetEmail");
-      await sendWelcomeEmail(user.email, user.profile?.firstName || undefined);
-    } catch (welcomeError) {
-      console.error("Welcome message/email setup failed, proceeding with registration.", welcomeError);
-    }
+    // Welcome email and message will be sent when the user verifies their email / completes registration
 
     // Si no está confirmado (y no hubo bypass), pedir verificación de correo en el frontend
     if (!cognitoUser.userConfirmed) {
@@ -102,11 +112,14 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ user: serializeUser(user) }, { status: 201 });
-  } catch (error) {
-    console.error("Cognito registration flow failed.", error);
+  } catch (error: any) {
+    console.error("Cognito registration flow failed:", error);
+    const cognitoMsg = getCognitoErrorMessage(error, "");
+    const rawMsg = error?.message || error?.toString?.() || "";
+    const finalMessage = cognitoMsg || rawMsg || "No pudimos crear tu cuenta en este momento.";
     return NextResponse.json(
-      { message: getCognitoErrorMessage(error, "No pudimos crear tu cuenta en este momento.") },
-      { status: getCognitoErrorStatus(error) },
+      { message: finalMessage },
+      { status: getCognitoErrorStatus(error, 500) },
     );
   }
 }

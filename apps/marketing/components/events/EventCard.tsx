@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { checkIsUpcoming } from "@/lib/events";
 
 export interface EventItem {
   id?: string;
@@ -12,6 +13,7 @@ export interface EventItem {
   category?: string;
   date?: string;
   publishTimeText?: string;
+  coverUrl?: string | null;
   cover_url?: string | null;
   youtube_id?: string;
   link?: string;
@@ -25,12 +27,44 @@ interface EventCardProps {
   item: EventItem;
 }
 
+function parseCalendarDate(dateStr?: string | Date | null): Date | null {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? null : dateStr;
+  const str = String(dateStr).trim();
+  if (!str) return null;
+
+  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    return new Date(year, month, day);
+  }
+
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+const MONTH_NAMES_ES = [
+  "ene", "feb", "mar", "abr", "may", "jun",
+  "jul", "ago", "sep", "oct", "nov", "dic"
+];
+
 function formatDate(dateStr?: string): string {
   if (!dateStr) return "";
   try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
+    const d = parseCalendarDate(dateStr);
+    if (!d) return dateStr;
+
+    const now = new Date();
+    const sameYear = d.getFullYear() === now.getFullYear();
+    const day = d.getDate();
+    const month = MONTH_NAMES_ES[d.getMonth()];
+
+    if (sameYear) {
+      return `${day} de ${month}`;
+    }
+    return `${day} de ${month} de ${d.getFullYear()}`;
   } catch {
     return dateStr;
   }
@@ -43,42 +77,87 @@ function getYoutubeId(url?: string): string | null {
   return match && match[2].length === 11 ? match[2] : null;
 }
 
+function formatUpcomingDateHeader(dateStr?: string, timeText?: string) {
+  if (!dateStr) return { tag: "PRÓXIMAMENTE", dateText: "" };
+  try {
+    const d = parseCalendarDate(dateStr);
+    if (!d) return { tag: "PRÓXIMAMENTE", dateText: dateStr };
+
+    const weekdayRaw = d.toLocaleDateString("es-ES", { weekday: "long" });
+    const weekday = weekdayRaw.charAt(0).toUpperCase() + weekdayRaw.slice(1);
+
+    const day = d.getDate();
+    const month = MONTH_NAMES_ES[d.getMonth()];
+
+    const cleanTime = timeText
+      ? timeText.replace(/\s*\([^)]*GMT[^)]*\)/gi, "").replace(/\s*\([^)]*UTC[^)]*\)/gi, "").trim()
+      : "18:00 hs";
+
+    return {
+      tag: "PRÓXIMAMENTE",
+      dateText: `${weekday} ${day} de ${month}. ${cleanTime}`,
+    };
+  } catch {
+    return { tag: "PRÓXIMAMENTE", dateText: dateStr || "" };
+  }
+}
+
+function isSpeakerNameValid(speakerName?: string, title?: string) {
+  if (!speakerName) return false;
+  const cleanName = speakerName.trim();
+  if (
+    cleanName === "Especialista LUMINUS" ||
+    cleanName === "Especialistas LUMINUS" ||
+    cleanName === "Especialista" ||
+    cleanName === "LUMINUS"
+  ) {
+    return false;
+  }
+  if (title) {
+    const cleanTitle = title.trim().toLowerCase();
+    const cleanSpeaker = cleanName.toLowerCase();
+    if (cleanTitle === cleanSpeaker) return false;
+    if (cleanSpeaker.length >= 4 && cleanTitle.includes(cleanSpeaker)) return false;
+  }
+  return true;
+}
+
 export function EventCard({ item }: EventCardProps) {
   const ytId = item.youtube_id || getYoutubeId(item.link) || "";
-  const thumbUrl =
-    item.cover_url ||
-    (ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : "/placeholder-video.jpg");
-  const displayDate = item.date ? formatDate(item.date) : item.publishTimeText || "";
+  const thumbUrl = item.coverUrl || item.cover_url || "/placeholder-video.jpg";
+  const isUpcoming = checkIsUpcoming(item);
+  const upcomingHeader = isUpcoming ? formatUpcomingDateHeader(item.date, item.time_text) : { tag: "", dateText: "" };
+  const displayDate = isUpcoming ? upcomingHeader.dateText : (item.date ? formatDate(item.date) : item.publishTimeText || "");
   const videoLink = item.link || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : undefined);
   const hasVideo = Boolean(ytId || videoLink);
 
   return (
-    <div className="w-full min-h-0 sm:min-h-[320px] h-full bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col group shadow-none">
+    <div className="w-full h-[390px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col group shadow-none">
 
-      {/* Thumbnail — edge-to-edge, no extra border radius */}
+      {/* Thumbnail — edge-to-edge with matching top rounded corners */}
       {hasVideo && videoLink ? (
         <a
           href={videoLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full aspect-video relative overflow-hidden bg-slate-200 shrink-0 block hover:opacity-95 transition-opacity"
+          className="w-full aspect-video relative overflow-hidden bg-slate-100 shrink-0 block hover:opacity-95 transition-opacity rounded-t-[15px]"
         >
           <Image
             src={thumbUrl}
             alt={item.title}
             fill
-            className="object-cover object-center"
+            className="object-cover object-center rounded-t-[15px]"
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             unoptimized
           />
         </a>
       ) : (
-        <div className="w-full aspect-video relative overflow-hidden bg-slate-200 shrink-0 block">
+        <div className="w-full aspect-video relative overflow-hidden bg-slate-100 shrink-0 block rounded-t-[15px]">
           <Image
             src={thumbUrl}
             alt={item.title}
             fill
-            className="object-cover object-center"
+            className="object-cover object-center rounded-t-[15px]"
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             unoptimized
           />
@@ -88,16 +167,25 @@ export function EventCard({ item }: EventCardProps) {
       {/* Content */}
       <div className="w-full flex-1 p-4 flex flex-col justify-between items-start gap-3">
         <div className="w-full flex flex-col gap-2">
+          {/* 1. Date / PROXIMAMENTE at the top */}
+          {isUpcoming ? (
+            <div className="w-full flex justify-start items-center gap-1.5 text-xs font-medium truncate h-4">
+              <span className="font-medium text-slate-900 tracking-tight shrink-0">
+                {upcomingHeader.tag}
+              </span>
+              <span className="text-slate-500 truncate">
+                {upcomingHeader.dateText}
+              </span>
+            </div>
+          ) : displayDate ? (
+            <div className="w-full flex justify-start items-center text-xs font-medium text-slate-500 h-4">
+              <span>{displayDate}</span>
+            </div>
+          ) : (
+            <div className="h-4" />
+          )}
 
-          {/* Speaker + Date row */}
-          <div className="w-full flex justify-between items-center text-xs text-slate-500 font-medium">
-            <span className="truncate max-w-[150px] sm:max-w-[200px]">
-              {item.speaker_name || "Especialista LUMINUS"}
-            </span>
-            {displayDate && <span>{displayDate}</span>}
-          </div>
-
-          {/* Title */}
+          {/* 2. Title */}
           {hasVideo && videoLink ? (
             <a
               href={videoLink}
@@ -105,15 +193,24 @@ export function EventCard({ item }: EventCardProps) {
               rel="noopener noreferrer"
               className="no-underline hover:text-red-600 transition-colors block"
             >
-              <h3 className="w-full text-base font-semibold text-slate-900 leading-snug line-clamp-2">
+              <h3 className="w-full text-base font-semibold text-slate-900 leading-snug line-clamp-2 min-h-[44px]">
                 {item.title}
               </h3>
             </a>
           ) : (
-            <h3 className="w-full text-base font-semibold text-slate-900 leading-snug line-clamp-2">
+            <h3 className="w-full text-base font-semibold text-slate-900 leading-snug line-clamp-2 min-h-[44px]">
               {item.title}
             </h3>
           )}
+
+          {/* 3. Speaker name below title - fixed height slot for exact alignment */}
+          <div className="h-5 flex items-center">
+            {isSpeakerNameValid(item.speaker_name, item.title) && (
+              <span className="text-xs font-medium text-slate-500 truncate max-w-full">
+                Con {item.speaker_name!.startsWith('Con ') ? item.speaker_name!.slice(4) : item.speaker_name}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Footer */}

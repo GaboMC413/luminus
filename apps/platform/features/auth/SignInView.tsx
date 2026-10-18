@@ -8,6 +8,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
 import { VerificationModal } from "./VerificationModal";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
+
+import { getSafeRedirectUrl } from "@/lib/utils/url";
 
 function GoogleIcon() {
   return (
@@ -41,11 +44,23 @@ export default function SignInView() {
   const [showPassword, setShowPassword] = useState(false);
   const [reactivateModalOpen, setReactivateModalOpen] = useState(false);
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const getRedirectTarget = () => {
+    if (typeof window === "undefined") return "/comunidad";
+    const params = new URLSearchParams(window.location.search);
+    return getSafeRedirectUrl(params.get("redirect"));
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
 
     const params = new URLSearchParams(window.location.search);
+    const emailParam = params.get("email");
+    if (emailParam) {
+      setEmail(emailParam.trim());
+    }
+
     if (params.get("error") === "google_config" || params.get("error") === "cognito_config") {
       setMessage({
         text: "Google todavia no esta configurado en este entorno.",
@@ -67,7 +82,11 @@ export default function SignInView() {
   }, []);
 
   const handleGoogleSignIn = () => {
-    window.location.href = "/api/auth/cognito/start?provider=google&intent=signin";
+    const target = getRedirectTarget();
+    const googleUrl = target !== "/comunidad"
+      ? `/api/auth/cognito/start?provider=google&intent=signin&redirect=${encodeURIComponent(target)}`
+      : "/api/auth/cognito/start?provider=google&intent=signin";
+    window.location.href = googleUrl;
   };
 
   const handleSignIn = async (reactivate = false) => {
@@ -84,7 +103,7 @@ export default function SignInView() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, password, reactivate }),
+        body: JSON.stringify({ email, password, reactivate, turnstileToken }),
       });
       const data = await response.json();
 
@@ -101,7 +120,7 @@ export default function SignInView() {
         return;
       }
 
-      router.push("/comunidad");
+      router.push(getRedirectTarget());
     } catch {
       setMessage({ text: "No pudimos conectar con el servidor.", type: "error" });
     } finally {
@@ -120,7 +139,7 @@ export default function SignInView() {
       try {
         const response = await fetch("/api/auth/reactivate-oauth", { method: "POST" });
         if (response.ok) {
-          router.push("/comunidad");
+          router.push(getRedirectTarget());
         } else {
           setMessage({ text: "No pudimos reactivar tu cuenta de Google. Intenta nuevamente.", type: "error" });
         }
@@ -167,8 +186,8 @@ export default function SignInView() {
       {/* 2. Right Form Pane - No shadows, no borders, plain elements on slate-50 */}
       <div className="flex-1 flex flex-col bg-slate-50 min-h-0 h-full overflow-hidden pt-14 lg:pt-0">
 
-        {/* Mobile Header: Logo (only visible on mobile) */}
-        <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-light-gradient-slate border-b-0 flex items-center justify-center shrink-0 z-50">
+        {/* Mobile Header: Logo (only visible on mobile, no border, no line) */}
+        <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 bg-slate-50 flex items-center justify-center shrink-0 z-50 border-none shadow-none">
           <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
             <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[20px]" />
           </Link>
@@ -222,6 +241,11 @@ export default function SignInView() {
                 />
               </div>
 
+              <TurnstileWidget
+                onSuccess={(token) => setTurnstileToken(token)}
+                onExpire={() => setTurnstileToken(null)}
+              />
+
               {message.text && (
                 <p className={`text-left px-0 mt-4 text-body-small font-bold ${message.type === 'error' ? 'text-red-500' : 'text-green-600'} tracking-[-0.03em]`}>
                   {message.text}
@@ -267,7 +291,13 @@ export default function SignInView() {
 
             <div className="flex flex-col items-center mt-2">
               <button
-                onClick={() => router.push("/auth/registrarse")}
+                onClick={() => {
+                  const target = getRedirectTarget();
+                  const signUpUrl = target !== "/comunidad"
+                    ? `/auth/registrarse?redirect=${encodeURIComponent(target)}`
+                    : "/auth/registrarse";
+                  router.push(signUpUrl);
+                }}
                 className="text-slate-500 hover:text-slate-900 text-body-small cursor-pointer bg-transparent border-none outline-none"
               >
                 ¿Primera vez en LUMINUS? <span className="underline font-semibold text-slate-900">Regístrate gratis</span>

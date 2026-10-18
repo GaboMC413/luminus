@@ -3,11 +3,13 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, MessageSquare, Send, Sparkles } from "lucide-react";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 export default function ContactoClient() {
   // Form states
   const [formData, setFormData] = useState({
     nombre: "",
+    apellido: "",
     email: "",
     telefono: "",
     motivo: "",
@@ -16,6 +18,8 @@ export default function ContactoClient() {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   // Input change handler
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -24,18 +28,48 @@ export default function ContactoClient() {
       ...prev,
       [name]: value,
     }));
+    if (errorMessage) setErrorMessage("");
   };
 
   // Form submit handler
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setErrorMessage("");
     
-    // Simulate high-fidelity network request (1 second timeout)
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // Split full name if needed
+      const nameParts = formData.nombre.trim().split(" ");
+      const nombre = nameParts[0] || "";
+      const apellido = nameParts.slice(1).join(" ") || formData.apellido || "N/A";
+
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre,
+          apellido,
+          email: formData.email,
+          telefono: formData.telefono,
+          motivo: formData.motivo,
+          mensaje: formData.mensaje,
+          turnstileToken,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorMessage(data.error || "No pudimos enviar tu mensaje. Intenta nuevamente.");
+        return;
+      }
+
       setIsSuccess(true);
-    }, 1000);
+    } catch (err) {
+      setErrorMessage("No pudimos conectar con el servidor. Intenta nuevamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -198,6 +232,17 @@ export default function ContactoClient() {
                   Puedes incluir el contexto de tu consulta, dudas específicas o el tipo de contacto que estás buscando.
                 </span>
               </div>
+
+              <TurnstileWidget
+                onSuccess={(token) => setTurnstileToken(token)}
+                onExpire={() => setTurnstileToken(null)}
+              />
+
+              {errorMessage && (
+                <p className="text-sm font-bold text-red-600 text-center tracking-tight my-2">
+                  {errorMessage}
+                </p>
+              )}
 
               {/* Submit Button */}
               <button

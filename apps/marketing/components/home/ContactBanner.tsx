@@ -7,7 +7,7 @@ export function ContactBanner() {
       <div className="w-full max-w-[1440px] mx-auto flex flex-col lg:flex-row items-stretch min-h-[620px]">
 
         {/* Left 50% Column: Text & CTA */}
-        <div className="w-full lg:w-1/2 p-8 md:p-14 lg:p-16 flex flex-col justify-center gap-6">
+        <div className="w-full lg:w-1/2 py-14 px-8 sm:p-14 md:p-14 lg:p-16 flex flex-col justify-center gap-6">
           <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-white">
             Hacer el bienestar más cercano
           </h2>
@@ -16,7 +16,7 @@ export function ContactBanner() {
               Nacimos con el propósito de hacer el bienestar más cercano, simple y accesible. Creamos una red abierta para descubrir profesionales, herramientas y nuevas perspectivas que te ayuden a vivir mejor. Si quieres conocernos, compartir tu propuesta o hacernos alguna pregunta, escríbenos.
             </p>
           </div>
-          <div className="pt-2">
+          <div className="pt-2 w-full sm:w-auto">
             <Link
               href="/contacto"
               className="flex sm:inline-flex items-center justify-center w-full sm:w-auto py-3.5 px-8 text-base font-normal text-slate-950 bg-white hover:bg-slate-100 rounded-2xl text-center sm:min-w-[240px] transition-colors"

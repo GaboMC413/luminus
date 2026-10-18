@@ -118,6 +118,9 @@ export function ProfileContent() {
     if (!loading && profile) {
       const editParam = searchParams.get("edit");
       if (editParam) {
+        if (editParam === "interests" || editParam === "intereses") {
+          setShowEditInterests(true);
+        }
         // Wait a frame for the DOM to render the .glow-highlight class, then scroll to it smoothly
         setTimeout(() => {
           const highlightedEl = document.querySelector(".glow-highlight");
@@ -318,6 +321,7 @@ export function ProfileContent() {
                   otherInterests={profile.other_interests}
                   onEdit={() => setShowEditInterests(true)}
                   firstName={profile.first_name}
+                  highlight={editParam === "interests" || editParam === "intereses"}
                 />
 
                 <ProfileCompletionCard

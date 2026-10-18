@@ -9,7 +9,8 @@
     "dev:platform": "npm run dev -w platform",
     "dev:marketing": "npm run dev -w marketing",
     "build:platform": "npm run build -w platform",
-    "build:marketing": "npm run build -w marketing"
+    "build:marketing": "npm run build -w marketing",
+    "test:platform": "npm run test -w platform"
   },
   "devDependencies": {
     "@aws-amplify/backend": "^1.5.1",

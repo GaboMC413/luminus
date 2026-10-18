@@ -6,9 +6,10 @@ import { getCurrentSession } from "@/lib/auth/session";
 import {
   ALLOWED_RESUME_CONTENT_TYPES,
   extensionForResumeContentType,
-  getResumeStorageConfig,
+  getS3Config,
   MAX_RESUME_SIZE_BYTES,
   normalizeResumeFileName,
+  createS3Client,
 } from "@/lib/resumeStorage";
 
 export const runtime = "nodejs";
@@ -37,27 +38,31 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { bucket, region, accessKeyId, secretAccessKey } = getResumeStorageConfig();
+    const { bucket } = getS3Config();
     const fileName = normalizeResumeFileName(body?.fileName, extension);
-    const key = `resumes/${session.userId}/${randomUUID()}.${extension}`;
-    const s3 = new S3Client({
-      region,
-      credentials: {
-        accessKeyId,
-        secretAccessKey,
-      },
-    });
+    const userIdOrGuest = session?.userId || `guest-${randomUUID()}`;
+    const key = `resumes/${userIdOrGuest}/${randomUUID()}.${extension}`;
+
+    const s3 = createS3Client();
+
     const command = new PutObjectCommand({
       Bucket: bucket,
       Key: key,
       ContentType: contentType,
       CacheControl: "private, no-store",
       Metadata: {
-        owner: session.userId,
+        owner: userIdOrGuest,
         originalfilename: encodeURIComponent(fileName),
       },
     });
-    const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 60 });
+
+    const uploadUrl = await getSignedUrl(s3, command, {
+      expiresIn: 60,
+      unhoistableHeaders: new Set([
+        "x-amz-meta-owner",
+        "x-amz-meta-originalfilename",
+      ]),
+    });
 
     return NextResponse.json({ uploadUrl, key, fileName, contentType, contentLength, owner: session.userId });
   } catch (error: any) {

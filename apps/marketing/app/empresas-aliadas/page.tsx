@@ -12,8 +12,38 @@ import { Badge } from "../../components/ui/Badge";
 import { empresasAliadasContent } from "../../content/empresas-aliadas";
 
 export const metadata: Metadata = {
-  title: "Empresas Aliadas | LUMINUS Latam",
-  description: "Co-diseña el futuro del bienestar regional con nosotros. Únete a las organizaciones que integran salud integral y desarrollo humano en América Latina.",
+  title: "Empresas Aliadas | LUMINUS LATAM",
+  description:
+    "Co-diseña el futuro del bienestar regional con nosotros. Únete a las organizaciones que integran salud integral y desarrollo humano en América Latina.",
+  alternates: {
+    canonical: "https://luminuslatam.com/empresas-aliadas",
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_LA",
+    url: "https://luminuslatam.com/empresas-aliadas",
+    siteName: "LUMINUS LATAM",
+    title: "Empresas Aliadas | LUMINUS LATAM",
+    description:
+      "Co-diseña el futuro del bienestar regional con nosotros. Únete a las organizaciones que integran salud integral y desarrollo humano en América Latina.",
+    images: [
+      {
+        url: "https://luminuslatam.com/luminus_platform.jpg",
+        secureUrl: "https://luminuslatam.com/luminus_platform.jpg",
+        width: 1200,
+        height: 630,
+        type: "image/jpeg",
+        alt: "LUMINUS LATAM - Empresas Aliadas",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Empresas Aliadas | LUMINUS LATAM",
+    description:
+      "Co-diseña el futuro del bienestar regional con nosotros. Únete a las organizaciones que integran salud integral y desarrollo humano en América Latina.",
+    images: ["https://luminuslatam.com/luminus_platform.jpg"],
+  },
 };
 
 export default function EmpresasAliadasPage() {

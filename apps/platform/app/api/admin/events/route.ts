@@ -1,0 +1,165 @@
+import { NextResponse } from "next/server";
+import { getCurrentSession } from "@/lib/auth/session";
+import { prisma } from "@/lib/db";
+import { deleteS3FileByUrl } from "@/lib/storage/s3FileCleanup";
+
+function extractYoutubeId(url?: string | null): string | null {
+  if (!url) return null;
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  return match ? match[1] : null;
+}
+
+export async function POST(request: Request) {
+  try {
+    const session = getCurrentSession();
+    if (!session || session.role !== "ADMIN") {
+      return NextResponse.json({ error: "Acceso no autorizado." }, { status: 403 });
+    }
+
+    const body = await request.json();
+    const {
+      id,
+      title,
+      description,
+      speakerName,
+      speakerBio,
+      category,
+      date,
+      timeText,
+      location,
+      coverUrl,
+      youtubeId,
+      link,
+      isUpcoming,
+    } = body;
+
+    if (!title) {
+      return NextResponse.json({ error: "El título del evento es obligatorio." }, { status: 400 });
+    }
+
+    // Generate slug
+    const generateSlug = (t: string) =>
+      t
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9\s-]/g, "")
+        .trim()
+        .replace(/\s+/g, "-")
+        .substring(0, 80) + "-" + Math.random().toString(36).substring(2, 6);
+
+    let dateVal: Date | null = null;
+    if (date) {
+      if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
+        dateVal = new Date(`${date.trim()}T12:00:00.000Z`);
+      } else {
+        const parsed = new Date(date);
+        if (!isNaN(parsed.getTime())) dateVal = parsed;
+      }
+    }
+
+    const finalYoutubeId = youtubeId || extractYoutubeId(link) || null;
+
+    if (id) {
+      // Find existing event to track previous cover
+      const existingEvent = await prisma.event.findUnique({
+        where: { id },
+        select: { coverUrl: true },
+      });
+
+      // Update existing
+      const updated = await prisma.event.update({
+        where: { id },
+        data: {
+          title,
+          description: description || "",
+          speakerName: speakerName || null,
+          speakerBio: speakerBio || null,
+          category: category || null,
+          date: dateVal && !isNaN(dateVal.getTime()) ? dateVal : null,
+          timeText: timeText || null,
+          location: location || null,
+          coverUrl: coverUrl || null,
+          youtubeId: finalYoutubeId,
+          link: link || null,
+          isUpcoming: Boolean(isUpcoming),
+        },
+      });
+
+      // If coverUrl changed, check if previous cover can be safely deleted from S3
+      if (existingEvent?.coverUrl && existingEvent.coverUrl !== (coverUrl || null)) {
+        const inUseCount = await prisma.event.count({
+          where: { coverUrl: existingEvent.coverUrl, NOT: { id } },
+        });
+        if (inUseCount === 0) {
+          await deleteS3FileByUrl(existingEvent.coverUrl, { expectedFolder: "events/covers" });
+        }
+      }
+
+      return NextResponse.json({ success: true, event: updated });
+    } else {
+      // Create new
+      const slug = generateSlug(title);
+      const created = await prisma.event.create({
+        data: {
+          slug,
+          title,
+          description: description || "",
+          speakerName: speakerName || null,
+          speakerBio: speakerBio || null,
+          category: category || null,
+          date: dateVal && !isNaN(dateVal.getTime()) ? dateVal : null,
+          timeText: timeText || null,
+          location: location || null,
+          coverUrl: coverUrl || null,
+          youtubeId: finalYoutubeId,
+          link: link || null,
+          isUpcoming: isUpcoming !== undefined ? Boolean(isUpcoming) : true,
+        },
+      });
+      return NextResponse.json({ success: true, event: created });
+    }
+  } catch (error: any) {
+    console.error("[API Admin Events Error]:", error);
+    return NextResponse.json({ error: error.message || "Error guardando el evento." }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const session = getCurrentSession();
+    if (!session || session.role !== "ADMIN") {
+      return NextResponse.json({ error: "Acceso no autorizado." }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "ID de evento no proporcionado." }, { status: 400 });
+    }
+
+    const existingEvent = await prisma.event.findUnique({
+      where: { id },
+      select: { coverUrl: true },
+    });
+
+    if (existingEvent?.coverUrl) {
+      const inUseCount = await prisma.event.count({
+        where: { coverUrl: existingEvent.coverUrl, NOT: { id } },
+      });
+      if (inUseCount === 0) {
+        await deleteS3FileByUrl(existingEvent.coverUrl, { expectedFolder: "events/covers" });
+      }
+    }
+
+    await prisma.event.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("[API Admin Events Delete Error]:", error);
+    return NextResponse.json({ error: error.message || "Error eliminando el evento." }, { status: 500 });
+  }
+}

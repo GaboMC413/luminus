@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
+import { deleteS3FileByUrl } from "@/lib/storage/s3FileCleanup";
 
 export const runtime = "nodejs";
 
@@ -60,7 +62,9 @@ function serializeProfile(user: any) {
 
   return {
     email: user.email,
+    role: user.role ?? "USER",
     profile: {
+      role: user.role ?? "USER",
       first_name: profile.firstName ?? "",
       last_name: profile.lastName ?? "",
       city: profile.city ?? "",
@@ -79,6 +83,8 @@ function serializeProfile(user: any) {
       tier: user.tier ?? "FREE",
       bio: profile.bio ?? "",
       other_interests: profile.intention ?? "",
+      isOnboarded: profile.isOnboarded ?? false,
+      is_onboarded: profile.isOnboarded ?? false,
     },
   };
 }
@@ -181,7 +187,9 @@ export async function PATCH(request: Request) {
   const intention = pickString(data, "otherInterests", "other_interests", "intention");
   const selectedPlan = pickString(data, "selectedPlan", "selected_plan");
 
-  if (avatarUrl !== undefined) profileData.avatarUrl = avatarUrl;
+  if (avatarUrl !== undefined) {
+    profileData.avatarUrl = await ensureS3AvatarUrl(avatarUrl, session.userId);
+  }
   if (coverUrl !== undefined) profileData.coverUrl = coverUrl;
   if (profession !== undefined) profileData.profession = profession;
   if (city !== undefined) profileData.city = city;
@@ -196,6 +204,14 @@ export async function PATCH(request: Request) {
 
   try {
     const { prisma } = await import("@/lib/db");
+
+    const existingProfile = prisma.userProfile?.findUnique
+      ? await prisma.userProfile.findUnique({
+          where: { userId: session.userId },
+          select: { avatarUrl: true },
+        })
+      : null;
+
     const user = await prisma.$transaction(async (tx: any) => {
       await tx.userProfile.upsert({
         where: { userId: session.userId },
@@ -305,6 +321,10 @@ export async function PATCH(request: Request) {
         const r4 = await checkAndTriggerQuestCompletion(session.userId, "cover");
         if (r4) newlyCompletedQuests.push(r4);
       }
+      if (shouldUpdateInterests) {
+        const r5 = await checkAndTriggerQuestCompletion(session.userId, "user_interests");
+        if (r5) newlyCompletedQuests.push(r5);
+      }
     } catch (questError) {
       console.error("Failed to check onboarding quests completion status:", questError);
     }
@@ -321,6 +341,18 @@ export async function PATCH(request: Request) {
       });
     } catch (logErr) {
       console.error("Failed to log UPDATE_PROFILE activity:", logErr);
+    }
+
+    // Clean up previous S3 avatar if a new avatar was successfully saved
+    if (
+      profileData.avatarUrl !== undefined &&
+      existingProfile?.avatarUrl &&
+      existingProfile.avatarUrl !== profileData.avatarUrl
+    ) {
+      await deleteS3FileByUrl(existingProfile.avatarUrl, {
+        expectedUserId: session.userId,
+        expectedFolder: "avatars",
+      });
     }
 
     const serialized = serializeProfile(user);

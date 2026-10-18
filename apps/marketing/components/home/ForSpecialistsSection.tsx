@@ -32,7 +32,7 @@ export function ForSpecialistsSection() {
         </div>
 
         {/* Right Column: Features & CTA */}
-        <div className="w-full lg:w-1/2 p-8 md:p-14 lg:p-16 flex flex-col justify-center gap-8">
+        <div className="w-full lg:w-1/2 py-14 px-8 sm:p-14 md:p-14 lg:p-16 flex flex-col justify-center gap-8">
           
           <div className="flex flex-col gap-3">
             <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-white">

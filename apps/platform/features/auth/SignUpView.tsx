@@ -7,9 +7,14 @@ import { PersonalData } from "./registration/PersonalData";
 import { InterestSelection } from "./registration/InterestSelection";
 import { PlanSelection } from "./registration/PlanSelection";
 import { VerificationModal } from "./VerificationModal";
+import { trackPlatformRegistration } from "@/lib/meta-pixel";
 import Link from "next/link";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
 import { useRouter } from "next/navigation";
+import { COUNTRIES as ALL_COUNTRIES } from "@/utils/countries";
+import { getSafeRedirectUrl } from "@/lib/utils/url";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
+import { trackRegistrationError } from "@/lib/registrationAuditTracker";
 
 const formatName = (str?: string) => {
   if (!str) return "";
@@ -49,6 +54,12 @@ export default function SignUpView() {
   const router = useRouter();
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  const getRedirectTarget = () => {
+    if (typeof window === "undefined") return "/comunidad";
+    const params = new URLSearchParams(window.location.search);
+    return getSafeRedirectUrl(params.get("redirect"));
+  };
+
   // Navigation & Form State
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
@@ -59,6 +70,8 @@ export default function SignUpView() {
   const [showPassword, setShowPassword] = useState(false);
   const [verifyModalOpen, setVerifyModalOpen] = useState(false);
   const [verifyEmail, setVerifyEmail] = useState("");
+  const [existingAccountEmail, setExistingAccountEmail] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   // Profile Data State (Preserved across steps)
   const [profileData, setProfileData] = useState({
@@ -136,6 +149,17 @@ export default function SignUpView() {
             const data = await res.json();
             if (data && data.profile) {
               const p = data.profile;
+              if (p.isOnboarded) {
+                router.replace(getRedirectTarget() || "/comunidad");
+                return;
+              }
+              const detectedCountry = p.country || p.phone_number
+                ? ALL_COUNTRIES.find(c =>
+                    (p.country && c.name.toLowerCase() === p.country.toLowerCase()) ||
+                    (p.phone_number && (p.phone_number.startsWith(c.dial) || p.phone_number.startsWith(c.code)))
+                  )
+                : null;
+
               setProfileData(prev => ({
                 ...prev,
                 firstName: prev.firstName || formatName(p.first_name) || "",
@@ -144,6 +168,9 @@ export default function SignUpView() {
                 city: prev.city || p.city || "",
                 country: prev.country || p.country || "",
                 phone: prev.phone || p.phone_number || "",
+                phoneCountry: prev.phoneCountry && prev.phoneCountry.code !== 'XX' 
+                  ? prev.phoneCountry 
+                  : (detectedCountry ? { ...detectedCountry, priority: !!detectedCountry.priority } : prev.phoneCountry),
                 gender: prev.gender || p.gender || "",
                 birthdateString: prev.birthdateString || p.birthdate || "",
               }));
@@ -177,7 +204,7 @@ export default function SignUpView() {
       setMessage({ text: "La contrasena debe incluir letras mayúsculas y minúsculas.", type: "error" });
       return;
     }
-    if (!/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+    if (!/\d/.test(password) || !/[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(password)) {
       setMessage({ text: "La contrasena debe incluir al menos un número y un símbolo.", type: "error" });
       return;
     }
@@ -190,7 +217,7 @@ export default function SignUpView() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, turnstileToken }),
       });
       const data = await response.json();
 
@@ -200,13 +227,35 @@ export default function SignUpView() {
         return;
       }
 
+      if (response.status === 409) {
+        setExistingAccountEmail(email);
+        setMessage({ text: "", type: "" });
+        return;
+      }
+
       if (!response.ok) {
+        setExistingAccountEmail(null);
+        trackRegistrationError({
+          step: "Paso 1 - Registro de Credenciales",
+          action: "POST /api/auth/register",
+          userEmail: email,
+          statusCode: response.status,
+          errorMessage: data.message ?? "Error en creación de cuenta",
+        });
         setMessage({ text: data.message ?? "No pudimos crear tu cuenta.", type: "error" });
         return;
       }
 
+      trackPlatformRegistration("initial");
       setStep(2);
-    } catch {
+    } catch (err: any) {
+      trackRegistrationError({
+        step: "Paso 1 - Registro de Credenciales",
+        action: "POST /api/auth/register (Network/Exception)",
+        userEmail: email,
+        statusCode: "Client/Network Error",
+        errorMessage: err?.message || "No pudimos conectar con el servidor",
+      });
       setMessage({ text: "No pudimos conectar con el servidor.", type: "error" });
     } finally {
       setLoading(false);
@@ -215,7 +264,11 @@ export default function SignUpView() {
   };
 
   const handleGoogleSignUp = () => {
-    window.location.href = "/api/auth/cognito/start?provider=google&intent=signup";
+    const target = getRedirectTarget();
+    const googleUrl = target !== "/comunidad"
+      ? `/api/auth/cognito/start?provider=google&intent=signup&redirect=${encodeURIComponent(target)}`
+      : "/api/auth/cognito/start?provider=google&intent=signup";
+    window.location.href = googleUrl;
   };
 
   const isRegistration = step > 1;
@@ -303,16 +356,16 @@ export default function SignUpView() {
         {/* 2. Right Form Pane - No shadows, no borders, plain elements on slate-50 */}
         <div className="flex-1 flex flex-col bg-slate-50 min-h-0 h-full overflow-hidden pt-14 lg:pt-0">
 
-          {/* Mobile Header: Logo (only visible on mobile) */}
-          <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-light-gradient-slate border-b-0 flex items-center justify-center shrink-0 z-50">
+          {/* Mobile Header: Logo (only visible on mobile, no border, no line) */}
+          <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 bg-slate-50 flex items-center justify-center shrink-0 z-50 border-none shadow-none">
             <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
               <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[20px]" />
             </Link>
           </div>
 
           {/* Central Content Area (Plain, no card, no shadow, no border!) */}
-          <div className="flex-1 flex items-center justify-center px-6 py-8 md:py-16">
-            <div className="w-full max-w-[344px] md:max-w-[380px] flex flex-col gap-6">
+          <div className="flex-1 flex items-center justify-center px-6 py-4 md:py-8">
+            <div className="w-full max-w-[344px] md:max-w-[380px] flex flex-col gap-3.5">
 
               <div className="flex flex-col gap-1 w-full text-center md:text-left">
                 <p className="text-black text-xl font-semibold leading-normal">
@@ -325,7 +378,7 @@ export default function SignUpView() {
                   e.preventDefault();
                   handleSignUp();
                 }}
-                className="flex flex-col w-full gap-3.5"
+                className="flex flex-col w-full gap-3"
               >
                 <InputField
                   type="email"
@@ -353,31 +406,31 @@ export default function SignUpView() {
                   className={`!bg-white border border-zinc-200/80 focus:border-slate-800 ${message.type === 'error' && (!password || password !== repeatPassword) ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
                 />
 
-                {/* Password Requirements Checklist - Stacked Layout */}
-                <div className="flex flex-col gap-1.5 px-0 mb-2">
-                  <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
-                    <p className={`text-xs sm:text-sm font-normal tracking-tight ${password.length >= 8 ? 'text-green-600' : 'text-slate-500'}`}>
+                {/* Password Requirements Checklist - Ultra-Compact Layout */}
+                <div className="flex flex-col gap-0.5 px-0.5 my-0.5">
+                  <div className="flex items-center gap-1.5 h-4">
+                    <span className={`text-[10px] ${password.length >= 8 ? 'text-green-600 font-bold' : 'text-slate-400'}`}>
+                      {password.length >= 8 ? '✓' : '•'}
+                    </span>
+                    <p className={`text-[11px] tracking-tight ${password.length >= 8 ? 'text-green-700 font-medium' : 'text-slate-500'}`}>
                       Mínimo 8 caracteres
                     </p>
-                    {password.length >= 8 && (
-                      <span className="text-green-600 text-sm sm:text-base font-bold">✓</span>
-                    )}
                   </div>
-                  <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
-                    <p className={`text-xs sm:text-sm font-normal tracking-tight ${/[A-Z]/.test(password) && /[a-z]/.test(password) ? 'text-green-600' : 'text-slate-500'}`}>
+                  <div className="flex items-center gap-1.5 h-4">
+                    <span className={`text-[10px] ${/[A-Z]/.test(password) && /[a-z]/.test(password) ? 'text-green-600 font-bold' : 'text-slate-400'}`}>
+                      {/[A-Z]/.test(password) && /[a-z]/.test(password) ? '✓' : '•'}
+                    </span>
+                    <p className={`text-[11px] tracking-tight ${/[A-Z]/.test(password) && /[a-z]/.test(password) ? 'text-green-700 font-medium' : 'text-slate-500'}`}>
                       Mayúsculas y minúsculas
                     </p>
-                    {/[A-Z]/.test(password) && /[a-z]/.test(password) && (
-                      <span className="text-green-600 text-sm sm:text-base font-bold">✓</span>
-                    )}
                   </div>
-                  <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
-                    <p className={`text-xs sm:text-sm font-normal tracking-tight ${/\d/.test(password) && /[^A-Za-z0-9]/.test(password) ? 'text-green-600' : 'text-slate-500'}`}>
+                  <div className="flex items-center gap-1.5 h-4">
+                    <span className={`text-[10px] ${/\d/.test(password) && /[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(password) ? 'text-green-600 font-bold' : 'text-slate-400'}`}>
+                      {/\d/.test(password) && /[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(password) ? '✓' : '•'}
+                    </span>
+                    <p className={`text-[11px] tracking-tight ${/\d/.test(password) && /[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(password) ? 'text-green-700 font-medium' : 'text-slate-500'}`}>
                       Al menos un número y un símbolo
                     </p>
-                    {/\d/.test(password) && /[^A-Za-z0-9]/.test(password) && (
-                      <span className="text-green-600 text-sm sm:text-base font-bold">✓</span>
-                    )}
                   </div>
                 </div>
 
@@ -395,13 +448,36 @@ export default function SignUpView() {
                   className={`!bg-white border border-zinc-200/80 focus:border-slate-800 ${message.type === 'error' && (!repeatPassword || password !== repeatPassword) ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
                 />
 
+                <TurnstileWidget
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  onExpire={() => setTurnstileToken(null)}
+                />
+
+                {existingAccountEmail && (
+                  <div className="p-4 bg-amber-50/80 border border-amber-200/80 rounded-2xl text-left my-1 space-y-2.5">
+                    <div className="text-amber-950 font-bold text-sm">
+                      ¡Hola de nuevo!
+                    </div>
+                    <p className="text-xs text-amber-900 leading-relaxed font-medium">
+                      Ya tienes una cuenta registrada con <strong className="font-semibold">{existingAccountEmail}</strong>.
+                    </p>
+                    <Link
+                      href={`/login?email=${encodeURIComponent(existingAccountEmail)}${getRedirectTarget() !== "/comunidad" ? `&redirect=${encodeURIComponent(getRedirectTarget())}` : ""}`}
+                      className="inline-flex items-center justify-center w-full py-2.5 px-4 bg-black hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition cursor-pointer"
+                    >
+                      Iniciar sesión
+                    </Link>
+                  </div>
+                )}
+
                 {message.text && (
-                  <p className={`text-left px-0 mt-2 text-xs sm:text-sm font-bold ${message.type === 'error' ? 'text-red-500' : 'text-green-600'} tracking-tight`}>
+                  <p className={`text-left px-0 mt-1 text-xs sm:text-sm font-bold ${message.type === 'error' ? 'text-red-500' : 'text-green-600'} tracking-tight`}>
                     {message.text}
                   </p>
                 )}
 
-                <div className="flex flex-col gap-4 mt-2">
+                {/* Botones de Registro JUNTOS: Luminus + Google */}
+                <div className="flex flex-col gap-2 mt-0.5">
                   <Button
                     type="submit"
                     variant="primary"
@@ -409,44 +485,71 @@ export default function SignUpView() {
                   >
                     {loading ? "Cargando..." : "Regístrate en LUMINUS"}
                   </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleGoogleSignUp}
+                    className="flex items-center justify-center gap-2 hover:bg-zinc-50 border-zinc-200"
+                  >
+                    <GoogleIcon />
+                    <span>Registrarse con Google</span>
+                  </Button>
                 </div>
               </form>
 
-              {/* Divider */}
-              <div className="relative flex py-1 items-center">
-                <div className="flex-grow border-t border-zinc-200/80"></div>
-                <span className="flex-shrink mx-4 text-[13px] font-medium text-slate-400 font-sans">o</span>
-                <div className="flex-grow border-t border-zinc-200/80"></div>
-              </div>
+              {/* Sección Especialista agrupada con espacio compacto */}
+              <div className="flex flex-col gap-2 w-full -mt-1">
+                {/* Divider 'o' */}
+                <div className="relative flex py-0.5 items-center">
+                  <div className="flex-grow border-t border-zinc-200/80"></div>
+                  <span className="flex-shrink mx-3 text-[12px] font-medium text-slate-400 font-sans">o</span>
+                  <div className="flex-grow border-t border-zinc-200/80"></div>
+                </div>
 
-              {/* Google Sign Up Button */}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleGoogleSignUp}
-                className="flex items-center justify-center gap-2 hover:bg-zinc-50 border-zinc-200"
-              >
-                <GoogleIcon />
-                <span>Registrarse con Google</span>
-              </Button>
+                {/* Botón Registrarme como especialista en GRIS */}
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => router.push("/auth/registrarse/especialista")}
+                  className="w-full !bg-slate-100 hover:!bg-slate-200/90 !text-slate-800 font-semibold !border-slate-200"
+                >
+                  Registrarme como especialista
+                </Button>
+              </div>
 
               <p className="text-[11px] text-slate-400 text-center leading-tight">
                 Al registrarte en LUMINUS estás aceptando nuestros{" "}
-                <Link href="#" onClick={(e) => { e.preventDefault(); alert("Términos: Be kind y cultiva el bienestar."); }} className="underline font-medium hover:text-slate-800 cursor-pointer text-slate-500">
+                <Link
+                  href="https://luminuslatam.com/legal/terminos"
+                  target="_blank"
+                  className="underline font-medium hover:text-slate-800 cursor-pointer text-slate-500"
+                >
                   Términos y Condiciones
                 </Link>{" "}
                 y nuestra{" "}
-                <Link href="#" onClick={(e) => { e.preventDefault(); alert("Privacidad: Tus datos están 100% seguros con nosotros."); }} className="underline font-medium hover:text-slate-800 cursor-pointer text-slate-500">
+                <Link
+                  href="https://luminuslatam.com/legal/privacidad"
+                  target="_blank"
+                  className="underline font-medium hover:text-slate-800 cursor-pointer text-slate-500"
+                >
                   Política de Privacidad
                 </Link>.
               </p>
 
-              <div className="flex flex-col items-center mt-2">
+              <div className="flex flex-col items-center">
                 <button
-                  onClick={() => router.push("/auth/iniciar-sesion")}
-                  className="text-slate-500 hover:text-slate-900 text-body-secondary cursor-pointer bg-transparent border-none outline-none"
+                  type="button"
+                  onClick={() => {
+                    const target = getRedirectTarget();
+                    const signInUrl = target !== "/comunidad"
+                      ? `/auth/iniciar-sesion?redirect=${encodeURIComponent(target)}`
+                      : "/auth/iniciar-sesion";
+                    router.push(signInUrl);
+                  }}
+                  className="text-slate-500 hover:text-slate-900 text-[13px] font-sans cursor-pointer bg-transparent border-none outline-none py-0.5"
                 >
-                  ¿Ya tienes cuenta? <span className="underline font-semibold text-slate-900">Ingresa</span>
+                  ¿Ya tienes cuenta? <span className="underline font-semibold text-slate-900">Iniciar sesión</span>
                 </button>
               </div>
             </div>
@@ -513,7 +616,7 @@ export default function SignUpView() {
             ) : (
               <PlanSelection
                 onNext={() => {
-                  router.push('/comunidad');
+                  router.push(getRedirectTarget());
                 }}
                 onBack={() => setStep(3)}
                 data={profileData}

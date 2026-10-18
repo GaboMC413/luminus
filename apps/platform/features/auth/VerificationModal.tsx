@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { trackPlatformRegistration } from "@/lib/meta-pixel";
 
 interface VerificationModalProps {
   isOpen: boolean;
@@ -52,6 +53,7 @@ export function VerificationModal({ isOpen, email, onClose, onSuccess }: Verific
         return;
       }
 
+      trackPlatformRegistration("verified");
       onSuccess();
     } catch (err) {
       setMessage({ text: "Error de conexión. Intenta nuevamente.", type: "error" });

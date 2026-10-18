@@ -8,7 +8,13 @@ import { Button } from "@/components/ui/Button";
 import { formatShortTime, getPresetStartDate } from "../../utils";
 import { AdminCard } from "../AdminDesignSystem";
 
-import { renderWelcomeEmailHtml, renderPasswordResetEmailHtml } from "@/lib/email/templates";
+import {
+  renderWelcomeEmailHtml,
+  renderPasswordResetEmailHtml,
+  renderEmailChangeVerificationHtml,
+  renderContactNotificationEmailHtml,
+  renderEventRegistrationEmailHtml,
+} from "@/lib/mails";
 
 interface EmailLogsTabProps {
   emailLogs: AdminEmailLog[];
@@ -28,7 +34,32 @@ const templatesData = {
   emailChange: {
     name: "Confirmar Email (Email Change Verification)",
     subject: "Codigo para confirmar tu email de LUMINUS",
-    htmlBody: renderPasswordResetEmailHtml("654321"),
+    htmlBody: renderEmailChangeVerificationHtml("654321"),
+  },
+  contact: {
+    name: "Notificación de Contacto (Contact Request)",
+    subject: "Nuevo mensaje de contacto de Gabriel Montenegro",
+    htmlBody: renderContactNotificationEmailHtml({
+      nombre: "Gabriel",
+      apellido: "Montenegro",
+      email: "gabrielmedcap@hotmail.com",
+      telefono: "+54 9 11 2345-6789",
+      motivo: "Consulta General / Especialistas",
+      mensaje: "Hola, me gustaría recibir más información.",
+    }),
+  },
+  eventRegistration: {
+    name: "Confirmación de Inscripción a Evento (Event Registration)",
+    subject: "[LUMINUS] Confirmación de inscripción: Sexualidad sin tabúes",
+    htmlBody: renderEventRegistrationEmailHtml({
+      firstName: "Gabriel",
+      eventTitle: "Sexualidad sin tabúes: cuerpo, vínculos y comunicación",
+      eventCoverUrl: "https://luminuslatam.com/images/placeholder-event.jpg",
+      eventDate: "2026-09-19T18:00:00.000Z",
+      timeText: "18:00 hs (GMT-3)",
+      speakerName: "Dra. Sofía Martínez",
+      youtubeUrl: "https://www.youtube.com/@luminus_latam",
+    }),
   },
 };
 
@@ -39,7 +70,9 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
   const [emailStartDate, setEmailStartDate] = useState("");
   const [emailEndDate, setEmailEndDate] = useState("");
   const [selectedEmailLogId, setSelectedEmailLogId] = useState<string>(emailLogs[0]?.id ?? "");
-  const [selectedTemplate, setSelectedTemplate] = useState<"welcome" | "recovery" | "emailChange">("welcome");
+  const [selectedTemplate, setSelectedTemplate] = useState<"welcome" | "recovery" | "emailChange" | "contact" | "eventRegistration">("welcome");
+  const [showTraceModal, setShowTraceModal] = useState<boolean>(false);
+  const [copiedLog, setCopiedLog] = useState<boolean>(false);
 
   const filteredEmailLogs = useMemo(() => {
     return emailLogs.filter((log) => {
@@ -83,8 +116,18 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
     emailStartDate !== "" ||
     emailEndDate !== "";
 
+  // Parse metadata if present
+  const parsedMetadata = useMemo(() => {
+    if (!selectedEmailLog?.metadata) return null;
+    try {
+      return JSON.parse(selectedEmailLog.metadata);
+    } catch {
+      return null;
+    }
+  }, [selectedEmailLog]);
+
   return (
-    <div className="mx-auto flex max-w-[1350px] flex-col gap-6 px-6 py-8">
+    <div className="mx-auto flex max-w-7xl flex-col gap-6 px-6 py-8">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-[28px] font-bold leading-tight font-jakarta">Mails Enviados</h1>
@@ -118,83 +161,83 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
 
       {emailSubTab === "historial" ? (
         <div className="flex flex-col gap-5">
-          {/* Filter Toolbar */}
+          {/* Filter Bar */}
           <AdminCard className="p-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex-1 min-w-[240px]">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-12 items-end">
+              <div className="md:col-span-4">
+                <label className="block text-xs font-medium text-slate-700 mb-1">Buscar correo o asunto</label>
                 <InputField
+                  placeholder="ej. usuario@mail.com..."
                   value={emailSearch}
                   onChange={(e) => setEmailSearch(e.target.value)}
-                  placeholder="Buscar por email de destinatario o asunto..."
-                  className="!w-full !h-10 text-xs"
                 />
               </div>
 
-              <div className="min-w-[160px]">
+              <div className="md:col-span-3">
                 <SelectInput
+                  label="Periodo de fecha"
                   value={emailDatePreset}
+                  onSelect={(value) => setEmailDatePreset(value)}
                   options={[
-                    { label: "Todo el tiempo", value: "all" },
-                    { label: "Esta semana", value: "week" },
-                    { label: "Este mes", value: "month" },
-                    { label: "Últimos 6 meses", value: "6months" },
-                    { label: "Este año", value: "year" },
-                    { label: "Trimestre actual", value: "quarter" },
-                    { label: "Fechas fijas", value: "custom" },
+                    { value: "all", label: "Histórico Completo" },
+                    { value: "today", label: "Hoy" },
+                    { value: "7days", label: "Últimos 7 días" },
+                    { value: "30days", label: "Últimos 30 días" },
+                    { value: "custom", label: "Rango Personalizado" },
                   ]}
-                  onSelect={(val) => setEmailDatePreset(val)}
-                  className="!h-10 text-xs"
                 />
               </div>
 
-              {emailDatePreset === "custom" && (
+              {emailDatePreset === "custom" ? (
                 <>
-                  <div className="w-[120px]">
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Desde</label>
                     <InputField
                       type="date"
                       value={emailStartDate}
                       onChange={(e) => setEmailStartDate(e.target.value)}
-                      className="!h-10 text-xs"
                     />
                   </div>
-                  <div className="w-[120px]">
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-medium text-slate-700 mb-1">Hasta</label>
                     <InputField
                       type="date"
                       value={emailEndDate}
                       onChange={(e) => setEmailEndDate(e.target.value)}
-                      className="!h-10 text-xs"
                     />
                   </div>
                 </>
-              )}
+              ) : null}
 
-              {hasActiveFilters && (
-                <Button
-                  type="button"
-                  variant="small"
-                  onClick={() => {
-                    setEmailSearch("");
-                    setEmailDatePreset("all");
-                    setEmailStartDate("");
-                    setEmailEndDate("");
-                  }}
-                  className="!h-10 shrink-0 text-xs font-semibold"
-                >
-                  Limpiar filtros
-                </Button>
-              )}
+              <div className="md:col-span-3 flex items-center justify-end">
+                {hasActiveFilters && (
+                  <Button
+                    variant="small"
+                    onClick={() => {
+                      setEmailSearch("");
+                      setEmailDatePreset("all");
+                      setEmailStartDate("");
+                      setEmailEndDate("");
+                    }}
+                  >
+                    Limpiar Filtros
+                  </Button>
+                )}
+              </div>
             </div>
           </AdminCard>
 
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_460px]">
-            {/* List of Sent Emails */}
-            <AdminCard>
-              <div className="grid grid-cols-[1.5fr_1.8fr_130px] border-b border-slate-200/80 bg-slate-50/80 px-4 py-3 text-[11.5px] font-bold uppercase tracking-wider text-slate-500">
+          {/* Main 2-Column Section: History List vs. Reader */}
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1fr_1.3fr]">
+            {/* Left side list */}
+            <AdminCard className="flex flex-col h-185">
+              <div className="border-b border-slate-200/80 bg-slate-50/80 px-4 py-3 text-[11.5px] font-bold uppercase tracking-wider text-slate-500 grid grid-cols-[160px_minmax(0,1fr)_135px] items-center gap-3">
                 <span>Destinatario</span>
                 <span>Asunto</span>
-                <span>Fecha</span>
+                <span className="text-right">Fecha</span>
               </div>
-              <div className="max-h-[680px] overflow-y-auto divide-y divide-slate-100">
+
+              <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
                 {filteredEmailLogs.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-20 text-slate-400">
                     <span className="material-symbols-rounded text-[48px] mb-3 text-slate-300">mail</span>
@@ -203,18 +246,31 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
                 ) : (
                   filteredEmailLogs.map((log) => {
                     const active = log.id === selectedEmailLog?.id;
+                    const isRealSuccess = Boolean(log.messageId);
+                    const isLocalPreview = log.status === "LOCAL_PREVIEW";
+                    const isFailed = log.status === "FAILED" || (!isRealSuccess && !isLocalPreview);
+
+                    const dotColorClass = isLocalPreview
+                      ? "bg-blue-500"
+                      : isFailed
+                      ? "bg-rose-500"
+                      : "bg-emerald-500";
+
                     return (
                       <button
                         key={log.id}
                         type="button"
                         onClick={() => setSelectedEmailLogId(log.id)}
-                        className={`grid w-full grid-cols-[1.5fr_1.8fr_130px] items-center px-4 py-3.5 text-left text-[14px] transition hover:bg-slate-50 outline-none border-none cursor-pointer ${
-                          active ? "bg-slate-100/80" : "bg-white"
+                        className={`grid w-full grid-cols-[160px_minmax(0,1fr)_135px] items-center gap-3 px-4 py-3.5 text-left text-[13px] transition hover:bg-slate-50 outline-none border-none cursor-pointer ${
+                          active ? "bg-slate-100/90" : "bg-white"
                         }`}
                       >
-                        <span className="truncate font-bold text-slate-900 pr-2 text-xs">{log.recipient}</span>
-                        <span className="truncate text-slate-600 pr-2 text-xs font-medium">{log.subject}</span>
-                        <span className="text-slate-500 text-xs font-sans">
+                        <span className="truncate font-semibold text-slate-900 text-xs flex items-center gap-2 min-w-0">
+                          <span className={`w-2.5 h-2.5 rounded-full ${dotColorClass} shrink-0`} title={isFailed ? "Fallo de envío" : isLocalPreview ? "Preview Local" : "Enviado con éxito"} />
+                          <span className="truncate">{log.recipient}</span>
+                        </span>
+                        <span className="truncate text-slate-600 text-xs font-normal min-w-0">{log.subject}</span>
+                        <span className="text-slate-500 text-[11px] font-mono text-right shrink-0 whitespace-nowrap">
                           {formatShortTime(log.createdAt)}
                         </span>
                       </button>
@@ -226,22 +282,53 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
 
             {/* HTML Email Reader side-panel */}
             {selectedEmailLog ? (
-              <AdminCard className="flex flex-col h-[740px]">
+              <AdminCard className="flex flex-col h-185 relative">
                 {/* Header */}
-                <div className="border-b border-slate-200/80 p-5 shrink-0 bg-slate-50/50">
-                  <div className="flex flex-col gap-1.5">
-                    <h2 className="text-[15px] font-bold text-slate-900 leading-tight truncate font-jakarta">
-                      {selectedEmailLog.subject}
-                    </h2>
-                    <div className="text-[12px] text-slate-500 space-y-0.5 mt-1 font-sans">
-                      <p>
-                        <span className="font-semibold text-slate-700">Para:</span> {selectedEmailLog.recipient}
-                      </p>
-                      <p>
-                        <span className="font-semibold text-slate-700">Fecha:</span>{" "}
-                        {formatShortTime(selectedEmailLog.createdAt)}
-                      </p>
+                <div className="border-b border-slate-200/80 p-5 shrink-0 bg-slate-50/50 flex flex-col gap-2">
+                  {/* Line 1: Subject Title */}
+                  <h2 className="text-[16px] font-bold text-slate-900 leading-tight font-jakarta">
+                    {selectedEmailLog.subject}
+                  </h2>
+
+                  {/* Line 2: Recipient (Left) & Date (Right) */}
+                  <div className="flex items-center justify-between gap-4 text-[12px] text-slate-500 font-sans pt-0.5">
+                    <p className="truncate">
+                      <span className="font-semibold text-slate-700">Para:</span> {selectedEmailLog.recipient}
+                    </p>
+                    <p className="shrink-0">
+                      <span className="font-semibold text-slate-700">Fecha:</span>{" "}
+                      {formatShortTime(selectedEmailLog.createdAt)}
+                    </p>
+                  </div>
+
+                  {/* Line 3: Status Text + Ver log link (without arrow) right next to it */}
+                  <div className="flex items-center gap-3 pt-0.5">
+                    <div>
+                      {selectedEmailLog.status === "FAILED" || (!selectedEmailLog.messageId && selectedEmailLog.status !== "LOCAL_PREVIEW") ? (
+                        <span className="text-xs font-bold text-rose-600 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-rose-600" />
+                          Fallo de Envío
+                        </span>
+                      ) : selectedEmailLog.status === "LOCAL_PREVIEW" ? (
+                        <span className="text-xs font-bold text-blue-600 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-blue-600" />
+                          Preview Local
+                        </span>
+                      ) : (
+                        <span className="text-xs font-bold text-emerald-600 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                          AWS SES Enviado
+                        </span>
+                      )}
                     </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowTraceModal(true)}
+                      className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors hover:underline cursor-pointer"
+                    >
+                      Ver log
+                    </button>
                   </div>
                 </div>
 
@@ -249,14 +336,201 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
                 <div className="flex-1 bg-[#F8FAFC] p-4 overflow-hidden flex flex-col">
                   <iframe
                     title="Visualización de Mail"
-                    srcDoc={selectedEmailLog.htmlBody}
+                    srcDoc={selectedEmailLog.htmlBody || `<div style="font-family: system-ui, -apple-system, sans-serif; padding: 40px 20px; text-align: center; color: #64748b; background-color: #ffffff;"><div style="font-size: 32px; margin-bottom: 12px;">📧</div><h3 style="margin: 0 0 8px 0; color: #1e293b; font-size: 16px;">Vista previa no disponible</h3><p style="margin: 0; font-size: 13px;">El cuerpo de este correo no fue almacenado o fue registrado en modo plano.</p></div>`}
                     className="w-full h-full border border-slate-200 rounded-xl bg-white shadow-sm flex-1"
                     sandbox="allow-same-origin"
                   />
                 </div>
+
+                {/* TRACEABILITY MODAL POPUP */}
+                {showTraceModal && (() => {
+                  const rawLogText = parsedMetadata?.rawLog || [
+                    `=== LOG TÉCNICO DE ENVÍO LUMINUS ===`,
+                    `[LOG ID]:           ${selectedEmailLog.id}`,
+                    `[TIMESTAMP]:        ${selectedEmailLog.createdAt}`,
+                    `[DESTINATARIO(S)]:  ${selectedEmailLog.recipient}`,
+                    `[ASUNTO]:           ${selectedEmailLog.subject}`,
+                    `[REGION AWS]:       ${parsedMetadata?.region || "us-east-1"}`,
+                    `[CONFIG SET]:       ${parsedMetadata?.configurationSet || "Ninguno"}`,
+                    `[ESTADO REGISTRADO]: ${selectedEmailLog.status || "SIN_ESTADO"}`,
+                    `[MESSAGE ID AWS]:   ${selectedEmailLog.messageId || "N/A (No generado / fallo en llamada)"}`,
+                    `[DETALLE DE ERROR]: ${selectedEmailLog.errorDetails || "Ninguno"}`,
+                    `====================================`,
+                  ].join("\n");
+
+                  const isRealSuccess = Boolean(selectedEmailLog.messageId);
+                  const isLocalPreview = selectedEmailLog.status === "LOCAL_PREVIEW";
+                  const isFailed = selectedEmailLog.status === "FAILED" || (!isRealSuccess && !isLocalPreview);
+
+                  return (
+                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+                      <div className="w-full max-w-[680px] max-h-[90vh] bg-white rounded-2xl p-6 shadow-2xl border border-slate-200 flex flex-col relative animate-in fade-in zoom-in-95 duration-200 text-left overflow-hidden">
+                        
+                        {/* Modal Header */}
+                        <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-100 shrink-0">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-xl font-bold text-slate-900 font-jakarta">Trazabilidad y Log del Correo</h3>
+                              {isLocalPreview ? (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+                                  Preview Local
+                                </span>
+                              ) : isFailed ? (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-700 border border-rose-200">
+                                  Sin Confirmación AWS / Falló
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                  AWS SES Enviado
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1 font-mono">ID Log: {selectedEmailLog.id}</p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setShowTraceModal(false)}
+                            className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors cursor-pointer shrink-0"
+                            aria-label="Cerrar"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+
+                        {/* Modal Content Scrollable */}
+                        <div className="flex-1 overflow-y-auto pt-4 space-y-5 pr-1">
+                          
+                          {/* 1. Log Técnico Crudo Copiable */}
+                          <div className="bg-slate-900 rounded-xl p-4 border border-slate-800 space-y-2.5 shadow-inner">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[11px] font-mono text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                Log Técnico Crudo (Copiable)
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(rawLogText);
+                                  setCopiedLog(true);
+                                  setTimeout(() => setCopiedLog(false), 2000);
+                                }}
+                                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-mono text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs active:scale-95"
+                              >
+                                {copiedLog ? "✓ ¡Log Copiado!" : "📋 Copiar Log Técnico"}
+                              </button>
+                            </div>
+                            <pre className="text-xs font-mono text-emerald-300 bg-slate-950 p-3 rounded-lg border border-slate-800/80 whitespace-pre-wrap break-all overflow-x-auto select-all leading-relaxed">
+                              {rawLogText}
+                            </pre>
+                          </div>
+
+                          {/* 2. Datos Técnicos AWS SES */}
+                          <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-2.5">
+                            <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wider">Datos de Infraestructura AWS SES</h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                              <div>
+                                <span className="text-slate-400 block">Message ID AWS:</span>
+                                <span className="font-mono font-medium text-slate-800 break-all">
+                                  {selectedEmailLog.messageId || "N/A (No generado o fallo en llamada)"}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-slate-400 block">Remitente Configurado:</span>
+                                <span className="font-medium text-slate-800 break-all">
+                                  {parsedMetadata?.sender || "LUMINUS LATAM"}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-slate-400 block">Región AWS:</span>
+                                <span className="font-medium text-slate-800">{parsedMetadata?.region || "us-east-1"}</span>
+                              </div>
+                              <div>
+                                <span className="text-slate-400 block">ConfigurationSet:</span>
+                                <span className="font-medium text-slate-800">{parsedMetadata?.configurationSet || "Sin conjunto asignado"}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* 3. Error details callout if failed */}
+                          {(selectedEmailLog.status === "FAILED" || selectedEmailLog.errorDetails) && (
+                            <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 space-y-1.5">
+                              <div className="flex items-center gap-2 text-rose-800 font-semibold text-xs uppercase tracking-wider">
+                                <span className="material-symbols-rounded text-[18px]">error</span>
+                                <span>Detalle del Error Devuelto por AWS / Sistema:</span>
+                              </div>
+                              <pre className="text-xs font-mono bg-white p-3 rounded-lg border border-rose-200 text-rose-900 whitespace-pre-wrap break-all overflow-x-auto">
+                                {selectedEmailLog.errorDetails || "Error indeterminado durante la llamada a AWS SES."}
+                              </pre>
+                            </div>
+                          )}
+
+                          {/* 4. Línea de Tiempo del Recorrido (Timeline) */}
+                          <div className="space-y-3">
+                            <h4 className="text-xs font-bold text-slate-600 uppercase tracking-wider">Línea de Tiempo del Recorrido</h4>
+                            
+                            <div className="space-y-2.5 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
+                              {(parsedMetadata?.timeline || [
+                                { step: "Solicitud recibida", timestamp: selectedEmailLog.createdAt, success: true },
+                                { step: "Plantilla compilada", timestamp: selectedEmailLog.createdAt, success: true },
+                                { step: isFailed ? "Sin respuesta de MessageID AWS" : "Procesado", timestamp: selectedEmailLog.createdAt, success: !isFailed },
+                              ]).map((item: any, idx: number) => (
+                                <div key={idx} className="flex items-start gap-3 relative z-10 pl-1">
+                                  <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-white text-[10px] font-bold ${item.success ? "bg-emerald-500" : "bg-rose-500"}`}>
+                                    {item.success ? "✓" : "✕"}
+                                  </div>
+                                  <div className="bg-white border border-slate-200 rounded-xl p-3 flex-1 shadow-2xs">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <span className="text-xs font-bold text-slate-900">{item.step}</span>
+                                      <span className="text-[11px] font-mono text-slate-400">
+                                        {item.timestamp ? formatShortTime(item.timestamp) : "—"}
+                                      </span>
+                                    </div>
+                                    {item.details && (
+                                      <p className="text-xs text-slate-600 mt-1 font-mono bg-slate-50 p-1.5 rounded border border-slate-100">
+                                        {item.details}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="pt-4 mt-2 border-t border-slate-100 flex items-center justify-between shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(rawLogText);
+                              setCopiedLog(true);
+                              setTimeout(() => setCopiedLog(false), 2000);
+                            }}
+                            className="px-4 h-10 bg-emerald-700 hover:bg-emerald-800 text-white font-medium rounded-xl text-xs transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
+                          >
+                            {copiedLog ? "✓ ¡Log Copiado al Portapapeles!" : "📋 Copiar Log Técnico"}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setShowTraceModal(false)}
+                            className="px-5 h-10 bg-black hover:bg-slate-800 text-white font-medium rounded-xl text-xs transition-colors cursor-pointer shadow-xs"
+                          >
+                            Cerrar
+                          </button>
+                        </div>
+
+                      </div>
+                    </div>
+                  );
+                })()}
               </AdminCard>
             ) : (
-              <AdminCard className="flex items-center justify-center text-slate-400 p-8 text-center h-[740px]">
+              <AdminCard className="flex items-center justify-center text-slate-400 p-8 text-center h-185">
                 <p className="text-sm font-medium">
                   Selecciona un correo del historial para visualizar su contenido.
                 </p>
@@ -306,11 +580,33 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
               >
                 Confirmar Email
               </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTemplate("contact")}
+                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-semibold transition-all cursor-pointer border-none outline-none ${
+                  selectedTemplate === "contact"
+                    ? "bg-black text-white font-bold"
+                    : "bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+              >
+                Notificación de Contacto
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTemplate("eventRegistration")}
+                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-semibold transition-all cursor-pointer border-none outline-none ${
+                  selectedTemplate === "eventRegistration"
+                    ? "bg-black text-white font-bold"
+                    : "bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+              >
+                Inscripción a Eventos
+              </button>
             </div>
           </AdminCard>
 
           {/* Right Column: template details & iframe preview */}
-          <AdminCard className="flex flex-col h-[740px]">
+          <AdminCard className="flex flex-col h-185">
             <div className="border-b border-slate-200/80 p-5 shrink-0 bg-slate-50/50">
               <h2 className="text-[16px] font-bold text-slate-900 font-jakarta leading-tight">
                 {templatesData[selectedTemplate].name}

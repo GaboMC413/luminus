@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { generateRecoveryCode, getRecoveryCodeExpiry, hashRecoveryCode } from "@/lib/auth/recoveryTokens";
-import { sendEmailChangeVerificationEmail } from "@/lib/email/passwordResetEmail";
+import { sendEmailChangeVerificationEmail } from "@/lib/mails/sender";
 
 export const runtime = "nodejs";
 

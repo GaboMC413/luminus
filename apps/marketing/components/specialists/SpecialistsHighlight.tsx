@@ -6,7 +6,7 @@ export function SpecialistsHighlight() {
       <div className="max-w-[1440px] mx-auto flex flex-col lg:flex-row items-stretch min-h-[560px]">
 
         {/* Left Column: Text & CTA */}
-        <div className="w-full lg:w-1/2 p-8 md:p-16 lg:p-20 flex flex-col justify-center gap-6">
+        <div className="w-full lg:w-1/2 py-14 px-8 sm:p-14 md:p-16 lg:p-20 flex flex-col justify-center gap-6">
           <h2 className="text-3xl lg:text-heading-3 font-normal tracking-tight text-white leading-tight">
             Conoce mejor a cada Especialista
           </h2>

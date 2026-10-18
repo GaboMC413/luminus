@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { NotificationPopup } from "./NotificationPopup";
@@ -90,8 +90,8 @@ export function PlatformNavbar() {
   const messagesRef = useRef<HTMLDivElement>(null);
 
   const onboardingNotification = notifications.find(n => n.type === "onboarding-progress");
-  const onboardingOutstandingCount = onboardingNotification
-    ? onboardingNotification.quests.filter((q: any) => !q.completed).length
+  const onboardingOutstandingCount = onboardingNotification && onboardingNotification.progressPercentage !== 100
+    ? (onboardingNotification.quests || []).filter((q: any) => !q.completed).length
     : 0;
 
   const otherUnreadCount = notifications
@@ -242,49 +242,47 @@ export function PlatformNavbar() {
     })));
   }
 
-  // Sync real chats for dynamic notification count & list
-  useEffect(() => {
-    const loadChats = async () => {
-      // Fetch conversations from database
-      let dbMessages: any[] = [];
-      try {
-        const response = await fetch("/api/messages/conversations", {
-          cache: "no-store",
+  // Fetch conversations from database on demand
+  const loadChats = useCallback(async () => {
+    let dbMessages: any[] = [];
+    try {
+      const response = await fetch("/api/messages/conversations", {
+        cache: "no-store",
+      });
+      if (response.ok) {
+        const data = await response.json();
+        dbMessages = (data.conversations || []).map((conv: any) => {
+          const lastMsg = conv.last_message;
+          const timestamp = lastMsg ? new Date(lastMsg.created_at).getTime() : new Date(conv.updated_at).getTime();
+          return {
+            id: conv.id,
+            avatar: conv.participant.avatar_url,
+            title: conv.is_unread ? "Mensaje nuevo" : "Mensaje",
+            user: conv.participant.name,
+            action: lastMsg?.body || "Sin mensajes aún",
+            date: formatRelativeTime(timestamp),
+            isUnread: conv.is_unread,
+            isMuted: conv.is_muted,
+            isDb: true,
+            participantId: conv.participant.id
+          };
         });
-        if (response.ok) {
-          const data = await response.json();
-          dbMessages = (data.conversations || []).map((conv: any) => {
-            const lastMsg = conv.last_message;
-            const timestamp = lastMsg ? new Date(lastMsg.created_at).getTime() : new Date(conv.updated_at).getTime();
-            return {
-              id: conv.id,
-              avatar: conv.participant.avatar_url,
-              title: conv.is_unread ? "Mensaje nuevo" : "Mensaje",
-              user: conv.participant.name,
-              action: lastMsg?.body || "Sin mensajes aún",
-              date: formatRelativeTime(timestamp),
-              isUnread: conv.is_unread,
-              isMuted: conv.is_muted,
-              isDb: true,
-              participantId: conv.participant.id
-            };
-          });
-        }
-      } catch (err) {
-        console.error("Error fetching database conversations in navbar:", err);
       }
+    } catch (err) {
+      console.error("Error fetching database conversations in navbar:", err);
+    }
 
-      setMessages(dbMessages);
-    };
+    setMessages(dbMessages);
+  }, []);
 
+  // Sync real chats on mount and on explicit events (pure event-driven, 0 idle polling)
+  useEffect(() => {
     loadChats();
     window.addEventListener("luminus_messages_update", loadChats);
-    const interval = setInterval(loadChats, 30000);
     return () => {
       window.removeEventListener("luminus_messages_update", loadChats);
-      clearInterval(interval);
     };
-  }, []);
+  }, [loadChats]);
 
   useEffect(() => {
     loadNotifications();
@@ -499,7 +497,7 @@ export function PlatformNavbar() {
   return (
     <>
       {/* Desktop Header */}
-      <header className="fixed top-0 left-0 w-full bg-white border-b border-slate-200 z-50 h-[64px] px-6 lg:px-8 flex items-center justify-between">
+      <header className="fixed top-0 left-0 w-full bg-white border-b border-slate-200 z-[100] h-[64px] px-6 lg:px-8 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <Link href="/">
             <img src="/logo-luminus-black.svg" alt="Luminus" className="hidden sm:block h-[20px] cursor-pointer" />
@@ -548,7 +546,13 @@ export function PlatformNavbar() {
         <div className="flex items-center gap-2 lg:gap-4">
           <div className="relative" ref={messagesRef}>
             <button
-              onClick={() => setIsMessagesOpen(!isMessagesOpen)}
+              onClick={() => {
+                const nextOpen = !isMessagesOpen;
+                setIsMessagesOpen(nextOpen);
+                if (nextOpen) {
+                  loadChats();
+                }
+              }}
               type="button"
               aria-label={`Messages: ${unreadMessagesCount} unread`}
               className={`relative flex h-12 w-12 items-center justify-center rounded-xl transition ${isMessagesOpen
@@ -636,7 +640,10 @@ export function PlatformNavbar() {
             </button>
 
           {isProfileDropdownOpen && (
-            <div className="fixed right-6 top-[64px] sm:absolute sm:right-0 sm:top-auto sm:mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+            <div
+              style={{ backgroundColor: "#ffffff" }}
+              className="fixed right-6 top-[64px] sm:absolute sm:right-0 sm:top-auto sm:mt-2 w-52 !bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] shadow-xl shadow-slate-900/10 animate-in zoom-in-95 duration-150 origin-top-right"
+            >
               <Link
                 href="/perfil-usuario"
                 onClick={() => setIsProfileDropdownOpen(false)}
@@ -679,7 +686,7 @@ export function PlatformNavbar() {
 
       {/* Mobile Nav - Fixed Bottom */}
       {showMobileNavbar && (
-        <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 z-50 animate-in slide-in-from-bottom duration-200">
+        <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 z-[100] animate-in slide-in-from-bottom duration-200">
           <div className="max-w-md mx-auto h-[64px] px-6 flex justify-between items-center pb-[env(safe-area-inset-bottom)]">
             {NAV_ITEMS.map((tab) => {
               const isActive = activeTab === tab.id;

@@ -1,6 +1,5 @@
-import fs from "fs";
-import path from "path";
-import { supabase } from "@/lib/supabase";
+import type { Metadata } from "next";
+import { getDbEvents } from "@/lib/events";
 import { Navbar, Footer } from "@/components";
 import { UpcomingEventsTimeline } from "@/components/events/UpcomingEventsTimeline";
 import { PastEventsGrid } from "@/components/events/PastEventsGrid";
@@ -8,98 +7,69 @@ import { PastEventsGrid } from "@/components/events/PastEventsGrid";
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Próximas Fechas | LUMINUS - Encuentros y Talleres",
-  description: "Descubre y reserva tu lugar para los próximos talleres, encuentros y conversaciones en vivo sobre bienestar en LUMINUS.",
+export const metadata: Metadata = {
+  title: "Próximas Fechas | LUMINUS LATAM",
+  description: "Conoce las próximas charlas en vivo, entrevistas y talleres con especialistas del bienestar. Participa y reserva tu lugar.",
+  alternates: { canonical: "https://luminuslatam.com/proximasfechas" },
+  openGraph: {
+    title: "Próximas Fechas | LUMINUS LATAM",
+    description: "Conoce las próximas charlas en vivo, entrevistas y talleres con especialistas del bienestar. Participa y reserva tu lugar.",
+    url: "https://luminuslatam.com/proximasfechas",
+    siteName: "LUMINUS LATAM",
+    images: [
+      {
+        url: "/luminus_events.jpg",
+        secureUrl: "https://luminuslatam.com/luminus_events.jpg",
+        width: 1200,
+        height: 630,
+        type: "image/jpeg",
+        alt: "Próximas Fechas | LUMINUS LATAM",
+      },
+    ],
+    locale: "es_LA",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Próximas Fechas | LUMINUS LATAM",
+    description: "Conoce las próximas charlas en vivo, entrevistas y talleres con especialistas del bienestar. Participa y reserva tu lugar.",
+    images: ["/luminus_events.jpg"],
+  },
 };
 
+function deduplicateEvents(events: any[]) {
+  const seen = new Set<string>();
+  return events.filter((e) => {
+    const normTitle = (e.title || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "")
+      .trim();
+    if (!normTitle) return true;
+    if (seen.has(normTitle)) return false;
+    seen.add(normTitle);
+    return true;
+  });
+}
+
 export default async function ProximasFechasPage() {
-  let supabaseEvents: any[] = [];
-  let jsonEvents: any[] = [];
+  const [upcomingFromDb, pastFromDb] = await Promise.all([
+    getDbEvents({ type: "upcoming" }),
+    getDbEvents({ type: "past" }),
+  ]);
 
-  // 1. Fetch from Supabase
-  try {
-    if (supabase) {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .order("date", { ascending: true });
+  const rawUpcoming = Array.isArray(upcomingFromDb) ? upcomingFromDb : [];
+  const rawPast = Array.isArray(pastFromDb) ? pastFromDb : [];
 
-      if (data && data.length > 0) {
-        supabaseEvents = data;
-      } else if (error) {
-        console.warn("Supabase query failed for ProximasFechas:", error.message);
-      }
-    }
-  } catch (err) {
-    console.warn("Could not connect to Supabase for ProximasFechas:", err);
-  }
-
-  // 2. Fetch local JSON events
-  try {
-    const jsonPath = path.join(process.cwd(), "apps", "marketing", "data", "youtube_videos.json");
-    if (fs.existsSync(jsonPath)) {
-      jsonEvents = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
-    } else {
-      const altPath = path.join(process.cwd(), "data", "youtube_videos.json");
-      if (fs.existsSync(altPath)) {
-        jsonEvents = JSON.parse(fs.readFileSync(altPath, "utf8"));
-      }
-    }
-  } catch (fsErr) {
-    console.error("Error loading local JSON for ProximasFechas:", fsErr);
-  }
-
-  // 3. Filter upcoming events
-  const now = new Date();
-  const upcomingMap = new Map<string, any>();
-
-  const processUpcomingEvent = (ev: any) => {
-    if (!ev) return;
-    const isUpcoming =
-      ev.is_upcoming === true ||
-      (ev.is_upcoming !== false &&
-        ev.date &&
-        !isNaN(new Date(ev.date).getTime()) &&
-        new Date(ev.date) >= now);
-
-    if (isUpcoming) {
-      const key = ev.slug || ev.id || ev.youtube_id;
-      if (key && !upcomingMap.has(key)) {
-        upcomingMap.set(key, ev);
-      }
-    }
-  };
-
-  supabaseEvents.forEach(processUpcomingEvent);
-
-  const upcomingEvents = Array.from(upcomingMap.values()).sort((a: any, b: any) => {
-    const dateA = a.date ? new Date(a.date).getTime() : 0;
-    const dateB = b.date ? new Date(b.date).getTime() : 0;
-    return dateA - dateB;
+  const upcomingEvents = deduplicateEvents(rawUpcoming).sort((a, b) => {
+    const dA = a.date ? new Date(a.date).getTime() : 0;
+    const dB = b.date ? new Date(b.date).getTime() : 0;
+    return dA - dB;
   });
 
-  // 4. Filter ALL past events for the historic section, sorted descending by date (newest past event first)
-  const combinedList = [...supabaseEvents, ...jsonEvents];
-  const pastEventsMap = new Map<string, any>();
-
-  combinedList.forEach((item: any) => {
-    if (!item) return;
-    if (item.is_upcoming === true) return;
-    if (item.date) {
-      const d = new Date(item.date);
-      if (!isNaN(d.getTime()) && d > now) return;
-    }
-    const key = item.youtube_id || item.id || item.slug;
-    if (key && !pastEventsMap.has(key)) {
-      pastEventsMap.set(key, item);
-    }
-  });
-
-  const pastEvents = Array.from(pastEventsMap.values()).sort((a: any, b: any) => {
-    const dateA = a.date ? new Date(a.date).getTime() : 0;
-    const dateB = b.date ? new Date(b.date).getTime() : 0;
-    return dateB - dateA;
+  const pastEvents = deduplicateEvents(rawPast).sort((a, b) => {
+    const dA = a.date ? new Date(a.date).getTime() : 0;
+    const dB = b.date ? new Date(b.date).getTime() : 0;
+    return dB - dA;
   });
 
   return (

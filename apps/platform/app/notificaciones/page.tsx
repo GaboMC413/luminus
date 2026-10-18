@@ -6,6 +6,7 @@ import { formatRelativeTime } from "@/components/ui/PlatformNavbar";
 import { OnboardingProgressCard } from "@/components/ui/NotificationPopup";
 import { PageLoader } from "@/components/ui/PageLoader";
 import { DotSpinner } from "@/components/ui/DotSpinner";
+import { formatMessageBody } from "@/utils/messages";
 
 type Notification = {
   id: string;
@@ -214,7 +215,7 @@ function NotificationsContent() {
 
     // 2. Tab filter
     if (activeFilter === "todas") return true;
-    if (activeFilter === "leidas") return n.type === "onboarding-progress" ? false : !n.isUnread;
+    if (activeFilter === "leidas") return !n.isUnread;
     if (activeFilter === "no_leidas") return n.isUnread;
     if (activeFilter === "especialistas") {
       return String(n.type).includes("follow");
@@ -387,6 +388,7 @@ function NotificationsContent() {
                             quests={n.quests || []}
                             progressPercentage={n.progressPercentage || 0}
                             onClose={() => {}}
+                            onDismiss={() => deleteNotification(n.id)}
                           />
                         </div>
                       );
@@ -461,9 +463,9 @@ function NotificationsContent() {
                           </div>
                           <p className="text-sm leading-relaxed text-slate-600 group-hover:text-slate-900 transition-colors">
                             {n.user && n.user !== "LUMINUS" && (
-                              <span className="font-semibold text-slate-900 group-hover:underline">{n.user}: </span>
+                              <span className="font-semibold text-slate-900 group-hover:text-slate-600 transition-colors">{n.user}: </span>
                             )}
-                            {n.action}
+                            {formatMessageBody(n.action)}
                           </p>
                           {n.type === "connection_request" && n.isUnread && (
                             <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>

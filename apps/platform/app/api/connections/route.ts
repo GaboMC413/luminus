@@ -11,6 +11,21 @@ function serializeConnection(connection: any, currentUserId: string) {
   const profile = otherUser?.profile ?? {};
   const fullName = profile.fullName || `${profile.firstName || ""} ${profile.lastName || ""}`.trim();
 
+  const userCategoriesMap = new Map();
+  (otherUser?.interests ?? []).forEach((row: any) => {
+    const cat = row.interest?.category;
+    if (cat && !userCategoriesMap.has(cat.id)) {
+      userCategoriesMap.set(cat.id, {
+        id: cat.id,
+        name: cat.name,
+        icon: cat.icon || "label",
+        iconFilled: cat.iconFilled ?? true,
+        color: cat.color || "#3B82F6",
+        bgColor: cat.bgColor || "#DBEAFE",
+      });
+    }
+  });
+
   return {
     id: connection.id,
     status: connection.status,
@@ -21,6 +36,8 @@ function serializeConnection(connection: any, currentUserId: string) {
       avatar: profile.avatarUrl || "",
       profession: profile.profession || "",
       location: `${profile.city || ""}, ${profile.country || ""}`.replace(/^,\s*|,\s*$/, "").trim(),
+      interests: (otherUser?.interests ?? []).map((row: any) => row.interest?.name).filter(Boolean),
+      categories: Array.from(userCategoriesMap.values()),
     },
     created_at: connection.createdAt?.toISOString?.() ?? "",
     updated_at: connection.updatedAt?.toISOString?.() ?? "",
@@ -54,8 +71,34 @@ export async function GET() {
         ],
       },
       include: {
-        requester: { include: { profile: true } },
-        recipient: { include: { profile: true } },
+        requester: {
+          include: {
+            profile: true,
+            interests: {
+              include: {
+                interest: {
+                  include: {
+                    category: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        recipient: {
+          include: {
+            profile: true,
+            interests: {
+              include: {
+                interest: {
+                  include: {
+                    category: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
       orderBy: { updatedAt: "desc" },
     });

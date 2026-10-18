@@ -6,6 +6,7 @@ import { InputField } from "@/components/ui/InputField";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 export default function ForgotPasswordView() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function ForgotPasswordView() {
   const [timer, setTimer] = useState(180); // 3 minutes in seconds
   const [canResend, setCanResend] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   // Timer logic for resending code
   useEffect(() => {
@@ -54,7 +56,7 @@ export default function ForgotPasswordView() {
       const response = await fetch("/api/auth/recover/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, turnstileToken }),
       });
       const data = await response.json();
 
@@ -126,7 +128,7 @@ export default function ForgotPasswordView() {
       setMessage({ text: "La contraseña debe incluir letras mayúsculas y minúsculas.", type: "error" });
       return;
     }
-    if (!/\d/.test(newPassword) || !/[^A-Za-z0-9]/.test(newPassword)) {
+    if (!/\d/.test(newPassword) || !/[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(newPassword)) {
       setMessage({ text: "La contraseña debe incluir al menos un número y un símbolo.", type: "error" });
       return;
     }
@@ -183,8 +185,8 @@ export default function ForgotPasswordView() {
       {/* 2. Right Form Pane */}
       <div className="flex-1 flex flex-col bg-slate-50 min-h-0 h-full overflow-hidden pt-14 lg:pt-0 animate-in fade-in duration-300">
         
-        {/* Mobile Header: Logo */}
-        <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-light-gradient-slate border-b-0 flex items-center justify-center shrink-0 z-50">
+        {/* Mobile Header: Logo (only visible on mobile, no border, no line) */}
+        <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 bg-slate-50 flex items-center justify-center shrink-0 z-50 border-none shadow-none">
           <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
             <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[20px]" />
           </Link>
@@ -226,18 +228,24 @@ export default function ForgotPasswordView() {
               >
                 <div className="flex flex-col gap-3.5">
                   {view === 'email' && (
-                    <InputField
-                      type="email"
-                      placeholder="Correo electrónico"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        if (message.type === 'error') setMessage({ text: "", type: "" });
-                      }}
-                      variant="clean"
-                      className={`!bg-white border border-zinc-200/80 focus:border-slate-800 ${message.type === 'error' && !email ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
-                      enterKeyHint="go"
-                    />
+                    <>
+                      <InputField
+                        type="email"
+                        placeholder="Correo electrónico"
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          if (message.type === 'error') setMessage({ text: "", type: "" });
+                        }}
+                        variant="clean"
+                        className={`!bg-white border border-zinc-200/80 focus:border-slate-800 ${message.type === 'error' && !email ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
+                        enterKeyHint="go"
+                      />
+                      <TurnstileWidget
+                        onSuccess={(token) => setTurnstileToken(token)}
+                        onExpire={() => setTurnstileToken(null)}
+                      />
+                    </>
                   )}
 
                   {view === 'code' && (
@@ -291,10 +299,10 @@ export default function ForgotPasswordView() {
                           )}
                         </div>
                         <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
-                          <p className={`text-xs sm:text-sm font-normal tracking-tight ${/\d/.test(newPassword) && /[^A-Za-z0-9]/.test(newPassword) ? 'text-green-600' : 'text-slate-500'}`}>
+                          <p className={`text-xs sm:text-sm font-normal tracking-tight ${/\d/.test(newPassword) && /[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(newPassword) ? 'text-green-600' : 'text-slate-500'}`}>
                             Al menos un número y un símbolo
                           </p>
-                          {/\d/.test(newPassword) && /[^A-Za-z0-9]/.test(newPassword) && (
+                          {/\d/.test(newPassword) && /[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(newPassword) && (
                             <span className="text-green-600 text-sm sm:text-base font-bold">✓</span>
                           )}
                         </div>

@@ -6,7 +6,7 @@ export function DarkFeatureShowcase() {
       <div className="w-full max-w-[1440px] flex flex-col lg:flex-row items-center justify-between min-h-[360px] lg:h-[380px]">
 
         {/* Left 50% Column */}
-        <div className="w-full lg:w-1/2 px-8 sm:px-14 lg:px-20 py-12 lg:py-0 flex items-center justify-start h-full">
+        <div className="w-full lg:w-1/2 px-8 sm:px-14 lg:px-20 py-14 sm:py-16 lg:py-0 flex items-center justify-start h-full">
           <p className="text-xl lg:text-heading-5 font-normal text-white max-w-xl">
             Conecta con personas, encuentra especialistas, participa de actividades y descubre nuevas formas de cuidar tu bienestar en Latinoamérica.
           </p>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { parsePhoneNumberFromString, CountryCode } from "libphonenumber-js";
+import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
 
 export const runtime = "nodejs";
 
@@ -75,9 +76,18 @@ export async function POST(request: Request) {
     typeof data.otherInterests === "string" && data.otherInterests.trim()
       ? data.otherInterests.trim()
       : undefined;
+  const rawAvatarUrl = typeof data.avatarUrl === "string" ? data.avatarUrl : undefined;
+  const avatarUrl = await ensureS3AvatarUrl(rawAvatarUrl, session.userId);
 
   try {
     const { prisma } = await import("@/lib/db");
+
+    const existingProfile = await prisma.userProfile.findUnique({
+      where: { userId: session.userId },
+      select: { isOnboarded: true },
+    });
+    const wasAlreadyOnboarded = Boolean(existingProfile?.isOnboarded);
+
     const profile = await prisma.$transaction(async (tx: any) => {
       const savedProfile = await tx.userProfile.upsert({
         where: { userId: session.userId },
@@ -86,7 +96,7 @@ export async function POST(request: Request) {
           fullName,
           firstName,
           lastName,
-          avatarUrl: typeof data.avatarUrl === "string" ? data.avatarUrl : undefined,
+          avatarUrl,
           city: typeof data.city === "string" ? data.city : undefined,
           country: typeof data.country === "string" ? data.country : undefined,
           phoneNumber,
@@ -100,7 +110,7 @@ export async function POST(request: Request) {
           fullName,
           firstName,
           lastName,
-          avatarUrl: typeof data.avatarUrl === "string" ? data.avatarUrl : undefined,
+          avatarUrl,
           city: typeof data.city === "string" ? data.city : undefined,
           country: typeof data.country === "string" ? data.country : undefined,
           phoneNumber,
@@ -158,7 +168,19 @@ export async function POST(request: Request) {
       return savedProfile;
     });
 
+    if (data.isOnboarded === true && !wasAlreadyOnboarded) {
+      try {
+        const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
+        await sendWelcomeMessage(prisma, session.userId);
+        const { sendWelcomeEmail } = await import("@/lib/mails/sender");
+        await sendWelcomeEmail(session.email, firstName || profile?.firstName || undefined);
+      } catch (welcomeError) {
+        console.error("Welcome message/email trigger during onboarding completion failed:", welcomeError);
+      }
+    }
+
     return NextResponse.json({ profile });
+
   } catch (error) {
     console.error("Onboarding database flow failed.", error);
     return NextResponse.json(

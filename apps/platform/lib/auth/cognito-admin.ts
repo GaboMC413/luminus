@@ -52,6 +52,12 @@ function getCognitoUsername(user: CognitoManagedUser) {
 }
 
 function isSystemUser(user: CognitoManagedUser) {
+  const hasCognitoIdentity = user.identities?.some(
+    (identity) => identity.provider === "cognito" && !identity.providerSubject.startsWith("system:")
+  );
+  if (hasCognitoIdentity) {
+    return false;
+  }
   return user.cognitoSub.startsWith("system:");
 }
 
@@ -144,3 +150,23 @@ export async function adminConfirmUser(email: string) {
     console.error("Failed to auto-confirm user in Cognito:", error);
   }
 }
+
+export async function adminDeleteCognitoUser(email: string) {
+  const client = getCognitoAdminClient();
+  const UserPoolId = getUserPoolId();
+
+  try {
+    await client.send(
+      new AdminDeleteUserCommand({
+        UserPoolId,
+        Username: email,
+      })
+    );
+  } catch (error: any) {
+    if (error?.name === "UserNotFoundException" || error instanceof UserNotFoundException) {
+      return;
+    }
+    console.error("Failed to delete Cognito user:", error);
+  }
+}
+

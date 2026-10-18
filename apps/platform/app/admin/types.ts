@@ -3,6 +3,7 @@ export type AdminUser = {
   email: string;
   role: "USER" | "ADMIN";
   status: "active" | "disabled" | "deleted";
+  isGhost?: boolean;
   emailVerified: boolean;
   authProvider: string;
   createdAt: string | null;
@@ -87,6 +88,10 @@ export type AdminEmailLog = {
   recipient: string;
   subject: string;
   htmlBody: string;
+  status?: string | null;
+  messageId?: string | null;
+  errorDetails?: string | null;
+  metadata?: string | null;
   createdAt: string;
 };
 
@@ -207,6 +212,64 @@ export type AdminSuggestion = {
   categoryName: string | null;
 };
 
+export type AdminEvent = {
+  id: string;
+  youtubeId: string | null;
+  slug: string | null;
+  title: string;
+  description: string;
+  date: string | null;
+  timeText: string | null;
+  location: string | null;
+  speakerName: string | null;
+  speakerBio: string | null;
+  category: string | null;
+  coverUrl: string | null;
+  link: string | null;
+  isUpcoming: boolean;
+  liveNotificationSent?: boolean;
+  liveNotificationSentAt?: string | null;
+  createdAt: string;
+  inscriptionsCount?: number;
+};
+
+export type AdminEventInscription = {
+  id: string;
+  eventId: string;
+  userId?: string | null;
+  guestFirstName?: string | null;
+  guestLastName?: string | null;
+  guestEmail?: string | null;
+  guestCity?: string | null;
+  guestState?: string | null;
+  guestCountry?: string | null;
+  marketingConsent?: boolean;
+  notifiedLiveAt?: string | null;
+  notifiedLiveStatus?: string | null;
+  createdAt: string;
+  user?: {
+    email: string;
+    profile?: {
+      firstName?: string;
+      lastName?: string;
+      fullName?: string;
+      avatarUrl?: string;
+    };
+  };
+};
+
+export type AdminContactMessage = {
+  id: string;
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono: string | null;
+  pais: string | null;
+  motivo: string;
+  mensaje: string;
+  createdAt: string;
+};
+
 export type AdminTab =
   | "usuarios"
   | "chats"
@@ -214,5 +277,9 @@ export type AdminTab =
   | "logs"
   | "busquedas"
   | "especialistas"
+  | "publicaciones"
   | "emails"
-  | "categorias";
+  | "categorias"
+  | "eventos"
+  | "contacto";
+

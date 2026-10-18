@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Share2, Check } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { LocationInput } from "@/components/ui/LocationInput";
 import { Button } from "@/components/ui/Button";
+import { trackEventInscription } from "@/lib/meta-pixel";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 interface EventItem {
   id?: string;
@@ -19,6 +20,7 @@ interface EventItem {
   date?: string;
   time_text?: string;
   location?: string;
+  coverUrl?: string | null;
   cover_url?: string | null;
   youtube_id?: string;
 }
@@ -27,12 +29,30 @@ interface EventRegistrationSectionProps {
   event: EventItem;
 }
 
+function parseCalendarDate(dateStr?: string | Date | null): Date | null {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? null : dateStr;
+  const str = String(dateStr).trim();
+  if (!str) return null;
+
+  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    return new Date(year, month, day);
+  }
+
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function formatDateTimeFull(dateString?: string, timeText?: string) {
   const timeStr = cleanTimeString(timeText);
   if (!dateString) return timeStr !== "Hora a confirmar" ? timeStr : "Fecha a confirmar";
   try {
-    const d = new Date(dateString);
-    if (isNaN(d.getTime())) return timeStr;
+    const d = parseCalendarDate(dateString);
+    if (!d) return timeStr;
 
     const weekday = d.toLocaleDateString("es-ES", { weekday: "long" });
     const day = d.getDate();
@@ -129,6 +149,12 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpenModal, setIsOpenModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const coverUrl = event.coverUrl || event.cover_url || "/images/placeholder-event.jpg";
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleShare = async () => {
     const shareData = {
@@ -157,13 +183,73 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
     }
   };
 
+  const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
+  const handleOpenModal = () => {
+    setSubmitted(false);
+    setIsAlreadyRegistered(false);
+    setResendSuccess(false);
+    setSubmitError(null);
+    setIsOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsOpenModal(false);
+    setSubmitted(false);
+    setIsAlreadyRegistered(false);
+    setResendSuccess(false);
+    setSubmitError(null);
+  };
+
+  const handleResendEmail = async () => {
+    setIsResending(true);
+    try {
+      const res = await fetch("/api/event-inscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          eventId: event.id,
+          eventTitle: event.title,
+          eventCoverUrl: event.coverUrl || event.cover_url,
+          eventDate: event.date,
+          timeText: event.time_text,
+          speakerName: event.speaker_name,
+          youtubeId: event.youtube_id,
+          youtubeUrl: event.youtube_id ? `https://www.youtube.com/watch?v=${event.youtube_id}` : null,
+          eventSlug: event.slug,
+          isResend: true,
+          turnstileToken,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setResendSuccess(true);
+      } else {
+        setSubmitError(data.error || "No se pudo reenviar el correo.");
+      }
+    } catch {
+      setSubmitError("Error de conexión al intentar reenviar el correo.");
+    } finally {
+      setIsResending(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.city) return;
 
     setIsSubmitting(true);
+    setSubmitError(null);
+    setResendSuccess(false);
     try {
-      await fetch("/api/event-inscription", {
+      const res = await fetch("/api/event-inscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -173,33 +259,41 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           city: formData.city,
           eventId: event.id,
           eventTitle: event.title,
-          eventCoverUrl: coverUrl,
+          eventCoverUrl: event.coverUrl || event.cover_url,
           eventDate: event.date,
           timeText: event.time_text,
           speakerName: event.speaker_name,
           youtubeId: event.youtube_id,
           youtubeUrl: event.youtube_id ? `https://www.youtube.com/watch?v=${event.youtube_id}` : null,
           eventSlug: event.slug,
+          turnstileToken,
         }),
       });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        console.error("[Inscription Error]:", data.error || data.warnings);
+        setSubmitError(data.error || "Ocurrió un error al procesar la inscripción.");
+      } else {
+        console.log("[Inscription Success]:", data);
+        trackEventInscription(event.title, event.slug);
+        setIsAlreadyRegistered(!!data.alreadyRegistered);
+        setSubmitted(true);
+      }
     } catch (err) {
       console.warn("Registration API failed:", err);
+      setSubmitError("No se pudo conectar con el servidor. Inténtalo nuevamente.");
     } finally {
       setIsSubmitting(false);
-      setSubmitted(true);
     }
   };
 
-  const coverUrl =
-    event.cover_url ||
-    (event.youtube_id
-      ? `https://i.ytimg.com/vi/${event.youtube_id}/hqdefault.jpg`
-      : "/placeholder-video.jpg");
-
-  const formattedDateTime = formatDateTimeFull(event.date, event.time_text);
+  // Defer locale-dependent date formatting to client to avoid SSR/client hydration mismatch (#418/#423)
+  const formattedDateTime = mounted
+    ? formatDateTimeFull(event.date, event.time_text)
+    : "Cargando fecha...";
 
   return (
-    <div className="w-full py-8 md:py-14 bg-white flex-1 flex flex-col items-center">
+    <div className="w-full py-14 sm:py-16 md:py-24 bg-white flex-1 flex flex-col items-center">
       <div className="w-full max-w-[1140px] px-4 sm:px-6 lg:px-8 flex flex-col gap-6 text-left">
 
         {/* Back Link */}
@@ -261,7 +355,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           {/* 5. Botón de inscripción (1st CTA) */}
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setIsOpenModal(true)}
+              onClick={handleOpenModal}
               className="w-full sm:w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
             >
               <span>Inscribirme a este evento</span>
@@ -296,7 +390,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           {/* 7. Segundo botón de inscripción (2nd CTA) */}
           <div className="pt-2 flex items-center gap-3">
             <button
-              onClick={() => setIsOpenModal(true)}
+              onClick={handleOpenModal}
               className="w-full sm:w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
             >
               <span>Inscribirme a este evento</span>
@@ -305,7 +399,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
               variant="soft"
               size="default"
               onClick={handleShare}
-              className="h-12 w-12 !px-0 rounded-2xl shrink-0 border border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100 flex items-center justify-center relative"
+              className="h-12 w-12 !px-0 !rounded-2xl shrink-0 border border-slate-200 text-slate-700 hover:text-black hover:bg-slate-100 flex items-center justify-center relative"
               title={copied ? "¡Enlace copiado!" : "Compartir evento"}
               aria-label="Compartir evento"
             >
@@ -339,7 +433,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
 
             <div className="flex items-center gap-3">
               <button
-                onClick={() => setIsOpenModal(true)}
+                onClick={handleOpenModal}
                 className="w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
               >
                 <span>Inscribirme a este evento</span>
@@ -372,7 +466,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
 
             <div className="pt-2 flex items-center gap-3">
               <button
-                onClick={() => setIsOpenModal(true)}
+                onClick={handleOpenModal}
                 className="w-auto h-12 px-8 bg-black hover:bg-slate-800 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
               >
                 <span>Inscribirme a este evento</span>
@@ -436,15 +530,12 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
 
       {/* Interactive Registration Modal */}
       {isOpenModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-[500px] bg-white rounded-2xl p-6 sm:p-7 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-200 text-left">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-[500px] max-h-[92dvh] overflow-y-auto overscroll-contain bg-white rounded-2xl p-6 sm:p-7 shadow-2xl border border-slate-200 relative animate-in fade-in zoom-in-95 duration-200 text-left my-auto">
 
             {/* Close Button */}
             <button
-              onClick={() => {
-                setIsOpenModal(false);
-                setSubmitted(false);
-              }}
+              onClick={handleCloseModal}
               className="absolute top-5 right-5 w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-700 transition-colors cursor-pointer"
               aria-label="Cerrar modal"
             >
@@ -454,23 +545,73 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
             </button>
 
             {submitted ? (
-              <div className="flex flex-col items-center justify-center text-center gap-4 pt-2">
-                <div className="w-14 h-14 rounded-full bg-green-100 text-green-700 flex items-center justify-center">
-                  <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
+              isAlreadyRegistered ? (
+                <div className="flex flex-col items-center justify-center text-center gap-4 pt-2">
+                  <div className="w-14 h-14 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-normal text-slate-900">Ya te inscribiste a este evento</h3>
+                  <p className="text-slate-600 text-sm font-light leading-relaxed">
+                    La información para acceder a <strong className="font-medium text-slate-800">{event.title}</strong> te la enviamos por correo electrónico a <strong className="font-medium text-slate-800">{formData.email}</strong>.
+                  </p>
+
+                  <div className="w-full flex flex-col items-center gap-3 pt-2">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">¿No encuentras el mail?</p>
+                    
+                    <button
+                      onClick={handleResendEmail}
+                      disabled={isResending || resendSuccess}
+                      className="w-full h-12 px-6 bg-black hover:bg-slate-800 disabled:opacity-80 text-white rounded-2xl text-base font-normal transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm gap-2"
+                    >
+                      {isResending ? (
+                        "Reenviando..."
+                      ) : resendSuccess ? (
+                        <>
+                          <Check className="w-5 h-5 text-emerald-400" />
+                          <span>¡Mail reenviado con éxito!</span>
+                        </>
+                      ) : (
+                        "Reenviar mail de confirmación"
+                      )}
+                    </button>
+
+                    <Link
+                      href="/contacto"
+                      target="_blank"
+                      className="text-slate-600 hover:text-black text-sm font-medium underline transition-colors"
+                    >
+                      Contactar a LUMINUS
+                    </Link>
+
+                    <button
+                      onClick={handleCloseModal}
+                      className="text-slate-400 hover:text-slate-700 text-sm font-normal underline transition-colors pt-2 cursor-pointer"
+                    >
+                      Cerrar
+                    </button>
+                  </div>
                 </div>
-                <h3 className="text-2xl font-normal text-slate-900">¡Inscripción confirmada!</h3>
-                <p className="text-slate-600 text-sm font-light leading-relaxed">
-                  Te has inscripto a <strong className="font-medium text-slate-800">{event.title}</strong>. Te enviamos los detalles de acceso a <strong className="font-medium text-slate-800">{formData.email}</strong>.
-                </p>
-                <button
-                  onClick={() => setIsOpenModal(false)}
-                  className="mt-1 w-full h-12 px-8 bg-black hover:bg-slate-800 text-white rounded-2xl text-base font-normal transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
-                >
-                  Cerrar
-                </button>
-              </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center gap-4 pt-2">
+                  <div className="w-14 h-14 rounded-full bg-green-100 text-green-700 flex items-center justify-center">
+                    <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-2xl font-normal text-slate-900">¡Inscripción confirmada!</h3>
+                  <p className="text-slate-600 text-sm font-light leading-relaxed">
+                    Te has inscripto a <strong className="font-medium text-slate-800">{event.title}</strong>. Te enviamos los detalles de acceso a <strong className="font-medium text-slate-800">{formData.email}</strong>.
+                  </p>
+                  <button
+                    onClick={handleCloseModal}
+                    className="mt-1 w-full h-12 px-8 bg-black hover:bg-slate-800 text-white rounded-2xl text-base font-normal transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
+                  >
+                    Cerrar
+                  </button>
+                </div>
+              )
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div className="pr-10">
@@ -532,15 +673,26 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
                   {/* Ciudad */}
                   <LocationInput
                     label="Ciudad *"
-                    placeholder="Ciudad"
+                    placeholder="Ingresa tu ciudad"
                     required
                     defaultValue={formData.city}
                     onSelect={({ city }) => setFormData((prev) => ({ ...prev, city }))}
                   />
                 </div>
 
-                <button
-                  type="submit"
+                <TurnstileWidget
+                  onSuccess={(token) => setTurnstileToken(token)}
+                  onExpire={() => setTurnstileToken(null)}
+                />
+
+                {submitError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-medium text-center">
+                    {submitError}
+                  </div>
+                )}
+
+                  <button
+                    type="submit"
                   disabled={isSubmitting}
                   className="w-full mt-1 h-12 px-8 bg-black hover:bg-slate-800 disabled:opacity-50 text-white font-normal rounded-2xl text-base transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"
                 >

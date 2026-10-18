@@ -6,7 +6,7 @@ import {
   renderPasswordResetEmailHtml,
   renderEmailChangeVerificationHtml,
   renderContactNotificationEmailHtml,
-} from "@/lib/email/templates";
+} from "@/lib/mails";
 
 export default function EmailPreviewPage() {
   const [activeTab, setActiveTab] = useState<"welcome" | "passwordReset" | "emailChange" | "contact">("welcome");
