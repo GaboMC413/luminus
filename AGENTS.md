@@ -14,6 +14,7 @@ This repository has the following specialized skills installed under [`skills/`]
 
 ### Architecture & Knowledge
 * **`graphify`**: Codebase knowledge graph, community detection, architecture audit.
+* **`archify`**: Visual architecture, sequence, lifecycle/state, ERD, and data-flow diagrams as explorable standalone HTML/SVG.
 
 ### Design & UI Craft
 * **`impeccable`**: Design director & frontend craft: design audits, anti-pattern detection, design system capture (DESIGN.md), UX review, typography, colors, animations, and aesthetic refinement.
