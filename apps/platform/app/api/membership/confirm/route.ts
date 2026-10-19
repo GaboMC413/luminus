@@ -12,7 +12,12 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json().catch(() => null);
-    const { subscriptionId, customerId } = body || {};
+    const { subscriptionId, customerId, billingInterval, cardName, city, country, firstName: bodyFirstName, lastName: bodyLastName } = body || {};
+
+    const nameParts = cardName ? String(cardName).trim().split(/\s+/) : [];
+    const firstName = bodyFirstName ? String(bodyFirstName).trim() : (nameParts[0] || undefined);
+    const lastName = bodyLastName ? String(bodyLastName).trim() : (nameParts.length > 1 ? nameParts.slice(1).join(" ") : undefined);
+    const fullName = (firstName && lastName) ? `${firstName} ${lastName}` : (cardName ? String(cardName).trim() : undefined);
 
     const { prisma } = await import("@/lib/db");
     const now = new Date();
@@ -25,8 +30,23 @@ export async function POST(request: Request) {
         stripeCustomerId: customerId ? String(customerId) : undefined,
         stripeSubscriptionId: subscriptionId ? String(subscriptionId) : undefined,
         profile: {
-          update: {
-            selectedPlan: "Monthly",
+          upsert: {
+            create: {
+              selectedPlan: billingInterval === "annual" ? "Annual" : "Monthly",
+              city: city ? String(city).trim() : undefined,
+              country: country ? String(country).trim() : undefined,
+              firstName,
+              lastName,
+              fullName,
+            },
+            update: {
+              selectedPlan: billingInterval === "annual" ? "Annual" : "Monthly",
+              ...(city ? { city: String(city).trim() } : {}),
+              ...(country ? { country: String(country).trim() } : {}),
+              ...(firstName ? { firstName } : {}),
+              ...(lastName ? { lastName } : {}),
+              ...(fullName ? { fullName } : {}),
+            },
           },
         },
       },

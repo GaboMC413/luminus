@@ -178,6 +178,14 @@ export default function SignUpView() {
                 setEmail(prev => prev || data.email);
               }
             }
+          } else if (res.status === 401) {
+            // Stale or invalid session. Reset to Step 1 and remove ?onboarding=1
+            setStep(1);
+            if (window.location.search.includes("onboarding=1")) {
+              const url = new URL(window.location.href);
+              url.searchParams.delete("onboarding");
+              window.history.replaceState({}, "", url.pathname + (url.search ? url.search : ""));
+            }
           }
         } catch (err) {
           console.error("Failed to fetch profile for autofill:", err);
@@ -186,6 +194,17 @@ export default function SignUpView() {
       fetchUserProfile();
     }
   }, [step]);
+
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+    setStep(1);
+    setEmail("");
+    window.location.href = "/auth/registrarse";
+  };
 
   const handleSignUp = async () => {
     if (!email || !password || !repeatPassword) {
@@ -579,13 +598,29 @@ export default function SignUpView() {
     <div className="auth-fixed-page bg-slate-50 flex flex-col lg:flex-row font-sans">
 
       {/* LATERAL SIDEBAR */}
-      <div className="fixed top-0 left-0 right-0 lg:relative w-full h-14 lg:h-full lg:w-80 luminus-light-gradient-slate lg:luminus-light-gradient border-b-0 lg:border-r border-slate-200 shrink-0 flex lg:flex-col items-center justify-center lg:justify-start lg:pt-12 z-50 transition-all duration-500 overflow-hidden">
-        <Link href="/" className="relative z-10 flex flex-col items-center w-full px-8 cursor-pointer hover:opacity-80 transition-opacity">
+      <div className="fixed top-0 left-0 right-0 lg:relative w-full h-14 lg:h-full lg:w-80 luminus-light-gradient-slate lg:luminus-light-gradient border-b-0 lg:border-r border-slate-200 shrink-0 flex lg:flex-col items-center justify-between lg:justify-start px-6 lg:px-0 lg:pt-12 z-50 transition-all duration-500 overflow-hidden">
+        <Link href="/" className="relative z-10 flex flex-col items-center lg:w-full px-0 lg:px-8 cursor-pointer hover:opacity-80 transition-opacity">
           <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[20px]" />
         </Link>
 
+        {/* Mobile Header Logout Button */}
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="lg:hidden relative z-10 text-[12px] font-sans text-slate-500 hover:text-slate-900 bg-transparent border-0 cursor-pointer underline"
+        >
+          Cerrar sesión
+        </button>
+
         {/* SIDEBAR FOOTER */}
-        <div className="relative z-10 hidden lg:flex flex-col mt-auto w-full h-[64px] justify-center border-t border-slate-100">
+        <div className="relative z-10 hidden lg:flex flex-col mt-auto w-full py-4 px-6 items-center justify-center border-t border-slate-100 gap-1.5">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="text-[12px] font-sans text-slate-500 hover:text-slate-900 bg-transparent border-0 cursor-pointer hover:underline"
+          >
+            Cerrar sesión / Salir
+          </button>
           <p className="text-[9px] text-slate-400 text-center uppercase tracking-widest font-sans">
             Luminus Latam © 2026
           </p>
@@ -598,6 +633,22 @@ export default function SignUpView() {
         className="flex-1 flex flex-col min-h-0 h-full overflow-y-auto pt-14 lg:pt-0"
       >
         <div className="flex-1 flex flex-col items-center pt-8 md:pt-12 pb-10 md:pb-20 px-6 md:px-12">
+          {/* Active Account Banner */}
+          {email && (
+            <div className="w-full max-w-[344px] md:max-w-[665px] mb-4 flex items-center justify-between text-xs text-slate-500 bg-white border border-slate-200/80 rounded-xl px-4 py-2.5 shadow-xs">
+              <span className="truncate mr-2">
+                Completando cuenta de <strong className="text-slate-800 font-semibold">{email}</strong>
+              </span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="text-slate-600 hover:text-slate-900 font-medium underline cursor-pointer shrink-0"
+              >
+                ¿No eres tú? Cerrar sesión
+              </button>
+            </div>
+          )}
+
           {/* Constrain width to 665px */}
           <div className="w-full max-w-[344px] md:max-w-[665px] flex flex-col">
             {step === 2 ? (

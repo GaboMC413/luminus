@@ -215,7 +215,7 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
             // Prevent input blur before selection is processed
             e.preventDefault();
           }}
-          className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 bg-white rounded-[12px] outline outline-1 outline-zinc-200 overflow-y-auto overscroll-contain max-h-[190px] sm:max-h-[250px] shadow-xl animate-in fade-in duration-150 pr-1"
+          className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 bg-white rounded-xl border border-zinc-200/90 overflow-y-auto overscroll-contain max-h-[190px] sm:max-h-[250px] animate-in fade-in duration-150 pr-1"
         >
           {sortedSuggestions.map(({ place_id, description, structured_formatting }, index) => (
             <div

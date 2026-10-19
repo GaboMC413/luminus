@@ -121,27 +121,33 @@ export async function assertOnboarded(redirectToPath?: string) {
   let isOnboarded = false;
   try {
     const { prisma } = await import("@/lib/db");
-    const profile = await prisma.userProfile.findUnique({
-      where: { userId: session.userId },
-      select: { isOnboarded: true },
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: {
+        id: true,
+        status: true,
+        profile: { select: { isOnboarded: true } },
+        specialistProfile: { select: { userId: true } },
+        specialistPostulations: { select: { id: true }, take: 1 },
+      },
     });
-    isOnboarded = !!profile?.isOnboarded;
+
+    if (!user || user.status !== "active") {
+      // Session references a user that was deleted, disabled, or no longer exists.
+      // Clear cookie immediately to break the lockout loop.
+      clearSessionCookie();
+      const loginTarget = redirectToPath
+        ? `/auth/iniciar-sesion?redirect=${encodeURIComponent(redirectToPath)}`
+        : "/auth/iniciar-sesion";
+      redirect(loginTarget);
+    }
+
+    isOnboarded = !!user.profile?.isOnboarded;
 
     // Si todavía no figura como onboarded, verificar si ya envió postulación de especialista
     // o tiene perfil de especialista. En ese caso ya completó su flujo y no debe ir al onboarding de usuario.
     if (!isOnboarded) {
-      const [specialistPostulation, specialistProfile] = await Promise.all([
-        prisma.specialistPostulation.findFirst({
-          where: { userId: session.userId },
-          select: { id: true },
-        }),
-        prisma.specialistProfile.findUnique({
-          where: { userId: session.userId },
-          select: { userId: true },
-        }),
-      ]);
-
-      if (specialistPostulation || specialistProfile) {
+      if (user.specialistProfile || user.specialistPostulations.length > 0) {
         await prisma.userProfile.upsert({
           where: { userId: session.userId },
           create: { userId: session.userId, isOnboarded: true },
@@ -150,7 +156,10 @@ export async function assertOnboarded(redirectToPath?: string) {
         isOnboarded = true;
       }
     }
-  } catch (error) {
+  } catch (error: any) {
+    if (error && typeof error === "object" && "digest" in error) {
+      throw error;
+    }
     console.error("Database check failed in assertOnboarded:", error);
   }
 

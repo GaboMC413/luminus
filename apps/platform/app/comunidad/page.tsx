@@ -12,7 +12,6 @@ import { MobileMembersCarousel } from "@/components/community/MobileMembersCarou
 import { UpcomingEventsCarousel, EventItem as CommunityEventItem } from "@/components/community/UpcomingEventsCarousel";
 import { SquareButton } from "@/components/ui/Button";
 import { SuccessModal } from "@/components/ui/SuccessModal";
-import { WelcomeBanner } from "@/features/membership/WelcomeBanner";
 
 export default function PlatformPage() {
   return (
@@ -461,8 +460,6 @@ function PlatformContent() {
               Comunidad
             </h1>
           </div>
-
-          <WelcomeBanner userProfile={currentUserProfile} />
 
           {/* 1. Create Post Input (with mobile quick action square buttons) */}
           <div className="flex items-center gap-2 sm:gap-2.5 w-full">

@@ -209,21 +209,21 @@ export default function AccountCreationView() {
             </div>
 
             {/* Verification Card */}
-            <div className="w-full bg-white rounded-2xl border border-zinc-200/90 p-6 sm:p-8 flex flex-col gap-5">
+            <div className="w-full bg-white rounded-2xl border border-zinc-200/90 p-6 sm:p-7 flex flex-col gap-5">
               <p className="text-sm text-slate-600 leading-relaxed text-center m-0">
                 Ingresa el código de 6 dígitos que enviamos a{" "}
                 <span className="font-semibold text-slate-900 block mt-0.5">{email}</span>
               </p>
 
               <form onSubmit={handleVerifyCode} className="flex flex-col gap-3.5">
-                {/* 6-Digit Code Input: standardized to exact h-12 height */}
+                {/* 6-Digit Code Input: standardized font styles & dynamic mono on typing */}
                 <input
                   ref={codeInputRef}
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
                   maxLength={6}
-                  placeholder="000000"
+                  placeholder="Código de 6 dígitos"
                   value={verificationCode}
                   onChange={(e) => {
                     const val = e.target.value.replace(/\D/g, "").slice(0, 6);
@@ -236,7 +236,11 @@ export default function AccountCreationView() {
                       handleVerifyCode();
                     }
                   }}
-                  className="w-full h-12 px-4 text-center font-mono text-xl tracking-[0.35em] font-bold text-slate-900 bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-300 placeholder:tracking-[0.35em]"
+                  className={`w-full h-12 px-4 text-center bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 placeholder:font-sans placeholder:font-normal placeholder:tracking-normal ${
+                    verificationCode
+                      ? "font-mono text-xl tracking-[0.35em] font-bold text-slate-900"
+                      : "font-sans text-sm tracking-normal"
+                  }`}
                 />
 
                 {verifyError && (
@@ -300,7 +304,7 @@ export default function AccountCreationView() {
             </div>
 
             {/* Step 2A: Card */}
-            <div className="w-full bg-white rounded-2xl border border-zinc-200/90 p-6 sm:p-8 flex flex-col gap-6">
+            <div className="w-full bg-white rounded-2xl border border-zinc-200/90 p-6 sm:p-7 flex flex-col gap-6">
               {/* Social Sign Up Options */}
               <div className="flex flex-col gap-2.5">
                 {/* Google Button */}
@@ -369,7 +373,7 @@ export default function AccountCreationView() {
                       setEmailExists(false);
                     }}
                     placeholder="tu@correo.com"
-                    className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400"
+                    className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 placeholder:font-sans placeholder:font-normal font-sans"
                   />
                 </div>
 
@@ -388,7 +392,7 @@ export default function AccountCreationView() {
                         setErrorMessage(null);
                       }}
                       placeholder="Mínimo 8 caracteres"
-                      className="w-full h-12 pl-4 pr-11 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400"
+                      className="w-full h-12 pl-4 pr-11 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 placeholder:font-sans placeholder:font-normal font-sans"
                     />
                     <button
                       type="button"

@@ -1,5 +1,5 @@
 import SignUpView from "@/features/auth/SignUpView";
-import { getCurrentSession } from "@/lib/auth/session";
+import { getCurrentSession, clearSessionCookie } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 
@@ -10,16 +10,22 @@ export default async function SignUpPage({
 }) {
   const session = getCurrentSession();
   if (session) {
-    const profile = await prisma.userProfile.findUnique({
-      where: { userId: session.userId },
-      select: { isOnboarded: true },
-    });
-    const postulation = await prisma.specialistPostulation.findFirst({
-      where: { userId: session.userId },
-      select: { id: true },
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: {
+        id: true,
+        status: true,
+        profile: { select: { isOnboarded: true } },
+        specialistPostulations: { select: { id: true }, take: 1 },
+      },
     });
 
-    if (profile?.isOnboarded || postulation) {
+    if (!user || user.status !== "active") {
+      clearSessionCookie();
+      return <SignUpView />;
+    }
+
+    if (user.profile?.isOnboarded || user.specialistPostulations.length > 0) {
       redirect(searchParams?.redirect || "/comunidad");
     }
   }

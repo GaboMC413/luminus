@@ -6,16 +6,58 @@ import { useRouter } from "next/navigation";
 import { LocationInput } from "@/components/ui/LocationInput";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { COUNTRIES } from "@/utils/countries";
+import { PhotoEditor } from "@/features/auth/registration/PhotoEditor";
+import { uploadAvatar } from "@/lib/uploadAvatar";
 
-const DEFAULT_COUNTRY = COUNTRIES.find((c) => c.code === "CO") || COUNTRIES[0] || {
-  code: "CO",
-  dial: "+57",
-  name: "Colombia",
+const DEFAULT_COUNTRY = COUNTRIES.find((c) => c.code === "UY") || COUNTRIES[0] || {
+  code: "UY",
+  dial: "+598",
+  name: "Uruguay",
 };
+
+const POPULAR_INTERESTS = [
+  "Meditación",
+  "Yoga",
+  "Mindfulness",
+  "Alimentación consciente",
+  "Salud mental",
+  "Gestión del estrés",
+  "Autoconocimiento",
+  "Hábitos",
+  "Pilates",
+  "Entrenamiento",
+  "Sueño y descanso",
+  "Longevidad",
+  "Respiración",
+  "Creatividad",
+  "Salud digestiva",
+  "Desarrollo personal",
+];
+
+const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0"));
+
+const MONTHS = [
+  { value: "01", label: "Enero" },
+  { value: "02", label: "Febrero" },
+  { value: "03", label: "Marzo" },
+  { value: "04", label: "Abril" },
+  { value: "05", label: "Mayo" },
+  { value: "06", label: "Junio" },
+  { value: "07", label: "Julio" },
+  { value: "08", label: "Agosto" },
+  { value: "09", label: "Septiembre" },
+  { value: "10", label: "Octubre" },
+  { value: "11", label: "Noviembre" },
+  { value: "12", label: "Diciembre" },
+];
+
+const currentYearNum = new Date().getFullYear();
+const YEARS = Array.from({ length: currentYearNum - 1920 + 1 }, (_, i) => String(currentYearNum - i));
 
 export default function CompleteProfileView() {
   const router = useRouter();
 
+  // Basic Personal Info
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [city, setCity] = useState("");
@@ -23,7 +65,19 @@ export default function CompleteProfileView() {
   const [phone, setPhone] = useState("");
   const [phoneCountry, setPhoneCountry] = useState(DEFAULT_COUNTRY);
   const [avatarUrl, setAvatarUrl] = useState("");
-  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  // Photo Cropping & Uploading States
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isCropping, setIsCropping] = useState(false);
+  const [tempImage, setTempImage] = useState<string | null>(null);
+
+  // Parity Fields: Birthdate, Interests (Gender removed per user request)
+  const [birthDay, setBirthDay] = useState("");
+  const [birthMonth, setBirthMonth] = useState("");
+  const [birthYear, setBirthYear] = useState("");
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const [availableInterests, setAvailableInterests] = useState<string[]>(POPULAR_INTERESTS);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -31,10 +85,43 @@ export default function CompleteProfileView() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch current profile to pre-fill (e.g. from Google OAuth)
+  // Load existing profile & categories
   useEffect(() => {
-    async function loadCurrentProfile() {
+    async function loadData() {
+      // 1. Instant pre-fill from localStorage (credit card and billing address)
+      if (typeof window !== "undefined") {
+        const localFirstName = localStorage.getItem("luminus_first_name");
+        const localLastName = localStorage.getItem("luminus_last_name");
+        if (localFirstName) setFirstName(localFirstName);
+        if (localLastName) setLastName(localLastName);
+
+        if (!localFirstName && !localLastName) {
+          const localCardName = localStorage.getItem("luminus_card_name");
+          if (localCardName) {
+            const parts = localCardName.trim().split(/\s+/);
+            setFirstName(parts[0] || "");
+            setLastName(parts.slice(1).join(" ") || "");
+          }
+        }
+        const localCity = localStorage.getItem("luminus_billing_city");
+        if (localCity) setCity(localCity);
+
+        const localCountry = localStorage.getItem("luminus_billing_country");
+        if (localCountry) setCountry(localCountry);
+
+        const localCountryCode = localStorage.getItem("luminus_billing_country_code");
+        if (localCountryCode || localCountry) {
+          const matched = COUNTRIES.find(
+            (c) =>
+              (localCountryCode && c.code.toUpperCase() === localCountryCode.toUpperCase()) ||
+              (localCountry && c.name.toLowerCase() === localCountry.toLowerCase())
+          );
+          if (matched) setPhoneCountry(matched);
+        }
+      }
+
       try {
+        // 2. Fetch Profile from server
         const res = await fetch("/api/profile");
         if (res.status === 401) {
           router.push("/auth/iniciar-sesion");
@@ -47,11 +134,62 @@ export default function CompleteProfileView() {
         if (profile) {
           if (profile.first_name) setFirstName(profile.first_name);
           if (profile.last_name) setLastName(profile.last_name);
+
+          // If first_name is empty, attempt intelligent parse from full_name or cardName
+          if (!profile.first_name && !profile.last_name) {
+            const localFn = typeof window !== "undefined" ? localStorage.getItem("luminus_first_name") : "";
+            const localLn = typeof window !== "undefined" ? localStorage.getItem("luminus_last_name") : "";
+            if (localFn) setFirstName(localFn);
+            if (localLn) setLastName(localLn);
+
+            if (!localFn && !localLn) {
+              const rawName = profile.fullName || (typeof window !== "undefined" ? localStorage.getItem("luminus_card_name") : "") || "";
+              if (rawName) {
+                const parts = rawName.trim().split(/\s+/);
+                setFirstName(parts[0] || "");
+                setLastName(parts.slice(1).join(" ") || "");
+              }
+            }
+          }
+
           if (profile.city) setCity(profile.city);
-          if (profile.country) setCountry(profile.country);
+          if (profile.country) {
+            setCountry(profile.country);
+            // Auto-match phone country from profile/billing country
+            const matched = COUNTRIES.find(
+              (c) => c.name.toLowerCase() === profile.country.toLowerCase()
+            );
+            if (matched) setPhoneCountry(matched);
+          }
+
+          if (profile.birthdate) {
+            const d = new Date(profile.birthdate);
+            if (!isNaN(d.getTime())) {
+              setBirthDay(String(d.getUTCDate()).padStart(2, "0"));
+              setBirthMonth(String(d.getUTCMonth() + 1).padStart(2, "0"));
+              setBirthYear(String(d.getUTCFullYear()));
+            }
+          }
+
+          if (profile.interests && Array.isArray(profile.interests) && profile.interests.length > 0) {
+            setSelectedInterests(profile.interests);
+          }
+
           if (profile.profile_picture_url) setAvatarUrl(profile.profile_picture_url);
           if (profile.phone_number) {
             setPhone(profile.phone_number);
+          }
+        }
+
+        // 3. Fetch categories for interests
+        const catRes = await fetch("/api/categories").catch(() => null);
+        if (catRes && catRes.ok) {
+          const catData = await catRes.json();
+          if (catData?.categories && Array.isArray(catData.categories) && catData.categories.length > 0) {
+            const extractedItems: string[] = catData.categories.flatMap((cat: any) =>
+              Array.isArray(cat.items) ? cat.items : typeof cat === "string" ? [cat] : []
+            );
+            setAvailableInterests(Array.from(new Set([...extractedItems, ...POPULAR_INTERESTS])));
           }
         }
       } catch (err) {
@@ -61,54 +199,51 @@ export default function CompleteProfileView() {
       }
     }
 
-    loadCurrentProfile();
+    loadData();
   }, [router]);
 
-  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.size > 3 * 1024 * 1024) {
-      setErrorMessage("La foto no debe pesar más de 3 MB.");
-      return;
+  // Image Selection -> Opens PhotoEditor (exact same component from current sign-up)
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        setTempImage(reader.result as string);
+        setIsCropping(true);
+      });
+      reader.readAsDataURL(file);
     }
+  };
 
-    setUploadingAvatar(true);
-    setErrorMessage(null);
+  const handleCropCancel = () => {
+    setIsCropping(false);
+    setTempImage(null);
+  };
 
+  const handleCropSave = async (croppedImage: Blob) => {
     try {
-      // 1. Get presigned upload URL
-      const presignRes = await fetch("/api/uploads/avatar", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contentType: file.type || "image/jpeg",
-          contentLength: file.size,
-        }),
+      setUploading(true);
+      setUploadProgress(10);
+      setIsCropping(false);
+
+      const { publicUrl } = await uploadAvatar(croppedImage, (percent) => {
+        setUploadProgress(percent);
       });
-
-      const presignData = await presignRes.json();
-      if (!presignRes.ok) {
-        throw new Error(presignData.message || "Error al preparar la carga.");
-      }
-
-      // 2. Upload file directly to S3
-      const uploadRes = await fetch(presignData.uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.type || "image/jpeg" },
-        body: file,
-      });
-
-      if (!uploadRes.ok) {
-        throw new Error("No se pudo subir la foto a S3.");
-      }
-
-      setAvatarUrl(presignData.publicUrl);
-    } catch (err: any) {
-      console.error("Avatar upload failed:", err);
-      setErrorMessage(err.message || "No pudimos subir tu foto. Intenta con otra imagen.");
+      setAvatarUrl(publicUrl);
+      setTempImage(null);
+    } catch (error: any) {
+      console.error("Error processing avatar:", error);
+      alert("No pudimos subir tu foto. Intenta nuevamente.");
     } finally {
-      setUploadingAvatar(false);
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setAvatarUrl("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -116,6 +251,49 @@ export default function CompleteProfileView() {
     e.preventDefault();
     setSaving(true);
     setErrorMessage(null);
+
+    // Validate birthdate if any part is filled
+    let birthdateString: string | undefined = undefined;
+    if (birthDay || birthMonth || birthYear) {
+      const d = parseInt(birthDay, 10);
+      const m = parseInt(birthMonth, 10);
+      const y = parseInt(birthYear, 10);
+
+      if (!d || !m || !y || isNaN(d) || isNaN(m) || isNaN(y) || m < 1 || m > 12 || d < 1 || d > 31) {
+        setErrorMessage("Por favor ingresa una fecha de nacimiento válida.");
+        setSaving(false);
+        return;
+      }
+
+      const daysInMonth = new Date(y, m, 0).getDate();
+      if (d > daysInMonth) {
+        setErrorMessage("El día ingresado no es válido para ese mes.");
+        setSaving(false);
+        return;
+      }
+
+      const currentYear = new Date().getFullYear();
+      if (y < 1920 || y > currentYear) {
+        setErrorMessage("Por favor ingresa un año válido.");
+        setSaving(false);
+        return;
+      }
+
+      const today = new Date();
+      let age = today.getFullYear() - y;
+      const monthDiff = today.getMonth() + 1 - m;
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < d)) {
+        age--;
+      }
+
+      if (age < 18) {
+        setErrorMessage("Debes ser mayor de 18 años para ser miembro de LUMINUS.");
+        setSaving(false);
+        return;
+      }
+
+      birthdateString = `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+    }
 
     try {
       const fullPhone = phone ? `${phoneCountry.dial} ${phone.replace(/\D/g, "")}` : undefined;
@@ -130,6 +308,8 @@ export default function CompleteProfileView() {
           country: country.trim() || undefined,
           phone_number: fullPhone,
           avatarUrl: avatarUrl || undefined,
+          birthdate: birthdateString,
+          interests: selectedInterests.length > 0 ? selectedInterests : undefined,
           isOnboarded: true,
         }),
       });
@@ -149,7 +329,6 @@ export default function CompleteProfileView() {
   const handleCompleteLater = async () => {
     setSaving(true);
     try {
-      // Mark isOnboarded so user is not blocked by assertOnboarded middleware
       await fetch("/api/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -164,68 +343,124 @@ export default function CompleteProfileView() {
     }
   };
 
+  const toggleInterest = (item: string) => {
+    if (selectedInterests.includes(item)) {
+      setSelectedInterests(selectedInterests.filter((i) => i !== item));
+    } else {
+      setSelectedInterests([...selectedInterests, item]);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FAFAFA] flex flex-col justify-between font-sans selection:bg-slate-200">
       {/* Header */}
-      {/* Header */}
-      <header className="w-full max-w-5xl mx-auto px-6 pt-8 pb-4 flex items-center justify-center">
+      <header className="w-full max-w-5xl mx-auto px-6 pt-8 pb-3 flex items-center justify-center">
         <Link href="/" className="inline-flex items-center">
           <img src="/logo-luminus-black.svg" alt="LUMINUS" className="h-[24px] w-auto" />
         </Link>
       </header>
 
-      {/* Main Container */}
-      <main className="w-full max-w-lg mx-auto px-4 py-6 flex flex-col items-center">
-        {/* Title */}
+      {/* Main Container: standardized to max-w-[430px] */}
+      <main className="w-full max-w-[430px] mx-auto px-4 pt-4 pb-8 flex flex-col items-center">
+        {/* Title (Only one line title, subtitle removed per request) */}
         <div className="text-center mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold font-jakarta text-slate-900 tracking-tight">
+          <h1 className="text-2xl sm:text-[26px] font-bold font-jakarta text-slate-900 tracking-tight">
             Completa tu perfil
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1.5 font-medium max-w-sm">
-            Agrega algunos datos para que otros miembros puedan conocerte.
-          </p>
         </div>
 
-        {/* Card */}
-        <div className="w-full bg-white rounded-2xl border border-zinc-200/90 p-6 sm:p-8 flex flex-col gap-6">
-          <form onSubmit={handleSaveAndContinue} className="flex flex-col gap-5">
-            {/* Avatar Upload */}
-            <div className="flex flex-col items-center gap-2">
-              <div className="relative group">
-                <div className="w-20 h-20 rounded-full overflow-hidden bg-slate-100 border border-zinc-200/90 flex items-center justify-center">
+        {/* Card: Flat, border border-zinc-200/90, zero shadows, p-6 sm:p-7 */}
+        <div className="w-full bg-white rounded-2xl border border-zinc-200/90 p-6 sm:p-7 flex flex-col gap-5">
+          <form onSubmit={handleSaveAndContinue} className="flex flex-col gap-4">
+            {/* 1. Profile Photo Section (Matching the current sign up component + PhotoEditor) */}
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-slate-700 font-jakarta">
+                Foto de perfil
+              </label>
+              <div className="inline-flex items-center gap-4">
+                <div className="w-24 h-24 bg-white rounded-2xl flex justify-center items-center overflow-hidden shrink-0 relative border border-zinc-200/90">
                   {avatarUrl ? (
-                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                    <img
+                      src={avatarUrl}
+                      alt="Profile"
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <span className="material-symbols-outlined text-slate-400 text-[32px] select-none">
+                    <span className="material-symbols-outlined text-zinc-300 select-none text-[54px]">
                       person
                     </span>
                   )}
+                  {uploading && (
+                    <div className="absolute inset-0 bg-white/90 backdrop-blur-[2px] flex flex-col items-center justify-center z-10">
+                      <div className="relative w-11 h-11 flex items-center justify-center">
+                        {/* Background Track Circle */}
+                        <svg className="w-11 h-11 -rotate-90 transform" viewBox="0 0 44 44">
+                          <circle
+                            cx="22"
+                            cy="22"
+                            r="18"
+                            stroke="currentColor"
+                            strokeWidth="3.5"
+                            className="text-zinc-200"
+                            fill="none"
+                          />
+                          {/* Animated Progress Wheel */}
+                          <circle
+                            cx="22"
+                            cy="22"
+                            r="18"
+                            stroke="currentColor"
+                            strokeWidth="3.5"
+                            strokeDasharray={113.097}
+                            strokeDashoffset={113.097 - (113.097 * uploadProgress) / 100}
+                            strokeLinecap="round"
+                            className="text-slate-900 transition-all duration-150 ease-out"
+                            fill="none"
+                          />
+                        </svg>
+                        {/* Percentage Center */}
+                        <span className="absolute text-[11px] font-bold font-mono text-slate-900 tracking-tight">
+                          {uploadProgress}%
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadingAvatar}
-                  className="absolute bottom-0 right-0 w-7 h-7 bg-black hover:bg-zinc-800 text-white rounded-full flex items-center justify-center shadow-sm cursor-pointer border border-white"
-                  title="Subir foto de perfil"
-                >
-                  <span className="material-symbols-outlined text-[15px]">
-                    {uploadingAvatar ? "hourglass_top" : "photo_camera"}
-                  </span>
-                </button>
+
                 <input
-                  ref={fileInputRef}
                   type="file"
-                  accept="image/png, image/jpeg, image/webp"
+                  accept="image/png, image/jpeg, image/webp, .png, .jpg, .jpeg, .webp"
                   className="hidden"
-                  onChange={handleAvatarFileChange}
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  disabled={uploading}
                 />
+
+                <div className="flex flex-col gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="h-10 px-4 bg-zinc-100 hover:bg-zinc-200 text-slate-800 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer border border-zinc-200/80 font-jakarta disabled:opacity-50"
+                  >
+                    {uploading ? `Subiendo ${uploadProgress}%` : avatarUrl ? "Cambiar foto" : "Subir Foto"}
+                  </button>
+
+                  {avatarUrl && !uploading && (
+                    <button
+                      type="button"
+                      onClick={handleRemovePhoto}
+                      className="h-8 px-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 text-xs font-semibold rounded-xl transition-all cursor-pointer border border-transparent font-jakarta flex items-center justify-center gap-1.5"
+                    >
+                      <span className="material-symbols-outlined text-[15px]">delete</span>
+                      Eliminar foto
+                    </button>
+                  )}
+                </div>
               </div>
-              <span className="text-[11px] text-slate-400 font-medium">
-                {uploadingAvatar ? "Subiendo foto..." : "Foto de perfil (opcional)"}
-              </span>
             </div>
 
-            {/* Names (Nombre & Apellido) */}
+            {/* 2. Names (Nombre & Apellido): standardized h-12 inputs pre-filled from credit card */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-semibold text-slate-700 font-jakarta">
@@ -236,7 +471,7 @@ export default function CompleteProfileView() {
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                   placeholder="Tu nombre"
-                  className="w-full h-11 px-3.5 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400"
+                  className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 placeholder:font-sans placeholder:font-normal font-sans"
                 />
               </div>
 
@@ -249,27 +484,36 @@ export default function CompleteProfileView() {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   placeholder="Tu apellido"
-                  className="w-full h-11 px-3.5 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400"
+                  className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 placeholder:font-sans placeholder:font-normal font-sans"
                 />
               </div>
             </div>
 
-            {/* Location (City & Country with Google Places Autocomplete) */}
+            {/* 3. Location (City & Country using Google Places Autocomplete API as in current sign up) */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-slate-700 font-jakarta">
                 Ciudad y País
               </label>
               <LocationInput
                 defaultValue={city && country ? `${city}, ${country}` : city || ""}
-                placeholder="Busca tu ciudad (ej. Santiago, Bogotá, Madrid)"
-                onSelect={({ city: selectedCity, country: selectedCountry }) => {
+                placeholder="Ingresa tu ciudad"
+                onSelect={({ city: selectedCity, country: selectedCountry, countryCode }) => {
                   setCity(selectedCity);
-                  setCountry(selectedCountry);
+                  if (selectedCountry) setCountry(selectedCountry);
+                  if (countryCode || selectedCountry) {
+                    const normalized = (selectedCountry || "").toLowerCase().trim();
+                    const found = COUNTRIES.find(
+                      (c) =>
+                        (countryCode && c.code.toLowerCase() === countryCode.toLowerCase()) ||
+                        c.name.toLowerCase() === normalized
+                    );
+                    if (found) setPhoneCountry(found);
+                  }
                 }}
               />
             </div>
 
-            {/* Phone Number with International Country Selector */}
+            {/* 4. Phone Number with Auto-Matched International Country Selector from Credit Card */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-slate-700 font-jakarta">
                 Teléfono
@@ -282,6 +526,84 @@ export default function CompleteProfileView() {
               />
             </div>
 
+            {/* 5. Birthdate (Fecha de nacimiento) - All 3 Select Dropdowns */}
+            <div className="flex flex-col gap-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-semibold text-slate-700 font-jakarta">
+                  Fecha de nacimiento
+                </label>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  Mayor de 18 años
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <select
+                  value={birthDay}
+                  onChange={(e) => setBirthDay(e.target.value)}
+                  className="w-full h-12 px-2.5 sm:px-3 text-xs sm:text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors text-slate-700 font-sans cursor-pointer"
+                >
+                  <option value="">Día</option>
+                  {DAYS.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={birthMonth}
+                  onChange={(e) => setBirthMonth(e.target.value)}
+                  className="w-full h-12 px-2.5 sm:px-3 text-xs sm:text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors text-slate-700 font-sans cursor-pointer"
+                >
+                  <option value="">Mes</option>
+                  {MONTHS.map((m) => (
+                    <option key={m.value} value={m.value}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={birthYear}
+                  onChange={(e) => setBirthYear(e.target.value)}
+                  className="w-full h-12 px-2.5 sm:px-3 text-xs sm:text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors text-slate-700 font-sans cursor-pointer"
+                >
+                  <option value="">Año</option>
+                  {YEARS.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* 6. Wellness Interests (Interactive multi-select chips) */}
+            <div className="flex flex-col gap-2 pt-1">
+              <label className="text-xs font-semibold text-slate-700 font-jakarta">
+                Elige los temas que te gustaría explorar
+              </label>
+              <div className="flex flex-wrap gap-1.5 max-h-44 overflow-y-auto pr-1">
+                {availableInterests.map((item) => {
+                  const isSelected = selectedInterests.includes(item);
+                  return (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => toggleInterest(item)}
+                      className={`px-3 py-1.5 text-xs rounded-full transition-all cursor-pointer font-jakarta border ${
+                        isSelected
+                          ? "bg-black text-white border-black font-semibold"
+                          : "bg-zinc-50 text-slate-700 border-zinc-200 hover:bg-zinc-100 font-normal"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Error Message */}
             {errorMessage && (
               <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
@@ -289,32 +611,41 @@ export default function CompleteProfileView() {
               </div>
             )}
 
-            {/* Actions */}
-            <div className="flex flex-col gap-3 pt-2">
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full h-12 bg-black hover:bg-zinc-800 active:scale-[0.99] text-white text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center font-jakarta disabled:opacity-50"
-              >
-                {saving ? "Guardando..." : "Guardar y continuar"}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleCompleteLater}
-                disabled={saving}
-                className="w-full py-2 text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors text-center cursor-pointer bg-transparent border-none"
-              >
-                Completar después
-              </button>
-            </div>
+            {/* Primary Action Button */}
+            <button
+              type="submit"
+              disabled={saving}
+              className="w-full h-12 mt-2 bg-black hover:bg-zinc-800 active:scale-[0.99] text-white text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center font-jakarta disabled:opacity-50"
+            >
+              {saving ? "Creando perfil..." : "Crear mi perfil"}
+            </button>
           </form>
         </div>
+
+        {/* Secondary Action: Volver (outside the card) */}
+        <button
+          type="button"
+          onClick={() => router.back()}
+          disabled={saving}
+          className="mt-4 py-2 text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors text-center cursor-pointer bg-transparent border-none font-jakarta inline-flex items-center gap-1.5"
+        >
+          <span className="material-symbols-outlined text-[16px]">arrow_back</span>
+          Volver
+        </button>
       </main>
+
+      {/* Cropping Modal from PhotoEditor (exact same component from current sign-up) */}
+      {isCropping && tempImage && (
+        <PhotoEditor
+          image={tempImage}
+          onSave={handleCropSave}
+          onCancel={handleCropCancel}
+        />
+      )}
 
       {/* Footer */}
       <footer className="w-full max-w-md mx-auto px-6 py-6 text-center text-xs text-slate-400">
-        LUMINUS © {new Date().getFullYear()}
+        © {new Date().getFullYear()} LUMINUS Latam.
       </footer>
     </div>
   );
