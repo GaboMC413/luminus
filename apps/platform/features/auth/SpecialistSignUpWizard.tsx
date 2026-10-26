@@ -444,7 +444,7 @@ export default function SpecialistSignUpWizard() {
                 errorField={errorField}
                 setErrorField={setErrorField}
                 onNext={() => goToStep(2)}
-                onCancel={() => router.push("/auth/registrarse")}
+                onCancel={() => router.push("/unirme")}
                 cancelLabel="Volver"
               />
             )}

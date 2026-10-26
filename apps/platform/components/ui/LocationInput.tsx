@@ -98,12 +98,18 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
     }
   };
 
+  const isTypingRef = useRef(false);
+  const prevDefaultValueRef = useRef(defaultValue);
+
   useEffect(() => {
-    if (defaultValue !== value) {
-      setValue(defaultValue, false);
-      lastResolvedValueRef.current = defaultValue;
+    if (defaultValue !== prevDefaultValueRef.current) {
+      prevDefaultValueRef.current = defaultValue;
+      if (!isTypingRef.current) {
+        setValue(defaultValue || "", false);
+        lastResolvedValueRef.current = defaultValue;
+      }
     }
-  }, [defaultValue]);
+  }, [defaultValue, setValue]);
 
   const handleSelect = async (description: string, mainText?: string, secondaryText?: string) => {
     let formatted = description;
@@ -115,6 +121,7 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
       formatted = parts.length > 1 ? parts.slice(0, -1).join(', ') : description;
     }
 
+    isTypingRef.current = false;
     setValue(formatted, false);
     clearSuggestions();
     lastResolvedValueRef.current = formatted;
@@ -146,26 +153,34 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
 
   return (
     <div 
-      className={`flex flex-col gap-2 relative w-full ${className}`} 
+      className={`relative w-full ${className}`} 
       ref={containerRef}
       style={{ scrollMarginTop: '16px' }}
     >
-      {label && <label className="text-label ml-1">{label}</label>}
       <InputField
         ref={ref}
         id={id}
         name={name}
+        label={label}
         placeholder={placeholder}
         value={value}
         className={inputClassName}
+        rightIcon={
+          <span className="material-symbols-outlined text-[20px]">
+            location_on
+          </span>
+        }
         onChange={(e) => {
           const nextValue = e.target.value;
-
+          isTypingRef.current = true;
           setValue(nextValue);
           onSelect({ city: nextValue, country: '' });
           setHighlightedIndex(-1);
           window.dispatchEvent(new CustomEvent('luminus-select-open', { detail: { id: instanceIdRef.current } }));
           scrollToInputTop();
+        }}
+        onBlur={() => {
+          isTypingRef.current = false;
         }}
         onFocus={() => {
           window.dispatchEvent(new CustomEvent('luminus-select-open', { detail: { id: instanceIdRef.current } }));
@@ -200,7 +215,10 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
         }}
         disabled={disabled}
         variant={variant}
-        autoComplete={autoComplete}
+        autoComplete="new-password"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck={false}
         data-lpignore="true"
         data-1p-ignore="true"
         data-form-type="other"
@@ -224,11 +242,11 @@ export const LocationInput = React.forwardRef<HTMLInputElement, LocationInputPro
               onMouseEnter={() => setHighlightedIndex(index)}
               className={`px-4 py-2.5 cursor-pointer transition flex flex-col min-w-0 ${highlightedIndex === index ? 'bg-slate-50' : 'hover:bg-slate-50'}`}
             >
-              <span className="text-black text-body text-secondary truncate whitespace-nowrap">
+              <span className="text-slate-900 text-sm font-medium truncate whitespace-nowrap font-sans">
                 {structured_formatting?.main_text || description.split(',')[0]}
                 {structured_formatting?.secondary_text ? `, ${structured_formatting.secondary_text.split(',')[0]}` : ''}
               </span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate font-jakarta">
                 {structured_formatting?.secondary_text ? structured_formatting.secondary_text.split(',').pop()?.trim() : ''}
               </span>
             </div>

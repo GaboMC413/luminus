@@ -96,13 +96,18 @@ export function setSessionCookie(token: string) {
 }
 
 export function clearSessionCookie() {
-  cookies().set(SESSION_COOKIE_NAME, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-  });
+  try {
+    cookies().set(SESSION_COOKIE_NAME, "", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 0,
+    });
+  } catch {
+    // Next.js App Router prevents mutating cookies during Server Component rendering.
+    // Swallow safely so callers do not crash.
+  }
 }
 
 export function getCurrentSession() {
@@ -134,12 +139,11 @@ export async function assertOnboarded(redirectToPath?: string) {
 
     if (!user || user.status !== "active") {
       // Session references a user that was deleted, disabled, or no longer exists.
-      // Clear cookie immediately to break the lockout loop.
-      clearSessionCookie();
+      // Clear cookie via route handler to break lockout loop cleanly.
       const loginTarget = redirectToPath
         ? `/auth/iniciar-sesion?redirect=${encodeURIComponent(redirectToPath)}`
         : "/auth/iniciar-sesion";
-      redirect(loginTarget);
+      redirect(`/api/auth/logout?redirect=${encodeURIComponent(loginTarget)}`);
     }
 
     isOnboarded = !!user.profile?.isOnboarded;
@@ -165,8 +169,8 @@ export async function assertOnboarded(redirectToPath?: string) {
 
   if (!isOnboarded) {
     const signupTarget = redirectToPath
-      ? `/auth/registrarse?onboarding=1&redirect=${encodeURIComponent(redirectToPath)}`
-      : "/auth/registrarse?onboarding=1";
+      ? `/perfil/completar?redirect=${encodeURIComponent(redirectToPath)}`
+      : "/perfil/completar";
     redirect(signupTarget);
   }
 

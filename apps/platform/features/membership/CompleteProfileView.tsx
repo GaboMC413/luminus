@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LocationInput } from "@/components/ui/LocationInput";
 import { PhoneInput } from "@/components/ui/PhoneInput";
+import { InputField } from "@/components/ui/InputField";
+import { SelectInput } from "@/components/ui/SelectInput";
+import { Button } from "@/components/ui/Button";
 import { COUNTRIES } from "@/utils/countries";
 import { PhotoEditor } from "@/features/auth/registration/PhotoEditor";
 import { uploadAvatar } from "@/lib/uploadAvatar";
@@ -62,6 +65,7 @@ export default function CompleteProfileView() {
   const [lastName, setLastName] = useState("");
   const [city, setCity] = useState("");
   const [country, setCountry] = useState("");
+  const [initialLocation, setInitialLocation] = useState("");
   const [phone, setPhone] = useState("");
   const [phoneCountry, setPhoneCountry] = useState(DEFAULT_COUNTRY);
   const [avatarUrl, setAvatarUrl] = useState("");
@@ -103,11 +107,14 @@ export default function CompleteProfileView() {
             setLastName(parts.slice(1).join(" ") || "");
           }
         }
-        const localCity = localStorage.getItem("luminus_billing_city");
+        const localCity = localStorage.getItem("luminus_billing_city") || "";
+        const localCountry = localStorage.getItem("luminus_billing_country") || "";
         if (localCity) setCity(localCity);
-
-        const localCountry = localStorage.getItem("luminus_billing_country");
         if (localCountry) setCountry(localCountry);
+        if (localCity || localCountry) {
+          const loc = localCity && localCountry ? `${localCity}, ${localCountry}` : localCity || localCountry;
+          setInitialLocation(loc);
+        }
 
         const localCountryCode = localStorage.getItem("luminus_billing_country_code");
         if (localCountryCode || localCountry) {
@@ -160,6 +167,10 @@ export default function CompleteProfileView() {
               (c) => c.name.toLowerCase() === profile.country.toLowerCase()
             );
             if (matched) setPhoneCountry(matched);
+          }
+          if (profile.city || profile.country) {
+            const loc = profile.city && profile.country ? `${profile.city}, ${profile.country}` : profile.city || profile.country;
+            setInitialLocation(loc);
           }
 
           if (profile.birthdate) {
@@ -372,12 +383,12 @@ export default function CompleteProfileView() {
         {/* Card: Flat, border border-zinc-200/90, zero shadows, p-6 sm:p-7 */}
         <div className="w-full bg-white rounded-2xl border border-zinc-200/90 p-6 sm:p-7 flex flex-col gap-5">
           <form onSubmit={handleSaveAndContinue} className="flex flex-col gap-4">
-            {/* 1. Profile Photo Section (Matching the current sign up component + PhotoEditor) */}
+            {/* 1. Profile Photo Section */}
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold text-slate-700 font-jakarta">
                 Foto de perfil
               </label>
-              <div className="inline-flex items-center gap-4">
+              <div className="inline-flex items-end gap-4">
                 <div className="w-24 h-24 bg-white rounded-2xl flex justify-center items-center overflow-hidden shrink-0 relative border border-zinc-200/90">
                   {avatarUrl ? (
                     <img
@@ -386,9 +397,11 @@ export default function CompleteProfileView() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="material-symbols-outlined text-zinc-300 select-none text-[54px]">
-                      person
-                    </span>
+                    <img
+                      src="/empty-profile-picture.png"
+                      alt="Avatar por defecto"
+                      className="w-full h-full object-cover select-none"
+                    />
                   )}
                   {uploading && (
                     <div className="absolute inset-0 bg-white/90 backdrop-blur-[2px] flex flex-col items-center justify-center z-10">
@@ -437,14 +450,14 @@ export default function CompleteProfileView() {
                 />
 
                 <div className="flex flex-col gap-1.5">
-                  <button
+                  <Button
                     type="button"
+                    variant="soft"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={uploading}
-                    className="h-10 px-4 bg-zinc-100 hover:bg-zinc-200 text-slate-800 text-xs sm:text-sm font-semibold rounded-xl transition-all cursor-pointer border border-zinc-200/80 font-jakarta disabled:opacity-50"
                   >
                     {uploading ? `Subiendo ${uploadProgress}%` : avatarUrl ? "Cambiar foto" : "Subir Foto"}
-                  </button>
+                  </Button>
 
                   {avatarUrl && !uploading && (
                     <button
@@ -460,60 +473,46 @@ export default function CompleteProfileView() {
               </div>
             </div>
 
-            {/* 2. Names (Nombre & Apellido): standardized h-12 inputs pre-filled from credit card */}
+            {/* 2. Names (Nombre & Apellido): standardized InputField components */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-slate-700 font-jakarta">
-                  Nombre
-                </label>
-                <input
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Tu nombre"
-                  className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 placeholder:font-sans placeholder:font-normal font-sans"
-                />
-              </div>
+              <InputField
+                label="Nombre"
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="Nombre"
+              />
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-semibold text-slate-700 font-jakarta">
-                  Apellido
-                </label>
-                <input
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Tu apellido"
-                  className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 placeholder:font-sans placeholder:font-normal font-sans"
-                />
-              </div>
-            </div>
-
-            {/* 3. Location (City & Country using Google Places Autocomplete API as in current sign up) */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-slate-700 font-jakarta">
-                Ciudad y País
-              </label>
-              <LocationInput
-                defaultValue={city && country ? `${city}, ${country}` : city || ""}
-                placeholder="Ingresa tu ciudad"
-                onSelect={({ city: selectedCity, country: selectedCountry, countryCode }) => {
-                  setCity(selectedCity);
-                  if (selectedCountry) setCountry(selectedCountry);
-                  if (countryCode || selectedCountry) {
-                    const normalized = (selectedCountry || "").toLowerCase().trim();
-                    const found = COUNTRIES.find(
-                      (c) =>
-                        (countryCode && c.code.toLowerCase() === countryCode.toLowerCase()) ||
-                        c.name.toLowerCase() === normalized
-                    );
-                    if (found) setPhoneCountry(found);
-                  }
-                }}
+              <InputField
+                label="Apellido"
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Apellido"
               />
             </div>
 
-            {/* 4. Phone Number with Auto-Matched International Country Selector from Credit Card */}
+            {/* 3. Location (City & Country using Google Places Autocomplete API) */}
+            <LocationInput
+              label="Ciudad y País"
+              defaultValue={initialLocation}
+              placeholder="Ingresa tu ciudad"
+              onSelect={({ city: selectedCity, country: selectedCountry, countryCode }) => {
+                setCity(selectedCity);
+                setCountry(selectedCountry || "");
+                if (countryCode || selectedCountry) {
+                  const normalized = (selectedCountry || "").toLowerCase().trim();
+                  const found = COUNTRIES.find(
+                    (c) =>
+                      (countryCode && c.code.toLowerCase() === countryCode.toLowerCase()) ||
+                      c.name.toLowerCase() === normalized
+                  );
+                  if (found) setPhoneCountry(found);
+                }
+              }}
+            />
+
+            {/* 4. Phone Number with Auto-Matched International Country Selector */}
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-semibold text-slate-700 font-jakarta">
                 Teléfono
@@ -526,7 +525,7 @@ export default function CompleteProfileView() {
               />
             </div>
 
-            {/* 5. Birthdate (Fecha de nacimiento) - All 3 Select Dropdowns */}
+            {/* 5. Birthdate (Fecha de nacimiento) - SelectInput Components */}
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-semibold text-slate-700 font-jakarta">
@@ -537,44 +536,26 @@ export default function CompleteProfileView() {
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <select
+                <SelectInput
+                  placeholder="Día"
                   value={birthDay}
-                  onChange={(e) => setBirthDay(e.target.value)}
-                  className="w-full h-12 px-2.5 sm:px-3 text-xs sm:text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors text-slate-700 font-sans cursor-pointer"
-                >
-                  <option value="">Día</option>
-                  {DAYS.map((d) => (
-                    <option key={d} value={d}>
-                      {d}
-                    </option>
-                  ))}
-                </select>
+                  onSelect={setBirthDay}
+                  options={DAYS}
+                />
 
-                <select
+                <SelectInput
+                  placeholder="Mes"
                   value={birthMonth}
-                  onChange={(e) => setBirthMonth(e.target.value)}
-                  className="w-full h-12 px-2.5 sm:px-3 text-xs sm:text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors text-slate-700 font-sans cursor-pointer"
-                >
-                  <option value="">Mes</option>
-                  {MONTHS.map((m) => (
-                    <option key={m.value} value={m.value}>
-                      {m.label}
-                    </option>
-                  ))}
-                </select>
+                  onSelect={setBirthMonth}
+                  options={MONTHS}
+                />
 
-                <select
+                <SelectInput
+                  placeholder="Año"
                   value={birthYear}
-                  onChange={(e) => setBirthYear(e.target.value)}
-                  className="w-full h-12 px-2.5 sm:px-3 text-xs sm:text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors text-slate-700 font-sans cursor-pointer"
-                >
-                  <option value="">Año</option>
-                  {YEARS.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </select>
+                  onSelect={setBirthYear}
+                  options={YEARS}
+                />
               </div>
             </div>
 
@@ -612,13 +593,14 @@ export default function CompleteProfileView() {
             )}
 
             {/* Primary Action Button */}
-            <button
+            <Button
               type="submit"
+              variant="primary"
               disabled={saving}
-              className="w-full h-12 mt-2 bg-black hover:bg-zinc-800 active:scale-[0.99] text-white text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center font-jakarta disabled:opacity-50"
+              className="mt-2"
             >
               {saving ? "Creando perfil..." : "Crear mi perfil"}
-            </button>
+            </Button>
           </form>
         </div>
 

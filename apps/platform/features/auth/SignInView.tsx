@@ -294,8 +294,8 @@ export default function SignInView() {
                 onClick={() => {
                   const target = getRedirectTarget();
                   const signUpUrl = target !== "/comunidad"
-                    ? `/auth/registrarse?redirect=${encodeURIComponent(target)}`
-                    : "/auth/registrarse";
+                    ? `/unirme?redirect=${encodeURIComponent(target)}`
+                    : "/unirme";
                   router.push(signUpUrl);
                 }}
                 className="text-slate-500 hover:text-slate-900 text-body-small cursor-pointer bg-transparent border-none outline-none"

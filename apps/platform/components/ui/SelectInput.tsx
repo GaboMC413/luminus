@@ -44,9 +44,12 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
     maxHeight: number;
   } | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
   const instanceIdRef = useRef(Math.random().toString(36).substring(2, 9));
+
+  React.useImperativeHandle(ref, () => triggerRef.current as HTMLDivElement);
 
   useEffect(() => {
     setMounted(true);
@@ -82,8 +85,9 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
   }, [isOpen, value, options, preventScrollOnOpen]);
 
   const updateCoords = () => {
-    if (containerRef.current) {
-      const rect = containerRef.current.querySelector('.reg-input-clean, .reg-input-bordered')?.getBoundingClientRect();
+    const el = triggerRef.current || containerRef.current;
+    if (el) {
+      const rect = el.getBoundingClientRect();
       if (rect) {
         const preferredMaxHeight = 340; // Approx 8-9 options
         const spaceBelow = window.innerHeight - rect.bottom - 16; // 16px safe margin from viewport bottom
@@ -143,21 +147,30 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
   }, [isOpen]);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
       if (
         containerRef.current &&
-        !containerRef.current.contains(event.target as Node) &&
+        !containerRef.current.contains(target) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(target) &&
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
+        !dropdownRef.current.contains(target)
       ) {
         setIsOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
-  const variantClass = variant === 'clean' ? 'reg-input-clean' : 'reg-input-bordered';
+  const variantClass = variant === 'clean' 
+    ? 'reg-input-clean' 
+    : 'w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus-within:border-slate-800 transition-colors text-slate-700 font-sans';
 
   const currentOptionLabel = typeof options[0] === 'string'
     ? value
@@ -178,7 +191,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
         maxHeight: `${coords.maxHeight}px`,
         zIndex: 10000,
       }}
-      className="bg-white rounded-[12px] outline outline-1 outline-zinc-200 overflow-y-auto overscroll-contain pr-1 animate-in fade-in duration-200"
+      className="bg-white rounded-xl border border-zinc-200/90 shadow-xl overflow-y-auto overscroll-contain pr-1 animate-in fade-in duration-150"
     >
       {options.map((option, index) => {
         const optLabel = typeof option === 'string' ? option : option.label;
@@ -223,10 +236,14 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
       ref={containerRef}
       style={{ scrollMarginTop: '100px' }}
     >
-      {label && <label className="text-label ml-1">{label}</label>}
+      {label && (
+        <label className="text-xs font-semibold text-slate-700 font-jakarta">
+          {label}
+        </label>
+      )}
 
       <div
-        ref={ref}
+        ref={triggerRef}
         tabIndex={disabled ? -1 : 0}
         autoFocus={autoFocus}
         onClick={() => {
@@ -307,7 +324,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(({
           ${disabled ? `${disabledOpacity ? 'opacity-50' : ''} cursor-not-allowed` : ''}
         `}
       >
-        <span className={`${!value ? '!text-slate-400' : 'text-zinc-900'} ${size === 'sm' ? '!text-xs' : 'text-[13px] md:text-base'} font-normal truncate select-none min-w-0 flex-1`}>
+        <span className={`${!value ? '!text-slate-400' : 'text-slate-900'} ${size === 'sm' ? '!text-xs' : 'text-sm'} font-normal truncate select-none min-w-0 flex-1 font-sans`}>
           {currentOptionLabel || placeholder}
         </span>
         {!disabled && (

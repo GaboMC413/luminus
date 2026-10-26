@@ -233,10 +233,10 @@ export function PhoneInput({
     <div 
       ref={containerRef}
       style={{ scrollMarginTop: '100px' }}
-      className={`reg-input-bordered px-4 flex items-center transition w-full relative ${className} ${disabled ? 'pointer-events-none' : 'focus-within:border-black'} ${error ? '!border-[#FF3D3D]' : ''}`}
+      className={`w-full h-12 px-4 bg-white border border-zinc-200/90 rounded-xl focus-within:border-slate-800 focus-within:ring-1 focus-within:ring-slate-800 transition-colors flex items-center relative ${className} ${disabled ? 'pointer-events-none opacity-50' : ''} ${error ? '!border-red-500 !ring-red-500' : ''}`}
     >
       <div
-        className={`relative flex items-center pr-2 shrink-0 h-full border-r border-slate-100 mr-2 ${!disabled ? 'cursor-pointer' : ''}`}
+        className={`relative flex items-center pr-2.5 shrink-0 h-full border-r border-zinc-200/80 mr-2.5 ${!disabled ? 'cursor-pointer' : ''}`}
         onClick={(e) => {
           e.preventDefault();
           if (!disabled) {
@@ -253,7 +253,7 @@ export function PhoneInput({
           }
         }}
       >
-        <span className={`${phoneCountry.dial === '+00' ? '!text-slate-400' : 'text-zinc-900'} text-[13px] md:text-base font-normal mr-2`}>
+        <span className={`${phoneCountry.dial === '+00' ? '!text-slate-400' : 'text-slate-900'} text-sm font-normal mr-2 font-sans`}>
           {phoneCountry.dial}
         </span>
         {!disabled && (
@@ -269,7 +269,7 @@ export function PhoneInput({
         value={value}
         disabled={disabled}
         onChange={(e) => handleNumberChange(e.target.value)}
-        className="flex-1 bg-transparent px-2 outline-none text-zinc-900 text-[13px] md:text-base font-normal placeholder:text-slate-400 h-full"
+        className="flex-1 bg-transparent px-2 outline-none text-slate-900 text-sm font-normal placeholder:text-slate-400 h-full font-sans"
         enterKeyHint="done"
         autoComplete="tel"
       />

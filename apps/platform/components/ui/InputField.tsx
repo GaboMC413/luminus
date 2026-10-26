@@ -1,6 +1,7 @@
 import React from 'react';
 
 interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label?: string;
   variant?: 'clean' | 'bordered';
   showPassword?: boolean;
   onTogglePassword?: () => void;
@@ -10,6 +11,7 @@ interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({ 
+  label,
   className = '', 
   type, 
   variant = 'bordered',
@@ -29,43 +31,48 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({
     right: 'text-right'
   };
 
-  const variantClass = variant === 'clean' ? 'reg-input-clean' : 'reg-input-bordered';
+  const defaultStyles = variant === 'clean' 
+    ? 'reg-input-clean'
+    : 'w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans';
 
   return (
-    <div className="relative w-full">
-      <input 
-        {...props}
-        ref={ref}
-        type={inputType}
-        className={`${variantClass} ${alignmentClasses[textAlign]} ${className} ${isPassword && onTogglePassword ? 'pr-14' : rightIcon ? 'pr-12' : ''} text-black disabled:text-slate-500 placeholder:text-slate-400`}
-      />
-      {rightIcon && !isPassword && (
-        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
-          {rightIcon}
-        </div>
+    <div className="relative w-full flex flex-col gap-1.5">
+      {label && (
+        <label className="text-xs font-semibold text-slate-700 font-jakarta">
+          {label}
+        </label>
       )}
-      {isPassword && onTogglePassword && (
-        <button 
-          type="button"
-          onClick={onTogglePassword}
-          className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black transition-colors"
-          tabIndex={-1}
-        >
-          {showPassword ? (
-            /* Open Eye - Visible state */
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-              <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-          ) : (
-            /* Slashed Eye - Non-visible state */
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-              <line x1="1" y1="1" x2="23" y2="23"></line>
-            </svg>
-          )}
-        </button>
-      )}
+      <div className="relative w-full">
+        <input 
+          {...props}
+          ref={ref}
+          type={inputType}
+          className={`${defaultStyles} ${alignmentClasses[textAlign]} ${className} ${isPassword && onTogglePassword ? 'pr-11' : rightIcon ? 'pr-11' : ''} text-slate-900 disabled:text-slate-400`}
+        />
+        {rightIcon && !isPassword && (
+          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none text-slate-400">
+            {rightIcon}
+          </div>
+        )}
+        {isPassword && onTogglePassword && (
+          <button 
+            type="button"
+            onClick={onTogglePassword}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors p-1 bg-transparent border-none cursor-pointer flex items-center justify-center"
+            tabIndex={-1}
+          >
+            {showPassword ? (
+              <span className="material-symbols-outlined text-[18px]">
+                visibility_off
+              </span>
+            ) : (
+              <span className="material-symbols-outlined text-[18px]">
+                visibility
+              </span>
+            )}
+          </button>
+        )}
+      </div>
     </div>
   );
 });

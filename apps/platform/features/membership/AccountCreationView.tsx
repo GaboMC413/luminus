@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { InputField } from "@/components/ui/InputField";
+import { Button } from "@/components/ui/Button";
 export default function AccountCreationView() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -255,14 +257,14 @@ export default function AccountCreationView() {
                   </div>
                 )}
 
-                {/* Submit button: standardized to exact h-12 height */}
-                <button
+                {/* Submit button: standardized Button component */}
+                <Button
                   type="submit"
+                  variant="primary"
                   disabled={verifying || verificationCode.length < 6}
-                  className="w-full h-12 bg-black hover:bg-zinc-800 active:scale-[0.99] text-white text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center font-jakarta disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {verifying ? "Verificando..." : "Verificar y continuar"}
-                </button>
+                </Button>
               </form>
 
               {/* Action links */}
@@ -308,10 +310,11 @@ export default function AccountCreationView() {
               {/* Social Sign Up Options */}
               <div className="flex flex-col gap-2.5">
                 {/* Google Button */}
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={handleGoogleSignUp}
-                  className="w-full h-12 bg-white hover:bg-zinc-50 border border-zinc-200/90 text-slate-800 text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-3 font-jakarta select-none"
+                  className="gap-3"
                 >
                   <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                     <path
@@ -332,19 +335,20 @@ export default function AccountCreationView() {
                     />
                   </svg>
                   Continuar con Google
-                </button>
+                </Button>
 
                 {/* Facebook Button */}
-                <button
+                <Button
                   type="button"
+                  variant="secondary"
                   onClick={handleFacebookSignUp}
-                  className="w-full h-12 bg-white hover:bg-zinc-50 border border-zinc-200/90 text-slate-800 text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-3 font-jakarta select-none"
+                  className="gap-3"
                 >
                   <svg className="w-4 h-4 shrink-0 fill-[#1877F2]" viewBox="0 0 24 24">
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                   </svg>
                   Continuar con Facebook
-                </button>
+                </Button>
               </div>
 
               {/* Separator */}
@@ -359,52 +363,34 @@ export default function AccountCreationView() {
               {/* Form */}
               <form onSubmit={handleCreateAccount} className="flex flex-col gap-4">
                 {/* Email Field */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-slate-700 font-jakarta">
-                    Correo electrónico
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => {
-                      setEmail(e.target.value);
-                      setErrorMessage(null);
-                      setEmailExists(false);
-                    }}
-                    placeholder="tu@correo.com"
-                    className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 placeholder:font-sans placeholder:font-normal font-sans"
-                  />
-                </div>
+                <InputField
+                  label="Correo electrónico"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setErrorMessage(null);
+                    setEmailExists(false);
+                  }}
+                  placeholder="tu@correo.com"
+                />
 
                 {/* Password Field */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-slate-700 font-jakarta">
-                    Contraseña
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      required
-                      value={password}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        setErrorMessage(null);
-                      }}
-                      placeholder="Mínimo 8 caracteres"
-                      className="w-full h-12 pl-4 pr-11 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 placeholder:font-sans placeholder:font-normal font-sans"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 p-1 bg-transparent border-none cursor-pointer flex items-center justify-center"
-                      tabIndex={-1}
-                    >
-                      <span className="material-symbols-outlined text-[18px]">
-                        {showPassword ? "visibility_off" : "visibility"}
-                      </span>
-                    </button>
-                  </div>
+                  <InputField
+                    label="Contraseña"
+                    type="password"
+                    required
+                    showPassword={showPassword}
+                    onTogglePassword={() => setShowPassword(!showPassword)}
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setErrorMessage(null);
+                    }}
+                    placeholder="Mínimo 8 caracteres"
+                  />
 
                   {/* Password Requirements Checklist */}
                   {password.length > 0 && (
@@ -459,13 +445,14 @@ export default function AccountCreationView() {
                 )}
 
                 {/* Submit Button */}
-                <button
+                <Button
                   type="submit"
+                  variant="primary"
                   disabled={loading}
-                  className="w-full h-12 mt-1 bg-black hover:bg-zinc-800 active:scale-[0.99] text-white text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center font-jakarta disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="mt-1"
                 >
                   {loading ? "Creando cuenta..." : "Crear mi cuenta"}
-                </button>
+                </Button>
               </form>
 
               {/* Legal Notice */}

@@ -22,6 +22,13 @@ export async function POST(request: Request) {
     const { prisma } = await import("@/lib/db");
     const now = new Date();
 
+    const existingUser = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { profile: { select: { firstName: true, lastName: true } } },
+    });
+
+    const hasProfileName = Boolean(existingUser?.profile?.firstName || existingUser?.profile?.lastName);
+
     const updatedUser = await prisma.user.update({
       where: { id: session.userId },
       data: {
@@ -43,9 +50,9 @@ export async function POST(request: Request) {
               selectedPlan: billingInterval === "annual" ? "Annual" : "Monthly",
               ...(city ? { city: String(city).trim() } : {}),
               ...(country ? { country: String(country).trim() } : {}),
-              ...(firstName ? { firstName } : {}),
-              ...(lastName ? { lastName } : {}),
-              ...(fullName ? { fullName } : {}),
+              ...(!hasProfileName && firstName ? { firstName } : {}),
+              ...(!hasProfileName && lastName ? { lastName } : {}),
+              ...(!hasProfileName && fullName ? { fullName } : {}),
             },
           },
         },

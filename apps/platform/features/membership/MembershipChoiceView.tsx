@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/Button";
 
 export default function MembershipChoiceView() {
   const router = useRouter();
@@ -46,22 +47,20 @@ export default function MembershipChoiceView() {
           <button
             type="button"
             onClick={() => setBillingCycle("monthly")}
-            className={`w-32 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer border-none font-jakarta flex items-center justify-center ${
-              !isAnnual
+            className={`w-32 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer border-none font-jakarta flex items-center justify-center ${!isAnnual
                 ? "bg-white text-slate-900"
                 : "bg-transparent text-slate-500 hover:text-slate-800"
-            }`}
+              }`}
           >
             Mensual
           </button>
           <button
             type="button"
             onClick={() => setBillingCycle("annual")}
-            className={`w-32 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer border-none font-jakarta flex items-center justify-center gap-1.5 ${
-              isAnnual
+            className={`w-32 py-1.5 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer border-none font-jakarta flex items-center justify-center gap-1.5 ${isAnnual
                 ? "bg-white text-slate-900"
                 : "bg-transparent text-slate-500 hover:text-slate-800"
-            }`}
+              }`}
           >
             <span>Anual</span>
             <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-full">
@@ -119,20 +118,20 @@ export default function MembershipChoiceView() {
 
           {/* Action buttons: Ser miembro over Unirme gratis por ahora */}
           <div className="flex flex-col gap-3">
-            <button
+            <Button
               type="button"
+              variant="primary"
               onClick={() => handleSelectPlan("membership")}
-              className="w-full h-12 bg-black hover:bg-zinc-800 active:scale-[0.99] text-white text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center font-jakarta"
             >
-              {isAnnual ? "Ser miembro por USD 45/año" : "Ser miembro por USD 5/mes"}
-            </button>
-            <button
+              {isAnnual ? "Hacerme miembro por USD 45/año" : "Hacerme miembro por USD 5/mes"}
+            </Button>
+            <Button
               type="button"
+              variant="secondary"
               onClick={() => handleSelectPlan("free")}
-              className="w-full h-12 bg-zinc-100 hover:bg-zinc-200/80 active:scale-[0.99] text-slate-700 text-sm font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center font-jakarta border border-zinc-200/60"
             >
               Unirme gratis por ahora
-            </button>
+            </Button>
           </div>
 
           {/* Legal Notice */}

@@ -216,7 +216,7 @@ export async function GET(request: Request) {
     maxAge: 0,
   });
 
-  const fallbackPath = storedState?.intent === "signup" ? "/auth/registrarse" : "/auth/iniciar-sesion";
+  const fallbackPath = storedState?.intent === "signup" ? "/unirme" : "/auth/iniciar-sesion";
 
   if (error) {
     const errorDescription = requestUrl.searchParams.get("error_description") || "unknown";
@@ -472,7 +472,7 @@ export async function GET(request: Request) {
   } catch (callbackError) {
     console.error("Cognito OAuth callback failed.", callbackError);
     const reason = callbackError instanceof Error ? encodeURIComponent(callbackError.message) : "unknown";
-    const fallbackPath = storedState?.intent === "signup" ? "/auth/registrarse" : "/auth/iniciar-sesion";
+    const fallbackPath = storedState?.intent === "signup" ? "/unirme" : "/auth/iniciar-sesion";
     return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=${reason}`);
   }
 }

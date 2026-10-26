@@ -3,10 +3,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/InputField";
-import { PersonalData } from "./registration/PersonalData";
-import { InterestSelection } from "./registration/InterestSelection";
-import { PlanSelection } from "./registration/PlanSelection";
-import { VerificationModal } from "./VerificationModal";
+import { PersonalData } from "../registration/PersonalData";
+import { InterestSelection } from "../registration/InterestSelection";
+import { PlanSelection } from "../registration/PlanSelection";
+import { VerificationModal } from "../VerificationModal";
 import { trackPlatformRegistration } from "@/lib/meta-pixel";
 import Link from "next/link";
 import { PlatformFooter } from "@/components/ui/PlatformFooter";
