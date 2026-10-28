@@ -85,6 +85,7 @@ function serializeProfile(user: any) {
       other_interests: profile.intention ?? "",
       isOnboarded: profile.isOnboarded ?? false,
       is_onboarded: profile.isOnboarded ?? false,
+      specialistProfile: user.specialistProfile || null,
     },
   };
 }
