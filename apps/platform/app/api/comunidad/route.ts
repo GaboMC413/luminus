@@ -60,6 +60,7 @@ export async function GET(request: Request) {
         notIn: blockedUserIds,
       },
       status: "active",
+      isGhost: false,
       profile: {
         isOnboarded: true,
         avatarUrl: {
@@ -201,6 +202,7 @@ export async function GET(request: Request) {
         interests: (user.interests ?? []).map((row: any) => row.interest.name),
         categories: Array.from(userCategoriesMap.values()),
         profession: profile.profession || "",
+        isGhost: user.isGhost ?? false,
       };
     });
 

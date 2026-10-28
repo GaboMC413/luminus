@@ -164,7 +164,7 @@ function NotificationItem({ id, type, avatar, icon, title, user, action, date, i
                   }
             }
           >
-            {user && user !== "LUMINUS" && <span className="font-semibold text-slate-900 group-hover:underline">{user}: </span>}
+            {user && user !== "LUMINUS" && <span className="font-semibold text-slate-900 group-hover:text-slate-600 transition-colors">{user}: </span>}
             {formatMessageBody(action)}
           </p>
         </div>
@@ -237,7 +237,9 @@ export function OnboardingProgressCard({ quests, progressPercentage, onClose, on
           </div>
           <div className="flex flex-col min-w-0">
             <h4 className="text-sm font-semibold text-slate-900 leading-tight">Tus Primeros Destellos</h4>
-            <span className="text-xs text-slate-400 font-medium">Enciende tu luz en LUMINUS</span>
+            <span className="text-xs text-slate-400 font-medium">
+              {progressPercentage === 100 ? "¡Completaste todos tus destellos!" : "Enciende tu luz en LUMINUS"}
+            </span>
           </div>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -262,8 +264,8 @@ export function OnboardingProgressCard({ quests, progressPercentage, onClose, on
 
       <div className="flex flex-col gap-1.5">
         <div className="flex justify-between items-center text-xs font-semibold text-slate-500 uppercase tracking-wider">
-          <span>Progreso del camino</span>
-          <span>{progressPercentage}%</span>
+          <span>{progressPercentage === 100 ? "Camino completado" : "Progreso del camino"}</span>
+          <span className={progressPercentage === 100 ? "text-emerald-600 font-bold" : ""}>{progressPercentage}%</span>
         </div>
         <div className="w-full h-1.5 bg-slate-200/80 rounded-full overflow-hidden">
           <div

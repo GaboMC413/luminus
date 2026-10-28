@@ -31,13 +31,15 @@ export function getResumeStorageConfig() {
 export function createS3Client() {
   const { region } = getS3Config();
   const accessKeyId =
-    process.env.S3_AVATAR_ACCESS_KEY_ID ||
-    process.env.SES_ACCESS_KEY_ID ||
-    process.env.AWS_ACCESS_KEY_ID;
+    process.env.S3_STORAGE_ACCESS_KEY_ID?.trim() ||
+    process.env.S3_ACCESS_KEY_ID?.trim() ||
+    process.env.S3_AVATAR_ACCESS_KEY_ID?.trim() ||
+    process.env.AWS_ACCESS_KEY_ID?.trim();
   const secretAccessKey =
-    process.env.S3_AVATAR_SECRET_ACCESS_KEY ||
-    process.env.SES_SECRET_ACCESS_KEY ||
-    process.env.AWS_SECRET_ACCESS_KEY;
+    process.env.S3_STORAGE_SECRET_ACCESS_KEY?.trim() ||
+    process.env.S3_SECRET_ACCESS_KEY?.trim() ||
+    process.env.S3_AVATAR_SECRET_ACCESS_KEY?.trim() ||
+    process.env.AWS_SECRET_ACCESS_KEY?.trim();
 
   return new S3Client({
     region,

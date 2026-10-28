@@ -16,6 +16,9 @@ vi.mock("@/lib/db", () => {
       user: {
         findUnique: vi.fn(),
       },
+      userProfile: {
+        findUnique: vi.fn().mockResolvedValue(null),
+      },
       activityLog: {
         create: vi.fn(),
       },

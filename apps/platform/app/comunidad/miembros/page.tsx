@@ -391,7 +391,7 @@ function MiembrosContent() {
 
   return (
     <div className="w-full flex-1 flex flex-col bg-slate-50 min-h-[calc(100vh-64px)] overflow-visible">
-      <div className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-6 pt-4 pb-12 md:py-6 flex flex-col min-h-0 overflow-visible">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-12 md:py-6 flex flex-col min-h-0 overflow-visible">
 
         {/* Header: Back Arrow + Title */}
         <div className="flex items-center gap-3 mb-4 md:mb-6 shrink-0">
@@ -624,9 +624,9 @@ function MiembrosContent() {
           {/* Members Grid */}
           <div onScroll={handleScroll} className="flex-1 w-full overflow-y-auto custom-scrollbar pb-12">
             {loading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 w-full">
-                {[...Array(8)].map((_, idx) => (
-                  <div key={idx} className="h-[300px] bg-white rounded-2xl border border-zinc-200 p-5 animate-pulse shadow-none" />
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 lg:gap-5 w-full">
+                {[...Array(10)].map((_, idx) => (
+                  <div key={idx} className="h-[280px] bg-white rounded-2xl border border-zinc-200 p-4 animate-pulse shadow-none" />
                 ))}
               </div>
             ) : filteredUsers.length === 0 ? (
@@ -637,7 +637,7 @@ function MiembrosContent() {
               </div>
             ) : (
               <div className="flex flex-col gap-6 w-full pb-8">
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 w-full">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 lg:gap-5 w-full">
                   {filteredUsers.map((user: any, idx: number) => (
                     <UserCard key={idx} user={user} />
                   ))}

@@ -70,7 +70,7 @@ export function UserCard({ user, actionMenu }: UserCardProps) {
 
       <div className="flex flex-col items-center gap-0.5 text-center w-full min-w-0">
         <h3
-          className="text-sm font-bold text-slate-900 leading-snug truncate w-full font-jakarta px-0.5"
+          className="text-sm font-bold text-slate-900 leading-snug truncate w-full font-jakarta px-0.5 group-hover:text-slate-600 transition-colors"
           title={user.name}
         >
           {user.name}
@@ -89,7 +89,7 @@ export function UserCard({ user, actionMenu }: UserCardProps) {
             e.stopPropagation();
             handleViewProfile();
           }}
-          className="text-xs font-semibold text-slate-500 hover:text-slate-900 hover:underline transition-colors shrink-0 cursor-pointer bg-transparent border-none outline-none font-jakarta mt-auto pt-1"
+          className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors shrink-0 cursor-pointer bg-transparent border-none outline-none font-jakarta mt-auto pt-1"
         >
           Ver perfil
         </button>

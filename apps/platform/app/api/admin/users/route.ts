@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { listAdminUsers, normalizeAdminUserPatch, serializeAdminUser } from "@/lib/admin/users";
 import { syncCognitoUserStatus } from "@/lib/auth/cognito-admin";
+import { deleteUserS3Data } from "@/lib/storage/userStorageCleanup";
 
 export const runtime = "nodejs";
 
@@ -174,6 +175,9 @@ export async function DELETE(request: Request) {
 
     // First delete from Cognito
     await syncCognitoUserStatus(existingUser, "deleted");
+
+    // Purge user storage files and folders from S3
+    await deleteUserS3Data(id);
 
     // Then hard delete from Database
     await prisma.user.delete({

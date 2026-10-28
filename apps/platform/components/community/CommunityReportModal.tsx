@@ -66,6 +66,7 @@ export function CommunityReportModal({
       onClose={handleClose}
       title="Reportar"
       maxWidth="440px"
+      containerClassName="shadow-none"
       footerClassName="px-5 py-3.5 border-t border-zinc-100 flex items-center gap-3 w-full"
       footer={
         isSuccess ? null : (

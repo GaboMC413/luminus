@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { PostItem, PostComment } from "./mockPostsData";
 import { InterestPill } from "@/components/ui/InterestPill";
@@ -77,31 +77,44 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
     setComments(post.comments || []);
   }, [post.id, post.comments]);
 
-  const rawLocation = post.authorLocation || (post.authorRole && post.authorRole !== "Miembro" ? post.authorRole : "Montevideo, Uruguay");
+  const isOfficialAccount = Boolean(
+    post.isOfficial ||
+    post.authorName?.toLowerCase() === "luminus" ||
+    post.authorId === "mock-luminus" ||
+    post.authorId === "50d13047-bab8-44f1-9541-a821113845cc"
+  );
+
+  const rawLocation = isOfficialAccount
+    ? "Cuenta Oficial"
+    : post.authorLocation || (post.authorRole && post.authorRole !== "Miembro" ? post.authorRole : "Montevideo, Uruguay");
   const authorSubtitle = formatCityCountry(rawLocation);
 
   const hasMedia = Boolean(post.youtubeId || (post.imageUrl && !imgError));
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [hasOverflow, setHasOverflow] = useState(false);
+  const { isTruncatable, truncatedText } = useMemo(() => {
+    const limit = hasMedia ? 90 : 170;
+    const cleanContent = post.content.trim();
+    const hasMultipleParagraphs = cleanContent.includes("\n\n") || cleanContent.split("\n").filter(Boolean).length > 2;
 
-  useEffect(() => {
-    const el = contentRef.current;
-    if (!el) return;
+    if (cleanContent.length <= limit && !hasMultipleParagraphs) {
+      return { isTruncatable: false, truncatedText: cleanContent };
+    }
 
-    const checkOverflow = () => {
-      if (!isExpanded) {
-        // Measure real DOM height: only overflowing if scrollHeight exceeds clientHeight by > 4px
-        const isClamped = el.scrollHeight > el.clientHeight + 4;
-        setHasOverflow(isClamped);
+    let cut = limit;
+    if (cleanContent.length > limit) {
+      const lastSpace = cleanContent.lastIndexOf(" ", limit);
+      if (lastSpace > limit * 0.6) {
+        cut = lastSpace;
       }
-    };
+    } else if (hasMultipleParagraphs) {
+      const firstBreak = cleanContent.indexOf("\n");
+      if (firstBreak !== -1 && firstBreak < limit) {
+        cut = firstBreak;
+      }
+    }
 
-    checkOverflow();
-
-    const ro = new ResizeObserver(checkOverflow);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [post.content, isExpanded, hasMedia]);
+    const sliced = cleanContent.slice(0, cut).replace(/\n+/g, " ").trimEnd();
+    return { isTruncatable: true, truncatedText: sliced };
+  }, [post.content, hasMedia]);
 
   const currentUserId = currentUserProfile?.id || currentUserProfile?.user_id;
   const currentUserName = currentUserProfile
@@ -124,13 +137,6 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
   } else if (userCity || userCountry) {
     currentUserLocation = userCity || userCountry;
   }
-
-  const isOfficialAccount = Boolean(
-    post.isOfficial ||
-    post.authorName?.toLowerCase() === "luminus" ||
-    post.authorId === "mock-luminus" ||
-    post.authorId === "50d13047-bab8-44f1-9541-a821113845cc"
-  );
 
   const isAdmin = Boolean(
     currentUserProfile?.role === "ADMIN" ||
@@ -419,7 +425,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
           }
 
           if (!line.trim()) {
-            return <div key={idx} className="h-2" />;
+            return <div key={idx} className="h-1" />;
           }
 
           return (
@@ -433,7 +439,11 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
   };
 
   return (
-    <article className="bg-white rounded-2xl border border-zinc-200 overflow-hidden flex flex-col shadow-none transition-all">
+    <article
+      className={`bg-white rounded-2xl border border-zinc-200 flex flex-col shadow-none transition-all ${
+        showPostMenu ? "relative z-40 overflow-visible" : "overflow-hidden"
+      }`}
+    >
       {/* 1. Header: Author info and Post date */}
       <div className="px-4 pt-3.5 pb-2.5 sm:px-5 sm:pt-4 sm:pb-3 flex items-center justify-between gap-3">
         <div
@@ -460,7 +470,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
           {/* Author details */}
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-sm font-bold text-slate-900 font-jakarta truncate ${isOfficialAccount ? "" : "group-hover/author:underline"
+              <span className={`text-sm font-bold text-slate-900 font-jakarta truncate ${isOfficialAccount ? "" : "group-hover/author:text-slate-600 transition-colors"
                 }`}>
                 {post.authorName}
               </span>
@@ -495,13 +505,14 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
             </div>
           )}
 
-          {!hideActions && (
-            <div ref={postMenuRef} className="relative flex items-center">
+          {!hideActions && (isAdmin || !isAuthorAdmin) && (
+            <div ref={postMenuRef} className={`relative flex items-center ${showPostMenu ? "z-30" : "z-0"}`}>
               <button
                 type="button"
                 onClick={() => setShowPostMenu((prev) => !prev)}
-                className={`flex items-center justify-center w-8 h-8 rounded-full transition-all border-none cursor-pointer bg-transparent ${showPostMenu ? "bg-slate-100" : "hover:bg-slate-50"
-                  }`}
+                className={`flex items-center justify-center w-8 h-8 rounded-full transition-all border-none cursor-pointer bg-transparent ${
+                  showPostMenu ? "bg-slate-100" : "hover:bg-slate-50"
+                }`}
                 aria-label="Opciones"
                 title="Opciones"
               >
@@ -511,7 +522,10 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
               </button>
 
               {showPostMenu && (
-                <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] shadow-none animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                <div
+                  style={{ backgroundColor: "#ffffff" }}
+                  className="absolute right-0 top-full mt-1.5 w-52 !bg-white border border-slate-200/90 rounded-2xl overflow-hidden z-[50] shadow-none animate-in zoom-in-95 duration-150 origin-top-right"
+                >
                   {isAdmin && isAuthorAdmin && onTogglePin && (
                     <button
                       type="button"
@@ -521,17 +535,15 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
                       }}
                       className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left border-b border-slate-100"
                     >
-                      <span className={`material-symbols-rounded text-[18px] transition-colors ${post.isPinned ? "text-violet-600 group-hover:text-violet-700" : "text-slate-500 group-hover:text-slate-900"
-                        }`}>
-                        push_pin
+                      <span className={`material-symbols-rounded text-[18px] text-slate-500 group-hover:text-slate-900 transition-colors ${post.isPinned ? "" : "rotate-45"}`}>
+                        {post.isPinned ? "keep_off" : "push_pin"}
                       </span>
-                      <span className={`font-semibold transition-colors ${post.isPinned ? "text-violet-700 group-hover:text-violet-800" : "text-slate-500 group-hover:text-slate-900"
-                        }`}>
+                      <span className="font-semibold text-slate-500 group-hover:text-slate-900 transition-colors">
                         {post.isPinned ? "Desfijar publicación" : "Fijar publicación"}
                       </span>
                     </button>
                   )}
-                  {isPostAuthor ? (
+                  {isPostAuthor || (isAdmin && isAuthorAdmin) ? (
                     <>
                       <button
                         type="button"
@@ -564,6 +576,22 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
                         </span>
                       </button>
                     </>
+                  ) : isAdmin ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowPostMenu(false);
+                        setIsDeleteConfirmOpen(true);
+                      }}
+                      className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                    >
+                      <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">
+                        delete
+                      </span>
+                      <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">
+                        Eliminar
+                      </span>
+                    </button>
                   ) : (
                     <button
                       type="button"
@@ -617,37 +645,48 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
 
       {/* Optional Post Title for Announcement Board Style */}
       {post.title && (
-        <h3 className="px-4 sm:px-5 pb-1.5 text-base sm:text-[17px] font-bold text-slate-900 font-jakarta leading-snug">
+        <h3 className="px-4 sm:px-5 pb-2.5 text-base sm:text-[17px] font-bold text-slate-900 font-jakarta leading-snug">
           {post.title}
         </h3>
       )}
 
-      {/* 3. Text content (with markdown support, subtle links, and real DOM overflow clamping) */}
-      <div className="px-4 sm:px-5 pb-3 text-sm text-slate-700 font-sans leading-relaxed">
-        <div
-          ref={contentRef}
-          className={`relative overflow-hidden transition-all duration-300 ${!isExpanded ? (hasMedia ? "max-h-[50px]" : "max-h-[165px]") : "max-h-none"
-            }`}
-        >
-          {renderFormattedContent(post.content)}
-          {!isExpanded && hasOverflow && (
-            <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-t from-white to-transparent pointer-events-none" />
-          )}
-        </div>
-        {hasOverflow && (
-          <button
-            type="button"
-            onClick={() => setIsExpanded((prev) => !prev)}
-            className="mt-1.5 text-xs text-slate-400 hover:text-slate-600 hover:underline font-sans border-none bg-transparent p-0 cursor-pointer select-none transition-colors block"
-          >
-            {isExpanded ? "Ver menos" : "Ver más"}
-          </button>
+      {/* 3. Text content (with inline Facebook/Instagram style truncation) */}
+      <div
+        className={`px-4 sm:px-5 text-sm text-slate-700 font-sans leading-relaxed ${
+          ((post.areas && post.areas.length > 0) || post.area) ? "pb-3 sm:pb-3.5" : "pb-3.5 sm:pb-4"
+        }`}
+      >
+        {!isExpanded && isTruncatable ? (
+          <p className="leading-relaxed">
+            {parseInlineMarkdown(truncatedText)}
+            <span className="text-slate-400 select-none">... </span>
+            <button
+              type="button"
+              onClick={() => setIsExpanded(true)}
+              className="font-bold text-slate-900 hover:text-slate-600 transition-colors inline cursor-pointer border-none bg-transparent p-0 select-none font-sans text-sm ml-0.5"
+            >
+              Ver más
+            </button>
+          </p>
+        ) : (
+          <>
+            {renderFormattedContent(post.content)}
+            {isTruncatable && (
+              <button
+                type="button"
+                onClick={() => setIsExpanded(false)}
+                className="mt-3 font-bold text-slate-900 hover:text-slate-600 transition-colors block cursor-pointer border-none bg-transparent p-0 select-none font-sans text-sm"
+              >
+                Ver menos
+              </button>
+            )}
+          </>
         )}
       </div>
 
       {/* 4. Area / Interest Pills at the end of the post (small) */}
       {((post.areas && post.areas.length > 0) || post.area) && (
-        <div className="px-4 sm:px-5 pb-3 flex flex-wrap items-center gap-1.5">
+        <div className="px-4 sm:px-5 pb-3.5 sm:pb-4 flex flex-wrap items-center gap-1.5">
           {(post.areas && post.areas.length > 0 ? post.areas : [post.area!]).map((areaTag) => (
             <InterestPill key={areaTag} interest={areaTag} size="sm" />
           ))}
@@ -755,7 +794,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
                       <div className="flex items-baseline gap-2 flex-wrap leading-tight">
                         <span
                           onClick={isOfficialComment ? undefined : (e) => handleCommentAuthorClick(e, comment)}
-                          className={`text-xs font-bold text-slate-900 font-sans ${isOfficialComment ? "cursor-default select-none" : "cursor-pointer hover:underline"
+                          className={`text-xs font-bold text-slate-900 font-sans ${isOfficialComment ? "cursor-default select-none" : "cursor-pointer hover:text-slate-600 transition-colors"
                             }`}
                           title={isOfficialComment ? undefined : `Ver perfil de ${comment.authorName}`}
                         >
@@ -878,14 +917,15 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
         onClose={() => setIsDeleteConfirmOpen(false)}
         title="¿Eliminar publicación?"
         maxWidth="400px"
-        footerClassName="px-5 py-3.5 border-t border-zinc-100 flex items-center gap-3 w-full"
+        containerClassName="shadow-none"
+        footerClassName="px-5 py-3.5 border-t border-zinc-100 flex flex-row items-center gap-2.5 w-full"
         footer={
           <>
             <Button
               variant="secondary"
               type="button"
               onClick={() => setIsDeleteConfirmOpen(false)}
-              className="flex-1 !h-11 !text-[13px] !font-medium !rounded-[12px]"
+              className="flex-1 !h-9 sm:!h-10 !text-xs sm:!text-[13px] !font-medium !rounded-[12px]"
             >
               Cancelar
             </Button>
@@ -895,7 +935,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
                 setIsDeleteConfirmOpen(false);
                 onDeletePost?.(post.id);
               }}
-              className="flex-1 !h-11 !text-[13px] !font-medium !bg-rose-600 hover:!bg-rose-700 !text-white !rounded-[12px]"
+              className="flex-1 !h-9 sm:!h-10 !text-xs sm:!text-[13px] !font-medium !bg-rose-600 hover:!bg-rose-700 !text-white !rounded-[12px]"
             >
               Eliminar
             </Button>
