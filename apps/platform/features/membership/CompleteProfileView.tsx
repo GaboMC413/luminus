@@ -1,5 +1,7 @@
 "use client";
 
+import { WelcomeRingCards } from "./WelcomeRingCards";
+
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { LocationInput } from "@/components/ui/LocationInput";
@@ -7,29 +9,31 @@ import { PhoneInput } from "@/components/ui/PhoneInput";
 import { InputField } from "@/components/ui/InputField";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { Button } from "@/components/ui/Button";
-import { COUNTRIES } from "@/utils/countries";
+import { COUNTRIES, Country } from "@/utils/countries";
 import { INTEREST_CATEGORIES } from "@/utils/constants";
 import { PhotoEditor } from "@/features/auth/registration/PhotoEditor";
 import { uploadAvatar } from "@/lib/uploadAvatar";
 import {
   Sun,
   Smile,
-  Stethoscope,
-  Activity,
+  HeartPulse,
+  Dumbbell,
   Apple,
-  Sparkles,
-  Users,
-  Flower2,
+  Sparkle,
+  Blend,
+  Flower,
   Tag,
   Asterisk,
   Compass,
-  ArrowRight
+  ArrowRight,
+  ChevronDown
 } from "lucide-react";
 
-const DEFAULT_COUNTRY = COUNTRIES.find((c) => c.code === "UY") || COUNTRIES[0] || {
-  code: "UY",
-  dial: "+598",
-  name: "Uruguay",
+const DEFAULT_COUNTRY: Country = {
+  code: "XX",
+  dial: "+00",
+  name: "Seleccionar país",
+  priority: false,
 };
 
 const MAX_INTERESTS = 10;
@@ -38,12 +42,41 @@ const CURATED_INTERESTS_SET = new Set(
   INTEREST_CATEGORIES.flatMap((cat) => cat.items.map((item) => item.toLowerCase().trim()))
 );
 
+const COUNTRY_SYNONYMS: Record<string, string> = {
+  "spain": "espana",
+  "united states": "estados unidos",
+  "usa": "estados unidos",
+  "us": "estados unidos",
+  "brazil": "brasil",
+  "brasil": "brasil",
+  "mexico": "mexico",
+  "peru": "peru",
+  "panama": "panama",
+};
+
 function normalizeText(value: string): string {
   return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
+}
+
+function findCountry(countryName?: string | null, countryCode?: string | null): Country | undefined {
+  if (countryCode) {
+    const codeClean = countryCode.trim().toUpperCase();
+    const byCode = COUNTRIES.find((c) => c.code.toUpperCase() === codeClean);
+    if (byCode) return byCode;
+  }
+  if (!countryName) return undefined;
+  const normalized = normalizeText(countryName);
+  const mapped = COUNTRY_SYNONYMS[normalized] || normalized;
+  return COUNTRIES.find(
+    (c) =>
+      normalizeText(c.name) === mapped ||
+      normalizeText(c.name) === normalized ||
+      c.code.toLowerCase() === normalized
+  );
 }
 
 const DAYS = Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0"));
@@ -77,15 +110,15 @@ type CategoryGroup = {
 
 function renderCategoryIcon(title: string, color: string) {
   const t = normalizeText(title);
-  const props = { className: "w-4 h-4 shrink-0", style: { color } };
+  const props = { className: "w-4 h-4 shrink-0", strokeWidth: 2, style: { color } };
   if (t.includes("crecimiento")) return <Sun {...props} />;
   if (t.includes("emocional")) return <Smile {...props} />;
-  if (t.includes("integral") || t.includes("salud")) return <Stethoscope {...props} />;
-  if (t.includes("movimiento") || t.includes("fisico")) return <Activity {...props} />;
+  if (t.includes("integral") || t.includes("salud")) return <HeartPulse {...props} />;
+  if (t.includes("ejercicio") || t.includes("movimiento") || t.includes("fisico")) return <Dumbbell {...props} />;
   if (t.includes("nutricion")) return <Apple {...props} />;
-  if (t.includes("espiritualidad")) return <Sparkles {...props} />;
-  if (t.includes("vinculo") || t.includes("relacion")) return <Users {...props} />;
-  if (t.includes("terapia")) return <Flower2 {...props} />;
+  if (t.includes("espiritualidad")) return <Sparkle {...props} />;
+  if (t.includes("vinculo") || t.includes("relacion")) return <Blend {...props} />;
+  if (t.includes("terapia")) return <Flower {...props} />;
   return <Tag {...props} />;
 }
 
@@ -94,6 +127,7 @@ export default function CompleteProfileView() {
 
   // 3-step onboarding state ("details" -> "interests" -> "welcome")
   const [step, setStep] = useState<"details" | "interests" | "welcome">("details");
+  const [isExitingInterests, setIsExitingInterests] = useState(false);
 
   // Basic Personal Info
   const [firstName, setFirstName] = useState("");
@@ -124,6 +158,24 @@ export default function CompleteProfileView() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const interestsScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollInterestsDown, setCanScrollInterestsDown] = useState(true);
+
+  const handleInterestsScroll = () => {
+    if (interestsScrollRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = interestsScrollRef.current;
+      setCanScrollInterestsDown(scrollTop + clientHeight < scrollHeight - 20);
+    }
+  };
+
+  useEffect(() => {
+    if (step === "interests") {
+      const timer = setTimeout(() => {
+        handleInterestsScroll();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [step]);
 
   // Load existing profile & categories
   useEffect(() => {
@@ -145,24 +197,24 @@ export default function CompleteProfileView() {
         const rawLocalCity = localStorage.getItem("luminus_billing_city") || "";
         const cleanLocalCity = rawLocalCity.split(",")[0].trim();
         const localCountry = localStorage.getItem("luminus_billing_country") || "";
+        const localCountryCode = localStorage.getItem("luminus_billing_country_code") || "";
         if (cleanLocalCity) setCity(cleanLocalCity);
-        if (localCountry) setCountry(localCountry);
-        if (cleanLocalCity || localCountry) {
-          const loc =
-            cleanLocalCity && localCountry
-              ? `${cleanLocalCity}, ${localCountry}`
-              : cleanLocalCity || localCountry;
-          setInitialLocation(loc);
+
+        const matchedLocalCountry = findCountry(localCountry, localCountryCode);
+        if (matchedLocalCountry) {
+          setCountry(matchedLocalCountry.name);
+          setPhoneCountry(matchedLocalCountry);
+        } else if (localCountry) {
+          setCountry(localCountry);
         }
 
-        const localCountryCode = localStorage.getItem("luminus_billing_country_code");
-        if (localCountryCode || localCountry) {
-          const matched = COUNTRIES.find(
-            (c) =>
-              (localCountryCode && c.code.toUpperCase() === localCountryCode.toUpperCase()) ||
-              (localCountry && c.name.toLowerCase() === localCountry.toLowerCase())
-          );
-          if (matched) setPhoneCountry(matched);
+        const resolvedLocalCountryName = matchedLocalCountry ? matchedLocalCountry.name : localCountry;
+        if (cleanLocalCity || resolvedLocalCountryName) {
+          const loc =
+            cleanLocalCity && resolvedLocalCountryName
+              ? `${cleanLocalCity}, ${resolvedLocalCountryName}`
+              : cleanLocalCity || resolvedLocalCountryName;
+          setInitialLocation(loc);
         }
       }
 
@@ -206,11 +258,13 @@ export default function CompleteProfileView() {
 
           if (cleanProfileCity) setCity(cleanProfileCity);
           if (profileCountry) {
-            setCountry(profileCountry);
-            const matched = COUNTRIES.find(
-              (c) => c.name.toLowerCase() === profileCountry.toLowerCase()
-            );
-            if (matched) setPhoneCountry(matched);
+            const matchedProfileCountry = findCountry(profileCountry);
+            if (matchedProfileCountry) {
+              setCountry(matchedProfileCountry.name);
+              setPhoneCountry(matchedProfileCountry);
+            } else {
+              setCountry(profileCountry);
+            }
           }
           if (cleanProfileCity || profileCountry) {
             const loc =
@@ -393,7 +447,13 @@ export default function CompleteProfileView() {
     setSaving(true);
     try {
       const cleanCity = city.split(",")[0].trim();
-      const fullPhone = phone ? `${phoneCountry.dial} ${phone.replace(/\D/g, "")}` : undefined;
+      const digitsOnly = phone.replace(/\D/g, "");
+      const hasValidDial = phoneCountry.code !== "XX" && phoneCountry.dial !== "+00";
+      const fullPhone = digitsOnly
+        ? hasValidDial
+          ? `${phoneCountry.dial} ${digitsOnly}`
+          : digitsOnly
+        : undefined;
 
       if (cleanCity && country) {
         setInitialLocation(`${cleanCity}, ${country}`);
@@ -436,7 +496,13 @@ export default function CompleteProfileView() {
 
     const birthCheck = validateBirthdate();
     const cleanCity = city.split(",")[0].trim();
-    const fullPhone = phone ? `${phoneCountry.dial} ${phone.replace(/\D/g, "")}` : undefined;
+    const digitsOnly = phone.replace(/\D/g, "");
+    const hasValidDial = phoneCountry.code !== "XX" && phoneCountry.dial !== "+00";
+    const fullPhone = digitsOnly
+      ? hasValidDial
+        ? `${phoneCountry.dial} ${digitsOnly}`
+        : digitsOnly
+      : undefined;
 
     try {
       const res = await fetch("/api/profile", {
@@ -465,9 +531,13 @@ export default function CompleteProfileView() {
         localStorage.setItem("luminus_profile_otherInterests", otherInterests.trim());
       }
 
-      // Smooth transition to Welcome Screen before entering /comunidad
-      setStep("welcome");
-      window.scrollTo(0, 0);
+      // Smooth crossfade transition to Welcome Screen
+      setIsExitingInterests(true);
+      setTimeout(() => {
+        setStep("welcome");
+        window.scrollTo(0, 0);
+        setIsExitingInterests(false);
+      }, 350);
     } catch (err: any) {
       setErrorMessage(err.message || "Error al guardar los datos. Intenta nuevamente.");
     } finally {
@@ -494,19 +564,31 @@ export default function CompleteProfileView() {
   const limitReached = selectedInterests.length >= MAX_INTERESTS;
 
   return (
-    <div className="min-h-screen bg-white flex flex-col justify-between font-sans selection:bg-slate-200">
+    <div
+      style={
+        step === "welcome"
+          ? {
+              backgroundImage:
+                "linear-gradient(0deg, rgba(255, 255, 255, 0.75) 0%, #ffffff 100%), linear-gradient(90deg, #FF7700 0%, #E855C8 33%, #0450FB 66%, #A8C800 100%)",
+            }
+          : undefined
+      }
+      className={`min-h-[100dvh] bg-white flex flex-col justify-between font-sans selection:bg-slate-200 relative ${
+        step === "interests" ? "h-[100dvh] overflow-hidden" : "overflow-x-hidden overflow-y-auto"
+      }`}
+    >
       <div
         className={`flex-1 flex flex-col items-center px-4 ${
-          step === "details"
-            ? "justify-center pt-24 pb-8"
-            : step === "interests"
-            ? "pt-12 sm:pt-16 pb-2"
-            : "justify-center pt-16 pb-8"
+          step === "interests"
+            ? "justify-between pt-6 pb-2 h-full overflow-hidden w-full"
+            : step === "welcome"
+            ? "justify-center pt-5 pb-3 sm:py-6"
+            : "justify-center pt-10 pb-8 sm:py-12"
         }`}
       >
         {step === "details" ? (
           /* STEP 1: Personal Details */
-          <main className="w-full max-w-[380px] mx-auto flex flex-col items-center gap-8 animate-fade-in-up">
+          <main className="w-full max-w-[380px] mx-auto flex flex-col items-center my-auto gap-6 sm:gap-8 animate-fade-in-up">
             <h1 className="text-2xl sm:text-[26px] font-bold font-jakarta text-slate-900 tracking-tight text-center m-0">
               Completa tu perfil
             </h1>
@@ -624,12 +706,7 @@ export default function CompleteProfileView() {
                     setCity(cleanCity);
                     setCountry(selectedCountry || "");
                     if (countryCode || selectedCountry) {
-                      const normalized = (selectedCountry || "").toLowerCase().trim();
-                      const found = COUNTRIES.find(
-                        (c) =>
-                          (countryCode && c.code.toLowerCase() === countryCode.toLowerCase()) ||
-                          c.name.toLowerCase() === normalized
-                      );
+                      const found = findCountry(selectedCountry, countryCode);
                       if (found) setPhoneCountry(found);
                     }
                   }}
@@ -698,49 +775,57 @@ export default function CompleteProfileView() {
           </main>
         ) : step === "interests" ? (
           /* STEP 2: Categorized Wellness Interests Screen */
-          <main className="w-full max-w-[380px] sm:max-w-[540px] md:max-w-[640px] mx-auto flex flex-col animate-fade-in-up">
-            <form onSubmit={handleFinishProfile} className="w-full flex flex-col">
+          <main className={`w-full max-w-[380px] sm:max-w-[540px] md:max-w-[640px] mx-auto flex-1 min-h-0 h-full flex flex-col transition-opacity duration-300 ease-out ${
+            isExitingInterests ? "opacity-0" : "animate-fade-in-up"
+          }`}>
+            <form onSubmit={handleFinishProfile} className="w-full flex-1 min-h-0 flex flex-col justify-between">
               {/* STICKY TOP BAR */}
-              <div className="sticky top-0 z-20 w-full bg-gradient-to-b from-white from-80% via-white/95 to-transparent pt-6 pb-6 flex flex-col gap-6">
+              <div className="sticky top-0 z-20 w-full bg-white pt-1 pb-2 flex flex-col gap-4">
                 <h1 className="text-2xl sm:text-[26px] font-bold font-jakarta text-slate-900 tracking-tight text-center m-0">
                   Elige tus intereses
                 </h1>
 
-                <div className="flex items-start justify-between gap-2 w-full">
+                <div className="flex items-start justify-between gap-2 w-full min-h-[30px] pt-1">
                   <div className="flex flex-wrap gap-1.5 flex-1">
-                    {selectedInterests.map((item) => {
-                      const catColor = getCategoryColor(item);
-                      return (
-                        <button
-                          key={`selected-${item}`}
-                          type="button"
-                          onClick={() => toggleInterest(item)}
-                          style={{
-                            backgroundColor: catColor,
-                            borderColor: catColor,
-                            color: "#FFFFFF",
-                          }}
-                          className="h-[30px] px-3 text-xs leading-none rounded-full transition-all font-jakarta border font-semibold cursor-pointer inline-flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95"
-                        >
-                          <span>{item}</span>
-                          <svg
-                            className="w-3 h-3 shrink-0"
-                            viewBox="0 0 12 12"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
+                    {selectedInterests.length === 0 ? (
+                      <span className="text-xs text-slate-400 font-sans italic leading-[30px]">
+                        Selecciona hasta {MAX_INTERESTS} temas
+                      </span>
+                    ) : (
+                      selectedInterests.map((item) => {
+                        const catColor = getCategoryColor(item);
+                        return (
+                          <button
+                            key={`selected-${item}`}
+                            type="button"
+                            onClick={() => toggleInterest(item)}
+                            style={{
+                              backgroundColor: catColor,
+                              borderColor: catColor,
+                              color: "#FFFFFF",
+                            }}
+                            className="h-[28px] px-2.5 text-xs leading-none rounded-full transition-all font-jakarta border font-semibold cursor-pointer inline-flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95 shadow-sm"
                           >
-                            <path d="M2.5 2.5L9.5 9.5M9.5 2.5L2.5 9.5" />
-                          </svg>
-                        </button>
-                      );
-                    })}
+                            <span>{item}</span>
+                            <svg
+                              className="w-3 h-3 shrink-0"
+                              viewBox="0 0 12 12"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              strokeLinecap="round"
+                            >
+                              <path d="M2.5 2.5L9.5 9.5M9.5 2.5L2.5 9.5" />
+                            </svg>
+                          </button>
+                        );
+                      })
+                    )}
                   </div>
 
                   <span
                     className={`text-xs font-semibold font-jakarta tabular-nums select-none shrink-0 leading-[30px] ${
-                      limitReached ? "text-slate-900" : "text-slate-400"
+                      limitReached ? "text-slate-900 font-bold" : "text-slate-400"
                     }`}
                   >
                     {selectedInterests.length}/{MAX_INTERESTS}
@@ -748,8 +833,12 @@ export default function CompleteProfileView() {
                 </div>
               </div>
 
-              {/* SCROLLABLE CATEGORIES & OTHER INTERESTS */}
-              <div className="flex flex-col gap-6 w-full pt-2 pb-0">
+              {/* SCROLLABLE CATEGORIES & OTHER INTERESTS WITH GRADIENT FADE */}
+              <div
+                ref={interestsScrollRef}
+                onScroll={handleInterestsScroll}
+                className="subtle-scrollbar flex-1 min-h-0 overflow-y-auto pr-2 my-1 flex flex-col gap-4 w-full pt-1 pb-3 [mask-image:linear-gradient(to_bottom,transparent,black_14px,black_calc(100%-16px),transparent)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_14px,black_calc(100%-16px),transparent)]"
+              >
                 {categories.map((category) => (
                   <div key={category.title} className="flex flex-col gap-2.5">
                     <h3
@@ -816,8 +905,20 @@ export default function CompleteProfileView() {
                 )}
               </div>
 
-              {/* STICKY FLOATING BOTTOM BAR */}
-              <div className="sticky bottom-0 z-20 w-full bg-gradient-to-t from-white from-60% via-white/85 to-transparent pt-6 pb-2 flex flex-col items-center gap-4 pointer-events-none">
+              {/* Scroll Affordance Cue */}
+              {canScrollInterestsDown && (
+                <button
+                  type="button"
+                  onClick={() => interestsScrollRef.current?.scrollBy({ top: 180, behavior: "smooth" })}
+                  className="w-full flex items-center justify-center gap-1.5 py-1 text-xs text-slate-400 hover:text-slate-600 transition-colors select-none cursor-pointer bg-transparent border-none"
+                >
+                  <span>Más categorías abajo</span>
+                  <ChevronDown className="w-3.5 h-3.5 animate-bounce" />
+                </button>
+              )}
+
+              {/* BOTTOM ACTIONS BAR - Pinned above footer */}
+              <div className="w-full shrink-0 pt-2 pb-1 flex flex-col items-center gap-0 pointer-events-none">
                 <div className="w-full max-w-[380px] mx-auto pointer-events-auto rounded-xl">
                   <Button type="submit" variant="primary" disabled={saving}>
                     {saving ? "Creando perfil..." : "Crear mi perfil"}
@@ -832,7 +933,7 @@ export default function CompleteProfileView() {
                     window.scrollTo(0, 0);
                   }}
                   disabled={saving}
-                  className="pointer-events-auto text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-900 underline underline-offset-2 transition-colors text-center cursor-pointer bg-transparent border-none p-0 font-sans"
+                  className="pointer-events-auto mt-3.5 mb-1 text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-900 underline underline-offset-2 transition-colors text-center cursor-pointer bg-transparent border-none p-0 font-sans"
                 >
                   Volver
                 </button>
@@ -840,87 +941,37 @@ export default function CompleteProfileView() {
             </form>
           </main>
         ) : (
-          /* STEP 3: ANIMATED WELCOME SCREEN */
-          <main className="w-full max-w-[420px] mx-auto flex flex-col items-center gap-7 animate-fade-in-up text-center relative">
-            {/* Luminous Warm Background Glow */}
-            <div
-              className="absolute -top-16 left-1/2 -translate-x-1/2 w-[340px] h-[340px] bg-gradient-to-tr from-amber-200/40 via-purple-200/35 to-rose-200/30 rounded-full blur-3xl pointer-events-none -z-10 animate-float-gentle"
-              aria-hidden="true"
-            />
-            {/* Header */}
-            <div className="flex flex-col items-center gap-3">
-              <h1 className="text-2xl sm:text-[30px] font-bold font-jakarta text-slate-900 tracking-tight m-0 leading-tight">
-                ¡Te damos la bienvenida a LUMINUS!
-              </h1>
-              <p className="text-sm text-slate-600 leading-relaxed max-w-[360px] m-0 font-sans">
-                Un mundo de conexiones, conocimientos y experiencias de bienestar te espera.
-              </p>
+          /* STEP 3: ANIMATED WELCOME SCREEN WITH 3D RING CARDS */
+          <main className="w-full max-w-[420px] sm:max-w-xl mx-auto flex flex-col items-center my-auto text-center relative py-1">
+            {/* Header: [LUMINUS LOGO] on top with entrance animation */}
+            <header className="animate-welcome-header flex flex-col items-center text-center gap-3 mb-6 sm:mb-8 shrink-0">
+              <div className="relative inline-flex items-center justify-center mb-0.5">
+                <img
+                  src="/logo-luminus-black.svg"
+                  alt="LUMINUS"
+                  className="h-[22px] sm:h-[24px] w-auto transition-transform duration-500 hover:scale-105"
+                />
+              </div>
+
+              <div className="flex flex-col items-center gap-1.5">
+                <h1 className="text-2xl sm:text-[28px] font-bold font-jakarta text-slate-900 tracking-tight m-0 leading-tight">
+                  ¡Te damos la bienvenida!
+                </h1>
+              </div>
+            </header>
+
+            {/* Middle: 3D Rotating Ring Cards with staggered entrance */}
+            <div className="animate-welcome-cards w-full my-auto flex items-center justify-center py-2">
+              <WelcomeRingCards />
             </div>
 
-            {/* 3 Animated Cards */}
-            <div className="w-full flex flex-col gap-3">
-              {/* Card 1 */}
-              <div
-                className="w-full bg-white/90 backdrop-blur-sm rounded-2xl border border-zinc-200/90 p-4 sm:p-4.5 flex items-start gap-3.5 text-left transition-all duration-300 hover:border-indigo-300 hover:shadow-[0_8px_25px_-6px_rgba(99,102,241,0.12)] hover:-translate-y-0.5"
-                style={{ animationDelay: "100ms" }}
-              >
-                <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100/80 flex items-center justify-center text-indigo-600 shrink-0">
-                  <Users className="w-5 h-5" />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <h3 className="text-sm font-bold font-jakarta text-slate-900 m-0">
-                    Conecta con otras personas
-                  </h3>
-                  <p className="text-xs text-slate-500 leading-relaxed m-0 font-sans">
-                    Comparte intereses y experiencias sobre bienestar.
-                  </p>
-                </div>
-              </div>
-
-              {/* Card 2 */}
-              <div
-                className="w-full bg-white/90 backdrop-blur-sm rounded-2xl border border-zinc-200/90 p-4 sm:p-4.5 flex items-start gap-3.5 text-left transition-all duration-300 hover:border-emerald-300 hover:shadow-[0_8px_25px_-6px_rgba(16,185,129,0.12)] hover:-translate-y-0.5"
-                style={{ animationDelay: "200ms" }}
-              >
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100/80 flex items-center justify-center text-emerald-600 shrink-0">
-                  <Compass className="w-5 h-5" />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <h3 className="text-sm font-bold font-jakarta text-slate-900 m-0">
-                    Encuentra especialistas
-                  </h3>
-                  <p className="text-xs text-slate-500 leading-relaxed m-0 font-sans">
-                    Descubre profesionales de distintas áreas.
-                  </p>
-                </div>
-              </div>
-
-              {/* Card 3 */}
-              <div
-                className="w-full bg-white/90 backdrop-blur-sm rounded-2xl border border-zinc-200/90 p-4 sm:p-4.5 flex items-start gap-3.5 text-left transition-all duration-300 hover:border-amber-300 hover:shadow-[0_8px_25px_-6px_rgba(245,158,11,0.12)] hover:-translate-y-0.5"
-                style={{ animationDelay: "300ms" }}
-              >
-                <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100/80 flex items-center justify-center text-amber-600 shrink-0">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <div className="flex flex-col gap-1">
-                  <h3 className="text-sm font-bold font-jakarta text-slate-900 m-0">
-                    Descubre nuevas experiencias
-                  </h3>
-                  <p className="text-xs text-slate-500 leading-relaxed m-0 font-sans">
-                    Explora actividades y encuentros de bienestar.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Direct CTA */}
-            <div className="w-full pt-1">
+            {/* Bottom: Direct CTA with staggered entrance */}
+            <div className="animate-welcome-button w-full max-w-[340px] mx-auto pt-8 sm:pt-10 shrink-0">
               <Button
                 type="button"
                 variant="primary"
                 onClick={() => router.push("/comunidad?welcome=1")}
-                className="w-full flex items-center justify-center gap-2"
+                className="w-full flex items-center justify-center gap-2 h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all"
               >
                 <span>Ingresar</span>
               </Button>
@@ -939,7 +990,7 @@ export default function CompleteProfileView() {
       )}
 
       {/* Footer */}
-      <footer className="w-full max-w-[380px] mx-auto px-4 py-6 flex flex-col items-center gap-3 text-center">
+      <footer className="relative z-10 w-full max-w-[380px] mx-auto px-4 py-3 sm:py-4 flex flex-col items-center gap-1 text-center shrink-0 mt-auto">
         <p className="text-xs text-slate-400 m-0">© 2026 LUMINUS Latam.</p>
       </footer>
     </div>

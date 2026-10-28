@@ -4,6 +4,7 @@ import {
   AdminEnableUserCommand,
   AdminSetUserPasswordCommand,
   AdminConfirmSignUpCommand,
+  AdminCreateUserCommand,
   CognitoIdentityProviderClient,
   UserNotFoundException,
 } from "@aws-sdk/client-cognito-identity-provider";
@@ -149,6 +150,36 @@ export async function adminConfirmUser(email: string) {
   } catch (error) {
     console.error("Failed to auto-confirm user in Cognito:", error);
   }
+}
+
+export async function adminCreateAndConfirmUser(email: string, password: string): Promise<string> {
+  const client = getCognitoAdminClient();
+  const UserPoolId = getUserPoolId();
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const createRes = await client.send(
+    new AdminCreateUserCommand({
+      UserPoolId,
+      Username: normalizedEmail,
+      MessageAction: "SUPPRESS", // Suppress AWS verification email/SMS
+      UserAttributes: [
+        { Name: "email", Value: normalizedEmail },
+        { Name: "email_verified", Value: "true" },
+      ],
+    })
+  );
+
+  await client.send(
+    new AdminSetUserPasswordCommand({
+      UserPoolId,
+      Username: normalizedEmail,
+      Password: password,
+      Permanent: true,
+    })
+  );
+
+  const subAttr = createRes.User?.Attributes?.find((attr) => attr.Name === "sub");
+  return subAttr?.Value || createRes.User?.Username || normalizedEmail;
 }
 
 export async function adminDeleteCognitoUser(email: string) {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCognitoErrorMessage, getCognitoErrorStatus, signUpWithCognito, resendConfirmationCode } from "@/lib/auth/cognito-password";
-import { adminConfirmUser } from "@/lib/auth/cognito-admin";
+import { adminConfirmUser, adminCreateAndConfirmUser } from "@/lib/auth/cognito-admin";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { serializeUser } from "@/lib/auth/validation";
 import { createMembershipSubscription } from "@/lib/stripe";
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     const { prisma } = await import("@/lib/db");
     const { action } = body;
 
-    // ACTION: Start Registration (Screen 2: creates Cognito user and sends 6-digit code)
+    // ACTION: Start Registration (Direct account creation without OTP code)
     if (action === "start_registration") {
       const email = typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
       const password = typeof body.password === "string" ? body.password : "";
@@ -35,53 +35,7 @@ export async function POST(request: Request) {
         select: { id: true, email: true, role: true, emailVerified: true, status: true },
       });
 
-      // LOCAL DEV BYPASS: In local development, bypass email verification and auto-login!
-      if (process.env.NODE_ENV !== "production") {
-        let user = existingUser;
-        if (!user) {
-          const userSub = "local-sub-" + Date.now();
-          const createdUser = await prisma.user.create({
-            data: {
-              email,
-              cognitoSub: userSub,
-              authProvider: "email",
-              emailVerified: true,
-              role: "USER",
-              status: "active",
-              tier: "FREE",
-              trialExpiresAt: null,
-              identities: {
-                create: {
-                  provider: "cognito",
-                  providerSubject: userSub,
-                  email,
-                },
-              },
-              profile: {
-                create: {
-                  selectedPlan: plan === "MEMBERSHIP" ? "Monthly" : "Free",
-                  isOnboarded: false,
-                },
-              },
-            },
-            select: { id: true, email: true, role: true },
-          });
-          user = { ...createdUser, emailVerified: true, status: "active" as any };
-        } else {
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { emailVerified: true },
-          });
-        }
-
-        return NextResponse.json({
-          success: true,
-          requiresVerification: true,
-          message: "Hemos enviado un código a tu correo.",
-        });
-      }
-
-      if (existingUser && existingUser.emailVerified) {
+      if (existingUser) {
         return NextResponse.json(
           { message: "Ya existe una cuenta con este correo. Iniciar sesión.", code: "EMAIL_EXISTS" },
           { status: 409 }
@@ -90,68 +44,84 @@ export async function POST(request: Request) {
 
       let userSub = "";
       try {
-        const cognitoUser = await signUpWithCognito(email, password);
-        userSub = cognitoUser.userSub;
+        userSub = await adminCreateAndConfirmUser(email, password);
       } catch (cognitoErr: any) {
-        if (cognitoErr.code === "UsernameExistsException") {
-          try {
-            await resendConfirmationCode(email);
-            return NextResponse.json({
-              success: true,
-              requiresVerification: true,
-              message: "Hemos enviado un código a tu correo.",
-            });
-          } catch {
+        if (
+          cognitoErr?.name === "UsernameExistsException" ||
+          cognitoErr?.code === "UsernameExistsException"
+        ) {
+          return NextResponse.json(
+            { message: "Ya existe una cuenta con este correo. Iniciar sesión.", code: "EMAIL_EXISTS" },
+            { status: 409 }
+          );
+        }
+
+        // If admin creation fails (e.g. IAM permission), fallback to signUpWithCognito + adminConfirmUser
+        try {
+          const fallbackUser = await signUpWithCognito(email, password);
+          userSub = fallbackUser.userSub;
+          await adminConfirmUser(email);
+        } catch (fallbackErr: any) {
+          if (process.env.NODE_ENV !== "production") {
+            console.warn("[LOCAL DEV] Bypassing Cognito error in local dev:", fallbackErr?.message || fallbackErr);
+            userSub = "local-sub-" + Date.now();
+          } else {
             return NextResponse.json(
-              { message: "Ya existe una cuenta con este correo. Iniciar sesión.", code: "EMAIL_EXISTS" },
-              { status: 409 }
+              { message: getCognitoErrorMessage(cognitoErr || fallbackErr, "No pudimos crear la cuenta.") },
+              { status: getCognitoErrorStatus(cognitoErr || fallbackErr, 400) }
             );
           }
         }
-        if (process.env.NODE_ENV !== "production") {
-          console.warn("[LOCAL DEV] Bypassing Cognito signUp error in local dev:", cognitoErr.message || cognitoErr);
-          userSub = "local-sub-" + Date.now();
-        } else {
-          return NextResponse.json(
-            { message: getCognitoErrorMessage(cognitoErr, "No pudimos crear la cuenta.") },
-            { status: getCognitoErrorStatus(cognitoErr, 400) }
-          );
-        }
       }
 
-      // Create or update local user record
-      if (!existingUser) {
-        await prisma.user.create({
-          data: {
-            email,
-            cognitoSub: userSub,
-            authProvider: "email",
-            emailVerified: false,
-            role: "USER",
-            status: "active",
-            tier: "FREE",
-            trialExpiresAt: null,
-            identities: {
-              create: {
-                provider: "cognito",
-                providerSubject: userSub,
-                email,
-              },
-            },
-            profile: {
-              create: {
-                selectedPlan: plan === "MEMBERSHIP" ? "Monthly" : "Free",
-                isOnboarded: false,
-              },
+      // Create local user record in PostgreSQL
+      const user = await prisma.user.create({
+        data: {
+          email,
+          cognitoSub: userSub,
+          authProvider: "email",
+          emailVerified: true,
+          role: "USER",
+          status: "active",
+          tier: "FREE",
+          trialExpiresAt: null,
+          identities: {
+            create: {
+              provider: "cognito",
+              providerSubject: userSub,
+              email,
             },
           },
-        });
+          profile: {
+            create: {
+              selectedPlan: plan === "MEMBERSHIP" ? "Monthly" : "Free",
+              isOnboarded: false,
+            },
+          },
+        },
+        select: { id: true, email: true, role: true },
+      });
+
+      // Establish session cookie immediately
+      const token = createSessionToken({
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+      });
+      setSessionCookie(token);
+
+      // Send background welcome email (non-blocking, warm onboarding)
+      try {
+        const { sendWelcomeEmail } = await import("@/lib/mails/sender");
+        await sendWelcomeEmail(user.email);
+      } catch (welcomeError) {
+        console.error("Welcome email error (non-fatal):", welcomeError);
       }
 
       return NextResponse.json({
         success: true,
-        requiresVerification: true,
-        message: "Código de verificación enviado.",
+        requiresVerification: false,
+        user: { id: user.id, email: user.email, role: user.role },
       });
     }
 

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
+import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
 import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -73,30 +74,85 @@ export async function POST(request: Request) {
         },
         include: { profile: true },
       });
-    } else {
-      // If user exists by email but without this cognitoSub, ensure profile has picture/name if empty
-      if (!user.cognitoSub.startsWith("facebook_") && user.email === email) {
-        // Link or update
-        await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            emailVerified: true,
-            lastLoginAt: new Date(),
-          },
-        });
+
+      // Cache avatar to S3 asynchronously for brand new users
+      if (avatarUrl && user?.id) {
+        ensureS3AvatarUrl(avatarUrl, user.id).then(async (s3Url) => {
+          if (s3Url && s3Url !== avatarUrl && user) {
+            await prisma.userProfile.update({
+              where: { userId: user.id },
+              data: { avatarUrl: s3Url },
+            }).catch(() => null);
+          }
+        }).catch(() => null);
       }
+    } else {
+      // Update last login
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          emailVerified: true,
+          lastLoginAt: new Date(),
+        },
+      });
 
       if (!user.profile) {
-        await prisma.userProfile.create({
+        user = await prisma.user.update({
+          where: { id: user.id },
           data: {
-            userId: user.id,
-            firstName,
-            lastName,
-            fullName: `${firstName} ${lastName}`.trim() || undefined,
-            avatarUrl: avatarUrl || undefined,
-            isOnboarded: false,
+            profile: {
+              create: {
+                firstName,
+                lastName,
+                fullName: `${firstName} ${lastName}`.trim() || undefined,
+                avatarUrl: avatarUrl || undefined,
+                isOnboarded: false,
+              },
+            },
           },
+          include: { profile: true },
         });
+
+        if (avatarUrl && user?.id) {
+          ensureS3AvatarUrl(avatarUrl, user.id).then(async (s3Url) => {
+            if (s3Url && s3Url !== avatarUrl && user) {
+              await prisma.userProfile.update({
+                where: { userId: user.id },
+                data: { avatarUrl: s3Url },
+              }).catch(() => null);
+            }
+          }).catch(() => null);
+        }
+      } else {
+        // If profile exists, fill in avatarUrl or names if they were missing!
+        const needsAvatar = !user.profile.avatarUrl && Boolean(avatarUrl);
+        const needsFirstName = !user.profile.firstName && Boolean(firstName);
+        const needsLastName = !user.profile.lastName && Boolean(lastName);
+
+        if (needsAvatar || needsFirstName || needsLastName) {
+          const resolvedAvatar = needsAvatar ? avatarUrl : user.profile.avatarUrl;
+          const updatedProfile = await prisma.userProfile.update({
+            where: { userId: user.id },
+            data: {
+              avatarUrl: resolvedAvatar || undefined,
+              firstName: user.profile.firstName || firstName || undefined,
+              lastName: user.profile.lastName || lastName || undefined,
+              fullName: user.profile.fullName || `${firstName} ${lastName}`.trim() || undefined,
+            },
+          });
+          user.profile = updatedProfile;
+
+          if (needsAvatar && avatarUrl && user?.id) {
+            ensureS3AvatarUrl(avatarUrl, user.id).then(async (s3Url) => {
+              if (s3Url && s3Url !== avatarUrl && user) {
+                await prisma.userProfile.update({
+                  where: { userId: user.id },
+                  data: { avatarUrl: s3Url },
+                }).catch(() => null);
+              }
+            }).catch(() => null);
+          }
+        }
       }
     }
 

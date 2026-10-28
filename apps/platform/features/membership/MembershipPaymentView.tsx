@@ -29,7 +29,21 @@ export default function MembershipPaymentView() {
   } | null>(null);
 
   // Card Inputs
-  const [cardHolderName, setCardHolderName] = useState("");
+  const [cardHolderName, setCardHolderName] = useState(() => {
+    if (typeof window !== "undefined") {
+      const first = localStorage.getItem("luminus_profile_firstName") || "";
+      const last = localStorage.getItem("luminus_profile_lastName") || "";
+      const full = [first, last].filter(Boolean).join(" ");
+      if (full) return full;
+    }
+    return "";
+  });
+  const [email, setEmail] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("luminus_user_email") || "";
+    }
+    return "";
+  });
   const [cardNumber, setCardNumber] = useState("");
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvc, setCardCvc] = useState("");
@@ -86,6 +100,10 @@ export default function MembershipPaymentView() {
         const res = await fetch("/api/profile");
         if (res.ok) {
           const data = await res.json();
+          if (data?.email) {
+            setEmail((prev) => prev || data.email);
+            localStorage.setItem("luminus_user_email", data.email);
+          }
           const p = data?.profile;
           if (p) {
             const userFullName = [p.first_name, p.last_name].filter(Boolean).join(" ");
@@ -212,13 +230,17 @@ export default function MembershipPaymentView() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col justify-between font-sans selection:bg-slate-200">
-      <div className="flex-1 flex flex-col items-center justify-center px-4 pt-24 pb-8">
-        <main className="w-full max-w-[380px] mx-auto flex flex-col items-center gap-6 animate-fade-in-up">
-          {/* Title */}
-          <h1 className="text-2xl sm:text-[26px] font-bold font-jakarta text-slate-900 tracking-tight text-center m-0 transition-all">
-            {isSuccess ? "¡Membresía activada!" : "Activa tu membresía"}
-          </h1>
+    <div className="min-h-[100dvh] bg-white flex flex-col justify-between font-sans selection:bg-slate-200">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pt-10 pb-8 sm:py-12">
+        <main className="w-full max-w-[380px] mx-auto flex flex-col items-center my-auto animate-fade-in-up">
+          {/* Header unit */}
+          {!isSuccess && (
+            <header className="flex flex-col items-center text-center gap-2 mb-6 sm:mb-8">
+              <h1 className="text-2xl sm:text-[26px] font-bold font-jakarta text-slate-900 tracking-tight m-0 transition-all">
+                Activa tu membresía
+              </h1>
+            </header>
+          )}
 
           {/* Payment and Card Info OR Success Confirmation */}
           <div className="w-full flex flex-col gap-4">
@@ -311,12 +333,12 @@ export default function MembershipPaymentView() {
 
                 {/* Title */}
                 <h3 className="text-xl font-bold font-jakarta text-slate-900 tracking-tight mb-2">
-                  ¡Pago confirmado!
+                  Pago confirmado
                 </h3>
 
                 {/* Subtitle */}
                 <p className="text-sm text-slate-500 max-w-[290px] leading-relaxed mb-6 font-sans">
-                  Tu membresía {isAnnual ? "anual" : "mensual"} ya está activa.
+                  Tu membresía ya está activa.
                 </p>
 
                 {/* Minimalist Progress Indicator */}
@@ -338,6 +360,19 @@ export default function MembershipPaymentView() {
                       setErrorMessage(null);
                     }}
                     placeholder="Nombre en la tarjeta"
+                    className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans"
+                  />
+
+                  {/* Prefilled Email field for double-checking receipt destination */}
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setErrorMessage(null);
+                    }}
+                    placeholder="Correo electrónico para comprobantes"
                     className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans"
                   />
 
@@ -492,7 +527,7 @@ export default function MembershipPaymentView() {
       `}</style>
 
       {/* Footer */}
-      <footer className="w-full max-w-[380px] mx-auto px-4 py-6 flex flex-col items-center gap-3 text-center">
+      <footer className="w-full max-w-[380px] mx-auto px-4 py-4 sm:py-6 flex flex-col items-center gap-2 text-center">
         <p className="text-xs text-slate-400 m-0">© 2026 LUMINUS Latam.</p>
       </footer>
     </div>
