@@ -27,15 +27,20 @@ export default function MembershipChoiceView() {
   ];
 
   return (
-    <div className="min-h-screen bg-white flex flex-col justify-between font-sans selection:bg-slate-200">
-      <div className="flex-1 flex flex-col items-center justify-center px-4 pt-24 pb-8">
-        <main className="w-full max-w-[380px] mx-auto flex flex-col items-center gap-6">
-          {/* Title */}
-          <h1 className="text-[22px] sm:text-[26px] font-bold font-jakarta text-slate-900 tracking-tight text-center sm:whitespace-nowrap m-0">
-            Sé parte de una red de bienestar
-          </h1>
+    <div className="min-h-[100dvh] bg-white flex flex-col justify-between font-sans selection:bg-slate-200">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pt-10 pb-8 sm:py-12">
+        <main className="w-full max-w-[380px] mx-auto flex flex-col items-center my-auto animate-fade-in-up">
+          {/* Header unit with persistent brand anchor */}
+          <header className="flex flex-col items-center text-center gap-2 mb-6 sm:mb-8">
+            <Link href="/" className="inline-flex items-center mb-1">
+              <img src="/iso-logo-black.svg" alt="LUMINUS" className="h-[36px] w-[36px]" />
+            </Link>
+            <h1 className="text-[22px] sm:text-[26px] font-bold font-jakarta text-slate-900 tracking-tight sm:whitespace-nowrap m-0">
+              Sé parte de una red de bienestar
+            </h1>
+          </header>
 
-          {/* Content Block: Switch + Card + Login Prompt (closer together with gap-4) */}
+          {/* Content Block: Switch + Card + Login Prompt */}
           <div className="w-full flex flex-col items-center gap-4">
             <button
               type="button"
@@ -146,7 +151,7 @@ export default function MembershipChoiceView() {
       </div>
 
       {/* Footer */}
-      <footer className="w-full max-w-[380px] mx-auto px-4 py-6 flex flex-col items-center gap-3 text-center">
+      <footer className="w-full max-w-[380px] mx-auto px-4 py-4 sm:py-6 flex flex-col items-center gap-2 text-center">
         <p className="text-[11px] text-slate-400 leading-relaxed m-0">
           Al unirte, estás creando una cuenta en LUMINUS y aceptando estar de acuerdo con nuestros{" "}
           <Link

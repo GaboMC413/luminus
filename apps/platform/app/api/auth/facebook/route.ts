@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
+import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
 import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -7,7 +9,7 @@ export const runtime = "nodejs";
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
-    const { accessToken } = body;
+    const { accessToken, reactivate } = body;
 
     if (!accessToken || typeof accessToken !== "string") {
       return NextResponse.json(
@@ -61,6 +63,7 @@ export async function POST(request: Request) {
           authProvider: "unknown",
           role: "USER",
           status: "active",
+          trialExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 3 months trial
           profile: {
             create: {
               firstName,
@@ -73,30 +76,117 @@ export async function POST(request: Request) {
         },
         include: { profile: true },
       });
+
+      // Cache avatar to S3 asynchronously for brand new users
+      if (avatarUrl && user?.id) {
+        ensureS3AvatarUrl(avatarUrl, user.id).then(async (s3Url) => {
+          if (s3Url && s3Url !== avatarUrl && user) {
+            await prisma.userProfile.update({
+              where: { userId: user.id },
+              data: { avatarUrl: s3Url },
+            }).catch(() => null);
+          }
+        }).catch(() => null);
+      }
     } else {
-      // If user exists by email but without this cognitoSub, ensure profile has picture/name if empty
-      if (!user.cognitoSub.startsWith("facebook_") && user.email === email) {
-        // Link or update
-        await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            emailVerified: true,
-            lastLoginAt: new Date(),
-          },
-        });
+      if (user.status === "deleted") {
+        if (reactivate) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { status: "active" },
+          });
+          user.status = "active";
+        } else {
+          const token = createSessionToken({
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+          });
+          cookies().set("luminus_reactivation_token", token, {
+            path: "/",
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 5 * 60,
+          });
+          return NextResponse.json(
+            { code: "REQUIRES_REACTIVATION", message: "Tu cuenta fue eliminada. ¿Deseas reactivarla?" },
+            { status: 403 }
+          );
+        }
+      } else if (user.status !== "active") {
+        return NextResponse.json(
+          { message: "Tu cuenta no está activa. Contacta al equipo de LUMINUS para revisarla." },
+          { status: 403 }
+        );
       }
 
+      // Update last login
+      await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          emailVerified: true,
+          lastLoginAt: new Date(),
+        },
+      });
+
       if (!user.profile) {
-        await prisma.userProfile.create({
+        user = await prisma.user.update({
+          where: { id: user.id },
           data: {
-            userId: user.id,
-            firstName,
-            lastName,
-            fullName: `${firstName} ${lastName}`.trim() || undefined,
-            avatarUrl: avatarUrl || undefined,
-            isOnboarded: false,
+            profile: {
+              create: {
+                firstName,
+                lastName,
+                fullName: `${firstName} ${lastName}`.trim() || undefined,
+                avatarUrl: avatarUrl || undefined,
+                isOnboarded: false,
+              },
+            },
           },
+          include: { profile: true },
         });
+
+        if (avatarUrl && user?.id) {
+          ensureS3AvatarUrl(avatarUrl, user.id).then(async (s3Url) => {
+            if (s3Url && s3Url !== avatarUrl && user) {
+              await prisma.userProfile.update({
+                where: { userId: user.id },
+                data: { avatarUrl: s3Url },
+              }).catch(() => null);
+            }
+          }).catch(() => null);
+        }
+      } else {
+        // If profile exists, fill in avatarUrl or names if they were missing!
+        const needsAvatar = !user.profile.avatarUrl && Boolean(avatarUrl);
+        const needsFirstName = !user.profile.firstName && Boolean(firstName);
+        const needsLastName = !user.profile.lastName && Boolean(lastName);
+
+        if (needsAvatar || needsFirstName || needsLastName) {
+          const resolvedAvatar = needsAvatar ? avatarUrl : user.profile.avatarUrl;
+          const updatedProfile = await prisma.userProfile.update({
+            where: { userId: user.id },
+            data: {
+              avatarUrl: resolvedAvatar || undefined,
+              firstName: user.profile.firstName || firstName || undefined,
+              lastName: user.profile.lastName || lastName || undefined,
+              fullName: user.profile.fullName || `${firstName} ${lastName}`.trim() || undefined,
+            },
+          });
+          user.profile = updatedProfile;
+
+          if (needsAvatar && avatarUrl && user?.id) {
+            ensureS3AvatarUrl(avatarUrl, user.id).then(async (s3Url) => {
+              if (s3Url && s3Url !== avatarUrl && user) {
+                await prisma.userProfile.update({
+                  where: { userId: user.id },
+                  data: { avatarUrl: s3Url },
+                }).catch(() => null);
+              }
+            }).catch(() => null);
+          }
+        }
       }
     }
 
@@ -109,6 +199,27 @@ export async function POST(request: Request) {
 
     setSessionCookie(sessionToken);
 
+    try {
+      if (isNewUser) {
+        await prisma.activityLog.create({
+          data: {
+            userId: user.id,
+            action: "USER_CREATED",
+            details: JSON.stringify({ email: user.email, provider: "facebook" }),
+          },
+        });
+      }
+      await prisma.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "LOGIN",
+          details: JSON.stringify({ email: user.email, provider: "facebook" }),
+        },
+      });
+    } catch (logError) {
+      console.error("Failed to log activity in Facebook auth:", logError);
+    }
+
     const isOnboarded = user.profile?.isOnboarded ?? false;
 
     return NextResponse.json({
@@ -119,6 +230,7 @@ export async function POST(request: Request) {
         id: user.id,
         email: user.email,
         role: user.role,
+        tier: user.tier,
       },
     });
   } catch (error: any) {
