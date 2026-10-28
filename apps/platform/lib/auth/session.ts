@@ -26,7 +26,6 @@ function getSessionSecret() {
   return secret;
 }
 
-
 function base64UrlEncode(value: string | Buffer) {
   return Buffer.from(value).toString("base64url");
 }
@@ -118,8 +117,8 @@ export async function assertOnboarded(redirectToPath?: string) {
   const session = getCurrentSession();
   if (!session) {
     const loginTarget = redirectToPath
-      ? `/auth/iniciar-sesion?redirect=${encodeURIComponent(redirectToPath)}`
-      : "/auth/iniciar-sesion";
+      ? `/iniciar-sesion?redirect=${encodeURIComponent(redirectToPath)}`
+      : "/iniciar-sesion";
     redirect(loginTarget);
   }
 
@@ -141,8 +140,8 @@ export async function assertOnboarded(redirectToPath?: string) {
       // Session references a user that was deleted, disabled, or no longer exists.
       // Clear cookie via route handler to break lockout loop cleanly.
       const loginTarget = redirectToPath
-        ? `/auth/iniciar-sesion?redirect=${encodeURIComponent(redirectToPath)}`
-        : "/auth/iniciar-sesion";
+        ? `/iniciar-sesion?redirect=${encodeURIComponent(redirectToPath)}`
+        : "/iniciar-sesion";
       redirect(`/api/auth/logout?redirect=${encodeURIComponent(loginTarget)}`);
     }
 
@@ -169,10 +168,38 @@ export async function assertOnboarded(redirectToPath?: string) {
 
   if (!isOnboarded) {
     const signupTarget = redirectToPath
-      ? `/perfil/completar?redirect=${encodeURIComponent(redirectToPath)}`
-      : "/perfil/completar";
+      ? `/unirme/perfil?redirect=${encodeURIComponent(redirectToPath)}`
+      : "/unirme/perfil";
     redirect(signupTarget);
   }
 
   return session;
+}
+
+export async function redirectIfAuthenticated() {
+  const session = getCurrentSession();
+  if (!session) return;
+
+  let destination: string | null = null;
+  try {
+    const { prisma } = await import("@/lib/db");
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: {
+        id: true,
+        status: true,
+        profile: { select: { isOnboarded: true } },
+      },
+    });
+
+    if (user && user.status === "active") {
+      destination = user.profile?.isOnboarded ? "/comunidad" : "/unirme/perfil";
+    }
+  } catch (error) {
+    console.error("Database check failed in redirectIfAuthenticated:", error);
+  }
+
+  if (destination) {
+    redirect(destination);
+  }
 }

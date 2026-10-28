@@ -1,11 +1,17 @@
-import CompleteProfileView from "@/features/membership/CompleteProfileView";
-import { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Completa tu perfil — LUMINUS",
-  description: "Personaliza tu perfil para conectar con otros miembros en LUMINUS.",
-};
-
-export default function PerfilCompletarPage() {
-  return <CompleteProfileView />;
+export default function LegacyPerfilCompletarRedirect({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  const params = new URLSearchParams();
+  if (searchParams) {
+    Object.entries(searchParams).forEach(([key, value]) => {
+      if (typeof value === "string") params.set(key, value);
+      else if (Array.isArray(value)) value.forEach((v) => params.append(key, v));
+    });
+  }
+  const queryString = params.toString();
+  redirect(queryString ? `/unirme/perfil?${queryString}` : "/unirme/perfil");
 }

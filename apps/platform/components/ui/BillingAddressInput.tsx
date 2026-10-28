@@ -15,6 +15,7 @@ interface BillingAddressInputProps {
   defaultValue?: string;
   onAddressSelect: (data: BillingAddressData) => void;
   placeholder?: string;
+  label?: string;
   className?: string;
   disabled?: boolean;
 }
@@ -22,12 +23,15 @@ interface BillingAddressInputProps {
 export function BillingAddressInput({
   defaultValue = "",
   onAddressSelect,
-  placeholder = "Calle y número",
+  placeholder = "Dirección de facturación (Calle y número)",
+  label,
   className = "",
   disabled = false,
 }: BillingAddressInputProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const isTypingRef = useRef(false);
+  const prevDefaultValueRef = useRef(defaultValue);
 
   const {
     ready,
@@ -35,17 +39,33 @@ export function BillingAddressInput({
     suggestions: { status, data: suggestions },
     setValue,
     clearSuggestions,
+    init,
   } = usePlacesAutocomplete({
     defaultValue,
     debounce: 300,
   });
 
-  // Keep internal value synced if defaultValue changes externally
+  // Ensure Google Places initializes if the script finishes loading after mount
   useEffect(() => {
-    if (defaultValue !== value && defaultValue) {
-      setValue(defaultValue, false);
+    if (ready) return;
+    const interval = setInterval(() => {
+      if (typeof window !== "undefined" && (window as any).google?.maps?.places) {
+        init();
+        clearInterval(interval);
+      }
+    }, 200);
+    return () => clearInterval(interval);
+  }, [ready, init]);
+
+  // Keep internal value synced only when defaultValue changes externally (not while typing)
+  useEffect(() => {
+    if (defaultValue !== prevDefaultValueRef.current) {
+      prevDefaultValueRef.current = defaultValue;
+      if (!isTypingRef.current) {
+        setValue(defaultValue || "", false);
+      }
     }
-  }, [defaultValue]);
+  }, [defaultValue, setValue]);
 
   // Click outside listener
   useEffect(() => {
@@ -63,15 +83,24 @@ export function BillingAddressInput({
   }, [clearSuggestions]);
 
   const handleSelectSuggestion = async (description: string) => {
+    isTypingRef.current = false;
+    prevDefaultValueRef.current = description;
     setValue(description, false);
     clearSuggestions();
     setHighlightedIndex(-1);
+
+    // Immediately set the selected address string
+    onAddressSelect({
+      address: description,
+      city: "",
+      country: "",
+      postalCode: "",
+    });
 
     try {
       const results = await getGeocode({ address: description });
       const addressComponents = results[0]?.address_components || [];
 
-      // Extract components
       const countryComp = addressComponents.find((c: any) => c.types.includes("country"));
       const postalCodeComp = addressComponents.find((c: any) => c.types.includes("postal_code"));
       const localityComp = addressComponents.find(
@@ -96,12 +125,6 @@ export function BillingAddressInput({
       });
     } catch (err) {
       console.error("Geocoding failed for billing address:", err);
-      onAddressSelect({
-        address: description,
-        city: "",
-        country: "",
-        postalCode: "",
-      });
     }
   };
 
@@ -109,22 +132,30 @@ export function BillingAddressInput({
 
   return (
     <div ref={containerRef} className={`relative w-full flex flex-col gap-1.5 ${className}`}>
-      <label className="text-xs font-semibold text-slate-700 font-jakarta">
-        Dirección de facturación
-      </label>
+      {label && (
+        <label className="text-xs font-semibold text-slate-700 font-jakarta">
+          {label}
+        </label>
+      )}
       <div className="relative">
         <input
           type="text"
           value={value}
-          disabled={disabled || !ready}
+          disabled={disabled}
           onChange={(e) => {
-            setValue(e.target.value);
+            const nextVal = e.target.value;
+            isTypingRef.current = true;
+            setValue(nextVal);
             onAddressSelect({
-              address: e.target.value,
+              address: nextVal,
               city: "",
               country: "",
               postalCode: "",
             });
+            setHighlightedIndex(-1);
+          }}
+          onBlur={() => {
+            isTypingRef.current = false;
           }}
           onKeyDown={(e) => {
             if (!hasSuggestions) return;
@@ -142,13 +173,16 @@ export function BillingAddressInput({
             }
           }}
           placeholder={placeholder}
-          autoComplete="off"
+          autoComplete="new-password"
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck={false}
-          name="billing_address_search_input"
+          name="luminus_place_lookup"
+          id="luminus_place_lookup"
           data-lpignore="true"
           data-1p-ignore="true"
+          data-bwignore="true"
+          data-form-type="other"
           className="w-full h-12 pl-4 pr-10 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans"
         />
         <span className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[20px] pointer-events-none">
@@ -158,16 +192,18 @@ export function BillingAddressInput({
 
       {/* Autocomplete Dropdown */}
       {hasSuggestions && (
-        <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-white rounded-xl border border-zinc-200/90 py-1.5 z-50 max-h-56 overflow-y-auto shadow-lg">
+        <div
+          onMouseDown={(e) => e.preventDefault()}
+          className="absolute top-[calc(100%+4px)] left-0 w-full bg-white rounded-xl border border-zinc-200/90 z-50 max-h-56 overflow-y-auto overflow-x-hidden"
+        >
           {suggestions.map((suggestion, index) => {
             const isHighlighted = index === highlightedIndex;
             return (
-              <button
+              <div
                 key={suggestion.place_id}
-                type="button"
                 onClick={() => handleSelectSuggestion(suggestion.description)}
                 onMouseEnter={() => setHighlightedIndex(index)}
-                className={`w-full text-left px-3.5 py-2 text-xs flex items-center gap-2 cursor-pointer transition-colors border-none ${
+                className={`w-full text-left px-3.5 py-2.5 text-xs flex items-center gap-2 cursor-pointer transition-colors ${
                   isHighlighted ? "bg-slate-100 text-slate-900" : "bg-white text-slate-700 hover:bg-slate-50"
                 }`}
               >
@@ -182,7 +218,7 @@ export function BillingAddressInput({
                     {suggestion.structured_formatting.secondary_text}
                   </span>
                 </span>
-              </button>
+              </div>
             );
           })}
         </div>

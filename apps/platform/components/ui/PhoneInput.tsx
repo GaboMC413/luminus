@@ -1,23 +1,23 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom';
-import { COUNTRIES as ALL_COUNTRIES } from '@/utils/countries';
-import { AsYouType, CountryCode, getExampleNumber } from 'libphonenumber-js';
-import examples from 'libphonenumber-js/examples.mobile.json';
+import React, { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { COUNTRIES as ALL_COUNTRIES } from "@/utils/countries";
+import { AsYouType, CountryCode, getExampleNumber } from "libphonenumber-js";
+import examples from "libphonenumber-js/examples.mobile.json";
 
 const getCountryMaxLength = (countryCode: string): number => {
-  if (countryCode === 'XX') return 15;
+  if (countryCode === "XX") return 15;
   try {
     const example = getExampleNumber(countryCode as CountryCode, examples);
     if (example) {
-      const nationalNumStr = example.formatNational().replace(/\D/g, '');
+      const nationalNumStr = example.formatNational().replace(/\D/g, "");
       return nationalNumStr.length;
     }
   } catch (err) {
-    console.error('Error getting example number length:', err);
+    console.error("Error getting example number length:", err);
   }
-  return 12; // fallback
+  return 12;
 };
 
 interface PhoneInputProps {
@@ -37,7 +37,7 @@ export function PhoneInput({
   onCountryChange,
   disabled = false,
   className = "",
-  error = false
+  error = false,
 }: PhoneInputProps) {
   const [showPhoneDropdown, setShowPhoneDropdown] = useState(false);
   const [coords, setCoords] = useState<{
@@ -57,7 +57,6 @@ export function PhoneInput({
     return () => setMounted(false);
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -69,11 +68,10 @@ export function PhoneInput({
         setShowPhoneDropdown(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Listen to global open broadcasts to close when another select opens
   useEffect(() => {
     const handleOtherSelectOpen = (e: Event) => {
       const customEvent = e as CustomEvent;
@@ -81,24 +79,22 @@ export function PhoneInput({
         setShowPhoneDropdown(false);
       }
     };
-    window.addEventListener('luminus-select-open', handleOtherSelectOpen);
-    return () => window.removeEventListener('luminus-select-open', handleOtherSelectOpen);
+    window.addEventListener("luminus-select-open", handleOtherSelectOpen);
+    return () => window.removeEventListener("luminus-select-open", handleOtherSelectOpen);
   }, []);
 
   const updateCoords = () => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       if (rect) {
-        const preferredMaxHeight = 280; // Show country codes list comfortably
-        const spaceBelow = window.innerHeight - rect.bottom - 16; // 16px safe margin from viewport bottom
-        const spaceAbove = rect.top - 16; // 16px safe margin from viewport top
+        const preferredMaxHeight = 280;
+        const spaceBelow = window.innerHeight - rect.bottom - 16;
+        const spaceAbove = rect.top - 16;
 
         let top: number | undefined = rect.bottom + 4;
         let bottom: number | undefined = undefined;
         let maxHeight = preferredMaxHeight;
 
-        // Last-resort fallback: only open upwards if space below is extremely tight (less than 120px)
-        // AND space above is larger than space below.
         if (spaceBelow < 120 && spaceAbove > spaceBelow) {
           top = undefined;
           bottom = window.innerHeight - rect.top + 4;
@@ -107,15 +103,14 @@ export function PhoneInput({
           maxHeight = Math.min(preferredMaxHeight, spaceBelow);
         }
 
-        // Fallback safety
         maxHeight = Math.max(maxHeight, 100);
 
         setCoords({
           top,
           bottom,
           left: rect.left,
-          width: 240, // Phone dropdown is standard 240px wide
-          maxHeight
+          width: 240,
+          maxHeight,
         });
       }
     }
@@ -130,11 +125,11 @@ export function PhoneInput({
         }
         setShowPhoneDropdown(false);
       };
-      window.addEventListener('scroll', handleScroll, true);
-      window.addEventListener('resize', updateCoords);
+      window.addEventListener("scroll", handleScroll, true);
+      window.addEventListener("resize", updateCoords);
       return () => {
-        window.removeEventListener('scroll', handleScroll, true);
-        window.removeEventListener('resize', updateCoords);
+        window.removeEventListener("scroll", handleScroll, true);
+        window.removeEventListener("resize", updateCoords);
       };
     } else {
       setCoords(null);
@@ -145,19 +140,17 @@ export function PhoneInput({
     let processedValue = rawValue;
     let selectedCountry = phoneCountry;
 
-    // Clean raw value
     const cleanRaw = rawValue.trim();
-    const digitsOnly = cleanRaw.replace(/\D/g, '');
+    const digitsOnly = cleanRaw.replace(/\D/g, "");
 
     const sortedCountries = [...ALL_COUNTRIES].sort(
-      (a, b) => b.dial.replace(/\D/g, '').length - a.dial.replace(/\D/g, '').length
+      (a, b) => b.dial.replace(/\D/g, "").length - a.dial.replace(/\D/g, "").length
     );
 
-    if (cleanRaw.startsWith('+')) {
+    if (cleanRaw.startsWith("+")) {
       for (const c of sortedCountries) {
-        const dialDigits = c.dial.replace(/\D/g, '');
-        
-        // Match with leading +
+        const dialDigits = c.dial.replace(/\D/g, "");
+
         if (digitsOnly.startsWith(dialDigits)) {
           selectedCountry = c;
           onCountryChange(c);
@@ -168,11 +161,11 @@ export function PhoneInput({
     }
 
     const maxLength = getCountryMaxLength(selectedCountry.code);
-    const onlyDigits = processedValue.replace(/\D/g, '');
+    const onlyDigits = processedValue.replace(/\D/g, "");
     const truncatedDigits = onlyDigits.slice(0, maxLength);
 
     let formatted = truncatedDigits;
-    if (selectedCountry.code !== 'XX') {
+    if (selectedCountry.code !== "XX") {
       const formatter = new AsYouType(selectedCountry.code as CountryCode);
       formatted = formatter.input(truncatedDigits);
     }
@@ -182,12 +175,11 @@ export function PhoneInput({
   const handleCountrySelect = (c: any) => {
     onCountryChange(c);
     setShowPhoneDropdown(false);
-    
-    // Also re-format and truncate current value for the new country
+
     const maxLength = getCountryMaxLength(c.code);
-    const currentVal = value || '';
-    const onlyDigits = currentVal.replace(/\D/g, '').slice(0, maxLength);
-    if (c.code !== 'XX') {
+    const currentVal = value || "";
+    const onlyDigits = currentVal.replace(/\D/g, "").slice(0, maxLength);
+    if (c.code !== "XX") {
       const formatter = new AsYouType(c.code as CountryCode);
       onChange(formatter.input(onlyDigits));
     } else {
@@ -198,67 +190,98 @@ export function PhoneInput({
   const dropdownCountries = ALL_COUNTRIES;
 
   const phoneDropdown = coords && (
-    <div 
+    <div
       ref={dropdownRef}
       data-select-portal="true"
       style={{
-        position: 'fixed',
-        top: coords.top !== undefined ? `${coords.top}px` : 'auto',
-        bottom: coords.bottom !== undefined ? `${coords.bottom}px` : 'auto',
+        position: "fixed",
+        top: coords.top !== undefined ? `${coords.top}px` : "auto",
+        bottom: coords.bottom !== undefined ? `${coords.bottom}px` : "auto",
         left: `${coords.left}px`,
         width: `${coords.width}px`,
         maxHeight: `${coords.maxHeight}px`,
         zIndex: 10000,
       }}
-      className="bg-white rounded-2xl py-2 border border-slate-200 overflow-y-auto overscroll-contain pr-1 animate-in fade-in duration-200"
+      className="bg-white rounded-xl border border-zinc-200/90 shadow-[0_8px_20px_-4px_rgba(0,0,0,0.08)] overflow-y-auto overflow-x-hidden overscroll-contain animate-in fade-in duration-150"
     >
-      {dropdownCountries.map((c) => (
-        <div
-          key={c.code}
-          onClick={(e) => { 
-            e.stopPropagation(); 
-            handleCountrySelect(c);
-          }}
-          className="px-4 py-2 hover:bg-slate-50 cursor-pointer transition flex items-center group w-full truncate"
-        >
-          <span className={`text-body truncate whitespace-nowrap transition-colors ${phoneCountry.code === c.code ? 'font-semibold text-black' : 'text-slate-600 group-hover:text-black'}`}>
-            {c.name} ({c.dial})
-          </span>
-        </div>
-      ))}
+      {dropdownCountries.map((c) => {
+        const isSelected = phoneCountry.code === c.code;
+        return (
+          <div
+            key={c.code}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCountrySelect(c);
+            }}
+            className={`px-3.5 py-2.5 cursor-pointer transition-colors flex items-center group w-full truncate text-xs sm:text-[13px] ${
+              isSelected
+                ? "bg-slate-100 font-semibold text-slate-900"
+                : "text-slate-700 hover:bg-slate-50"
+            }`}
+          >
+            <span className="truncate whitespace-nowrap font-sans">
+              {c.name} ({c.dial})
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 
   return (
-    <div 
+    <div
       ref={containerRef}
-      style={{ scrollMarginTop: '100px' }}
-      className={`w-full h-12 px-4 bg-white border border-zinc-200/90 rounded-xl focus-within:border-slate-800 focus-within:ring-1 focus-within:ring-slate-800 transition-colors flex items-center relative ${className} ${disabled ? 'pointer-events-none opacity-50' : ''} ${error ? '!border-red-500 !ring-red-500' : ''}`}
+      style={{ scrollMarginTop: "100px" }}
+      className={`w-full h-12 px-4 bg-white border border-zinc-200/90 rounded-xl focus-within:border-slate-800 focus-within:ring-1 focus-within:ring-slate-800 transition-colors flex items-center relative ${className} ${
+        disabled ? "pointer-events-none opacity-50" : ""
+      } ${error ? "!border-red-500 !ring-red-500" : ""}`}
     >
       <div
-        className={`relative flex items-center pr-2.5 shrink-0 h-full border-r border-zinc-200/80 mr-2.5 ${!disabled ? 'cursor-pointer' : ''}`}
+        className={`relative flex items-center pr-2.5 shrink-0 h-full border-r border-zinc-200/80 mr-2.5 ${
+          !disabled ? "cursor-pointer" : ""
+        }`}
         onClick={(e) => {
           e.preventDefault();
           if (!disabled) {
             const nextOpen = !showPhoneDropdown;
             setShowPhoneDropdown(nextOpen);
             if (nextOpen) {
-              window.dispatchEvent(new CustomEvent('luminus-select-open', { detail: { id: instanceIdRef.current } }));
-              if (typeof window !== 'undefined' && window.innerWidth < 768) {
+              window.dispatchEvent(
+                new CustomEvent("luminus-select-open", { detail: { id: instanceIdRef.current } })
+              );
+              if (typeof window !== "undefined" && window.innerWidth < 768) {
                 setTimeout(() => {
-                  containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  containerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }, 150);
               }
             }
           }
         }}
       >
-        <span className={`${phoneCountry.dial === '+00' ? '!text-slate-400' : 'text-slate-900'} text-sm font-normal mr-2 font-sans`}>
+        <span
+          className={`${
+            phoneCountry.dial === "+00" ? "!text-slate-400" : "text-slate-900"
+          } text-sm font-normal mr-2 font-sans`}
+        >
           {phoneCountry.dial}
         </span>
         {!disabled && (
-          <svg width="10" height="6" viewBox="0 0 10 6" fill="none" className={`transition-transform duration-200 ${showPhoneDropdown ? 'rotate-180' : ''}`}>
-            <path d="M1 1L5 5L9 1" stroke="#94A3B8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <svg
+            width="10"
+            height="6"
+            viewBox="0 0 10 6"
+            fill="none"
+            className={`transition-transform duration-200 ${
+              showPhoneDropdown ? "rotate-180" : ""
+            }`}
+          >
+            <path
+              d="M1 1L5 5L9 1"
+              stroke="#94A3B8"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         )}
       </div>

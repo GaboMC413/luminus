@@ -75,7 +75,7 @@ export function WelcomeBanner({ userProfile }: WelcomeBannerProps) {
 
         {isProfileIncomplete && (
           <Link
-            href="/perfil/completar"
+            href="/unirme/perfil"
             className="text-xs font-semibold text-slate-900 underline underline-offset-2 hover:text-black shrink-0 font-jakarta"
           >
             ¿Deseas completar tu perfil ahora?

@@ -49,7 +49,7 @@ export async function GET(request: Request) {
 
   if (!clientId || !cognitoDomain) {
     console.error("Cognito OAuth start failed: Cognito domain or client id is not configured.");
-    const targetPath = intent === "signup" ? "/unirme" : "/auth/iniciar-sesion";
+    const targetPath = intent === "signup" ? "/unirme" : "/iniciar-sesion";
     return NextResponse.redirect(new URL(`${targetPath}?error=cognito_config`, origin));
   }
 

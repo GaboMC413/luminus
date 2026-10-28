@@ -5,8 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BillingAddressInput, BillingAddressData } from "@/components/ui/BillingAddressInput";
 import { Button } from "@/components/ui/Button";
-import { InputField } from "@/components/ui/InputField";
-
+import { CreditCard } from "lucide-react";
 
 export default function MembershipPaymentView() {
   const router = useRouter();
@@ -58,7 +57,7 @@ export default function MembershipPaymentView() {
       });
 
       if (res.status === 401) {
-        router.push(`/auth/crear-cuenta?plan=membership&billing=${interval === "year" ? "annual" : "monthly"}`);
+        router.push(`/unirme/crear-cuenta?plan=membership&billing=${interval === "year" ? "annual" : "monthly"}`);
         return;
       }
 
@@ -199,7 +198,7 @@ export default function MembershipPaymentView() {
       // Success -> Show animation, then advance to Screen 4 (Profile Onboarding)
       setIsSuccess(true);
       setTimeout(() => {
-        router.push("/perfil/completar");
+        router.push("/unirme/perfil");
       }, 1800);
     } catch (err: any) {
       setErrorMessage(err.message || "Tu tarjeta fue rechazada. Verifica los datos o intenta con otro método.");
@@ -213,136 +212,123 @@ export default function MembershipPaymentView() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] flex flex-col justify-between font-sans selection:bg-slate-200">
-      {/* Header */}
-      <header className="w-full max-w-5xl mx-auto px-6 pt-8 pb-3 flex items-center justify-center">
-        <Link href="/" className="inline-flex items-center">
-          <img src="/logo-luminus-black.svg" alt="LUMINUS" className="h-[24px] w-auto" />
-        </Link>
-      </header>
-
-      {/* Main Container */}
-      <main className="w-full max-w-[430px] mx-auto px-4 pt-4 pb-8 flex flex-col items-center">
-        {/* Title */}
-        <div className="text-center mb-6">
-          <h1 className="text-2xl sm:text-[26px] font-bold font-jakarta text-slate-900 tracking-tight transition-all">
+    <div className="min-h-screen bg-white flex flex-col justify-between font-sans selection:bg-slate-200">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pt-24 pb-8">
+        <main className="w-full max-w-[380px] mx-auto flex flex-col items-center gap-6 animate-fade-in-up">
+          {/* Title */}
+          <h1 className="text-2xl sm:text-[26px] font-bold font-jakarta text-slate-900 tracking-tight text-center m-0 transition-all">
             {isSuccess ? "¡Membresía activada!" : "Activa tu membresía"}
           </h1>
-        </div>
 
-        {/* Card 1: Price & Plan Summary (Hidden on Success) */}
-        {!isSuccess && (
-          <div className="w-full bg-white rounded-2xl border border-zinc-200/90 p-6 flex flex-col gap-4 mb-3.5 animate-in fade-in duration-200">
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-base font-bold text-slate-900 font-jakarta">
-                  {isAnnual ? "Membresía Anual" : "Membresía Mensual"}
-                </span>
-                {isAnnual && (
-                  <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/70 font-jakarta">
-                    Ahorras USD 15
-                  </span>
+          {/* Payment and Card Info OR Success Confirmation */}
+          <div className="w-full flex flex-col gap-4">
+            {/* Price & Plan Summary (Hidden on Success) */}
+            {!isSuccess && (
+              <div className="w-full bg-zinc-50/70 rounded-2xl border border-zinc-200/90 p-5 flex flex-col gap-3 animate-in fade-in duration-200">
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-bold text-slate-900 font-jakarta">
+                      {isAnnual ? "Membresía Anual" : "Membresía Mensual"}
+                    </span>
+                    {isAnnual && (
+                      <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/70 font-jakarta">
+                        Ahorras USD 15
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-[30px] sm:text-[34px] font-extrabold text-slate-900 font-jakarta leading-none tracking-tight">
+                      {isAnnual ? "USD 45" : "USD 5"}
+                    </span>
+                    <span className="text-sm text-slate-500 font-medium">
+                      {isAnnual ? "/ año" : "/ mes"}
+                    </span>
+                    {isAnnual && (
+                      <span className="text-xs text-slate-400 font-normal ml-1">
+                        (USD 3.75/mes)
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-slate-500 leading-normal m-0">
+                    Renovación automática. Cancela cuando quieras.
+                  </p>
+                </div>
+
+                {/* Patreon-style Annual Toggle Switch (hidden if Step 1 selected annual) */}
+                {!selectedAnnualInStep1 && (
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={isAnnual}
+                    onClick={() => handleSwitchBilling(isAnnual ? "monthly" : "annual")}
+                    className="w-fit inline-flex items-center gap-2.5 cursor-pointer bg-transparent border-none p-0 select-none group"
+                  >
+                    <span
+                      className={`w-[42px] h-[24px] rounded-full border p-[3px] flex items-center transition-colors duration-200 box-border ${
+                        isAnnual
+                          ? "bg-black border-black"
+                          : "bg-white border-zinc-300 group-hover:border-zinc-400"
+                      }`}
+                    >
+                      <span
+                        className={`w-[16px] h-[16px] rounded-full transition-transform duration-200 ${
+                          isAnnual
+                            ? "translate-x-[18px] bg-white"
+                            : "translate-x-0 bg-zinc-400 group-hover:bg-zinc-500"
+                        }`}
+                      />
+                    </span>
+                    <span className="text-xs sm:text-sm font-medium text-slate-600 font-jakarta">
+                      Paga anual y ahorra un 25%
+                    </span>
+                  </button>
                 )}
-              </div>
-
-              <div className="flex items-baseline gap-1.5 pt-0.5">
-                <span className="text-[32px] sm:text-[36px] font-extrabold text-slate-900 font-jakarta leading-none tracking-tight">
-                  {isAnnual ? "USD 45" : "USD 5"}
-                </span>
-                <span className="text-sm text-slate-500 font-medium">
-                  {isAnnual ? "/ año" : "/ mes"}
-                </span>
-                {isAnnual && (
-                  <span className="text-xs text-slate-400 font-normal ml-1">
-                    (USD 3.75/mes)
-                  </span>
-                )}
-              </div>
-
-              <p className="text-xs text-slate-500 leading-relaxed m-0 pt-0.5">
-                Renovación automática. Cancela cuando quieras.
-              </p>
-            </div>
-
-            {/* Switch buttons: Mensual / Anual at bottom (same component as Step 1, hidden if Step 1 selected annual) */}
-            {!selectedAnnualInStep1 && (
-              <div className="w-full p-1 bg-zinc-100/90 rounded-xl flex items-center gap-1 border border-zinc-200/70 mt-1">
-                <button
-                  type="button"
-                  onClick={() => handleSwitchBilling("monthly")}
-                  className={`flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer border-none font-jakarta flex items-center justify-center ${!isAnnual
-                      ? "bg-white text-slate-900"
-                      : "bg-transparent text-slate-500 hover:text-slate-800"
-                    }`}
-                >
-                  Mensual
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleSwitchBilling("annual")}
-                  className={`flex-1 py-2 text-xs sm:text-sm font-semibold rounded-lg transition-all cursor-pointer border-none font-jakarta flex items-center justify-center gap-1.5 ${isAnnual
-                      ? "bg-white text-slate-900"
-                      : "bg-transparent text-slate-500 hover:text-slate-800"
-                    }`}
-                >
-                  <span>Anual</span>
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/80 rounded-full">
-                    -25%
-                  </span>
-                </button>
               </div>
             )}
-          </div>
-        )}
 
-        {/* Card 2: Payment and Card Info OR Success Confirmation */}
-        <div className="w-full bg-white rounded-2xl border border-zinc-200/90 p-6 sm:p-7 flex flex-col gap-4">
-          {isSuccess ? (
-            <div className="py-8 px-4 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-300 w-full">
-              {/* Animated Checkmark Badge */}
-              <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200/80 flex items-center justify-center mb-5 relative">
-                <svg
-                  className="w-8 h-8 text-emerald-600"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path
-                    className="animate-draw-check"
-                    d="M5 13l4 4L19 7"
-                  />
-                </svg>
-                {/* Subtle soft pulse ping */}
-                <span className="absolute inset-0 rounded-full border border-emerald-400/30 animate-ping opacity-25 pointer-events-none" />
+            {isSuccess ? (
+              <div className="py-8 px-4 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-300 w-full">
+                {/* Animated Checkmark Badge */}
+                <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200/80 flex items-center justify-center mb-5 relative">
+                  <svg
+                    className="w-8 h-8 text-emerald-600"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path
+                      className="animate-draw-check"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                  <span className="absolute inset-0 rounded-full border border-emerald-400/30 animate-ping opacity-25 pointer-events-none" />
+                </div>
+
+                {/* Title */}
+                <h3 className="text-xl font-bold font-jakarta text-slate-900 tracking-tight mb-2">
+                  ¡Pago confirmado!
+                </h3>
+
+                {/* Subtitle */}
+                <p className="text-sm text-slate-500 max-w-[290px] leading-relaxed mb-6 font-sans">
+                  Tu membresía {isAnnual ? "anual" : "mensual"} ya está activa.
+                </p>
+
+                {/* Minimalist Progress Indicator */}
+                <div className="w-40 h-1 bg-zinc-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-slate-900 rounded-full animate-progress-fill" />
+                </div>
               </div>
-
-              {/* Title */}
-              <h3 className="text-xl font-bold font-jakarta text-slate-900 tracking-tight mb-2">
-                ¡Pago confirmado!
-              </h3>
-
-              {/* Subtitle */}
-              <p className="text-sm text-slate-500 max-w-[290px] leading-relaxed mb-6 font-sans">
-                Tu membresía {isAnnual ? "anual" : "mensual"} ya está activa.
-              </p>
-
-              {/* Minimalist Progress Indicator */}
-              <div className="w-40 h-1 bg-zinc-100 rounded-full overflow-hidden">
-                <div className="h-full bg-slate-900 rounded-full animate-progress-fill" />
-              </div>
-            </div>
-          ) : (
-            <>
-              {/* Payment Form */}
-              <form onSubmit={handlePay} className="flex flex-col gap-4">
-                {/* Cardholder Name */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-slate-700 font-jakarta">
-                    Nombre en la tarjeta
-                  </label>
+            ) : (
+              <>
+                {/* Payment Form (placeholder-driven, no input labels) */}
+                <form onSubmit={handlePay} className="flex flex-col gap-3">
+                  {/* Cardholder Name */}
                   <input
                     type="text"
                     required
@@ -351,16 +337,11 @@ export default function MembershipPaymentView() {
                       setCardHolderName(e.target.value);
                       setErrorMessage(null);
                     }}
-                    placeholder="Nombre como figura en la tarjeta"
+                    placeholder="Nombre en la tarjeta"
                     className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans"
                   />
-                </div>
 
-                {/* Card Number */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-slate-700 font-jakarta">
-                    Número de tarjeta
-                  </label>
+                  {/* Card Number */}
                   <div className="relative">
                     <input
                       type="text"
@@ -368,62 +349,46 @@ export default function MembershipPaymentView() {
                       required
                       value={cardNumber}
                       onChange={(e) => handleCardNumberChange(e.target.value)}
-                      placeholder="1234 1234 1234 1234"
+                      placeholder="Número de tarjeta"
                       className="w-full h-12 pl-4 pr-11 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans tabular-nums tracking-wider"
                     />
-                    <span className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[20px] pointer-events-none">
-                      credit_card
-                    </span>
+                    <CreditCard className="w-5 h-5 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   </div>
-                </div>
 
-                {/* Expiry & CVC */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700 font-jakarta">
-                      Vencimiento (MM/AA)
-                    </label>
+                  {/* Expiry & CVC */}
+                  <div className="grid grid-cols-2 gap-3">
                     <input
                       type="text"
                       inputMode="numeric"
                       required
                       value={cardExpiry}
                       onChange={(e) => handleExpiryChange(e.target.value)}
-                      placeholder="MM/AA"
+                      placeholder="Vencimiento (MM/AA)"
                       maxLength={5}
                       className="w-full h-12 px-4 text-sm text-left bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans tabular-nums tracking-wider"
                     />
-                  </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700 font-jakarta">
-                      CVC / CVV
-                    </label>
                     <input
                       type="text"
                       inputMode="numeric"
                       required
                       value={cardCvc}
                       onChange={(e) => handleCvcChange(e.target.value)}
-                      placeholder="CVC"
+                      placeholder="CVC / CVV"
                       maxLength={4}
                       className="w-full h-12 px-4 text-sm text-left bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans tabular-nums tracking-wider"
                     />
                   </div>
-                </div>
 
-                {/* Billing Address with Google Places Autocomplete */}
-                <BillingAddressInput
-                  defaultValue={billingAddress}
-                  onAddressSelect={handleAddressSelected}
-                />
+                  {/* Billing Address with Google Places Autocomplete */}
+                  <BillingAddressInput
+                    defaultValue={billingAddress}
+                    placeholder="Dirección de facturación"
+                    onAddressSelect={handleAddressSelected}
+                  />
 
-                {/* City, Country & Postal Code (Prefilled from Address Autocomplete) */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700 font-jakarta">
-                      Ciudad y País
-                    </label>
+                  {/* City, Country & Postal Code */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <input
                       type="text"
                       value={
@@ -436,15 +401,10 @@ export default function MembershipPaymentView() {
                         setBillingCity(parts[0] || "");
                         setBillingCountry(parts[1] || "");
                       }}
-                      placeholder="Ciudad, País"
+                      placeholder="Ciudad y País"
                       className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans"
                     />
-                  </div>
 
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-slate-700 font-jakarta">
-                      Código postal
-                    </label>
                     <input
                       type="text"
                       required
@@ -457,54 +417,51 @@ export default function MembershipPaymentView() {
                       className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans tabular-nums"
                     />
                   </div>
-                </div>
 
-                {/* Error Message */}
-                {errorMessage && (
-                  <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
-                    {errorMessage}
-                  </div>
-                )}
+                  {/* Error Message */}
+                  {errorMessage && (
+                    <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
+                      {errorMessage}
+                    </div>
+                  )}
 
-                {/* Primary Action Button */}
-                <Button
-                  type="submit"
-                  variant="primary"
-                  disabled={processing || loadingIntent}
-                  className="mt-2"
-                >
-                  {processing
-                    ? "Procesando pago..."
-                    : isAnnual
+                  {/* Primary Action Button */}
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={processing || loadingIntent}
+                  >
+                    {processing
+                      ? "Procesando pago..."
+                      : isAnnual
                       ? "Activar membresía — USD 45/año"
                       : "Activar membresía — USD 5/mes"}
-                </Button>
-              </form>
+                  </Button>
+                </form>
 
-              {/* Clean Security Branding with Stripe Wordmark (No divider bar, no lock) */}
-              <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400 pt-1">
-                <span>Pagos procesados de forma segura con</span>
-                <img
-                  src="/Stripe_Logo,_revised_2016.svg"
-                  alt="Stripe"
-                  className="h-[15px] w-auto inline-block"
-                />
-              </div>
-            </>
-          )}
-        </div>
+                {/* Clean Security Branding with Stripe Wordmark */}
+                <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400">
+                  <span>Pagos procesados de forma segura con</span>
+                  <img
+                    src="/Stripe_Logo,_revised_2016.svg"
+                    alt="Stripe"
+                    className="h-[15px] w-auto inline-block"
+                  />
+                </div>
 
-        {/* Secondary Action: Cancelar (outside of the card, hidden on success) */}
-        {!isSuccess && (
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="mt-4 py-2 text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors text-center cursor-pointer bg-transparent border-none font-jakarta"
-          >
-            Cancelar
-          </button>
-        )}
-      </main>
+                {/* Secondary Action: Cancelar */}
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="py-1 text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors text-center cursor-pointer bg-transparent border-none font-jakarta"
+                >
+                  Cancelar
+                </button>
+              </>
+            )}
+          </div>
+        </main>
+      </div>
 
       {/* Embedded CSS Micro-animations */}
       <style>{`
@@ -535,8 +492,8 @@ export default function MembershipPaymentView() {
       `}</style>
 
       {/* Footer */}
-      <footer className="w-full max-w-md mx-auto px-6 py-8 flex items-center justify-center text-xs text-slate-400">
-        <p className="m-0">© 2026 LUMINUS Latam.</p>
+      <footer className="w-full max-w-[380px] mx-auto px-4 py-6 flex flex-col items-center gap-3 text-center">
+        <p className="text-xs text-slate-400 m-0">© 2026 LUMINUS Latam.</p>
       </footer>
     </div>
   );

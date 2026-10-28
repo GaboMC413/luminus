@@ -1,17 +1,17 @@
-import { Suspense } from "react";
-import AccountCreationView from "@/features/membership/AccountCreationView";
-import { PageLoader } from "@/components/ui/PageLoader";
-import { Metadata } from "next";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Crea tu cuenta — LUMINUS",
-  description: "Únete a la red LUMINUS para conectar con personas conscientes en Latinoamérica.",
-};
-
-export default function CrearCuentaPage() {
-  return (
-    <Suspense fallback={<PageLoader className="min-h-screen" />}>
-      <AccountCreationView />
-    </Suspense>
-  );
+export default function LegacyCrearCuentaRedirect({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>;
+}) {
+  const params = new URLSearchParams();
+  if (searchParams) {
+    Object.entries(searchParams).forEach(([key, value]) => {
+      if (typeof value === "string") params.set(key, value);
+      else if (Array.isArray(value)) value.forEach((v) => params.append(key, v));
+    });
+  }
+  const queryString = params.toString();
+  redirect(queryString ? `/unirme/crear-cuenta?${queryString}` : "/unirme/crear-cuenta");
 }

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -23,7 +24,10 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({
 }, ref) => {
   
   const isPassword = type === 'password';
-  const inputType = isPassword ? (showPassword ? 'text' : 'password') : type;
+
+  const defaultStyles = variant === 'bordered'
+    ? 'w-full h-11 px-3.5 bg-white border border-zinc-200/90 rounded-xl text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-all font-sans text-xs sm:text-sm'
+    : 'w-full h-11 border-b border-input-border text-base text-primary placeholder:text-placeholder focus:outline-none focus:border-primary transition-colors bg-transparent';
 
   const alignmentClasses = {
     left: 'text-left',
@@ -31,22 +35,18 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({
     right: 'text-right'
   };
 
-  const defaultStyles = variant === 'clean' 
-    ? 'reg-input-clean'
-    : 'w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans';
-
   return (
-    <div className="relative w-full flex flex-col gap-1.5">
+    <div className="w-full flex flex-col gap-1.5">
       {label && (
         <label className="text-xs font-semibold text-slate-700 font-jakarta">
           {label}
         </label>
       )}
       <div className="relative w-full">
-        <input 
-          {...props}
+        <input
           ref={ref}
-          type={inputType}
+          type={isPassword && showPassword ? 'text' : type}
+          {...props}
           className={`${defaultStyles} ${alignmentClasses[textAlign]} ${className} ${isPassword && onTogglePassword ? 'pr-11' : rightIcon ? 'pr-11' : ''} text-slate-900 disabled:text-slate-400`}
         />
         {rightIcon && !isPassword && (
@@ -62,13 +62,9 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({
             tabIndex={-1}
           >
             {showPassword ? (
-              <span className="material-symbols-outlined text-[18px]">
-                visibility_off
-              </span>
+              <EyeOff className="w-4 h-4 text-slate-400" />
             ) : (
-              <span className="material-symbols-outlined text-[18px]">
-                visibility
-              </span>
+              <Eye className="w-4 h-4 text-slate-400" />
             )}
           </button>
         )}

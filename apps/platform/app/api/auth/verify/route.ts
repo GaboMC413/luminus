@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
-  
+
   if (!body?.email || !body?.code) {
     return NextResponse.json({ message: "El correo y el código son requeridos." }, { status: 400 });
   }
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   try {
     const { prisma } = await import("@/lib/db");
     const email = body.email.trim().toLowerCase();
-    
+
     // 1. Confirm the code with Cognito (bypass if in local dev)
     try {
       await confirmSignUp(email, body.code);
@@ -29,6 +29,7 @@ export async function POST(request: Request) {
     // 2. Mark the local user as verified in DB (create if needed in local dev)
     let user = await prisma.user.findUnique({
       where: { email },
+      include: { profile: { select: { isOnboarded: true } } },
     });
 
     if (!user) {
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
             status: "active",
             tier: "FREE",
           },
+          include: { profile: { select: { isOnboarded: true } } },
         });
       } else {
         return NextResponse.json({ message: "Usuario no encontrado." }, { status: 404 });
@@ -51,6 +53,7 @@ export async function POST(request: Request) {
       user = await prisma.user.update({
         where: { id: user.id },
         data: { emailVerified: true },
+        include: { profile: { select: { isOnboarded: true } } },
       });
     }
 
@@ -75,23 +78,30 @@ export async function POST(request: Request) {
       console.error("Failed to log EMAIL_VERIFIED activity:", logError);
     }
 
-    return NextResponse.json({ success: true }, { status: 200 });
+    const onboardingStatus = user.profile?.isOnboarded ? "COMPLETED" : "PENDING";
+
+    return NextResponse.json({ success: true, onboardingStatus }, { status: 200 });
   } catch (error: any) {
     console.error("Cognito verification failed.", error);
-    
+
     if (error.code === "CodeMismatchException") {
       return NextResponse.json({ message: "El código ingresado es incorrecto." }, { status: 400 });
     }
-    
+
     if (error.code === "ExpiredCodeException") {
-      return NextResponse.json({ message: "El código ha expirado. Por favor, solicita uno nuevo." }, { status: 400 });
+      return NextResponse.json(
+        { message: "El código ha expirado. Por favor, solicita uno nuevo." },
+        { status: 400 }
+      );
     }
-    
+
     if (error.code === "NotAuthorizedException") {
-      // Sometimes returned if already confirmed
-      return NextResponse.json({ message: "El usuario ya ha sido verificado u ocurrió un error de autorización." }, { status: 400 });
+      return NextResponse.json(
+        { message: "El usuario ya ha sido verificado u ocurrió un error de autorización." },
+        { status: 400 }
+      );
     }
-    
+
     return NextResponse.json(
       { message: error.message || "No pudimos verificar tu correo en este momento." },
       { status: error.status || 500 }

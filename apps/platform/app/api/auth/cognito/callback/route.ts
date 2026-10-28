@@ -216,7 +216,7 @@ export async function GET(request: Request) {
     maxAge: 0,
   });
 
-  const fallbackPath = storedState?.intent === "signup" ? "/unirme" : "/auth/iniciar-sesion";
+  const fallbackPath = storedState?.intent === "signup" ? "/unirme" : "/iniciar-sesion";
 
   if (error) {
     const errorDescription = requestUrl.searchParams.get("error_description") || "unknown";
@@ -299,7 +299,7 @@ export async function GET(request: Request) {
 
     if (matchingUserIds.size > 1) {
       console.error("Cognito OAuth account collision.", { email });
-      return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito");
+      return redirectTo(requestUrl, "/iniciar-sesion?error=cognito");
     }
 
     const existingUser = existingByIdentity?.user || existingByExternalIdentity?.user || existingByLegacySub || existingByEmail;
@@ -307,7 +307,7 @@ export async function GET(request: Request) {
 
     if (existingUser) {
       if (existingUser.status === "disabled") {
-        return redirectTo(requestUrl, "/auth/iniciar-sesion?error=account_disabled");
+        return redirectTo(requestUrl, "/iniciar-sesion?error=account_disabled");
       }
       if (existingUser.status === "deleted") {
         const token = createSessionToken({
@@ -322,7 +322,7 @@ export async function GET(request: Request) {
           sameSite: "lax",
           maxAge: 5 * 60,
         });
-        return redirectTo(requestUrl, "/auth/iniciar-sesion?reactivate_oauth=1");
+        return redirectTo(requestUrl, "/iniciar-sesion?reactivate_oauth=1");
       }
     }
 
@@ -453,7 +453,7 @@ export async function GET(request: Request) {
     }
 
     if (storedState?.plan === "membership" && user.tier !== "BASIC") {
-      return redirectTo(requestUrl, "/membresia/pago");
+      return redirectTo(requestUrl, "/unirme/pago");
     }
 
     if (!user.profile?.isOnboarded) {
@@ -464,7 +464,7 @@ export async function GET(request: Request) {
       ) {
         return redirectTo(requestUrl, storedState.redirect);
       }
-      return redirectTo(requestUrl, "/perfil/completar");
+      return redirectTo(requestUrl, "/unirme/perfil");
     }
 
     const redirectTarget = getSafeRedirectUrl(storedState?.redirect, "/comunidad");
@@ -472,7 +472,7 @@ export async function GET(request: Request) {
   } catch (callbackError) {
     console.error("Cognito OAuth callback failed.", callbackError);
     const reason = callbackError instanceof Error ? encodeURIComponent(callbackError.message) : "unknown";
-    const fallbackPath = storedState?.intent === "signup" ? "/unirme" : "/auth/iniciar-sesion";
+    const fallbackPath = storedState?.intent === "signup" ? "/unirme" : "/iniciar-sesion";
     return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=${reason}`);
   }
 }

@@ -14,11 +14,11 @@ export async function GET(request: Request) {
   clearSessionCookie();
 
   const url = new URL(request.url);
-  const redirectParam = url.searchParams.get("redirect") || "/auth/iniciar-sesion";
+  const redirectParam = url.searchParams.get("redirect") || "/iniciar-sesion";
   const safeRedirect =
     redirectParam.startsWith("/") && !redirectParam.startsWith("//")
       ? redirectParam
-      : "/auth/iniciar-sesion";
+      : "/iniciar-sesion";
 
   return NextResponse.redirect(new URL(safeRedirect, url.origin));
 }
