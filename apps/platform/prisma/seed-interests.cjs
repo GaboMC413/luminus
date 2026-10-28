@@ -294,18 +294,6 @@ async function main() {
       },
     });
 
-    const validSlugs = category.items.map(slugify);
-
-    await prisma.interest.updateMany({
-      where: {
-        categoryId: savedCategory.id,
-        slug: { notIn: validSlugs },
-      },
-      data: {
-        isActive: false,
-      },
-    });
-
     for (const [interestIndex, interestName] of category.items.entries()) {
       await prisma.interest.upsert({
         where: { slug: slugify(interestName) },

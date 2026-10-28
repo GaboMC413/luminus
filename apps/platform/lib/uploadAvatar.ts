@@ -49,28 +49,19 @@ async function compressImageBlob(blob: Blob, maxDimension = 400, quality = 0.8):
   });
 }
 
-export async function uploadAvatar(
-  inputBlob: Blob,
-  onProgress?: (percent: number) => void
-) {
+export async function uploadAvatar(inputBlob: Blob) {
   // Safe local-only frontend mock for avatar uploads if explicitly forced.
   if (process.env.NEXT_PUBLIC_USE_MOCK_AVATAR_UPLOAD === "true") {
-    if (onProgress) onProgress(50);
     const mockUrl = URL.createObjectURL(inputBlob);
-    if (onProgress) onProgress(100);
     return {
       key: `mock-avatar-${Date.now()}`,
       publicUrl: mockUrl,
     };
   }
 
-  if (onProgress) onProgress(15);
-
   // Guarantee image is compressed to lightweight WebP (max 400px, ~40-60KB)
   const blob = await compressImageBlob(inputBlob, 400, 0.85);
   const contentType = "image/webp";
-
-  if (onProgress) onProgress(35);
 
   try {
     const response = await fetch("/api/uploads/avatar", {
@@ -88,36 +79,19 @@ export async function uploadAvatar(
     }
 
     const payload = await response.json();
-    if (onProgress) onProgress(50);
 
-    // Upload with XMLHttpRequest for real progress reporting
-    await new Promise<void>((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open("PUT", payload.uploadUrl);
-      xhr.setRequestHeader("Content-Type", contentType);
-      xhr.setRequestHeader("Cache-Control", "public, max-age=31536000, immutable");
-
-      if (xhr.upload && onProgress) {
-        xhr.upload.onprogress = (event) => {
-          if (event.lengthComputable) {
-            const calculated = Math.round(50 + (event.loaded / event.total) * 45);
-            onProgress(Math.min(calculated, 95));
-          }
-        };
-      }
-
-      xhr.onload = () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          if (onProgress) onProgress(100);
-          resolve();
-        } else {
-          reject(new Error("S3 upload request failed with status " + xhr.status));
-        }
-      };
-
-      xhr.onerror = () => reject(new Error("S3 upload network error"));
-      xhr.send(blob);
+    const uploadResponse = await fetch(payload.uploadUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": contentType,
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+      body: blob,
     });
+
+    if (!uploadResponse.ok) {
+      throw new Error("S3 upload request failed");
+    }
 
     return {
       key: payload.key as string,
@@ -125,16 +99,13 @@ export async function uploadAvatar(
     };
   } catch (err) {
     console.warn("Luminus: S3 direct upload failed or CORS restricted, using optimized DataURL fallback.", err);
-    if (onProgress) onProgress(85);
-
+    
     // Convert compressed blob to DataURL (super compact, ~40-60 KB)
     const dataUrl = await new Promise<string>((resolve) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result as string);
       reader.readAsDataURL(blob);
     });
-
-    if (onProgress) onProgress(100);
 
     return {
       key: `avatar-local-${Date.now()}`,

@@ -11,15 +11,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    try {
-      await resendConfirmationCode(body.email);
-    } catch (cognitoErr: any) {
-      if (process.env.NODE_ENV !== "production") {
-        console.warn("[LOCAL DEV] Bypassing Cognito resendConfirmationCode error in local dev");
-      } else {
-        throw cognitoErr;
-      }
-    }
+    await resendConfirmationCode(body.email);
     return NextResponse.json({ success: true, message: "Código reenviado." }, { status: 200 });
   } catch (error: any) {
     console.error("Cognito resend code failed.", error);

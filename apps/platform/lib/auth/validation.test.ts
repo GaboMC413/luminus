@@ -43,25 +43,25 @@ describe("validateAuthInput", () => {
     });
   });
 
-  it("debería rechazar contraseñas sin letras", () => {
-    expect(validateAuthInput({ email: "test@example.com", password: "12345678" })).toEqual({
+  it("debería rechazar contraseñas sin mayúsculas o minúsculas", () => {
+    expect(validateAuthInput({ email: "test@example.com", password: "password123!" })).toEqual({
       ok: false,
-      message: "La contrasena debe incluir al menos una letra.",
+      message: "La contrasena debe incluir letras mayusculas y minusculas.",
+    });
+    expect(validateAuthInput({ email: "test@example.com", password: "PASSWORD123!" })).toEqual({
+      ok: false,
+      message: "La contrasena debe incluir letras mayusculas y minusculas.",
     });
   });
 
-  it("debería rechazar contraseñas sin números", () => {
-    expect(validateAuthInput({ email: "test@example.com", password: "PasswordTest" })).toEqual({
+  it("debería rechazar contraseñas sin números o símbolos", () => {
+    expect(validateAuthInput({ email: "test@example.com", password: "PasswordTest!" })).toEqual({
       ok: false,
-      message: "La contrasena debe incluir al menos un numero.",
+      message: "La contrasena debe incluir al menos un numero y un simbolo.",
     });
-  });
-
-  it("debería aceptar contraseñas con 8+ chars, al menos 1 letra y al menos 1 número", () => {
-    expect(validateAuthInput({ email: "test@example.com", password: "password1" })).toEqual({
-      ok: true,
-      email: "test@example.com",
-      password: "password1",
+    expect(validateAuthInput({ email: "test@example.com", password: "Password123" })).toEqual({
+      ok: false,
+      message: "La contrasena debe incluir al menos un numero y un simbolo.",
     });
   });
 });

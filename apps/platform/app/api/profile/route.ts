@@ -79,13 +79,10 @@ function serializeProfile(user: any) {
       phone_number: profile.phoneNumber ?? "",
       selected_plan: profile.selectedPlan ?? "Mensual",
       created_at: profile.createdAt?.toISOString?.() ?? user.createdAt?.toISOString?.() ?? "",
-      member_since: user.memberSince?.toISOString?.() ?? null,
-      tier: user.tier ?? "FREE",
       bio: profile.bio ?? "",
       other_interests: profile.intention ?? "",
       isOnboarded: profile.isOnboarded ?? false,
       is_onboarded: profile.isOnboarded ?? false,
-      specialistProfile: user.specialistProfile || null,
     },
   };
 }
@@ -110,20 +107,6 @@ export async function GET() {
         },
         profilePrompts: {
           orderBy: { sortOrder: "asc" },
-        },
-        specialistProfile: {
-          include: {
-            courses: {
-              where: { isActive: true },
-            },
-            spaces: {
-              where: { isActive: true },
-              include: {
-                category: true,
-                services: true,
-              },
-            },
-          },
         },
       },
     });

@@ -15,7 +15,7 @@ export function TurnstileWidget({
   onSuccess,
   onError,
   onExpire,
-  className = "absolute pointer-events-none my-0 flex justify-center overflow-hidden min-h-0 h-0 w-0 opacity-0",
+  className = "my-0 flex justify-center overflow-hidden min-h-0 h-0 w-0 opacity-0",
   theme = "light",
 }: TurnstileWidgetProps) {
   const turnstileRef = useRef<TurnstileInstance | null>(null);
