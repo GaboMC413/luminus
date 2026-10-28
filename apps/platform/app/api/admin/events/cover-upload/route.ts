@@ -62,13 +62,13 @@ export async function POST(request: Request) {
 
     const accessKeyId =
       process.env.S3_STORAGE_ACCESS_KEY_ID?.trim() ||
-      process.env.AWS_ACCESS_KEY_ID?.trim() ||
-      process.env.SES_ACCESS_KEY_ID?.trim();
+      process.env.S3_ACCESS_KEY_ID?.trim() ||
+      process.env.AWS_ACCESS_KEY_ID?.trim();
 
     const secretAccessKey =
       process.env.S3_STORAGE_SECRET_ACCESS_KEY?.trim() ||
-      process.env.AWS_SECRET_ACCESS_KEY?.trim() ||
-      process.env.SES_SECRET_ACCESS_KEY?.trim();
+      process.env.S3_SECRET_ACCESS_KEY?.trim() ||
+      process.env.AWS_SECRET_ACCESS_KEY?.trim();
 
     const key = `events/covers/${randomUUID()}.${extensionForContentType(contentType)}`;
 

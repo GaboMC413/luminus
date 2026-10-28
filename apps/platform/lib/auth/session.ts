@@ -26,7 +26,6 @@ function getSessionSecret() {
   return secret;
 }
 
-
 function base64UrlEncode(value: string | Buffer) {
   return Buffer.from(value).toString("base64url");
 }
@@ -96,13 +95,18 @@ export function setSessionCookie(token: string) {
 }
 
 export function clearSessionCookie() {
-  cookies().set(SESSION_COOKIE_NAME, "", {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 0,
-  });
+  try {
+    cookies().set(SESSION_COOKIE_NAME, "", {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 0,
+    });
+  } catch {
+    // Next.js App Router prevents mutating cookies during Server Component rendering.
+    // Swallow safely so callers do not crash.
+  }
 }
 
 export function getCurrentSession() {
@@ -113,29 +117,89 @@ export async function assertOnboarded(redirectToPath?: string) {
   const session = getCurrentSession();
   if (!session) {
     const loginTarget = redirectToPath
-      ? `/auth/iniciar-sesion?redirect=${encodeURIComponent(redirectToPath)}`
-      : "/auth/iniciar-sesion";
+      ? `/iniciar-sesion?redirect=${encodeURIComponent(redirectToPath)}`
+      : "/iniciar-sesion";
     redirect(loginTarget);
   }
 
   let isOnboarded = false;
   try {
     const { prisma } = await import("@/lib/db");
-    const profile = await prisma.userProfile.findUnique({
-      where: { userId: session.userId },
-      select: { isOnboarded: true },
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: {
+        id: true,
+        status: true,
+        profile: { select: { isOnboarded: true } },
+        specialistProfile: { select: { userId: true } },
+        specialistPostulations: { select: { id: true }, take: 1 },
+      },
     });
-    isOnboarded = !!profile?.isOnboarded;
-  } catch (error) {
+
+    if (!user || user.status !== "active") {
+      // Session references a user that was deleted, disabled, or no longer exists.
+      // Clear cookie via route handler to break lockout loop cleanly.
+      const loginTarget = redirectToPath
+        ? `/iniciar-sesion?redirect=${encodeURIComponent(redirectToPath)}`
+        : "/iniciar-sesion";
+      redirect(`/api/auth/logout?redirect=${encodeURIComponent(loginTarget)}`);
+    }
+
+    isOnboarded = !!user.profile?.isOnboarded;
+
+    // Si todavía no figura como onboarded, verificar si ya envió postulación de especialista
+    // o tiene perfil de especialista. En ese caso ya completó su flujo y no debe ir al onboarding de usuario.
+    if (!isOnboarded) {
+      if (user.specialistProfile || user.specialistPostulations.length > 0) {
+        await prisma.userProfile.upsert({
+          where: { userId: session.userId },
+          create: { userId: session.userId, isOnboarded: true },
+          update: { isOnboarded: true },
+        });
+        isOnboarded = true;
+      }
+    }
+  } catch (error: any) {
+    if (error && typeof error === "object" && "digest" in error) {
+      throw error;
+    }
     console.error("Database check failed in assertOnboarded:", error);
   }
 
   if (!isOnboarded) {
     const signupTarget = redirectToPath
-      ? `/auth/registrarse?onboarding=1&redirect=${encodeURIComponent(redirectToPath)}`
-      : "/auth/registrarse?onboarding=1";
+      ? `/unirme/perfil?redirect=${encodeURIComponent(redirectToPath)}`
+      : "/unirme/perfil";
     redirect(signupTarget);
   }
 
   return session;
+}
+
+export async function redirectIfAuthenticated() {
+  const session = getCurrentSession();
+  if (!session) return;
+
+  let destination: string | null = null;
+  try {
+    const { prisma } = await import("@/lib/db");
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: {
+        id: true,
+        status: true,
+        profile: { select: { isOnboarded: true } },
+      },
+    });
+
+    if (user && user.status === "active") {
+      destination = user.profile?.isOnboarded ? "/comunidad" : "/unirme/perfil";
+    }
+  } catch (error) {
+    console.error("Database check failed in redirectIfAuthenticated:", error);
+  }
+
+  if (destination) {
+    redirect(destination);
+  }
 }

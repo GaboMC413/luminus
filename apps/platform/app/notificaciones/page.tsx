@@ -215,7 +215,7 @@ function NotificationsContent() {
 
     // 2. Tab filter
     if (activeFilter === "todas") return true;
-    if (activeFilter === "leidas") return n.type === "onboarding-progress" ? false : !n.isUnread;
+    if (activeFilter === "leidas") return !n.isUnread;
     if (activeFilter === "no_leidas") return n.isUnread;
     if (activeFilter === "especialistas") {
       return String(n.type).includes("follow");
@@ -463,7 +463,7 @@ function NotificationsContent() {
                           </div>
                           <p className="text-sm leading-relaxed text-slate-600 group-hover:text-slate-900 transition-colors">
                             {n.user && n.user !== "LUMINUS" && (
-                              <span className="font-semibold text-slate-900 group-hover:underline">{n.user}: </span>
+                              <span className="font-semibold text-slate-900 group-hover:text-slate-600 transition-colors">{n.user}: </span>
                             )}
                             {formatMessageBody(n.action)}
                           </p>

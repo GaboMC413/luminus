@@ -50,6 +50,10 @@ old-repo-temp/
 temp-email.html
 public/temp-email.html
 
-# local backups
+# local backups & generated tooling
 backups/
 apps/backups/
+.local-data/
+graphify-out/
+.codex/
+.archify/

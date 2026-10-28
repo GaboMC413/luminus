@@ -108,10 +108,10 @@ export function MobileMembersCarousel({ members, loading }: MobileMembersCarouse
       {/* Carousel Wrapper */}
       <div className="relative w-full group/carousel">
 
-        {/* Horizontal Carousel (Starts at post margin, scrolls until screen edge, ends with margin) */}
+        {/* Horizontal Carousel (Mobile: edge bleed; Desktop: strictly contained within post margins) */}
         <div
           ref={carouselRef}
-          className="flex items-stretch gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory custom-scrollbar -mx-4 px-4 sm:-mx-6 sm:px-6 scroll-px-4 sm:scroll-px-6 py-1"
+          className="flex items-stretch gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory custom-scrollbar -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 scroll-px-4 sm:scroll-px-6 md:scroll-px-0 py-1"
         >
           {loading && newMembers.length === 0 ? (
             [...Array(5)].map((_, i) => (

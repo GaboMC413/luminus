@@ -236,8 +236,10 @@ export function PersonalData({
     const birthStatus = validateBirthdate(finalBirthdate);
     if (birthStatus === 'invalid') { setErrorField('birthdate'); return; }
     if (birthStatus === 'underage') { setErrorField('underage'); return; }
-    if (!city || !country) { setErrorField('city'); return; }
+    if (!city || !city.trim()) { setErrorField('city'); return; }
     if (!phone) { setErrorField('phone'); return; }
+
+    const finalCountry = country || phoneCountry?.name || "Argentina";
 
     setIsSaving(true);
 
@@ -248,8 +250,8 @@ export function PersonalData({
       // Save data locally
       localStorage.setItem("luminus_profile_firstName", firstName);
       localStorage.setItem("luminus_profile_lastName", lastName);
-      localStorage.setItem("luminus_profile_city", city);
-      localStorage.setItem("luminus_profile_country", country);
+      localStorage.setItem("luminus_profile_city", city.trim());
+      localStorage.setItem("luminus_profile_country", finalCountry);
       let finalPhoneToSave = `${phoneCountry.dial} ${phone}`;
       try {
         const parsed = parsePhoneNumberFromString(phone, phoneCountry.code as CountryCode);
@@ -433,28 +435,33 @@ export function PersonalData({
               defaultValue={city}
               onSelect={({ city, country, countryCode }) => {
                 setCity(city);
-                setCountry(country);
+                if (country) {
+                  setCountry(country);
+                }
+                if (errorField === 'city') setErrorField(null);
 
-                // Auto-detect phone country from city selection
-                const normalizedCountry = country.toLowerCase().trim();
-                const mappedName = COUNTRY_SYNONYMS[normalizedCountry] || normalizedCountry;
+                // Auto-detect phone country from city selection if country provided
+                if (country) {
+                  const normalizedCountry = country.toLowerCase().trim();
+                  const mappedName = COUNTRY_SYNONYMS[normalizedCountry] || normalizedCountry;
 
-                const detected = ALL_COUNTRIES.find(c =>
-                  (countryCode && c.code.toLowerCase() === countryCode.toLowerCase()) ||
-                  c.name.toLowerCase() === mappedName ||
-                  c.name.toLowerCase() === normalizedCountry
-                );
-                if (detected) {
-                  setPhoneCountry(detected);
-                  if (phone) {
-                    const formatter = new AsYouType(detected.code as CountryCode);
-                    setPhone(formatter.input(phone));
+                  const detected = ALL_COUNTRIES.find(c =>
+                    (countryCode && c.code.toLowerCase() === countryCode.toLowerCase()) ||
+                    c.name.toLowerCase() === mappedName ||
+                    c.name.toLowerCase() === normalizedCountry
+                  );
+                  if (detected) {
+                    setPhoneCountry(detected);
+                    if (phone) {
+                      const formatter = new AsYouType(detected.code as CountryCode);
+                      setPhone(formatter.input(phone));
+                    }
                   }
                 }
               }}
               className={errorField === 'city' ? '[&_input]:!border-[#FF3D3D] [&_input]:!ring-1 [&_input]:!ring-[#FF3D3D]' : ''}
             />
-            {errorField === 'city' && <p className="text-[#FF3D3D] text-[12px] font-bold">Selecciona una ciudad de la lista de sugerencias</p>}
+            {errorField === 'city' && <p className="text-[#FF3D3D] text-[12px] font-bold">Ingresa tu ciudad</p>}
           </div>
         </div>
 

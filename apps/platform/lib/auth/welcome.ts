@@ -48,7 +48,21 @@ export async function sendWelcomeMessage(prisma: PrismaClient, newUserId: string
     });
   }
 
-  // 2. Draft the welcome message content
+  // 2. Check if a conversation between the system account and the user already exists
+  const existingConversation = await prisma.conversation.findFirst({
+    where: {
+      AND: [
+        { participants: { some: { userId: systemUser.id } } },
+        { participants: { some: { userId: newUserId } } },
+      ],
+    },
+  });
+
+  if (existingConversation) {
+    return;
+  }
+
+  // 3. Draft the welcome message content
   const welcomeText = `¡Te damos la bienvenida a *LUMINUS*! 🌱
 
 Nos alegra acompañarte en este camino hacia una vida con mayor bienestar y propósito. ✨

@@ -24,6 +24,11 @@ const QUEST_CONFIG: Record<string, { label: string; actionUrl: string; icon: str
     actionUrl: "/perfil-usuario?edit=prompts",
     icon: "format_quote",
   },
+  user_interests: {
+    label: "Selecciona tus temas de interés",
+    actionUrl: "/perfil-usuario?edit=interests",
+    icon: "interests",
+  },
   cover: {
     label: "Personaliza tu foto de portada",
     actionUrl: "/perfil-usuario?edit=cover",
@@ -52,6 +57,11 @@ const CELEBRATION_COPY: Record<string, { title: string; body: string; actionUrl:
     body: "Compartir tus reflexiones y valores ayuda a alinear tu energía con la de otros miembros. Permite que la comunidad conozca en qué crees y cómo pueden apoyarse mutuamente en su crecimiento.",
     actionUrl: "/perfil-usuario",
   },
+  user_interests: {
+    title: "Has seleccionado tus temas de interés",
+    body: "Definir tus temas de interés te ayuda a conectar con contenidos, especialistas y personas afines a tus búsquedas de bienestar.",
+    actionUrl: "/perfil-usuario",
+  },
   cover: {
     title: "Has personalizado tu foto de portada",
     body: "Personalizar tu portada define el ambiente y la energía de tu perfil. Un espacio visualmente acogedor y propio hace que tu presencia en LUMINUS se sienta verdaderamente tuya y acogedora.",
@@ -71,6 +81,7 @@ export async function getOnboardingQuests(userId: string): Promise<{ quests: Que
     include: {
       profile: true,
       profilePrompts: true,
+      interests: { take: 1 },
       sentConnections: { take: 1 },
       receivedConnections: { take: 1 },
     },
@@ -87,6 +98,7 @@ export async function getOnboardingQuests(userId: string): Promise<{ quests: Que
     profession: !!(profile?.profession && profile.profession.trim() !== ""),
     bio: !!(profile?.bio && profile.bio.trim() !== ""),
     interests: user.profilePrompts.length > 0,
+    user_interests: user.interests.length > 0 || !!(profile?.intention && profile.intention.trim() !== ""),
     cover: !!(profile?.coverUrl && profile.coverUrl.trim() !== ""),
     connect: user.sentConnections.length > 0 || user.receivedConnections.length > 0,
   };
@@ -123,6 +135,7 @@ export async function checkAndTriggerQuestCompletion(
     include: {
       profile: true,
       profilePrompts: true,
+      interests: { take: 1 },
       sentConnections: { take: 1 },
       receivedConnections: { take: 1 },
     },
@@ -142,6 +155,9 @@ export async function checkAndTriggerQuestCompletion(
       break;
     case "interests":
       isCompleted = user.profilePrompts.length > 0;
+      break;
+    case "user_interests":
+      isCompleted = user.interests.length > 0 || !!(profile?.intention && profile.intention.trim() !== "");
       break;
     case "cover":
       isCompleted = !!(profile?.coverUrl && profile.coverUrl.trim() !== "");

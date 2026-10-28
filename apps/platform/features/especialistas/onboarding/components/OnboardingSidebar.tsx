@@ -9,7 +9,19 @@ interface OnboardingSidebarProps {
   onStepClick?: (stepNum: number) => void;
   isCheckingStatus?: boolean;
   hideStepper?: boolean;
+  stepsList?: { num: number; label: string }[];
+  title?: string;
+  showLogo?: boolean;
+  hasNavbar?: boolean;
 }
+
+const DEFAULT_STEPS = [
+  { num: 1, label: "Información inicial" },
+  { num: 2, label: "Perfil profesional" },
+  { num: 3, label: "Sesiones introductorias" },
+  { num: 4, label: "Espacios de atención" },
+  { num: 5, label: "Cursos y talleres" },
+];
 
 export function OnboardingSidebar({
   step,
@@ -17,30 +29,37 @@ export function OnboardingSidebar({
   onStepClick,
   isCheckingStatus = false,
   hideStepper = false,
+  stepsList = DEFAULT_STEPS,
+  title = "Aplicación como Especialista",
+  showLogo = false,
+  hasNavbar = true,
 }: OnboardingSidebarProps) {
-  const stepsList = [
-    { num: 1, label: "Información inicial" },
-    { num: 2, label: "Perfil profesional" },
-    { num: 3, label: "Sesiones introductorias" },
-    { num: 4, label: "Espacios de atención" },
-    { num: 5, label: "Cursos y talleres" },
-  ];
-
+  const totalSteps = stepsList.length;
   // Number of completed steps prior to or up to maxVisitedStep
-  const completedCount = Math.max(0, Math.min(maxVisitedStep - 1, 5));
-  const progressPercentage = Math.min((completedCount / 5) * 100, 100);
-  const showStepper = !isCheckingStatus && !hideStepper && step <= 5;
+  const completedCount = Math.max(0, Math.min(maxVisitedStep - 1, totalSteps));
+  const progressPercentage = Math.min((completedCount / totalSteps) * 100, 100);
+  const showStepper = !isCheckingStatus && !hideStepper && step <= totalSteps;
 
   return (
-    <div className="hidden lg:flex lg:sticky lg:top-[64px] lg:h-[calc(100vh-64px)] lg:w-80 xl:w-96 luminus-light-gradient border-r border-slate-200 shrink-0 flex-col items-center py-12 px-8 z-50 transition-all duration-500 overflow-hidden relative">
-      <div className="relative z-10 flex flex-col items-center w-full">
+    <div
+      className={`hidden lg:flex lg:sticky ${
+        hasNavbar ? "lg:top-[64px] lg:h-[calc(100vh-64px)]" : "lg:top-0 lg:h-screen"
+      } lg:w-80 xl:w-96 luminus-light-gradient border-r border-slate-200 shrink-0 flex-col items-start py-10 px-8 z-50 transition-all duration-500 overflow-hidden relative`}
+    >
+      <div className="relative z-10 flex flex-col items-start w-full h-full">
+        {/* Desktop Logo */}
+        {showLogo && (
+          <Link href="/" className="w-fit mb-8 cursor-pointer hover:opacity-80 transition-opacity shrink-0">
+            <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[24px]" />
+          </Link>
+        )}
 
         {/* Mobile Header Stepper (small screens) */}
         {showStepper && (
           <div className="flex lg:hidden flex-col gap-2 w-full mt-3 text-slate-900">
             <div className="flex justify-between items-center text-[12px] font-jakarta">
-              <span className="font-bold uppercase tracking-wider text-slate-900">Aplicación como Especialista</span>
-              <span className="text-slate-500 font-semibold">{completedCount} de 5 completados</span>
+              <span className="font-bold uppercase tracking-wider text-slate-900">{title}</span>
+              <span className="text-slate-500 font-semibold">{completedCount} de {totalSteps} completados</span>
             </div>
             <div className="w-full bg-slate-100 border border-slate-200 h-1.5 rounded-full overflow-hidden">
               <div
@@ -60,10 +79,10 @@ export function OnboardingSidebar({
             {/* Header */}
             <div className="flex flex-col gap-1.5">
               <span className="text-[16px] font-bold font-jakarta text-slate-900">
-                Aplicación como Especialista
+                {title}
               </span>
               <span className="text-[13px] text-slate-500 font-sans font-medium">
-                {completedCount} de 5 pasos completados
+                {completedCount} de {totalSteps} pasos completados
               </span>
               <div className="w-full bg-slate-100 border border-slate-200/80 h-2 rounded-full overflow-hidden mt-1">
                 <div
@@ -119,6 +138,12 @@ export function OnboardingSidebar({
               })}
             </div>
           </div>
+        )}
+
+        {showLogo && (
+          <p className="hidden lg:block text-label !text-slate-400 uppercase tracking-wider font-sans mt-auto pt-6">
+            LUMINUS LATAM © 2026
+          </p>
         )}
       </div>
     </div>

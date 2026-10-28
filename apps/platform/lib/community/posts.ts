@@ -1,27 +1,24 @@
 import { PostItem, PostComment } from "@/components/community/mockPostsData";
 
+const MONTH_NAMES_ES = [
+  "ene", "feb", "mar", "abr", "may", "jun",
+  "jul", "ago", "sep", "oct", "nov", "dic"
+];
+
 export function formatPostDate(date: Date | string | null): string {
   if (!date) return "";
   const d = typeof date === "string" ? new Date(date) : date;
   if (isNaN(d.getTime())) return "";
 
   const now = new Date();
-  const diffMs = now.getTime() - d.getTime();
-  const diffMinutes = Math.floor(diffMs / (1000 * 60));
-  const diffHours = Math.floor(diffMinutes / 60);
-  const diffDays = Math.floor(diffHours / 24);
+  const sameYear = d.getFullYear() === now.getFullYear();
+  const day = d.getDate();
+  const month = MONTH_NAMES_ES[d.getMonth()];
 
-  if (diffMinutes < 1) return "Recién";
-  if (diffMinutes < 60) return `Hace ${diffMinutes} ${diffMinutes === 1 ? "minuto" : "minutos"}`;
-  if (diffHours < 24) return `Hace ${diffHours} ${diffHours === 1 ? "hora" : "horas"}`;
-  if (diffDays === 1) return "Ayer";
-  if (diffDays < 7) return `Hace ${diffDays} días`;
-
-  return d.toLocaleDateString("es-ES", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  if (sameYear) {
+    return `${day} de ${month}`;
+  }
+  return `${day} de ${month} de ${d.getFullYear()}`;
 }
 
 export function serializePost(rawPost: any, currentUserId?: string): PostItem {

@@ -45,12 +45,26 @@ function parseCalendarDate(dateStr?: string | Date | null): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
+const MONTH_NAMES_ES = [
+  "ene", "feb", "mar", "abr", "may", "jun",
+  "jul", "ago", "sep", "oct", "nov", "dic"
+];
+
 function formatDate(dateStr?: string): string {
   if (!dateStr) return "";
   try {
     const d = parseCalendarDate(dateStr);
     if (!d) return dateStr;
-    return d.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
+
+    const now = new Date();
+    const sameYear = d.getFullYear() === now.getFullYear();
+    const day = d.getDate();
+    const month = MONTH_NAMES_ES[d.getMonth()];
+
+    if (sameYear) {
+      return `${day} de ${month}`;
+    }
+    return `${day} de ${month} de ${d.getFullYear()}`;
   } catch {
     return dateStr;
   }
@@ -73,9 +87,7 @@ function formatUpcomingDateHeader(dateStr?: string, timeText?: string) {
     const weekday = weekdayRaw.charAt(0).toUpperCase() + weekdayRaw.slice(1);
 
     const day = d.getDate();
-
-    const monthRaw = d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "");
-    const month = monthRaw.charAt(0).toUpperCase() + monthRaw.slice(1);
+    const month = MONTH_NAMES_ES[d.getMonth()];
 
     const cleanTime = timeText
       ? timeText.replace(/\s*\([^)]*GMT[^)]*\)/gi, "").replace(/\s*\([^)]*UTC[^)]*\)/gi, "").trim()

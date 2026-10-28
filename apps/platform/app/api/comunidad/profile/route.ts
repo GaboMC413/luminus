@@ -288,6 +288,8 @@ export async function GET(request: Request) {
         created_at: profile.createdAt?.toISOString?.() ?? user.createdAt?.toISOString?.() ?? "",
         bio: profile.bio ?? "",
         other_interests: profile.intention ?? "",
+        tier: user.tier ?? "FREE",
+        member_since: user.memberSince?.toISOString?.() ?? null,
         connection_status: connection?.status ?? null,
         connection_direction: connection ? (connection.requesterId === session.userId ? "outgoing" : "incoming") : null,
         is_own_profile: id === session.userId,

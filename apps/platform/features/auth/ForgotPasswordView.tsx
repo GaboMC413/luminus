@@ -1,46 +1,49 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/InputField";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { PlatformFooter } from "@/components/ui/PlatformFooter";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 
 export default function ForgotPasswordView() {
   const router = useRouter();
-  
+
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState({ text: "", type: "" });
-  const [view, setView] = useState<'email' | 'code' | 'reset' | 'success'>('email');
-  const [timer, setTimer] = useState(180); // 3 minutes in seconds
-  const [canResend, setCanResend] = useState(false);
+  const [message, setMessage] = useState<{ text: string; type: "error" | "success" | "" }>({
+    text: "",
+    type: "",
+  });
+  const [view, setView] = useState<"email" | "code" | "reset" | "success">("email");
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resending, setResending] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
-  // Timer logic for resending code
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (view === 'code' && timer > 0) {
-      interval = setInterval(() => {
-        setTimer((prev) => prev - 1);
-      }, 1000);
-    } else if (timer === 0) {
-      setCanResend(true);
-    }
-    return () => clearInterval(interval);
-  }, [view, timer]);
+  const codeInputRef = useRef<HTMLInputElement>(null);
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
+  // Countdown for resend code
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  // Auto-focus code input when verification screen opens
+  useEffect(() => {
+    if (view === "code") {
+      setTimeout(() => {
+        codeInputRef.current?.focus();
+      }, 150);
+    }
+  }, [view]);
 
   const handleResetPasswordRequest = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -56,22 +59,22 @@ export default function ForgotPasswordView() {
       const response = await fetch("/api/auth/recover/request", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, turnstileToken }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), turnstileToken }),
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        setMessage({ text: data.message ?? "No pudimos enviar el correo de recuperación.", type: "error" });
+        setMessage({
+          text: data.message ?? "No pudimos enviar el correo de recuperación.",
+          type: "error",
+        });
         return;
       }
 
-      setView('code');
-      setTimer(180); // Reset timer
-      setCanResend(false);
-      setMessage({
-        text: "Si existe una cuenta con ese correo, enviaremos un código de recuperación.",
-        type: "success"
-      });
+      setView("code");
+      setCode("");
+      setResendCooldown(60);
+      setMessage({ text: "", type: "" });
     } catch {
       setMessage({ text: "No pudimos conectar con el servidor.", type: "error" });
     } finally {
@@ -79,10 +82,39 @@ export default function ForgotPasswordView() {
     }
   };
 
-  const handleVerifyCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!code) {
-      setMessage({ text: "Por favor, ingresa el código.", type: "error" });
+  const handleResendCode = async () => {
+    if (resending || resendCooldown > 0) return;
+    setResending(true);
+    setMessage({ text: "", type: "" });
+
+    try {
+      const response = await fetch("/api/auth/recover/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), turnstileToken }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setMessage({
+          text: data.message ?? "No pudimos reenviar el código.",
+          type: "error",
+        });
+      } else {
+        setMessage({ text: "Nuevo código enviado a tu correo.", type: "success" });
+        setResendCooldown(60);
+      }
+    } catch {
+      setMessage({ text: "Error de conexión al reenviar el código.", type: "error" });
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const handleVerifyCode = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (code.length < 6) {
+      setMessage({ text: "Ingresa el código completo de 6 dígitos.", type: "error" });
       return;
     }
 
@@ -93,22 +125,31 @@ export default function ForgotPasswordView() {
       const response = await fetch("/api/auth/recover/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), code: code.trim() }),
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        setMessage({ text: data.message ?? "El código es incorrecto o ha expirado.", type: "error" });
+        setMessage({
+          text: data.message ?? "El código es incorrecto o ha expirado.",
+          type: "error",
+        });
         return;
       }
 
-      setView('reset');
+      setMessage({ text: "", type: "" });
+      setView("reset");
     } catch {
       setMessage({ text: "No pudimos conectar con el servidor.", type: "error" });
     } finally {
       setLoading(false);
     }
   };
+
+  const hasMinLength = newPassword.length >= 8;
+  const hasUpperAndLower = /[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword);
+  const hasNumberAndSymbol =
+    /\d/.test(newPassword) && /[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(newPassword);
 
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,16 +161,22 @@ export default function ForgotPasswordView() {
       setMessage({ text: "Las contraseñas no coinciden.", type: "error" });
       return;
     }
-    if (newPassword.length < 8) {
+    if (!hasMinLength) {
       setMessage({ text: "La contraseña debe tener al menos 8 caracteres.", type: "error" });
       return;
     }
-    if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword)) {
-      setMessage({ text: "La contraseña debe incluir letras mayúsculas y minúsculas.", type: "error" });
+    if (!hasUpperAndLower) {
+      setMessage({
+        text: "La contraseña debe incluir letras mayúsculas y minúsculas.",
+        type: "error",
+      });
       return;
     }
-    if (!/\d/.test(newPassword) || !/[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(newPassword)) {
-      setMessage({ text: "La contraseña debe incluir al menos un número y un símbolo.", type: "error" });
+    if (!hasNumberAndSymbol) {
+      setMessage({
+        text: "La contraseña debe incluir al menos un número y un símbolo.",
+        type: "error",
+      });
       return;
     }
 
@@ -140,16 +187,24 @@ export default function ForgotPasswordView() {
       const response = await fetch("/api/auth/recover/reset", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code, newPassword }),
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          code: code.trim(),
+          newPassword,
+        }),
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        setMessage({ text: data.message ?? "Error al actualizar la contraseña.", type: "error" });
+        setMessage({
+          text: data.message ?? "Error al actualizar la contraseña.",
+          type: "error",
+        });
         return;
       }
 
-      setView('success');
+      setMessage({ text: "", type: "" });
+      setView("success");
     } catch {
       setMessage({ text: "No pudimos conectar con el servidor.", type: "error" });
     } finally {
@@ -158,228 +213,299 @@ export default function ForgotPasswordView() {
   };
 
   return (
-    <div className="auth-fixed-page flex flex-col lg:flex-row font-sans bg-slate-50 text-slate-900">
-      
-      {/* 1. Left Branding/Marketing Pane (Desktop only) */}
-      <div className="hidden lg:flex lg:w-[40%] xl:w-[45%] luminus-light-gradient border-r border-slate-200 flex-col justify-between p-12 lg:p-16 shrink-0 relative overflow-hidden animate-in slide-in-from-left duration-500">
-        <div className="relative z-10 flex flex-col h-full">
-          <Link href="/" className="w-fit cursor-pointer hover:opacity-80 transition-opacity">
-            <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[24px]" />
-          </Link>
+    <div className="min-h-screen bg-white flex flex-col justify-between font-sans selection:bg-slate-200">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pt-24 pb-8">
+        <main className="w-full max-w-[380px] mx-auto flex flex-col items-center gap-6">
+          {/* Title */}
+          <h1 className="text-2xl sm:text-[26px] font-bold font-jakarta text-slate-900 tracking-tight text-center m-0">
+            {view === "email" && "Recuperar contraseña"}
+            {view === "code" && "Confirma tu correo"}
+            {view === "reset" && "Crea tu nueva contraseña"}
+            {view === "success" && "¡Contraseña restablecida!"}
+          </h1>
 
-          <div className="flex flex-col gap-6 max-w-md mt-20 animate-in fade-in duration-700">
-            <h1 className="text-3xl lg:text-4xl font-bold text-slate-900 leading-tight tracking-[-0.03em] font-jakarta">
-              Recuperar contraseña
-            </h1>
-            <p className="text-lg text-slate-600 leading-relaxed font-normal tracking-[-0.01em]">
-              Un espacio para conectar con personas, especialistas y recursos que te ayudan a avanzar con más claridad, bienestar y propósito.
+          {/* Content Block */}
+          <div className="w-full flex flex-col gap-4">
+            <p className="text-sm text-slate-600 leading-relaxed text-center m-0">
+              {view === "email" &&
+                "Ingresa tu correo y te enviaremos un código para restablecer tu contraseña."}
+              {view === "code" && (
+                <>
+                  Ingresa el código de 6 dígitos que enviamos a{" "}
+                  <span className="font-semibold text-slate-900 block mt-0.5">{email}</span>
+                </>
+              )}
+              {view === "reset" &&
+                "Establece tu nueva contraseña para volver a acceder a tu cuenta."}
+              {view === "success" &&
+                "Tu contraseña ha sido restablecida con éxito. Ya puedes iniciar sesión con tus nuevas credenciales."}
             </p>
-          </div>
 
-          <p className="text-label !text-slate-400 uppercase tracking-wider font-sans mt-auto">
-            LUMINUS LATAM © 2026
-          </p>
-        </div>
-      </div>
+            {view === "email" && (
+              <>
+                <form onSubmit={handleResetPasswordRequest} className="flex flex-col gap-3">
+                  <InputField
+                    type="email"
+                    required
+                    placeholder="Correo electrónico"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (message.type) setMessage({ text: "", type: "" });
+                    }}
+                    enterKeyHint="go"
+                  />
 
-      {/* 2. Right Form Pane */}
-      <div className="flex-1 flex flex-col bg-slate-50 min-h-0 h-full overflow-hidden pt-14 lg:pt-0 animate-in fade-in duration-300">
-        
-        {/* Mobile Header: Logo */}
-        <div className="fixed top-0 left-0 right-0 lg:hidden w-full h-14 luminus-light-gradient-slate border-b-0 flex items-center justify-center shrink-0 z-50">
-          <Link href="/" className="cursor-pointer hover:opacity-80 transition-opacity">
-            <img src="/logo-luminus-black.svg" alt="Luminus" className="h-[20px]" />
-          </Link>
-        </div>
-
-        {/* Central Content Area */}
-        <div className="flex-1 flex items-center justify-center px-6 py-8 md:py-16">
-          <div className="w-full max-w-[344px] md:max-w-[380px] flex flex-col gap-8">
-            
-            {/* Title Section */}
-            <div className="flex flex-col gap-1 w-full text-center md:text-left">
-              <h2 className="text-black text-xl font-semibold leading-normal">
-                {view === 'email' && 'Recuperar contraseña'}
-                {view === 'code' && 'Confirma tu cuenta'}
-                {view === 'reset' && 'Crea tu nueva contraseña'}
-                {view === 'success' && '¡Contraseña restablecida!'}
-              </h2>
-              <p className="text-slate-500 text-body-small leading-relaxed">
-                {view === 'email' && 'Ingresa tu correo y te enviaremos un código para restablecer tu contraseña.'}
-                {view === 'code' && (
-                  <>
-                    Enviamos un código de 6 dígitos a <span className="font-semibold text-slate-800">{email}</span>.
-                  </>
-                )}
-                {view === 'reset' && 'Establece tu nueva contraseña para volver a acceder a tu cuenta.'}
-                {view === 'success' && 'Tu contraseña ha sido restablecida con éxito. Ya puedes iniciar sesión con tus nuevas credenciales.'}
-              </p>
-            </div>
-
-            {/* Forms section */}
-            {view !== 'success' ? (
-              <form
-                onSubmit={
-                  view === 'email' ? handleResetPasswordRequest :
-                  view === 'code' ? handleVerifyCode :
-                  handleUpdatePassword
-                }
-                className="flex flex-col w-full"
-              >
-                <div className="flex flex-col gap-3.5">
-                  {view === 'email' && (
-                    <>
-                      <InputField
-                        type="email"
-                        placeholder="Correo electrónico"
-                        value={email}
-                        onChange={(e) => {
-                          setEmail(e.target.value);
-                          if (message.type === 'error') setMessage({ text: "", type: "" });
-                        }}
-                        variant="clean"
-                        className={`!bg-white border border-zinc-200/80 focus:border-slate-800 ${message.type === 'error' && !email ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
-                        enterKeyHint="go"
-                      />
-                      <TurnstileWidget
-                        onSuccess={(token) => setTurnstileToken(token)}
-                        onExpire={() => setTurnstileToken(null)}
-                      />
-                    </>
-                  )}
-
-                  {view === 'code' && (
-                    <InputField
-                      type="text"
-                      placeholder="Código de 6 dígitos"
-                      value={code}
-                      onChange={(e) => {
-                        setCode(e.target.value);
-                        if (message.type === 'error') setMessage({ text: "", type: "" });
-                      }}
-                      variant="clean"
-                      className={`!bg-white border border-zinc-200/80 focus:border-slate-800 ${message.type === 'error' && !code ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
-                      enterKeyHint="go"
-                    />
-                  )}
-
-                  {view === 'reset' && (
-                    <div className="flex flex-col gap-3.5">
-                      <InputField
-                        type="password"
-                        placeholder="Nueva contraseña"
-                        value={newPassword}
-                        onChange={(e) => {
-                          setNewPassword(e.target.value);
-                          if (message.type === 'error') setMessage({ text: "", type: "" });
-                        }}
-                        showPassword={showPassword}
-                        onTogglePassword={() => setShowPassword(!showPassword)}
-                        variant="clean"
-                        className={`!bg-white border border-zinc-200/80 focus:border-slate-800 ${message.type === 'error' && (!newPassword || newPassword.length < 12) ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
-                        enterKeyHint="next"
-                      />
-
-                      {/* Password Requirements Checklist - Sleek Stacked Layout */}
-                      <div className="flex flex-col gap-1.5 px-0 mb-2">
-                        <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
-                          <p className={`text-xs sm:text-sm font-normal tracking-tight ${newPassword.length >= 8 ? 'text-green-600' : 'text-slate-500'}`}>
-                            Mínimo 8 caracteres
-                          </p>
-                          {newPassword.length >= 8 && (
-                            <span className="text-green-600 text-sm sm:text-base font-bold">✓</span>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
-                          <p className={`text-xs sm:text-sm font-normal tracking-tight ${/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword) ? 'text-green-600' : 'text-slate-500'}`}>
-                            Mayúsculas y minúsculas
-                          </p>
-                          {/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword) && (
-                            <span className="text-green-600 text-sm sm:text-base font-bold">✓</span>
-                          )}
-                        </div>
-                        <div className="flex items-center justify-between sm:justify-start gap-1.5 h-6 sm:h-5">
-                          <p className={`text-xs sm:text-sm font-normal tracking-tight ${/\d/.test(newPassword) && /[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(newPassword) ? 'text-green-600' : 'text-slate-500'}`}>
-                            Al menos un número y un símbolo
-                          </p>
-                          {/\d/.test(newPassword) && /[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(newPassword) && (
-                            <span className="text-green-600 text-sm sm:text-base font-bold">✓</span>
-                          )}
-                        </div>
-                      </div>
-
-                      <InputField
-                        type="password"
-                        placeholder="Repetir nueva contraseña"
-                        value={confirmPassword}
-                        onChange={(e) => {
-                          setConfirmPassword(e.target.value);
-                          if (message.type === 'error') setMessage({ text: "", type: "" });
-                        }}
-                        showPassword={showPassword}
-                        onTogglePassword={() => setShowPassword(!showPassword)}
-                        variant="clean"
-                        className={`!bg-white border border-zinc-200/80 focus:border-slate-800 ${message.type === 'error' && (!confirmPassword || newPassword !== confirmPassword) ? '!ring-2 !ring-[#FF3D3D]' : ''}`}
-                        enterKeyHint="go"
-                      />
+                  {message.text && (
+                    <div
+                      className={`p-3 rounded-xl text-xs text-center border ${
+                        message.type === "error"
+                          ? "bg-red-50 border-red-100 text-red-600"
+                          : "bg-emerald-50 border-emerald-100 text-emerald-700"
+                      }`}
+                    >
+                      {message.text}
                     </div>
                   )}
+
+                  <Button type="submit" variant="primary" disabled={loading}>
+                    {loading ? "Enviando..." : "Continuar"}
+                  </Button>
+
+                  <TurnstileWidget
+                    onSuccess={(token) => setTurnstileToken(token)}
+                    onExpire={() => setTurnstileToken(null)}
+                  />
+                </form>
+
+                <div className="flex justify-center">
+                  <Link
+                    href="/iniciar-sesion"
+                    className="text-xs sm:text-sm text-slate-500 hover:text-slate-900 underline underline-offset-2 font-medium transition-colors"
+                  >
+                    Volver al inicio de sesión
+                  </Link>
                 </div>
+              </>
+            )}
 
-                {message.text && (
-                  <p className={`text-left px-0 mt-4 text-xs sm:text-sm font-bold tracking-tight ${message.type === 'error' ? 'text-red-500' : 'text-green-600'}`}>
-                    {message.text}
-                  </p>
-                )}
+            {view === "code" && (
+              <>
+                <form onSubmit={handleVerifyCode} className="flex flex-col gap-3">
+                  <input
+                    ref={codeInputRef}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={6}
+                    placeholder="Código de 6 dígitos"
+                    value={code}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                      setCode(val);
+                      if (message.type) setMessage({ text: "", type: "" });
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && code.length >= 6) {
+                        e.preventDefault();
+                        handleVerifyCode();
+                      }
+                    }}
+                    className={`w-full h-12 px-4 text-center bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 placeholder:font-sans placeholder:font-normal placeholder:tracking-normal ${
+                      code
+                        ? "font-mono text-xl tracking-[0.35em] font-bold text-slate-900"
+                        : "font-sans text-sm tracking-normal"
+                    }`}
+                  />
 
-                <div className="flex flex-col items-center gap-4 mt-6">
+                  {message.text && (
+                    <div
+                      className={`p-3 rounded-xl text-xs text-center border ${
+                        message.type === "error"
+                          ? "bg-red-50 border-red-100 text-red-600"
+                          : "bg-emerald-50 border-emerald-100 text-emerald-700"
+                      }`}
+                    >
+                      {message.text}
+                    </div>
+                  )}
+
                   <Button
                     type="submit"
                     variant="primary"
-                    disabled={loading}
+                    disabled={loading || code.length < 6}
                   >
-                    {loading ? "Cargando..." : view === 'reset' ? "Restablecer contraseña" : "Continuar"}
+                    {loading ? "Verificando..." : "Verificar y continuar"}
                   </Button>
+                </form>
 
-                  {view === 'code' && (
-                    <button
-                      type="button"
-                      onClick={() => handleResetPasswordRequest()}
-                      disabled={!canResend || loading}
-                      className="text-body-small text-slate-500 hover:text-slate-900 text-center leading-tight font-sans px-2 underline transition-all font-medium cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {canResend ? "Solicitar nuevo código" : `Solicitar nuevo código (${formatTime(timer)})`}
-                    </button>
-                  )}
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <button
+                    type="button"
+                    onClick={handleResendCode}
+                    disabled={resending || resendCooldown > 0}
+                    className="hover:text-slate-900 underline font-medium cursor-pointer bg-transparent border-none p-0 disabled:opacity-40 disabled:no-underline"
+                  >
+                    {resending
+                      ? "Reenviando..."
+                      : resendCooldown > 0
+                      ? `Reenviar código (${resendCooldown}s)`
+                      : "Reenviar código"}
+                  </button>
 
                   <button
                     type="button"
-                    onClick={() => router.push("/auth/iniciar-sesion")}
-                    className="text-body-small text-slate-500 hover:text-slate-900 text-center leading-tight font-sans px-2 underline transition-all font-medium cursor-pointer bg-transparent border-none outline-none"
+                    onClick={() => {
+                      setView("email");
+                      setMessage({ text: "", type: "" });
+                    }}
+                    className="hover:text-slate-900 underline font-medium cursor-pointer bg-transparent border-none p-0"
                   >
-                    Volver al inicio de sesión
+                    Cambiar correo
                   </button>
                 </div>
-              </form>
-            ) : (
-              <div className="flex flex-col items-center w-full gap-4 mt-2">
-                <Button
-                  type="button"
-                  variant="primary"
-                  onClick={() => router.push("/auth/iniciar-sesion")}
-                >
-                  Iniciar sesión
-                </Button>
-              </div>
+              </>
+            )}
+
+            {view === "reset" && (
+              <>
+                <form onSubmit={handleUpdatePassword} className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-2">
+                    <InputField
+                      type="password"
+                      required
+                      placeholder="Nueva contraseña"
+                      value={newPassword}
+                      onChange={(e) => {
+                        setNewPassword(e.target.value);
+                        if (message.type) setMessage({ text: "", type: "" });
+                      }}
+                      showPassword={showPassword}
+                      onTogglePassword={() => setShowPassword(!showPassword)}
+                      enterKeyHint="next"
+                    />
+
+                    {/* Inline Password Rules */}
+                    <div className="flex items-center gap-3 flex-wrap pt-0.5">
+                      <span
+                        className={`text-[11px] flex items-center gap-1 transition-colors ${
+                          hasMinLength ? "text-emerald-600 font-semibold" : "text-slate-400"
+                        }`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            hasMinLength ? "bg-emerald-600" : "bg-slate-300"
+                          }`}
+                        />
+                        8+ caracteres
+                      </span>
+                      <span
+                        className={`text-[11px] flex items-center gap-1 transition-colors ${
+                          hasUpperAndLower ? "text-emerald-600 font-semibold" : "text-slate-400"
+                        }`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            hasUpperAndLower ? "bg-emerald-600" : "bg-slate-300"
+                          }`}
+                        />
+                        Mayúsculas y minúsculas
+                      </span>
+                      <span
+                        className={`text-[11px] flex items-center gap-1 transition-colors ${
+                          hasNumberAndSymbol ? "text-emerald-600 font-semibold" : "text-slate-400"
+                        }`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            hasNumberAndSymbol ? "bg-emerald-600" : "bg-slate-300"
+                          }`}
+                        />
+                        Número y símbolo
+                      </span>
+                    </div>
+                  </div>
+
+                  <InputField
+                    type="password"
+                    required
+                    placeholder="Repetir nueva contraseña"
+                    value={confirmPassword}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      if (message.type) setMessage({ text: "", type: "" });
+                    }}
+                    showPassword={showPassword}
+                    onTogglePassword={() => setShowPassword(!showPassword)}
+                    enterKeyHint="go"
+                  />
+
+                  {message.text && (
+                    <div
+                      className={`p-3 rounded-xl text-xs text-center border ${
+                        message.type === "error"
+                          ? "bg-red-50 border-red-100 text-red-600"
+                          : "bg-emerald-50 border-emerald-100 text-emerald-700"
+                      }`}
+                    >
+                      {message.text}
+                    </div>
+                  )}
+
+                  <Button type="submit" variant="primary" disabled={loading}>
+                    {loading ? "Restableciendo..." : "Restablecer contraseña"}
+                  </Button>
+                </form>
+
+                <div className="flex justify-center">
+                  <Link
+                    href="/iniciar-sesion"
+                    className="text-xs sm:text-sm text-slate-500 hover:text-slate-900 underline underline-offset-2 font-medium transition-colors"
+                  >
+                    Volver al inicio de sesión
+                  </Link>
+                </div>
+              </>
+            )}
+
+            {view === "success" && (
+              <Button
+                type="button"
+                variant="primary"
+                onClick={() => router.push("/iniciar-sesion")}
+              >
+                Iniciar sesión
+              </Button>
             )}
           </div>
-        </div>
-
-        {/* Auth Page Footer */}
-        <PlatformFooter className="bg-transparent border-t-0 py-4 shrink-0 lg:hidden" />
-
-
+        </main>
       </div>
+
+      {/* Footer */}
+      <footer className="w-full max-w-[380px] mx-auto px-4 py-6 flex flex-col items-center gap-3 text-center">
+        <p className="text-[11px] text-slate-400 leading-relaxed m-0">
+          Al ingresar, aceptas estar de acuerdo con nuestros{" "}
+          <Link
+            href="https://luminuslatam.com/legal/terminos"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-600"
+          >
+            Términos y Condiciones
+          </Link>{" "}
+          así como con nuestra{" "}
+          <Link
+            href="https://luminuslatam.com/legal/privacidad"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-600"
+          >
+            Política de Privacidad
+          </Link>
+          .
+        </p>
+        <p className="text-xs text-slate-400 m-0">© 2026 LUMINUS Latam.</p>
+      </footer>
     </div>
   );
 }

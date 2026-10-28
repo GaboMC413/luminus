@@ -55,13 +55,8 @@
 
   /* LUMINUS SIGNATURE GRADIENT BACKGROUND */
   .luminus-gradient {
-    background-color: rgb(155, 150, 150);
-    background-image:
-      radial-gradient(circle at 90.65% 7.69%, hsla(299, 100%, 75%, 0.9) 0%, transparent 51%),
-      radial-gradient(circle at 74.35% 88.25%, hsla(222, 97%, 50%, 0.8) 0%, transparent 62%),
-      radial-gradient(circle at 33.5% 79.7%, hsla(67, 100%, 45%, 0.8) 0%, transparent 72%),
-      radial-gradient(circle at 21.02% 16.96%, hsla(28, 100%, 50%, 0.8) 5%, transparent 59%);
-    background-blend-mode: overlay, normal, normal, normal;
+    background-color: #0450FB;
+    background-image: linear-gradient(135deg, #FF7700 0%, #E855C8 33%, #0450FB 66%, #A8C800 100%);
   }
 
   /* LUMINUS SOFT LIGHT GRADIENT (MARKETING HERO STYLE - EXACT 1:1 MATCH) */
@@ -76,8 +71,11 @@
   .luminus-light-gradient-slate {
     background-color: #f8fafc;
     background-image:
-      linear-gradient(180deg, rgba(248, 250, 252, 0.65) 0%, #f8fafc 100%),
+      linear-gradient(180deg, rgba(248, 250, 252, 0.45) 0%, #f8fafc 60%, #f8fafc 100%),
       linear-gradient(90deg, #FF7700 0%, #E855C8 33%, #0450FB 66%, #A8C800 100%);
+    background-repeat: no-repeat;
+    border: none !important;
+    box-shadow: none !important;
   }
 
   /* HIGH-END TYPOGRAPHY SYSTEM (Tailwind @apply semantic classes, no custom sizing properties) */
@@ -365,4 +363,47 @@ body.mobile-viewport-height-override div.w-full.h-\[100svh\] {
   100% {
     transform: rotate(360deg);
   }
+}
+
+
+/* Fluid Entrance Animations */
+@keyframes fadeInUpSmooth {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInSmooth {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes floatGentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUpSmooth 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-in {
+  animation: fadeInSmooth 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-float-gentle {
+  animation: floatGentle 3s ease-in-out infinite;
 }

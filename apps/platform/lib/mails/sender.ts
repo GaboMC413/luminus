@@ -978,8 +978,8 @@ const DEFAULT_CONTACT_RECIPIENTS = [
 
 export async function sendContactNotificationEmail(data: ContactNotificationPayload) {
   const startTime = new Date().toISOString();
-  const rawFrom = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
-  const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM");
+  const rawFrom = process.env.SES_FROM_EMAIL || process.env.NOTIFICATION_FROM_EMAIL || "info@luminuslatam.com";
+  const fromEmail = formatSenderAddress(rawFrom, "LUMINUS Contacto");
 
   const envRecipients = process.env.CONTACT_NOTIFICATION_EMAILS
     ? process.env.CONTACT_NOTIFICATION_EMAILS.split(",").map((e) => e.trim()).filter(Boolean)
@@ -993,7 +993,7 @@ export async function sendContactNotificationEmail(data: ContactNotificationPayl
   const htmlBody = renderContactNotificationEmailHtml(data);
   const textBody = `NUEVO MENSAJE DE CONTACTO:\nMotivo: ${data.motivo}\nNombre: ${data.nombre} ${data.apellido}\nEmail: ${data.email}\nMensaje:\n${data.mensaje}`;
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
-  const configurationSet = process.env.SES_CONFIGURATION_NOTIFICACIONES || "luminus-notificaciones";
+  const configurationSet = process.env.SES_CONFIGURATION_NOTIFICACIONES || undefined;
 
   writeLocalEmailPreview(toAddresses.join(", "), subject, htmlBody);
 
@@ -1040,6 +1040,7 @@ export async function sendContactNotificationEmail(data: ContactNotificationPayl
   const command = new SendEmailCommand({
     FromEmailAddress: fromEmail,
     Destination: { ToAddresses: toAddresses },
+    ReplyToAddresses: data.email ? [data.email] : undefined,
     Content: {
       Simple: {
         Subject: { Data: subject, Charset: "UTF-8" },

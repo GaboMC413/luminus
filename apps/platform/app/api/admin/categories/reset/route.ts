@@ -119,6 +119,18 @@ export async function POST() {
         },
       });
 
+      const validSlugs = category.items.map(slugify);
+
+      await prisma.interest.updateMany({
+        where: {
+          categoryId: savedCategory.id,
+          slug: { notIn: validSlugs },
+        },
+        data: {
+          isActive: false,
+        },
+      });
+
       for (let interestIndex = 0; interestIndex < category.items.length; interestIndex++) {
         const interestName = category.items[interestIndex];
         await prisma.interest.upsert({
