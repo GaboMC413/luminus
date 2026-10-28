@@ -38,6 +38,8 @@ export interface Profile {
   phone_number: string;
   selected_plan: string;
   created_at: string;
+  member_since?: string | null;
+  tier?: string;
   bio?: string;
   other_interests?: string;
   cover_url?: string;
@@ -289,7 +291,12 @@ export function ProfileContent() {
                 />
 
                 <div className="hidden md:flex flex-col gap-4 lg:gap-6">
-                  <ProfileMembershipCard plan={profile.selected_plan} createdAt={profile.created_at} />
+                  <ProfileMembershipCard
+                    plan={profile.selected_plan}
+                    createdAt={profile.created_at}
+                    memberSince={profile.member_since}
+                    tier={profile.tier}
+                  />
                   <button
                     onClick={handleSignOut}
                     className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[14px] bg-transparent border-none outline-none cursor-pointer"
@@ -329,6 +336,8 @@ export function ProfileContent() {
                   <ProfileMembershipCard
                     plan={profile.selected_plan}
                     createdAt={profile.created_at}
+                    memberSince={profile.member_since}
+                    tier={profile.tier}
                     showSettingsButtons={true}
                   />
 
