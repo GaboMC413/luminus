@@ -46,11 +46,18 @@ export default function AccountCreationView() {
       if (!res.ok) {
         throw new Error(data.message || "Error al registrarse con Facebook.");
       }
-      if (plan === "free") {
-        router.push("/unirme/perfil");
-      } else {
+
+      if (plan === "membership" && data.user?.tier !== "BASIC") {
         router.push(`/unirme/pago?plan=${plan}&billing=${billing}`);
+        return;
       }
+
+      if (!data.isOnboarded) {
+        router.push("/unirme/perfil");
+        return;
+      }
+
+      router.push("/comunidad");
     } catch (err: any) {
       if (err.message && !err.message.includes("cancelado")) {
         setErrorMessage(err.message || "No se pudo conectar con Facebook.");

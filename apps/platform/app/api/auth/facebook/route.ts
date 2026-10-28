@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
 import { prisma } from "@/lib/db";
@@ -8,7 +9,7 @@ export const runtime = "nodejs";
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
-    const { accessToken } = body;
+    const { accessToken, reactivate } = body;
 
     if (!accessToken || typeof accessToken !== "string") {
       return NextResponse.json(
@@ -62,6 +63,7 @@ export async function POST(request: Request) {
           authProvider: "unknown",
           role: "USER",
           status: "active",
+          trialExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 3 months trial
           profile: {
             create: {
               firstName,
@@ -87,6 +89,38 @@ export async function POST(request: Request) {
         }).catch(() => null);
       }
     } else {
+      if (user.status === "deleted") {
+        if (reactivate) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { status: "active" },
+          });
+          user.status = "active";
+        } else {
+          const token = createSessionToken({
+            userId: user.id,
+            email: user.email,
+            role: user.role,
+          });
+          cookies().set("luminus_reactivation_token", token, {
+            path: "/",
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 5 * 60,
+          });
+          return NextResponse.json(
+            { code: "REQUIRES_REACTIVATION", message: "Tu cuenta fue eliminada. ¿Deseas reactivarla?" },
+            { status: 403 }
+          );
+        }
+      } else if (user.status !== "active") {
+        return NextResponse.json(
+          { message: "Tu cuenta no está activa. Contacta al equipo de LUMINUS para revisarla." },
+          { status: 403 }
+        );
+      }
+
       // Update last login
       await prisma.user.update({
         where: { id: user.id },
@@ -165,6 +199,27 @@ export async function POST(request: Request) {
 
     setSessionCookie(sessionToken);
 
+    try {
+      if (isNewUser) {
+        await prisma.activityLog.create({
+          data: {
+            userId: user.id,
+            action: "USER_CREATED",
+            details: JSON.stringify({ email: user.email, provider: "facebook" }),
+          },
+        });
+      }
+      await prisma.activityLog.create({
+        data: {
+          userId: user.id,
+          action: "LOGIN",
+          details: JSON.stringify({ email: user.email, provider: "facebook" }),
+        },
+      });
+    } catch (logError) {
+      console.error("Failed to log activity in Facebook auth:", logError);
+    }
+
     const isOnboarded = user.profile?.isOnboarded ?? false;
 
     return NextResponse.json({
@@ -175,6 +230,7 @@ export async function POST(request: Request) {
         id: user.id,
         email: user.email,
         role: user.role,
+        tier: user.tier,
       },
     });
   } catch (error: any) {

@@ -18,6 +18,7 @@ export default function SignInView() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [reactivateModalOpen, setReactivateModalOpen] = useState(false);
+  const [isOauthReactivate, setIsOauthReactivate] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   // Inline verification step state (matches Step 2B of /unirme)
@@ -99,6 +100,11 @@ export default function SignInView() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        if (data.code === "REQUIRES_REACTIVATION") {
+          setIsOauthReactivate(true);
+          setReactivateModalOpen(true);
+          return;
+        }
         throw new Error(data.message || "Error al iniciar sesión con Facebook.");
       }
       if (!data.isOnboarded) {
@@ -164,19 +170,20 @@ export default function SignInView() {
     setReactivateModalOpen(false);
 
     const params = new URLSearchParams(window.location.search);
-    if (params.get("reactivate_oauth") === "1") {
+    if (params.get("reactivate_oauth") === "1" || isOauthReactivate) {
       setLoading(true);
       try {
         const response = await fetch("/api/auth/reactivate-oauth", { method: "POST" });
         if (response.ok) {
           router.push(getRedirectTarget());
         } else {
-          setErrorMessage("No pudimos reactivar tu cuenta de Google. Intenta nuevamente.");
+          setErrorMessage("No pudimos reactivar tu cuenta. Intenta nuevamente.");
         }
       } catch {
         setErrorMessage("No pudimos conectar con el servidor.");
       } finally {
         setLoading(false);
+        setIsOauthReactivate(false);
       }
       return;
     }
