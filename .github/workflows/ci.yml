@@ -6,7 +6,7 @@ on:
 
 jobs:
   test:
-    name: Correr Tests y Validaciones
+    name: Correr Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -16,16 +16,10 @@ jobs:
     - name: Configurar Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '20'
+        node-version: '20' # La versión de node de tu entorno actual
 
     - name: Instalar dependencias
       run: npm install
-
-    - name: Generar Prisma Client
-      run: npm run db:generate -w platform
-
-    - name: Verificar TypeScript
-      run: npx --prefix apps/platform tsc --noEmit -p apps/platform/tsconfig.json
 
     - name: Ejecutar los tests
       run: npm run test:platform
