@@ -452,7 +452,7 @@ export async function GET(request: Request) {
       console.error("Failed to log activity in Cognito callback:", logError);
     }
 
-    if (storedState?.plan === "membership" && user.tier !== "BASIC") {
+    if (storedState?.plan === "membership" && user.tier !== "MECENAS") {
       return redirectTo(requestUrl, "/unirme/pago");
     }
 

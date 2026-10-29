@@ -17,7 +17,7 @@ export interface UserSubscriptionContext {
  */
 export function isMecenas(user?: UserSubscriptionContext | null): boolean {
   if (!user) return false;
-  return user.tier === "BASIC" || Boolean(user.stripeSubscriptionId);
+  return user.tier === "MECENAS" || Boolean(user.stripeSubscriptionId);
 }
 
 /**

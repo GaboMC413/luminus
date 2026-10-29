@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     const updatedUser = await prisma.user.update({
       where: { id: session.userId },
       data: {
-        tier: "BASIC",
+        tier: "MECENAS",
         memberSince: now,
         stripeCustomerId: customerId ? String(customerId) : undefined,
         stripeSubscriptionId: subscriptionId ? String(subscriptionId) : undefined,
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
           userId: session.userId,
           action: "MEMBERSHIP_ACTIVATED",
           details: JSON.stringify({
-            tier: "BASIC",
+            tier: "MECENAS",
             subscriptionId,
             timestamp: now.toISOString(),
           }),

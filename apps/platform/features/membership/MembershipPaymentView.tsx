@@ -53,6 +53,8 @@ interface PaymentFormProps {
   defaultCardHolderName: string;
   defaultCity: string;
   defaultCountry: string;
+  isSuccess: boolean;
+  setIsSuccess: (val: boolean) => void;
 }
 
 function PaymentForm({
@@ -67,6 +69,8 @@ function PaymentForm({
   defaultCardHolderName,
   defaultCity,
   defaultCountry,
+  isSuccess,
+  setIsSuccess,
 }: PaymentFormProps) {
   const stripe = useStripe();
   const elements = useElements();
@@ -84,7 +88,6 @@ function PaymentForm({
   const [cardPostalCode, setCardPostalCode] = useState("");
 
   const [processing, setProcessing] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Sync defaults when profile finishes loading in parent
@@ -337,7 +340,7 @@ function PaymentForm({
 
           {/* Subtitle */}
           <p className="text-sm text-slate-500 max-w-[290px] leading-relaxed mb-6 font-sans">
-            Tu membresía como Mecenas ya está activa.
+            Tu membresía ya está activa.
           </p>
 
           {/* Minimalist Progress Indicator */}
@@ -533,6 +536,7 @@ export default function MembershipPaymentView() {
   const isAnnual = billingCycle === "annual";
 
   const [loadingIntent, setLoadingIntent] = useState(true);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [isOnboarded, setIsOnboarded] = useState(false);
   const [subscriptionData, setSubscriptionData] = useState<{
     clientSecret: string | null;
@@ -560,14 +564,14 @@ export default function MembershipPaymentView() {
   const [defaultCity, setDefaultCity] = useState("");
   const [defaultCountry, setDefaultCountry] = useState("");
 
-  // Initialize Payment Intent with chosen interval
-  const initIntent = useCallback(async (interval: "month" | "year") => {
+  // Initialize Payment Intent with chosen interval (or update existing)
+  const initIntent = useCallback(async (interval: "month" | "year", existingSubId?: string) => {
     setLoadingIntent(true);
     try {
       const res = await fetch("/api/membership/create-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ interval }),
+        body: JSON.stringify({ interval, existingSubscriptionId: existingSubId }),
       });
 
       if (res.status === 401) {
@@ -626,19 +630,21 @@ export default function MembershipPaymentView() {
 
   const handleSwitchBilling = (newCycle: "annual" | "monthly") => {
     setBillingCycle(newCycle);
-    initIntent(newCycle === "annual" ? "year" : "month");
+    initIntent(newCycle === "annual" ? "year" : "month", subscriptionData?.subscriptionId);
   };
 
   return (
     <div className="min-h-[100dvh] bg-white flex flex-col justify-between font-sans selection:bg-slate-200">
       <div className="flex-1 flex flex-col items-center justify-center px-4 pt-10 pb-8 sm:py-12">
         <main className="w-full max-w-[380px] mx-auto flex flex-col items-center my-auto animate-fade-in-up">
-          {/* Header unit */}
-          <header className="flex flex-col items-center text-center gap-2 mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-[26px] font-bold font-jakarta text-slate-900 tracking-tight m-0 transition-all">
-              Conviértete en Mecenas
-            </h1>
-          </header>
+          {/* Header unit - hidden upon payment confirmation */}
+          {!isSuccess && (
+            <header className="flex flex-col items-center text-center gap-2 mb-6 sm:mb-8">
+              <h1 className="text-2xl sm:text-[26px] font-bold font-jakarta text-slate-900 tracking-tight m-0 transition-all">
+                Conviértete en Mecenas
+              </h1>
+            </header>
+          )}
 
           <Elements stripe={stripePromise}>
             <PaymentForm
@@ -653,6 +659,8 @@ export default function MembershipPaymentView() {
               defaultCardHolderName={defaultCardHolderName}
               defaultCity={defaultCity}
               defaultCountry={defaultCountry}
+              isSuccess={isSuccess}
+              setIsSuccess={setIsSuccess}
             />
           </Elements>
         </main>

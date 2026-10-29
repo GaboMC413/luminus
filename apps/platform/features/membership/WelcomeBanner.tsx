@@ -30,7 +30,7 @@ export function WelcomeBanner({ userProfile }: WelcomeBannerProps) {
 
   if (!visible) return null;
 
-  const isPaidMember = userProfile?.tier === "BASIC";
+  const isPaidMember = userProfile?.tier === "MECENAS";
   const isProfileIncomplete = !userProfile?.city || !userProfile?.first_name;
 
   const handleDismiss = () => {

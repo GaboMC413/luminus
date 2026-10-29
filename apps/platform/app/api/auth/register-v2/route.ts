@@ -225,7 +225,7 @@ export async function POST(request: Request) {
           emailVerified: true,
           role: "USER",
           status: "active",
-          tier: isPaidMember ? "BASIC" : "FREE",
+          tier: isPaidMember ? "MECENAS" : "FREE",
           trialExpiresAt: null, // No 3-month trial
           memberSince: isPaidMember ? now : null,
           stripeCustomerId: isPaidMember && stripeCustomerId ? String(stripeCustomerId) : null,

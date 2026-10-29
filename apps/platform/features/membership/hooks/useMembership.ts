@@ -34,10 +34,10 @@ export function useMembership(): MembershipState {
       const res = await fetch("/api/profile", { credentials: "include" });
       if (res.ok) {
         const data = await res.json();
-        setTier(data.tier || "FREE");
+        setTier(data.tier || data.profile?.tier || "FREE");
         setEmail(data.email || "");
-        setMemberSince(data.member_since || null);
-        setSelectedPlan(data.profile?.selectedPlan || "Monthly");
+        setMemberSince(data.member_since || data.memberSince || data.profile?.member_since || null);
+        setSelectedPlan(data.profile?.selectedPlan || data.profile?.selected_plan || "Monthly");
         setStripeSubscriptionId(data.stripeSubscriptionId || null);
       }
     } catch {

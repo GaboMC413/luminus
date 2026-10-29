@@ -3,6 +3,10 @@ export type AdminUser = {
   email: string;
   role: "USER" | "ADMIN";
   status: "active" | "disabled" | "deleted";
+  tier?: "FREE" | "MECENAS" | string;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  memberSince?: string | null;
   isGhost?: boolean;
   emailVerified: boolean;
   authProvider: string;

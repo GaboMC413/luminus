@@ -120,9 +120,9 @@ function SettingsContent() {
         setPhone(savedPhone);
       }
       setCreatedAt(profile.created_at || new Date().toISOString());
-      setTier(data.tier ?? "FREE");
-      setMemberSince(data.member_since ?? null);
-      setSelectedPlan(profile.selectedPlan ?? "Monthly");
+      setTier(data.tier ?? profile.tier ?? "FREE");
+      setMemberSince(data.member_since ?? data.memberSince ?? profile.member_since ?? null);
+      setSelectedPlan(profile.selectedPlan ?? profile.selected_plan ?? data.selectedPlan ?? "Monthly");
     }
 
     loadProfile();

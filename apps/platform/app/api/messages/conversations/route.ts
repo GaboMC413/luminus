@@ -202,7 +202,7 @@ export async function POST(request: Request) {
       select: { tier: true, trialExpiresAt: true },
     });
 
-    const isBasic = user && (user.tier === "BASIC" || (user.trialExpiresAt && user.trialExpiresAt > new Date()));
+    const isBasic = user && user.tier === "MECENAS";
 
     if (!isBasic) {
       // FREE Tier Daily Limit: 1 new conversation per day in local time zone

@@ -28,11 +28,13 @@ export async function createMembershipSubscription({
   name,
   phone,
   interval = "month",
+  existingSubscriptionId,
 }: {
   email: string;
   name: string;
   phone?: string;
   interval?: "month" | "year";
+  existingSubscriptionId?: string;
 }): Promise<CreateSubscriptionResult> {
   // Graceful fallback for local development if Stripe keys are not yet provided
   if (!stripe) {
@@ -45,25 +47,7 @@ export async function createMembershipSubscription({
     };
   }
 
-  // 1. Find or create Customer
-  const existingCustomers = await stripe.customers.list({
-    email,
-    limit: 1,
-  });
-
-  let customer = existingCustomers.data[0];
-  if (!customer) {
-    customer = await stripe.customers.create({
-      email,
-      name,
-      phone,
-      metadata: {
-        source: "mecenas_subscription",
-      },
-    });
-  }
-
-  // 2. Resolve Price ID for USD 5/month or USD 45/year
+  // 1. Resolve Price ID for USD 5/month or USD 45/year
   const isAnnual = interval === "year";
   const targetUnitAmount = isAnnual ? 4500 : 500; // $45.00 or $5.00 USD
   const envPriceId = isAnnual
@@ -98,6 +82,65 @@ export async function createMembershipSubscription({
       });
       finalPriceId = newPrice.id;
     }
+  }
+
+  // 2. If an existing incomplete subscription exists, UPDATE IT instead of spamming new ones
+  if (existingSubscriptionId && !existingSubscriptionId.startsWith("sub_mock_")) {
+    try {
+      const existingSub = await stripe.subscriptions.retrieve(existingSubscriptionId, {
+        expand: ["latest_invoice.payment_intent"],
+      });
+
+      if (existingSub.status === "incomplete" && existingSub.items?.data?.[0]?.id) {
+        const updatedSub = await stripe.subscriptions.update(existingSubscriptionId, {
+          items: [{
+            id: existingSub.items.data[0].id,
+            price: finalPriceId,
+          }],
+          proration_behavior: "none",
+          payment_behavior: "default_incomplete",
+          expand: ["latest_invoice.payment_intent"],
+          metadata: {
+            user_email: email,
+            type: isAnnual ? "mecenas_annual" : "mecenas_monthly",
+          },
+        });
+
+        const invoice = updatedSub.latest_invoice as any;
+        const paymentIntent = invoice?.payment_intent;
+        const clientSecret =
+          typeof paymentIntent === "object" && paymentIntent !== null
+            ? (paymentIntent.client_secret as string)
+            : null;
+
+        return {
+          clientSecret: clientSecret || null,
+          subscriptionId: updatedSub.id,
+          customerId: typeof updatedSub.customer === "string" ? updatedSub.customer : updatedSub.customer.id,
+          isMock: false,
+        };
+      }
+    } catch (updateErr) {
+      console.warn("[Stripe] Could not update existing subscription, falling back to create:", updateErr);
+    }
+  }
+
+  // 3. Find or create Customer
+  const existingCustomers = await stripe.customers.list({
+    email,
+    limit: 1,
+  });
+
+  let customer = existingCustomers.data[0];
+  if (!customer) {
+    customer = await stripe.customers.create({
+      email,
+      name,
+      phone,
+      metadata: {
+        source: "mecenas_subscription",
+      },
+    });
   }
 
   // 3. Create Subscription with default_incomplete payment behavior

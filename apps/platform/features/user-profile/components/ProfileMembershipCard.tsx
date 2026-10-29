@@ -26,7 +26,7 @@ export function ProfileMembershipCard({
   showSettingsButtons = false,
   isPublic = false,
 }: ProfileMembershipCardProps) {
-  const isMember = isMecenas({ tier }) || plan === "Monthly" || Boolean(memberSince);
+  const isMember = isMecenas({ tier });
 
   const getMemberSinceText = () => {
     const rawDate = memberSince || createdAt;
