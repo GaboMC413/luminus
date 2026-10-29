@@ -72,7 +72,7 @@ export function ProfileMembershipCard({
         <>
           <div className="w-full h-px bg-slate-50" />
 
-          <Link href="/perfil-usuario/configuracion?tab=membership" className="w-full">
+          <Link href="/perfil-usuario/configuracion/membresia" className="w-full">
             <ProfileButton
               onClick={() => { }}
               icon="autorenew"
@@ -83,7 +83,7 @@ export function ProfileMembershipCard({
 
           {showSettingsButtons && (
             <div className="flex flex-col gap-2 w-full">
-              <Link href="/perfil-usuario/configuracion" className="w-full">
+              <Link href="/perfil-usuario/configuracion/personal" className="w-full">
                 <ProfileButton
                   onClick={() => { }}
                   icon="settings"
@@ -92,7 +92,7 @@ export function ProfileMembershipCard({
                 />
               </Link>
 
-              <Link href="/perfil-usuario/configuracion?tab=password" className="w-full">
+              <Link href="/perfil-usuario/configuracion/contrasena" className="w-full">
                 <ProfileButton
                   onClick={() => { }}
                   icon="lock"
