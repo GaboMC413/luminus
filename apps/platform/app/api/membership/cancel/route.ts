@@ -59,6 +59,16 @@ export async function POST(req: Request) {
           });
         }
 
+        // If subscription is attached to a schedule, release it before setting cancel_at_period_end
+        const scheduleId = typeof sub.schedule === "string" ? sub.schedule : (sub.schedule as any)?.id;
+        if (scheduleId) {
+          try {
+            await stripe.subscriptionSchedules.release(scheduleId);
+          } catch (schedErr) {
+            console.warn("[cancel] Could not release subscription schedule:", schedErr);
+          }
+        }
+
         // Active subscription: schedule cancellation at the end of the current period
         await stripe.subscriptions.update(user.stripeSubscriptionId, {
           cancel_at_period_end: true,

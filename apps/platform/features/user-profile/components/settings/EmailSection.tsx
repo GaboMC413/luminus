@@ -225,7 +225,7 @@ export function EmailSection({
                     id="new_email"
                     label="Nuevo correo electrónico"
                     type="email"
-                    placeholder="ejemplo@correo.com"
+                    placeholder="Ingresa tu correo electrónico"
                     value={newEmail}
                     onChange={(e) => {
                       setNewEmail(e.target.value);

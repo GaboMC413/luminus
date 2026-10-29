@@ -19,6 +19,43 @@ export interface CreateSubscriptionResult {
   isMock?: boolean;
 }
 
+export async function getOrCreateMembershipPrice(interval: "month" | "year"): Promise<string> {
+  if (!stripe) return interval === "year" ? "price_mock_annual" : "price_mock_monthly";
+
+  const isAnnual = interval === "year";
+  const targetUnitAmount = isAnnual ? 4500 : 500;
+  const envPriceId = isAnnual
+    ? process.env.STRIPE_PRICE_ID_ANNUAL_45
+    : process.env.STRIPE_PRICE_ID_MONTHLY_5;
+
+  if (envPriceId) return envPriceId;
+
+  const prices = await stripe.prices.list({
+    active: true,
+    currency: "usd",
+    limit: 20,
+  });
+  const matchingPrice = prices.data.find(
+    (p) => p.unit_amount === targetUnitAmount && p.recurring?.interval === interval
+  );
+
+  if (matchingPrice) return matchingPrice.id;
+
+  const product = await stripe.products.create({
+    name: isAnnual ? "Mecenas LUMINUS Anual" : "Mecenas LUMINUS",
+    description: isAnnual
+      ? "Acceso anual como Mecenas a la red LUMINUS con ahorro de USD 15"
+      : "Acceso como Mecenas y apoyo al desarrollo de la red LUMINUS",
+  });
+  const newPrice = await stripe.prices.create({
+    product: product.id,
+    unit_amount: targetUnitAmount,
+    currency: "usd",
+    recurring: { interval },
+  });
+  return newPrice.id;
+}
+
 /**
  * Creates or retrieves a Stripe Customer and creates a monthly $5 or annual $45 Mecenas subscription.
  * Uses payment_behavior: 'default_incomplete' so the frontend can confirm it via Stripe Elements.
@@ -53,40 +90,7 @@ export async function createMembershipSubscription({
 
   // 1. Resolve Price ID for USD 5/month or USD 45/year
   const isAnnual = interval === "year";
-  const targetUnitAmount = isAnnual ? 4500 : 500; // $45.00 or $5.00 USD
-  const envPriceId = isAnnual
-    ? process.env.STRIPE_PRICE_ID_ANNUAL_45
-    : process.env.STRIPE_PRICE_ID_MONTHLY_5;
-
-  let finalPriceId = envPriceId;
-  if (!finalPriceId) {
-    const prices = await stripe.prices.list({
-      active: true,
-      currency: "usd",
-      limit: 20,
-    });
-    const matchingPrice = prices.data.find(
-      (p) => p.unit_amount === targetUnitAmount && p.recurring?.interval === interval
-    );
-
-    if (matchingPrice) {
-      finalPriceId = matchingPrice.id;
-    } else {
-      const product = await stripe.products.create({
-        name: isAnnual ? "Mecenas LUMINUS Anual" : "Mecenas LUMINUS",
-        description: isAnnual
-          ? "Acceso anual como Mecenas a la red LUMINUS con ahorro de USD 15"
-          : "Acceso como Mecenas y apoyo al desarrollo de la red LUMINUS",
-      });
-      const newPrice = await stripe.prices.create({
-        product: product.id,
-        unit_amount: targetUnitAmount,
-        currency: "usd",
-        recurring: { interval },
-      });
-      finalPriceId = newPrice.id;
-    }
-  }
+  const finalPriceId = await getOrCreateMembershipPrice(interval);
 
   // 2. If an existing incomplete subscription exists, UPDATE IT instead of spamming new ones
   if (existingSubscriptionId && !existingSubscriptionId.startsWith("sub_mock_")) {

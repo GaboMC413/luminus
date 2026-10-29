@@ -79,6 +79,8 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
   const [birthYear, setBirthYear] = useState("");
   const [dateError, setDateError] = useState("");
   const [locationError, setLocationError] = useState("");
+  const [firstNameError, setFirstNameError] = useState("");
+  const [lastNameError, setLastNameError] = useState("");
 
   // Refs for auto-focusing & auto-tabbing
   const professionRef = useRef<HTMLInputElement>(null);
@@ -87,6 +89,16 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
   const dayRef = useRef<HTMLDivElement>(null);
   
   const genderRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(initialData);
+      setFirstNameError("");
+      setLastNameError("");
+      setLocationError("");
+      setDateError("");
+    }
+  }, [isOpen, initialData]);
 
   useEffect(() => {
     if (isOpen && initialFocusField) {
@@ -105,6 +117,8 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
     if (!isOpen) {
       setDateError("");
       setLocationError("");
+      setFirstNameError("");
+      setLastNameError("");
     }
   }, [isOpen]);
 
@@ -123,10 +137,27 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === "first_name") setFirstNameError("");
+    if (name === "last_name") setLastNameError("");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.first_name || !formData.first_name.trim()) {
+      setFirstNameError("Ingresa tu nombre");
+      return;
+    }
+
+    if (!formData.last_name || !formData.last_name.trim()) {
+      setLastNameError("Ingresa tu apellido");
+      return;
+    }
+
+    if (!formData.city || !formData.city.trim()) {
+      setLocationError("Ingresa tu ciudad");
+      return;
+    }
 
     // Pad single digits
     const paddedDay = birthDay.length === 1 ? '0' + birthDay : birthDay;
@@ -144,11 +175,6 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
         setDateError("Fecha inválida");
         return;
       }
-    }
-
-    if (!formData.city || !formData.city.trim()) {
-      setLocationError("Ingresa tu ciudad");
-      return;
     }
 
     // Convert birthdate splits back to YYYY-MM-DD for saving
@@ -189,7 +215,8 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
               name="first_name"
               value={formData.first_name}
               onChange={handleChange}
-              placeholder="Nombre"
+              placeholder="Ingresa tu nombre"
+              error={firstNameError}
               variant="bordered"
             />
           </div>
@@ -199,7 +226,8 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
               name="last_name"
               value={formData.last_name}
               onChange={handleChange}
-              placeholder="Apellido"
+              placeholder="Ingresa tu apellido"
+              error={lastNameError}
               variant="bordered"
             />
           </div>
@@ -212,7 +240,7 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
             name="profession"
             value={formData.profession}
             onChange={handleChange}
-            placeholder="Tu profesión"
+            placeholder="Ingresa tu profesión"
             variant="bordered"
             autoFocus={initialFocusField === 'profession'}
           />

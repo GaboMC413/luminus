@@ -59,16 +59,50 @@ export async function GET() {
       console.warn("[billing-details] Could not retrieve stripe customer:", e);
     }
 
-    // 2. Fetch Active Subscription
+    // 2. Fetch Authoritative Subscription from Stripe (Single Source of Truth)
     let subscriptionData: any = null;
     let defaultPmIdFromSub: string | null = null;
-    if (user.stripeSubscriptionId && !user.stripeSubscriptionId.startsWith("sub_mock_")) {
-      try {
-        const sub = await stripe.subscriptions.retrieve(user.stripeSubscriptionId, {
-          expand: ["default_payment_method", "items.data.price.product"],
-        });
+    let sub: any = null;
 
-        if (sub.status === "active" || sub.status === "trialing" || sub.status === "past_due") {
+    if (user.stripeCustomerId && stripe) {
+      try {
+        if (user.stripeSubscriptionId && !user.stripeSubscriptionId.startsWith("sub_mock_")) {
+          try {
+            sub = await stripe.subscriptions.retrieve(user.stripeSubscriptionId, {
+              expand: ["default_payment_method", "items.data.price.product"],
+            });
+          } catch (retrievalErr) {
+            console.warn("[billing-details] Could not retrieve subscription by id:", retrievalErr);
+          }
+        }
+
+        // If not found, missing id, or canceled, query Stripe directly for customer subscriptions
+        if (!sub || sub.status === "canceled") {
+          const customerSubs = await stripe.subscriptions.list({
+            customer: user.stripeCustomerId,
+            status: "all",
+            limit: 5,
+            expand: ["data.default_payment_method", "data.items.data.price.product"],
+          });
+
+          // Find active, trialing, or past_due subscription
+          const liveSub = customerSubs.data.find(
+            (s) => s.status === "active" || s.status === "trialing" || s.status === "past_due"
+          );
+
+          if (liveSub) {
+            sub = liveSub;
+            // Sync database stripeSubscriptionId with Stripe
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { stripeSubscriptionId: liveSub.id },
+            }).catch(() => {});
+          } else if (!sub && customerSubs.data.length > 0) {
+            sub = customerSubs.data[0];
+          }
+        }
+
+        if (sub && (sub.status === "active" || sub.status === "trialing" || sub.status === "past_due")) {
           const price = sub.items?.data?.[0]?.price;
           const product = price?.product as any;
           const planName = product?.name || "Mecenas LUMINUS";
@@ -81,6 +115,16 @@ export async function GET() {
               : sub.default_payment_method.id;
           }
 
+          const scheduledChange = sub.metadata?.scheduled_change;
+          const scheduledPlanChange = scheduledChange
+            ? {
+                targetInterval: scheduledChange,
+                targetPlanName: scheduledChange === "year" ? "Mecenas Anual" : "Mecenas Mensual",
+                targetAmount: scheduledChange === "year" ? 45.0 : 5.0,
+                effectiveDate: (sub as any).current_period_end || null,
+              }
+            : null;
+
           subscriptionData = {
             id: sub.id,
             planName,
@@ -89,8 +133,19 @@ export async function GET() {
             interval,
             currentPeriodEnd: (sub as any).current_period_end || (sub as any).items?.data?.[0]?.current_period_end || null,
             cancelAtPeriodEnd: sub.cancel_at_period_end,
+            scheduledPlanChange,
             status: sub.status,
           };
+
+          // Synchronize PostgreSQL database tier if out of sync with Stripe
+          if (user.tier !== "MECENAS") {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { tier: "MECENAS", stripeSubscriptionId: sub.id },
+            }).catch((syncErr) => {
+              console.warn("[billing-details] Failed to sync tier to MECENAS:", syncErr);
+            });
+          }
 
           // Synchronize PostgreSQL database if selectedPlan is out of sync with authoritative Stripe subscription
           const expectedPlan = interval === "year" ? "Annual" : "Monthly";
@@ -102,7 +157,8 @@ export async function GET() {
               console.warn("[billing-details] Failed to sync selectedPlan:", syncErr);
             });
           }
-        } else if (sub.status === "canceled") {
+        } else {
+          // No active subscription in Stripe -> single source of truth dictates tier is FREE
           if (user.tier === "MECENAS") {
             await prisma.user.update({
               where: { id: user.id },
@@ -168,8 +224,20 @@ export async function GET() {
       phone: stripeCustomer?.phone || defaultCustomerData.phone,
     };
 
+    const hasActiveSubscription = Boolean(
+      subscriptionData &&
+      (subscriptionData.status === "active" || subscriptionData.status === "trialing")
+    );
+
+    const missingPaymentMethod = Boolean(
+      hasActiveSubscription &&
+      !subscriptionData?.cancelAtPeriodEnd &&
+      paymentMethods.length === 0
+    );
+
     return NextResponse.json({
-      hasActiveSubscription: Boolean(subscriptionData || user.tier === "MECENAS"),
+      hasActiveSubscription,
+      missingPaymentMethod,
       subscription: subscriptionData,
       defaultPaymentMethod,
       paymentMethods,

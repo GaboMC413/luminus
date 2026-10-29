@@ -187,6 +187,20 @@ export async function PATCH(request: Request) {
   const firstName = pickString(data, "first_name", "firstName");
   const lastName = pickString(data, "last_name", "lastName");
   const birthdate = parseBirthdate(data.birthdate ?? data.birthdateString);
+
+  if ((data.first_name !== undefined || data.firstName !== undefined) && !firstName) {
+    return NextResponse.json({ message: "El nombre no puede estar vacío." }, { status: 400 });
+  }
+  if ((data.last_name !== undefined || data.lastName !== undefined) && !lastName) {
+    return NextResponse.json({ message: "El apellido no puede estar vacío." }, { status: 400 });
+  }
+  if (data.city !== undefined && !pickString(data, "city")) {
+    return NextResponse.json({ message: "La ciudad no puede estar vacía." }, { status: 400 });
+  }
+  if ((data.birthdate !== undefined || data.birthdateString !== undefined) && !birthdate) {
+    return NextResponse.json({ message: "La fecha de nacimiento es inválida o no puede estar vacía." }, { status: 400 });
+  }
+
   const shouldUpdateInterests = Array.isArray(data.interests);
   const shouldUpdatePrompts = Array.isArray(data.prompts);
 

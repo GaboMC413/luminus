@@ -388,8 +388,8 @@ export default function CompleteProfileView() {
   };
 
   const validateBirthdate = (): { valid: boolean; birthdateString?: string; error?: string } => {
-    if (!birthDay && !birthMonth && !birthYear) {
-      return { valid: true, birthdateString: undefined };
+    if (!birthDay || !birthMonth || !birthYear) {
+      return { valid: false, error: "Por favor ingresa tu fecha de nacimiento." };
     }
 
     const d = parseInt(birthDay, 10);
@@ -430,6 +430,20 @@ export default function CompleteProfileView() {
   const handleContinueToInterests = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+
+    if (!firstName.trim()) {
+      setErrorMessage("Por favor ingresa tu nombre.");
+      return;
+    }
+    if (!lastName.trim()) {
+      setErrorMessage("Por favor ingresa tu apellido.");
+      return;
+    }
+    const cleanCity = city.split(",")[0].trim();
+    if (!cleanCity) {
+      setErrorMessage("Por favor ingresa tu ciudad.");
+      return;
+    }
 
     const birthCheck = validateBirthdate();
     if (!birthCheck.valid) {
