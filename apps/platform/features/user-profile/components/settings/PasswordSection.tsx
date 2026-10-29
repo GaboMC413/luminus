@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { InputField } from "@/components/ui/InputField";
+import { Button } from "@/components/ui/Button";
 import { SectionHeader } from "./SectionHeader";
+import { Pencil, Check } from "lucide-react";
 
 export interface PasswordSectionProps {
   editingFieldId: string | null;
@@ -86,42 +88,57 @@ export function PasswordSection({
     setEditingFieldId("password");
   };
 
+  const handleCancel = () => {
+    setEditingFieldId(null);
+    setNewPassword("");
+    setRepeatPassword("");
+    setPasswordError("");
+  };
+
   return (
     <div className="w-full flex flex-col">
       <SectionHeader
         title="Contraseña"
-        description="Desde aquí puedes cambiar tu contraseña."
+        description="Crea una contraseña segura de al menos 8 caracteres con letras y números."
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
         {!isEditing ? (
-          <div className="flex flex-col gap-2 w-full max-w-lg relative">
-            <label className="text-label ml-1">Cambiar contraseña</label>
+          <div className="flex flex-col gap-1.5 w-full max-w-lg relative">
+            <label htmlFor="current_password_display" className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">
+              Contraseña actual
+            </label>
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
                 <InputField
-                  value="••••••••"
+                  id="current_password_display"
+                  value="••••••••••••"
                   disabled
                   variant="bordered"
-                  className="!bg-slate-50 !border-none !text-slate-500"
                 />
               </div>
               <button
                 onClick={handleEditClick}
-                className={`shrink-0 w-9 h-9 flex items-center justify-center rounded-full transition-all ${isAnotherEditing ? "text-slate-300 cursor-not-allowed" : "text-slate-400 hover:text-black hover:bg-slate-100"}`}
-                title="Editar"
+                className={`shrink-0 w-9 h-9 flex items-center justify-center rounded-full transition-all ${
+                  isAnotherEditing
+                    ? "text-slate-300 cursor-not-allowed"
+                    : "text-slate-400 hover:text-slate-800 hover:bg-slate-100"
+                }`}
+                title="Editar contraseña"
+                aria-label="Editar contraseña"
               >
-                <span className="material-symbols-rounded text-[18px]">edit</span>
+                <Pencil className="w-4 h-4" />
               </button>
             </div>
           </div>
         ) : (
           <div className="flex flex-col gap-4 w-full max-w-lg relative">
-            <div className="flex flex-col gap-2 w-full">
-              <label className="text-label ml-1">Nueva contraseña</label>
+            <div className="flex flex-col gap-1.5 w-full">
               <InputField
+                id="new_password_input"
+                label="Nueva contraseña"
                 type="password"
-                placeholder="Nueva contraseña"
+                placeholder="Mínimo 8 caracteres"
                 value={newPassword}
                 onChange={(e) => {
                   setNewPassword(e.target.value);
@@ -130,36 +147,36 @@ export function PasswordSection({
                 showPassword={showPassword}
                 onTogglePassword={() => setShowPassword(!showPassword)}
                 variant="bordered"
-                className="bg-white border-black text-black"
                 autoFocus
               />
             </div>
 
             {/* Requirements Checklist */}
-            <div className="flex flex-col gap-1.5 px-1 mb-1">
-              <div className="flex items-center gap-2 h-5">
-                <p className={`text-sm font-normal ${newPassword.length >= 8 ? '!text-green-600 font-semibold' : '!text-slate-500'}`}>
+            <div className="flex flex-col gap-1.5 px-0.5">
+              <div className="flex items-center gap-2 h-4">
+                <p className={`text-xs font-medium transition-colors ${newPassword.length >= 8 ? 'text-emerald-700 font-semibold' : 'text-slate-500'}`}>
                   Mínimo 8 caracteres
                 </p>
                 {newPassword.length >= 8 && (
-                  <span className="!text-green-600 text-sm font-semibold">✓</span>
+                  <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
                 )}
               </div>
-              <div className="flex items-center gap-2 h-5">
-                <p className={`text-sm font-normal ${/[A-Za-z]/.test(newPassword) && /\d/.test(newPassword) ? '!text-green-600 font-semibold' : '!text-slate-500'}`}>
+              <div className="flex items-center gap-2 h-4">
+                <p className={`text-xs font-medium transition-colors ${/[A-Za-z]/.test(newPassword) && /\d/.test(newPassword) ? 'text-emerald-700 font-semibold' : 'text-slate-500'}`}>
                   Incluir al menos una letra y un número
                 </p>
                 {/[A-Za-z]/.test(newPassword) && /\d/.test(newPassword) && (
-                  <span className="!text-green-600 text-sm font-semibold">✓</span>
+                  <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
                 )}
               </div>
             </div>
 
-            <div className="flex flex-col gap-2 w-full">
-              <label className="text-label ml-1">Repetir nueva contraseña</label>
+            <div className="flex flex-col gap-1.5 w-full">
               <InputField
+                id="repeat_password_input"
+                label="Confirmar contraseña"
                 type="password"
-                placeholder="Repetir nueva contraseña"
+                placeholder="Vuelve a escribir la contraseña"
                 value={repeatPassword}
                 onChange={(e) => {
                   setRepeatPassword(e.target.value);
@@ -168,35 +185,34 @@ export function PasswordSection({
                 showPassword={showPassword}
                 onTogglePassword={() => setShowPassword(!showPassword)}
                 variant="bordered"
-                className="bg-white border-black text-black"
+                error={passwordError}
               />
             </div>
 
-            {passwordError && (
-              <p className="text-[#FF3D3D] text-label font-semibold mt-1 px-1">
-                {passwordError}
-              </p>
-            )}
-
-            <div className="flex gap-2 justify-end mt-1">
-              <button
-                onClick={() => {
-                  setEditingFieldId(null);
-                  setNewPassword("");
-                  setRepeatPassword("");
-                  setPasswordError("");
-                }}
-                className={`px-3 h-8 text-button text-slate-500 hover:text-slate-900 transition-all duration-300 origin-center ${shouldAnimate ? "scale-110 text-slate-900" : "scale-100"}`}
+            <div className="flex gap-2 justify-end mt-1.5">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleCancel}
+                className={`w-auto font-medium text-slate-600 hover:text-slate-900 transition-all duration-200 ${
+                  shouldAnimate ? "scale-105" : "scale-100"
+                }`}
               >
                 Cancelar
-              </button>
-              <button
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
                 onClick={handlePasswordSave}
-                disabled={loading || !newPassword || !repeatPassword}
-                className={`px-4 h-8 text-button font-semibold bg-black text-white rounded-lg hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 origin-center ${shouldAnimate ? "scale-110" : "scale-100"}`}
+                disabled={loading || newPassword.length < 8 || !repeatPassword}
+                className={`w-auto transition-all duration-200 ${
+                  shouldAnimate ? "scale-105" : "scale-100"
+                }`}
               >
-                {loading ? "Guardando..." : "Guardar"}
-              </button>
+                {loading ? "Guardando..." : "Guardar contraseña"}
+              </Button>
             </div>
           </div>
         )}

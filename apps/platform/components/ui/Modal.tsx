@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { X } from "lucide-react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -33,7 +34,7 @@ export function Modal({
   headerClassName,
   contentClassName,
   footerClassName,
-  hideDividers = false,
+  hideDividers = true,
   disableInnerScroll = false,
 }: ModalProps) {
   const [mounted, setMounted] = useState(false);
@@ -72,7 +73,7 @@ export function Modal({
           style={{ maxWidth }}
         >
           {/* Header */}
-          <div className={`flex justify-between items-start shrink-0 ${hideDividers ? "" : "border-b border-slate-100/70"} ${headerClassName || "px-5 py-4 md:px-8 md:py-5"}`}>
+          <div className={`flex justify-between items-start shrink-0 ${hideDividers ? "" : "border-b border-slate-100/70"} ${headerClassName || "px-6 pt-6 pb-4 sm:px-7 sm:pt-7 sm:pb-4"}`}>
             <div className="flex flex-col gap-1 pr-4">
               <h3 className="font-sans font-bold text-black text-[15px] md:text-base leading-snug">
                 {title}
@@ -85,23 +86,22 @@ export function Modal({
             </div>
             <button
               onClick={onClose}
+              aria-label="Cerrar modal"
+              title="Cerrar modal"
               className="p-1 hover:bg-slate-50 rounded-full transition-colors text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none outline-none shrink-0"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
+              <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Content */}
-          <div className={`${disableInnerScroll ? "" : "overflow-y-auto max-h-[75vh] custom-scrollbar"} ${contentClassName || "p-5 py-5 md:p-8 md:py-6"}`}>
+          <div className={`${disableInnerScroll ? "" : "overflow-y-auto max-h-[75vh] custom-scrollbar"} ${contentClassName || (footer ? "px-6 py-0 sm:px-7" : "px-6 pb-6 pt-1 sm:px-7 sm:pb-7 sm:pt-1")}`}>
             {children}
           </div>
 
           {/* Footer */}
           {footer && (
-            <div className={`mt-auto shrink-0 ${hideDividers ? "" : "border-t border-slate-50"} relative z-10 bg-white ${footerClassName || "flex flex-col-reverse md:flex-row gap-2.5 md:gap-4 px-5 pt-4 pb-5 md:px-8 md:py-6"}`}>
+            <div className={`mt-auto shrink-0 ${hideDividers ? "" : "border-t border-slate-50"} relative z-10 bg-white ${footerClassName || "flex flex-col-reverse md:flex-row gap-3 px-6 pb-6 pt-4 sm:px-7 sm:pb-7 sm:pt-4"}`}>
               {footer}
             </div>
           )}

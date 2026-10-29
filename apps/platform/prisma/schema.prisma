@@ -73,6 +73,11 @@ model User {
   stripeSubscriptionId     String?                   @unique @map("stripe_subscription_id") @db.VarChar
   memberSince              DateTime?                 @map("member_since") @db.Timestamptz
   lastLoginAt              DateTime?                 @map("last_login_at") @db.Timestamptz
+  closedAt                 DateTime?                 @map("closed_at") @db.Timestamptz
+  purgeAt                  DateTime?                 @map("purge_at") @db.Timestamptz
+  paidUntil                DateTime?                 @map("paid_until") @db.Timestamptz
+  closureReason            String?                   @map("closure_reason") @db.VarChar
+  closureFeedback          String?                   @map("closure_feedback") @db.Text
   createdAt                DateTime                  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt                DateTime                  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   profile                  UserProfile?
@@ -96,6 +101,7 @@ model User {
   communityPostComments    CommunityPostComment[]
   communityPostLikes       CommunityPostLike[]
 
+  @@index([status, purgeAt])
   @@map("users")
 }
 

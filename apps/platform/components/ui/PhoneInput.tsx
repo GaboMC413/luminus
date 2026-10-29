@@ -232,14 +232,18 @@ export function PhoneInput({
     <div
       ref={containerRef}
       style={{ scrollMarginTop: "100px" }}
-      className={`w-full h-12 px-4 bg-white border border-zinc-200/90 rounded-xl focus-within:border-slate-800 focus-within:ring-1 focus-within:ring-slate-800 transition-colors flex items-center relative ${className} ${
-        disabled ? "pointer-events-none opacity-50" : ""
-      } ${error ? "!border-red-500 !ring-red-500" : ""}`}
+      className={`w-full h-11 px-3.5 ${
+        disabled
+          ? "bg-slate-50 border-slate-200/90 text-slate-600 pointer-events-none cursor-default"
+          : "bg-white border-slate-200 focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900"
+      } border rounded-xl transition-colors flex items-center relative text-xs sm:text-sm font-sans ${className} ${
+        error ? "!border-rose-500 !ring-1 !ring-rose-500" : ""
+      }`}
     >
       <div
-        className={`relative flex items-center pr-2.5 shrink-0 h-full border-r border-zinc-200/80 mr-2.5 ${
-          !disabled ? "cursor-pointer" : ""
-        }`}
+        className={`relative flex items-center pr-2.5 shrink-0 h-full border-r ${
+          disabled ? "border-slate-200/90" : "border-slate-200 cursor-pointer"
+        } mr-2.5`}
         onClick={(e) => {
           e.preventDefault();
           if (!disabled) {
@@ -260,8 +264,12 @@ export function PhoneInput({
       >
         <span
           className={`${
-            phoneCountry.dial === "+00" ? "!text-slate-400" : "text-slate-900"
-          } text-sm font-normal mr-2 font-sans`}
+            phoneCountry.dial === "+00"
+              ? "!text-slate-400"
+              : disabled
+              ? "text-slate-600"
+              : "text-slate-900"
+          } text-xs sm:text-sm font-normal mr-2 font-sans`}
         >
           {phoneCountry.dial}
         </span>
@@ -292,7 +300,9 @@ export function PhoneInput({
         value={value}
         disabled={disabled}
         onChange={(e) => handleNumberChange(e.target.value)}
-        className="flex-1 bg-transparent px-2 outline-none text-slate-900 text-sm font-normal placeholder:text-slate-400 h-full font-sans"
+        className={`flex-1 bg-transparent px-1 outline-none text-xs sm:text-sm font-normal placeholder:text-slate-400 h-full font-sans ${
+          disabled ? "text-slate-600 cursor-default" : "text-slate-900"
+        }`}
         enterKeyHint="done"
         autoComplete="tel"
       />

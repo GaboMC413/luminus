@@ -29,7 +29,7 @@ export function PhoneSection({
     <div className="w-full flex flex-col">
       <SectionHeader
         title="Celular"
-        description="Configura tu número de teléfono para contacto directo."
+        description="Permite coordinar actividades y recibir avisos importantes."
       />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
         <EditableField

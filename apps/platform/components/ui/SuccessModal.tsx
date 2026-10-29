@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from './Button';
+import { X } from "lucide-react";
 
 interface SuccessModalProps {
   isOpen: boolean;
@@ -163,7 +164,7 @@ export function SuccessModal({
             aria-label="Cerrar"
             className="absolute top-4 right-4 w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors border-none bg-transparent cursor-pointer select-none"
           >
-            <span className="material-symbols-outlined text-[18px]">close</span>
+            <X className="w-4 h-4" />
           </button>
           
           {/* Eyebrow */}

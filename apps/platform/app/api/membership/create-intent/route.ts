@@ -40,7 +40,19 @@ export async function POST(request: Request) {
       phone: user.profile?.phoneNumber || undefined,
       interval,
       existingSubscriptionId,
+      customerId: user.stripeCustomerId,
+      userId: user.id,
     });
+
+    // Immediately persist customer ID to database if not present yet
+    if (!user.stripeCustomerId && subscriptionData.customerId && !subscriptionData.isMock) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { stripeCustomerId: subscriptionData.customerId },
+      }).catch((updateErr) => {
+        console.warn("[create-intent] Could not persist stripeCustomerId:", updateErr);
+      });
+    }
 
     return NextResponse.json({ ...subscriptionData, interval });
   } catch (error: any) {

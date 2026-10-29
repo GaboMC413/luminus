@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BillingAddressInput, BillingAddressData } from "@/components/ui/BillingAddressInput";
@@ -365,19 +365,6 @@ function PaymentForm({
               className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans"
             />
 
-            {/* Email field */}
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setErrorMessage(null);
-              }}
-              placeholder="Correo electrónico para comprobantes"
-              className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans"
-            />
-
             {/* Card Number - Stripe Element */}
             <div className="relative w-full h-12 px-4 bg-white border border-zinc-200/90 rounded-xl focus-within:border-slate-800 focus-within:ring-1 focus-within:ring-slate-800 transition-colors flex items-center">
               <div className="w-full pr-8">
@@ -564,14 +551,21 @@ export default function MembershipPaymentView() {
   const [defaultCity, setDefaultCity] = useState("");
   const [defaultCountry, setDefaultCountry] = useState("");
 
+  const inFlightRef = useRef(false);
+  const subscriptionDataRef = useRef(subscriptionData);
+  subscriptionDataRef.current = subscriptionData;
+
   // Initialize Payment Intent with chosen interval (or update existing)
   const initIntent = useCallback(async (interval: "month" | "year", existingSubId?: string) => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setLoadingIntent(true);
     try {
+      const activeSubId = existingSubId || subscriptionDataRef.current?.subscriptionId;
       const res = await fetch("/api/membership/create-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ interval, existingSubscriptionId: existingSubId }),
+        body: JSON.stringify({ interval, existingSubscriptionId: activeSubId }),
       });
 
       if (res.status === 401) {
@@ -593,6 +587,7 @@ export default function MembershipPaymentView() {
     } catch {
       // Non-critical background failure
     } finally {
+      inFlightRef.current = false;
       setLoadingIntent(false);
     }
   }, [router, isFromSettings]);
@@ -630,7 +625,6 @@ export default function MembershipPaymentView() {
 
   const handleSwitchBilling = (newCycle: "annual" | "monthly") => {
     setBillingCycle(newCycle);
-    initIntent(newCycle === "annual" ? "year" : "month", subscriptionData?.subscriptionId);
   };
 
   return (

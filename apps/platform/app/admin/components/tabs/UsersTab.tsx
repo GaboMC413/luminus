@@ -177,7 +177,6 @@ export function UsersTab({
         country: String(formData.get("country") || ""),
         phoneNumber: String(formData.get("phoneNumber") || ""),
         selectedPlan: String(formData.get("selectedPlan") || selectedPlan),
-        gender: String(formData.get("gender") || ""),
         birthdate: String(formData.get("birthdate") || ""),
         bio: String(formData.get("bio") || ""),
         isOnboarded: formData.get("isOnboarded") === "on",
@@ -643,7 +642,6 @@ export function UsersTab({
                     <AdminDetailRow label="Celular" value={fieldValue(selectedUser.profile.phoneNumber)} />
                     <AdminDetailRow label="País" value={fieldValue(selectedUser.profile.country)} />
                     <AdminDetailRow label="Ciudad" value={fieldValue(selectedUser.profile.city)} />
-                    <AdminDetailRow label="Género" value={fieldValue(selectedUser.profile.gender)} />
                     <AdminDetailRow label="Nacimiento" value={fieldValue(selectedUser.profile.birthdate)} />
                     <AdminDetailRow label="Profesión" value={fieldValue(selectedUser.profile.profession)} />
                   </div>
@@ -909,15 +907,9 @@ export function UsersTab({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[11px] font-bold uppercase text-slate-400">Género</span>
-                        <InputField name="gender" defaultValue={selectedUser.profile.gender || ""} className="!h-9 text-xs" />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[11px] font-bold uppercase text-slate-400">Nacimiento</span>
-                        <InputField name="birthdate" defaultValue={selectedUser.profile.birthdate || ""} className="!h-9 text-xs" />
-                      </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[11px] font-bold uppercase text-slate-400">Nacimiento</span>
+                      <InputField name="birthdate" defaultValue={selectedUser.profile.birthdate || ""} className="!h-9 text-xs" />
                     </div>
 
                     <div className="flex flex-col gap-1">
