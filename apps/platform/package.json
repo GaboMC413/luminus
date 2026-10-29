@@ -24,6 +24,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1056.0",
     "@marsidev/react-turnstile": "^1.6.1",
     "@prisma/client": "^5.22.0",
+    "@stripe/react-stripe-js": "^7.0.1",
     "@stripe/stripe-js": "^10.1.0",
     "aws-amplify": "^6.6.6",
     "libphonenumber-js": "^1.13.3",

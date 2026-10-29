@@ -71,6 +71,9 @@ function SettingsContent() {
   const [phoneCountry, setPhoneCountry] = useState<Country>({ code: 'XX', dial: '+00', name: 'Seleccionar país', priority: false });
   const [email, setEmail] = useState("");
   const [createdAt, setCreatedAt] = useState("");
+  const [tier, setTier] = useState("FREE");
+  const [memberSince, setMemberSince] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState("Monthly");
 
   // Custom SuccessModal state for LUMINUS
   const [successModalOpen, setSuccessModalOpen] = useState(false);
@@ -117,6 +120,9 @@ function SettingsContent() {
         setPhone(savedPhone);
       }
       setCreatedAt(profile.created_at || new Date().toISOString());
+      setTier(data.tier ?? profile.tier ?? "FREE");
+      setMemberSince(data.member_since ?? data.memberSince ?? profile.member_since ?? null);
+      setSelectedPlan(profile.selectedPlan ?? profile.selected_plan ?? data.selectedPlan ?? "Monthly");
     }
 
     loadProfile();
@@ -306,6 +312,10 @@ function SettingsContent() {
                 {activeTab === "membership" && (
                   <MembershipSection
                     createdAt={createdAt}
+                    memberSince={memberSince}
+                    tier={tier}
+                    selectedPlan={selectedPlan}
+                    email={email}
                     showSuccess={showSuccess}
                   />
                 )}

@@ -62,6 +62,11 @@ function serializeProfile(user: any) {
 
   return {
     email: user.email,
+    tier: user.tier ?? "FREE",
+    memberSince: user.memberSince?.toISOString?.() ?? null,
+    member_since: user.memberSince?.toISOString?.() ?? null,
+    stripeSubscriptionId: user.stripeSubscriptionId ?? null,
+    stripeCustomerId: user.stripeCustomerId ?? null,
     role: user.role ?? "USER",
     profile: {
       role: user.role ?? "USER",

@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     }
 
     // Check if user already has an active subscription
-    if (user.tier === "BASIC" && user.stripeSubscriptionId) {
+    if (user.tier === "MECENAS" && user.stripeSubscriptionId) {
       return NextResponse.json({
         alreadySubscribed: true,
         message: "Ya tienes una membresía activa.",
@@ -32,12 +32,14 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => null);
     const interval: "month" | "year" = body?.interval === "year" ? "year" : "month";
+    const existingSubscriptionId: string | undefined = body?.existingSubscriptionId;
 
     const subscriptionData = await createMembershipSubscription({
       email: user.email,
       name: user.profile?.fullName || `${user.profile?.firstName || ""} ${user.profile?.lastName || ""}`.trim() || user.email,
       phone: user.profile?.phoneNumber || undefined,
       interval,
+      existingSubscriptionId,
     });
 
     return NextResponse.json({ ...subscriptionData, interval });

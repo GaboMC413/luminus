@@ -186,14 +186,7 @@ export default function CompleteProfileView() {
         if (localFirstName) setFirstName(localFirstName);
         if (localLastName) setLastName(localLastName);
 
-        if (!localFirstName && !localLastName) {
-          const localCardName = localStorage.getItem("luminus_card_name");
-          if (localCardName) {
-            const parts = localCardName.trim().split(/\s+/);
-            setFirstName(parts[0] || "");
-            setLastName(parts.slice(1).join(" ") || "");
-          }
-        }
+        // Do not guess names from card payments to prevent ghost name caching
         const rawLocalCity = localStorage.getItem("luminus_billing_city") || "";
         const cleanLocalCity = rawLocalCity.split(",")[0].trim();
         const localCountry = localStorage.getItem("luminus_billing_country") || "";

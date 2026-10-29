@@ -185,7 +185,7 @@ export async function POST(request: Request) {
           where: { id: session.userId },
           select: { tier: true, trialExpiresAt: true },
         });
-        const isPremium = requester && (requester.tier === "BASIC" || (requester.trialExpiresAt && new Date(requester.trialExpiresAt) > new Date()));
+        const isPremium = requester && requester.tier === "MECENAS";
 
         if (!isPremium) {
           const diffMs = Date.now() - new Date(existingConnection.updatedAt).getTime();

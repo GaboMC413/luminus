@@ -51,7 +51,8 @@ enum ConnectionStatus {
 
 enum UserTier {
   FREE  @map("FREE")
-  BASIC @map("BASIC")
+  MECENAS @map("MECENAS")
+  BASIC   @map("BASIC")
 
   @@map("user_tier")
 }

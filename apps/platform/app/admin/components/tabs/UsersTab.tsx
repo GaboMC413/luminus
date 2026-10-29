@@ -29,7 +29,7 @@ export function UsersTab({
   setSelectedSpecialistUserId,
   setSpecialistSubTab,
 }: UsersTabProps) {
-  const [userSubTab, setUserSubTab] = useState<"activos" | "cerradas" | "deshabilitados">("activos");
+  const [userSubTab, setUserSubTab] = useState<"activos" | "mecenas" | "cerradas" | "deshabilitados">("activos");
   const [search, setSearch] = useState("");
 
   const [selectedId, setSelectedId] = useState<string>(users[0]?.id ?? "");
@@ -50,10 +50,13 @@ export function UsersTab({
   const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
 
   const activeUsers = useMemo(() => users.filter((u) => u.status === "active"), [users]);
+  const mecenasUsers = useMemo(() => users.filter((u) => u.tier === "MECENAS" || Boolean(u.stripeSubscriptionId)), [users]);
   const closedUsers = useMemo(() => users.filter((u) => u.status === "deleted"), [users]);
   const disabledUsers = useMemo(() => users.filter((u) => u.status === "disabled"), [users]);
 
-  const baseUsersList = userSubTab === "cerradas"
+  const baseUsersList = userSubTab === "mecenas"
+    ? mecenasUsers
+    : userSubTab === "cerradas"
     ? closedUsers
     : userSubTab === "deshabilitados"
       ? disabledUsers
@@ -267,10 +270,11 @@ export function UsersTab({
                   value={userSubTab}
                   options={[
                     { label: `Activos · ${activeUsers.length}`, value: "activos" },
+                    { label: `Mecenas (Suscritos) · ${mecenasUsers.length}`, value: "mecenas" },
                     { label: `Cuentas cerradas · ${closedUsers.length}`, value: "cerradas" },
                     { label: `Deshabilitados · ${disabledUsers.length}`, value: "deshabilitados" },
                   ]}
-                  onSelect={(val) => setUserSubTab(val as "activos" | "cerradas" | "deshabilitados")}
+                  onSelect={(val) => setUserSubTab(val as "activos" | "mecenas" | "cerradas" | "deshabilitados")}
                   className="!h-10 text-xs font-bold"
                 />
               </div>
@@ -386,6 +390,11 @@ export function UsersTab({
                                 user.profile.fullName || `${user.profile.firstName} ${user.profile.lastName}`
                               )}
                             </span>
+                            {(user.tier === "MECENAS" || Boolean(user.stripeSubscriptionId)) && (
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
+                                Mecenas
+                              </span>
+                            )}
                             {user.isGhost && (
                               <span
                                 className="material-symbols-rounded text-slate-400 text-[14px] shrink-0"
@@ -532,7 +541,9 @@ export function UsersTab({
                       </AdminBadge>
 
                       <AdminBadge variant="plan">
-                        {selectedUser.profile.selectedPlan ? selectedUser.profile.selectedPlan : "Trial"}
+                        {selectedUser.tier === "MECENAS" || Boolean(selectedUser.stripeSubscriptionId)
+                          ? `Mecenas (${selectedUser.profile.selectedPlan === "Annual" ? "Anual" : "Mensual"})`
+                          : "Cuenta Gratis"}
                       </AdminBadge>
 
                       {selectedUser.isGhost && (
@@ -644,7 +655,34 @@ export function UsersTab({
                     Cuenta y Membresía
                   </h3>
                   <div className="bg-slate-50/50 rounded-xl p-1 divide-y divide-slate-100">
-                    <AdminDetailRow label="Plan Actual" value={fieldValue(selectedUser.profile.selectedPlan)} />
+                    <AdminDetailRow
+                      label="Membresía"
+                      value={selectedUser.tier === "MECENAS" || Boolean(selectedUser.stripeSubscriptionId) ? "Mecenas Activo" : "Cuenta Gratis"}
+                    />
+                    {(selectedUser.tier === "MECENAS" || Boolean(selectedUser.stripeSubscriptionId)) && (
+                      <AdminDetailRow
+                        label="Ciclo de Pago"
+                        value={selectedUser.profile.selectedPlan === "Annual" ? "Anual (USD 45/año)" : "Mensual (USD 5/mes)"}
+                      />
+                    )}
+                    {selectedUser.memberSince && (
+                      <AdminDetailRow label="Mecenas Desde" value={formatDate(selectedUser.memberSince)} />
+                    )}
+                    {selectedUser.stripeCustomerId && (
+                      <AdminDetailRow
+                        label="Stripe Customer"
+                        value={
+                          <a
+                            href={`https://dashboard.stripe.com/test/customers/${selectedUser.stripeCustomerId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-indigo-600 hover:underline"
+                          >
+                            {selectedUser.stripeCustomerId}
+                          </a>
+                        }
+                      />
+                    )}
                     <AdminDetailRow label="Último Login" value={formatDate(selectedUser.lastLoginAt)} />
                     <AdminDetailRow label="Fecha de Alta" value={formatDate(selectedUser.createdAt)} />
                   </div>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ProfileButton, EmptyProfileButton } from "@/components/ui/Button";
 import { Profile } from "./ProfileContent";
+import { isMecenas } from "@/lib/membership/access";
 
 interface ProfileSidebarProps {
   profile: Profile;
@@ -137,20 +138,20 @@ export function ProfileSidebar({
             )
           )}
 
-          {(profile.tier === "BASIC" || profile.selected_plan === "Monthly" || profile.member_since) && (
+          {isMecenas({ tier: profile.tier }) && (
             <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200/90 mt-1 select-none">
               <span className="material-symbols-rounded text-slate-800 text-[14px]">stars</span>
               <span className="text-slate-900 font-semibold text-[11px] font-sans">
                 {(() => {
-                  if (!profile.member_since) return "Miembro LUMINUS";
+                  if (!profile.member_since) return "Mecenas LUMINUS";
                   try {
                     const d = new Date(profile.member_since);
-                    if (isNaN(d.getTime())) return "Miembro LUMINUS";
+                    if (isNaN(d.getTime())) return "Mecenas LUMINUS";
                     const month = MONTH_NAMES[d.getMonth()];
                     const capMonth = month ? month.charAt(0).toUpperCase() + month.slice(1) : "";
-                    return `Miembro desde ${capMonth} ${d.getFullYear()}`;
+                    return `Mecenas desde ${capMonth} ${d.getFullYear()}`;
                   } catch {
-                    return "Miembro LUMINUS";
+                    return "Mecenas LUMINUS";
                   }
                 })()}
               </span>

@@ -47,7 +47,7 @@ export default function AccountCreationView() {
         throw new Error(data.message || "Error al registrarse con Facebook.");
       }
 
-      if (plan === "membership" && data.user?.tier !== "BASIC") {
+      if (plan === "membership" && data.user?.tier !== "MECENAS") {
         router.push(`/unirme/pago?plan=${plan}&billing=${billing}`);
         return;
       }
