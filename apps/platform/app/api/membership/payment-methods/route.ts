@@ -70,6 +70,45 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ message: "ID de método de pago requerido." }, { status: 400 });
     }
 
+    const { prisma } = await import("@/lib/db");
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: { stripeCustomerId: true, stripeSubscriptionId: true, tier: true },
+    });
+
+    if (!user) {
+      return NextResponse.json({ message: "Usuario no encontrado." }, { status: 404 });
+    }
+
+    // Requirement: Users with an active renewing subscription must cancel their subscription before deleting their card
+    if (user.stripeSubscriptionId && !user.stripeSubscriptionId.startsWith("sub_mock_") && stripe) {
+      try {
+        const sub = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+        const isActiveAndRenewing =
+          (sub.status === "active" || sub.status === "trialing") &&
+          !sub.cancel_at_period_end;
+
+        if (isActiveAndRenewing && user.stripeCustomerId) {
+          const pms = await stripe.paymentMethods.list({
+            customer: user.stripeCustomerId,
+            type: "card",
+          });
+
+          if (pms.data.length <= 1) {
+            return NextResponse.json(
+              {
+                message:
+                  "Para eliminar tu tarjeta debes cancelar tu membresía primero.",
+              },
+              { status: 400 }
+            );
+          }
+        }
+      } catch (err) {
+        console.warn("[payment-methods] Could not verify subscription status:", err);
+      }
+    }
+
     if (!stripe) {
       return NextResponse.json({ success: true, isMock: true });
     }

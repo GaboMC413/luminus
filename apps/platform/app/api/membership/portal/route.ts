@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
     const host = request.headers.get("host") || "localhost:3000";
     const protocol = request.headers.get("x-forwarded-proto") || "http";
-    const returnUrl = `${protocol}://${host}/perfil-usuario/configuracion?tab=membership`;
+    const returnUrl = `${protocol}://${host}/perfil-usuario/configuracion/membresia`;
 
     const portal = await createCustomerPortalSession({
       customerId: user.stripeCustomerId,

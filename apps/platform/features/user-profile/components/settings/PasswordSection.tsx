@@ -99,7 +99,7 @@ export function PasswordSection({
     <div className="w-full flex flex-col">
       <SectionHeader
         title="Contraseña"
-        description="Crea una contraseña segura de al menos 8 caracteres con letras y números."
+        description="Administra tu contraseña para mantener tu cuenta segura."
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">

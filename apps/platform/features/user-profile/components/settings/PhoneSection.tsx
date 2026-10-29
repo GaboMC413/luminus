@@ -36,7 +36,7 @@ export function PhoneSection({
           id="phone"
           label="Número de celular"
           value={phone}
-          placeholder="99 123 456"
+          placeholder="Número de celular"
           isPhone
           phoneCountry={phoneCountry}
           onCountryChange={(matched) => setPhoneCountry(matched)}

@@ -207,7 +207,7 @@ function PaymentForm({
       setIsSuccess(true);
       setTimeout(() => {
         if (isFromSettings || isOnboarded) {
-          router.push("/perfil-usuario/configuracion?tab=membership&success=1");
+          router.push("/perfil-usuario/configuracion/membresia?success=1");
         } else {
           router.push("/unirme/perfil");
         }
@@ -221,7 +221,7 @@ function PaymentForm({
 
   const handleCancel = () => {
     if (isFromSettings) {
-      router.push("/perfil-usuario/configuracion?tab=membership");
+      router.push("/perfil-usuario/configuracion/membresia");
     } else {
       router.push("/unirme");
     }
@@ -576,7 +576,7 @@ export default function MembershipPaymentView() {
       const data = await res.json();
       if (data.alreadySubscribed) {
         if (isFromSettings) {
-          router.push("/perfil-usuario/configuracion?tab=membership");
+          router.push("/perfil-usuario/configuracion/membresia");
         } else {
           router.push("/comunidad?welcome=1");
         }

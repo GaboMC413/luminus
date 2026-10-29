@@ -53,6 +53,7 @@ export function PersonalInfoSection({
             id="first_name"
             label="Nombre"
             value={firstName}
+            required
             onSave={async (val) => {
               await onProfileSave?.({ first_name: val });
               setFirstName(val);
@@ -68,6 +69,7 @@ export function PersonalInfoSection({
             id="last_name"
             label="Apellido"
             value={lastName}
+            required
             onSave={async (val) => {
               await onProfileSave?.({ last_name: val });
               setLastName(val);
@@ -91,7 +93,7 @@ export function PersonalInfoSection({
               setProfession(val);
               localStorage.setItem("luminus_profile_profession", val);
             }}
-            placeholder="Ej. Diseñador de Productos"
+            placeholder="Ingresa tu profesión"
             editingFieldId={editingFieldId}
             setEditingFieldId={setEditingFieldId}
             attentionCounter={attentionCounter}
@@ -103,6 +105,7 @@ export function PersonalInfoSection({
             label="Ciudad"
             value={city}
             isLocation
+            required
             onSave={async (cityVal, countryVal) => {
               await onProfileSave?.({ city: cityVal, country: countryVal });
               setCity(cityVal);
@@ -112,6 +115,7 @@ export function PersonalInfoSection({
                 localStorage.setItem("luminus_profile_country", countryVal);
               }
             }}
+            placeholder="Ingresa tu ciudad"
             editingFieldId={editingFieldId}
             setEditingFieldId={setEditingFieldId}
             attentionCounter={attentionCounter}
@@ -125,6 +129,7 @@ export function PersonalInfoSection({
             label="Fecha de nacimiento"
             value={birthdate}
             isDate
+            required
             onSave={async (val) => {
               await onProfileSave?.({ birthdate: val });
               setBirthdate(val);
@@ -136,6 +141,7 @@ export function PersonalInfoSection({
                 localStorage.setItem("luminus_profile_birthdate", val);
               }
             }}
+            placeholder="Selecciona tu fecha de nacimiento"
             editingFieldId={editingFieldId}
             setEditingFieldId={setEditingFieldId}
             attentionCounter={attentionCounter}

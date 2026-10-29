@@ -26,6 +26,7 @@ export interface EditableFieldProps {
   setEditingFieldId: (id: string | null) => void;
   attentionCounter: number;
   setAttentionCounter: (val: number | ((prev: number) => number)) => void;
+  required?: boolean;
 }
 
 export function EditableField({
@@ -46,7 +47,8 @@ export function EditableField({
   editingFieldId,
   setEditingFieldId,
   attentionCounter,
-  setAttentionCounter
+  setAttentionCounter,
+  required = false
 }: EditableFieldProps) {
   const isEditing = editingFieldId === id;
   const isAnotherEditing = editingFieldId !== null && editingFieldId !== id;
@@ -109,6 +111,11 @@ export function EditableField({
 
   const handleSave = async () => {
     if (isDate) {
+      if (required && (!birthDay || !birthMonth || !birthYear)) {
+        setValidationError("Ingresa tu fecha de nacimiento");
+        return;
+      }
+
       const paddedDay = birthDay ? birthDay.padStart(2, '0') : '';
       const paddedMonth = birthMonth ? birthMonth.padStart(2, '0') : '';
       let fullYear = birthYear;
@@ -128,8 +135,11 @@ export function EditableField({
 
       await onSave?.(normalized, extraValue);
     } else {
-      if (isLocation && !currentValue?.trim()) {
-        setValidationError("Ingresa tu ciudad");
+      if ((required || isLocation) && !currentValue?.trim()) {
+        const msg = isLocation
+          ? "Ingresa tu ciudad"
+          : `Ingresa tu ${label.toLowerCase()}`;
+        setValidationError(msg);
         return;
       }
       await onSave?.(currentValue, extraValue);
@@ -188,7 +198,9 @@ export function EditableField({
                   }
                 }}
                 disabled={!isEditing}
-                className={`${!isEditing ? "pointer-events-none" : ""}`}
+                className={`${!isEditing ? "pointer-events-none" : ""} ${
+                  validationError ? "[&_input]:!border-rose-500 [&_input]:!ring-rose-500" : ""
+                }`}
               />
               {validationError && <p className="text-rose-600 text-xs font-medium mt-1">{validationError}</p>}
             </div>
@@ -254,7 +266,9 @@ export function EditableField({
               disabled={!isEditing}
               onChange={(e) => {
                 setCurrentValue(e.target.value);
+                if (validationError) setValidationError("");
               }}
+              error={isEditing ? validationError : undefined}
               variant="bordered"
             />
           )}

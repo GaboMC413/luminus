@@ -97,7 +97,7 @@ export function UpdateBillingInfoModal({
           required
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Ej. María López"
+          placeholder="Nombre y apellido"
           autoComplete="name"
         />
 
@@ -107,7 +107,7 @@ export function UpdateBillingInfoModal({
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="ejemplo@correo.com"
+          placeholder="Correo electrónico"
           autoComplete="email"
         />
 
@@ -116,7 +116,7 @@ export function UpdateBillingInfoModal({
           type="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
-          placeholder="99 123 456"
+          placeholder="Número de celular"
           autoComplete="tel"
         />
 
