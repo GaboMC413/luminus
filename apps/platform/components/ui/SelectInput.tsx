@@ -94,7 +94,12 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
 
     // Filter options when searchable
     const filteredOptions = useMemo(() => {
-      if (!searchable || !isOpen || !searchTerm.trim()) {
+      if (
+        !searchable ||
+        !isOpen ||
+        !searchTerm.trim() ||
+        searchTerm.trim().toLowerCase() === currentOptionLabel.toLowerCase().trim()
+      ) {
         return options;
       }
       const query = searchTerm.toLowerCase().trim();
@@ -103,7 +108,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
         const optVal = (typeof opt === "string" ? opt : opt.value).toLowerCase();
         return optLabel.includes(query) || optVal.includes(query);
       });
-    }, [options, searchable, isOpen, searchTerm]);
+    }, [options, searchable, isOpen, searchTerm, currentOptionLabel]);
 
     useEffect(() => {
       if (isOpen) {
@@ -404,6 +409,15 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
               disabled={disabled}
               value={isOpen ? searchTerm : currentOptionLabel}
               placeholder={placeholder}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isOpen) {
+                  setIsOpen(true);
+                  window.dispatchEvent(
+                    new CustomEvent("luminus-select-open", { detail: { id: instanceIdRef.current } })
+                  );
+                }
+              }}
               onChange={handleInputChange}
               onFocus={() => {
                 if (!isOpen) {

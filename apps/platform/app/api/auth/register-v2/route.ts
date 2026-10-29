@@ -110,14 +110,6 @@ export async function POST(request: Request) {
       });
       setSessionCookie(token);
 
-      // Send background welcome email (non-blocking, warm onboarding)
-      try {
-        const { sendWelcomeEmail } = await import("@/lib/mails/sender");
-        await sendWelcomeEmail(user.email);
-      } catch (welcomeError) {
-        console.error("Welcome email error (non-fatal):", welcomeError);
-      }
-
       return NextResponse.json({
         success: true,
         requiresVerification: false,

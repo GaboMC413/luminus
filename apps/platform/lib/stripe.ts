@@ -20,7 +20,7 @@ export interface CreateSubscriptionResult {
 }
 
 /**
- * Creates or retrieves a Stripe Customer and creates a monthly $5 membership subscription.
+ * Creates or retrieves a Stripe Customer and creates a monthly $5 or annual $45 Mecenas subscription.
  * Uses payment_behavior: 'default_incomplete' so the frontend can confirm it via Stripe Elements.
  */
 export async function createMembershipSubscription({
@@ -58,7 +58,7 @@ export async function createMembershipSubscription({
       name,
       phone,
       metadata: {
-        source: "membership_subscription",
+        source: "mecenas_subscription",
       },
     });
   }
@@ -85,10 +85,10 @@ export async function createMembershipSubscription({
       finalPriceId = matchingPrice.id;
     } else {
       const product = await stripe.products.create({
-        name: isAnnual ? "Membresía LUMINUS Anual" : "Membresía LUMINUS",
+        name: isAnnual ? "Mecenas LUMINUS Anual" : "Mecenas LUMINUS",
         description: isAnnual
-          ? "Acceso anual a la red LUMINUS con ahorro de USD 15"
-          : "Acceso y apoyo al desarrollo de la red LUMINUS",
+          ? "Acceso anual como Mecenas a la red LUMINUS con ahorro de USD 15"
+          : "Acceso como Mecenas y apoyo al desarrollo de la red LUMINUS",
       });
       const newPrice = await stripe.prices.create({
         product: product.id,
@@ -109,7 +109,7 @@ export async function createMembershipSubscription({
     expand: ["latest_invoice.payment_intent"],
     metadata: {
       user_email: email,
-      type: isAnnual ? "membership_annual" : "membership_monthly",
+      type: isAnnual ? "mecenas_annual" : "mecenas_monthly",
     },
   });
 
@@ -128,3 +128,24 @@ export async function createMembershipSubscription({
   };
 }
 
+/**
+ * Creates a Stripe Customer Portal session for self-service payment method updates and invoice downloads.
+ */
+export async function createCustomerPortalSession({
+  customerId,
+  returnUrl,
+}: {
+  customerId: string;
+  returnUrl: string;
+}): Promise<{ url: string; isMock: boolean }> {
+  if (!stripe) {
+    return { url: returnUrl, isMock: true };
+  }
+
+  const portalSession = await stripe.billingPortal.sessions.create({
+    customer: customerId,
+    return_url: returnUrl,
+  });
+
+  return { url: portalSession.url, isMock: false };
+}

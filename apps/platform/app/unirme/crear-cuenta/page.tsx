@@ -1,7 +1,8 @@
 import { Suspense } from "react";
 import AccountCreationView from "@/features/membership/AccountCreationView";
 import { PageLoader } from "@/components/ui/PageLoader";
-import { redirectIfAuthenticated } from "@/lib/auth/session";
+import { getCurrentSession } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,7 +11,26 @@ export const metadata: Metadata = {
 };
 
 export default async function UnirmeCrearCuentaPage() {
-  await redirectIfAuthenticated();
+  const session = getCurrentSession();
+  if (session) {
+    try {
+      const { prisma } = await import("@/lib/db");
+      const user = await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: {
+          profile: { select: { isOnboarded: true } },
+        },
+      });
+
+      // Only redirect if already completely registered and onboarded
+      if (user?.profile?.isOnboarded) {
+        redirect("/comunidad");
+      }
+    } catch {
+      // Continue to view
+    }
+  }
+
   return (
     <Suspense fallback={<PageLoader className="min-h-screen" />}>
       <AccountCreationView />

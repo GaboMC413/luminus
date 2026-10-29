@@ -20,10 +20,10 @@ export default function MembershipChoiceView() {
   };
 
   const benefits = [
-    "Conecta con personas y especialistas.",
-    "Descubre actividades de bienestar.",
+    "Conecta directamente con especialistas.",
+    "Encuentra actividades y experiencias.",
     "Publica y comparte tus iniciativas.",
-    "Accede a funcionalidades exclusivas.",
+    "Disfruta de beneficios exclusivos a medida que estén disponibles.",
   ];
 
   return (
@@ -65,55 +65,65 @@ export default function MembershipChoiceView() {
                 />
               </span>
               <span className="text-xs sm:text-sm font-medium text-slate-600 font-jakarta">
-                Paga anual y ahorra un 25%
+                Plan anual con 25% de descuento
               </span>
             </button>
 
             {/* Pricing Card Block */}
             <div className="w-full bg-white border border-zinc-200/90 rounded-2xl p-6 flex flex-col gap-4">
-              {/* Block 1: Price */}
-              <div className="flex items-baseline gap-1.5 flex-wrap">
-                <span className="text-[34px] font-extrabold text-slate-900 font-jakarta tracking-tight leading-none">
-                  {isAnnual ? "USD 45" : "USD 5"}
-                </span>
-                <span className="text-sm font-medium text-slate-500">
-                  {isAnnual ? "/ año" : "/ mes"}
-                </span>
-
-                {isAnnual && (
-                  <span className="ml-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full">
-                    Ahorra USD 15
+              {/* Block 1: Tier & Price */}
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center justify-between h-[26px]">
+                  <span className="text-sm font-bold text-slate-900 font-jakarta tracking-tight">
+                    {isAnnual ? "Mecenas anual" : "Mecenas mensual"}
                   </span>
-                )}
+                  {isAnnual && (
+                    <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-full animate-in fade-in duration-150">
+                      Ahorra USD 15
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-baseline gap-1.5 h-[38px]">
+                  <span className="text-[34px] font-extrabold text-slate-900 font-jakarta tracking-tight leading-none">
+                    {isAnnual ? "USD 45" : "USD 5"}
+                  </span>
+                  <span className="text-sm font-medium text-slate-500">
+                    {isAnnual ? "/ año" : "/ mes"}
+                  </span>
+                  {isAnnual && (
+                    <span className="text-xs text-slate-400 font-normal ml-1">
+                      (USD 3.75/mes)
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-xs text-slate-500 leading-normal m-0">
+                  Renovación automática. Cancela cuando quieras.
+                </p>
               </div>
 
               {/* Block 2: Benefits & Mission */}
               <div className="flex flex-col gap-3">
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-jakarta m-0">
-                    Lo que incluye tu membresía
-                  </h3>
-                  <ul className="flex flex-col gap-1.5 p-0 m-0 list-none">
-                    {benefits.map((benefit, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-xs sm:text-[13.5px] text-slate-700 leading-snug">
-                        <svg
-                          className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          strokeWidth="2.5"
-                          stroke="currentColor"
-                          aria-hidden="true"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                        </svg>
-                        <span>{benefit}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <ul className="flex flex-col gap-1.5 p-0 m-0 list-none">
+                  {benefits.map((benefit, idx) => (
+                    <li key={idx} className="flex items-start gap-2 text-xs sm:text-[13.5px] text-slate-700 leading-snug">
+                      <svg
+                        className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth="2.5"
+                        stroke="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                      </svg>
+                      <span>{benefit}</span>
+                    </li>
+                  ))}
+                </ul>
 
                 <p className="text-xs sm:text-[13px] text-slate-500 leading-normal m-0">
-                  Tu membresía nos permite desarrollar nuevas herramientas, ampliar la red y acercar el bienestar a cada vez más personas en Latinoamérica.
+                  Siendo mecenas, impulsas el desarrollo de nuevas herramientas y experiencias acercando el bienestar a cada vez más personas en Latinoamérica.
                 </p>
               </div>
 
@@ -124,7 +134,7 @@ export default function MembershipChoiceView() {
                   variant="primary"
                   onClick={() => handleSelectPlan("membership")}
                 >
-                  {isAnnual ? "Hacerme miembro por USD 45/año" : "Hacerme miembro por USD 5/mes"}
+                  {isAnnual ? "Ser Mecenas por USD 45/año" : "Ser Mecenas por USD 5/mes"}
                 </Button>
                 <Button
                   type="button"

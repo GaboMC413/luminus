@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ProfileButton } from "@/components/ui/Button";
+import { isMecenas } from "@/lib/membership/access";
 
 interface ProfileMembershipCardProps {
   plan: string;
@@ -25,7 +26,7 @@ export function ProfileMembershipCard({
   showSettingsButtons = false,
   isPublic = false,
 }: ProfileMembershipCardProps) {
-  const isMember = tier === "BASIC" || plan === "Monthly" || Boolean(memberSince);
+  const isMember = isMecenas({ tier }) || plan === "Monthly" || Boolean(memberSince);
 
   const getMemberSinceText = () => {
     const rawDate = memberSince || createdAt;
@@ -49,19 +50,19 @@ export function ProfileMembershipCard({
         </div>
         <div className="flex flex-col min-w-0 self-center gap-1">
           <span className="text-sm md:text-base text-slate-900 font-semibold truncate leading-relaxed">
-            {isMember ? "Membresía LUMINUS" : "Cuenta Gratuita"}
+            {isMember ? "Mecenas LUMINUS" : "Cuenta Gratis"}
           </span>
 
           {isMember ? (
             <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200/90 w-fit">
               <span className="material-symbols-rounded text-amber-600 text-[14px]">stars</span>
               <span className="text-amber-900 font-bold text-[11px] font-sans">
-                Miembro desde {memberSinceText}
+                Mecenas desde {memberSinceText}
               </span>
             </div>
           ) : (
             <p className="text-slate-500 text-[11px] font-medium leading-snug tracking-[-0.01em] font-sans">
-              {isPublic ? "Usuario de la comunidad" : "Acceso básico gratuito"}
+              {isPublic ? "Usuario de la comunidad" : "Acceso estándar gratuito"}
             </p>
           )}
         </div>
@@ -75,7 +76,7 @@ export function ProfileMembershipCard({
             <ProfileButton
               onClick={() => { }}
               icon="autorenew"
-              label={isMember ? "Gestionar membresía" : "Hacerme miembro (USD 5/mes)"}
+              label={isMember ? "Gestionar membresía" : "Convertirme en Mecenas (USD 5/mes)"}
               className="w-full"
             />
           </Link>

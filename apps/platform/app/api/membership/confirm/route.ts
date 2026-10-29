@@ -14,6 +14,32 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => null);
     const { subscriptionId, customerId, billingInterval, cardName, city, country, firstName: bodyFirstName, lastName: bodyLastName } = body || {};
 
+    const { stripe } = await import("@/lib/stripe");
+    if (stripe && subscriptionId && !String(subscriptionId).startsWith("sub_mock_")) {
+      try {
+        const subscription = await stripe.subscriptions.retrieve(String(subscriptionId), {
+          expand: ["latest_invoice.payment_intent"],
+        });
+
+        const invoice = subscription.latest_invoice as any;
+        const paymentIntent = invoice?.payment_intent;
+        const isPaid = subscription.status === "active" || paymentIntent?.status === "succeeded";
+
+        if (!isPaid) {
+          return NextResponse.json(
+            { message: "El pago de la suscripción aún no ha sido confirmado por Stripe." },
+            { status: 400 }
+          );
+        }
+      } catch (stripeErr: any) {
+        console.error("Stripe subscription verification error:", stripeErr);
+        return NextResponse.json(
+          { message: stripeErr.message || "Error al verificar la suscripción con Stripe." },
+          { status: 400 }
+        );
+      }
+    }
+
     const nameParts = cardName ? String(cardName).trim().split(/\s+/) : [];
     const firstName = bodyFirstName ? String(bodyFirstName).trim() : (nameParts[0] || undefined);
     const lastName = bodyLastName ? String(bodyLastName).trim() : (nameParts.length > 1 ? nameParts.slice(1).join(" ") : undefined);
