@@ -131,7 +131,6 @@ export function normalizeAdminUserPatch(input: unknown) {
     "city",
     "country",
     "phoneNumber",
-    "gender",
     "bio",
     "intention",
     "selectedPlan",

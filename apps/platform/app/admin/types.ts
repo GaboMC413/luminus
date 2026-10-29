@@ -21,7 +21,7 @@ export type AdminUser = {
     city: string;
     country: string;
     phoneNumber: string;
-    gender: string;
+    gender?: string;
     birthdate: string;
     bio: string;
     intention: string;

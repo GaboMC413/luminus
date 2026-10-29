@@ -29,12 +29,16 @@ export async function createMembershipSubscription({
   phone,
   interval = "month",
   existingSubscriptionId,
+  customerId,
+  userId,
 }: {
   email: string;
   name: string;
   phone?: string;
   interval?: "month" | "year";
   existingSubscriptionId?: string;
+  customerId?: string | null;
+  userId?: string;
 }): Promise<CreateSubscriptionResult> {
   // Graceful fallback for local development if Stripe keys are not yet provided
   if (!stripe) {
@@ -126,21 +130,42 @@ export async function createMembershipSubscription({
   }
 
   // 3. Find or create Customer
-  const existingCustomers = await stripe.customers.list({
-    email,
-    limit: 1,
-  });
+  const normalizedEmail = email.trim().toLowerCase();
+  let customer: Stripe.Customer | null = null;
 
-  let customer = existingCustomers.data[0];
+  if (customerId && !customerId.startsWith("cus_mock_")) {
+    try {
+      const retrieved = await stripe.customers.retrieve(customerId);
+      if (!retrieved.deleted) {
+        customer = retrieved as Stripe.Customer;
+      }
+    } catch (err) {
+      console.warn("[Stripe] Failed to retrieve customer by id, falling back to lookup:", err);
+    }
+  }
+
   if (!customer) {
-    customer = await stripe.customers.create({
-      email,
-      name,
-      phone,
-      metadata: {
-        source: "mecenas_subscription",
-      },
+    const existingCustomers = await stripe.customers.list({
+      email: normalizedEmail,
+      limit: 5,
     });
+    customer = (existingCustomers.data.find((c) => !c.deleted) as Stripe.Customer) || null;
+  }
+
+  if (!customer) {
+    const idempotencyKey = `create-customer-${userId || normalizedEmail.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+    customer = await stripe.customers.create(
+      {
+        email: normalizedEmail,
+        name,
+        phone,
+        metadata: {
+          source: "mecenas_subscription",
+          userId: userId || "",
+        },
+      },
+      { idempotencyKey }
+    );
   }
 
   // 3. Create Subscription with default_incomplete payment behavior

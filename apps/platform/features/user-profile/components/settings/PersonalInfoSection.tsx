@@ -13,8 +13,6 @@ export interface PersonalInfoSectionProps {
   setCity: (v: string) => void;
   country: string;
   setCountry: (v: string) => void;
-  gender: string;
-  setGender: (v: string) => void;
   birthdate: string;
   setBirthdate: (v: string) => void;
   editingFieldId: string | null;
@@ -35,8 +33,6 @@ export function PersonalInfoSection({
   setCity,
   country,
   setCountry,
-  gender,
-  setGender,
   birthdate,
   setBirthdate,
   editingFieldId,
@@ -47,8 +43,9 @@ export function PersonalInfoSection({
 }: PersonalInfoSectionProps) {
   return (
     <div className="w-full flex flex-col">
-      <SectionHeader title="Información personal"
-        description="Aquí puedes gestionar tus datos personales."
+      <SectionHeader
+        title="Información personal"
+        description="Actualiza tus datos de perfil e identidad en la plataforma."
       />
       <div className="flex flex-col gap-6 w-full">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -61,7 +58,7 @@ export function PersonalInfoSection({
               setFirstName(val);
               localStorage.setItem("luminus_profile_firstName", val);
             }}
-            placeholder="Nombre"
+            placeholder="Ingresa tu nombre"
             editingFieldId={editingFieldId}
             setEditingFieldId={setEditingFieldId}
             attentionCounter={attentionCounter}
@@ -76,7 +73,7 @@ export function PersonalInfoSection({
               setLastName(val);
               localStorage.setItem("luminus_profile_lastName", val);
             }}
-            placeholder="Apellido"
+            placeholder="Ingresa tu apellido"
             editingFieldId={editingFieldId}
             setEditingFieldId={setEditingFieldId}
             attentionCounter={attentionCounter}
@@ -123,22 +120,6 @@ export function PersonalInfoSection({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <EditableField
-            id="gender"
-            label="Género"
-            value={gender}
-            isSelect
-            options={["Mujer", "Hombre", "No binario", "Prefiero no decirlo"]}
-            onSave={async (val) => {
-              await onProfileSave?.({ gender: val });
-              setGender(val);
-              localStorage.setItem("luminus_profile_gender", val);
-            }}
-            editingFieldId={editingFieldId}
-            setEditingFieldId={setEditingFieldId}
-            attentionCounter={attentionCounter}
-            setAttentionCounter={setAttentionCounter}
-          />
           <EditableField
             id="birthdate"
             label="Fecha de nacimiento"
