@@ -51,9 +51,13 @@ jobs:
         run: npm run test:platform
 
       - name: Build de Marketing
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
         run: npm run build -w marketing
 
       - name: Build de Plataforma
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
         run: npm run build -w platform
 
   security:
