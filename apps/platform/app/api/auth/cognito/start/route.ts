@@ -63,7 +63,7 @@ export async function GET(request: Request) {
   };
   const redirectUri = `${origin}/api/auth/cognito/callback`;
 
-  cookies().set(COGNITO_STATE_COOKIE, JSON.stringify(statePayload), {
+  (await cookies()).set(COGNITO_STATE_COOKIE, JSON.stringify(statePayload), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

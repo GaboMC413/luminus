@@ -6,8 +6,8 @@ import { deleteUserS3Data } from "@/lib/storage/userStorageCleanup";
 
 export const runtime = "nodejs";
 
-function requireAdmin() {
-  const session = getCurrentSession();
+async function requireAdmin() {
+  const session = await getCurrentSession();
 
   if (!session) {
     return {
@@ -49,7 +49,7 @@ function describeAdminUpdateError(error: unknown) {
 }
 
 export async function GET(request: Request) {
-  const admin = requireAdmin();
+  const admin = await requireAdmin();
 
   if (!admin.ok) {
     return admin.response;
@@ -70,7 +70,7 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const admin = requireAdmin();
+  const admin = await requireAdmin();
 
   if (!admin.ok) {
     return admin.response;
@@ -154,7 +154,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const admin = requireAdmin();
+  const admin = await requireAdmin();
 
   if (!admin.ok) {
     return admin.response;

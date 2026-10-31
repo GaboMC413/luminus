@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function PATCH(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
   if (!session || session.role !== "ADMIN") {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }

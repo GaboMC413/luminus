@@ -75,7 +75,7 @@ async function logSentEmail(
       if (oldestRecords.length > 0) {
         await prisma.sentEmailLog.deleteMany({
           where: {
-            id: { in: oldestRecords.map((r) => r.id) },
+            id: { in: oldestRecords.map((r: { id: string }) => r.id) },
           },
         });
       }

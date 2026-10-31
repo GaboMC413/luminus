@@ -108,7 +108,7 @@ export async function POST(request: Request) {
         email: user.email,
         role: user.role,
       });
-      setSessionCookie(token);
+      await setSessionCookie(token);
 
       return NextResponse.json({
         success: true,
@@ -270,7 +270,7 @@ export async function POST(request: Request) {
         role: user.role,
       });
 
-      setSessionCookie(token);
+      await setSessionCookie(token);
 
       // 6. Log activity
       try {

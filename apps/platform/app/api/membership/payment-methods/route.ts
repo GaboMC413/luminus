@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 
 // PUT: Set payment method as default
 export async function PUT(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }
@@ -57,7 +57,7 @@ export async function PUT(request: Request) {
 
 // DELETE: Detach a payment method
 export async function DELETE(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }

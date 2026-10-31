@@ -65,14 +65,12 @@ const nextConfig = {
       },
     ];
   },
-  experimental: {
-    outputFileTracingRoot: path.join(__dirname, "../../"),
-    outputFileTracingIncludes: {
-      "/**": [
-        "../../node_modules/.prisma/client/**/*",
-        "../../node_modules/@prisma/client/**/*",
-      ],
-    },
+  outputFileTracingRoot: path.join(__dirname, "../../"),
+  outputFileTracingIncludes: {
+    "/**": [
+      "../../node_modules/.prisma/client/**/*",
+      "../../node_modules/@prisma/client/**/*",
+    ],
   },
 };
 

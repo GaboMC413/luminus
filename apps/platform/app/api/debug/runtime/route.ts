@@ -38,7 +38,7 @@ async function runTest(testFn: () => Promise<any>) {
 }
 
 export async function GET() {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
   // Restrict to verified ADMIN users only when debugging is enabled
   if (process.env.ENABLE_RUNTIME_DEBUG !== "true" || session?.role !== "ADMIN") {
     return NextResponse.json({ message: "Not found." }, { status: 404 });

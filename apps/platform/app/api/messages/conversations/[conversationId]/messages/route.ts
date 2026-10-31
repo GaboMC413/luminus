@@ -32,8 +32,9 @@ async function assertParticipant(prisma: any, conversationId: string, userId: st
   });
 }
 
-export async function GET(request: Request, { params }: { params: { conversationId: string } }) {
-  const session = getCurrentSession();
+export async function GET(request: Request, props: { params: Promise<{ conversationId: string }> }) {
+  const params = await props.params;
+  const session = await getCurrentSession();
   const { conversationId } = params;
 
   if (!session) {
@@ -153,8 +154,9 @@ export async function GET(request: Request, { params }: { params: { conversation
   }
 }
 
-export async function POST(request: Request, { params }: { params: { conversationId: string } }) {
-  const session = getCurrentSession();
+export async function POST(request: Request, props: { params: Promise<{ conversationId: string }> }) {
+  const params = await props.params;
+  const session = await getCurrentSession();
   const { conversationId } = params;
 
   if (!session) {

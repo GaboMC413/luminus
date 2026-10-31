@@ -17,7 +17,7 @@ function extensionForContentType(contentType: string) {
 
 export async function POST(request: Request) {
   try {
-    const session = getCurrentSession();
+    const session = await getCurrentSession();
 
     if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ message: "No autorizado." }, { status: 401 });

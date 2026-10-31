@@ -5,11 +5,9 @@ import { formatPostDate } from "@/lib/community/posts";
 
 export const runtime = "nodejs";
 
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  const session = getCurrentSession();
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });

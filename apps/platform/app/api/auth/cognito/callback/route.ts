@@ -206,9 +206,9 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get("code");
   const state = requestUrl.searchParams.get("state");
   const error = requestUrl.searchParams.get("error");
-  const storedState = readStoredState(cookies().get(COGNITO_STATE_COOKIE)?.value);
+  const storedState = readStoredState((await cookies()).get(COGNITO_STATE_COOKIE)?.value);
 
-  cookies().set(COGNITO_STATE_COOKIE, "", {
+  (await cookies()).set(COGNITO_STATE_COOKIE, "", {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -315,7 +315,7 @@ export async function GET(request: Request) {
           email: existingUser.email,
           role: existingUser.role,
         });
-        cookies().set("luminus_reactivation_token", token, {
+        (await cookies()).set("luminus_reactivation_token", token, {
           path: "/",
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
@@ -429,7 +429,7 @@ export async function GET(request: Request) {
       role: user.role,
     });
 
-    setSessionCookie(token);
+    await setSessionCookie(token);
 
     try {
       if (isNewUser) {

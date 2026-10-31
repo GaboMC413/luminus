@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
 
-export default function LegacyPerfilCompletarRedirect({
-  searchParams,
-}: {
-  searchParams?: Record<string, string | string[] | undefined>;
-}) {
+export default async function LegacyPerfilCompletarRedirect(
+  props: {
+    searchParams?: Promise<Record<string, string | string[] | undefined>>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const params = new URLSearchParams();
   if (searchParams) {
     Object.entries(searchParams).forEach(([key, value]) => {
