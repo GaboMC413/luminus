@@ -44,6 +44,9 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      - name: Generar cliente de Prisma
+        run: npm run db:generate -w platform
+
       - name: Ejecutar tests
         run: npm run test:platform
 

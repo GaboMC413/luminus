@@ -902,7 +902,7 @@ export async function sendBatchEventLiveNotifications(
     const batch = pendingInscriptions.slice(i, i + batchSize);
 
     await Promise.all(
-      batch.map(async (inscription) => {
+      batch.map(async (inscription: any) => {
         const guestEmail = inscription.guest?.email;
         if (!guestEmail) return;
 
