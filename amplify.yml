@@ -5,6 +5,7 @@ applications:
       phases:
         preBuild:
           commands:
+            - nvm use 22 || nvm install 22
             - cd ../..
             - npm ci --cache .npm --prefer-offline
         build:
@@ -28,6 +29,7 @@ applications:
       phases:
         preBuild:
           commands:
+            - nvm use 22 || nvm install 22
             - cd ../..
             - npm ci --cache .npm --prefer-offline
         build:
