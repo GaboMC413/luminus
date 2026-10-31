@@ -42,7 +42,7 @@ jobs:
           cache: npm
 
       - name: Instalar dependencias
-        run: npm ci
+        run: npm ci --no-audit
 
       - name: Generar cliente de Prisma
         run: npm run db:generate -w platform
@@ -63,7 +63,6 @@ jobs:
   security:
     name: Auditoría de seguridad
     runs-on: ubuntu-latest
-    continue-on-error: true
 
     steps:
       - name: Clonar el código
@@ -73,10 +72,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
 
       - name: Instalar dependencias
-        run: npm ci
+        run: npm ci --no-audit
 
       - name: Revisar vulnerabilidades
         run: npm audit --omit=dev
