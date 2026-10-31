@@ -5,7 +5,7 @@ import { hashPassword } from "@/lib/auth/password";
 export const runtime = "nodejs";
 
 export async function PATCH(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });

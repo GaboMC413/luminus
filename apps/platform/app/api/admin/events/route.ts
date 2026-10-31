@@ -11,7 +11,7 @@ function extractYoutubeId(url?: string | null): string | null {
 
 export async function POST(request: Request) {
   try {
-    const session = getCurrentSession();
+    const session = await getCurrentSession();
     if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ error: "Acceso no autorizado." }, { status: 403 });
     }
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const session = getCurrentSession();
+    const session = await getCurrentSession();
     if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ error: "Acceso no autorizado." }, { status: 403 });
     }

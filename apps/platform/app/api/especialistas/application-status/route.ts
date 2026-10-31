@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
   if (!session) {
     return NextResponse.json({ hasApplication: false, status: null });
   }

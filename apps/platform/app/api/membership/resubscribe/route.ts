@@ -6,7 +6,7 @@ import type Stripe from "stripe";
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }

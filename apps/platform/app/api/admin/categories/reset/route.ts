@@ -88,7 +88,7 @@ function slugify(value: string) {
 }
 
 export async function POST() {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
   if (!session || session.role !== "ADMIN") {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }

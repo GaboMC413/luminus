@@ -97,7 +97,7 @@ export async function POST(request: Request) {
       role: user.role,
     });
 
-    setSessionCookie(token);
+    await setSessionCookie(token);
 
     try {
       await prisma.activityLog.create({

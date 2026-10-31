@@ -48,7 +48,7 @@ describe("/api/profile", () => {
   describe("Test 1: Rutas Protegidas (Autenticación)", () => {
     it("debería rechazar la petición GET con 401 si no hay sesión iniciada", async () => {
       // 1. Simulamos que el usuario NO está logueado
-      vi.mocked(getCurrentSession).mockReturnValue(null);
+      vi.mocked(getCurrentSession).mockResolvedValue(null);
 
       const res = await GET();
       const data = await res.json();
@@ -61,7 +61,7 @@ describe("/api/profile", () => {
     });
 
     it("debería rechazar la petición PATCH con 401 si no hay sesión iniciada", async () => {
-      vi.mocked(getCurrentSession).mockReturnValue(null);
+      vi.mocked(getCurrentSession).mockResolvedValue(null);
       const req = createRequest({ first_name: "Hacker" });
 
       const res = await PATCH(req);
@@ -76,7 +76,7 @@ describe("/api/profile", () => {
     it("solo debe usar el ID de la sesión segura para actualizar datos, ignorando cualquier ID enviado en la petición", async () => {
       // 1. Simulamos que quien inició sesión fue "usuario-legitimo-123"
       const sessionData = { userId: "usuario-legitimo-123", email: "legitimo@test.com", role: "USER" };
-      vi.mocked(getCurrentSession).mockReturnValue(sessionData as any);
+      vi.mocked(getCurrentSession).mockResolvedValue(sessionData as any);
 
       // 2. El atacante intenta enviar un "userId" diferente (ej: "admin-456") en el cuerpo
       const req = createRequest({
@@ -122,7 +122,7 @@ describe("/api/profile", () => {
   describe("Test 3: Flujo Principal (Actualizar Perfil)", () => {
     it("debería actualizar los datos correctamente si la sesión es válida", async () => {
       const sessionData = { userId: "user-123", email: "test@test.com", role: "USER" };
-      vi.mocked(getCurrentSession).mockReturnValue(sessionData as any);
+      vi.mocked(getCurrentSession).mockResolvedValue(sessionData as any);
 
       const req = createRequest({
         first_name: "Juan",

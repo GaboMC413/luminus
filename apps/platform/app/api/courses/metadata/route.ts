@@ -157,7 +157,7 @@ async function validateSafeExternalUrl(targetUrl: string): Promise<string | null
 
 export async function POST(request: Request) {
   // 1. Authentication check
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }

@@ -2,24 +2,79 @@ name: CI
 
 on:
   pull_request:
-    branches: [ "main", "platform/dev" ]
+    branches:
+      - main
+      - platform/dev
+      - marketing/dev
 
 jobs:
-  test:
-    name: Correr Tests
+  validate-source:
+    name: Validar rama de origen
     runs-on: ubuntu-latest
 
     steps:
-    - name: Clonar el código
-      uses: actions/checkout@v4
+      - name: Verificar rama autorizada
+        env:
+          SOURCE_BRANCH: ${{ github.head_ref }}
+          TARGET_BRANCH: ${{ github.base_ref }}
+        run: |
+          if [[ "$TARGET_BRANCH" == "main" ]]; then
+            if [[ "$SOURCE_BRANCH" != "platform/dev" && "$SOURCE_BRANCH" != "marketing/dev" ]]; then
+              echo "::error::Solo platform/dev y marketing/dev pueden integrarse a main."
+              exit 1
+            fi
+          fi
 
-    - name: Configurar Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20' # La versión de node de tu entorno actual
+          echo "Rama autorizada."
 
-    - name: Instalar dependencias
-      run: npm install
+  test:
+    name: Tests y Builds
+    runs-on: ubuntu-latest
 
-    - name: Ejecutar los tests
-      run: npm run test:platform
+    steps:
+      - name: Clonar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Instalar dependencias
+        run: npm ci --no-audit
+
+      - name: Generar cliente de Prisma
+        run: npm run db:generate -w platform
+
+      - name: Ejecutar tests
+        run: npm run test:platform
+
+      - name: Build de Marketing
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
+        run: npm run build -w marketing
+
+      - name: Build de Plataforma
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy?schema=public"
+        run: npm run build -w platform
+
+  security:
+    name: Auditoría de seguridad
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Instalar dependencias
+        run: npm ci --no-audit
+
+      - name: Revisar vulnerabilidades
+        run: npm audit --omit=dev

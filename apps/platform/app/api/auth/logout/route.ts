@@ -11,7 +11,7 @@ function getCognitoDomain() {
 }
 
 export async function GET(request: Request) {
-  clearSessionCookie();
+  await clearSessionCookie();
 
   const url = new URL(request.url);
   const redirectParam = url.searchParams.get("redirect") || "/iniciar-sesion";
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  clearSessionCookie();
+  await clearSessionCookie();
 
   const url = new URL(request.url);
   const origin = (process.env.AUTH_BASE_URL?.trim() || url.origin).replace(/\/$/, "");

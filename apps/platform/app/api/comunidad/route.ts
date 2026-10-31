@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });

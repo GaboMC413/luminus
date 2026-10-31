@@ -5,7 +5,7 @@ import { stripe } from "@/lib/stripe";
 export const runtime = "nodejs";
 
 export async function DELETE(req: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No estás autenticado." }, { status: 401 });
@@ -54,7 +54,7 @@ export async function DELETE(req: Request) {
       },
     });
 
-    clearSessionCookie();
+    await clearSessionCookie();
 
     return NextResponse.json({ success: true, message: "Cuenta cerrada correctamente." });
   } catch (error) {

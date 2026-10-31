@@ -102,7 +102,7 @@ export async function POST(request: Request) {
             email: user.email,
             role: user.role,
           });
-          cookies().set("luminus_reactivation_token", token, {
+          (await cookies()).set("luminus_reactivation_token", token, {
             path: "/",
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -197,7 +197,7 @@ export async function POST(request: Request) {
       role: user.role,
     });
 
-    setSessionCookie(sessionToken);
+    await setSessionCookie(sessionToken);
 
     try {
       if (isNewUser) {

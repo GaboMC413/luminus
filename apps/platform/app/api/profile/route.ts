@@ -96,7 +96,7 @@ function serializeProfile(user: any) {
 }
 
 export async function GET() {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
@@ -171,7 +171,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });

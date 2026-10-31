@@ -84,8 +84,9 @@ export function readSessionToken(token?: string): SessionPayload | null {
   return payload;
 }
 
-export function setSessionCookie(token: string) {
-  cookies().set(SESSION_COOKIE_NAME, token, {
+export async function setSessionCookie(token: string) {
+  const cookieStore = await cookies();
+  cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -94,9 +95,10 @@ export function setSessionCookie(token: string) {
   });
 }
 
-export function clearSessionCookie() {
+export async function clearSessionCookie() {
   try {
-    cookies().set(SESSION_COOKIE_NAME, "", {
+    const cookieStore = await cookies();
+    cookieStore.set(SESSION_COOKIE_NAME, "", {
       httpOnly: true,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
@@ -109,12 +111,13 @@ export function clearSessionCookie() {
   }
 }
 
-export function getCurrentSession() {
-  return readSessionToken(cookies().get(SESSION_COOKIE_NAME)?.value);
+export async function getCurrentSession(): Promise<SessionPayload | null> {
+  const cookieStore = await cookies();
+  return readSessionToken(cookieStore.get(SESSION_COOKIE_NAME)?.value);
 }
 
 export async function getCurrentActiveUser() {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
   if (!session) return null;
 
   try {
@@ -144,7 +147,7 @@ export async function getCurrentActiveUser() {
 }
 
 export async function assertOnboarded(redirectToPath?: string) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
   if (!session) {
     const loginTarget = redirectToPath
       ? `/iniciar-sesion?redirect=${encodeURIComponent(redirectToPath)}`
@@ -207,7 +210,7 @@ export async function assertOnboarded(redirectToPath?: string) {
 }
 
 export async function redirectIfAuthenticated() {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
   if (!session) return;
 
   let destination: string | null = null;

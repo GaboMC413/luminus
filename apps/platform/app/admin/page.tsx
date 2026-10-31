@@ -23,7 +23,7 @@ async function loadAdminSection<T>(
 }
 
 export default async function AdminPage() {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     redirect("/auth/iniciar-sesion");

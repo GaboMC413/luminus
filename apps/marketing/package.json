@@ -14,13 +14,14 @@
     "@aws-sdk/client-ses": "^3.1111.0",
     "@aws-sdk/client-sesv2": "^3.1116.0",
     "@marsidev/react-turnstile": "^1.6.1",
-    "lucide-react": "^0.446.0",
-    "next": "^14.2.35",
+    "@prisma/client": "^5.22.0",
+    "lucide-react": "^1.16.0",
+    "next": "^15.5.28",
     "react": "^18",
     "react-dom": "^18"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.4.20",

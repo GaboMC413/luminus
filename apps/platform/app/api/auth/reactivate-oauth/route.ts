@@ -5,7 +5,7 @@ import { setSessionCookie, readSessionToken } from "@/lib/auth/session";
 export const runtime = "nodejs";
 
 export async function POST() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get("luminus_reactivation_token")?.value;
 
   if (!token) {
@@ -66,10 +66,10 @@ export async function POST() {
     }
 
     // Set the actual session cookie
-    setSessionCookie(token);
+    await setSessionCookie(token);
 
     // Clear the temporary reactivation cookie
-    cookies().delete("luminus_reactivation_token");
+    (await cookies()).delete("luminus_reactivation_token");
 
     return NextResponse.json({ success: true, message: "Cuenta reactivada con éxito." });
   } catch (error) {

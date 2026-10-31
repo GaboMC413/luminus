@@ -5,7 +5,7 @@ import { createCustomerPortalSession } from "@/lib/stripe";
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });

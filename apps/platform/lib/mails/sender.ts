@@ -75,7 +75,7 @@ async function logSentEmail(
       if (oldestRecords.length > 0) {
         await prisma.sentEmailLog.deleteMany({
           where: {
-            id: { in: oldestRecords.map((r) => r.id) },
+            id: { in: oldestRecords.map((r: { id: string }) => r.id) },
           },
         });
       }
@@ -902,7 +902,7 @@ export async function sendBatchEventLiveNotifications(
     const batch = pendingInscriptions.slice(i, i + batchSize);
 
     await Promise.all(
-      batch.map(async (inscription) => {
+      batch.map(async (inscription: any) => {
         const guestEmail = inscription.guest?.email;
         if (!guestEmail) return;
 

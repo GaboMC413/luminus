@@ -16,7 +16,7 @@ function extensionForContentType(contentType: string) {
 }
 
 export async function POST(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   const body = await request.json().catch(() => null);
   const contentType = typeof body?.contentType === "string" ? body.contentType : "image/webp";

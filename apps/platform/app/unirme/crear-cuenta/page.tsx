@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function UnirmeCrearCuentaPage() {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
   if (session) {
     try {
       const { prisma } = await import("@/lib/db");
