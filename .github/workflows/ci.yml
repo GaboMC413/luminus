@@ -7,19 +7,19 @@ on:
 jobs:
   test:
     name: Correr Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
-    - name: Clonar el código
-      uses: actions/checkout@v4
+      - name: Clonar el código
+        uses: actions/checkout@v5
 
-    - name: Configurar Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20' # La versión de node de tu entorno actual
+      - name: Configurar Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
 
-    - name: Instalar dependencias
-      run: npm install
+      - name: Instalar dependencias
+        run: npm ci
 
-    - name: Ejecutar los tests
-      run: npm run test:platform
+      - name: Ejecutar los tests
+        run: npm run test:platform
