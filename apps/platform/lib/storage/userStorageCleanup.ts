@@ -1,4 +1,5 @@
-import { S3Client, ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/client-s3";
+import { ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/client-s3";
+import { getStorageConfig, getS3Client } from "./s3Client";
 
 /**
  * Permanently deletes all AWS S3 folders and files associated with a given user
@@ -10,42 +11,8 @@ export async function deleteUserS3Data(userId: string): Promise<{ deletedCount: 
     return { deletedCount: 0 };
   }
 
-  let bucket =
-    process.env.S3_STORAGE_BUCKET?.trim() ||
-    process.env.S3_BUCKET?.trim() ||
-    process.env.S3_AVATAR_BUCKET?.trim() ||
-    "luminus-storage-dev-905418193825-us-east-1-an";
-
-  if (bucket === "luminus-storage-prod") {
-    bucket = "luminus-storage-prod-905418193825-us-east-1-an";
-  } else if (bucket === "luminus-storage-dev" || bucket === "luminus-dev-avatars") {
-    bucket = "luminus-storage-dev-905418193825-us-east-1-an";
-  }
-
-  const region =
-    process.env.S3_STORAGE_REGION?.trim() ||
-    process.env.S3_REGION?.trim() ||
-    process.env.S3_AVATAR_REGION?.trim() ||
-    "us-east-1";
-
-  const accessKeyId =
-    process.env.S3_STORAGE_ACCESS_KEY_ID?.trim() ||
-    process.env.S3_ACCESS_KEY_ID?.trim() ||
-    process.env.S3_AVATAR_ACCESS_KEY_ID?.trim() ||
-    process.env.AWS_ACCESS_KEY_ID?.trim();
-
-  const secretAccessKey =
-    process.env.S3_STORAGE_SECRET_ACCESS_KEY?.trim() ||
-    process.env.S3_SECRET_ACCESS_KEY?.trim() ||
-    process.env.S3_AVATAR_SECRET_ACCESS_KEY?.trim() ||
-    process.env.AWS_SECRET_ACCESS_KEY?.trim();
-
-  const s3 = new S3Client({
-    region,
-    ...(accessKeyId && secretAccessKey
-      ? { credentials: { accessKeyId, secretAccessKey } }
-      : {}),
-  });
+  const { bucket } = getStorageConfig();
+  const s3 = getS3Client();
 
   const prefixes = [
     `avatars/${userId}/`,
