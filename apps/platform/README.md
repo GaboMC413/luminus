@@ -10,11 +10,11 @@ Required local env vars:
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/postgres?schema=public&sslmode=require"
 AUTH_SESSION_SECRET="use-a-long-random-secret-with-at-least-32-characters"
 AUTH_BASE_URL="http://localhost:3100"
-S3_AVATAR_BUCKET="luminus-dev-avatars"
-S3_AVATAR_REGION="us-east-1"
-S3_AVATAR_PUBLIC_BASE_URL="https://luminus-dev-avatars.s3.us-east-1.amazonaws.com"
-S3_AVATAR_ACCESS_KEY_ID="IAM_ACCESS_KEY_ID"
-S3_AVATAR_SECRET_ACCESS_KEY="IAM_SECRET_ACCESS_KEY"
+S3_STORAGE_BUCKET="luminus-storage-dev-905418193825-us-east-1-an"
+S3_STORAGE_REGION="us-east-1"
+S3_STORAGE_PUBLIC_BASE_URL="https://luminus-storage-dev-905418193825-us-east-1-an.s3.us-east-1.amazonaws.com"
+S3_STORAGE_ACCESS_KEY_ID="IAM_ACCESS_KEY_ID"
+S3_STORAGE_SECRET_ACCESS_KEY="IAM_SECRET_ACCESS_KEY"
 SES_REGION="us-east-1"
 SES_FROM_EMAIL="info@luminuslatam.com"
 SES_ACCESS_KEY_ID="IAM_ACCESS_KEY_ID"
@@ -48,19 +48,19 @@ npm run db:migrate -w platform
 npm run dev:platform
 ```
 
-## Avatar uploads
+## Unified S3 Storage
 
-User avatar images are uploaded directly from the browser to S3 with a short-lived signed URL.
+The platform uses a single unified S3 bucket per environment (dev / prod), with dedicated folder prefixes:
+- `avatars/`: User profile pictures.
+- `feed/`: Community posts and images.
+- `events/covers/`: Event cover images.
+- `resumes/`: Curriculums / resumes.
 
-Create an S3 bucket for avatars and configure:
-
+Bucket configuration:
 - CORS: allow `PUT` from local dev and the Amplify domain.
-- Public read, or a CloudFront distribution exposed through `S3_AVATAR_PUBLIC_BASE_URL`.
-- IAM permission for the Amplify app/runtime to run `s3:PutObject` on `avatars/*`.
-- Amplify environment variables must use the `S3_AVATAR_*` credential names because `AWS_*`
-  prefixes are reserved by Amplify.
-
-The app stores the resulting public URL in `user_profiles.avatar_url`.
+- Public read on `avatars/*`, `feed/*`, and `events/covers/*`.
+- IAM permissions for the Amplify app/runtime to run `s3:PutObject`, `s3:GetObject`, and `s3:DeleteObject`.
+- Amplify environment variables use the `S3_STORAGE_*` credential names because `AWS_*` prefixes are reserved by Amplify.
 
 ## Password recovery emails
 

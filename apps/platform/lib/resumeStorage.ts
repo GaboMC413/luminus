@@ -100,11 +100,9 @@ export function isAllowedLegacyResumeUrl(value: string) {
     const url = new URL(value);
     if (url.protocol !== "https:") return false;
 
-    const publicBaseUrl = process.env.S3_PUBLIC_BASE_URL?.trim();
+    const { bucket, region, publicBaseUrl } = getStorageConfig();
     if (publicBaseUrl && url.origin === new URL(publicBaseUrl).origin) return url.pathname.includes("/resumes/");
 
-    const bucket = process.env.S3_BUCKET?.trim();
-    const region = process.env.S3_REGION?.trim() || "us-east-1";
     return !!bucket && url.hostname === `${bucket}.s3.${region}.amazonaws.com` && url.pathname.startsWith("/resumes/");
   } catch {
     return false;
