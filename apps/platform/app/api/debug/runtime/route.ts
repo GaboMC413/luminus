@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { getCurrentSession } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,7 +38,9 @@ async function runTest(testFn: () => Promise<any>) {
 }
 
 export async function GET() {
-  if (process.env.ENABLE_RUNTIME_DEBUG !== "true") {
+  const session = getCurrentSession();
+  // Restrict to verified ADMIN users only when debugging is enabled
+  if (process.env.ENABLE_RUNTIME_DEBUG !== "true" || session?.role !== "ADMIN") {
     return NextResponse.json({ message: "Not found." }, { status: 404 });
   }
 
@@ -91,5 +94,3 @@ export async function GET() {
     },
   });
 }
-
-

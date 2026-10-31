@@ -41,33 +41,36 @@ export async function POST(request: Request) {
     let bucket =
       process.env.S3_STORAGE_BUCKET?.trim() ||
       process.env.S3_BUCKET?.trim() ||
-      "luminus-storage-prod-905418193825-us-east-1-an";
+      process.env.S3_AVATAR_BUCKET?.trim() ||
+      "luminus-storage-dev-905418193825-us-east-1-an";
 
     if (bucket === "luminus-storage-prod") {
       bucket = "luminus-storage-prod-905418193825-us-east-1-an";
+    } else if (bucket === "luminus-storage-dev" || bucket === "luminus-dev-avatars") {
+      bucket = "luminus-storage-dev-905418193825-us-east-1-an";
     }
 
     const region =
       process.env.S3_STORAGE_REGION?.trim() ||
       process.env.S3_REGION?.trim() ||
+      process.env.S3_AVATAR_REGION?.trim() ||
       "us-east-1";
 
     let publicBaseUrl =
       process.env.S3_STORAGE_PUBLIC_BASE_URL?.trim() ||
-      process.env.S3_PUBLIC_BASE_URL?.trim();
-
-    if (publicBaseUrl && publicBaseUrl.includes("luminus-storage-prod.s3")) {
-      publicBaseUrl = publicBaseUrl.replace("luminus-storage-prod.s3", "luminus-storage-prod-905418193825-us-east-1-an.s3");
-    }
+      process.env.S3_PUBLIC_BASE_URL?.trim() ||
+      process.env.S3_AVATAR_PUBLIC_BASE_URL?.trim();
 
     const accessKeyId =
       process.env.S3_STORAGE_ACCESS_KEY_ID?.trim() ||
       process.env.S3_ACCESS_KEY_ID?.trim() ||
+      process.env.S3_AVATAR_ACCESS_KEY_ID?.trim() ||
       process.env.AWS_ACCESS_KEY_ID?.trim();
 
     const secretAccessKey =
       process.env.S3_STORAGE_SECRET_ACCESS_KEY?.trim() ||
       process.env.S3_SECRET_ACCESS_KEY?.trim() ||
+      process.env.S3_AVATAR_SECRET_ACCESS_KEY?.trim() ||
       process.env.AWS_SECRET_ACCESS_KEY?.trim();
 
     const key = `events/covers/${randomUUID()}.${extensionForContentType(contentType)}`;

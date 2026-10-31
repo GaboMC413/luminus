@@ -1,7 +1,7 @@
 const { Client } = require('pg');
 const { S3Client, ListObjectsV2Command, DeleteObjectsCommand } = require('@aws-sdk/client-s3');
 
-const BUCKET = process.env.S3_AVATAR_BUCKET || process.env.NEXT_PUBLIC_S3_BUCKET_NAME || 'luminus-storage-prod-905418193825-us-east-1-an';
+const BUCKET = process.env.S3_STORAGE_BUCKET || process.env.S3_BUCKET || process.env.S3_AVATAR_BUCKET || process.env.NEXT_PUBLIC_S3_BUCKET_NAME || 'luminus-storage-dev-905418193825-us-east-1-an';
 const REGION = process.env.AWS_REGION || process.env.S3_AVATAR_REGION || 'us-east-1';
 const DRY_RUN = process.argv.includes('--dry-run');
 

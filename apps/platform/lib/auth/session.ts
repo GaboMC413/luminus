@@ -113,6 +113,36 @@ export function getCurrentSession() {
   return readSessionToken(cookies().get(SESSION_COOKIE_NAME)?.value);
 }
 
+export async function getCurrentActiveUser() {
+  const session = getCurrentSession();
+  if (!session) return null;
+
+  try {
+    const { prisma } = await import("@/lib/db");
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        status: true,
+      },
+    });
+
+    if (!user || user.status !== "active") {
+      return null;
+    }
+
+    return {
+      ...session,
+      role: user.role as "USER" | "ADMIN",
+      status: user.status,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function assertOnboarded(redirectToPath?: string) {
   const session = getCurrentSession();
   if (!session) {

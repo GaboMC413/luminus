@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCurrentSession } from "@/lib/auth/session";
+import { getCurrentSession, getCurrentActiveUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { serializePost } from "@/lib/community/posts";
 
@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const session = getCurrentSession();
+  const session = await getCurrentActiveUser();
 
   try {
     const rawPosts = await prisma.communityPost.findMany({
@@ -80,7 +80,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentActiveUser();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });

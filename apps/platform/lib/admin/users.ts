@@ -108,19 +108,39 @@ export function normalizeAdminUserPatch(input: unknown) {
     return { ok: false as const, message: "Usuario invalido." };
   }
 
-  const userData: { role?: UserRole; status?: UserStatus; isGhost?: boolean } = {};
+  const rawUserData =
+    body.userData && typeof body.userData === "object"
+      ? (body.userData as Record<string, unknown>)
+      : body;
+  const rawProfileData =
+    body.profileData && typeof body.profileData === "object"
+      ? (body.profileData as Record<string, unknown>)
+      : body;
+
+  const userData: { role?: UserRole; status?: UserStatus; isGhost?: boolean; email?: string } = {};
   const profileData: Record<string, string | boolean | Date | null> = {};
 
-  if (body.role === "USER" || body.role === "ADMIN") {
-    userData.role = body.role;
+  const roleCandidate = rawUserData.role ?? body.role;
+  if (roleCandidate === "USER" || roleCandidate === "ADMIN") {
+    userData.role = roleCandidate;
   }
 
-  if (body.status === "active" || body.status === "disabled" || body.status === "deleted") {
-    userData.status = body.status;
+  const statusCandidate = rawUserData.status ?? body.status;
+  if (statusCandidate === "active" || statusCandidate === "disabled" || statusCandidate === "deleted") {
+    userData.status = statusCandidate;
   }
 
-  if (typeof body.isGhost === "boolean") {
-    userData.isGhost = body.isGhost;
+  const ghostCandidate = rawUserData.isGhost ?? body.isGhost;
+  if (typeof ghostCandidate === "boolean") {
+    userData.isGhost = ghostCandidate;
+  }
+
+  const emailCandidate = rawUserData.email ?? body.email;
+  if (typeof emailCandidate === "string" && emailCandidate.trim()) {
+    const cleanEmail = emailCandidate.trim().toLowerCase();
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      userData.email = cleanEmail;
+    }
   }
 
   const profileFields = [
@@ -137,17 +157,20 @@ export function normalizeAdminUserPatch(input: unknown) {
   ];
 
   for (const field of profileFields) {
-    if (typeof body[field] === "string") {
-      profileData[field] = body[field].trim() || "";
+    const val = rawProfileData[field] ?? body[field];
+    if (typeof val === "string") {
+      profileData[field] = val.trim() || "";
     }
   }
 
-  if (typeof body.isOnboarded === "boolean") {
-    profileData.isOnboarded = body.isOnboarded;
+  const onboardedCandidate = rawProfileData.isOnboarded ?? body.isOnboarded;
+  if (typeof onboardedCandidate === "boolean") {
+    profileData.isOnboarded = onboardedCandidate;
   }
 
-  if (typeof body.birthdate === "string") {
-    profileData.birthdate = body.birthdate ? new Date(`${body.birthdate}T00:00:00.000Z`) : null;
+  const birthdateCandidate = rawProfileData.birthdate ?? body.birthdate;
+  if (typeof birthdateCandidate === "string") {
+    profileData.birthdate = birthdateCandidate ? new Date(`${birthdateCandidate}T00:00:00.000Z`) : null;
   }
 
   if (typeof profileData.firstName === "string" || typeof profileData.lastName === "string") {
