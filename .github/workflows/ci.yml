@@ -2,9 +2,31 @@ name: CI
 
 on:
   pull_request:
-    branches: ["main"]
+    branches:
+      - main
+      - platform/dev
+      - marketing/dev
 
 jobs:
+  validate-source:
+    name: Validar rama de origen
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verificar rama autorizada
+        env:
+          SOURCE_BRANCH: ${{ github.head_ref }}
+          TARGET_BRANCH: ${{ github.base_ref }}
+        run: |
+          if [[ "$TARGET_BRANCH" == "main" ]]; then
+            if [[ "$SOURCE_BRANCH" != "platform/dev" && "$SOURCE_BRANCH" != "marketing/dev" ]]; then
+              echo "::error::Solo platform/dev y marketing/dev pueden integrarse a main."
+              exit 1
+            fi
+          fi
+
+          echo "Rama autorizada."
+
   test:
     name: Tests y Builds
     runs-on: ubuntu-latest
