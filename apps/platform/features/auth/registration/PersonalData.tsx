@@ -205,7 +205,7 @@ export function PersonalData({
       console.error('Error processing image:', error);
       trackRegistrationError({
         step: "Paso 2 - Datos Personales (Foto de Perfil)",
-        action: "S3_AVATAR_UPLOAD_FAIL",
+        action: "AVATAR_UPLOAD_FAIL",
         userName: `${firstName} ${lastName}`.trim(),
         errorMessage: error?.message || "No pudimos subir tu foto de perfil.",
       });

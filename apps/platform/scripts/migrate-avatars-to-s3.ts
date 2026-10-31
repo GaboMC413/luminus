@@ -1,19 +1,12 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { prisma } from "../lib/db";
-
-const s3Client = new S3Client({
-  region: process.env.S3_AVATAR_REGION || "us-east-1",
-  credentials: {
-    accessKeyId: process.env.S3_AVATAR_ACCESS_KEY_ID || "",
-    secretAccessKey: process.env.S3_AVATAR_SECRET_ACCESS_KEY || "",
-  },
-});
-
-const S3_BUCKET = process.env.S3_AVATAR_BUCKET || "luminus-dev-avatars";
-const PUBLIC_BASE_URL = process.env.S3_AVATAR_PUBLIC_BASE_URL || `https://${S3_BUCKET}.s3.us-east-1.amazonaws.com`;
+import { getStorageConfig, getS3Client } from "../lib/storage/s3Client";
 
 async function migrateAvatars() {
-  console.log(`🚀 Iniciando migración de avatares Base64 a AWS S3 (${S3_BUCKET})...\n`);
+  const { bucket, publicBaseUrl } = getStorageConfig();
+  const s3Client = getS3Client();
+
+  console.log(`🚀 Iniciando migración de avatares Base64 a AWS S3 (${bucket})...\n`);
 
   const profiles = await prisma.userProfile.findMany({
     where: {
@@ -62,7 +55,7 @@ async function migrateAvatars() {
       // 1. Upload to AWS S3
       await s3Client.send(
         new PutObjectCommand({
-          Bucket: S3_BUCKET,
+          Bucket: bucket,
           Key: key,
           Body: imageBuffer,
           ContentType: contentType,
@@ -70,7 +63,7 @@ async function migrateAvatars() {
         })
       );
 
-      const s3Url = `${PUBLIC_BASE_URL}/${key}`;
+      const s3Url = `${publicBaseUrl}/${key}`;
 
       // 2. Update PostgreSQL UserProfile avatarUrl
       await prisma.userProfile.update({
