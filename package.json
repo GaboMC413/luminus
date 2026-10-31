@@ -30,8 +30,6 @@
     "@aws-sdk/s3-request-presigner": "^3.1063.0"
   },
   "overrides": {
-    "next": {
-      "postcss": "8.5.32"
-    }
+    "postcss": "8.5.32"
   }
 }
