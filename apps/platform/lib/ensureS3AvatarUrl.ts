@@ -23,10 +23,12 @@ export async function ensureS3AvatarUrl(avatarUrl?: string | null, userId?: stri
           process.env.S3_STORAGE_BUCKET?.trim() ||
           process.env.S3_BUCKET?.trim() ||
           process.env.S3_AVATAR_BUCKET?.trim() ||
-          "luminus-storage-prod-905418193825-us-east-1-an";
+          "luminus-storage-dev-905418193825-us-east-1-an";
 
-        if (bucket === "luminus-storage-prod" || bucket === "luminus-dev-avatars") {
+        if (bucket === "luminus-storage-prod") {
           bucket = "luminus-storage-prod-905418193825-us-east-1-an";
+        } else if (bucket === "luminus-storage-dev" || bucket === "luminus-dev-avatars") {
+          bucket = "luminus-storage-dev-905418193825-us-east-1-an";
         }
 
         const region =
@@ -57,6 +59,7 @@ export async function ensureS3AvatarUrl(avatarUrl?: string | null, userId?: stri
         const baseUrl =
           process.env.S3_STORAGE_PUBLIC_BASE_URL?.trim() ||
           process.env.S3_PUBLIC_BASE_URL?.trim() ||
+          process.env.S3_AVATAR_PUBLIC_BASE_URL?.trim() ||
           `https://${bucket}.s3.${region}.amazonaws.com`;
 
         await s3.send(
@@ -95,10 +98,12 @@ export async function ensureS3AvatarUrl(avatarUrl?: string | null, userId?: stri
       process.env.S3_STORAGE_BUCKET?.trim() ||
       process.env.S3_BUCKET?.trim() ||
       process.env.S3_AVATAR_BUCKET?.trim() ||
-      "luminus-storage-prod-905418193825-us-east-1-an";
+      "luminus-storage-dev-905418193825-us-east-1-an";
 
-    if (bucket === "luminus-storage-prod" || bucket === "luminus-dev-avatars") {
+    if (bucket === "luminus-storage-prod") {
       bucket = "luminus-storage-prod-905418193825-us-east-1-an";
+    } else if (bucket === "luminus-storage-dev" || bucket === "luminus-dev-avatars") {
+      bucket = "luminus-storage-dev-905418193825-us-east-1-an";
     }
 
     const region =
@@ -129,6 +134,7 @@ export async function ensureS3AvatarUrl(avatarUrl?: string | null, userId?: stri
     const baseUrl =
       process.env.S3_STORAGE_PUBLIC_BASE_URL?.trim() ||
       process.env.S3_PUBLIC_BASE_URL?.trim() ||
+      process.env.S3_AVATAR_PUBLIC_BASE_URL?.trim() ||
       `https://${bucket}.s3.${region}.amazonaws.com`;
 
     await s3.send(

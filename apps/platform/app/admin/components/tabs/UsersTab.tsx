@@ -164,10 +164,11 @@ export function UsersTab({
     const role = (formData.get("role") as "USER" | "ADMIN") || selectedUser.role;
     const status = (formData.get("status") as "active" | "disabled" | "deleted") || selectedUser.status;
     const isGhost = formData.get("isGhost") === "true";
+    const email = String(formData.get("email") || "").trim().toLowerCase();
 
     const payload = {
       id: selectedUser.id,
-      userData: { role, status, isGhost },
+      userData: { role, status, isGhost, ...(email ? { email } : {}) },
       profileData: {
         firstName: String(formData.get("firstName") || ""),
         lastName: String(formData.get("lastName") || ""),
@@ -201,6 +202,7 @@ export function UsersTab({
           item.id === selectedUser.id
             ? {
               ...item,
+              email: email || item.email,
               role,
               status,
               isGhost,
@@ -885,9 +887,10 @@ export function UsersTab({
                     <div className="flex flex-col gap-1">
                       <span className="text-[11px] font-bold uppercase text-slate-400">Mail</span>
                       <InputField
-                        value={selectedUser.email}
-                        disabled
-                        className="!h-9 text-xs bg-slate-100/70 text-slate-500 cursor-not-allowed border-slate-200/80"
+                        name="email"
+                        defaultValue={selectedUser.email}
+                        type="email"
+                        className="!h-9 text-xs"
                       />
                     </div>
 

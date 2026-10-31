@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowLeft, User, Mail, Phone, Lock, Award, Trash2 } from "lucide-react";
 import { SettingsProvider, useSettings } from "@/features/user-profile/context/SettingsContext";
-import { SuccessModal } from "@/components/ui/SuccessModal";
+import { Toast } from "@/components/ui/Toast";
 import { AccountClosureModal } from "@/features/user-profile/components/settings/AccountClosureModal";
 import { PageLoader } from "@/components/ui/PageLoader";
 
@@ -154,11 +154,13 @@ function SettingsLayoutContent({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      <SuccessModal
+      <Toast
         isOpen={successModalOpen}
         onClose={() => setSuccessModalOpen(false)}
         title={successModalConfig.title}
         message={successModalConfig.message}
+        type="success"
+        autoCloseMs={4000}
       />
 
       {/* Account Closure Modal */}

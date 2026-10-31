@@ -35,6 +35,12 @@ const ELEMENT_STYLE = {
   },
 };
 
+function isPlaceholderEmail(value?: string | null): boolean {
+  if (!value) return true;
+  const clean = value.trim().toLowerCase();
+  return clean.startsWith("facebook_") && clean.endsWith("@luminus.lat");
+}
+
 interface PaymentFormProps {
   billingCycle: "annual" | "monthly";
   subscriptionData: {
@@ -80,7 +86,7 @@ function PaymentForm({
 
   // Form states
   const [cardHolderName, setCardHolderName] = useState(defaultCardHolderName);
-  const [email, setEmail] = useState(defaultEmail);
+  const [email, setEmail] = useState(() => (isPlaceholderEmail(defaultEmail) ? "" : defaultEmail));
   const [billingAddress, setBillingAddress] = useState("");
   const [billingCity, setBillingCity] = useState(defaultCity);
   const [billingCountry, setBillingCountry] = useState(defaultCountry);
@@ -96,8 +102,10 @@ function PaymentForm({
   }, [defaultCardHolderName, cardHolderName]);
 
   useEffect(() => {
-    if (defaultEmail && !email) setEmail(defaultEmail);
-  }, [defaultEmail, email]);
+    if (defaultEmail && !isPlaceholderEmail(defaultEmail)) {
+      setEmail((prev) => (prev ? prev : defaultEmail));
+    }
+  }, [defaultEmail]);
 
   useEffect(() => {
     if (defaultCity && !billingCity) setBillingCity(defaultCity);
@@ -122,6 +130,13 @@ function PaymentForm({
 
     if (!cardHolderName.trim()) {
       setErrorMessage("Por favor ingresa el nombre que figura en la tarjeta.");
+      return;
+    }
+
+    const trimmedEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!trimmedEmail || !emailRegex.test(trimmedEmail) || isPlaceholderEmail(trimmedEmail)) {
+      setErrorMessage("Por favor ingresa un correo electrónico válido para tu cuenta y recibos.");
       return;
     }
 
@@ -152,7 +167,7 @@ function PaymentForm({
               card: cardNumberElement,
               billing_details: {
                 name: cardHolderName.trim(),
-                email: email.trim() || undefined,
+                email: trimmedEmail,
                 address: {
                   line1: billingAddress.trim() || undefined,
                   city: billingCity.trim() || undefined,
@@ -182,6 +197,7 @@ function PaymentForm({
           customerId: subscriptionData.customerId,
           billingInterval: billingCycle,
           cardName: cardHolderName.trim(),
+          email: trimmedEmail,
           postalCode: cardPostalCode.trim(),
           address: billingAddress.trim(),
           city: billingCity.trim(),
@@ -198,6 +214,7 @@ function PaymentForm({
       // Persist in localStorage for pre-fill in Step 4
       if (typeof window !== "undefined") {
         localStorage.setItem("luminus_card_name", cardHolderName.trim());
+        localStorage.setItem("luminus_user_email", trimmedEmail);
         if (billingCity) localStorage.setItem("luminus_billing_city", billingCity.trim());
         if (billingCountry) localStorage.setItem("luminus_billing_country", billingCountry.trim());
         if (billingCountryCode) localStorage.setItem("luminus_billing_country_code", billingCountryCode.trim());
@@ -362,6 +379,19 @@ function PaymentForm({
                 setErrorMessage(null);
               }}
               placeholder="Nombre en la tarjeta"
+              className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans"
+            />
+
+            {/* Email for Receipts / Account */}
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setErrorMessage(null);
+              }}
+              placeholder="Correo electrónico para tus recibos"
               className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans"
             />
 
@@ -544,7 +574,8 @@ export default function MembershipPaymentView() {
   });
   const [defaultEmail, setDefaultEmail] = useState(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem("luminus_user_email") || "";
+      const stored = localStorage.getItem("luminus_user_email") || "";
+      return isPlaceholderEmail(stored) ? "" : stored;
     }
     return "";
   });
@@ -604,8 +635,14 @@ export default function MembershipPaymentView() {
         if (res.ok) {
           const data = await res.json();
           if (data?.email) {
-            setDefaultEmail(data.email);
-            localStorage.setItem("luminus_user_email", data.email);
+            const clean = data.email.trim().toLowerCase();
+            if (!isPlaceholderEmail(clean)) {
+              setDefaultEmail(clean);
+              localStorage.setItem("luminus_user_email", clean);
+            } else {
+              setDefaultEmail("");
+              localStorage.removeItem("luminus_user_email");
+            }
           }
           const p = data?.profile;
           if (p) {

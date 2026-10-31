@@ -89,6 +89,18 @@ export async function PATCH(request: Request) {
   try {
     const { prisma } = await import("@/lib/db");
 
+    if (parsed.userData.email) {
+      const emailConflict = await prisma.user.findFirst({
+        where: {
+          email: parsed.userData.email,
+          id: { not: parsed.id },
+        },
+      });
+      if (emailConflict) {
+        return NextResponse.json({ message: "Ese correo electrónico ya pertenece a otro usuario." }, { status: 400 });
+      }
+    }
+
     if (parsed.userData.status) {
       const existingUser = await prisma.user.findUnique({
         where: { id: parsed.id },

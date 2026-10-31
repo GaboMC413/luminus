@@ -7,12 +7,30 @@ import {
 } from "@/lib/auth/recoveryTokens";
 import { sendPasswordResetEmail } from "@/lib/mails/sender";
 import { verifyTurnstileToken } from "@/lib/turnstile";
+import { isRateLimited } from "@/utils/rateLimit";
 
 export const runtime = "nodejs";
 
 const GENERIC_RECOVERY_MESSAGE = "Si existe una cuenta con ese correo, enviaremos un codigo de recuperacion.";
 
+function getClientIp(request: Request): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+  return request.headers.get("cf-connecting-ip") || request.headers.get("x-real-ip") || "unknown-ip";
+}
+
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const rateCheck = isRateLimited(ip, "AUTH_RECOVER_REQ", 5, 15 * 60 * 1000);
+  if (rateCheck.success) {
+    return NextResponse.json(
+      { message: "Demasiados intentos. Por favor espera unos minutos." },
+      { status: 429 }
+    );
+  }
+
   const body = await request.json().catch(() => null);
   const email = typeof body?.email === "string" ? body.email.trim().toLowerCase() : "";
 
@@ -35,6 +53,19 @@ export async function POST(request: Request) {
     });
 
     if (!user) {
+      return NextResponse.json({ success: true, message: GENERIC_RECOVERY_MESSAGE });
+    }
+
+    // Cooldown: prevent email flooding if a token was created within the last 60 seconds
+    const recentToken = await prisma.passwordResetToken.findFirst({
+      where: {
+        userId: user.id,
+        createdAt: { gte: new Date(Date.now() - 60 * 1000) },
+      },
+      select: { id: true },
+    });
+
+    if (recentToken) {
       return NextResponse.json({ success: true, message: GENERIC_RECOVERY_MESSAGE });
     }
 

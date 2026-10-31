@@ -10,7 +10,7 @@ const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
 });
 
-const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "AIzaSyC8oSQoTxkqdQ2otejFMnrGQAU1oeUaZEA";
+const googleMapsApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://luminuslatam.com";
 
@@ -80,10 +80,12 @@ export default function RootLayout({
             `,
           }}
         />
-        <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places&language=es&loading=async`}
-          strategy="afterInteractive"
-        />
+        {googleMapsApiKey ? (
+          <Script
+            src={`https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places&language=es&loading=async`}
+            strategy="afterInteractive"
+          />
+        ) : null}
         {children}
       </body>
     </html>

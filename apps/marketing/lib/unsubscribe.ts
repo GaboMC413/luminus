@@ -1,10 +1,15 @@
 import crypto from "crypto";
 
-const SECRET_KEY =
-  process.env.UNSUBSCRIBE_SECRET ||
-  process.env.NEXTAUTH_SECRET ||
-  process.env.JWT_SECRET ||
-  "luminus-unsubscribe-secret-key-2026";
+function getUnsubscribeSecret(): string {
+  const secret = process.env.UNSUBSCRIBE_SECRET || process.env.AUTH_SESSION_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("UNSUBSCRIBE_SECRET is required in production.");
+    }
+    return "dev-local-unsubscribe-secret-fallback-at-least-32-chars";
+  }
+  return secret;
+}
 
 /**
  * Normalizes email address for consistent hashing and comparisons.
@@ -19,7 +24,7 @@ export function normalizeEmail(email: string): string {
 export function generateUnsubscribeToken(email: string): string {
   const cleanEmail = normalizeEmail(email);
   return crypto
-    .createHmac("sha256", SECRET_KEY)
+    .createHmac("sha256", getUnsubscribeSecret())
     .update(cleanEmail)
     .digest("hex")
     .substring(0, 32); // 32 chars hex token
@@ -32,10 +37,12 @@ export function verifyUnsubscribeToken(email: string, token: string): boolean {
   if (!email || !token) return false;
   const expectedToken = generateUnsubscribeToken(email);
   try {
-    return crypto.timingSafeEqual(
-      Buffer.from(token.trim()),
-      Buffer.from(expectedToken)
-    );
+    const tokenBuf = Buffer.from(token.trim());
+    const expectedBuf = Buffer.from(expectedToken);
+    if (tokenBuf.length !== expectedBuf.length) {
+      return false;
+    }
+    return crypto.timingSafeEqual(tokenBuf, expectedBuf);
   } catch {
     return false;
   }

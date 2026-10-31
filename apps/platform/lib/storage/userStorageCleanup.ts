@@ -2,7 +2,7 @@ import { S3Client, ListObjectsV2Command, DeleteObjectsCommand } from "@aws-sdk/c
 
 /**
  * Permanently deletes all AWS S3 folders and files associated with a given user
- * from the unified production bucket (avatars, feed images, and resumes).
+ * from the unified bucket (avatars, feed images, and resumes).
  * Called when an administrator deletes a user permanently from the admin manager.
  */
 export async function deleteUserS3Data(userId: string): Promise<{ deletedCount: number }> {
@@ -13,25 +13,31 @@ export async function deleteUserS3Data(userId: string): Promise<{ deletedCount: 
   let bucket =
     process.env.S3_STORAGE_BUCKET?.trim() ||
     process.env.S3_BUCKET?.trim() ||
-    "luminus-storage-prod-905418193825-us-east-1-an";
+    process.env.S3_AVATAR_BUCKET?.trim() ||
+    "luminus-storage-dev-905418193825-us-east-1-an";
 
-  if (bucket === "luminus-storage-prod" || bucket === "luminus-dev-avatars") {
+  if (bucket === "luminus-storage-prod") {
     bucket = "luminus-storage-prod-905418193825-us-east-1-an";
+  } else if (bucket === "luminus-storage-dev" || bucket === "luminus-dev-avatars") {
+    bucket = "luminus-storage-dev-905418193825-us-east-1-an";
   }
 
   const region =
     process.env.S3_STORAGE_REGION?.trim() ||
     process.env.S3_REGION?.trim() ||
+    process.env.S3_AVATAR_REGION?.trim() ||
     "us-east-1";
 
   const accessKeyId =
     process.env.S3_STORAGE_ACCESS_KEY_ID?.trim() ||
     process.env.S3_ACCESS_KEY_ID?.trim() ||
+    process.env.S3_AVATAR_ACCESS_KEY_ID?.trim() ||
     process.env.AWS_ACCESS_KEY_ID?.trim();
 
   const secretAccessKey =
     process.env.S3_STORAGE_SECRET_ACCESS_KEY?.trim() ||
     process.env.S3_SECRET_ACCESS_KEY?.trim() ||
+    process.env.S3_AVATAR_SECRET_ACCESS_KEY?.trim() ||
     process.env.AWS_SECRET_ACCESS_KEY?.trim();
 
   const s3 = new S3Client({

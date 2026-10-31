@@ -11,7 +11,7 @@ import { RecentMembersCard } from "@/components/community/RecentMembersCard";
 import { MobileMembersCarousel } from "@/components/community/MobileMembersCarousel";
 import { UpcomingEventsCarousel, EventItem as CommunityEventItem } from "@/components/community/UpcomingEventsCarousel";
 import { SquareButton } from "@/components/ui/Button";
-import { SuccessModal } from "@/components/ui/SuccessModal";
+import { Toast } from "@/components/ui/Toast";
 
 export default function PlatformPage() {
   return (
@@ -570,16 +570,14 @@ function PlatformContent() {
         </aside>
       </div>
 
-      {/* Floating Confirmation Popup (does not break page layout) */}
-      <SuccessModal
+      {/* Floating Confirmation Toast */}
+      <Toast
         isOpen={Boolean(postNotice)}
         onClose={() => setPostNotice(null)}
         title={postNotice?.title || "¡Publicación enviada!"}
         message={postNotice?.message || ""}
-        buttonText="Entendido"
-        eyebrow="Comunidad LUMINUS"
-        celebrate={true}
-        autoCloseMs={6000}
+        type="success"
+        autoCloseMs={5000}
       />
     </div>
   );

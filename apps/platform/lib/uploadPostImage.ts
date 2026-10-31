@@ -6,6 +6,7 @@
  * 2. In-browser processing: Resizes to max 1600px, strips EXIF/GPS metadata via Canvas.
  * 3. Converts to image/webp and guarantees output file size is strictly < 1 MB.
  * 4. Requests S3 presigned URL and uploads directly to AWS S3 (feed/ folder).
+ * 5. Robust fallback: If direct browser-to-S3 PUT fails (CORS/ad-blocker), uploads via server proxy.
  */
 
 const MAX_INPUT_FILE_SIZE_BYTES = 15 * 1024 * 1024; // 15 MB initial input limit
@@ -105,7 +106,7 @@ export async function processAndCompressPostImage(
                 try {
                   const nextBlob = await tryExportWebp(qualityIndex + 1);
                   res(nextBlob);
-                } catch (e) {
+                } catch {
                   res(blob);
                 }
               }
@@ -140,7 +141,7 @@ export interface UploadPostImageResult {
 }
 
 /**
- * Compresses the image in the browser and uploads it directly to S3 via presigned URL.
+ * Compresses the image in the browser and uploads to S3 with seamless server fallback.
  */
 export async function uploadPostImage(
   file: File,
@@ -154,7 +155,10 @@ export async function uploadPostImage(
   }
 
   // 2. Mock mode support
-  if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true") {
+  if (
+    process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true" ||
+    process.env.NEXT_PUBLIC_USE_MOCK_AVATAR_UPLOAD === "true"
+  ) {
     onStatusChange?.("Subiendo imagen...");
     onProgress?.(30);
     await new Promise((r) => setTimeout(r, 300));
@@ -170,7 +174,7 @@ export async function uploadPostImage(
   }
 
   // 3. Compress & convert to WebP in browser
-  onStatusChange?.("Subiendo imagen...");
+  onStatusChange?.("Optimizando imagen...");
   onProgress?.(15);
   const webpBlob = await processAndCompressPostImage(file);
   onProgress?.(35);
@@ -181,68 +185,89 @@ export async function uploadPostImage(
     );
   }
 
-  // 4. Request Presigned Upload URL from our backend
+  // 4. Try Direct S3 Presigned Upload First
+  onStatusChange?.("Subiendo imagen...");
   onProgress?.(45);
-  const presignRes = await fetch("/api/uploads/post-image", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({
-      contentType: "image/webp",
-      contentLength: webpBlob.size,
-    }),
-  });
 
-  if (!presignRes.ok) {
-    const errorData = await presignRes.json().catch(() => null);
-    throw new Error(
-      errorData?.message || `Error al solicitar autorización de subida (${presignRes.status})`
-    );
-  }
+  try {
+    const presignRes = await fetch("/api/uploads/post-image", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        contentType: "image/webp",
+        contentLength: webpBlob.size,
+      }),
+    });
 
-  const { uploadUrl, key, publicUrl } = await presignRes.json();
+    if (presignRes.ok) {
+      const { uploadUrl, key, publicUrl } = await presignRes.json();
+      if (uploadUrl) {
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("PUT", uploadUrl);
+          xhr.setRequestHeader("Content-Type", "image/webp");
 
-  if (!uploadUrl) {
-    throw new Error("Respuesta inválida del servidor de almacenamiento.");
-  }
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable && event.total > 0) {
+              const uploadPercent = Math.round((event.loaded / event.total) * 50);
+              onProgress?.(45 + uploadPercent);
+            }
+          };
 
-  // 5. Upload binary directly using presigned PUT with progress tracking
-  await new Promise<void>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", uploadUrl);
-    xhr.setRequestHeader("Content-Type", "image/webp");
-    xhr.setRequestHeader("Cache-Control", "public, max-age=31536000, immutable");
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve();
+            } else {
+              reject(new Error(`S3 direct upload failed with status ${xhr.status}`));
+            }
+          };
 
-    xhr.upload.onprogress = (event) => {
-      if (event.lengthComputable && event.total > 0) {
-        // Maps 45% -> 95%
-        const uploadPercent = Math.round((event.loaded / event.total) * 50);
-        onProgress?.(45 + uploadPercent);
-      }
-    };
+          xhr.onerror = () => {
+            reject(new Error("S3 direct upload network or CORS error"));
+          };
 
-    xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) {
+          xhr.send(webpBlob);
+        });
+
         onProgress?.(100);
-        resolve();
-      } else if (xhr.status === 403) {
-        reject(new Error("No se pudo autorizar la subida de la imagen (403)."));
-      } else {
-        reject(new Error("No se pudo completar la subida de la imagen. Por favor intenta nuevamente."));
+        onStatusChange?.("Completado");
+        return {
+          publicUrl,
+          key,
+          sizeBytes: webpBlob.size,
+        };
       }
-    };
+    }
+  } catch (directS3Err) {
+    console.warn("Direct S3 upload failed or CORS restricted. Falling back to server upload proxy:", directS3Err);
+  }
 
-    xhr.onerror = () => {
-      reject(new Error("Error de conexión al subir la imagen."));
-    };
+  // 5. Fallback: Server-side upload proxy (100% reliable, immune to CORS and ad-blockers)
+  onStatusChange?.("Subiendo imagen...");
+  onProgress?.(60);
 
-    xhr.send(webpBlob);
+  const formData = new FormData();
+  formData.append("file", webpBlob, "post.webp");
+
+  const fallbackRes = await fetch("/api/uploads/post-image", {
+    method: "POST",
+    credentials: "include",
+    body: formData,
   });
 
+  if (!fallbackRes.ok) {
+    const errData = await fallbackRes.json().catch(() => null);
+    throw new Error(errData?.message || "No se pudo completar la subida de la imagen.");
+  }
+
+  const fallbackData = await fallbackRes.json();
+  onProgress?.(100);
   onStatusChange?.("Completado");
+
   return {
-    publicUrl,
-    key,
-    sizeBytes: webpBlob.size,
+    publicUrl: fallbackData.publicUrl,
+    key: fallbackData.key,
+    sizeBytes: fallbackData.sizeBytes || webpBlob.size,
   };
 }

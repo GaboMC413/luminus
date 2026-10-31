@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import { syncCognitoUserStatus } from "@/lib/auth/cognito-admin";
 import { deleteUserS3Data } from "@/lib/storage/userStorageCleanup";
 
@@ -8,7 +9,15 @@ async function executePurge(req: Request) {
   const authHeader = req.headers.get("authorization");
   const cronSecret = process.env.CRON_SECRET;
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || !authHeader) {
+    return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+  }
+
+  const expectedHeader = `Bearer ${cronSecret}`;
+  const authBuf = Buffer.from(authHeader);
+  const expectedBuf = Buffer.from(expectedHeader);
+
+  if (authBuf.length !== expectedBuf.length || !timingSafeEqual(authBuf, expectedBuf)) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }
 
