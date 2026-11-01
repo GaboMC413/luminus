@@ -3,6 +3,7 @@
 import { WelcomeRingCards } from "./WelcomeRingCards";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LocationInput } from "@/components/ui/LocationInput";
 import { PhoneInput } from "@/components/ui/PhoneInput";
@@ -11,7 +12,7 @@ import { SelectInput } from "@/components/ui/SelectInput";
 import { Button } from "@/components/ui/Button";
 import { COUNTRIES, Country } from "@/utils/countries";
 import { INTEREST_CATEGORIES } from "@/utils/constants";
-import { PhotoEditor } from "@/features/auth/registration/PhotoEditor";
+import { PhotoEditor } from "@/components/ui/PhotoEditor";
 import { uploadAvatar } from "@/lib/uploadAvatar";
 import {
   Sun,
@@ -595,16 +596,22 @@ export default function CompleteProfileView() {
       >
         {step === "details" ? (
           /* STEP 1: Personal Details */
-          <main className="w-full max-w-[380px] mx-auto flex flex-col items-center my-auto gap-6 sm:gap-8 animate-fade-in-up">
-            <h1 className="text-2xl sm:text-[26px] font-bold font-jakarta text-slate-900 tracking-tight text-center m-0">
-              Completa tu perfil
-            </h1>
+          <main className="w-full max-w-[380px] mx-auto flex flex-col items-center my-auto animate-fade-in-up">
+            {/* Header unit with persistent brand anchor */}
+            <header className="flex flex-col items-center text-center gap-2 mb-6 sm:mb-8">
+              <Link href="/" className="inline-flex items-center mb-1">
+                <img src="/iso-logo-black.svg" alt="LUMINUS" className="h-[36px] w-[36px]" />
+              </Link>
+              <h1 className="text-2xl sm:text-[26px] font-bold font-jakarta text-slate-900 tracking-tight m-0">
+                Completa tu perfil
+              </h1>
+            </header>
 
             <div className="w-full flex flex-col gap-4">
               <form onSubmit={handleContinueToInterests} className="flex flex-col gap-3">
                 {/* 1. Profile Photo Section */}
                 <div className="inline-flex items-end gap-4">
-                  <div className="w-24 h-24 bg-white rounded-2xl flex justify-center items-center overflow-hidden shrink-0 relative border border-zinc-200/90">
+                  <div className="w-24 h-24 bg-white rounded-2xl flex justify-center items-center overflow-hidden shrink-0 relative border border-slate-200">
                     {avatarUrl ? (
                       <img
                         src={avatarUrl}
@@ -666,7 +673,7 @@ export default function CompleteProfileView() {
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploading}
-                      className="h-8 px-3 bg-zinc-100 hover:bg-zinc-200/80 text-slate-800 text-xs font-semibold rounded-lg transition-all cursor-pointer border border-zinc-200/90 font-jakarta inline-flex items-center justify-center whitespace-nowrap disabled:opacity-50"
+                      className="h-8 px-3 bg-slate-100 hover:bg-slate-200/80 text-slate-800 text-xs font-semibold rounded-xl transition-all cursor-pointer border border-slate-200 font-jakarta inline-flex items-center justify-center whitespace-nowrap disabled:opacity-50"
                     >
                       {uploading
                         ? `Subiendo ${uploadProgress}%`
@@ -679,7 +686,7 @@ export default function CompleteProfileView() {
                       <button
                         type="button"
                         onClick={handleRemovePhoto}
-                        className="h-8 px-3 bg-red-50/70 hover:bg-red-100/80 text-red-600 hover:text-red-700 text-xs font-semibold rounded-lg transition-all cursor-pointer border border-red-200/60 font-jakarta inline-flex items-center justify-center whitespace-nowrap"
+                        className="h-8 px-3 bg-red-50/70 hover:bg-red-100/80 text-red-600 hover:text-red-700 text-xs font-semibold rounded-xl transition-all cursor-pointer border border-red-200/60 font-jakarta inline-flex items-center justify-center whitespace-nowrap"
                       >
                         Eliminar foto
                       </button>
@@ -932,18 +939,19 @@ export default function CompleteProfileView() {
                   </Button>
                 </div>
 
-                <button
+                <Button
                   type="button"
+                  variant="back"
                   onClick={() => {
                     setStep("details");
                     setErrorMessage(null);
                     window.scrollTo(0, 0);
                   }}
                   disabled={saving}
-                  className="pointer-events-auto mt-3.5 mb-1 text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-900 underline underline-offset-2 transition-colors text-center cursor-pointer bg-transparent border-none p-0 font-sans"
+                  className="pointer-events-auto mt-3 mb-1"
                 >
                   Volver
-                </button>
+                </Button>
               </div>
             </form>
           </main>
@@ -977,7 +985,7 @@ export default function CompleteProfileView() {
               <Button
                 type="button"
                 variant="primary"
-                onClick={() => router.push("/comunidad?welcome=1")}
+                onClick={() => router.push("/inicio?welcome=1")}
                 className="w-full flex items-center justify-center gap-2 h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all"
               >
                 <span>Ingresar</span>
@@ -997,7 +1005,28 @@ export default function CompleteProfileView() {
       )}
 
       {/* Footer */}
-      <footer className="relative z-10 w-full max-w-[380px] mx-auto px-4 py-3 sm:py-4 flex flex-col items-center gap-1 text-center shrink-0 mt-auto">
+      <footer className="relative z-10 w-full max-w-[380px] mx-auto px-4 py-4 sm:py-6 flex flex-col items-center gap-2 text-center shrink-0 mt-auto">
+        <p className="text-[11px] text-slate-400 leading-relaxed m-0">
+          Al unirte, estás creando una cuenta en LUMINUS y aceptando estar de acuerdo con nuestros{" "}
+          <Link
+            href="https://luminuslatam.com/legal/terminos"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-600"
+          >
+            Términos y Condiciones
+          </Link>{" "}
+          así como con nuestra{" "}
+          <Link
+            href="https://luminuslatam.com/legal/privacidad"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-600"
+          >
+            Política de Privacidad
+          </Link>
+          .
+        </p>
         <p className="text-xs text-slate-400 m-0">© 2026 LUMINUS Latam.</p>
       </footer>
     </div>

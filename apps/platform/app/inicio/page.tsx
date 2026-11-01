@@ -10,8 +10,11 @@ import { PostCard } from "@/components/community/PostCard";
 import { RecentMembersCard } from "@/components/community/RecentMembersCard";
 import { MobileMembersCarousel } from "@/components/community/MobileMembersCarousel";
 import { UpcomingEventsCarousel, EventItem as CommunityEventItem } from "@/components/community/UpcomingEventsCarousel";
-import { SquareButton } from "@/components/ui/Button";
+import { Button, SquareButton } from "@/components/ui/Button";
+import { CardHeader } from "@/components/ui/CardHeader";
+import { User } from "lucide-react";
 import { Toast } from "@/components/ui/Toast";
+import { formatLocationDisplay } from "@/utils/locationUtils";
 
 export default function PlatformPage() {
   return (
@@ -340,7 +343,7 @@ function PlatformContent() {
         {/* ========================================================================= */}
         <div className="hidden md:flex w-[240px] lg:w-[270px] flex-col gap-4 shrink-0 h-fit">
           {/* Card 1: Main Profile Card */}
-          <div className="bg-white rounded-2xl border border-zinc-200 overflow-hidden flex flex-col shadow-none relative">
+          <div className="card-surface !p-0 overflow-hidden flex flex-col relative">
             {/* 1. Cover photo */}
             <div className="h-20 w-full relative bg-slate-100 shrink-0">
               {currentUserProfile?.cover_url ? (
@@ -365,8 +368,8 @@ function PlatformContent() {
                     onError={() => setProfileImgError(true)}
                   />
                 ) : (
-                  <div className="w-full h-full bg-slate-50 flex items-center justify-center text-zinc-300">
-                    <span className="material-symbols-outlined text-[50px]">person</span>
+                  <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
+                    <User className="w-12 h-12" strokeWidth={1.5} />
                   </div>
                 )}
               </div>
@@ -376,7 +379,7 @@ function PlatformContent() {
             <div className="p-4 flex flex-col items-center text-center gap-3">
               <div className="flex flex-col items-center gap-1 w-full">
                 <h3
-                  className="text-lg font-bold text-slate-900 leading-snug line-clamp-1 hover:text-slate-600 transition-colors cursor-pointer font-jakarta"
+                  className="font-jakarta text-base font-bold text-slate-900 line-clamp-1 hover:text-slate-600 transition-colors cursor-pointer"
                   onClick={() => router.push("/perfil-usuario")}
                 >
                   {currentUserProfile
@@ -384,28 +387,29 @@ function PlatformContent() {
                     "Usuario sin nombre"
                     : "Cargando..."}
                 </h3>
-                <p className="text-sm font-medium text-slate-400 font-sans tracking-wide">
-                  {currentUserProfile?.city
-                    ? `${currentUserProfile.city.split(",")[0]}, ${currentUserProfile.country || ""}`.replace(
-                      /,\s*$/,
-                      ""
-                    )
-                    : "Ubicación no especificada"}
+                <p className="font-sans text-xs text-slate-500 font-medium truncate max-w-full">
+                  {formatLocationDisplay(
+                    currentUserProfile?.city && currentUserProfile?.country
+                      ? `${currentUserProfile.city}, ${currentUserProfile.country}`
+                      : currentUserProfile?.location || currentUserProfile?.city || currentUserProfile?.country
+                  ) || "Montevideo, Uruguay"}
                 </p>
               </div>
 
-              <button
+              <Button
+                variant="soft"
+                size="sm"
                 onClick={() => router.push("/perfil-usuario")}
-                className="w-full py-2.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-xs font-bold font-jakarta transition flex items-center justify-center gap-2 cursor-pointer border-none"
+                className="w-full"
               >
                 Ir a mi perfil
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* Card 2: Mi Red (Quick connections preview) */}
-          <div className="bg-white rounded-2xl border border-zinc-200 p-4 flex flex-col gap-3 shadow-none">
-            <h4 className="text-base font-bold text-slate-900 font-jakarta">Mi red</h4>
+          <div className="card-surface flex flex-col gap-3">
+            <CardHeader title="Mi red" />
 
             {connectionsLoading ? (
               <div className="py-6 flex items-center justify-center">
@@ -420,7 +424,7 @@ function PlatformContent() {
                 {activeConnections.slice(0, 12).map((conn: any) => (
                   <div
                     key={conn.id}
-                    onClick={() => router.push(`/comunidad/public-profile?id=${conn.user.id}`)}
+                    onClick={() => router.push(`/inicio/public-profile?id=${conn.user.id}`)}
                     className="relative group cursor-pointer"
                   >
                     <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 group-hover:border-slate-200 transition-colors duration-200 flex items-center justify-center shrink-0">
@@ -431,9 +435,7 @@ function PlatformContent() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="material-symbols-outlined text-slate-400 text-[20px] select-none">
-                          person
-                        </span>
+                        <User className="w-4 h-4 text-slate-400" strokeWidth={1.75} />
                       )}
                     </div>
                   </div>
@@ -441,12 +443,14 @@ function PlatformContent() {
               </div>
             )}
 
-            <button
+            <Button
+              variant="soft"
+              size="sm"
               onClick={() => router.push("/red")}
-              className="w-full py-2.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 rounded-xl text-xs font-bold font-jakarta transition flex items-center justify-center gap-2 cursor-pointer border-none"
+              className="w-full"
             >
               Ver mi red
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -484,7 +488,7 @@ function PlatformContent() {
                 icon="group"
                 variant="outline"
                 type="button"
-                onClick={() => router.push("/comunidad/miembros")}
+                onClick={() => router.push("/inicio/miembros")}
                 title="Miembros"
                 aria-label="Miembros"
               />
@@ -565,7 +569,7 @@ function PlatformContent() {
           <RecentMembersCard
             members={users}
             loading={loading}
-            onViewAllMembers={() => router.push("/comunidad/miembros")}
+            onViewAllMembers={() => router.push("/inicio/miembros")}
           />
         </aside>
       </div>

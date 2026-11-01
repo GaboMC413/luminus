@@ -33,7 +33,7 @@ export default function SignInView() {
   const codeInputRef = useRef<HTMLInputElement>(null);
 
   const getRedirectTarget = () => {
-    if (typeof window === "undefined") return "/comunidad";
+    if (typeof window === "undefined") return "/inicio";
     const params = new URLSearchParams(window.location.search);
     return getSafeRedirectUrl(params.get("redirect"));
   };
@@ -82,7 +82,7 @@ export default function SignInView() {
   const handleGoogleSignIn = () => {
     const target = getRedirectTarget();
     const googleUrl =
-      target !== "/comunidad"
+      target !== "/inicio"
         ? `/api/auth/cognito/start?provider=google&intent=signin&redirect=${encodeURIComponent(target)}`
         : "/api/auth/cognito/start?provider=google&intent=signin";
     window.location.href = googleUrl;
@@ -267,7 +267,7 @@ export default function SignInView() {
 
   const target = getRedirectTarget();
   const signUpUrl =
-    target !== "/comunidad"
+    target !== "/inicio"
       ? `/unirme?redirect=${encodeURIComponent(target)}`
       : "/unirme";
 

@@ -101,7 +101,7 @@ export function Modal({
 
           {/* Footer */}
           {footer && (
-            <div className={`mt-auto shrink-0 ${hideDividers ? "" : "border-t border-slate-50"} relative z-10 bg-white ${footerClassName || "flex flex-col-reverse md:flex-row gap-3 px-6 pb-6 pt-4 sm:px-7 sm:pb-7 sm:pt-4"}`}>
+            <div className={`mt-auto shrink-0 ${hideDividers ? "" : "border-t border-slate-50"} relative z-10 bg-white ${footerClassName || "flex flex-col-reverse md:flex-row md:justify-end gap-3 px-6 pb-6 pt-4 sm:px-7 sm:pb-7 sm:pt-4"}`}>
               {footer}
             </div>
           )}

@@ -5,6 +5,23 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Modal from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
+import { UserAvatar } from "@/components/ui/UserAvatar";
+import { EmptyState } from "@/components/ui/EmptyState";
+import {
+  ArrowLeft,
+  MoreVertical,
+  Bell,
+  BellOff,
+  Trash2,
+  Ban,
+  Flag,
+  Minus,
+  ChevronUp,
+  X,
+  MessageSquare,
+  Send,
+} from "lucide-react";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { isUuid } from "@/utils/validation";
 import { formatMessageBody, formatShortTime, formatChatDateDivider } from "@/utils/messages";
@@ -194,6 +211,9 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
           (a, b) => new Date(a.createdAt || "").getTime() - new Date(b.createdAt || "").getTime()
         );
         setMessages(sortedMsgs);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("luminus_messages_update"));
+        }
       } catch (err) {
         console.error("Error loading DB chat inside popup:", err);
       } finally {
@@ -243,6 +263,9 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
       console.error("Error refreshing DB messages inside popup:", err);
     } finally {
       setIsRefreshing(false);
+    }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("luminus_messages_update"));
     }
   };
 
@@ -509,22 +532,22 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
     right: "16px",
     height: "auto",
   } : {
-    height: isMinimized ? "60px" : "480px"
+    height: isMinimized ? "52px" : "480px"
   };
 
   return (
     <div
-      className="fixed left-4 right-4 top-20 bottom-[calc(80px+env(safe-area-inset-bottom,0px))] sm:inset-auto sm:bottom-0 sm:right-4 lg:right-12 z-50 sm:z-40 sm:w-[400px] sm:h-[480px] bg-white border border-slate-200 rounded-2xl sm:rounded-none sm:rounded-t-2xl shadow-none flex flex-col transition-all duration-300 overflow-hidden"
+      className="fixed left-4 right-4 top-20 bottom-[calc(80px+env(safe-area-inset-bottom,0px))] sm:inset-auto sm:bottom-4 sm:right-6 lg:right-10 z-50 sm:z-40 sm:w-[380px] sm:h-[480px] bg-white border border-slate-200/90 rounded-2xl shadow-[0_12px_40px_-12px_rgba(15,23,42,0.12)] flex flex-col transition-all duration-300 overflow-hidden"
       style={dynamicStyle}
     >
       {/* Header */}
       <div
         onClick={handleHeaderClick}
-        className={`h-[60px] px-3 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white select-none transition-colors duration-200 touch-none ${
+        className={`h-13 px-3.5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white select-none transition-colors duration-200 touch-none ${
           isMinimized ? "cursor-pointer hover:bg-slate-50" : ""
         }`}
       >
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
           {/* Mobile Back Button */}
           <button
             onClick={() => {
@@ -534,28 +557,26 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
               }
               onClose();
             }}
-            className="sm:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer mr-1"
+            className="sm:hidden w-7 h-7 flex items-center justify-center rounded-lg hover:bg-slate-100 transition-colors text-slate-500 hover:text-slate-900 border-none bg-transparent cursor-pointer mr-0.5"
             title="Atrás"
           >
-            <span className="material-symbols-outlined text-[22px]">arrow_back</span>
+            <ArrowLeft className="w-4 h-4" strokeWidth={2} />
           </button>
 
           <div className="relative shrink-0">
-            <img src={avatar || "/logo-luminus-white.svg"} alt={name} className="w-9 h-9 rounded-[10px] object-cover" />
+            <UserAvatar src={avatar} alt={name} size="sm" className="rounded-full border-none ring-1 ring-slate-100" />
           </div>
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            <h4 className="text-sm font-semibold text-slate-900 leading-none truncate max-w-[110px] sm:max-w-[130px] font-jakarta flex items-center gap-1.5" title={name}>
+            <h4 className="font-jakarta text-sm font-semibold text-slate-900 leading-tight truncate max-w-[130px] sm:max-w-[150px] flex items-center gap-1.5" title={name}>
               <span>{name}</span>
               {isMuted && (
-                <span className="material-symbols-rounded text-slate-400 text-[15px] shrink-0" title="Silenciado">
-                  notifications_off
-                </span>
+                <span title="Silenciado" className="flex items-center shrink-0"><BellOff className="w-3 h-3 text-slate-400" /></span>
               )}
             </h4>
             {userId && name?.toLowerCase() !== "luminus" && userId !== "50d13047-bab8-44f1-9541-a821113845cc" && userId !== "mock-luminus" && (
               <Link
-                href={`/comunidad/public-profile?id=${userId}`}
-                className="h-8 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer font-jakarta flex items-center justify-center shrink-0 text-decoration-none border-none outline-none"
+                href={`/inicio/public-profile?id=${userId}`}
+                className="h-6 px-2 bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 rounded-md text-[11px] font-medium font-jakarta transition-colors cursor-pointer flex items-center justify-center shrink-0 no-underline"
               >
                 Ver perfil
               </Link>
@@ -564,54 +585,52 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
         </div>
 
         {/* Action icons */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-0.5">
           {/* Options Menu */}
           {name?.toLowerCase() !== "luminus" && userId !== "50d13047-bab8-44f1-9541-a821113845cc" && userId !== "mock-luminus" && (
             <div className="relative flex items-center" ref={menuRef}>
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className={`flex items-center justify-center w-8 h-8 rounded-full transition-all border-none cursor-pointer bg-transparent ${isMenuOpen ? "bg-slate-100" : "hover:bg-slate-50"}`}
+                className={`flex items-center justify-center w-7 h-7 rounded-lg transition-colors border-none cursor-pointer bg-transparent ${isMenuOpen ? "bg-slate-100 text-slate-900" : "text-slate-400 hover:bg-slate-100 hover:text-slate-800"}`}
                 title="Opciones"
               >
-                <span className="material-symbols-rounded text-slate-400 hover:text-black transition-colors text-[20px]">more_vert</span>
+                <MoreVertical className="w-3.5 h-3.5" strokeWidth={2} />
               </button>
 
               {isMenuOpen && (
-                <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] shadow-none animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+                <div className="absolute right-0 top-full mt-1.5 w-56 bg-white border border-slate-200/90 rounded-xl p-1.5 overflow-hidden z-[100] shadow-[0_10px_38px_-10px_rgba(22,23,24,0.12)] animate-in fade-in zoom-in-95 duration-150 origin-top-right">
                   <button
                     onClick={handleMuteChat}
-                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                    className="group w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium font-jakarta text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                   >
-                    <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900 text-[18px] transition-colors">
-                      {isMuted ? "notifications" : "notifications_off"}
-                    </span>
-                    <span className="font-semibold text-slate-500 group-hover:text-slate-900 transition-colors">
+                    <BellOff className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 transition-colors" />
+                    <span>
                       {isMuted ? "Desactivar silencio" : "Silenciar chat"}
                     </span>
                   </button>
                   <button
                     onClick={handleDeleteChat}
-                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                    className="group w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium font-jakarta text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                   >
-                    <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">delete</span>
-                    <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Eliminar chat</span>
+                    <Trash2 className="w-3.5 h-3.5 text-rose-500 transition-colors" />
+                    <span>Eliminar chat</span>
                   </button>
                   <button
                     onClick={handleBlockUser}
-                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                    className="group w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium font-jakarta text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                   >
-                    <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">block</span>
-                    <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Bloquear usuario</span>
+                    <Ban className="w-3.5 h-3.5 text-rose-500 transition-colors" />
+                    <span>Bloquear usuario</span>
                   </button>
                   <button
                     onClick={() => {
                       setIsMenuOpen(false);
                       setIsReportModalOpen(true);
                     }}
-                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
+                    className="group w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium font-jakarta text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                   >
-                    <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">flag</span>
-                    <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Reportar usuario</span>
+                    <Flag className="w-3.5 h-3.5 text-rose-500 transition-colors" />
+                    <span>Reportar usuario</span>
                   </button>
                 </div>
               )}
@@ -623,48 +642,47 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
               e.stopPropagation();
               setIsMinimized(!isMinimized);
             }}
-            className="hidden sm:flex w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer"
+            className="hidden sm:flex w-7 h-7 items-center justify-center rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-800 border-none bg-transparent cursor-pointer"
             title={isMinimized ? "Maximizar chat" : "Minimizar chat"}
           >
-            <span className="material-symbols-outlined text-[20px]">
-              {isMinimized ? "keyboard_arrow_up" : "remove"}
-            </span>
+            {isMinimized ? (
+              <ChevronUp className="w-3.5 h-3.5" strokeWidth={2} />
+            ) : (
+              <Minus className="w-3.5 h-3.5" strokeWidth={2} />
+            )}
           </button>
 
           <button
             onClick={onClose}
-            className="hidden sm:flex w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer"
+            className="hidden sm:flex w-7 h-7 items-center justify-center rounded-lg hover:bg-slate-100 transition-colors text-slate-400 hover:text-slate-800 border-none bg-transparent cursor-pointer"
             title="Cerrar chat"
           >
-            <span className="material-symbols-outlined text-[20px]">close</span>
+            <X className="w-3.5 h-3.5" strokeWidth={2} />
           </button>
         </div>
       </div>
 
       {/* Message Body */}
-      <div ref={chatContainerRef} onClick={handleChatContainerClick} className="flex-1 overflow-y-auto p-3 custom-scrollbar flex flex-col gap-4 bg-white overscroll-contain">
+      <div ref={chatContainerRef} onClick={handleChatContainerClick} className="flex-1 overflow-y-auto p-3 custom-scrollbar flex flex-col gap-2.5 bg-white overscroll-contain">
         {isLoadingMessages ? (
-          <div className="flex-1 flex flex-col gap-4 bg-white justify-end p-2">
+          <div className="flex-1 flex flex-col gap-3 bg-white justify-end p-2">
             <div className="flex flex-col items-start gap-1">
-              <div className="w-[55%] h-10 bg-slate-100 rounded-xl rounded-tl-none animate-pulse" />
+              <div className="w-[55%] h-8 bg-slate-100 rounded-xl rounded-tl-none animate-pulse" />
             </div>
             <div className="flex flex-col items-end gap-1">
-              <div className="w-[45%] h-12 bg-slate-100 rounded-xl rounded-tr-none animate-pulse" />
+              <div className="w-[45%] h-10 bg-slate-100 rounded-xl rounded-tr-none animate-pulse" />
             </div>
             <div className="flex flex-col items-start gap-1">
-              <div className="w-[65%] h-10 bg-slate-100 rounded-xl rounded-tl-none animate-pulse" />
+              <div className="w-[65%] h-8 bg-slate-100 rounded-xl rounded-tl-none animate-pulse" />
             </div>
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-4 animate-in fade-in duration-300">
-            <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 mb-4">
-              <span className="material-symbols-outlined text-[28px]">chat_bubble_outline</span>
-            </div>
-            <p className="text-sm font-semibold text-slate-800 mb-1.5">¡Saluda a {name.split(" ")[0]}!</p>
-            <p className="text-xs text-slate-400 max-w-[220px] leading-relaxed">
-              Envía un mensaje para comenzar la conversación.
-            </p>
-          </div>
+          <EmptyState
+            icon={<MessageSquare className="w-5 h-5 text-slate-300" strokeWidth={1.75} />}
+            title={`¡Saluda a ${name.split(" ")[0]}!`}
+            description="Envía un mensaje para comenzar la conversación."
+            className="flex-1 justify-center animate-in fade-in duration-200"
+          />
         ) : (
           <div className="flex flex-col gap-0.5">
             {messages.map((msg, index) => {
@@ -679,8 +697,8 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
               return (
                 <React.Fragment key={msg.id}>
                   {showDateDivider && (
-                    <div className="flex justify-center my-3 select-none">
-                      <span className="px-3.5 py-1 rounded-full bg-slate-100 border border-slate-200/80 text-[11px] font-semibold text-slate-500 font-sans tracking-tight shadow-none">
+                    <div className="flex justify-center my-2.5 select-none">
+                      <span className="px-2.5 py-0.5 rounded-full bg-slate-100/70 text-[10px] font-medium font-sans text-slate-400 tracking-tight">
                         {formatChatDateDivider(msg.createdAt)}
                       </span>
                     </div>
@@ -689,15 +707,15 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                     className={`flex flex-col ${isMine ? "items-end" : "items-start"} ${isConsecutive ? "mt-0.5" : "mt-2 first:mt-0"}`}
                   >
                     <div
-                      className={`max-w-[90%] pl-4 pr-12 pt-2.5 pb-3 text-sm leading-relaxed relative min-w-[75px] ${
+                      className={`max-w-[85%] pl-3 pr-10 pt-1.5 pb-2 text-xs leading-relaxed relative min-w-[65px] font-sans ${
                         isMine
-                          ? `bg-black text-white font-medium ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tr-none"}`
-                          : `bg-slate-100 text-slate-800 border border-slate-100 ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tl-none"}`
+                          ? `bg-slate-900 text-white font-normal ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tr-none"}`
+                          : `bg-slate-100/90 text-slate-800 ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tl-none"}`
                       }`}
                     >
                       <span className="block break-words whitespace-pre-wrap">{formatMessageBody(msg.text)}</span>
                       <span 
-                        className={`absolute bottom-1 right-2.5 text-[9px] font-sans font-normal select-none pointer-events-none ${
+                        className={`absolute bottom-1 right-2 text-[9.5px] font-sans font-medium select-none pointer-events-none ${
                           isMine ? "text-white/60" : "text-slate-400"
                         }`}
                       >
@@ -705,7 +723,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                       </span>
                     </div>
                     {isLastMessage && isMine && (
-                      <span className="text-[10px] text-slate-400 mt-1 mr-1 font-semibold select-none">
+                      <span className="text-[10px] text-slate-400 mt-0.5 mr-1 font-medium font-sans select-none">
                         {(() => {
                           if (!otherLastReadAt || !msg.createdAt) return "Enviado";
                           const msgDate = new Date(msg.createdAt);
@@ -724,48 +742,53 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
       </div>
 
       {/* Input Footer */}
-      <div className="p-3 bg-white border-t border-slate-100 shrink-0 touch-none">
+      <div className="p-2.5 bg-white border-t border-slate-100 shrink-0 touch-none">
         {isPendingForMe ? (
-          <div className="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-2xl gap-3 border border-slate-100">
-            <p className="text-xs font-medium text-slate-700 text-center">
+          <div className="flex flex-col items-center justify-center p-3.5 bg-slate-50 rounded-xl gap-2.5 border border-slate-100">
+            <p className="text-xs font-medium text-slate-700 text-center font-sans">
               {name} quiere conectar contigo. ¿Aceptas la solicitud para chatear?
             </p>
-            <div className="flex gap-4 w-full max-w-xs">
-              <button
+            <div className="flex gap-2 w-full max-w-xs">
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={handleAcceptConnection}
-                className="flex-1 py-2 px-3 rounded-xl bg-black text-white hover:bg-slate-800 text-xs font-semibold transition-colors border-none cursor-pointer"
+                className="flex-1"
               >
                 Aceptar
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={handleRejectConnection}
-                className="flex-1 py-2 px-3 rounded-xl bg-slate-200 text-slate-800 hover:bg-slate-300 text-xs font-semibold transition-colors border-none cursor-pointer"
+                className="flex-1"
               >
                 Rechazar
-              </button>
+              </Button>
             </div>
           </div>
         ) : isDeclinedByMe ? (
-          <div className="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-2xl gap-2 border border-slate-100">
-            <p className="text-xs font-medium text-slate-500 text-center">
+          <div className="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-xl gap-2 border border-slate-100">
+            <p className="text-xs font-medium text-slate-500 text-center font-sans">
               Has rechazado esta solicitud de conexión.
             </p>
-            <button
+            <Button
+              variant="primary"
+              size="sm"
               onClick={handleSendRequest}
-              className="py-1.5 px-4 rounded-xl bg-slate-900 text-white hover:bg-black text-[11px] font-semibold transition-colors border-none cursor-pointer"
             >
               Enviar solicitud para conectar
-            </button>
+            </Button>
           </div>
         ) : isDeclinedForMe ? (
-          <div className="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-2xl border border-slate-100">
-            <p className="text-xs font-medium text-slate-400 text-center">
+          <div className="flex flex-col items-center justify-center p-3.5 bg-slate-50 rounded-xl border border-slate-100">
+            <p className="text-xs font-medium text-slate-400 text-center font-sans">
               La solicitud de conexión fue rechazada.
             </p>
           </div>
         ) : (
           <div className="flex items-center w-full">
-            <div className="flex-1 relative flex items-end">
+            <div className="flex-1 relative flex items-center">
               <textarea
                 ref={textareaRef}
                 value={inputText}
@@ -783,7 +806,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                 }}
                 placeholder="Escribe un mensaje..."
                 rows={1}
-                className="w-full bg-slate-50 border-none rounded-[24px] py-3.5 pl-5 pr-14 text-[14px] focus:ring-1 focus:ring-slate-200 outline-none transition-all resize-none max-h-28 custom-scrollbar block text-slate-800 touch-auto overscroll-contain"
+                className="w-full bg-slate-50/80 border border-slate-200/90 focus:bg-white focus:border-slate-300 rounded-xl py-2 pl-3 pr-9 text-xs sm:text-[13px] font-sans outline-none transition-all resize-none min-h-[36px] max-h-24 custom-scrollbar block text-slate-900 placeholder:text-slate-400 touch-auto overscroll-contain leading-snug"
                 onInput={(e) => {
                   const target = e.target as HTMLTextAreaElement;
                   target.style.height = "auto";
@@ -791,19 +814,22 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
                 }}
               />
               <button
+                type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onTouchStart={(e) => e.preventDefault()}
                 onClick={(e) => {
                   e.preventDefault();
                   handleSend();
                 }}
-                className={`absolute right-1.5 bottom-1.5 w-10 h-10 rounded-full flex items-center justify-center transition-all border-none ${
+                aria-label="Enviar mensaje"
+                disabled={!inputText.trim()}
+                className={`absolute right-1 bottom-1 w-7 h-7 rounded-lg flex items-center justify-center transition-all border-none ${
                   inputText.trim()
-                    ? "text-slate-800"
-                    : "text-slate-400"
-                } bg-slate-100 hover:bg-black hover:text-white cursor-pointer hover:scale-105 active:scale-95 touch-manipulation`}
+                    ? "bg-slate-900 text-white hover:bg-black active:scale-95 shadow-xs cursor-pointer"
+                    : "bg-transparent text-slate-300 cursor-default"
+                } touch-manipulation`}
               >
-                <span className="material-symbols-outlined text-[18px] ml-0.5">send</span>
+                <Send className="w-3.5 h-3.5 ml-0.5" />
               </button>
             </div>
           </div>
@@ -820,37 +846,37 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
         title="Reportar usuario"
         maxWidth="440px"
         footer={
-          <>
-            <button
+          <div className="flex items-center gap-2 w-full">
+            <Button
+              variant="secondary"
+              size="md"
               onClick={() => {
                 setIsReportModalOpen(false);
                 setReportReason("");
                 setReportDescription("");
               }}
               disabled={isSubmittingReport}
-              className="flex-1 h-11 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-sm font-bold transition duration-200 cursor-pointer border-none"
+              className="flex-1"
             >
               Cancelar
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="danger"
+              size="md"
               onClick={handleSubmitReport}
               disabled={isSubmittingReport || !reportReason}
-              className={`flex-1 h-11 text-white rounded-xl text-sm font-bold transition duration-200 cursor-pointer border-none flex items-center justify-center gap-1.5 ${
-                isSubmittingReport || !reportReason
-                  ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                  : "bg-[#FF4B4B] hover:bg-[#E03A3A] hover:scale-[1.02] active:scale-[0.98]"
-              }`}
+              className="flex-1"
             >
               {isSubmittingReport ? (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <span className="material-symbols-rounded text-[18px]">flag</span>
+                  <Flag className="w-4 h-4 mr-1.5" />
                   <span>Reportar</span>
                 </>
               )}
-            </button>
-          </>
+            </Button>
+          </div>
         }
       >
         <div className="flex flex-col gap-4">
@@ -871,12 +897,12 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-600">Detalles adicionales (opcional)</label>
+            <label className="text-xs font-semibold font-jakarta text-slate-700">Detalles adicionales (opcional)</label>
             <textarea
               value={reportDescription}
               onChange={(e) => setReportDescription(e.target.value)}
               placeholder="Proporciona más detalles si lo deseas..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-1 focus:ring-slate-300 outline-none resize-none h-24 text-slate-800 font-medium"
+              className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm font-sans focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none resize-none h-24 text-slate-800"
             />
           </div>
         </div>

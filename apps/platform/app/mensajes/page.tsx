@@ -689,7 +689,7 @@ function MessagesContent() {
             <div className="mb-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 flex items-center justify-between shadow-none">
               <span>{error}</span>
               <button
-                onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/comunidad")}
+                onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/inicio")}
                 className="text-xs font-semibold text-slate-900 underline hover:no-underline cursor-pointer bg-transparent border-none font-jakarta"
               >
                 Volver
@@ -729,7 +729,7 @@ function MessagesContent() {
                       </p>
                     </div>
                     <button
-                      onClick={() => router.push("/comunidad")}
+                      onClick={() => router.push("/inicio")}
                       className="h-10 px-6 bg-black hover:bg-zinc-800 text-white rounded-xl text-sm font-semibold transition duration-200 cursor-pointer border-none shadow-sm flex items-center justify-center"
                     >
                       Ir a la comunidad
@@ -796,7 +796,7 @@ function MessagesContent() {
                       window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
                       const from = searchParams.get("from");
                       if (from === "profile" && recipientId) {
-                        router.push(`/comunidad/public-profile?id=${recipientId}`);
+                        router.push(`/inicio/public-profile?id=${recipientId}`);
                       } else {
                         setMobileView('list');
                       }
@@ -842,7 +842,7 @@ function MessagesContent() {
                   Conecta con personas en la comunidad para iniciar una conversacion y enviarles mensajes privados.
                 </p>
                 <button
-                  onClick={() => router.push("/comunidad")}
+                  onClick={() => router.push("/inicio")}
                   className="h-11 px-6 bg-black text-white rounded-xl text-sm font-semibold hover:bg-zinc-800 transition duration-200"
                 >
                   Explorar la Comunidad
@@ -868,7 +868,7 @@ function MessagesContent() {
                         window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
                         const from = searchParams.get("from");
                         if (from === "profile") {
-                          router.push(`/comunidad/public-profile?id=${selectedConv.participant.id}`);
+                          router.push(`/inicio/public-profile?id=${selectedConv.participant.id}`);
                         } else {
                           setMobileView('list');
                         }
@@ -894,7 +894,7 @@ function MessagesContent() {
                       </h2>
                       {selectedConv.participant.name?.toLowerCase() !== "luminus" && selectedConv.participant.id !== "50d13047-bab8-44f1-9541-a821113845cc" && selectedConv.participant.id !== "mock-luminus" && (
                         <Link
-                          href={`/comunidad/public-profile?id=${selectedConv.participant.id}`}
+                          href={`/inicio/public-profile?id=${selectedConv.participant.id}`}
                           className="h-8 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer font-jakarta flex items-center justify-center shrink-0 text-decoration-none border-none outline-none"
                         >
                           Ver perfil

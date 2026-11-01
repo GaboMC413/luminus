@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from 'react';
-import { PhotoEditor } from './PhotoEditor';
+import { PhotoEditor } from '@/components/ui/PhotoEditor';
 import { InputField } from '@/components/ui/InputField';
 import { LocationInput } from '@/components/ui/LocationInput';
 import { SelectInput } from '@/components/ui/SelectInput';
@@ -288,7 +288,7 @@ export function PersonalData({
       {/* Profile Photo Section */}
       <div className="w-full flex flex-col justify-start items-start gap-2.5">
         <div className="w-full inline-flex justify-start items-end gap-5">
-          <div className="w-32 h-32 bg-white rounded-2xl flex justify-center items-center overflow-hidden shrink-0 relative border border-zinc-200">
+          <div className="w-32 h-32 bg-white rounded-2xl flex justify-center items-center overflow-hidden shrink-0 relative border border-slate-200">
             {avatarUrl ? (
               <img
                 src={avatarUrl}
@@ -296,7 +296,7 @@ export function PersonalData({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="material-symbols-outlined text-zinc-200 select-none flex items-center justify-center" style={{ fontSize: '104px', width: '104px', height: '104px' }}>
+              <span className="material-symbols-outlined text-slate-200 select-none flex items-center justify-center" style={{ fontSize: '104px', width: '104px', height: '104px' }}>
                 person
               </span>
             )}
@@ -307,7 +307,7 @@ export function PersonalData({
 
           <Button
             type="button"
-            variant="slate"
+            variant="secondary"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             className="mb-2"

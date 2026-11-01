@@ -1,6 +1,6 @@
 "use client";
 
-import { ProfileButton } from "@/components/ui/Button";
+import { Edit3 } from "lucide-react";
 import { PromptsDisplay, Prompt } from "./ProfilePrompts";
 
 interface ProfileCompletionCardProps {
@@ -15,14 +15,16 @@ export function ProfileCompletionCard({ prompts, onEditPrompts, isPublic = false
   return (
     <div className="relative group">
       {!isPublic && onEditPrompts && (
-        <ProfileButton
+        <button
           onClick={() => {
             window.history.replaceState(null, "", window.location.pathname);
             onEditPrompts('list');
           }}
-          icon="edit"
-          className={`absolute top-4 right-4 z-20 ${highlight ? "glow-highlight" : ""}`}
-        />
+          className={`absolute top-5 right-5 z-20 w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 flex items-center justify-center transition-all cursor-pointer border border-slate-200/60 shadow-none ${highlight ? "glow-highlight" : ""}`}
+          title="Editar reflexiones"
+        >
+          <Edit3 className="w-3.5 h-3.5" />
+        </button>
       )}
       <PromptsDisplay prompts={prompts} onEdit={onEditPrompts} isPublic={isPublic} firstName={firstName} highlight={highlight} />
     </div>

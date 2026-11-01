@@ -288,7 +288,7 @@ export async function POST(request: Request) {
       return NextResponse.json({
         ok: true,
         user: serializeUser(user),
-        redirectUrl: "/comunidad",
+        redirectUrl: "/inicio",
       }, { status: 201 });
     }
 

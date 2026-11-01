@@ -226,7 +226,7 @@ export async function redirectIfAuthenticated() {
     });
 
     if (user && user.status === "active") {
-      destination = user.profile?.isOnboarded ? "/comunidad" : "/unirme/perfil";
+      destination = user.profile?.isOnboarded ? "/inicio" : "/unirme/perfil";
     }
   } catch (error) {
     console.error("Database check failed in redirectIfAuthenticated:", error);

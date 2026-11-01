@@ -7,7 +7,7 @@ describe("formatPostDate", () => {
     const day = now.getDate();
     const months = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
     const month = months[now.getMonth()];
-    expect(formatPostDate(now)).toBe(`${day} de ${month}`);
+    expect(formatPostDate(now)).toBe("Ahora");
   });
 
   it("formats previous year date correctly", () => {

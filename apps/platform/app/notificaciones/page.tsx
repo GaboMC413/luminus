@@ -223,6 +223,7 @@ function NotificationsContent() {
     if (activeFilter === "comunidad") {
       return (
         String(n.type).includes("connect") ||
+        String(n.type).includes("network") ||
         n.type === "quest_completed_connect" ||
         String(n.type).includes("connection")
       );
@@ -259,7 +260,7 @@ function NotificationsContent() {
             <div className="mb-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 flex items-center justify-between shadow-none shrink-0">
               <span>{error}</span>
               <button
-                onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/comunidad")}
+                onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/inicio")}
                 className="text-xs font-semibold text-slate-900 underline hover:no-underline cursor-pointer bg-transparent border-none font-jakarta"
               >
                 Volver
@@ -467,6 +468,22 @@ function NotificationsContent() {
                             )}
                             {formatMessageBody(n.action)}
                           </p>
+                          {n.type === "network_add" && (
+                            <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                              {n.action_url && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    router.push(n.action_url);
+                                  }}
+                                  className="h-8 px-4 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-xl transition duration-200 cursor-pointer border-none outline-none font-jakarta"
+                                >
+                                  Ver perfil
+                                </button>
+                              )}
+                            </div>
+                          )}
+
                           {n.type === "connection_request" && n.isUnread && (
                             <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
                               <button

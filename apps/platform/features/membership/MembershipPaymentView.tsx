@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BillingAddressInput, BillingAddressData } from "@/components/ui/BillingAddressInput";
+import { InputField } from "@/components/ui/InputField";
 import { Button } from "@/components/ui/Button";
 import { CreditCard } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
@@ -239,8 +240,6 @@ function PaymentForm({
   const handleCancel = () => {
     if (isFromSettings) {
       router.push("/perfil-usuario/configuracion/membresia");
-    } else {
-      router.push("/unirme");
     }
   };
 
@@ -265,7 +264,7 @@ function PaymentForm({
     <div className="w-full flex flex-col gap-4">
       {/* Price & Plan Summary (Hidden on Success) */}
       {!isSuccess && (
-        <div className="w-full bg-zinc-50/70 rounded-2xl border border-zinc-200/90 p-5 flex flex-col gap-3 animate-in fade-in duration-200">
+        <div className="w-full bg-slate-50/70 rounded-2xl border border-slate-200 p-5 flex flex-col gap-3 animate-in fade-in duration-200">
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
               <span className="text-sm font-bold text-slate-900 font-jakarta">
@@ -310,14 +309,14 @@ function PaymentForm({
                 className={`w-[42px] h-[24px] rounded-full border p-[3px] flex items-center transition-colors duration-200 box-border ${
                   isAnnual
                     ? "bg-black border-black"
-                    : "bg-white border-zinc-300 group-hover:border-zinc-400"
+                    : "bg-white border-slate-300 group-hover:border-slate-400"
                 }`}
               >
                 <span
                   className={`w-[16px] h-[16px] rounded-full transition-transform duration-200 ${
                     isAnnual
                       ? "translate-x-[18px] bg-white"
-                      : "translate-x-0 bg-zinc-400 group-hover:bg-zinc-500"
+                      : "translate-x-0 bg-slate-400 group-hover:bg-slate-500"
                   }`}
                 />
               </span>
@@ -370,7 +369,7 @@ function PaymentForm({
           {/* Payment Form with Stripe Split Elements */}
           <form onSubmit={handlePay} className="flex flex-col gap-3">
             {/* Cardholder Name */}
-            <input
+            <InputField
               type="text"
               required
               value={cardHolderName}
@@ -379,11 +378,10 @@ function PaymentForm({
                 setErrorMessage(null);
               }}
               placeholder="Nombre en la tarjeta"
-              className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans"
             />
 
             {/* Email for Receipts / Account */}
-            <input
+            <InputField
               type="email"
               required
               value={email}
@@ -392,11 +390,10 @@ function PaymentForm({
                 setErrorMessage(null);
               }}
               placeholder="Correo electrónico para tus recibos"
-              className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans"
             />
 
             {/* Card Number - Stripe Element */}
-            <div className="relative w-full h-12 px-4 bg-white border border-zinc-200/90 rounded-xl focus-within:border-slate-800 focus-within:ring-1 focus-within:ring-slate-800 transition-colors flex items-center">
+            <div className="relative w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900 transition-colors flex items-center">
               <div className="w-full pr-8">
                 <CardNumberElement
                   options={{
@@ -409,12 +406,12 @@ function PaymentForm({
                   }}
                 />
               </div>
-              <CreditCard className="w-5 h-5 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              <CreditCard className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             </div>
 
             {/* Expiry & CVC - Stripe Elements */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="w-full h-12 px-4 bg-white border border-zinc-200/90 rounded-xl focus-within:border-slate-800 focus-within:ring-1 focus-within:ring-slate-800 transition-colors flex items-center">
+              <div className="w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900 transition-colors flex items-center">
                 <div className="w-full">
                   <CardExpiryElement
                     options={{
@@ -429,7 +426,7 @@ function PaymentForm({
                 </div>
               </div>
 
-              <div className="w-full h-12 px-4 bg-white border border-zinc-200/90 rounded-xl focus-within:border-slate-800 focus-within:ring-1 focus-within:ring-slate-800 transition-colors flex items-center">
+              <div className="w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900 transition-colors flex items-center">
                 <div className="w-full">
                   <CardCvcElement
                     options={{
@@ -454,7 +451,7 @@ function PaymentForm({
 
             {/* City, Country & Postal Code */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <input
+              <InputField
                 type="text"
                 value={
                   billingCity && billingCountry
@@ -467,10 +464,9 @@ function PaymentForm({
                   setBillingCountry(parts[1] || "");
                 }}
                 placeholder="Ciudad y País"
-                className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans"
               />
 
-              <input
+              <InputField
                 type="text"
                 required
                 value={cardPostalCode}
@@ -479,7 +475,6 @@ function PaymentForm({
                   setErrorMessage(null);
                 }}
                 placeholder="Código postal"
-                className="w-full h-12 px-4 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans tabular-nums"
               />
             </div>
 
@@ -514,15 +509,17 @@ function PaymentForm({
             />
           </div>
 
-          {/* Secondary Actions: Cambiar plan / Reiniciar */}
-          <div className="flex flex-col items-center gap-2 pt-1">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="py-1 text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-800 transition-colors text-center cursor-pointer bg-transparent border-none font-jakarta"
-            >
-              {isFromSettings ? "← Volver a ajustes de membresía" : "← Cambiar plan"}
-            </button>
+          {/* Secondary Actions */}
+          <div className="flex flex-col items-center gap-2 pt-1 w-full">
+            {isFromSettings && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleCancel}
+              >
+                Volver a membresía
+              </Button>
+            )}
             {!isFromSettings && (
               <button
                 type="button"
@@ -609,7 +606,7 @@ export default function MembershipPaymentView() {
         if (isFromSettings) {
           router.push("/perfil-usuario/configuracion/membresia");
         } else {
-          router.push("/comunidad?welcome=1");
+          router.push("/inicio?welcome=1");
         }
         return;
       }
@@ -671,6 +668,9 @@ export default function MembershipPaymentView() {
           {/* Header unit - hidden upon payment confirmation */}
           {!isSuccess && (
             <header className="flex flex-col items-center text-center gap-2 mb-6 sm:mb-8">
+              <Link href="/" className="inline-flex items-center mb-1">
+                <img src="/iso-logo-black.svg" alt="LUMINUS" className="h-[36px] w-[36px]" />
+              </Link>
               <h1 className="text-2xl sm:text-[26px] font-bold font-jakarta text-slate-900 tracking-tight m-0 transition-all">
                 Conviértete en Mecenas
               </h1>
@@ -697,9 +697,30 @@ export default function MembershipPaymentView() {
         </main>
       </div>
 
-      {/* Footer copyright */}
-      <footer className="w-full py-4 text-center text-xs text-slate-400 font-sans border-t border-slate-100">
-        © {new Date().getFullYear()} LUMINUS. Todos los derechos reservados.
+      {/* Footer */}
+      <footer className="w-full max-w-[380px] mx-auto px-4 py-4 sm:py-6 flex flex-col items-center gap-2 text-center">
+        <p className="text-[11px] text-slate-400 leading-relaxed m-0">
+          Al unirte, estás creando una cuenta en LUMINUS y aceptando estar de acuerdo con nuestros{" "}
+          <Link
+            href="https://luminuslatam.com/legal/terminos"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-600"
+          >
+            Términos y Condiciones
+          </Link>{" "}
+          así como con nuestra{" "}
+          <Link
+            href="https://luminuslatam.com/legal/privacidad"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-600"
+          >
+            Política de Privacidad
+          </Link>
+          .
+        </p>
+        <p className="text-xs text-slate-400 m-0">© 2026 LUMINUS Latam.</p>
       </footer>
     </div>
   );

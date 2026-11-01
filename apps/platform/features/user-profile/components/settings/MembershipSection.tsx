@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Modal } from "@/components/ui/Modal";
+import { Button } from "@/components/ui/Button";
 import { SectionHeader } from "./SectionHeader";
 import { SettingsGhostLoader } from "./SettingsGhostLoader";
 import { isMecenas } from "@/lib/membership/access";
@@ -914,33 +915,38 @@ export function MembershipSection({
       <Modal
         isOpen={mustCancelModalOpen}
         onClose={() => setMustCancelModalOpen(false)}
-        title="Cancelar membresía para eliminar tarjeta"
-        subtitle="Para eliminar tu tarjeta de crédito, primero debes cancelar tu membresía activa."
+        title="No es posible eliminar esta tarjeta"
+        subtitle="Esta tarjeta está asociada a tu membresía activa de Mecenas."
         maxWidth="460px"
-      >
-        <div className="flex flex-col gap-4 font-sans text-xs text-slate-600">
-          <p className="m-0 leading-relaxed">
-            Una vez cancelada tu membresía, podrás eliminar tu tarjeta de crédito inmediatamente y no se realizarán nuevos cobros.
-          </p>
-          <div className="flex justify-end gap-2.5 pt-2">
-            <button
-              type="button"
+        footer={
+          <>
+            <Button
+              variant="secondary"
               onClick={() => setMustCancelModalOpen(false)}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors cursor-pointer"
+              className="w-full md:w-auto"
             >
-              Volver
-            </button>
-            <button
-              type="button"
+              Entendido
+            </Button>
+            <Button
+              variant="primary"
               onClick={() => {
                 setMustCancelModalOpen(false);
-                setCancelModalOpen(true);
+                setAddCardModalOpen(true);
               }}
-              className="px-4 py-2 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white transition-colors cursor-pointer"
+              className="w-full md:w-auto"
             >
-              Cancelar membresía
-            </button>
-          </div>
+              Agregar otra tarjeta
+            </Button>
+          </>
+        }
+      >
+        <div className="flex flex-col gap-3 font-sans text-xs text-slate-600 leading-relaxed">
+          <p className="m-0">
+            Para mantener tu membresía activa y continuar disfrutando de sus beneficios, necesitas contar con al menos un método de pago registrado.
+          </p>
+          <p className="m-0 text-slate-500">
+            Si deseas cambiar de tarjeta, agrega un nuevo método de pago y establécelo como predeterminado antes de eliminar este.
+          </p>
         </div>
       </Modal>
     </div>

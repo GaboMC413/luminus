@@ -126,9 +126,9 @@ export function PromptsDisplay({ prompts, onEdit, isPublic = false, firstName, h
   const nameToUse = firstName ? firstName.trim() : "Este usuario";
 
   return (
-    <div className={`bg-white rounded-2xl p-4 lg:p-6 flex flex-col gap-4 lg:gap-5 border border-slate-200 shadow-none transition-all ${!hasPrompts ? 'bg-slate-50/50 border-slate-100' : ''}`}>
+    <div className="bg-white rounded-2xl p-5 sm:p-6 flex flex-col gap-4 border border-slate-200/90 shadow-none transition-all">
       <div className="flex items-center gap-2.5">
-        <h3 className="text-label text-[0.75rem] lg:text-[0.8125rem] uppercase font-semibold ml-1">Reflexiones</h3>
+        <h3 className="text-title-section text-slate-900 font-jakarta uppercase tracking-wider text-xs font-bold">Reflexiones</h3>
       </div>
 
       {hasPrompts ? (

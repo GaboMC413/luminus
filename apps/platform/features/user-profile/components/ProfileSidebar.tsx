@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ProfileButton, EmptyProfileButton } from "@/components/ui/Button";
+import { User, Sparkles, Briefcase, Cake, MapPin, Mail, UserPlus, Camera, Settings, Lock, Edit3 } from "lucide-react";
+import { Button, ProfileButton, EmptyProfileButton } from "@/components/ui/Button";
 import { Profile } from "./ProfileContent";
 import { isMecenas } from "@/lib/membership/access";
 
@@ -29,12 +30,6 @@ export function ProfileSidebar({
   onConnect,
   highlightField
 }: ProfileSidebarProps) {
-
-  const toTitleCase = (str: string) => {
-    if (!str) return "";
-    return str.toLowerCase().replace(/\b\w/g, s => s.toUpperCase());
-  };
-
   const MONTH_NAMES = [
     "enero", "febrero", "marzo", "abril", "mayo", "junio",
     "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
@@ -67,65 +62,63 @@ export function ProfileSidebar({
     return dateStr;
   };
 
-  const getGenderIcon = (gender: string) => {
-    if (gender === 'Masculino' || gender === 'Hombre') return 'male';
-    if (gender === 'Femenino' || gender === 'Mujer') return 'female';
-    return 'wc';
-  };
-
   const hasLocation = profile.city || profile.country;
   const fullName = `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 flex flex-col items-start md:items-center shadow-none overflow-hidden relative group">
+    <div className="bg-white rounded-2xl border border-slate-200/90 flex flex-col items-start md:items-center shadow-none overflow-hidden relative group">
       {/* Local Cover - Mobile Only */}
-      <div className={`md:hidden w-full h-[130px] md:h-[160px] relative shrink-0 ${!coverUrl || coverUrl.includes("empty") ? 'luminus-light-gradient border-b border-slate-200' : ''}`}>
+      <div className={`md:hidden w-full h-36 md:h-44 relative shrink-0 ${!coverUrl || coverUrl.includes("empty") ? 'luminus-light-gradient border-b border-slate-200' : 'bg-slate-100'}`}>
         {coverUrl && !coverUrl.includes("empty") && (
           <img src={coverUrl} alt="Cover" className="w-full h-full object-cover" />
         )}
         {!isPublic && onShowCoverModal && (
-          <ProfileButton
+          <button
             onClick={() => {
               window.history.replaceState(null, "", window.location.pathname);
               onShowCoverModal();
             }}
-            icon="photo_camera"
-            className={`absolute bottom-3 right-3 z-10 ${highlightField === "cover" ? "glow-highlight" : ""} ${coverUrl && !coverUrl.includes("empty") ? "opacity-50 hover:opacity-100 transition-opacity" : ""}`}
-          />
+            className={`absolute bottom-3 right-3 z-10 w-9 h-9 rounded-xl bg-white/90 border border-slate-200 flex items-center justify-center text-slate-700 hover:bg-white hover:text-slate-900 transition-all ${highlightField === "cover" ? "glow-highlight" : ""}`}
+            title="Cambiar portada"
+          >
+            <Camera className="w-4 h-4" />
+          </button>
         )}
       </div>
 
-      <div className="w-32 h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 rounded-[26px] md:rounded-[32px] lg:rounded-[38px] overflow-hidden -mt-[96px] md:mt-6 ml-4 md:ml-0 relative shrink-0 group border-4 border-white bg-white">
+      {/* Avatar Container */}
+      <div className="w-32 h-32 md:w-40 md:h-40 lg:w-44 lg:h-44 rounded-2xl overflow-hidden -mt-20 md:mt-6 ml-4 md:ml-0 relative shrink-0 group border-4 border-white bg-white shadow-none">
         {profile.profile_picture_url ? (
           <img
             src={profile.profile_picture_url}
-            alt="Profile"
+            alt={fullName}
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full border border-slate-200 rounded-[26px] md:rounded-[32px] lg:rounded-[38px] bg-slate-50 flex items-center justify-center">
-            <span className="material-symbols-outlined text-zinc-200 select-none flex items-center justify-center text-[72px] md:text-[88px] lg:text-[104px]" style={{ width: '100%', height: '100%' }}>
-              person
-            </span>
+          <div className="w-full h-full border border-slate-200/90 rounded-xl bg-slate-50 flex items-center justify-center">
+            <User className="w-16 h-16 md:w-20 md:h-20 text-slate-300 stroke-[1.5]" />
           </div>
         )}
         {!isPublic && onEditPhoto && (
-          <ProfileButton
+          <button
             onClick={onEditPhoto}
-            icon="photo_camera"
-            className={`absolute bottom-3 right-3 z-20 ${profile.profile_picture_url ? "opacity-50 hover:opacity-100 transition-opacity" : ""}`}
-          />
+            className="absolute bottom-2.5 right-2.5 z-20 w-8 h-8 rounded-xl bg-white/95 border border-slate-200/90 text-slate-700 hover:text-slate-900 hover:bg-white flex items-center justify-center transition-all cursor-pointer shadow-none"
+            title="Cambiar foto de perfil"
+          >
+            <Camera className="w-4 h-4" />
+          </button>
         )}
       </div>
 
-      <div className="w-full p-4 pt-5 lg:p-5 lg:pt-6 flex flex-col items-start md:items-center gap-4 lg:gap-6">
-        <div className="text-left md:text-center flex flex-col items-start md:items-center gap-1 lg:gap-1.5 w-full">
-          <h2 className="text-xl lg:text-3xl font-bold tracking-tight text-slate-900 leading-snug text-left md:text-center font-jakarta">
+      <div className="w-full p-4 pt-5 lg:p-6 flex flex-col items-start md:items-center gap-4 lg:gap-5">
+        <div className="text-left md:text-center flex flex-col items-start md:items-center gap-1.5 w-full">
+          <h2 className="text-title-page font-bold tracking-tight text-slate-900 leading-snug text-left md:text-center font-jakarta">
             {fullName || "Tu Nombre"}
           </h2>
           {hasLocation ? (
-            <p className="text-sm lg:text-base font-medium text-slate-400 text-left md:text-center leading-relaxed">
-              {profile.city?.split(',')[0] || ""}{profile.city && profile.country ? ", " : ""}{profile.country || ""}
+            <p className="text-meta text-slate-500 text-left md:text-center leading-relaxed flex items-center gap-1">
+              <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0 inline" />
+              <span>{profile.city?.split(',')[0] || ""}{profile.city && profile.country ? ", " : ""}{profile.country || ""}</span>
             </p>
           ) : (
             !isPublic && onEditProfile && (
@@ -139,9 +132,9 @@ export function ProfileSidebar({
           )}
 
           {isMecenas({ tier: profile.tier }) && (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200/90 mt-1 select-none">
-              <span className="material-symbols-rounded text-slate-800 text-[14px]">stars</span>
-              <span className="text-slate-900 font-semibold text-[11px] font-sans">
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200/80 mt-1 select-none">
+              <Sparkles className="w-3.5 h-3.5 text-slate-700" />
+              <span className="text-slate-800 font-semibold text-meta font-jakarta">
                 {(() => {
                   if (!profile.member_since) return "Mecenas LUMINUS";
                   try {
@@ -161,67 +154,84 @@ export function ProfileSidebar({
 
         <div className="w-full h-px bg-slate-100" />
 
-        <div className="w-full flex flex-col gap-4 lg:gap-6 px-1">
-          <DetailItem label="Profesión" value={profile.profession} icon="work" onClick={onEditProfile ? () => onEditProfile("profession") : undefined} isPublic={isPublic} firstName={profile.first_name} highlightField={highlightField} />
-          <DetailItem label="Cumpleaños" value={formatDisplayDate(profile.birthdate)} icon="cake" isPublic={isPublic} firstName={profile.first_name} />
+        <div className="w-full flex flex-col gap-3.5 px-1">
+          <DetailItem 
+            label="Profesión" 
+            value={profile.profession} 
+            icon={<Briefcase className="w-4 h-4 text-slate-400 shrink-0" />} 
+            onClick={onEditProfile ? () => onEditProfile("profession") : undefined} 
+            isPublic={isPublic} 
+            firstName={profile.first_name} 
+            highlightField={highlightField} 
+          />
+          <DetailItem 
+            label="Cumpleaños" 
+            value={formatDisplayDate(profile.birthdate)} 
+            icon={<Cake className="w-4 h-4 text-slate-400 shrink-0" />} 
+            isPublic={isPublic} 
+            firstName={profile.first_name} 
+          />
         </div>
 
         {(!isPublic || onSendMessage || onConnect) && (
           <>
-            <div className="w-full h-px bg-slate-50" />
+            <div className="w-full h-px bg-slate-100" />
 
             <div className="w-full flex flex-col gap-2">
               {isPublic ? (
                 <>
                   {onSendMessage && (
-                    <button
+                    <Button
                       onClick={onSendMessage}
-                      className="w-full py-3.5 bg-black text-white rounded-xl text-[14px] font-bold hover:bg-zinc-800 transition flex items-center justify-center gap-2 border-none cursor-pointer font-jakarta"
+                      variant="primary"
+                      fullWidth
+                      className="gap-2"
                     >
-                      <span className="material-symbols-outlined text-[20px]">mail</span>
+                      <Mail className="w-4 h-4" />
                       Enviar Mensaje
-                    </button>
+                    </Button>
                   )}
                   {onConnect && (
-                    <button
+                    <Button
                       onClick={onConnect}
-                      className="w-full py-3.5 bg-white border border-slate-200 text-slate-600 rounded-xl text-[14px] font-bold hover:bg-slate-50 hover:text-black hover:border-slate-300 transition flex items-center justify-center gap-2 cursor-pointer font-jakarta"
+                      variant="secondary"
+                      fullWidth
+                      className="gap-2"
                     >
-                      <span className="material-symbols-outlined text-[20px]">person_add</span>
+                      <UserPlus className="w-4 h-4" />
                       Conectar
-                    </button>
+                    </Button>
                   )}
                 </>
               ) : (
                 <>
                   {onEditProfile && (
-                    <ProfileButton
+                    <Button
+                      variant="secondary"
+                      fullWidth
                       onClick={() => {
                         window.history.replaceState(null, "", window.location.pathname);
                         onEditProfile();
                       }}
-                      icon="edit"
-                      label="Editar perfil"
-                      className={`w-full ${highlightField === "personal" ? "glow-highlight" : ""}`}
-                    />
+                      className={`gap-2 ${highlightField === "personal" ? "glow-highlight" : ""}`}
+                    >
+                      <Edit3 className="w-4 h-4" />
+                      Editar perfil
+                    </Button>
                   )}
 
                   <Link href="/perfil-usuario/configuracion/personal" className="w-full hidden md:block">
-                    <ProfileButton
-                      onClick={() => { }}
-                      icon="settings"
-                      label="Ajustes de la cuenta"
-                      className="w-full"
-                    />
+                    <Button variant="ghost" fullWidth className="justify-start gap-2.5 text-slate-600 hover:text-slate-900">
+                      <Settings className="w-4 h-4 text-slate-400" />
+                      <span>Ajustes de la cuenta</span>
+                    </Button>
                   </Link>
 
                   <Link href="/perfil-usuario/configuracion/contrasena" className="w-full hidden md:block">
-                    <ProfileButton
-                      onClick={() => { }}
-                      icon="lock"
-                      label="Cambiar contraseña"
-                      className="w-full"
-                    />
+                    <Button variant="ghost" fullWidth className="justify-start gap-2.5 text-slate-600 hover:text-slate-900">
+                      <Lock className="w-4 h-4 text-slate-400" />
+                      <span>Cambiar contraseña</span>
+                    </Button>
                   </Link>
                 </>
               )}
@@ -233,24 +243,37 @@ export function ProfileSidebar({
   );
 }
 
-function DetailItem({ label, value, icon, onClick, isPublic = false, firstName, highlightField }: { label: string; value: string; icon: string; onClick?: () => void; isPublic?: boolean; firstName?: string; highlightField?: string }) {
+function DetailItem({ 
+  label, 
+  value, 
+  icon, 
+  onClick, 
+  isPublic = false, 
+  firstName, 
+  highlightField 
+}: { 
+  label: string; 
+  value: string; 
+  icon: React.ReactNode; 
+  onClick?: () => void; 
+  isPublic?: boolean; 
+  firstName?: string; 
+  highlightField?: string;
+}) {
   const isEmpty = !value || value === 'No definido' || value === 'Sin fecha de nacimiento' || value.trim().length === 0;
 
   if (isEmpty && isPublic && label !== "Profesión") return null;
 
   const nameToUse = firstName ? firstName.trim() : "Este usuario";
-
   const isHighlighted = highlightField === "personal" && label === "Profesión";
 
   return (
-    <div className="flex items-center gap-4 relative w-full">
-      <span className="material-symbols-rounded text-slate-400 text-[20px] shrink-0">
-        {icon}
-      </span>
+    <div className="flex items-center gap-3.5 relative w-full">
+      {icon}
       <div className="flex flex-col min-w-0 flex-1">
         {isEmpty ? (
           isPublic ? (
-            <span className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight truncate leading-relaxed">
+            <span className="text-body text-slate-400 font-normal italic tracking-tight truncate">
               {nameToUse} aún no ha agregado su profesión.
             </span>
           ) : (
@@ -267,7 +290,9 @@ function DetailItem({ label, value, icon, onClick, isPublic = false, firstName, 
             )
           )
         ) : (
-          <span className={`text-sm lg:text-base truncate leading-relaxed ${isHighlighted ? "glow-highlight px-2 py-0.5 rounded-lg border border-dashed border-slate-200 w-fit" : "text-primary"}`}>{value}</span>
+          <span className={`text-body text-slate-800 font-medium truncate ${isHighlighted ? "glow-highlight px-2 py-0.5 rounded-lg border border-dashed border-slate-200 w-fit" : ""}`}>
+            {value}
+          </span>
         )}
       </div>
     </div>

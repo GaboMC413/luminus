@@ -57,7 +57,7 @@ export default function AccountCreationView() {
         return;
       }
 
-      router.push("/comunidad");
+      router.push("/inicio");
     } catch (err: any) {
       if (err.message && !err.message.includes("cancelado")) {
         setErrorMessage(err.message || "No se pudo conectar con Facebook.");

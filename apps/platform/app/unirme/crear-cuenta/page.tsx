@@ -24,7 +24,7 @@ export default async function UnirmeCrearCuentaPage() {
 
       // Only redirect if already completely registered and onboarded
       if (user?.profile?.isOnboarded) {
-        redirect("/comunidad");
+        redirect("/inicio");
       }
     } catch {
       // Continue to view

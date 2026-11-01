@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import { Plus } from "lucide-react";
 import { PostItem } from "./mockPostsData";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
@@ -443,15 +444,13 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
       <button
         type="button"
         onClick={() => setIsModalOpen(true)}
-        className="w-full h-11 sm:h-12 px-4 rounded-2xl bg-white border border-zinc-200/80 hover:border-slate-400 hover:bg-slate-50/80 text-left transition-all duration-200 active:scale-[0.99] cursor-pointer flex items-center justify-between group outline-none select-none"
+        className="w-full h-11 sm:h-12 px-4 rounded-2xl bg-white border border-slate-200/90 hover:border-slate-300 hover:bg-slate-50/70 text-left transition-all duration-200 active:scale-[0.99] cursor-pointer flex items-center justify-between group outline-none select-none"
         title="Crear una publicación"
       >
-        <span className="text-[14px] sm:text-[15px] font-normal text-slate-500 font-sans tracking-normal">
+        <span className="text-sm font-normal text-slate-500 font-sans tracking-normal">
           Crear una publicación
         </span>
-        <span className="material-symbols-outlined text-[20px] text-slate-500 group-hover:text-slate-800 transition-colors shrink-0">
-          add
-        </span>
+        <Plus className="w-5 h-5 text-slate-400 group-hover:text-slate-800 transition-colors shrink-0" strokeWidth={2} />
       </button>
 
       {/* 2. Main Modal: Modern Minimalist Composer */}
@@ -472,7 +471,7 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
               variant="secondary"
               type="button"
               onClick={handleResetAndCloseModal}
-              className="w-full sm:flex-1 !h-11 !text-[13px] !font-medium !rounded-[12px]"
+              className="w-full sm:flex-1"
             >
               Cancelar
             </Button>
@@ -487,7 +486,7 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
                 (!postText.trim() && !postTitle.trim() && !imagePreview && !youtubeId)
               }
               title={!isAdmin && !selectedCategory ? "Selecciona una categoría para publicar" : undefined}
-              className="w-full sm:flex-1 !h-11 !text-[13px] !font-medium !rounded-[12px]"
+              className="w-full sm:flex-1"
             >
               Publicar
             </Button>

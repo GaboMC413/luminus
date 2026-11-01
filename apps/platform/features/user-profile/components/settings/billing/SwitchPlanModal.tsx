@@ -67,8 +67,35 @@ export function SwitchPlanModal({
           : "Cambia a facturación mensual sin perder tus beneficios."
       }
       maxWidth="440px"
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleClose}
+            disabled={loading}
+            className="w-full md:w-auto"
+          >
+            Cancelar
+          </Button>
+
+          <Button
+            type="button"
+            variant="primary"
+            onClick={handleConfirm}
+            disabled={loading}
+            className="w-full md:w-auto"
+          >
+            {loading
+              ? "Cambiando plan..."
+              : isSwitchingToAnnual
+              ? "Cambiar a Anual"
+              : "Cambiar a Mensual"}
+          </Button>
+        </>
+      }
     >
-      <div className="flex flex-col gap-4 font-sans">
+      <div className="flex flex-col gap-4 font-sans pb-1">
         {errorMessage && (
           <div className="p-3 text-xs bg-red-50 text-red-700 border border-red-200 rounded-xl">
             {errorMessage}
@@ -96,33 +123,6 @@ export function SwitchPlanModal({
               Entra en vigencia el <strong className="text-slate-800">{nextRenewalDate}</strong> cuando tu plan actual finalice.
             </p>
           )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-col-reverse sm:flex-row gap-2.5 pt-1">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={handleClose}
-            disabled={loading}
-            className="flex-1 !h-10 text-xs text-slate-600 hover:text-slate-900"
-          >
-            Volver
-          </Button>
-
-          <Button
-            type="button"
-            variant="primary"
-            onClick={handleConfirm}
-            disabled={loading}
-            className="flex-1 !h-10 text-xs font-semibold !bg-slate-900 hover:!bg-black text-white rounded-xl shadow-none"
-          >
-            {loading
-              ? "Guardando..."
-              : isSwitchingToAnnual
-              ? "Cambiar a Anual"
-              : "Cambiar a Mensual"}
-          </Button>
         </div>
       </div>
     </Modal>

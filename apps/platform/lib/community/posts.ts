@@ -1,4 +1,5 @@
 import { PostItem, PostComment } from "@/components/community/mockPostsData";
+import { formatLocationDisplay } from "../../utils/locationUtils";
 
 const MONTH_NAMES_ES = [
   "ene", "feb", "mar", "abr", "may", "jun",
@@ -11,6 +12,31 @@ export function formatPostDate(date: Date | string | null): string {
   if (isNaN(d.getTime())) return "";
 
   const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+
+  // If in the future or under 1 minute
+  if (diffMs < 60000 && diffMs >= 0) {
+    return "Ahora";
+  }
+
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 60 && diffMins > 0) {
+    return `Hace ${diffMins} min`;
+  }
+
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24 && diffHours > 0) {
+    return `Hace ${diffHours} h`;
+  }
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) {
+    return "Ayer";
+  }
+  if (diffDays > 1 && diffDays < 7) {
+    return `Hace ${diffDays} días`;
+  }
+
   const sameYear = d.getFullYear() === now.getFullYear();
   const day = d.getDate();
   const month = MONTH_NAMES_ES[d.getMonth()];
@@ -29,7 +55,8 @@ export function serializePost(rawPost: any, currentUserId?: string): PostItem {
     rawPost.user?.email?.split("@")[0] ||
     "Usuario";
 
-  const authorLocation = [profile?.city, profile?.country].filter(Boolean).join(", ");
+  const rawLocation = [profile?.city, profile?.country].filter(Boolean).join(", ");
+  const authorLocation = formatLocationDisplay(rawLocation);
 
   const comments: PostComment[] = (rawPost.comments || []).map((c: any) => {
     const cProfile = c.user?.profile;
@@ -39,7 +66,8 @@ export function serializePost(rawPost: any, currentUserId?: string): PostItem {
       c.user?.email?.split("@")[0] ||
       "Usuario";
 
-    const cLocation = [cProfile?.city, cProfile?.country].filter(Boolean).join(", ");
+    const cRawLocation = [cProfile?.city, cProfile?.country].filter(Boolean).join(", ");
+    const cLocation = formatLocationDisplay(cRawLocation);
 
     return {
       id: c.id,
@@ -49,6 +77,7 @@ export function serializePost(rawPost: any, currentUserId?: string): PostItem {
       authorRole: cProfile?.profession || "Miembro",
       authorLocation: cLocation || undefined,
       date: formatPostDate(c.createdAt),
+      createdAt: c.createdAt ? new Date(c.createdAt).toISOString() : undefined,
       content: c.content,
     };
   });
@@ -65,6 +94,7 @@ export function serializePost(rawPost: any, currentUserId?: string): PostItem {
     authorRole: profile?.profession || "Miembro",
     authorLocation: authorLocation || undefined,
     date: formatPostDate(rawPost.createdAt),
+    createdAt: rawPost.createdAt ? new Date(rawPost.createdAt).toISOString() : undefined,
     imageUrl: rawPost.imageUrl || undefined,
     imageAlt: rawPost.imageAlt || undefined,
     youtubeUrl: rawPost.youtubeUrl || undefined,

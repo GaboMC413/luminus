@@ -1,6 +1,7 @@
 "use client";
 
-import { ProfileButton, EmptyProfileButton } from "@/components/ui/Button";
+import { Edit3 } from "lucide-react";
+import { EmptyProfileButton } from "@/components/ui/Button";
 
 interface ProfileAboutSectionProps {
   bio?: string;
@@ -15,29 +16,33 @@ export function ProfileAboutSection({ bio, onEdit, isPublic = false, firstName, 
   const nameToUse = firstName ? firstName.trim() : "Este usuario";
 
   return (
-    <div className="bg-white rounded-2xl p-4 lg:p-6 flex flex-col gap-4 lg:gap-5 border border-slate-200 shadow-none relative group">
+    <div className="bg-white rounded-2xl p-5 sm:p-6 flex flex-col gap-3.5 border border-slate-200/90 shadow-none relative group">
       {!isPublic && onEdit && (
-        <ProfileButton
+        <button
           onClick={() => {
             window.history.replaceState(null, "", window.location.pathname);
             onEdit();
           }}
-          icon="edit"
-          className={`absolute top-4 right-4 z-20 ${highlight ? "glow-highlight" : ""}`}
-        />
+          className={`absolute top-5 right-5 z-20 w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 flex items-center justify-center transition-all cursor-pointer border border-slate-200/60 shadow-none ${highlight ? "glow-highlight" : ""}`}
+          title="Editar Sobre mí"
+        >
+          <Edit3 className="w-3.5 h-3.5" />
+        </button>
       )}
-      <div className="flex items-center gap-1">
-        <h3 className="text-label text-[0.75rem] lg:text-[0.8125rem] uppercase font-semibold ml-1">Sobre mí</h3>
+      <div className="flex items-center gap-1.5">
+        <h3 className="text-title-section text-slate-900 font-jakarta uppercase tracking-wider text-xs font-bold">
+          Sobre mí
+        </h3>
       </div>
 
       {hasBio ? (
-        <p className="text-sm lg:text-base text-slate-600 leading-relaxed animate-in fade-in duration-300">
+        <p className="text-body text-slate-600 leading-relaxed font-sans whitespace-pre-wrap">
           {bio}
         </p>
       ) : (
         <div className="flex flex-col items-start gap-4">
           {isPublic ? (
-            <p className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight leading-relaxed">
+            <p className="text-body text-slate-400 font-normal italic tracking-tight leading-relaxed">
               {nameToUse} aún no ha escrito sobre sí.
             </p>
           ) : (

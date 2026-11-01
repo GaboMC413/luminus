@@ -3,10 +3,25 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import {
+  Home,
+  HeartHandshake,
+  Globe,
+  Layers,
+  Sun,
+  MessageSquare,
+  Bell,
+  User,
+  Settings,
+  Shield,
+  LogOut,
+  ChevronDown
+} from "lucide-react";
 import { NotificationPopup } from "./NotificationPopup";
 import { MessagesPopup } from "./MessagesPopup";
 import { ChatPopup } from "./ChatPopup";
 import { SuccessModal } from "./SuccessModal";
+import { UserAvatar } from "./UserAvatar";
 
 export function formatRelativeTime(timestamp: any): string {
   if (!timestamp) return "Ahora";
@@ -35,15 +50,15 @@ export function formatRelativeTime(timestamp: any): string {
   const diffMonths = Math.floor(diffDays / 30);
   if (diffMonths < 12) return `${diffMonths} mes${diffMonths > 1 ? "es" : ""}`;
 
-  return dateObj.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return dateObj.toLocaleDateString([], { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
 const NAV_ITEMS = [
-  { id: "comunidad", label: "Comunidad", path: "/comunidad", icon: "/Icons/NavBar/comunity inactive.svg", activeIcon: "/Icons/NavBar/community active.svg" },
-  { id: "especialistas", label: "Especialistas", path: "/especialistas", icon: "/Icons/NavBar/expert inactive.svg", activeIcon: "/Icons/NavBar/expert active.svg" },
-  { id: "espacios", label: "Espacios", path: "/espacios", icon: "/Icons/NavBar/map inactive.svg", activeIcon: "/Icons/NavBar/map active.svg" },
-  { id: "grupos", label: "Grupos", path: "/grupos", icon: "/Icons/NavBar/espacios inactive.svg", activeIcon: "/Icons/NavBar/espacios active.svg" },
-  { id: "faro", label: "Faro", path: "/faro", icon: "/Icons/NavBar/faro inactive.svg", activeIcon: "/Icons/NavBar/faro active.svg" },
+  { id: "inicio", label: "Inicio", path: "/inicio", icon: Home },
+  { id: "especialistas", label: "Especialistas", path: "/especialistas", icon: HeartHandshake },
+  { id: "espacios", label: "Espacios", path: "/espacios", icon: Globe },
+  { id: "grupos", label: "Grupos", path: "/grupos", icon: Layers },
+  { id: "faro", label: "Faro", path: "/faro", icon: Sun },
 ];
 
 const INITIAL_NOTIFICATIONS: any[] = [];
@@ -68,10 +83,11 @@ function formatNotificationDate(value: string) {
 export function PlatformNavbar() {
   const router = useRouter();
   const pathname = usePathname();
-  
+
   const [profileName, setProfileName] = useState("");
   const [profileAvatar, setProfileAvatar] = useState("");
   const [userRole, setUserRole] = useState<"USER" | "ADMIN">("USER");
+  const [userEmail, setUserEmail] = useState("");
 
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
@@ -89,20 +105,12 @@ export function PlatformNavbar() {
   const notificationRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
 
-  const onboardingNotification = notifications.find(n => n.type === "onboarding-progress");
-  const onboardingOutstandingCount = onboardingNotification && onboardingNotification.progressPercentage !== 100
-    ? (onboardingNotification.quests || []).filter((q: any) => !q.completed).length
-    : 0;
+  // Real unread notifications count: count actual unread notifications
+  const unreadNotificationsCount = notifications.filter(
+    (n) => n.type !== "onboarding-progress" && n.isUnread
+  ).length;
 
-  const otherUnreadCount = notifications
-    .filter(n => n.type !== "onboarding-progress" && !String(n.type).startsWith("quest_completed_") && n.isUnread)
-    .length;
-
-  const unreadNotificationsCount = onboardingOutstandingCount > 0
-    ? onboardingOutstandingCount + otherUnreadCount
-    : otherUnreadCount;
-
-  const unreadMessagesCount = messages.filter(m => m.isUnread && !m.isMuted).length;
+  const unreadMessagesCount = messages.filter((m) => m.isUnread && !m.isMuted).length;
 
   const [showMobileNavbar, setShowMobileNavbar] = useState(true);
 
@@ -132,10 +140,12 @@ export function PlatformNavbar() {
     const storedFirst = localStorage.getItem("luminus_profile_firstName") || "";
     const storedLast = localStorage.getItem("luminus_profile_lastName") || "";
     const fullName = `${storedFirst} ${storedLast}`.trim();
+    const storedEmail = localStorage.getItem("luminus_user_email") || "";
+    setUserEmail(storedEmail);
+
     if (fullName) {
       setProfileName(fullName);
-    } else {
-      const storedEmail = localStorage.getItem("luminus_user_email") || "Usuario";
+    } else if (storedEmail) {
       setProfileName(storedEmail.split("@")[0]);
     }
 
@@ -157,10 +167,11 @@ export function PlatformNavbar() {
       const data = await response.json();
       if (data.user) {
         const u = data.user;
-        
+
         const cachedUserId = localStorage.getItem("luminus_cached_user_id");
         const cachedEmail = localStorage.getItem("luminus_user_email");
-        const isUserChanged = (cachedUserId && cachedUserId !== u.id) || (!cachedUserId && cachedEmail && cachedEmail !== u.email);
+        const isUserChanged =
+          (cachedUserId && cachedUserId !== u.id) || (!cachedUserId && cachedEmail && cachedEmail !== u.email);
 
         if (isUserChanged) {
           const keysToRemove = [
@@ -183,12 +194,13 @@ export function PlatformNavbar() {
             "luminus_profile_plan",
             "luminus_onboarding_completed",
             "luminus_chats",
-            "luminus_cached_user_id"
+            "luminus_cached_user_id",
           ];
-          keysToRemove.forEach(k => localStorage.removeItem(k));
-          
+          keysToRemove.forEach((k) => localStorage.removeItem(k));
+
           setProfileName("");
           setProfileAvatar("");
+          setUserEmail("");
           setUserRole("USER");
         }
 
@@ -209,6 +221,7 @@ export function PlatformNavbar() {
 
         if (u.email) {
           localStorage.setItem("luminus_user_email", u.email);
+          setUserEmail(u.email);
         }
 
         setUserRole(role);
@@ -236,10 +249,12 @@ export function PlatformNavbar() {
     }
 
     const data = await response.json();
-    setNotifications((data.notifications || []).map((notification: any) => ({
-      ...notification,
-      date: formatNotificationDate(notification.date),
-    })));
+    setNotifications(
+      (data.notifications || []).map((notification: any) => ({
+        ...notification,
+        date: formatNotificationDate(notification.date),
+      }))
+    );
   }
 
   // Fetch conversations from database on demand
@@ -264,7 +279,7 @@ export function PlatformNavbar() {
             isUnread: conv.is_unread,
             isMuted: conv.is_muted,
             isDb: true,
-            participantId: conv.participant.id
+            participantId: conv.participant.id,
           };
         });
       }
@@ -302,7 +317,6 @@ export function PlatformNavbar() {
       if (customEvent.detail) {
         setCompletedQuest(customEvent.detail);
         setShowSuccessModal(true);
-        // Reload notifications lists to update the bell count and checklist checklist state immediately
         loadNotifications();
       }
     };
@@ -318,10 +332,10 @@ export function PlatformNavbar() {
     if (typeof window !== "undefined" && !(window as any).__luminus_fetch_intercepted) {
       (window as any).__luminus_fetch_intercepted = true;
       const originalFetch = window.fetch;
-      window.fetch = async function(...args) {
+      window.fetch = async function (...args) {
         const response = await originalFetch(...args);
-        const url = typeof args[0] === 'string' ? args[0] : (args[0] as Request).url || '';
-        if (url.includes('/api/')) {
+        const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url || "";
+        if (url.includes("/api/")) {
           try {
             const clone = response.clone();
             const data = await clone.json();
@@ -360,9 +374,28 @@ export function PlatformNavbar() {
     };
   }, [router]);
 
+  const [profileFromContext, setProfileFromContext] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (pathname.startsWith("/inicio/public-profile")) {
+      const params = new URLSearchParams(window.location.search);
+      const fromParam = params.get("from");
+      if (fromParam && ["especialistas", "espacios", "grupos", "faro", "inicio"].includes(fromParam)) {
+        setProfileFromContext(fromParam);
+      } else {
+        setProfileFromContext("");
+      }
+    } else {
+      setProfileFromContext(null);
+    }
+  }, [pathname]);
+
   // Determine active tab based on pathname
   const getActiveTab = () => {
-    if (pathname.includes("/comunidad")) return "comunidad";
+    if (pathname.startsWith("/inicio/public-profile")) {
+      return profileFromContext ?? "";
+    }
+    if (pathname === "/" || pathname.startsWith("/inicio") || pathname.startsWith("/comunidad")) return "inicio";
     if (pathname.includes("/especialistas")) return "especialistas";
     if (pathname.includes("/espacios")) return "espacios";
     if (pathname.includes("/grupos")) return "grupos";
@@ -402,7 +435,7 @@ export function PlatformNavbar() {
   }, []);
 
   const markNotificationRead = async (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isUnread: false } : n));
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isUnread: false } : n)));
     await fetch("/api/notifications", {
       method: "PATCH",
       headers: {
@@ -414,7 +447,7 @@ export function PlatformNavbar() {
   };
 
   const markAllNotificationsRead = async () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isUnread: false })));
+    setNotifications((prev) => prev.map((n) => ({ ...n, isUnread: false })));
     await fetch("/api/notifications", {
       method: "PATCH",
       headers: {
@@ -426,7 +459,7 @@ export function PlatformNavbar() {
   };
 
   const deleteNotification = async (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
     await fetch(`/api/notifications?id=${id}`, {
       method: "DELETE",
       credentials: "include",
@@ -434,6 +467,9 @@ export function PlatformNavbar() {
   };
 
   const markMessageRead = (id: string | number) => {
+    setMessages((prev) =>
+      prev.map((m) => (String(m.id) === String(id) ? { ...m, isUnread: false } : m))
+    );
     const msgObj = messages.find((m) => String(m.id) === String(id));
     if (msgObj) {
       const participantId = msgObj.participantId ? String(msgObj.participantId) : String(msgObj.id);
@@ -443,7 +479,7 @@ export function PlatformNavbar() {
         setActivePopupChat({
           userId: participantId,
           name: msgObj.user,
-          avatar: msgObj.avatar
+          avatar: msgObj.avatar,
         });
       }
     }
@@ -483,9 +519,9 @@ export function PlatformNavbar() {
       "luminus_profile_plan",
       "luminus_onboarding_completed",
       "luminus_chats",
-      "luminus_cached_user_id"
+      "luminus_cached_user_id",
     ];
-    keysToRemove.forEach(k => localStorage.removeItem(k));
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
 
     if (data?.cognitoLogoutUrl) {
       window.location.href = data.cognitoLogoutUrl;
@@ -497,54 +533,47 @@ export function PlatformNavbar() {
   return (
     <>
       {/* Desktop Header */}
-      <header className="fixed top-0 left-0 w-full bg-white border-b border-slate-200 z-[100] h-[64px] px-6 lg:px-8 flex items-center justify-between">
-        <div className="flex items-center gap-8">
-          <Link href="/">
+      <header className="fixed top-0 left-0 w-full bg-white border-b border-slate-200/90 z-[100] h-[64px] px-6 lg:px-8 flex items-center justify-between">
+        <div className="flex items-stretch gap-8 h-full">
+          <Link href="/inicio" className="inline-flex items-center">
             <img src="/logo-luminus-black.svg" alt="Luminus" className="hidden sm:block h-[20px] cursor-pointer" />
             <img src="/iso-logo-black.svg" alt="Luminus" className="sm:hidden h-[24px] cursor-pointer" />
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-1">
+          {/* Desktop Nav Items */}
+          <nav className="hidden lg:flex items-stretch gap-1.5 h-full">
             {NAV_ITEMS.map((item) => {
               const isActive = activeTab === item.id;
+              const Icon = item.icon;
               return (
                 <Link
                   key={item.id}
                   href={item.path}
-                  className={`group h-[48px] px-3 lg:px-[12px] rounded-xl flex items-center gap-2.5 transition-colors duration-200 ${isActive
-                    ? "text-black bg-slate-50/50"
-                    : "text-slate-400 hover:text-black"
-                    }`}
+                  className={`group relative h-full px-4 flex items-center gap-2.5 transition-colors duration-150 font-jakarta text-sm select-none ${
+                    isActive
+                      ? "font-bold text-slate-900"
+                      : "font-medium text-slate-600 hover:text-slate-900"
+                  }`}
                 >
-                  <div className="relative w-[18px] h-[18px] lg:w-[24px] lg:h-[24px] shrink-0">
-                    {/* Inactive Icon Layer */}
-                    <div
-                      style={{
-                        maskImage: `url('${item.icon}')`,
-                        WebkitMaskImage: `url('${item.icon}')`
-                      }}
-                      className={`absolute inset-0 transition-opacity duration-200 [mask-size:contain] [mask-repeat:no-repeat] [mask-position:center] [webkit-mask-size:contain] [webkit-mask-repeat:no-repeat] [webkit-mask-position:center] ${isActive ? "opacity-0" : "opacity-100 bg-slate-400 group-hover:bg-black"}`}
-                    />
-                    {/* Active Icon Layer */}
-                    <div
-                      style={{
-                        maskImage: `url('${item.activeIcon}')`,
-                        WebkitMaskImage: `url('${item.activeIcon}')`
-                      }}
-                      className={`absolute inset-0 transition-opacity duration-200 [mask-size:contain] [mask-repeat:no-repeat] [mask-position:center] [webkit-mask-size:contain] [webkit-mask-repeat:no-repeat] [webkit-mask-position:center] ${isActive ? "opacity-100 bg-black" : "opacity-0"}`}
-                    />
-                  </div>
-                  <span className={`text-[14px] font-semibold ${isActive ? "text-black" : "text-slate-400 group-hover:text-black"}`}>
-                    {item.label}
-                  </span>
+                  <Icon
+                    className={`w-5 h-5 shrink-0 transition-colors duration-150 ${
+                      isActive ? "text-slate-900" : "text-slate-400 group-hover:text-slate-900"
+                    }`}
+                    strokeWidth={isActive ? 2.25 : 1.75}
+                  />
+                  <span>{item.label}</span>
+                  {isActive && (
+                    <span className="absolute -bottom-[1px] left-2.5 right-2.5 h-[2px] bg-slate-900 rounded-full z-10" />
+                  )}
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        <div className="flex items-center gap-2 lg:gap-4">
-          <div className="relative" ref={messagesRef}>
+        <div className="flex items-center gap-2 lg:gap-3 h-full">
+          {/* Messages Button & Popup */}
+          <div className="relative flex items-center h-full" ref={messagesRef}>
             <button
               onClick={() => {
                 const nextOpen = !isMessagesOpen;
@@ -554,19 +583,18 @@ export function PlatformNavbar() {
                 }
               }}
               type="button"
-              aria-label={`Messages: ${unreadMessagesCount} unread`}
-              className={`relative flex h-12 w-12 items-center justify-center rounded-xl transition ${isMessagesOpen
-                ? "bg-slate-100 text-black"
-                : "bg-auto text-slate-400 hover:bg-slate-100 hover:text-black"
-                }`}
+              aria-label={`Mensajes: ${unreadMessagesCount} no leídos`}
+              className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors duration-150 cursor-pointer ${
+                isMessagesOpen
+                  ? "bg-slate-100 text-slate-900"
+                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+              }`}
             >
-              <span className={`material-symbols-rounded text-[22px] ${isMessagesOpen ? "material-icon-filled text-black" : ""}`}>
-                chat_bubble
-              </span>
+              <MessageSquare className="w-5 h-5" strokeWidth={2} />
               {unreadMessagesCount > 0 && (
-                <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#FF4B4B] text-white flex items-center justify-center text-[10px] font-bold leading-none z-50">
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white flex items-center justify-center text-[10px] font-bold font-jakarta leading-none ring-2 ring-white">
                   {unreadMessagesCount}
-                </div>
+                </span>
               )}
             </button>
 
@@ -579,7 +607,8 @@ export function PlatformNavbar() {
             />
           </div>
 
-          <div className="relative" ref={notificationRef}>
+          {/* Notifications Button & Popup */}
+          <div className="relative flex items-center h-full" ref={notificationRef}>
             <button
               onClick={() => {
                 const nextOpen = !isNotificationOpen;
@@ -589,19 +618,18 @@ export function PlatformNavbar() {
                 }
               }}
               type="button"
-              aria-label={`Notifications: ${unreadNotificationsCount} unread`}
-              className={`relative flex h-12 w-12 items-center justify-center rounded-xl transition ${isNotificationOpen
-                ? "bg-slate-100 text-black"
-                : "bg-auto text-slate-400 hover:bg-slate-100 hover:text-black"
-                }`}
+              aria-label={`Notificaciones: ${unreadNotificationsCount} no leídas`}
+              className={`relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors duration-150 cursor-pointer ${
+                isNotificationOpen
+                  ? "bg-slate-100 text-slate-900"
+                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+              }`}
             >
-              <span className={`material-symbols-rounded text-[22px] ${isNotificationOpen ? "material-icon-filled text-black" : ""}`}>
-                notifications
-              </span>
+              <Bell className="w-5 h-5" strokeWidth={2} />
               {unreadNotificationsCount > 0 && (
-                <div className="absolute top-1 right-1 w-4 h-4 rounded-full bg-[#FF4B4B] text-white flex items-center justify-center text-[10px] font-bold leading-none z-50">
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white flex items-center justify-center text-[10px] font-bold font-jakarta leading-none ring-2 ring-white">
                   {unreadNotificationsCount}
-                </div>
+                </span>
               )}
             </button>
 
@@ -612,112 +640,123 @@ export function PlatformNavbar() {
               onMarkRead={markNotificationRead}
               onMarkAllRead={markAllNotificationsRead}
               onDelete={deleteNotification}
+              onOpenChat={(userId, name, avatar) => {
+                if (window.innerWidth < 640) {
+                  router.push(`/mensajes?id=${userId}`);
+                } else {
+                  setActivePopupChat({ userId, name: name || "", avatar: avatar || "" });
+                }
+              }}
             />
           </div>
 
-          <div className="relative" ref={dropdownRef}>
+          {/* User Profile Button & Dropdown */}
+          <div className="relative flex items-center h-full" ref={dropdownRef}>
             <button
               onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-              className={`group flex items-center gap-2.5 p-1 lg:pr-2.5 rounded-xl transition-all ${isProfileDropdownOpen ? "bg-slate-50" : "hover:bg-slate-50"}`}
+              className={`group flex items-center gap-2 p-1.5 pr-2.5 rounded-xl transition-colors duration-150 cursor-pointer ${
+                isProfileDropdownOpen ? "bg-slate-100 text-slate-900" : "hover:bg-slate-50 text-slate-700"
+              }`}
             >
-              {profileAvatar ? (
-                <img
-                  src={profileAvatar}
-                  alt="Perfil"
-                  className="w-8 h-8 lg:w-9 lg:h-9 rounded-[8px] object-cover"
-                />
-              ) : (
-                <div className="w-8 h-8 lg:w-9 lg:h-9 rounded-[8px] bg-slate-100 flex items-center justify-center">
-                  <span className="material-symbols-rounded text-slate-400 text-[20px]">person</span>
-                </div>
-              )}
-              <span className={`hidden lg:block text-sm font-semibold ${isProfileDropdownOpen ? "text-slate-900" : "text-slate-500 group-hover:text-slate-900"}`}>
+              <UserAvatar src={profileAvatar} alt={profileName || "Perfil"} size="sm" />
+              <span className="hidden lg:block font-jakarta text-sm font-semibold text-slate-900 group-hover:text-slate-700 max-w-[140px] truncate transition-colors">
                 {profileName}
               </span>
-              <span className="material-symbols-rounded text-slate-400 text-[18px] hidden lg:block">
-                keyboard_arrow_down
-              </span>
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 transition-transform duration-150 hidden lg:block ${
+                  isProfileDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
             </button>
 
-          {isProfileDropdownOpen && (
-            <div
-              style={{ backgroundColor: "#ffffff" }}
-              className="fixed right-6 top-[64px] sm:absolute sm:right-0 sm:top-auto sm:mt-2 w-52 !bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] shadow-xl shadow-slate-900/10 animate-in zoom-in-95 duration-150 origin-top-right"
-            >
-              <Link
-                href="/perfil-usuario"
-                onClick={() => setIsProfileDropdownOpen(false)}
-                className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors"
-              >
-                <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900">person</span>
-                <span className="font-semibold text-slate-500 group-hover:text-slate-900">Ver mi perfil</span>
-              </Link>
-              <Link
-                href="/perfil-usuario/configuracion"
-                onClick={() => setIsProfileDropdownOpen(false)}
-                className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors"
-              >
-                <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900">settings</span>
-                <span className="font-semibold text-slate-500 group-hover:text-slate-900">Ajustes de cuenta</span>
-              </Link>
-              {userRole === "ADMIN" && (
-                <Link
-                  href="/admin"
-                  onClick={() => setIsProfileDropdownOpen(false)}
-                  className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors"
-                >
-                  <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900">admin_panel_settings</span>
-                  <span className="font-semibold text-slate-500 group-hover:text-slate-900">Administrador</span>
-                </Link>
-              )}
-              <div className="h-[1px] bg-slate-100 w-full"></div>
-              <button
-                onClick={handleSignOut}
-                className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors text-left"
-              >
-                <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B]">logout</span>
-                <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B]">Cerrar sesión</span>
-              </button>
-            </div>
-          )}
+            {isProfileDropdownOpen && (
+              <div className="fixed left-4 right-4 sm:left-auto top-[70px] sm:absolute sm:right-0 sm:top-[calc(100%+8px)] w-auto sm:w-72 bg-white border border-slate-200/80 rounded-2xl overflow-hidden z-[100] shadow-[0_10px_38px_-10px_rgba(22,23,24,0.08),0_4px_16px_-4px_rgba(22,23,24,0.03)] animate-in fade-in-0 zoom-in-98 duration-150 ease-out origin-top-right">
+                {/* User Info Header */}
+                <div className="p-3.5 border-b border-slate-100 flex items-center gap-3 bg-slate-50/60">
+                  <UserAvatar src={profileAvatar} alt={profileName || "Perfil"} size="md" />
+                  <div className="flex flex-col min-w-0">
+                    <span className="font-jakarta text-sm font-semibold text-slate-900 truncate">
+                      {profileName || "Usuario"}
+                    </span>
+                    {userEmail && (
+                      <span className="text-[11px] text-slate-500 font-sans truncate">
+                        {userEmail}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Navigation links */}
+                <div className="p-1.5 flex flex-col gap-0.5">
+                  <Link
+                    href="/perfil-usuario"
+                    onClick={() => setIsProfileDropdownOpen(false)}
+                    className="group w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium font-jakarta text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                  >
+                    <User className="w-4 h-4 text-slate-400 group-hover:text-slate-900 transition-colors shrink-0" strokeWidth={2} />
+                    <span>Ver mi perfil</span>
+                  </Link>
+                  <Link
+                    href="/perfil-usuario/configuracion"
+                    onClick={() => setIsProfileDropdownOpen(false)}
+                    className="group w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium font-jakarta text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                  >
+                    <Settings className="w-4 h-4 text-slate-400 group-hover:text-slate-900 transition-colors shrink-0" strokeWidth={2} />
+                    <span>Ajustes de cuenta</span>
+                  </Link>
+                  {userRole === "ADMIN" && (
+                    <Link
+                      href="/admin"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                      className="group w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium font-jakarta text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                    >
+                      <Shield className="w-4 h-4 text-slate-400 group-hover:text-slate-900 transition-colors shrink-0" strokeWidth={2} />
+                      <span>Administrador</span>
+                    </Link>
+                  )}
+                </div>
+
+                <div className="h-px bg-slate-100 my-1 mx-2" />
+
+                {/* Sign Out */}
+                <div className="p-1.5 pt-0">
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="group w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium font-jakarta text-rose-600 hover:bg-rose-50/70 transition-colors text-left cursor-pointer border-none bg-transparent"
+                  >
+                    <LogOut className="w-4 h-4 text-rose-500 group-hover:text-rose-600 transition-colors shrink-0" strokeWidth={2} />
+                    <span>Cerrar sesión</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
       {/* Mobile Nav - Fixed Bottom */}
       {showMobileNavbar && (
-        <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 z-[100] animate-in slide-in-from-bottom duration-200">
-          <div className="max-w-md mx-auto h-[64px] px-6 flex justify-between items-center pb-[env(safe-area-inset-bottom)]">
+        <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200/90 z-[100]">
+          <div className="max-w-md mx-auto h-[60px] px-4 flex justify-between items-center pb-[env(safe-area-inset-bottom)]">
             {NAV_ITEMS.map((tab) => {
               const isActive = activeTab === tab.id;
-
+              const Icon = tab.icon;
               return (
                 <Link
                   key={tab.id}
                   href={tab.path}
-                  className={`flex flex-col items-center justify-center gap-0 flex-1 transition-colors duration-200 ${isActive ? "text-black" : "text-slate-400"}`}
+                  className={`flex flex-col items-center justify-center gap-1 flex-1 py-1 transition-colors duration-150 select-none ${
+                    isActive ? "text-slate-900 font-bold" : "text-slate-400 hover:text-slate-600 font-medium"
+                  }`}
                 >
-                  <div className="flex items-center justify-center">
-                    <div className="relative w-[26px] h-[26px] shrink-0">
-                      {/* Inactive Icon Layer */}
-                      <div
-                        style={{
-                          maskImage: `url('${tab.icon}')`,
-                          WebkitMaskImage: `url('${tab.icon}')`
-                        }}
-                        className={`absolute inset-0 transition-opacity duration-200 [mask-size:contain] [mask-repeat:no-repeat] [mask-position:center] [webkit-mask-size:contain] [webkit-mask-repeat:no-repeat] [webkit-mask-position:center] ${isActive ? "opacity-0" : "opacity-100 bg-slate-400"}`}
-                      />
-                      {/* Active Icon Layer */}
-                      <div
-                        style={{
-                          maskImage: `url('${tab.activeIcon}')`,
-                          WebkitMaskImage: `url('${tab.activeIcon}')`
-                        }}
-                        className={`absolute inset-0 transition-opacity duration-200 [mask-size:contain] [mask-repeat:no-repeat] [mask-position:center] [webkit-mask-size:contain] [webkit-mask-repeat:no-repeat] [webkit-mask-position:center] ${isActive ? "opacity-100 bg-black" : "opacity-0"}`}
-                      />
-                    </div>
-                  </div>
-                  <span className={`text-[10px] font-medium tracking-tight ${isActive ? "opacity-100" : "opacity-70"}`}>
+                  <Icon
+                    className={`w-5 h-5 transition-colors shrink-0 ${
+                      isActive ? "text-slate-900" : "text-slate-400"
+                    }`}
+                    strokeWidth={isActive ? 2.25 : 1.75}
+                  />
+                  <span className="text-[10px] font-jakarta leading-none tracking-tight">
                     {tab.label}
                   </span>
                 </Link>
@@ -726,7 +765,7 @@ export function PlatformNavbar() {
           </div>
         </div>
       )}
-      
+
       {activePopupChat && (
         <ChatPopup
           userId={activePopupChat.userId}
@@ -745,16 +784,6 @@ export function PlatformNavbar() {
         eyebrow="¡Destello completado!"
         celebrate={true}
       />
-
-      {/* Preload icons to avoid lag */}
-      <div className="hidden" aria-hidden="true">
-        {NAV_ITEMS.map((item) => (
-          <div key={item.id}>
-            <img src={item.icon} alt="" />
-            <img src={item.activeIcon} alt="" />
-          </div>
-        ))}
-      </div>
     </>
   );
 }

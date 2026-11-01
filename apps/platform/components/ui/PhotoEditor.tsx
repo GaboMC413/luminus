@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import AvatarEditor from 'react-avatar-editor';
 import { Button } from '@/components/ui/Button';
 
-interface PhotoEditorProps {
+export interface PhotoEditorProps {
   image: string;
   onSave: (blob: Blob) => void;
   onCancel: () => void;
@@ -191,4 +191,5 @@ export function PhotoEditor({ image, onSave, onCancel }: PhotoEditorProps) {
     </div>
   );
 }
+
 export default PhotoEditor;

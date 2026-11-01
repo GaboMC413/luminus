@@ -8,14 +8,10 @@ import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { CommunityReportModal } from "./CommunityReportModal";
 import { EditPostModal } from "./EditPostModal";
+import { formatLocationDisplay } from "@/utils/locationUtils";
+import { formatPostDate } from "@/lib/community/posts";
 
-function formatCityCountry(loc?: string): string {
-  if (!loc) return "";
-  const parts = loc.split(",").map((p) => p.trim()).filter(Boolean);
-  if (parts.length <= 1) return loc;
-  // Keeps only City and Country (parts[0] and parts[parts.length - 1]), omitting state/department
-  return `${parts[0]}, ${parts[parts.length - 1]}`;
-}
+const formatCityCountry = formatLocationDisplay;
 
 interface PostCardProps {
   post: PostItem;
@@ -87,7 +83,8 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
   const rawLocation = isOfficialAccount
     ? "Cuenta Oficial"
     : post.authorLocation || (post.authorRole && post.authorRole !== "Miembro" ? post.authorRole : "Montevideo, Uruguay");
-  const authorSubtitle = formatCityCountry(rawLocation);
+  const authorSubtitle = formatLocationDisplay(rawLocation);
+  const displayDate = formatPostDate(post.createdAt || post.date);
 
   const hasMedia = Boolean(post.youtubeId || (post.imageUrl && !imgError));
   const { isTruncatable, truncatedText } = useMemo(() => {
@@ -133,7 +130,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
   if (userCity && userCountry) {
     currentUserLocation = `${userCity}, ${userCountry}`;
   } else if (currentUserProfile?.location) {
-    currentUserLocation = formatCityCountry(currentUserProfile.location);
+    currentUserLocation = formatLocationDisplay(currentUserProfile.location);
   } else if (userCity || userCountry) {
     currentUserLocation = userCity || userCountry;
   }
@@ -162,7 +159,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
       router.push("/perfil-usuario");
     } else {
       const targetId = post.authorId || post.authorName;
-      router.push(`/comunidad/public-profile?id=${encodeURIComponent(targetId)}`);
+      router.push(`/inicio/public-profile?id=${encodeURIComponent(targetId)}`);
     }
   };
 
@@ -186,7 +183,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
       router.push("/perfil-usuario");
     } else {
       const targetId = comment.authorId || comment.authorName;
-      router.push(`/comunidad/public-profile?id=${encodeURIComponent(targetId)}`);
+      router.push(`/inicio/public-profile?id=${encodeURIComponent(targetId)}`);
     }
   };
 
@@ -470,7 +467,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
           {/* Author details */}
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className={`text-sm font-bold text-slate-900 font-jakarta truncate ${isOfficialAccount ? "" : "group-hover/author:text-slate-600 transition-colors"
+              <span className={`font-jakarta text-sm font-semibold text-slate-900 truncate ${isOfficialAccount ? "" : "group-hover/author:text-slate-700 transition-colors"
                 }`}>
                 {post.authorName}
               </span>
@@ -481,13 +478,17 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
               )}
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-slate-400 font-medium font-sans">
-              <span className="truncate max-w-[180px] sm:max-w-[240px] text-slate-500">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium font-sans">
+              <span className="truncate max-w-[180px] sm:max-w-[240px]">
                 {authorSubtitle}
               </span>
-              <span>•</span>
-              {/* Post date */}
-              <span className="text-slate-400 whitespace-nowrap">{post.date}</span>
+              {displayDate && (
+                <>
+                  <span className="text-slate-300 font-normal select-none">&bull;</span>
+                  {/* Post date */}
+                  <span className="text-slate-400 whitespace-nowrap">{displayDate}</span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -749,7 +750,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
           {comments.length > 0 && (
             <div className="flex flex-col gap-4">
               {comments.map((comment) => {
-                const commentLoc = formatCityCountry(
+                const commentLoc = formatLocationDisplay(
                   comment.authorLocation || (comment.authorRole && comment.authorRole !== "Miembro" ? comment.authorRole : "Montevideo, Uruguay")
                 );
 
@@ -794,22 +795,22 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
                       <div className="flex items-baseline gap-2 flex-wrap leading-tight">
                         <span
                           onClick={isOfficialComment ? undefined : (e) => handleCommentAuthorClick(e, comment)}
-                          className={`text-xs font-bold text-slate-900 font-sans ${isOfficialComment ? "cursor-default select-none" : "cursor-pointer hover:text-slate-600 transition-colors"
+                          className={`text-xs font-semibold text-slate-900 font-jakarta ${isOfficialComment ? "cursor-default select-none" : "cursor-pointer hover:text-slate-700 transition-colors"
                             }`}
                           title={isOfficialComment ? undefined : `Ver perfil de ${comment.authorName}`}
                         >
                           {comment.authorName}
                         </span>
                         {commentLoc && (
-                          <span className="text-xs text-slate-400 font-normal font-sans">
+                          <span className="text-xs text-slate-500 font-medium font-sans">
                             {commentLoc}
                           </span>
                         )}
                         {comment.date && (
                           <>
-                            <span className="text-[10px] text-slate-300">•</span>
-                            <span className="text-xs text-slate-400 font-normal font-sans">
-                              {comment.date}
+                            <span className="text-slate-300 font-normal select-none">&bull;</span>
+                            <span className="text-xs text-slate-400 font-medium font-sans">
+                              {formatPostDate(comment.createdAt || comment.date)}
                             </span>
                           </>
                         )}

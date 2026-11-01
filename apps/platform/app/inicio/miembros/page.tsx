@@ -396,7 +396,7 @@ function MiembrosContent() {
         {/* Header: Back Arrow + Title */}
         <div className="flex items-center gap-3 mb-4 md:mb-6 shrink-0">
           <button
-            onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/comunidad")}
+            onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/inicio")}
             className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900 cursor-pointer"
             title="Volver"
           >

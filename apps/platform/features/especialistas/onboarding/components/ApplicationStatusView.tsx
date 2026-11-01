@@ -3,6 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { Clock } from "lucide-react";
 
 interface ApplicationStatusViewProps {
   createdAt?: string | null;
@@ -46,7 +47,7 @@ export function ApplicationStatusView({ createdAt, email }: ApplicationStatusVie
         <div className="flex justify-between items-center py-1 border-b border-slate-100">
           <span className="text-slate-500 font-medium">Estado</span>
           <div className="inline-flex items-center gap-1.5 text-emerald-700 text-[13px] font-bold font-jakarta">
-            <span className="material-symbols-rounded text-[18px]">schedule</span>
+            <Clock className="w-4 h-4 text-emerald-700" />
             <span>En revisión</span>
           </div>
         </div>

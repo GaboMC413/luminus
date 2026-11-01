@@ -473,8 +473,8 @@ export default function SpecialistSignUpWizard() {
                       setEmail(e.target.value);
                       if (authMessage.type === "error") setAuthMessage({ text: "", type: "" });
                     }}
-                    variant="clean"
-                    className="!bg-white border border-zinc-200/80 focus:border-slate-800"
+
+
                   />
 
                   <InputField
@@ -487,8 +487,8 @@ export default function SpecialistSignUpWizard() {
                     }}
                     showPassword={showPassword}
                     onTogglePassword={() => setShowPassword(!showPassword)}
-                    variant="clean"
-                    className="!bg-white border border-zinc-200/80 focus:border-slate-800"
+
+
                   />
 
                   {/* Password Checklist - Ultra Compact */}
@@ -529,8 +529,8 @@ export default function SpecialistSignUpWizard() {
                     }}
                     showPassword={showPassword}
                     onTogglePassword={() => setShowPassword(!showPassword)}
-                    variant="clean"
-                    className="!bg-white border border-zinc-200/80 focus:border-slate-800"
+
+
                   />
 
                   <TurnstileWidget
@@ -545,7 +545,7 @@ export default function SpecialistSignUpWizard() {
                         Ya tienes una cuenta registrada con <strong>{existingAccountEmail}</strong>.
                       </p>
                       <Link
-                        href={`/auth/iniciar-sesion?email=${encodeURIComponent(existingAccountEmail)}&redirect=/especialistas/onboarding`}
+                        href={`/iniciar-sesion?email=${encodeURIComponent(existingAccountEmail)}&redirect=/especialistas/unirme`}
                         className="inline-flex items-center justify-center w-full py-2.5 px-4 bg-black hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition cursor-pointer"
                       >
                         Iniciar sesión
@@ -572,9 +572,9 @@ export default function SpecialistSignUpWizard() {
                 {/* Google Sign Up Button */}
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="secondary"
                   onClick={handleGoogleSignUp}
-                  className="w-full flex items-center justify-center gap-2 hover:bg-zinc-50 border-zinc-200"
+                  className="w-full flex items-center justify-center gap-2 mt-2"
                 >
                   <GoogleIcon />
                   <span>Registrarse con Google</span>
@@ -582,9 +582,9 @@ export default function SpecialistSignUpWizard() {
 
                 {/* Existing user note */}
                 <p className="text-[13px] md:text-[14px] text-slate-600 text-center leading-relaxed mt-2 px-1">
-                  Si ya te registraste antes en LUMINUS, debes sumarte a la red de especialsitas con tu cuenta{" "}
+                  Si ya te registraste antes en LUMINUS, debes sumarte a la red de especialistas con tu cuenta{" "}
                   <Link
-                    href="/especialistas/onboarding"
+                    href="/especialistas/unirme"
                     className="underline font-semibold text-slate-900 hover:text-black"
                   >
                     usando este link
@@ -732,7 +732,7 @@ export default function SpecialistSignUpWizard() {
             {step === 8 && (
               <OnboardingSuccessModal
                 buttonText="Descubrir la plataforma"
-                redirectUrl="/comunidad"
+                redirectUrl="/inicio"
               />
             )}
           </div>
