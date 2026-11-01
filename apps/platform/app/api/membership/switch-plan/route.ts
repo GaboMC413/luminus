@@ -21,7 +21,13 @@ export async function POST(req: Request) {
     const { prisma } = await import("@/lib/db");
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
-      select: { id: true, stripeSubscriptionId: true, tier: true },
+      select: {
+        id: true,
+        email: true,
+        stripeSubscriptionId: true,
+        tier: true,
+        profile: { select: { firstName: true, fullName: true } },
+      },
     });
 
     if (!user) {
@@ -96,6 +102,25 @@ export async function POST(req: Request) {
         scheduled_change: targetInterval,
       },
     });
+
+    try {
+      const userName = user.profile?.firstName || user.profile?.fullName || undefined;
+      if (targetInterval === "year") {
+        const { sendMembershipSwitchAnnualEmail } = await import("@/lib/mails/sender");
+        await sendMembershipSwitchAnnualEmail(user.email, { name: userName });
+      } else {
+        const { sendMembershipSwitchMonthlyEmail } = await import("@/lib/mails/sender");
+        let periodEndDate = "el fin de tu ciclo anual actual";
+        const currentPeriodEnd = (sub as any)?.current_period_end;
+        if (currentPeriodEnd) {
+          const d = new Date(currentPeriodEnd * 1000);
+          periodEndDate = d.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+        }
+        await sendMembershipSwitchMonthlyEmail(user.email, { name: userName, periodEndDate });
+      }
+    } catch (emailErr) {
+      console.error("[switch-plan] Failed to send switch plan email:", emailErr);
+    }
 
     return NextResponse.json({
       success: true,

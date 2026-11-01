@@ -20,16 +20,24 @@ export async function POST(req: Request) {
     const { prisma } = await import("@/lib/db");
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
-      select: { id: true, stripeSubscriptionId: true },
+      select: {
+        id: true,
+        email: true,
+        stripeSubscriptionId: true,
+        profile: { select: { firstName: true, fullName: true } },
+      },
     });
 
     if (!user) {
       return NextResponse.json({ message: "Usuario no encontrado." }, { status: 404 });
     }
 
+    let currentPeriodEnd: number | undefined;
+
     if (user.stripeSubscriptionId && !user.stripeSubscriptionId.startsWith("sub_mock_") && stripe) {
       try {
         const sub = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+        currentPeriodEnd = (sub as any)?.current_period_end;
 
         // If subscription is already fully canceled in Stripe
         if (sub.status === "canceled") {
@@ -93,6 +101,21 @@ export async function POST(req: Request) {
         }
         throw stripeErr;
       }
+    }
+
+    try {
+      const { sendMembershipCanceledEmail } = await import("@/lib/mails/sender");
+      let accessUntilDate = "el fin de tu ciclo de facturación actual";
+      if (currentPeriodEnd) {
+        const d = new Date(currentPeriodEnd * 1000);
+        accessUntilDate = d.toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" });
+      }
+      await sendMembershipCanceledEmail(user.email, {
+        name: user.profile?.firstName || user.profile?.fullName || undefined,
+        accessUntilDate,
+      });
+    } catch (emailErr) {
+      console.error("[cancel] Failed to send cancellation email:", emailErr);
     }
 
     return NextResponse.json({
