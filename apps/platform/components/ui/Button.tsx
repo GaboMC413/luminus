@@ -1,33 +1,36 @@
 import React from 'react';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'outline' | 'slate' | 'small' | 'back' | 'secondary' | 'soft' | 'ghost' | 'danger';
+  variant?: 'primary' | 'secondary' | 'outline' | 'soft' | 'ghost' | 'destructive' | 'danger' | 'link' | 'back' | 'slate' | 'small';
   size?: 'sm' | 'md' | 'lg';
+  fullWidth?: boolean;
   children?: React.ReactNode;
 }
 
 // --- STANDARD BUTTON COMPONENT ---
 // Used for general actions, forms, and primary/secondary navigation buttons.
-export function Button({ variant = 'primary', size, children, className = '', ...props }: ButtonProps) {
+export function Button({ variant = 'primary', size, fullWidth, children, className = '', ...props }: ButtonProps) {
   // Base styles for standard buttons
-  const baseStyles = "transition-all outline-none flex items-center justify-center font-jakarta duration-200 ease-out active:scale-[0.99] cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100";
+  const baseStyles = "transition-all outline-none flex items-center justify-center font-jakarta duration-150 ease-out active:scale-[0.99] cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100";
 
   const sizeOverrides = {
-    sm: "!h-9 !px-3.5 !text-xs sm:!text-sm",
-    md: "!h-10 !px-4 !text-xs sm:!text-sm",
-    lg: "!h-11 !px-5 !text-sm",
+    sm: "!h-8.5 !px-3 !text-xs font-medium",
+    md: "!h-10 !px-4 !text-xs sm:!text-sm font-semibold",
+    lg: "!h-11 !px-5 !text-sm font-semibold",
   };
 
   const variants = {
-    primary: "w-full h-11 px-5 rounded-xl text-sm font-semibold bg-slate-900 text-white hover:bg-black shadow-none border-none",
-    outline: "w-full h-11 px-5 rounded-xl text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-none",
-    secondary: "w-full h-11 px-5 rounded-xl text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-none",
-    soft: "h-10 px-4 rounded-xl text-xs sm:text-sm font-semibold bg-slate-100 hover:bg-slate-200/80 text-slate-800 border border-slate-200/60 shadow-none",
-    ghost: "h-10 px-3.5 rounded-xl text-xs sm:text-sm font-semibold bg-transparent hover:bg-slate-100 text-slate-600 hover:text-slate-900 border-none shadow-none",
-    danger: "w-full h-11 px-5 rounded-xl text-sm font-semibold bg-rose-600 text-white hover:bg-rose-700 shadow-none border-none",
+    primary: "h-11 px-5 rounded-xl text-sm font-semibold bg-slate-900 text-white hover:bg-black shadow-none border-none",
+    secondary: "h-11 px-5 rounded-xl text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-none",
+    outline: "h-11 px-5 rounded-xl text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-none",
+    soft: "h-8.5 px-3 rounded-xl text-xs font-medium bg-slate-50 hover:bg-slate-100/90 text-slate-600 hover:text-slate-900 border-none shadow-none",
+    ghost: "h-9 px-3 rounded-xl text-xs font-semibold bg-transparent hover:bg-slate-100 text-slate-600 hover:text-slate-900 border-none shadow-none",
+    destructive: "h-11 px-5 rounded-xl text-sm font-semibold bg-rose-600 text-white hover:bg-rose-700 shadow-none border-none",
+    danger: "h-11 px-5 rounded-xl text-sm font-semibold bg-rose-600 text-white hover:bg-rose-700 shadow-none border-none",
+    link: "p-0 h-auto bg-transparent border-none text-slate-900 hover:text-slate-600 text-xs font-semibold hover:underline shadow-none",
     slate: "h-9 px-4 rounded-lg text-sm font-medium bg-slate-400 text-white hover:bg-slate-500 gap-2 shadow-none border-none",
-    small: "h-8 md:h-9 px-4 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 shadow-none",
-    back: "flex items-center gap-1.5 group w-fit !bg-transparent !border-none !p-0"
+    small: "h-9 px-3.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 shadow-none border-none",
+    back: "flex items-center gap-1.5 group w-fit !bg-transparent !border-none !p-0",
   };
 
   if (variant === 'back') {
@@ -52,9 +55,10 @@ export function Button({ variant = 'primary', size, children, className = '', ..
   }
 
   const sizeClass = size ? sizeOverrides[size] : "";
+  const widthClass = fullWidth ? "w-full" : "";
 
   return (
-    <button className={`${baseStyles} ${variants[variant as keyof typeof variants]} ${sizeClass} ${className}`} {...props}>
+    <button className={`${baseStyles} ${variants[variant as keyof typeof variants] || variants.primary} ${sizeClass} ${widthClass} ${className}`} {...props}>
       {children}
     </button>
   );
@@ -103,7 +107,6 @@ export const ProfileButton = React.forwardRef<HTMLButtonElement, ProfileButtonPr
 );
 
 // --- EMPTY PROFILE BUTTON COMPONENT ---
-// Used for empty state profile actions with a notification dot
 export interface EmptyProfileButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   label: string;
   icon?: string;
@@ -131,7 +134,6 @@ export function EmptyProfileButton({ label, icon, className = "", ...props }: Em
 }
 
 // --- SQUARE ICON BUTTON COMPONENT ---
-// Used for compact, icon-only square actions (e.g. mobile headers and toolbars)
 export interface SquareButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   icon: string;
   variant?: 'outline' | 'secondary' | 'primary';

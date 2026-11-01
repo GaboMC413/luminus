@@ -4,6 +4,8 @@ import React, { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/InputField";
 import { SelectInput } from "@/components/ui/SelectInput";
+import { Loader2, ChevronRight, ChevronUp, Trash2, Plus } from "lucide-react";
+import { StepHeader, SelectionCard, StepperNav } from "./molecules";
 import { CourseItem } from "../types";
 
 const TYPE_OPTIONS = [
@@ -219,21 +221,21 @@ export function Step5Courses({
     <div className="flex flex-col gap-6 animate-in fade-in duration-300">
       {/* Title & Introductory Copy */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-[24px] md:text-[28px] font-bold text-slate-900 font-jakarta leading-tight">
+        <h1 className="text-2xl sm:text-[26px] font-bold text-slate-900 font-jakarta leading-tight tracking-tight">
           Cursos y talleres
         </h1>
-        <p className="text-[13px] md:text-[14px] text-slate-500 font-sans">
+        <p className="text-xs sm:text-sm text-slate-500 font-sans leading-relaxed">
           Comparte cursos, talleres o capacitaciones desde tu perfil.
         </p>
       </div>
 
       {/* Initial Decision Options */}
       <div ref={coursesContainerRef} className="flex flex-col gap-3 mt-1">
-        <label className="text-label ml-1 font-jakarta font-bold text-slate-900">
+        <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">
           ¿Deseas agregar un curso o taller?
         </label>
         {errorField === "coursesChoice" && (
-          <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">
+          <p className="text-xs font-medium text-rose-600 ml-1">
             Selecciona una opción para continuar
           </p>
         )}
@@ -269,7 +271,7 @@ export function Step5Courses({
               >
                 {/* Importer Section */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-label ml-1 font-jakarta font-bold text-slate-900">
+                  <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">
                     Enlace
                   </label>
 
@@ -299,9 +301,7 @@ export function Step5Courses({
                     >
                       {isFetchingMetadata ? (
                         <div className="flex items-center gap-1.5">
-                          <span className="animate-spin material-symbols-rounded text-[16px]">
-                            progress_activity
-                          </span>
+                          <Loader2 className="w-4 h-4 animate-spin text-white" />
                           <span>Agregando...</span>
                         </div>
                       ) : (
@@ -312,7 +312,7 @@ export function Step5Courses({
 
                   {/* Non-blocking Import Error State */}
                   {importError && (
-                    <p className="text-[#FF3D3D] text-[12px] font-bold ml-1 mt-0.5 font-sans">
+                    <p className="text-xs font-medium text-rose-600 ml-1 mt-0.5 font-sans">
                       No pudimos importar la información desde este enlace. Revisa la dirección o completa los datos manualmente.
                     </p>
                   )}
@@ -346,7 +346,7 @@ export function Step5Courses({
                             className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors bg-transparent border-none cursor-pointer flex items-center justify-center shrink-0"
                             title="Eliminar curso"
                           >
-                            <span className="material-symbols-rounded text-[18px]">delete</span>
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
 
@@ -358,13 +358,13 @@ export function Step5Courses({
                             className="flex items-center gap-1 text-[12px] font-bold text-slate-600 hover:text-slate-900 cursor-pointer w-fit bg-transparent border-none p-0 mt-1"
                           >
                             <span>Ver detalles</span>
-                            <span className="material-symbols-rounded text-[16px]">chevron_right</span>
+                            <ChevronRight className="w-4 h-4" />
                           </button>
                         ) : (
                           /* Full Form Fields */
                           <div className="flex flex-col gap-4 mt-1">
                             {errorField === `courseItem_${idx}` && (
-                              <p className="text-[#FF3D3D] text-[12px] font-bold">
+                              <p className="text-xs font-medium text-rose-600">
                                 Completa los campos obligatorios del curso (tipo, título y enlace)
                               </p>
                             )}
@@ -372,7 +372,7 @@ export function Step5Courses({
                             {/* Row 1: Tipo & Título */}
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                               <div className="flex flex-col gap-2">
-                                <label className="text-label ml-1">Tipo *</label>
+                                <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">Tipo *</label>
                                 <SelectInput
                                   value={course.type || "Curso"}
                                   options={TYPE_OPTIONS}
@@ -380,7 +380,7 @@ export function Step5Courses({
                                 />
                               </div>
                               <div className="sm:col-span-2 flex flex-col gap-2">
-                                <label className="text-label ml-1">Título *</label>
+                                <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">Título *</label>
                                 <InputField
                                   type="text"
                                   value={course.name}
@@ -393,7 +393,7 @@ export function Step5Courses({
                             {/* Row 2: Modalidad & Plataforma o institución */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               <div className="flex flex-col gap-2">
-                                <label className="text-label ml-1">Modalidad *</label>
+                                <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">Modalidad *</label>
                                 <SelectInput
                                   value={course.modality || "Online grabado"}
                                   options={MODALITY_OPTIONS}
@@ -401,7 +401,7 @@ export function Step5Courses({
                                 />
                               </div>
                               <div className="flex flex-col gap-2">
-                                <label className="text-label ml-1">
+                                <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">
                                   Plataforma o institución
                                 </label>
                                 <InputField
@@ -417,7 +417,7 @@ export function Step5Courses({
 
                             {/* Row 3: Enlace */}
                             <div className="flex flex-col gap-2">
-                              <label className="text-label ml-1">Enlace *</label>
+                              <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">Enlace *</label>
                               <InputField
                                 type="url"
                                 value={course.url}
@@ -432,7 +432,7 @@ export function Step5Courses({
                               className="flex items-center gap-1 text-[12px] font-bold text-slate-500 hover:text-slate-800 cursor-pointer w-fit bg-transparent border-none p-0 mt-1"
                             >
                               <span>Ocultar detalles</span>
-                              <span className="material-symbols-rounded text-[16px]">expand_less</span>
+                              <ChevronUp className="w-4 h-4" />
                             </button>
                           </div>
                         )}
@@ -482,9 +482,9 @@ export function Step5Courses({
             className="!w-auto px-6 gap-2 font-bold font-jakarta"
           >
             {loading ? "Enviando..." : "Enviar aplicación"}
-            {!loading && (
-              <span className="material-symbols-rounded text-[18px]">arrow_forward</span>
-            )}
+            {!loading && <ChevronRight className="w-4 h-4 ml-1" />}
+
+
           </Button>
         </div>
 

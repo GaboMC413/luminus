@@ -83,8 +83,30 @@ export function UpdateBillingInfoModal({
       onClose={onClose}
       title="Actualizar información de facturación"
       maxWidth="460px"
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            disabled={submitting}
+            className="w-full md:w-auto"
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form="update-billing-form"
+            variant="primary"
+            disabled={submitting}
+            className="w-full md:w-auto"
+          >
+            {submitting ? "Guardando..." : "Guardar cambios"}
+          </Button>
+        </>
+      }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form id="update-billing-form" onSubmit={handleSubmit} className="flex flex-col gap-4 pb-1">
         {errorMessage && (
           <div className="p-3 text-xs bg-red-50 text-red-700 border border-red-200 rounded-xl">
             {errorMessage}
@@ -119,28 +141,6 @@ export function UpdateBillingInfoModal({
           placeholder="Número de celular"
           autoComplete="tel"
         />
-
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="md"
-            onClick={onClose}
-            disabled={submitting}
-            className="w-auto"
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            variant="primary"
-            size="md"
-            disabled={submitting}
-            className="w-auto"
-          >
-            {submitting ? "Guardando..." : "Guardar cambios"}
-          </Button>
-        </div>
       </form>
     </Modal>
   );

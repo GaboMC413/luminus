@@ -24,7 +24,7 @@ export function UserCard({ user, actionMenu }: UserCardProps) {
 
   const handleViewProfile = () => {
     if (isOfficial) return;
-    router.push(`/comunidad/public-profile?id=${encodeURIComponent(user.id)}`);
+    router.push(`/inicio/public-profile?id=${encodeURIComponent(user.id)}`);
   };
 
   const formatLocation = (loc: string) => {

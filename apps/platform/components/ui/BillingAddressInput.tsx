@@ -183,7 +183,7 @@ export function BillingAddressInput({
           data-1p-ignore="true"
           data-bwignore="true"
           data-form-type="other"
-          className="w-full h-12 pl-4 pr-10 text-sm bg-white border border-zinc-200/90 rounded-xl focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors placeholder:text-slate-400 font-sans"
+          className="w-full h-11 pl-3.5 pr-10 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-colors placeholder:text-slate-400 font-sans"
         />
         <span className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[20px] pointer-events-none">
           home_pin
@@ -194,7 +194,7 @@ export function BillingAddressInput({
       {hasSuggestions && (
         <div
           onMouseDown={(e) => e.preventDefault()}
-          className="absolute top-[calc(100%+4px)] left-0 w-full bg-white rounded-xl border border-zinc-200/90 z-50 max-h-56 overflow-y-auto overflow-x-hidden"
+          className="absolute top-[calc(100%+4px)] left-0 w-full bg-white rounded-xl border border-slate-200 shadow-lg z-50 max-h-56 overflow-y-auto overflow-x-hidden"
         >
           {suggestions.map((suggestion, index) => {
             const isHighlighted = index === highlightedIndex;

@@ -1,4 +1,4 @@
-import { prisma } from "./db";
+import { prisma } from "@/lib/db";
 
 export interface Quest {
   id: string;
@@ -8,10 +8,10 @@ export interface Quest {
   icon: string;
 }
 
-const QUEST_CONFIG: Record<string, { label: string; actionUrl: string; icon: string }> = {
+export const QUEST_CONFIG: Record<string, { label: string; actionUrl: string; icon: string }> = {
   profession: {
     label: "Indica tu profesión",
-    actionUrl: "/perfil-usuario?edit=personal",
+    actionUrl: "/perfil-usuario?edit=profession",
     icon: "work",
   },
   bio: {
@@ -21,12 +21,12 @@ const QUEST_CONFIG: Record<string, { label: string; actionUrl: string; icon: str
   },
   interests: {
     label: "Comparte tus reflexiones",
-    actionUrl: "/perfil-usuario?edit=prompts",
+    actionUrl: "/perfil-usuario?edit=interests",
     icon: "format_quote",
   },
   user_interests: {
     label: "Selecciona tus temas de interés",
-    actionUrl: "/perfil-usuario?edit=interests",
+    actionUrl: "/perfil-usuario?edit=user_interests",
     icon: "interests",
   },
   cover: {
@@ -36,7 +36,7 @@ const QUEST_CONFIG: Record<string, { label: string; actionUrl: string; icon: str
   },
   connect: {
     label: "Envía una solicitud de conexión",
-    actionUrl: "/comunidad/miembros",
+    actionUrl: "/inicio/miembros",
     icon: "person_add",
   },
 };
@@ -44,33 +44,33 @@ const QUEST_CONFIG: Record<string, { label: string; actionUrl: string; icon: str
 const CELEBRATION_COPY: Record<string, { title: string; body: string; actionUrl: string }> = {
   profession: {
     title: "Has indicado tu profesión",
-    body: "Definir tu profesión ayuda a que otros miembros conozcan tu experiencia y campo de especialidad. Es el punto de partida ideal para compartir conocimientos y entablar colaboraciones en la comunidad.",
+    body: "Tu experiencia y campo de especialidad ahora son visibles para la red.",
     actionUrl: "/perfil-usuario",
   },
   bio: {
     title: "Has escrito tu biografía",
-    body: "Tu biografía es tu voz en LUMINUS. Al contar quién eres, qué te apasiona y qué buscas, creas puentes de afinidad genuina para que otras personas inicien conversaciones significativas contigo.",
+    body: "Tu voz y presentación ayudan a que otros miembros conecten contigo.",
     actionUrl: "/perfil-usuario",
   },
   interests: {
     title: "Has compartido tus reflexiones",
-    body: "Compartir tus reflexiones y valores ayuda a alinear tu energía con la de otros miembros. Permite que la comunidad conozca en qué crees y cómo pueden apoyarse mutuamente en su crecimiento.",
+    body: "Tus valores e intenciones fortalecen afinidades genuinas en la comunidad.",
     actionUrl: "/perfil-usuario",
   },
   user_interests: {
     title: "Has seleccionado tus temas de interés",
-    body: "Definir tus temas de interés te ayuda a conectar con contenidos, especialistas y personas afines a tus búsquedas de bienestar.",
+    body: "Tus áreas de interés te acercan a contenidos y personas afines a tu bienestar.",
     actionUrl: "/perfil-usuario",
   },
   cover: {
     title: "Has personalizado tu foto de portada",
-    body: "Personalizar tu portada define el ambiente y la energía de tu perfil. Un espacio visualmente acogedor y propio hace que tu presencia en LUMINUS se sienta verdaderamente tuya y acogedora.",
+    body: "Tu perfil ahora transmite tu energía y presencia visual única.",
     actionUrl: "/perfil-usuario",
   },
   connect: {
     title: "Has enviado tu primera solicitud",
-    body: "¡Has dado el primer paso para construir tu red! En LUMINUS, cada conexión fortalece nuestra red de apoyo. Conectar te permite intercambiar perspectivas, compartir bienestar y no caminar solo.",
-    actionUrl: "/comunidad/miembros",
+    body: "Has dado el primer paso para construir conexiones conscientes en la red.",
+    actionUrl: "/inicio/miembros",
   },
 };
 
@@ -146,25 +146,18 @@ export async function checkAndTriggerQuestCompletion(
   const profile = user.profile;
   let isCompleted = false;
 
-  switch (questId) {
-    case "profession":
-      isCompleted = !!(profile?.profession && profile.profession.trim() !== "");
-      break;
-    case "bio":
-      isCompleted = !!(profile?.bio && profile.bio.trim() !== "");
-      break;
-    case "interests":
-      isCompleted = user.profilePrompts.length > 0;
-      break;
-    case "user_interests":
-      isCompleted = user.interests.length > 0 || !!(profile?.intention && profile.intention.trim() !== "");
-      break;
-    case "cover":
-      isCompleted = !!(profile?.coverUrl && profile.coverUrl.trim() !== "");
-      break;
-    case "connect":
-      isCompleted = user.sentConnections.length > 0 || user.receivedConnections.length > 0;
-      break;
+  if (questId === "profession") {
+    isCompleted = !!(profile?.profession && profile.profession.trim() !== "");
+  } else if (questId === "bio") {
+    isCompleted = !!(profile?.bio && profile.bio.trim() !== "");
+  } else if (questId === "interests") {
+    isCompleted = user.profilePrompts.length > 0;
+  } else if (questId === "user_interests") {
+    isCompleted = user.interests.length > 0 || !!(profile?.intention && profile.intention.trim() !== "");
+  } else if (questId === "cover") {
+    isCompleted = !!(profile?.coverUrl && profile.coverUrl.trim() !== "");
+  } else if (questId === "connect") {
+    isCompleted = user.sentConnections.length > 0 || user.receivedConnections.length > 0;
   }
 
   if (!isCompleted) return null;

@@ -3,31 +3,40 @@
 import React, { useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
+import {
+  Briefcase,
+  CalendarCheck,
+  Building2,
+  Users,
+  BookOpen,
+  Mic,
+} from "lucide-react";
+import { StepHeader } from "./molecules/StepHeader";
+import { StepperNav } from "./molecules/StepperNav";
 
 export const BENEFITS = [
   {
-    icon: "business_center",
+    icon: Briefcase,
     title: "Tener un perfil profesional en la plataforma.",
   },
   {
-    icon: "calendar_check",
+    icon: CalendarCheck,
     title: "Ofrecer sesiones de 15 minutos para primer contacto",
   },
   {
-    icon: "chair",
+    icon: Building2,
     title: "Publicar tu espacio, consultorio, clínica o centro.",
   },
   {
-    icon: "groups",
+    icon: Users,
     title: "Crear grupos temáticos sobre tu especialidad.",
   },
   {
-    icon: "books_movies_and_music",
+    icon: BookOpen,
     title: "Publicar talleres, cursos y otras propuestas formativas.",
   },
   {
-    icon: "mic",
+    icon: Mic,
     title: "Participar en entrevistas producidas por LUMINUS.",
   },
 ];
@@ -66,38 +75,34 @@ export function Step1Intro({
   };
 
   return (
-    <div className="flex flex-col gap-5 animate-in fade-in duration-300">
-      <div className="flex flex-col gap-2.5">
-        <h1 className="text-[24px] md:text-[28px] font-bold text-slate-900 font-jakarta leading-tight">
-          Forma parte de nuestra red de especialistas
-        </h1>
-        <p className="text-body-secondary leading-relaxed">
-          Una plataforma para conectar, compartir y hacer crecer tu propuesta profesional.
-        </p>
-      </div>
+    <div className="flex flex-col gap-6 animate-in fade-in duration-300">
+      <StepHeader
+        title="Forma parte de nuestra red de especialistas"
+        subtitle="Una plataforma para conectar, compartir y hacer crecer tu propuesta profesional."
+      />
 
-      {/* Benefit Cards - Punto medio: Cards limpias sin cajas extra de íconos */}
+      {/* Benefit Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 my-1">
-        {BENEFITS.map((benefit, idx) => (
-          <div
-            key={idx}
-            className="bg-white rounded-xl border border-slate-200/80 px-3.5 py-2.5 sm:py-3 flex items-center gap-3 transition-colors hover:border-slate-300 shadow-[0_1px_2px_rgba(0,0,0,0.02)]"
-          >
-            <span
-              className="material-symbols-rounded material-icon-filled text-slate-800 text-[20px] shrink-0"
-              style={{ fontVariationSettings: "'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24" }}
+        {BENEFITS.map((benefit, idx) => {
+          const Icon = benefit.icon;
+          return (
+            <div
+              key={idx}
+              className="bg-white rounded-xl border border-slate-200/90 px-3.5 py-3 flex items-center gap-3 transition-colors hover:border-slate-300 shadow-sm"
             >
-              {benefit.icon}
-            </span>
-            <span className="text-[13px] sm:text-[13.5px] font-medium text-slate-800 font-jakarta leading-snug">
-              {benefit.title}
-            </span>
-          </div>
-        ))}
+              <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 border border-slate-100">
+                <Icon className="w-4 h-4 text-slate-800" />
+              </div>
+              <span className="text-xs sm:text-sm font-medium text-slate-800 font-jakarta leading-snug">
+                {benefit.title}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       {/* Consejo de Expertos Disclaimer */}
-      <p className="text-[13px] md:text-[13.5px] text-slate-500 font-sans leading-relaxed">
+      <p className="text-xs sm:text-sm text-slate-500 font-sans leading-relaxed">
         LUMINUS reúne a especialistas con formación, experiencia y una práctica profesional responsable. Cada aplicación es evaluada por nuestro Consejo de Expertos, que revisa las credenciales, la trayectoria y la coherencia del perfil antes de aprobar su incorporación.
       </p>
 
@@ -113,17 +118,17 @@ export function Step1Intro({
               setTermsAccepted(e.target.checked);
               if (errorField === "terms") setErrorField(null);
             }}
-            className="w-5 h-5 rounded border-zinc-300 accent-emerald-600 text-emerald-600 focus:ring-emerald-500 cursor-pointer shrink-0"
+            className="w-5 h-5 rounded border-slate-300 text-slate-900 accent-slate-900 focus:ring-slate-900 cursor-pointer shrink-0"
           />
           <label
             htmlFor="terms"
-            className="text-[13px] text-slate-600 font-normal leading-normal cursor-pointer select-none"
+            className="text-xs sm:text-sm text-slate-600 font-normal leading-normal cursor-pointer select-none font-sans"
           >
             Acepto las{" "}
             <Link
               href="https://luminuslatam.com/legal/condiciones-especialistas"
               target="_blank"
-              className="font-semibold text-black underline hover:text-zinc-800"
+              className="font-semibold text-slate-900 underline hover:text-black"
             >
               Condiciones de Uso y Políticas para Especialistas
             </Link>{" "}
@@ -131,39 +136,27 @@ export function Step1Intro({
           </label>
         </div>
         {errorField === "terms" && !termsAccepted && (
-          <p className="text-[#FF3D3D] text-[12px] font-bold ml-8">
+          <p className="text-xs font-medium text-rose-600 mt-1 ml-8">
             Debes aceptar las condiciones para continuar
           </p>
         )}
       </div>
 
-      <div className="flex justify-between items-center gap-3 mt-6 pt-2">
-        <Button
-          onClick={() => {
-            if (onCancel) {
-              onCancel();
-            } else {
-              router.push("/especialistas");
-            }
-          }}
-          variant="back"
-        >
-          {cancelLabel || "Volver"}
-        </Button>
-        <Button
-          onClick={handleContinue}
-          variant="primary"
-          disabled={!termsAccepted}
-          className={`!w-auto px-6 gap-2 ${
-            !termsAccepted
-              ? "!bg-slate-200 !text-slate-400 !cursor-not-allowed hover:!bg-slate-200 hover:!text-slate-400 shadow-none border-transparent"
-              : ""
-          }`}
-        >
-          Continuar
-          <span className="material-symbols-rounded text-[18px]">arrow_forward</span>
-        </Button>
-      </div>
+      <StepperNav
+        onBack={() => {
+          if (onCancel) {
+            onCancel();
+          } else {
+            router.push("/especialistas");
+          }
+        }}
+        backLabel={cancelLabel || "Volver"}
+        onNext={handleContinue}
+        nextLabel="Continuar"
+        disabled={!termsAccepted}
+      />
     </div>
   );
 }
+
+export default Step1Intro;

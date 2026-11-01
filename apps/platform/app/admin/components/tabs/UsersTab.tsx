@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { InterestPill } from "@/components/ui/InterestPill";
 import { Modal } from "@/components/ui/Modal";
 import { uploadAvatar } from "@/lib/uploadAvatar";
-import { PhotoEditor } from "@/features/auth/registration/PhotoEditor";
+import { PhotoEditor } from "@/components/ui/PhotoEditor";
 import { fieldValue, formatDate } from "../../utils";
 import { AdminBadge, AdminCard, AdminDetailRow } from "../AdminDesignSystem";
 

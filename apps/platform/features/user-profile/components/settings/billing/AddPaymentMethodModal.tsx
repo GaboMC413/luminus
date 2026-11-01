@@ -34,12 +34,13 @@ const ELEMENT_STYLE = {
   },
 };
 
-interface AddCardFormProps {
+interface AddCardModalContentProps {
+  isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-function AddCardForm({ onClose, onSuccess }: AddCardFormProps) {
+function AddCardModalContent({ isOpen, onClose, onSuccess }: AddCardModalContentProps) {
   const stripe = useStripe();
   const elements = useElements();
 
@@ -124,116 +125,120 @@ function AddCardForm({ onClose, onSuccess }: AddCardFormProps) {
     }
   };
 
-  if (loadingIntent) {
-    return (
-      <div className="flex flex-col gap-3 animate-pulse py-1">
-        <div className="w-full h-12 bg-slate-100 rounded-xl" />
-        <div className="w-full h-12 bg-slate-100 rounded-xl" />
-        <div className="grid grid-cols-2 gap-3">
-          <div className="w-full h-12 bg-slate-100 rounded-xl" />
-          <div className="w-full h-12 bg-slate-100 rounded-xl" />
-        </div>
-        <div className="w-36 h-3 bg-slate-100 rounded mt-1" />
-      </div>
-    );
-  }
-
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      {errorMessage && (
-        <div className="p-3 text-xs bg-red-50 text-red-700 border border-red-200 rounded-xl">
-          {errorMessage}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Agregar método de pago"
+      maxWidth="460px"
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onClose}
+            disabled={submitting}
+            className="w-full md:w-auto"
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            form="add-card-form"
+            variant="primary"
+            disabled={submitting || loadingIntent}
+            className="w-full md:w-auto"
+          >
+            {submitting ? "Guardando..." : "Guardar tarjeta"}
+          </Button>
+        </>
+      }
+    >
+      {loadingIntent ? (
+        <div className="flex flex-col gap-3 animate-pulse py-1">
+          <div className="w-full h-12 bg-slate-100 rounded-xl" />
+          <div className="w-full h-12 bg-slate-100 rounded-xl" />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="w-full h-12 bg-slate-100 rounded-xl" />
+            <div className="w-full h-12 bg-slate-100 rounded-xl" />
+          </div>
+          <div className="w-36 h-3 bg-slate-100 rounded mt-1" />
         </div>
+      ) : (
+        <form id="add-card-form" onSubmit={handleSubmit} className="flex flex-col gap-3 pb-1">
+          {errorMessage && (
+            <div className="p-3 text-xs bg-red-50 text-red-700 border border-red-200 rounded-xl">
+              {errorMessage}
+            </div>
+          )}
+
+          {/* Cardholder Name */}
+          <InputField
+            label="Nombre en la tarjeta"
+            type="text"
+            required
+            value={cardHolderName}
+            onChange={(e) => {
+              setCardHolderName(e.target.value);
+              setErrorMessage(null);
+            }}
+            placeholder="Tal como figura en la tarjeta"
+          />
+
+          {/* Card Details Block */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">
+              Datos de la tarjeta
+            </label>
+            {/* Card Number */}
+            <div className="relative w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900 transition-colors flex items-center">
+              <div className="w-full pr-8">
+                <CardNumberElement
+                  options={{
+                    style: ELEMENT_STYLE,
+                    placeholder: "Número de tarjeta",
+                  }}
+                  onChange={() => setErrorMessage(null)}
+                />
+              </div>
+              <CreditCard className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            </div>
+
+            {/* Expiry & CVC */}
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900 transition-colors flex items-center">
+                <div className="w-full">
+                  <CardExpiryElement
+                    options={{
+                      style: ELEMENT_STYLE,
+                      placeholder: "MM / AA",
+                    }}
+                    onChange={() => setErrorMessage(null)}
+                  />
+                </div>
+              </div>
+
+              <div className="w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900 transition-colors flex items-center">
+                <div className="w-full">
+                  <CardCvcElement
+                    options={{
+                      style: ELEMENT_STYLE,
+                      placeholder: "CVC / CVV",
+                    }}
+                    onChange={() => setErrorMessage(null)}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 pt-0.5 text-xs text-slate-500 font-medium">
+            <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <span>Datos asegurados con Stripe</span>
+          </div>
+        </form>
       )}
-
-      {/* Cardholder Name */}
-      <InputField
-        label="Nombre en la tarjeta"
-        type="text"
-        required
-        value={cardHolderName}
-        onChange={(e) => {
-          setCardHolderName(e.target.value);
-          setErrorMessage(null);
-        }}
-        placeholder="Tal como figura en la tarjeta"
-      />
-
-      {/* Card Details Block */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">
-          Datos de la tarjeta
-        </label>
-        {/* Card Number */}
-        <div className="relative w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900 transition-colors flex items-center">
-          <div className="w-full pr-8">
-            <CardNumberElement
-              options={{
-                style: ELEMENT_STYLE,
-                placeholder: "Número de tarjeta",
-              }}
-              onChange={() => setErrorMessage(null)}
-            />
-          </div>
-          <CreditCard className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-        </div>
-
-        {/* Expiry & CVC */}
-        <div className="grid grid-cols-2 gap-3 pt-1">
-          <div className="w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900 transition-colors flex items-center">
-            <div className="w-full">
-              <CardExpiryElement
-                options={{
-                  style: ELEMENT_STYLE,
-                  placeholder: "MM / AA",
-                }}
-                onChange={() => setErrorMessage(null)}
-              />
-            </div>
-          </div>
-
-          <div className="w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900 transition-colors flex items-center">
-            <div className="w-full">
-              <CardCvcElement
-                options={{
-                  style: ELEMENT_STYLE,
-                  placeholder: "CVC / CVV",
-                }}
-                onChange={() => setErrorMessage(null)}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center gap-1.5 pt-0.5 text-xs text-slate-500 font-medium">
-        <Lock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-        <span>Datos asegurados con Stripe</span>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center justify-end gap-3 pt-2">
-        <Button
-          type="button"
-          variant="secondary"
-          size="md"
-          onClick={onClose}
-          disabled={submitting}
-          className="w-auto"
-        >
-          Cancelar
-        </Button>
-        <Button
-          type="submit"
-          variant="primary"
-          size="md"
-          disabled={submitting}
-          className="w-auto"
-        >
-          {submitting ? "Guardando..." : "Guardar tarjeta"}
-        </Button>
-      </div>
-    </form>
+    </Modal>
   );
 }
 
@@ -244,16 +249,11 @@ interface AddPaymentMethodModalProps {
 }
 
 export function AddPaymentMethodModal({ isOpen, onClose, onSuccess }: AddPaymentMethodModalProps) {
+  if (!isOpen) return null;
+
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Agregar método de pago"
-      maxWidth="460px"
-    >
-      <Elements stripe={stripePromise}>
-        <AddCardForm onClose={onClose} onSuccess={onSuccess} />
-      </Elements>
-    </Modal>
+    <Elements stripe={stripePromise}>
+      <AddCardModalContent isOpen={isOpen} onClose={onClose} onSuccess={onSuccess} />
+    </Elements>
   );
 }

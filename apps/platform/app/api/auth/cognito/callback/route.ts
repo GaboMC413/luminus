@@ -467,7 +467,7 @@ export async function GET(request: Request) {
       return redirectTo(requestUrl, "/unirme/perfil");
     }
 
-    const redirectTarget = getSafeRedirectUrl(storedState?.redirect, "/comunidad");
+    const redirectTarget = getSafeRedirectUrl(storedState?.redirect, "/inicio");
     return redirectTo(requestUrl, redirectTarget);
   } catch (callbackError) {
     console.error("Cognito OAuth callback failed.", callbackError);

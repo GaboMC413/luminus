@@ -233,7 +233,7 @@ export async function POST(request: Request) {
             where: {
               userId: recipientId,
               type: "connection_request",
-              actionUrl: `/comunidad/public-profile?id=${session.userId}`
+              actionUrl: `/inicio/public-profile?id=${session.userId}`
             }
           });
 
@@ -245,7 +245,7 @@ export async function POST(request: Request) {
               actorName: requesterName,
               actorAvatarUrl: requesterAvatar,
               body: "quiere agregarte a su red.",
-              actionUrl: `/comunidad/public-profile?id=${session.userId}`,
+              actionUrl: `/inicio/public-profile?id=${session.userId}`,
             },
           });
         } catch (notifError) {
@@ -308,7 +308,7 @@ export async function POST(request: Request) {
         where: {
           userId: recipientId,
           type: "connection_request",
-          actionUrl: `/comunidad/public-profile?id=${session.userId}`
+          actionUrl: `/inicio/public-profile?id=${session.userId}`
         }
       });
 
@@ -320,7 +320,7 @@ export async function POST(request: Request) {
           actorName: requesterName,
           actorAvatarUrl: requesterAvatar,
           body: "quiere agregarte a su red.",
-          actionUrl: `/comunidad/public-profile?id=${session.userId}`,
+          actionUrl: `/inicio/public-profile?id=${session.userId}`,
         },
       });
     } catch (notifError) {
@@ -435,7 +435,7 @@ export async function PUT(request: Request) {
           actorName: accepterName,
           actorAvatarUrl: accepterAvatar,
           body: "aceptó tu solicitud de conexión.",
-          actionUrl: `/comunidad/public-profile?id=${session.userId}`,
+          actionUrl: `/inicio/public-profile?id=${session.userId}`,
         },
       });
     } catch (notifCreateError) {
@@ -450,12 +450,12 @@ export async function PUT(request: Request) {
             {
               userId: session.userId,
               type: "connection_request",
-              actionUrl: `/comunidad/public-profile?id=${requesterId}`
+              actionUrl: `/inicio/public-profile?id=${requesterId}`
             },
             {
               userId: requesterId,
               type: "connection_request",
-              actionUrl: `/comunidad/public-profile?id=${session.userId}`
+              actionUrl: `/inicio/public-profile?id=${session.userId}`
             }
           ]
         }
@@ -599,12 +599,12 @@ export async function DELETE(request: Request) {
             {
               userId: connection.recipientId,
               type: "connection_request",
-              actionUrl: `/comunidad/public-profile?id=${connection.requesterId}`
+              actionUrl: `/inicio/public-profile?id=${connection.requesterId}`
             },
             {
               userId: connection.requesterId,
               type: "connection_request",
-              actionUrl: `/comunidad/public-profile?id=${connection.recipientId}`
+              actionUrl: `/inicio/public-profile?id=${connection.recipientId}`
             }
           ]
         }
@@ -756,12 +756,12 @@ export async function PATCH(request: Request) {
             {
               userId: session.userId,
               type: "connection_request",
-              actionUrl: `/comunidad/public-profile?id=${targetId}`
+              actionUrl: `/inicio/public-profile?id=${targetId}`
             },
             {
               userId: targetId,
               type: "connection_request",
-              actionUrl: `/comunidad/public-profile?id=${session.userId}`
+              actionUrl: `/inicio/public-profile?id=${session.userId}`
             }
           ]
         }

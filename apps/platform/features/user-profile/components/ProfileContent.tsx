@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ProfileButton } from "@/components/ui/Button";
-import { PhotoEditor } from "@/features/auth/registration/PhotoEditor";
+import { PhotoEditor } from "@/components/ui/PhotoEditor";
 import { Prompt } from "./ProfilePrompts";
 
 // Modals

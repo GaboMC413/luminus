@@ -162,7 +162,7 @@ function NetworkContent() {
         {/* Header */}
         <div className="flex items-center gap-3 mb-4 md:mb-6 shrink-0">
           <button
-            onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/comunidad")}
+            onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/inicio")}
             className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900 cursor-pointer"
             title="Volver"
           >
@@ -175,7 +175,7 @@ function NetworkContent() {
           <div className="mb-4 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 flex items-center justify-between shadow-none shrink-0">
             <span>{error}</span>
             <button
-              onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/comunidad")}
+              onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/inicio")}
               className="text-xs font-semibold text-slate-900 underline hover:no-underline cursor-pointer bg-transparent border-none font-jakarta"
             >
               Volver
@@ -275,7 +275,7 @@ function NetworkContent() {
               {!searchQuery && (
                 <Button
                   variant="primary"
-                  onClick={() => router.push("/comunidad/miembros")}
+                  onClick={() => router.push("/inicio/miembros")}
                   className="mt-4 px-6 text-xs font-semibold bg-black text-white hover:bg-zinc-900 rounded-xl !w-auto h-10 flex items-center justify-center gap-2"
                 >
                   <span>Explorar miembros</span>
@@ -373,7 +373,7 @@ function NetworkContent() {
                 pendingRequests.map((conn) => (
                   <div key={conn.id} className="flex items-center gap-3 p-3 hover:bg-slate-50 rounded-xl transition-colors">
                     <Link
-                      href={`/comunidad/public-profile?id=${conn.user.id}`}
+                      href={`/inicio/public-profile?id=${conn.user.id}`}
                       onClick={() => setShowRequestsModal(false)}
                       className="flex-1 flex items-center gap-3 min-w-0 cursor-pointer group text-decoration-none"
                     >

@@ -71,8 +71,30 @@ export function CancelSubscriptionModal({
       title="¿Deseas cancelar tu membresía?"
       subtitle="Podrás continuar disfrutando de todos los beneficios de Mecenas hasta el final del período actual."
       maxWidth="480px"
+      footer={
+        <>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleClose}
+            disabled={canceling}
+            className="w-full md:w-auto"
+          >
+            Conservar plan
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            onClick={handleCancel}
+            disabled={canceling}
+            className="w-full md:w-auto"
+          >
+            {canceling ? "Cancelando..." : "Cancelar membresía"}
+          </Button>
+        </>
+      }
     >
-      <div className="flex flex-col gap-4 font-sans">
+      <div className="flex flex-col gap-4 font-sans pb-1">
         {errorMessage && (
           <div className="p-3 text-xs bg-red-50 text-red-700 border border-red-200 rounded-xl">
             {errorMessage}
@@ -126,30 +148,6 @@ export function CancelSubscriptionModal({
               className="w-full mt-1 p-2.5 text-xs border border-slate-200 rounded-xl focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-slate-900 placeholder:text-slate-400 resize-none font-sans"
             />
           )}
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center justify-end gap-3 pt-2">
-          <Button
-            type="button"
-            variant="secondary"
-            size="md"
-            onClick={handleClose}
-            disabled={canceling}
-            className="w-auto"
-          >
-            Mantener membresía
-          </Button>
-          <Button
-            type="button"
-            variant="danger"
-            size="md"
-            onClick={handleCancel}
-            disabled={canceling}
-            className="w-auto"
-          >
-            {canceling ? "Cancelando..." : "Confirmar cancelación"}
-          </Button>
         </div>
       </div>
     </Modal>

@@ -119,47 +119,45 @@ export function AccountClosureModal({
           : "Lo que sucederá con tu cuenta."
       }
       footer={
-        <div className="flex items-center justify-between w-full gap-3 pt-2">
-          {step === 1 ? (
-            <>
-              <Button
-                variant="outline"
-                onClick={handleCloseModal}
-                className="text-xs h-10 px-4 text-slate-700 hover:text-slate-900"
-              >
-                Prefiero quedarme
-              </Button>
-              <Button
-                variant="primary"
-                onClick={() => setStep(2)}
-                disabled={!selectedReason}
-                className="text-xs h-10 px-5 !bg-slate-900 hover:!bg-slate-800 text-white border-none shadow-sm disabled:opacity-50"
-              >
-                Continuar
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                onClick={() => setStep(1)}
-                disabled={isSubmitting}
-                className="text-xs h-10 px-4 text-slate-600 hover:text-slate-900 flex items-center gap-1.5"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                Volver
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleConfirmClosure}
-                disabled={isSubmitting}
-                className="text-xs h-10 px-5 !bg-rose-600 hover:!bg-rose-700 text-white border-none shadow-sm"
-              >
-                {isSubmitting ? "Cerrando cuenta..." : "Cerrar mi cuenta"}
-              </Button>
-            </>
-          )}
-        </div>
+        step === 1 ? (
+          <>
+            <Button
+              variant="secondary"
+              onClick={handleCloseModal}
+              className="w-full md:w-auto"
+            >
+              Prefiero quedarme
+            </Button>
+            <Button
+              variant="primary"
+              onClick={() => setStep(2)}
+              disabled={!selectedReason}
+              className="w-full md:w-auto"
+            >
+              Continuar
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => setStep(1)}
+              disabled={isSubmitting}
+              className="w-full md:w-auto flex items-center justify-center gap-1.5"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Volver</span>
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleConfirmClosure}
+              disabled={isSubmitting}
+              className="w-full md:w-auto"
+            >
+              {isSubmitting ? "Cerrando cuenta..." : "Cerrar mi cuenta"}
+            </Button>
+          </>
+        )
       }
     >
       <div className="flex flex-col gap-4 py-1 font-sans text-sm">

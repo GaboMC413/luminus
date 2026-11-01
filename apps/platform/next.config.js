@@ -36,6 +36,20 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/comunidad',
+        destination: '/inicio',
+        permanent: true,
+      },
+      {
+        source: '/comunidad/:path*',
+        destination: '/inicio/:path*',
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

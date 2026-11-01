@@ -139,7 +139,7 @@ export function MobileMembersCarousel({ members, loading }: MobileMembersCarouse
               {/* End Card: Giant grey button with border, arrow directly inside without white container box */}
               <button
                 type="button"
-                onClick={() => router.push("/comunidad/miembros")}
+                onClick={() => router.push("/inicio/miembros")}
                 className="w-[145px] sm:w-[155px] shrink-0 snap-start bg-slate-50 hover:bg-slate-100/90 border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center gap-3 text-center cursor-pointer transition-all outline-none group select-none"
               >
                 <span className="material-symbols-outlined text-[32px] text-slate-700 group-hover:text-slate-900 group-hover:translate-x-1 transition-all select-none">

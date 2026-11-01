@@ -27,7 +27,7 @@ function SpecialistCard({ specialist }: { specialist: Specialist }) {
     <article
       className="group flex min-h-[220px] cursor-pointer flex-col items-center rounded-2xl border border-slate-200 bg-white px-3 py-4 text-center transition-colors hover:border-slate-400"
       onClick={() => {
-        router.push(`/comunidad/public-profile?id=${encodeURIComponent(specialist.id)}`);
+        router.push(`/inicio/public-profile?id=${encodeURIComponent(specialist.id)}`);
       }}
     >
       <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 sm:h-20 sm:w-20">
@@ -113,7 +113,7 @@ export default function EspecialistasPage() {
       {isPending && (
         <section className="order-[-3] rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
           <strong>Tu aplicación está en revisión.</strong>{" "}
-          <button className="underline" onClick={() => router.push("/especialistas/onboarding")}>Ver estado</button>
+          <button className="underline" onClick={() => router.push("/especialistas/unirme")}>Ver estado</button>
         </section>
       )}
 
@@ -200,7 +200,7 @@ export default function EspecialistasPage() {
             <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
               <button
                 type="button"
-                onClick={() => router.push("/especialistas/onboarding")}
+                onClick={() => router.push("/especialistas/unirme")}
                 className="w-full rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-zinc-900 sm:w-auto"
               >
                 Aplicar como Especialista
