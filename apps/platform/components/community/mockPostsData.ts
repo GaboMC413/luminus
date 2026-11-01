@@ -6,6 +6,7 @@ export interface PostComment {
   authorRole?: string;
   authorLocation?: string;
   date: string;
+  createdAt?: string;
   content: string;
 }
 
@@ -19,6 +20,7 @@ export interface PostItem {
   authorLocation?: string;
   isOfficial?: boolean;
   date: string;
+  createdAt?: string;
   imageUrl?: string;
   imageAlt?: string;
   youtubeUrl?: string;

@@ -38,6 +38,8 @@ function serializeConnection(connection: any, currentUserId: string) {
       location: `${profile.city || ""}, ${profile.country || ""}`.replace(/^,\s*|,\s*$/, "").trim(),
       interests: (otherUser?.interests ?? []).map((row: any) => row.interest?.name).filter(Boolean),
       categories: Array.from(userCategoriesMap.values()),
+      isSpecialist: Boolean(otherUser?.specialistProfile),
+      specialty: otherUser?.specialistProfile?.specialty || otherUser?.specialistProfile?.title || "",
     },
     created_at: connection.createdAt?.toISOString?.() ?? "",
     updated_at: connection.updatedAt?.toISOString?.() ?? "",
@@ -74,6 +76,7 @@ export async function GET() {
         requester: {
           include: {
             profile: true,
+            specialistProfile: true,
             interests: {
               include: {
                 interest: {
@@ -88,6 +91,7 @@ export async function GET() {
         recipient: {
           include: {
             profile: true,
+            specialistProfile: true,
             interests: {
               include: {
                 interest: {
@@ -103,8 +107,22 @@ export async function GET() {
       orderBy: { updatedAt: "desc" },
     });
 
+    const serialized = connections.map((conn: any) => serializeConnection(conn, session.userId));
+    
+    // In our directed model:
+    // "following" = users the current user added to their network (outgoing & accepted)
+    // "followers" = users who added the current user to their network (incoming & accepted)
+    const following = serialized.filter(
+      (c: any) => c.direction === "outgoing" && c.status === "accepted"
+    );
+    const followers = serialized.filter(
+      (c: any) => c.direction === "incoming" && c.status === "accepted"
+    );
+
     return NextResponse.json({
-      connections: connections.map((connection: any) => serializeConnection(connection, session.userId)),
+      connections: serialized,
+      following,
+      followers,
     });
   } catch (error) {
     console.error("Connections read failed.", error);
@@ -133,11 +151,11 @@ export async function POST(request: Request) {
   const recipientId = typeof body?.recipientId === "string" ? body.recipientId.trim() : "";
 
   if (!recipientId || !isUuid(recipientId)) {
-    return NextResponse.json({ message: "Usuario destino invalido." }, { status: 400 });
+    return NextResponse.json({ message: "Usuario destino inválido." }, { status: 400 });
   }
 
   if (recipientId === session.userId) {
-    return NextResponse.json({ message: "No puedes conectarte contigo mismo." }, { status: 400 });
+    return NextResponse.json({ message: "No puedes sumarte a ti mismo a tu red." }, { status: 400 });
   }
 
   try {
@@ -156,129 +174,117 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Usuario no encontrado." }, { status: 404 });
     }
 
-    const targetName = recipient.profile?.fullName || `${recipient.profile?.firstName || ""} ${recipient.profile?.lastName || ""}`.trim() || recipient.email || "Usuario";
+    const targetName =
+      recipient.profile?.fullName ||
+      `${recipient.profile?.firstName || ""} ${recipient.profile?.lastName || ""}`.trim() ||
+      recipient.email ||
+      "Usuario";
+
     const targetDetails = JSON.stringify({
       recipientId,
       recipientEmail: recipient.email,
       recipientName: targetName,
     });
 
-    const existingConnection = await prisma.userConnection.findFirst({
+    // Check if reverse relationship blocked session user
+    const reverseConnection = await prisma.userConnection.findFirst({
       where: {
-        OR: [
-          { requesterId: session.userId, recipientId },
-          { requesterId: recipientId, recipientId: session.userId },
-        ],
+        requesterId: recipientId,
+        recipientId: session.userId,
+        status: "blocked",
       },
     });
 
-    if (existingConnection) {
-      if (existingConnection.status === "blocked") {
-        if (existingConnection.requesterId !== session.userId) {
-          return NextResponse.json({ message: "No puedes enviar una solicitud a este usuario." }, { status: 403 });
-        }
+    if (reverseConnection) {
+      return NextResponse.json({ message: "No puedes sumar a este usuario a tu red." }, { status: 403 });
+    }
+
+    // Check directed connection from session.userId -> recipientId
+    const existingDirected = await prisma.userConnection.findFirst({
+      where: {
+        requesterId: session.userId,
+        recipientId,
+      },
+    });
+
+    if (existingDirected) {
+      if (existingDirected.status === "blocked") {
         return NextResponse.json({ message: "Debes desbloquear a este usuario primero." }, { status: 400 });
       }
 
-      if (existingConnection.status === "declined") {
-        const requester = await prisma.user.findUnique({
-          where: { id: session.userId },
-          select: { tier: true, trialExpiresAt: true },
-        });
-        const isPremium = requester && requester.tier === "MECENAS";
-
-        if (!isPremium) {
-          const diffMs = Date.now() - new Date(existingConnection.updatedAt).getTime();
-          const cooldownMs = 24 * 60 * 60 * 1000;
-
-          if (diffMs < cooldownMs) {
-            const hoursLeft = Math.ceil((cooldownMs - diffMs) / (60 * 60 * 1000));
-            return NextResponse.json({
-              message: `Debes esperar ${hoursLeft} horas antes de enviar otra solicitud a este usuario.`
-            }, { status: 429 });
-          }
-        }
-
-        const updated = await prisma.userConnection.update({
-          where: { id: existingConnection.id },
-          data: {
-            requesterId: session.userId,
-            recipientId,
-            status: "pending",
-            updatedAt: new Date(),
-          },
-        });
-
-        try {
-          await prisma.activityLog.create({
-            data: {
-              userId: session.userId,
-              action: "REQUEST_CONNECTION",
-              details: targetDetails,
-            },
-          });
-        } catch (logError) {
-          console.error("Failed to log REQUEST_CONNECTION activity:", logError);
-        }
-
-        try {
-          const requesterProfile = await prisma.userProfile.findUnique({
-            where: { userId: session.userId },
-            select: { firstName: true, lastName: true, fullName: true, avatarUrl: true },
-          });
-          const requesterName = requesterProfile?.fullName || `${requesterProfile?.firstName || ""} ${requesterProfile?.lastName || ""}`.trim() || "Un usuario";
-          const requesterAvatar = requesterProfile?.avatarUrl || "";
-
-          await prisma.notification.deleteMany({
-            where: {
-              userId: recipientId,
-              type: "connection_request",
-              actionUrl: `/inicio/public-profile?id=${session.userId}`
-            }
-          });
-
-          await prisma.notification.create({
-            data: {
-              userId: recipientId,
-              type: "connection_request",
-              title: "Nueva solicitud",
-              actorName: requesterName,
-              actorAvatarUrl: requesterAvatar,
-              body: "quiere agregarte a su red.",
-              actionUrl: `/inicio/public-profile?id=${session.userId}`,
-            },
-          });
-        } catch (notifError) {
-          console.error("Failed to create connection request notification:", notifError);
-        }
-
+      if (existingDirected.status === "accepted") {
         return NextResponse.json({
           success: true,
           connection: {
-            id: updated.id,
-            status: updated.status,
+            id: existingDirected.id,
+            status: "accepted",
             direction: "outgoing",
           },
-          message: "Solicitud de conexion enviada.",
+          message: "Este usuario ya está en tu red.",
         });
+      }
+
+      // If existing connection was declined/pending, activate it instantly
+      const updated = await prisma.userConnection.update({
+        where: { id: existingDirected.id },
+        data: {
+          status: "accepted",
+          updatedAt: new Date(),
+        },
+      });
+
+      // Notification to recipient
+      try {
+        const requesterProfile = await prisma.userProfile.findUnique({
+          where: { userId: session.userId },
+          select: { firstName: true, lastName: true, fullName: true, avatarUrl: true },
+        });
+        const requesterName =
+          requesterProfile?.fullName ||
+          `${requesterProfile?.firstName || ""} ${requesterProfile?.lastName || ""}`.trim() ||
+          "Un usuario";
+        const requesterAvatar = requesterProfile?.avatarUrl || "";
+
+        await prisma.notification.deleteMany({
+          where: {
+            userId: recipientId,
+            type: { in: ["network_add", "connection_request", "connection_accepted"] },
+            actionUrl: `/inicio/public-profile?id=${session.userId}`,
+          },
+        });
+
+        await prisma.notification.create({
+          data: {
+            userId: recipientId,
+            type: "network_add",
+            title: "Nueva conexión",
+            actorName: requesterName,
+            actorAvatarUrl: requesterAvatar,
+            body: "te sumó a su red.",
+            actionUrl: `/inicio/public-profile?id=${session.userId}`,
+          },
+        });
+      } catch (notifErr) {
+        console.error("Failed to create network_add notification:", notifErr);
       }
 
       return NextResponse.json({
         success: true,
         connection: {
-          id: existingConnection.id,
-          status: existingConnection.status,
-          direction: existingConnection.requesterId === session.userId ? "outgoing" : "incoming",
+          id: updated.id,
+          status: "accepted",
+          direction: "outgoing",
         },
-        message: "La conexion ya existe.",
+        message: "Usuario sumado a tu red.",
       });
     }
 
+    // Create new directed connection with instant accepted status
     const connection = await prisma.userConnection.create({
       data: {
         requesterId: session.userId,
         recipientId,
-        status: "pending",
+        status: "accepted",
       },
     });
 
@@ -286,45 +292,47 @@ export async function POST(request: Request) {
       await prisma.activityLog.create({
         data: {
           userId: session.userId,
-          action: "REQUEST_CONNECTION",
+          action: "ADD_TO_NETWORK",
           details: targetDetails,
         },
       });
     } catch (logError) {
-      console.error("Failed to log REQUEST_CONNECTION activity:", logError);
+      console.error("Failed to log ADD_TO_NETWORK activity:", logError);
     }
 
-    // Create a connection request notification for the recipient user
+    // Create network_add notification for recipient
     try {
       const requesterProfile = await prisma.userProfile.findUnique({
         where: { userId: session.userId },
         select: { firstName: true, lastName: true, fullName: true, avatarUrl: true },
       });
-      const requesterName = requesterProfile?.fullName || `${requesterProfile?.firstName || ""} ${requesterProfile?.lastName || ""}`.trim() || "Un usuario";
+      const requesterName =
+        requesterProfile?.fullName ||
+        `${requesterProfile?.firstName || ""} ${requesterProfile?.lastName || ""}`.trim() ||
+        "Un usuario";
       const requesterAvatar = requesterProfile?.avatarUrl || "";
 
-      // Ensure we don't create multiple notifications for the same request
       await prisma.notification.deleteMany({
         where: {
           userId: recipientId,
-          type: "connection_request",
-          actionUrl: `/inicio/public-profile?id=${session.userId}`
-        }
+          type: { in: ["network_add", "connection_request", "connection_accepted"] },
+          actionUrl: `/inicio/public-profile?id=${session.userId}`,
+        },
       });
 
       await prisma.notification.create({
         data: {
           userId: recipientId,
-          type: "connection_request",
-          title: "Nueva solicitud",
+          type: "network_add",
+          title: "Nueva conexión",
           actorName: requesterName,
           actorAvatarUrl: requesterAvatar,
-          body: "quiere agregarte a su red.",
+          body: "te sumó a su red.",
           actionUrl: `/inicio/public-profile?id=${session.userId}`,
         },
       });
     } catch (notifError) {
-      console.error("Failed to create connection request notification:", notifError);
+      console.error("Failed to create network_add notification:", notifError);
     }
 
     const newlyCompletedQuests = [];
@@ -340,153 +348,21 @@ export async function POST(request: Request) {
       success: true,
       connection: {
         id: connection.id,
-        status: connection.status,
+        status: "accepted",
         direction: "outgoing",
       },
-      message: "Solicitud de conexion enviada.",
+      message: "Sumado a tu red con éxito.",
       newlyCompletedQuests,
     });
   } catch (error) {
-    console.error("Connection request failed.", error);
-    return NextResponse.json({ message: "No pudimos enviar la solicitud de conexion." }, { status: 500 });
+    console.error("Add to network failed.", error);
+    return NextResponse.json({ message: "No pudimos sumar este usuario a tu red." }, { status: 500 });
   }
 }
 
 export async function PUT(request: Request) {
-  const session = await getCurrentSession();
-
-  if (!session) {
-    return NextResponse.json({ message: "No autorizado." }, { status: 401 });
-  }
-
-  const rateLimitResult = isRateLimited(
-    session.userId,
-    "ACCEPT_CONNECTION",
-    RATE_LIMITS.ACCEPT_CONNECTION.limit,
-    RATE_LIMITS.ACCEPT_CONNECTION.windowMs
-  );
-  if (rateLimitResult.success) {
-    return NextResponse.json({ message: "Demasiadas solicitudes. Inténtalo de nuevo más tarde." }, { status: 429 });
-  }
-
-  const body = await request.json().catch(() => null);
-  const requesterId = typeof body?.recipientId === "string" ? body.recipientId.trim() : "";
-
-  if (!requesterId || !isUuid(requesterId)) {
-    return NextResponse.json({ message: "Usuario origen invalido." }, { status: 400 });
-  }
-
-  try {
-    const { prisma } = await import("@/lib/db");
-    const connection = await prisma.userConnection.findFirst({
-      where: {
-        requesterId,
-        recipientId: session.userId,
-        status: "pending",
-      },
-    });
-
-    if (!connection) {
-      return NextResponse.json({ message: "No se encontró ninguna solicitud de conexión pendiente." }, { status: 404 });
-    }
-
-    const updated = await prisma.userConnection.update({
-      where: { id: connection.id },
-      data: { status: "accepted" },
-    });
-
-    try {
-      const requesterUser = await prisma.user.findUnique({
-        where: { id: requesterId },
-        select: { email: true, profile: { select: { firstName: true, lastName: true, fullName: true } } },
-      });
-      if (requesterUser) {
-        const requesterName = requesterUser.profile?.fullName || `${requesterUser.profile?.firstName || ""} ${requesterUser.profile?.lastName || ""}`.trim() || requesterUser.email || "Usuario";
-        await prisma.activityLog.create({
-          data: {
-            userId: session.userId,
-            action: "ACCEPT_CONNECTION",
-            details: JSON.stringify({
-              requesterId,
-              requesterEmail: requesterUser.email,
-              requesterName,
-            }),
-          },
-        });
-      }
-    } catch (logError) {
-      console.error("Failed to log ACCEPT_CONNECTION activity:", logError);
-    }
-
-    // Create a connection accepted notification for the requester (original sender)
-    try {
-      const accepterProfile = await prisma.userProfile.findUnique({
-        where: { userId: session.userId },
-        select: { firstName: true, lastName: true, fullName: true, avatarUrl: true },
-      });
-      const accepterName = accepterProfile?.fullName || `${accepterProfile?.firstName || ""} ${accepterProfile?.lastName || ""}`.trim() || "Un usuario";
-      const accepterAvatar = accepterProfile?.avatarUrl || "";
-
-      await prisma.notification.create({
-        data: {
-          userId: requesterId,
-          type: "connection_accepted",
-          title: "Solicitud aceptada",
-          actorName: accepterName,
-          actorAvatarUrl: accepterAvatar,
-          body: "aceptó tu solicitud de conexión.",
-          actionUrl: `/inicio/public-profile?id=${session.userId}`,
-        },
-      });
-    } catch (notifCreateError) {
-      console.error("Failed to create connection accepted notification:", notifCreateError);
-    }
-
-    // Delete any pending connection_request notifications for this connection
-    try {
-      await prisma.notification.deleteMany({
-        where: {
-          OR: [
-            {
-              userId: session.userId,
-              type: "connection_request",
-              actionUrl: `/inicio/public-profile?id=${requesterId}`
-            },
-            {
-              userId: requesterId,
-              type: "connection_request",
-              actionUrl: `/inicio/public-profile?id=${session.userId}`
-            }
-          ]
-        }
-      });
-    } catch (notifDeleteError) {
-      console.error("Failed to delete notification on accept:", notifDeleteError);
-    }
-
-    const newlyCompletedQuests = [];
-    try {
-      const { checkAndTriggerQuestCompletion } = await import("@/lib/onboarding");
-      const r = await checkAndTriggerQuestCompletion(session.userId, "connect");
-      if (r) newlyCompletedQuests.push(r);
-    } catch (questError) {
-      console.error("Failed to check onboarding connect quest completion:", questError);
-    }
-
-    return NextResponse.json({
-      success: true,
-      connection: {
-        id: updated.id,
-        status: updated.status,
-        direction: "incoming",
-      },
-      message: "Solicitud de conexión aceptada.",
-      newlyCompletedQuests,
-    });
-  } catch (error) {
-    console.error("Accept connection failed.", error);
-    return NextResponse.json({ message: "No pudimos aceptar la solicitud de conexión." }, { status: 500 });
-  }
+  // Idempotent acceptance / backward compatibility
+  return POST(request);
 }
 
 export async function DELETE(request: Request) {
@@ -520,106 +396,69 @@ export async function DELETE(request: Request) {
 
   try {
     const { prisma } = await import("@/lib/db");
+    
+    // In our directed model, deleting means the current user removes targetId from their network
     const connection = await prisma.userConnection.findFirst({
       where: {
-        OR: [
-          { requesterId: session.userId, recipientId: targetId },
-          { requesterId: targetId, recipientId: session.userId },
-        ],
+        requesterId: session.userId,
+        recipientId: targetId,
       },
     });
 
     if (!connection) {
-      return NextResponse.json({ message: "No existe ninguna conexión activa o pendiente." }, { status: 404 });
+      return NextResponse.json({ message: "No tienes a este usuario en tu red." }, { status: 404 });
     }
 
-    if (connection.status === "pending") {
-      await prisma.userConnection.update({
-        where: { id: connection.id },
-        data: { status: "declined" },
+    await prisma.userConnection.delete({
+      where: { id: connection.id },
+    });
+
+    try {
+      const otherUser = await prisma.user.findUnique({
+        where: { id: targetId },
+        select: { email: true, profile: { select: { firstName: true, lastName: true, fullName: true } } },
       });
+      const otherUserName =
+        otherUser?.profile?.fullName ||
+        `${otherUser?.profile?.firstName || ""} ${otherUser?.profile?.lastName || ""}`.trim() ||
+        otherUser?.email ||
+        "Usuario";
 
-      try {
-        const isRecipient = connection.recipientId === session.userId;
-        const otherUserId = isRecipient ? connection.requesterId : connection.recipientId;
-        const otherUser = await prisma.user.findUnique({
-          where: { id: otherUserId },
-          select: { email: true, profile: { select: { firstName: true, lastName: true, fullName: true } } },
-        });
-        const otherUserName = otherUser?.profile?.fullName || `${otherUser?.profile?.firstName || ""} ${otherUser?.profile?.lastName || ""}`.trim() || otherUser?.email || "Usuario";
-        
-        await prisma.activityLog.create({
-          data: {
-            userId: session.userId,
-            action: isRecipient ? "NETWORK_REJECT" : "CANCEL_CONNECTION_REQUEST",
-            details: JSON.stringify({
-              targetId: otherUserId,
-              targetEmail: otherUser?.email,
-              targetName: otherUserName,
-            }),
-          },
-        });
-      } catch (logErr) {
-        console.error("Failed to log NETWORK_REJECT activity:", logErr);
-      }
-    } else {
-      await prisma.userConnection.delete({
-        where: { id: connection.id },
+      await prisma.activityLog.create({
+        data: {
+          userId: session.userId,
+          action: "REMOVE_FROM_NETWORK",
+          details: JSON.stringify({
+            targetId,
+            targetEmail: otherUser?.email,
+            targetName: otherUserName,
+          }),
+        },
       });
-
-      try {
-        const otherUserId = connection.requesterId === session.userId ? connection.recipientId : connection.requesterId;
-        const otherUser = await prisma.user.findUnique({
-          where: { id: otherUserId },
-          select: { email: true, profile: { select: { firstName: true, lastName: true, fullName: true } } },
-        });
-        const otherUserName = otherUser?.profile?.fullName || `${otherUser?.profile?.firstName || ""} ${otherUser?.profile?.lastName || ""}`.trim() || otherUser?.email || "Usuario";
-
-        await prisma.activityLog.create({
-          data: {
-            userId: session.userId,
-            action: "NETWORK_DELETION",
-            details: JSON.stringify({
-              targetId: otherUserId,
-              targetEmail: otherUser?.email,
-              targetName: otherUserName,
-            }),
-          },
-        });
-      } catch (logErr) {
-        console.error("Failed to log NETWORK_DELETION activity:", logErr);
-      }
+    } catch (logErr) {
+      console.error("Failed to log REMOVE_FROM_NETWORK activity:", logErr);
     }
 
-    // Delete any pending connection_request notifications between these two users
+    // Delete any pending notification sent from session.userId to targetId
     try {
       await prisma.notification.deleteMany({
         where: {
-          OR: [
-            {
-              userId: connection.recipientId,
-              type: "connection_request",
-              actionUrl: `/inicio/public-profile?id=${connection.requesterId}`
-            },
-            {
-              userId: connection.requesterId,
-              type: "connection_request",
-              actionUrl: `/inicio/public-profile?id=${connection.recipientId}`
-            }
-          ]
-        }
+          userId: targetId,
+          type: { in: ["network_add", "connection_request", "connection_accepted"] },
+          actionUrl: `/inicio/public-profile?id=${session.userId}`,
+        },
       });
     } catch (notifDeleteError) {
-      console.error("Failed to delete connection request notifications:", notifDeleteError);
+      console.error("Failed to clean up notification on removal:", notifDeleteError);
     }
 
     return NextResponse.json({
       success: true,
-      message: "Conexión eliminada/cancelada con éxito.",
+      message: "Eliminado de tu red con éxito.",
     });
   } catch (error) {
-    console.error("Delete connection failed.", error);
-    return NextResponse.json({ message: "No pudimos eliminar la conexión." }, { status: 500 });
+    console.error("Remove from network failed.", error);
+    return NextResponse.json({ message: "No pudimos eliminar al usuario de tu red." }, { status: 500 });
   }
 }
 
@@ -677,7 +516,11 @@ export async function PATCH(request: Request) {
           where: { id: targetId },
           select: { email: true, profile: { select: { firstName: true, lastName: true, fullName: true } } },
         });
-        const otherUserName = otherUser?.profile?.fullName || `${otherUser?.profile?.firstName || ""} ${otherUser?.profile?.lastName || ""}`.trim() || otherUser?.email || "Usuario";
+        const otherUserName =
+          otherUser?.profile?.fullName ||
+          `${otherUser?.profile?.firstName || ""} ${otherUser?.profile?.lastName || ""}`.trim() ||
+          otherUser?.email ||
+          "Usuario";
         await prisma.activityLog.create({
           data: {
             userId: session.userId,
@@ -698,41 +541,65 @@ export async function PATCH(request: Request) {
         message: "Usuario desbloqueado con éxito.",
       });
     }
-    
-    // Find if a connection exists in any direction
+
+    // Action === "block":
+    // 1. Create or update directed connection from session.userId -> targetId as blocked
     const existing = await prisma.userConnection.findFirst({
       where: {
-        OR: [
-          { requesterId: session.userId, recipientId: targetId },
-          { requesterId: targetId, recipientId: session.userId }
-        ]
-      }
+        requesterId: session.userId,
+        recipientId: targetId,
+      },
     });
 
-    let connection;
     if (existing) {
-      // Update existing connection status to blocked
-      connection = await prisma.userConnection.update({
+      await prisma.userConnection.update({
         where: { id: existing.id },
-        data: { status: "blocked", requesterId: session.userId, recipientId: targetId }
+        data: { status: "blocked" },
       });
     } else {
-      // Create a new blocked connection
-      connection = await prisma.userConnection.create({
+      await prisma.userConnection.create({
         data: {
           requesterId: session.userId,
           recipientId: targetId,
-          status: "blocked"
-        }
+          status: "blocked",
+        },
       });
     }
+
+    // 2. Sever any reverse connection from targetId -> session.userId
+    await prisma.userConnection.deleteMany({
+      where: {
+        requesterId: targetId,
+        recipientId: session.userId,
+      },
+    });
+
+    // 3. Delete notifications between both users
+    await prisma.notification.deleteMany({
+      where: {
+        OR: [
+          {
+            userId: targetId,
+            actionUrl: `/inicio/public-profile?id=${session.userId}`,
+          },
+          {
+            userId: session.userId,
+            actionUrl: `/inicio/public-profile?id=${targetId}`,
+          },
+        ],
+      },
+    });
 
     try {
       const otherUser = await prisma.user.findUnique({
         where: { id: targetId },
         select: { email: true, profile: { select: { firstName: true, lastName: true, fullName: true } } },
       });
-      const otherUserName = otherUser?.profile?.fullName || `${otherUser?.profile?.firstName || ""} ${otherUser?.profile?.lastName || ""}`.trim() || otherUser?.email || "Usuario";
+      const otherUserName =
+        otherUser?.profile?.fullName ||
+        `${otherUser?.profile?.firstName || ""} ${otherUser?.profile?.lastName || ""}`.trim() ||
+        otherUser?.email ||
+        "Usuario";
       await prisma.activityLog.create({
         data: {
           userId: session.userId,
@@ -748,38 +615,12 @@ export async function PATCH(request: Request) {
       console.error("Failed to log BLOCK_USER activity:", logErr);
     }
 
-    // Delete any pending notifications between them
-    try {
-      await prisma.notification.deleteMany({
-        where: {
-          OR: [
-            {
-              userId: session.userId,
-              type: "connection_request",
-              actionUrl: `/inicio/public-profile?id=${targetId}`
-            },
-            {
-              userId: targetId,
-              type: "connection_request",
-              actionUrl: `/inicio/public-profile?id=${session.userId}`
-            }
-          ]
-        }
-      });
-    } catch (notifErr) {
-      console.error("Failed to delete notifications on block:", notifErr);
-    }
-
     return NextResponse.json({
       success: true,
-      connection: {
-        id: connection.id,
-        status: connection.status,
-      },
-      message: "Usuario bloqueado con éxito."
+      message: "Usuario bloqueado con éxito.",
     });
   } catch (error) {
     console.error("Block connection failed.", error);
-    return NextResponse.json({ message: "No pudimos bloquear la conexión." }, { status: 500 });
+    return NextResponse.json({ message: "No pudimos bloquear al usuario." }, { status: 500 });
   }
 }

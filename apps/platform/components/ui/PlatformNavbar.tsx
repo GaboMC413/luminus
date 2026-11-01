@@ -374,8 +374,27 @@ export function PlatformNavbar() {
     };
   }, [router]);
 
+  const [profileFromContext, setProfileFromContext] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (pathname.startsWith("/inicio/public-profile")) {
+      const params = new URLSearchParams(window.location.search);
+      const fromParam = params.get("from");
+      if (fromParam && ["especialistas", "espacios", "grupos", "faro", "inicio"].includes(fromParam)) {
+        setProfileFromContext(fromParam);
+      } else {
+        setProfileFromContext("");
+      }
+    } else {
+      setProfileFromContext(null);
+    }
+  }, [pathname]);
+
   // Determine active tab based on pathname
   const getActiveTab = () => {
+    if (pathname.startsWith("/inicio/public-profile")) {
+      return profileFromContext ?? "";
+    }
     if (pathname === "/" || pathname.startsWith("/inicio") || pathname.startsWith("/comunidad")) return "inicio";
     if (pathname.includes("/especialistas")) return "especialistas";
     if (pathname.includes("/espacios")) return "espacios";
@@ -515,14 +534,14 @@ export function PlatformNavbar() {
     <>
       {/* Desktop Header */}
       <header className="fixed top-0 left-0 w-full bg-white border-b border-slate-200/90 z-[100] h-[64px] px-6 lg:px-8 flex items-center justify-between">
-        <div className="flex items-center gap-8 h-full">
+        <div className="flex items-stretch gap-8 h-full">
           <Link href="/inicio" className="inline-flex items-center">
             <img src="/logo-luminus-black.svg" alt="Luminus" className="hidden sm:block h-[20px] cursor-pointer" />
             <img src="/iso-logo-black.svg" alt="Luminus" className="sm:hidden h-[24px] cursor-pointer" />
           </Link>
 
           {/* Desktop Nav Items */}
-          <nav className="hidden lg:flex items-center gap-1.5 h-[64px]">
+          <nav className="hidden lg:flex items-stretch gap-1.5 h-full">
             {NAV_ITEMS.map((item) => {
               const isActive = activeTab === item.id;
               const Icon = item.icon;
@@ -544,7 +563,7 @@ export function PlatformNavbar() {
                   />
                   <span>{item.label}</span>
                   {isActive && (
-                    <span className="absolute bottom-0 left-2.5 right-2.5 h-[2px] bg-slate-900 rounded-full" />
+                    <span className="absolute -bottom-[1px] left-2.5 right-2.5 h-[2px] bg-slate-900 rounded-full z-10" />
                   )}
                 </Link>
               );
@@ -640,7 +659,7 @@ export function PlatformNavbar() {
               }`}
             >
               <UserAvatar src={profileAvatar} alt={profileName || "Perfil"} size="sm" />
-              <span className="hidden lg:block text-sm font-medium font-jakarta text-slate-600 group-hover:text-slate-900 max-w-[140px] truncate">
+              <span className="hidden lg:block font-jakarta text-sm font-semibold text-slate-900 group-hover:text-slate-700 max-w-[140px] truncate transition-colors">
                 {profileName}
               </span>
               <ChevronDown
@@ -656,7 +675,7 @@ export function PlatformNavbar() {
                 <div className="p-3.5 border-b border-slate-100 flex items-center gap-3 bg-slate-50/60">
                   <UserAvatar src={profileAvatar} alt={profileName || "Perfil"} size="md" />
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-bold font-jakarta text-slate-900 truncate">
+                    <span className="font-jakarta text-sm font-semibold text-slate-900 truncate">
                       {profileName || "Usuario"}
                     </span>
                     {userEmail && (

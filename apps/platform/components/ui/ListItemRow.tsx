@@ -44,11 +44,11 @@ export function ListItemRow({
         <UserAvatar src={avatar} alt={name} size="md" />
 
         <div className="flex flex-col min-w-0">
-          <span className="font-jakarta text-xs sm:text-sm font-semibold text-slate-900 group-hover:text-slate-700 transition-colors truncate">
+          <span className="font-jakarta text-sm font-semibold text-slate-900 group-hover:text-slate-700 transition-colors truncate">
             {name}
           </span>
           {subtitle && (
-            <span className="font-sans text-[11px] sm:text-xs text-slate-500 truncate">
+            <span className="font-sans text-xs text-slate-500 font-medium truncate">
               {subtitle}
             </span>
           )}

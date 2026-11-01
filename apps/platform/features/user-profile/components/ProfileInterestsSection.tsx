@@ -1,6 +1,7 @@
 "use client";
 
-import { ProfileButton, EmptyProfileButton } from "@/components/ui/Button";
+import { Edit3 } from "lucide-react";
+import { EmptyProfileButton } from "@/components/ui/Button";
 import { InterestPill } from "@/components/ui/InterestPill";
 
 interface ProfileInterestsSectionProps {
@@ -17,28 +18,32 @@ export function ProfileInterestsSection({ interests, otherInterests, onEdit, isP
   const nameToUse = firstName ? firstName.trim() : "Este usuario";
 
   return (
-    <div className="bg-white rounded-2xl p-4 lg:p-6 flex flex-col gap-2 lg:gap-6 border border-slate-200 shadow-none relative group">
+    <div className="bg-white rounded-2xl p-5 sm:p-6 flex flex-col gap-4 border border-slate-200/90 shadow-none relative group">
       {!isPublic && onEdit && (
-        <ProfileButton
+        <button
           onClick={() => {
             window.history.replaceState(null, "", window.location.pathname);
             onEdit();
           }}
-          icon="edit"
-          className={`absolute top-4 right-4 z-20 ${highlight ? "glow-highlight" : ""}`}
-        />
+          className={`absolute top-5 right-5 z-20 w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 flex items-center justify-center transition-all cursor-pointer border border-slate-200/60 shadow-none ${highlight ? "glow-highlight" : ""}`}
+          title="Editar intereses"
+        >
+          <Edit3 className="w-3.5 h-3.5" />
+        </button>
       )}
-      <div className="flex items-center gap-1">
-        <h3 className="text-label text-[0.75rem] lg:text-[0.8125rem] uppercase font-semibold ml-1">Intereses</h3>
+      <div className="flex items-center gap-1.5">
+        <h3 className="text-title-section text-slate-900 font-jakarta uppercase tracking-wider text-xs font-bold">
+          Intereses
+        </h3>
       </div>
 
       {hasInterests ? (
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2 sm:gap-2.5">
           {interests?.map((interest: string, idx: number) => (
             <InterestPill key={idx} interest={interest} />
           ))}
           {otherInterests && (
-            <div className="h-9 px-4 bg-slate-50 text-slate-400 border border-slate-100 rounded-xl text-[12px] lg:text-[14px] font-medium italic tracking-tight font-sans flex items-center shadow-none shrink-0 select-none">
+            <div className="h-8 px-3 bg-slate-50 text-slate-500 border border-slate-200/70 rounded-xl text-xs font-medium italic tracking-tight font-sans flex items-center shadow-none shrink-0 select-none">
               + {otherInterests}
             </div>
           )}
@@ -46,7 +51,7 @@ export function ProfileInterestsSection({ interests, otherInterests, onEdit, isP
       ) : (
         <div className="flex flex-col items-start gap-4">
           {isPublic ? (
-            <p className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight leading-relaxed">
+            <p className="text-body text-slate-400 font-normal italic tracking-tight leading-relaxed">
               {nameToUse} aún no ha seleccionado intereses.
             </p>
           ) : (

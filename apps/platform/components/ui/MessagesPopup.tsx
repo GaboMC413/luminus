@@ -46,7 +46,7 @@ function MessageItem({
       <div className="flex flex-col gap-0.5 min-w-0 flex-1 justify-center">
         {/* Row 1: Name + Date & Status */}
         <div className="flex items-center justify-between gap-2">
-          <span className="text-sm font-bold font-jakarta text-slate-900 truncate leading-tight">
+          <span className="font-jakarta text-sm font-semibold text-slate-900 truncate leading-tight">
             {user}
           </span>
           <div className="flex items-center gap-1.5 shrink-0">

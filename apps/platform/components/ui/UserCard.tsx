@@ -1,5 +1,6 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { formatLocationDisplay } from '@/utils/locationUtils';
 
 interface UserCardProps {
   user: {
@@ -25,13 +26,6 @@ export function UserCard({ user, actionMenu }: UserCardProps) {
   const handleViewProfile = () => {
     if (isOfficial) return;
     router.push(`/inicio/public-profile?id=${encodeURIComponent(user.id)}`);
-  };
-
-  const formatLocation = (loc: string) => {
-    if (!loc) return "";
-    const parts = loc.split(',').map(p => p.trim()).filter(Boolean);
-    if (parts.length <= 2) return loc;
-    return `${parts[0]}, ${parts[parts.length - 1]}`;
   };
 
   const hasAvatar = user.avatar && !imgError;
@@ -70,16 +64,16 @@ export function UserCard({ user, actionMenu }: UserCardProps) {
 
       <div className="flex flex-col items-center gap-0.5 text-center w-full min-w-0">
         <h3
-          className="text-sm font-bold text-slate-900 leading-snug truncate w-full font-jakarta px-0.5 group-hover:text-slate-600 transition-colors"
+          className="font-jakarta text-sm font-semibold text-slate-900 leading-snug truncate w-full px-0.5 group-hover:text-slate-700 transition-colors"
           title={user.name}
         >
           {user.name}
         </h3>
         <p
           className="text-xs font-medium text-slate-500 font-sans truncate w-full px-0.5"
-          title={formatLocation(user.location)}
+          title={formatLocationDisplay(user.location)}
         >
-          {formatLocation(user.location)}
+          {formatLocationDisplay(user.location)}
         </p>
       </div>
 

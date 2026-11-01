@@ -116,6 +116,7 @@ function NotificationItem({
   };
 
   const isQuest = String(type).startsWith("quest_completed_");
+  const isNetworkAdd = type === "network_add";
   const isConnectionAccepted = type === "connection_accepted";
   const isConnectionRequest = type === "connection_request";
 
@@ -169,7 +170,9 @@ function NotificationItem({
 
         {/* Row 2: Message / Update description */}
         <p className="text-xs leading-relaxed text-slate-500 group-hover:text-slate-800 transition-colors truncate font-sans m-0">
-          {isConnectionAccepted
+          {isNetworkAdd
+            ? "Te sumó a su red."
+            : isConnectionAccepted
             ? "Aceptó tu solicitud de conexión."
             : isConnectionRequest
             ? "Quiere conectarse contigo."
@@ -177,6 +180,23 @@ function NotificationItem({
         </p>
 
         {/* Row 3: High-intent contextual actions */}
+        {isNetworkAdd && actionUrl && (
+          <div className="mt-1.5 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isUnread) onMarkRead(id);
+                onClose();
+                router.push(actionUrl);
+              }}
+              className="inline-flex items-center h-7 px-3 rounded-lg text-xs font-semibold font-jakarta text-slate-700 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 transition-colors border-none cursor-pointer"
+            >
+              <span>Ver perfil</span>
+            </button>
+          </div>
+        )}
+
         {isConnectionAccepted && (
           <div className="mt-1.5 flex items-center gap-2">
             <button

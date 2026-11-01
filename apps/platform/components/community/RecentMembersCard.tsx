@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CardHeader } from "@/components/ui/CardHeader";
 import { ListItemRow } from "@/components/ui/ListItemRow";
 import { Button } from "@/components/ui/Button";
+import { formatLocationDisplay } from "@/utils/locationUtils";
 
 interface RecentMembersCardProps {
   members: any[];
@@ -26,13 +27,6 @@ export function RecentMembersCard({ members, loading, onViewAllMembers }: Recent
         Boolean(m.avatar && typeof m.avatar === "string" && m.avatar.trim())
     )
     .slice(0, 6);
-
-  const formatLocation = (loc?: string) => {
-    if (!loc) return "";
-    const parts = loc.split(",").map((p) => p.trim()).filter(Boolean);
-    if (parts.length <= 2) return loc;
-    return `${parts[0]}, ${parts[parts.length - 1]}`;
-  };
 
   return (
     <div className="card-surface flex flex-col gap-3">
@@ -63,7 +57,7 @@ export function RecentMembersCard({ members, loading, onViewAllMembers }: Recent
               key={member.id}
               avatar={member.avatar}
               name={member.name}
-              subtitle={formatLocation(member.location) || "Miembro de la comunidad"}
+              subtitle={formatLocationDisplay(member.location) || "Miembro de la comunidad"}
               onClick={() => router.push(`/inicio/public-profile?id=${encodeURIComponent(member.id)}`)}
             />
           ))}

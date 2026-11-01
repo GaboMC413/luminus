@@ -27,7 +27,7 @@ function SpecialistCard({ specialist }: { specialist: Specialist }) {
     <article
       className="group flex min-h-[220px] cursor-pointer flex-col items-center rounded-2xl border border-slate-200 bg-white px-3 py-4 text-center transition-colors hover:border-slate-400"
       onClick={() => {
-        router.push(`/inicio/public-profile?id=${encodeURIComponent(specialist.id)}`);
+        router.push(`/inicio/public-profile?id=${encodeURIComponent(specialist.id)}&from=especialistas`);
       }}
     >
       <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 sm:h-20 sm:w-20">

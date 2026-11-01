@@ -244,12 +244,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: "Este perfil no está disponible." }, { status: 404 });
     }
 
-    const connection = await prisma.userConnection.findFirst({
+    const outgoingConnection = await prisma.userConnection.findFirst({
       where: {
-        OR: [
-          { requesterId: session.userId, recipientId: id },
-          { requesterId: id, recipientId: session.userId },
-        ],
+        requesterId: session.userId,
+        recipientId: id,
       },
       select: {
         id: true,
@@ -258,9 +256,25 @@ export async function GET(request: Request) {
       },
     });
 
-    if (connection && connection.status === "blocked" && connection.requesterId === id) {
+    const incomingConnection = await prisma.userConnection.findFirst({
+      where: {
+        requesterId: id,
+        recipientId: session.userId,
+      },
+      select: {
+        id: true,
+        requesterId: true,
+        status: true,
+      },
+    });
+
+    if (incomingConnection && incomingConnection.status === "blocked") {
       return NextResponse.json({ message: "Este perfil no está disponible." }, { status: 403 });
     }
+
+    const isFollowing = outgoingConnection?.status === "accepted";
+    const isFollower = incomingConnection?.status === "accepted";
+    const isBlocked = outgoingConnection?.status === "blocked";
 
     const profile = (user.profile ?? {}) as any;
     const prompts = (user.profilePrompts ?? [])
@@ -272,6 +286,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       profile: {
+        id: user.id,
         first_name: profile.firstName ?? "",
         last_name: profile.lastName ?? "",
         city: profile.city ?? "",
@@ -283,17 +298,62 @@ export async function GET(request: Request) {
         cover_url: profile.coverUrl ?? "",
         gender: profile.gender ?? "",
         birthdate: profile.birthdate ? new Date(profile.birthdate).toISOString().slice(0, 10) : "",
-        phone_number: profile.phoneNumber ?? "",
-        selected_plan: profile.selectedPlan ?? "Mensual",
+
+
         created_at: profile.createdAt?.toISOString?.() ?? user.createdAt?.toISOString?.() ?? "",
         bio: profile.bio ?? "",
         other_interests: profile.intention ?? "",
         tier: user.tier ?? "FREE",
         member_since: user.memberSince?.toISOString?.() ?? null,
-        connection_status: connection?.status ?? null,
-        connection_direction: connection ? (connection.requesterId === session.userId ? "outgoing" : "incoming") : null,
+        connection_status: isBlocked ? "blocked" : (isFollowing ? "accepted" : null),
+        connection_direction: isFollowing ? "outgoing" : null,
+        is_in_network: isFollowing,
+        has_in_network: isFollower,
+        is_mutual: Boolean(isFollowing && isFollower),
         is_own_profile: id === session.userId,
-        specialistProfile: user.specialistProfile || null,
+        specialistProfile: user.specialistProfile ? {
+          specialty: user.specialistProfile.specialty,
+          title: user.specialistProfile.title,
+          clinicName: user.specialistProfile.clinicName,
+          bio: user.specialistProfile.bio,
+          institution: user.specialistProfile.institution,
+          linkedinUrl: user.specialistProfile.linkedinUrl,
+          instagramUrl: user.specialistProfile.instagramUrl,
+          websiteUrl: user.specialistProfile.websiteUrl,
+          courses: (user.specialistProfile.courses || []).map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            type: c.type,
+            description: c.description,
+            modality: c.modality,
+            url: c.url,
+            coverUrl: c.coverUrl,
+            institution: c.institution,
+          })),
+          spaces: (user.specialistProfile.spaces || []).map((s: any) => ({
+            id: s.id,
+            name: s.name,
+            description: s.description,
+            address: s.address,
+            city: s.city,
+            country: s.country,
+            phone: s.phone,
+            website: s.website,
+            googleMapsUrl: s.googleMapsUrl,
+            coverUrl: s.coverUrl,
+            spaceType: s.spaceType,
+            services: (s.services || []).map((srv: any) => ({
+              id: srv.id,
+              name: srv.name,
+            })),
+            availability: (s.availability || []).map((av: any) => ({
+              dayOfWeek: av.dayOfWeek,
+              startTime: av.startTime,
+              endTime: av.endTime,
+              isActive: av.isActive,
+            })),
+          })),
+        } : null,
       }
     });
   } catch (error) {

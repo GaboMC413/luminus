@@ -35,7 +35,7 @@ export const QUEST_CONFIG: Record<string, { label: string; actionUrl: string; ic
     icon: "photo_prints",
   },
   connect: {
-    label: "Envía una solicitud de conexión",
+    label: "Suma a alguien a tu red",
     actionUrl: "/inicio/miembros",
     icon: "person_add",
   },
@@ -68,8 +68,8 @@ const CELEBRATION_COPY: Record<string, { title: string; body: string; actionUrl:
     actionUrl: "/perfil-usuario",
   },
   connect: {
-    title: "Has enviado tu primera solicitud",
-    body: "Has dado el primer paso para construir conexiones conscientes en la red.",
+    title: "Has sumado tu primera conexión",
+    body: "Has dado el primer paso para construir tu red en la comunidad.",
     actionUrl: "/inicio/miembros",
   },
 };

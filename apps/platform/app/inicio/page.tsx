@@ -14,6 +14,7 @@ import { Button, SquareButton } from "@/components/ui/Button";
 import { CardHeader } from "@/components/ui/CardHeader";
 import { User } from "lucide-react";
 import { Toast } from "@/components/ui/Toast";
+import { formatLocationDisplay } from "@/utils/locationUtils";
 
 export default function PlatformPage() {
   return (
@@ -386,13 +387,12 @@ function PlatformContent() {
                     "Usuario sin nombre"
                     : "Cargando..."}
                 </h3>
-                <p className="font-sans text-xs text-slate-500 font-medium">
-                  {currentUserProfile?.city
-                    ? `${currentUserProfile.city.split(",")[0]}, ${currentUserProfile.country || ""}`.replace(
-                      /,\s*$/,
-                      ""
-                    )
-                    : "Ubicación no especificada"}
+                <p className="font-sans text-xs text-slate-500 font-medium truncate max-w-full">
+                  {formatLocationDisplay(
+                    currentUserProfile?.city && currentUserProfile?.country
+                      ? `${currentUserProfile.city}, ${currentUserProfile.country}`
+                      : currentUserProfile?.location || currentUserProfile?.city || currentUserProfile?.country
+                  ) || "Montevideo, Uruguay"}
                 </p>
               </div>
 
