@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "bae03ba9-d8fc-477c-84f1-91dd35206cac",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\architecture-luminus-overview-20261018-133900\\candidate.json",
+  "output": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\architecture-luminus-overview-20261018-133900\\luminus-architecture.html",
+  "specification": {
+    "sha256": "412610f5ae2d85e1bf529f1ec01f4f0f8ebb1e790b0f56d918b15d79530a7474",
+    "bytes": 6360
+  },
+  "artifact": {
+    "sha256": "e437240fdbe34b275a97cd6fd0dba72ab49925eb686f6e4b182d4a53051eb8f0",
+    "bytes": 831303
+  }
+}

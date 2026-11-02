@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "babc6f8c-be6d-4f45-af74-000d36807464",
+  "status": "current",
+  "command": "deliver",
+  "type": "tree",
+  "input": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\tree-luminus-sitemap-20261018-134600\\candidate.json",
+  "output": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\tree-luminus-sitemap-20261018-134600\\luminus-sitemap.html",
+  "specification": {
+    "sha256": "68caafb1ecad7aefe6e149ae11d518b2d630fe10addd46616ee649c8809f4826",
+    "bytes": 6047
+  },
+  "artifact": {
+    "sha256": "abe3cdcca3ad0bfc78dfb50d7c99cc4fa796fe77984d5e39d815916c00b23570",
+    "bytes": 843396
+  }
+}

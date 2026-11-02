@@ -1,0 +1,213 @@
+{
+  "schema_version": 1,
+  "diagram_type": "tree",
+  "meta": {
+    "title": "Luminus Website & Platform Sitemap",
+    "subtitle": "Hierarchical route map across Marketing site and Platform application",
+    "output": ".archify/tree-luminus-sitemap-20261018-134600/luminus-sitemap.html",
+    "quality_profile": "showcase",
+    "locale": "en",
+    "repository": {
+      "url": "https://github.com/GaboMC413/luminus.git",
+      "revision": "5718e0ea767e00c8c07253dc6047c750e7ed9b11",
+      "provider": "github"
+    }
+  },
+  "layout": {
+    "direction": "right",
+    "gapX": 24,
+    "gapY": 24
+  },
+  "nodes": [
+    {
+      "id": "luminus",
+      "label": "Luminus Monorepo",
+      "sublabel": "Web & Platform Ecosystem"
+    },
+    {
+      "id": "marketing",
+      "label": "Marketing App",
+      "parent": "luminus",
+      "sublabel": "apps/marketing (Public Website)"
+    },
+    {
+      "id": "platform",
+      "label": "Platform App",
+      "parent": "luminus",
+      "sublabel": "apps/platform (Member Workspace)"
+    },
+    {
+      "id": "m_home",
+      "label": "Landing Page",
+      "parent": "marketing",
+      "sublabel": "/",
+      "sources": [
+        { "path": "apps/marketing/app/page.tsx", "line": 1, "end_line": 20, "label": "Marketing Home" }
+      ]
+    },
+    {
+      "id": "m_about",
+      "label": "Sobre Nosotros",
+      "parent": "marketing",
+      "sublabel": "/sobre-nosotros",
+      "sources": [
+        { "path": "apps/marketing/app/sobre-nosotros/page.tsx", "line": 1, "end_line": 20, "label": "About Page" }
+      ]
+    },
+    {
+      "id": "m_events",
+      "label": "Eventos y Fechas",
+      "parent": "marketing",
+      "sublabel": "/eventos, /proximasfechas"
+    },
+    {
+      "id": "m_recordings",
+      "label": "Grabaciones",
+      "parent": "marketing",
+      "sublabel": "/grabaciones"
+    },
+    {
+      "id": "m_interviews",
+      "label": "Entrevistas",
+      "parent": "marketing",
+      "sublabel": "/entrevistas"
+    },
+    {
+      "id": "m_specialists",
+      "label": "Especialistas Landing",
+      "parent": "marketing",
+      "sublabel": "/especialistas"
+    },
+    {
+      "id": "m_partners",
+      "label": "Empresas Aliadas",
+      "parent": "marketing",
+      "sublabel": "/empresas-aliadas"
+    },
+    {
+      "id": "m_faq",
+      "label": "Preguntas Frecuentes",
+      "parent": "marketing",
+      "sublabel": "/preguntas-frecuentes"
+    },
+    {
+      "id": "m_contact",
+      "label": "Contacto",
+      "parent": "marketing",
+      "sublabel": "/contacto"
+    },
+    {
+      "id": "m_legal",
+      "label": "Legal & Terms",
+      "parent": "marketing",
+      "sublabel": "/legal (privacidad, cookies)"
+    },
+    {
+      "id": "p_auth",
+      "label": "Authentication",
+      "parent": "platform",
+      "sublabel": "/auth/iniciar-sesion, /auth/crear-cuenta",
+      "sources": [
+        { "path": "apps/platform/app/auth/iniciar-sesion/page.tsx", "line": 1, "end_line": 4, "label": "Login Route" }
+      ]
+    },
+    {
+      "id": "p_onboarding",
+      "label": "Perfil Onboarding",
+      "parent": "platform",
+      "sublabel": "/perfil/completar",
+      "sources": [
+        { "path": "apps/platform/app/perfil/completar/page.tsx", "line": 1, "end_line": 9, "label": "Onboarding Route" }
+      ]
+    },
+    {
+      "id": "p_profile",
+      "label": "Mi Perfil & Config",
+      "parent": "platform",
+      "sublabel": "/perfil-usuario, /configuracion",
+      "sources": [
+        { "path": "apps/platform/app/perfil-usuario/page.tsx", "line": 1, "end_line": 11, "label": "Profile Route" }
+      ]
+    },
+    {
+      "id": "p_network",
+      "label": "Red de Contactos",
+      "parent": "platform",
+      "sublabel": "/red & /mapa",
+      "sources": [
+        { "path": "apps/platform/app/red/page.tsx", "line": 1, "end_line": 20, "label": "Networking Directory" }
+      ]
+    },
+    {
+      "id": "p_community",
+      "label": "Comunidad & Muro",
+      "parent": "platform",
+      "sublabel": "/comunidad",
+      "sources": [
+        { "path": "apps/platform/app/comunidad/page.tsx", "line": 1, "end_line": 20, "label": "Community Feed" }
+      ]
+    },
+    {
+      "id": "p_messages",
+      "label": "Mensajeria Directa",
+      "parent": "platform",
+      "sublabel": "/mensajes & /notificaciones",
+      "sources": [
+        { "path": "apps/platform/app/mensajes/page.tsx", "line": 1, "end_line": 20, "label": "Direct Messaging" }
+      ]
+    },
+    {
+      "id": "p_learning",
+      "label": "Espacios & Grupos",
+      "parent": "platform",
+      "sublabel": "/espacios, /grupos, /faro",
+      "sources": [
+        { "path": "apps/platform/app/espacios/page.tsx", "line": 1, "end_line": 20, "label": "Learning Spaces" }
+      ]
+    },
+    {
+      "id": "p_membership",
+      "label": "Membresia & Pago",
+      "parent": "platform",
+      "sublabel": "/membresia & /membresia/pago",
+      "sources": [
+        { "path": "apps/platform/app/membresia/page.tsx", "line": 1, "end_line": 9, "label": "Membership Upgrade" }
+      ]
+    },
+    {
+      "id": "p_admin",
+      "label": "Admin Dashboard",
+      "parent": "platform",
+      "sublabel": "/admin (Users & Chats)",
+      "sources": [
+        { "path": "apps/platform/app/admin/page.tsx", "line": 1, "end_line": 20, "label": "Admin Panel" }
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Public Surface",
+      "items": [
+        "Marketing portal showcasing specialists, upcoming events, and recordings",
+        "Lead acquisition forms for prospective members and partner companies"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Member Platform",
+      "items": [
+        "Protected workspace with interest-based onboarding and social networking",
+        "Direct peer messaging, community feed, and study spaces"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Monetization & Ops",
+      "items": [
+        "Free vs Basic ($5/mo) subscription tiers with Stripe Elements checkout",
+        "Role-guarded administrator back-office for user moderation and metrics"
+      ]
+    }
+  ]
+}

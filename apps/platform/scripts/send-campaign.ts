@@ -51,7 +51,7 @@ async function main() {
   const isDryRun = args.includes("--dry-run");
   const autoConfirm = args.includes("--yes") || args.includes("-y");
 
-  let campaignId = "cmp_octubre_3_conversaciones_2026"; // Por defecto la campaña de octubre
+  let campaignId = "cmp_novedades_semanales_noviembre_2026"; // Por defecto la nueva campaña de novedades
   const argCampaign = args.find((a) => a.startsWith("--campaign-id="));
   if (argCampaign) {
     campaignId = argCampaign.split("=")[1].trim();

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "534a6b1a-af21-4fa5-be4a-2537c0d2e6ff",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\workflow-luminus-navigation-20261018-134700\\candidate.json",
+  "output": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\workflow-luminus-navigation-20261018-134700\\luminus-navigation.html",
+  "specification": {
+    "sha256": "461e80ae8e729f9b8ed852058a921f30a3a843f3647303a44b90941d21314c46",
+    "bytes": 6595
+  },
+  "artifact": {
+    "sha256": "15524a976dda130dcc70aefbcf988d68e16aefe8e7721ab97cb87a850bf19c89",
+    "bytes": 830010
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "tree",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\tree-luminus-sitemap-20261018-134600\\candidate.json",
+    "sha256": "68caafb1ecad7aefe6e149ae11d518b2d630fe10addd46616ee649c8809f4826",
+    "bytes": 6047
+  },
+  "artifact": {
+    "path": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\tree-luminus-sitemap-20261018-134600\\luminus-sitemap.html",
+    "sha256": "abe3cdcca3ad0bfc78dfb50d7c99cc4fa796fe77984d5e39d815916c00b23570",
+    "bytes": 843396
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\tree-luminus-sitemap-20261018-134600\\luminus-sitemap.finalize.json",
+    "summaryReceipt": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\tree-luminus-sitemap-20261018-134600\\luminus-sitemap.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\tree-luminus-sitemap-20261018-134600\\luminus-sitemap.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.1.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-18T16:38:51.629Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 4667,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

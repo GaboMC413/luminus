@@ -5,6 +5,7 @@ import Link from "next/link";
 import SelectInput from "@/components/ui/SelectInput";
 import { renderBelenEducacionSexualNewsletterHtml } from "@/lib/mails/belenEducacionSexualNewsletter";
 import { renderOctoberEventsNewsletterHtml } from "@/lib/mails/octoberEventsNewsletter";
+import { renderNovemberNewsletterHtml } from "@/lib/mails/novemberNewsletter";
 import { renderBelenNewsletterHtml } from "@/lib/mails/belenNewsletter";
 import { renderRelaunchNewsletterHtml } from "@/lib/mails/relaunchNewsletter";
 import { renderVivianaNewsletterHtml } from "@/lib/mails/vivianaNewsletter";
@@ -103,6 +104,12 @@ interface SendLog {
 }
 
 const DEFAULT_TEMPLATES = [
+    {
+      name: "Novedades: Canal Instagram, Nutrición Deportiva & Flotación",
+      subject: "Novedades en LUMINUS: nuevo canal, nutrición deportiva y terapia de flotación",
+      previewText: "Canal de Instagram de LUMINUS, nutrición deportiva con Romina Acosta y terapia de flotación.",
+      html: renderNovemberNewsletterHtml(),
+    },
     {
       name: "Calendario de Octubre: 3 Conversaciones de Bienestar",
       subject: "Octubre en LUMINUS: 3 nuevas conversaciones para tu bienestar",
@@ -467,16 +474,17 @@ export default function LocalEmailMarketingPage() {
         const list = data.campaigns || [];
         setCampaigns(list);
         setLogs(data.logs || []);
-        const belen = list.find((c: any) => c.id === "cmp_belen_pittamiglio_2026");
-        if (belen) {
+        const activeDraftOrFirst = list.find((c: any) => c.status === "DRAFT") || list[0];
+        if (activeDraftOrFirst) {
           setCurrentCampaign((prev) => {
-            if (!prev.id || prev.id === "cmp_belen_pittamiglio_2026") {
+            if (!prev.id || prev.id === "cmp_belen_pittamiglio_2026" || prev.id === activeDraftOrFirst.id) {
               return {
-                ...belen,
-                previewText: belen.previewText || "",
+                ...activeDraftOrFirst,
+                previewText: activeDraftOrFirst.previewText || "",
               };
             }
-            return prev;
+            const matching = list.find((c: any) => c.id === prev.id);
+            return matching ? { ...matching, previewText: matching.previewText || "" } : prev;
           });
         }
       }

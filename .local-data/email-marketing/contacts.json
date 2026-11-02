@@ -1,5 +1,43 @@
 [
   {
+    "id": "cnt_1788140902140_0siwo",
+    "email": "gabrielmedcap@gmail.com",
+    "firstName": "Gabriel",
+    "lastName": "Medero",
+    "tags": [
+      "Inscripto a Evento",
+      "Usuario Plataforma"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.\n[Inscripto a Evento]: \"Pilates más allá de la estétic\"\n[Inscripto a Evento]: \"Pilates más allá de la estética: fuerza, movilidad y salud a largo plazo\"\n[Inscripto a Evento]: \"Mindfulness y Calma Mental: Estrategias para el día a día\"",
+    "createdAt": "2026-11-02T00:14:00.637Z",
+    "country": "Uruguay",
+    "city": "Montevideo",
+    "profession": "Director General de LUMINUS",
+    "source": "Plataforma LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1788298979167_azlni",
+    "email": "gabrielmedcap@hotmail.com",
+    "firstName": "Gabriel",
+    "lastName": "Medero Capotte",
+    "country": "México",
+    "city": "Santa Anita",
+    "profession": "",
+    "source": "Eventos LUMINUS",
+    "tags": [
+      "Inscripto a Evento",
+      "Usuario Plataforma"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde inscripciones a eventos.\n[Inscripto a Evento]: \"Pilates más allá de la estétic\"\n[Inscripto a Evento]: \"Pilates más allá de la estética: fuerza, movilidad y salud a largo plazo\"\n[Inscripto a Evento]: \"Sexualidad sin tabúes: cuerpo, vínculos y comunicación\"\n[Inscripto a Evento]: \"Verse bien, sentirse bien: otra mirada sobre la medicina estética\"",
+    "createdAt": "2026-10-28T20:45:07.351Z",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
     "id": "cnt_1790887758712_rn8n5",
     "email": "marylinevora@gmail.com",
     "firstName": "Marylin",
@@ -1785,12 +1823,15 @@
     "city": "",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
+    "tags": [
+      "bounced"
+    ],
     "unsubscribed": false,
-    "notes": "Suscrito: 2025-11-18 12:28:49 | Enviados: 3 | Abiertos: 0 | Clics: 0",
+    "notes": "Suscrito: 2025-11-18 12:28:49 | Enviados: 3 | Abiertos: 0 | Clics: 0\n[Supresión] Marcado manualmente como BOUNCED / no enviar.",
     "createdAt": "2026-09-01T21:42:59.166Z",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true,
+    "bounceReason": "MANUAL_SUPPRESSION_BOUNCE"
   },
   {
     "id": "cnt_1788298979166_vmyaj",
@@ -2605,12 +2646,15 @@
     "city": "",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
+    "tags": [
+      "bounced"
+    ],
     "unsubscribed": false,
-    "notes": "Suscrito: 2025-11-18 12:28:49 | Enviados: 3 | Abiertos: 0 | Clics: 0",
+    "notes": "Suscrito: 2025-11-18 12:28:49 | Enviados: 3 | Abiertos: 0 | Clics: 0\n[Supresión] Marcado manualmente como BOUNCED / no enviar.",
     "createdAt": "2026-09-01T21:42:59.166Z",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true,
+    "bounceReason": "MANUAL_SUPPRESSION_BOUNCE"
   },
   {
     "id": "cnt_1788298979166_nurxv",
@@ -3091,12 +3135,15 @@
     "city": "",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
+    "tags": [
+      "bounced"
+    ],
     "unsubscribed": false,
-    "notes": "Suscrito: 2025-11-18 12:26:19 | Enviados: 3 | Abiertos: 0 | Clics: 0",
+    "notes": "Suscrito: 2025-11-18 12:26:19 | Enviados: 3 | Abiertos: 0 | Clics: 0\n[Supresión] Marcado manualmente como BOUNCED / no enviar.",
     "createdAt": "2026-09-01T21:42:59.166Z",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true,
+    "bounceReason": "MANUAL_SUPPRESSION_BOUNCE"
   },
   {
     "id": "cnt_1788298979166_k5u13",
@@ -3606,12 +3653,15 @@
     "city": "",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
+    "tags": [
+      "bounced"
+    ],
     "unsubscribed": false,
-    "notes": "Suscrito: 2025-11-18 12:28:49 | Enviados: 3 | Abiertos: 0 | Clics: 0",
+    "notes": "Suscrito: 2025-11-18 12:28:49 | Enviados: 3 | Abiertos: 0 | Clics: 0\n[Supresión] Marcado manualmente como BOUNCED / no enviar.",
     "createdAt": "2026-09-01T21:42:59.166Z",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true,
+    "bounceReason": "MANUAL_SUPPRESSION_BOUNCE"
   },
   {
     "id": "cnt_1788298979166_evp2i",
@@ -6263,12 +6313,15 @@
     "city": "",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
+    "tags": [
+      "bounced"
+    ],
     "unsubscribed": false,
-    "notes": "Suscrito: 2025-11-18 12:30:36 | Enviados: 3 | Abiertos: 0 | Clics: 0",
+    "notes": "Suscrito: 2025-11-18 12:30:36 | Enviados: 3 | Abiertos: 0 | Clics: 0\n[Supresión] Marcado manualmente como BOUNCED / no enviar.",
     "createdAt": "2026-09-01T21:42:59.165Z",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true,
+    "bounceReason": "MANUAL_SUPPRESSION_BOUNCE"
   },
   {
     "id": "cnt_1788298979165_sdneh",
@@ -6600,14 +6653,15 @@
     "profession": "",
     "source": "Subscribers Active CSV",
     "tags": [
-      "bounced",
-      "transient-bounce"
+      "transient-bounce",
+      "bounced"
     ],
     "unsubscribed": false,
-    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 20:40:12 en envío anterior. Omitido de campañas.",
+    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 20:40:12 en envío anterior. Omitido de campañas.\n[Supresión] Marcado manualmente como BOUNCED / no enviar.",
     "createdAt": "2026-09-01T21:42:59.165Z",
     "status": "BOUNCED",
-    "bounced": true
+    "bounced": true,
+    "bounceReason": "MANUAL_SUPPRESSION_BOUNCE"
   },
   {
     "id": "cnt_1788298979165_pva9r",
@@ -12076,12 +12130,15 @@
     "city": "",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
+    "tags": [
+      "bounced"
+    ],
     "unsubscribed": false,
-    "notes": "Suscrito: 2025-11-18 12:33:35 | Enviados: 4 | Abiertos: 0 | Clics: 0",
+    "notes": "Suscrito: 2025-11-18 12:33:35 | Enviados: 4 | Abiertos: 0 | Clics: 0\n[Supresión] Marcado manualmente como BOUNCED / no enviar.",
     "createdAt": "2026-09-01T21:42:59.164Z",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true,
+    "bounceReason": "MANUAL_SUPPRESSION_BOUNCE"
   },
   {
     "id": "cnt_1788298979164_j6w3b",
@@ -16214,12 +16271,14 @@
     "city": "",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
+    "tags": [
+      "bounced"
+    ],
     "unsubscribed": false,
-    "notes": "Suscrito: 2025-11-18 12:36:25 | Enviados: 3 | Abiertos: 0 | Clics: 0",
+    "notes": "Suscrito: 2025-11-18 12:36:25 | Enviados: 3 | Abiertos: 0 | Clics: 0\n[AWS SES Sync] Suprimido automáticamente por Rebote de entrega (Bounce) el 1/10/2026.",
     "createdAt": "2026-09-01T21:42:59.163Z",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true
   },
   {
     "id": "cnt_1788298979163_et3x0",
@@ -20544,14 +20603,15 @@
     "profession": "",
     "source": "Subscribers Active CSV",
     "tags": [
-      "bounced",
-      "transient-bounce"
+      "transient-bounce",
+      "bounced"
     ],
     "unsubscribed": false,
-    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 20:47:31 en envío anterior. Omitido de campañas.",
+    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 20:47:31 en envío anterior. Omitido de campañas.\n[Supresión] Marcado manualmente como BOUNCED / no enviar.",
     "createdAt": "2026-09-01T21:42:59.162Z",
     "status": "BOUNCED",
-    "bounced": true
+    "bounced": true,
+    "bounceReason": "MANUAL_SUPPRESSION_BOUNCE"
   },
   {
     "id": "cnt_1788298979162_bvdvg",
@@ -26634,12 +26694,15 @@
     "city": "",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
+    "tags": [
+      "bounced"
+    ],
     "unsubscribed": false,
-    "notes": "Suscrito: 2025-12-03 12:17:13 | Enviados: 6 | Abiertos: 4 | Clics: 0",
+    "notes": "Suscrito: 2025-12-03 12:17:13 | Enviados: 6 | Abiertos: 4 | Clics: 0\n[Supresión] Marcado manualmente como BOUNCED / no enviar.",
     "createdAt": "2026-09-01T21:42:59.158Z",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true,
+    "bounceReason": "MANUAL_SUPPRESSION_BOUNCE"
   },
   {
     "id": "cnt_1788298979158_xa11k",
@@ -28659,12 +28722,15 @@
     "city": "",
     "profession": "",
     "source": "Subscribers Active CSV",
-    "tags": [],
+    "tags": [
+      "bounced"
+    ],
     "unsubscribed": false,
-    "notes": "Suscrito: 2025-12-03 12:14:15 | Enviados: 2 | Abiertos: 2 | Clics: 0",
+    "notes": "Suscrito: 2025-12-03 12:14:15 | Enviados: 2 | Abiertos: 2 | Clics: 0\n[Supresión] Marcado manualmente como BOUNCED / no enviar.",
     "createdAt": "2026-09-01T21:42:59.158Z",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true,
+    "bounceReason": "MANUAL_SUPPRESSION_BOUNCE"
   },
   {
     "id": "cnt_1788298979158_gynes",
@@ -35900,18 +35966,19 @@
     "firstName": "Marcelo Edgardo Paz",
     "lastName": "",
     "tags": [
-      "bounced",
-      "transient-bounce"
+      "transient-bounce",
+      "bounced"
     ],
     "unsubscribed": false,
-    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 20:55:18 en envío anterior. Omitido de campañas.",
+    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 20:55:18 en envío anterior. Omitido de campañas.\n[Supresión] Marcado manualmente como BOUNCED / no enviar.",
     "createdAt": "2026-08-31T01:48:21.934Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
     "status": "BOUNCED",
-    "bounced": true
+    "bounced": true,
+    "bounceReason": "MANUAL_SUPPRESSION_BOUNCE"
   },
   {
     "id": "cnt_1788140901934_dcf1b",
@@ -41356,14 +41423,15 @@
       "bounced"
     ],
     "unsubscribed": false,
-    "notes": "[Import CSV] Suscrito: 2025-11-18 12:37:15 | Enviados: 4 | Abiertos: 4 | Clics: 4\n[AWS SES Sync] Suprimido automáticamente por Rebote de entrega (Bounce) el 17/9/2026.",
+    "notes": "[Import CSV] Suscrito: 2025-11-18 12:37:15 | Enviados: 4 | Abiertos: 4 | Clics: 4\n[AWS SES Sync] Suprimido automáticamente por Rebote de entrega (Bounce) el 17/9/2026.\n[Supresión] Marcado manualmente como BOUNCED / no enviar.",
     "createdAt": "2026-08-31T01:48:21.813Z",
     "country": "United States",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
     "status": "BOUNCED",
-    "bounced": true
+    "bounced": true,
+    "bounceReason": "MANUAL_SUPPRESSION_BOUNCE"
   },
   {
     "id": "cnt_1788140901813_l4xkz",
@@ -45735,15 +45803,18 @@
     "email": "edem@live.cl",
     "firstName": "Eduardo",
     "lastName": "Espinoza Moya",
-    "tags": [],
-    "unsubscribed": false,
-    "notes": "[Import CSV] Suscrito: 2025-11-18 12:19:05 | Enviados: 3 | Abiertos: 0 | Clics: 0",
+    "tags": [
+      "desuscrito",
+      "complaint"
+    ],
+    "unsubscribed": true,
+    "notes": "[Import CSV] Suscrito: 2025-11-18 12:19:05 | Enviados: 3 | Abiertos: 0 | Clics: 0\n[AWS SES Sync] Suprimido automáticamente por Reporte de Abuso / Queja en Yahoo/Gmail el 22/10/2026.",
     "createdAt": "2026-08-31T01:45:50.410Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
+    "status": "UNSUBSCRIBED",
     "bounced": false
   },
   {
@@ -46919,18 +46990,19 @@
     "firstName": "Ps.",
     "lastName": "Pía Barrientos",
     "tags": [
-      "bounced",
-      "transient-bounce"
+      "transient-bounce",
+      "bounced"
     ],
     "unsubscribed": false,
-    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 21:00:50 en envío anterior. Omitido de campañas.",
+    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 21:00:50 en envío anterior. Omitido de campañas.\n[Supresión] Marcado manualmente como BOUNCED / no enviar.",
     "createdAt": "2026-08-31T01:45:50.385Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
     "status": "BOUNCED",
-    "bounced": true
+    "bounced": true,
+    "bounceReason": "MANUAL_SUPPRESSION_BOUNCE"
   },
   {
     "id": "cnt_1788140750384_ys91v",
@@ -48079,16 +48151,19 @@
     "email": "deniiamasha2015@gmail.com",
     "firstName": "Denis",
     "lastName": "Amaya",
-    "tags": [],
+    "tags": [
+      "bounced"
+    ],
     "unsubscribed": false,
-    "notes": "[Import CSV] Suscrito: 2025-11-18 12:19:02 | Enviados: 4 | Abiertos: 1 | Clics: 0",
+    "notes": "[Import CSV] Suscrito: 2025-11-18 12:19:02 | Enviados: 4 | Abiertos: 1 | Clics: 0\n[Supresión] Marcado manualmente como BOUNCED / no enviar.",
     "createdAt": "2026-08-31T01:45:50.356Z",
     "country": "United States",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
-    "status": "ACTIVE",
-    "bounced": false
+    "status": "BOUNCED",
+    "bounced": true,
+    "bounceReason": "MANUAL_SUPPRESSION_BOUNCE"
   },
   {
     "id": "cnt_1788140750356_lqteq",
@@ -52377,18 +52452,19 @@
     "firstName": "Vero",
     "lastName": "Fortini",
     "tags": [
-      "bounced",
-      "transient-bounce"
+      "transient-bounce",
+      "bounced"
     ],
     "unsubscribed": false,
-    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 21:03:31 en envío anterior. Omitido de campañas.",
+    "notes": "[Rebote Temporal AWS SES] Registrado el 2026-09-22 21:03:31 en envío anterior. Omitido de campañas.\n[Supresión] Marcado manualmente como BOUNCED / no enviar.",
     "createdAt": "2026-08-31T01:45:50.295Z",
     "country": "",
     "city": "",
     "profession": "",
     "source": "Meta Ads",
     "status": "BOUNCED",
-    "bounced": true
+    "bounced": true,
+    "bounceReason": "MANUAL_SUPPRESSION_BOUNCE"
   },
   {
     "id": "cnt_1788140750295_3gz52",
@@ -67280,25 +67356,6 @@
     "bounced": false
   },
   {
-    "id": "cnt_1788302825813_8ozub",
-    "email": "martinoneilferrari@gmail.com",
-    "firstName": "Martin",
-    "lastName": "O'Neil",
-    "country": "Uruguay",
-    "city": "Punta Carretas",
-    "profession": "Director de Operaciones de LUMINUS",
-    "source": "Plataforma LUMINUS",
-    "tags": [
-      "Inscripto a Evento",
-      "Usuario Plataforma"
-    ],
-    "unsubscribed": false,
-    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
-    "createdAt": "2026-08-23T21:43:41.804Z",
-    "status": "ACTIVE",
-    "bounced": false
-  },
-  {
     "id": "cnt_1788830760964_v085l",
     "email": "dora.rusch@hospitaitaliano.org.ar",
     "firstName": "Dora",
@@ -67337,25 +67394,6 @@
     "bounced": false
   },
   {
-    "id": "cnt_1788830761420_syddq",
-    "email": "info@luminuslatam.com",
-    "firstName": "Gabriel",
-    "lastName": "Medero Capotte",
-    "country": "",
-    "city": "Carindale, Brisbane",
-    "profession": "",
-    "source": "Plataforma LUMINUS",
-    "tags": [
-      "Inscripto a Evento",
-      "Usuario Plataforma"
-    ],
-    "unsubscribed": false,
-    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
-    "createdAt": "2026-08-23T17:30:18.091Z",
-    "status": "ACTIVE",
-    "bounced": false
-  },
-  {
     "id": "cnt_1788830762384_1h59n",
     "email": "gabo@tribulatam.com",
     "firstName": "Gabriel",
@@ -67371,43 +67409,6 @@
     "unsubscribed": false,
     "notes": "Sincronizado automáticamente desde inscripciones a eventos.",
     "createdAt": "2026-08-22T14:19:08.732Z",
-    "status": "ACTIVE",
-    "bounced": false
-  },
-  {
-    "id": "cnt_1788298979167_azlni",
-    "email": "gabrielmedcap@hotmail.com",
-    "firstName": "Gabriel",
-    "lastName": "Medero",
-    "country": "",
-    "city": "Montevideo",
-    "profession": "",
-    "source": "Eventos LUMINUS",
-    "tags": [
-      "Inscripto a Evento"
-    ],
-    "unsubscribed": false,
-    "notes": "Sincronizado automáticamente desde inscripciones a eventos.\n[Inscripto a Evento]: \"Pilates más allá de la estétic\"\n[Inscripto a Evento]: \"Pilates más allá de la estética: fuerza, movilidad y salud a largo plazo\"\n[Inscripto a Evento]: \"Sexualidad sin tabúes: cuerpo, vínculos y comunicación\"\n[Inscripto a Evento]: \"Verse bien, sentirse bien: otra mirada sobre la medicina estética\"",
-    "createdAt": "2026-08-21T21:22:19.397Z",
-    "status": "ACTIVE",
-    "bounced": false
-  },
-  {
-    "id": "cnt_1788140902140_0siwo",
-    "email": "gabrielmedcap@gmail.com",
-    "firstName": "Gabriel",
-    "lastName": "Medero",
-    "tags": [
-      "Inscripto a Evento",
-      "Usuario Plataforma"
-    ],
-    "unsubscribed": false,
-    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.\n[Inscripto a Evento]: \"Pilates más allá de la estétic\"\n[Inscripto a Evento]: \"Pilates más allá de la estética: fuerza, movilidad y salud a largo plazo\"",
-    "createdAt": "2026-08-21T21:22:19.107Z",
-    "country": "Uruguay",
-    "city": "Durazno",
-    "profession": "Director General de LUMINUS",
-    "source": "Plataforma LUMINUS",
     "status": "ACTIVE",
     "bounced": false
   },
@@ -67444,6 +67445,554 @@
     "unsubscribed": false,
     "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
     "createdAt": "2026-07-07T21:46:01.039Z",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1788302825813_8ozub",
+    "email": "martinoneilferrari@gmail.com",
+    "firstName": "Martin",
+    "lastName": "O'Neil",
+    "country": "Uruguay",
+    "city": "Montevideo, Departamento de Montevideo",
+    "profession": "Director de Operaciones de LUMINUS",
+    "source": "Plataforma LUMINUS",
+    "tags": [
+      "Inscripto a Evento",
+      "Usuario Plataforma"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
+    "createdAt": "2026-06-24T23:13:39.142Z",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1788830761420_syddq",
+    "email": "info@luminuslatam.com",
+    "firstName": "LUMINUS",
+    "lastName": "Medero Capotte",
+    "country": "",
+    "city": "Cuenta Oficial",
+    "profession": "",
+    "source": "Plataforma LUMINUS",
+    "tags": [
+      "Inscripto a Evento",
+      "Usuario Plataforma"
+    ],
+    "unsubscribed": false,
+    "notes": "Sincronizado automáticamente desde la base de datos de usuarios.",
+    "createdAt": "2026-06-24T23:12:05.643Z",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981857_3vc9y",
+    "email": "trini.gonzalez.silva@gmail.com",
+    "firstName": "Trinidad",
+    "lastName": "Gonzalez Silva",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.857Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_4jcjf",
+    "email": "flornoemi.delgado@hotmail.com",
+    "firstName": "",
+    "lastName": "",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_dlscl",
+    "email": "carolalicia1976@gmail.com",
+    "firstName": "Carol",
+    "lastName": "Peraza",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_tq9zk",
+    "email": "fernanda.desouza@docente.ceibal.edu.uy",
+    "firstName": "Fernanda",
+    "lastName": "De Souza Silva",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_iilum",
+    "email": "mariajoseberro26@gmail.com",
+    "firstName": "Maria",
+    "lastName": "Jose BERRO",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_ggbn1",
+    "email": "lacolmena3202@gmail.com",
+    "firstName": "Angelica",
+    "lastName": "Massiotti",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_7datc",
+    "email": "sandrachocho1234@gmail.com",
+    "firstName": "Sandra",
+    "lastName": "Chocho",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_rl93y",
+    "email": "aisosacampos@gmail.com",
+    "firstName": "Angela",
+    "lastName": "Sosa",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_yiz8i",
+    "email": "nahupora@gmail.com",
+    "firstName": "Andrea",
+    "lastName": "Martinez",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_873rz",
+    "email": "gabrielacerdeiro@gmail.com",
+    "firstName": "Gabriela",
+    "lastName": "Cerdeiro",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_hjmse",
+    "email": "paradalilian04@gmail.com",
+    "firstName": "Josefina",
+    "lastName": "Parada",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_e6xv2",
+    "email": "carollr.1981@gmail.com",
+    "firstName": "Caroll",
+    "lastName": "Rollano",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_8yy13",
+    "email": "graherre31@gmail.com",
+    "firstName": "Graciela",
+    "lastName": "Herrera García",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_cc6wa",
+    "email": "nataliaronqui5@gmail.com",
+    "firstName": "Natalia",
+    "lastName": "Ronqui",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_c385t",
+    "email": "rosina.rossi@gmail.com",
+    "firstName": "Lic",
+    "lastName": "Rosina Rossi",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_u3n9r",
+    "email": "rosana.antunez@docente.ceibal.edu.uy",
+    "firstName": "Rosana",
+    "lastName": "Antunez Maciel",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_zrvj8",
+    "email": "gioamodernell@gmail.com",
+    "firstName": "Giorgina",
+    "lastName": "Modernell",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_f4xcl",
+    "email": "golpem@gmail.com",
+    "firstName": "Mónica",
+    "lastName": "Golpe",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_dspm9",
+    "email": "leticaspel1976@gmail.com",
+    "firstName": "Leticia",
+    "lastName": "Castro",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_wp9a7",
+    "email": "vir-di@hotmail.com",
+    "firstName": "Virginia",
+    "lastName": "Graciano",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_fbvcv",
+    "email": "lavalee3a@gmail.com",
+    "firstName": "Valeria",
+    "lastName": "Cabral",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_kq1db",
+    "email": "vmartucho@ute.com.uy",
+    "firstName": "Valeria",
+    "lastName": "Martucho",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_rpkzf",
+    "email": "j.ceciliadelossantos@gmail.com",
+    "firstName": "Cecilia",
+    "lastName": "de los Santos",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_a8zh6",
+    "email": "flor1488@hotmail.com",
+    "firstName": "Florencia",
+    "lastName": "Calixtro",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_rsk60",
+    "email": "andyben2011@gmail.com",
+    "firstName": "Andrea",
+    "lastName": "Benítez",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_dwxyf",
+    "email": "cinthiacabs@gmail.com",
+    "firstName": "Cinthia",
+    "lastName": "Caballero",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_zv3nw",
+    "email": "polapolola86@gmail.com",
+    "firstName": "Silvana",
+    "lastName": "Rios",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_t3rk7",
+    "email": "vinottoa@yahoo.com.ar",
+    "firstName": "AnaMaria",
+    "lastName": "Vinotto",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_a3r97",
+    "email": "elbiamontes1969@gmail.com",
+    "firstName": "Elbia",
+    "lastName": "Montes de Oca",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_8lbs3",
+    "email": "mgonzalezbonifacino@gmail.com",
+    "firstName": "Miguel",
+    "lastName": "Gonzalez",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_ujf7d",
+    "email": "lilianm.vidal7@gmail.com",
+    "firstName": "Lilian",
+    "lastName": "Vidal",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_h92bj",
+    "email": "reginajferreira@gmail.com",
+    "firstName": "Regina",
+    "lastName": "ferreira",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_25ec9",
+    "email": "maugef@gmail.com",
+    "firstName": "Maria",
+    "lastName": "Fernandez",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
+    "status": "ACTIVE",
+    "bounced": false
+  },
+  {
+    "id": "cnt_1793658981860_irz4o",
+    "email": "marinacmagnani@hotmail.com",
+    "firstName": "Marina",
+    "lastName": "Magnani",
+    "tags": [
+      "Inscripto a Evento"
+    ],
+    "unsubscribed": false,
+    "notes": "[Inscripción a Evento LUMINUS]",
+    "createdAt": "2026-11-02T22:36:21.860Z",
+    "source": "Eventos LUMINUS",
     "status": "ACTIVE",
     "bounced": false
   }

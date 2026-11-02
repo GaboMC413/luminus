@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\architecture-luminus-overview-20261018-133900\\candidate.json",
+    "sha256": "ee9a2f20152b6eafa8f45af0632ea180a18237f8978d8a0425e2bb8d2fef840f",
+    "bytes": 6360
+  },
+  "artifact": {
+    "path": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\architecture-luminus-overview-20261018-133900\\luminus-architecture.html",
+    "sha256": "24ca1f251ce60c33c8d55cf9f93daf92dbcde3c07069deb775545391d9b10ab4",
+    "bytes": 831531
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\architecture-luminus-overview-20261018-133900\\luminus-architecture.finalize.json",
+    "summaryReceipt": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\architecture-luminus-overview-20261018-133900\\luminus-architecture.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\architecture-luminus-overview-20261018-133900\\luminus-architecture.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.1.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-18T16:38:51.629Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 5200,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  },
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "resolvedCrossovers": 1
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [
+        {
+          "left": {
+            "id": "api-to-postgres",
+            "from": "api",
+            "to": "postgres",
+            "label": "Prisma SQL",
+            "collectionIndex": 5,
+            "artifactIndex": 6
+          },
+          "right": {
+            "id": "api-to-ses",
+            "from": "api",
+            "to": "ses",
+            "label": "Send Email",
+            "collectionIndex": 9,
+            "artifactIndex": 10
+          },
+          "point": [
+            634.0000000000001,
+            304.00000000000006
+          ],
+          "sharedNode": "api"
+        }
+      ],
+      "detours": [],
+      "truncated": false
+    },
+    "hints": [
+      "api → postgres and api → ses cross next to api: move node postgres or ses so the two reach api from different sides (for example one level with it, one directly above or below it)."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

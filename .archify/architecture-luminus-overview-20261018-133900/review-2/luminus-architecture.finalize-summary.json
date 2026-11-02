@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\architecture-luminus-overview-20261018-133900\\candidate.json",
+    "sha256": "412610f5ae2d85e1bf529f1ec01f4f0f8ebb1e790b0f56d918b15d79530a7474",
+    "bytes": 6360
+  },
+  "artifact": {
+    "path": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\architecture-luminus-overview-20261018-133900\\luminus-architecture.html",
+    "sha256": "e437240fdbe34b275a97cd6fd0dba72ab49925eb686f6e4b182d4a53051eb8f0",
+    "bytes": 831303
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\architecture-luminus-overview-20261018-133900\\review-2\\luminus-architecture.finalize.json",
+    "summaryReceipt": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\architecture-luminus-overview-20261018-133900\\review-2\\luminus-architecture.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Users\\gabri\\OneDrive\\Escritorio\\Trabajo\\LUMINUS\\Web - App\\luminus\\.archify\\architecture-luminus-overview-20261018-133900\\review-2\\luminus-architecture.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.1.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-18T16:38:51.629Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 4785,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

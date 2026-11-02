@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Luminus Fullstack Architecture",
+    "output": ".archify/architecture-luminus-overview-20261018-133900/luminus-architecture.html",
+    "quality_profile": "showcase",
+    "locale": "en",
+    "repository": {
+      "url": "https://github.com/GaboMC413/luminus.git",
+      "revision": "5718e0ea767e00c8c07253dc6047c750e7ed9b11",
+      "provider": "github"
+    }
+  },
+  "components": [
+    {
+      "id": "users",
+      "type": "external",
+      "label": "Users & Members",
+      "sublabel": "Browser / Mobile Web",
+      "icon": "person",
+      "pos": [40, 220],
+      "size": [130, 60]
+    },
+    {
+      "id": "marketing",
+      "type": "frontend",
+      "label": "Marketing App",
+      "sublabel": "Next.js 14 Landing",
+      "icon": "frontend",
+      "tag": "apps/marketing",
+      "sources": [
+        { "path": "apps/marketing/package.json", "line": 1, "end_line": 20, "label": "Next.js Marketing Site" }
+      ],
+      "pos": [230, 80],
+      "size": [150, 60]
+    },
+    {
+      "id": "platform",
+      "type": "frontend",
+      "label": "Platform Web App",
+      "sublabel": "Next.js 14 App Router",
+      "icon": "frontend",
+      "tag": "apps/platform",
+      "sources": [
+        { "path": "apps/platform/package.json", "line": 1, "end_line": 33, "label": "Platform App Manifest" }
+      ],
+      "pos": [230, 220],
+      "size": [150, 60]
+    },
+    {
+      "id": "cognito",
+      "type": "security",
+      "label": "AWS Cognito",
+      "sublabel": "Auth & Hosted UI",
+      "icon": "security",
+      "tag": "OAuth 2.0 / PKCE",
+      "sources": [
+        { "path": "amplify/auth/resource.ts", "line": 1, "end_line": 11, "label": "Amplify Auth Resource" }
+      ],
+      "pos": [460, 80],
+      "size": [150, 60]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "API Route Handlers",
+      "sublabel": "Server Runtime & RPC",
+      "icon": "backend",
+      "tag": "app/api/*",
+      "sources": [
+        { "path": "apps/platform/app/api/auth/cognito/callback/route.ts", "line": 1, "end_line": 15, "label": "Cognito Auth Route" }
+      ],
+      "pos": [460, 220],
+      "size": [150, 60]
+    },
+    {
+      "id": "s3",
+      "type": "cloud",
+      "label": "Amazon S3",
+      "sublabel": "Avatars & Resumes",
+      "icon": "cloud",
+      "tag": "Presigned PUT",
+      "sources": [
+        { "path": "apps/platform/app/api/uploads/avatar/route.ts", "line": 12, "end_line": 28, "label": "S3 Presigned Upload API" }
+      ],
+      "pos": [230, 360],
+      "size": [150, 60]
+    },
+    {
+      "id": "stripe",
+      "type": "external",
+      "label": "Stripe Billing",
+      "sublabel": "Checkout & Subscriptions",
+      "icon": "external",
+      "tag": "Basic Tier $5/mo",
+      "sources": [
+        { "path": "apps/platform/lib/stripe.ts", "line": 1, "end_line": 26, "label": "Stripe Client SDK" }
+      ],
+      "pos": [690, 80],
+      "size": [150, 60]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL DB",
+      "sublabel": "Relational Data Store",
+      "icon": "database",
+      "tag": "Prisma ORM",
+      "sources": [
+        { "path": "apps/platform/prisma/schema.prisma", "line": 1, "end_line": 8, "label": "Prisma Schema Config" },
+        { "path": "apps/platform/lib/db.ts", "line": 1, "end_line": 15, "label": "PrismaClient Singleton" }
+      ],
+      "pos": [690, 220],
+      "size": [150, 60]
+    },
+    {
+      "id": "ses",
+      "type": "cloud",
+      "label": "Amazon SES",
+      "sublabel": "Transactional Email",
+      "icon": "cloud",
+      "tag": "us-east-1",
+      "sources": [
+        { "path": "apps/platform/lib/email/passwordResetEmail.ts", "line": 90, "end_line": 105, "label": "SES Send Command" }
+      ],
+      "pos": [460, 360],
+      "size": [150, 60]
+    }
+  ],
+  "connections": [
+    {
+      "id": "users-to-platform",
+      "from": "users",
+      "to": "platform",
+      "label": "HTTPS Session",
+      "variant": "emphasis"
+    },
+    {
+      "id": "users-to-marketing",
+      "from": "users",
+      "to": "marketing",
+      "label": "Public Website",
+      "variant": "default"
+    },
+    {
+      "id": "platform-to-api",
+      "from": "platform",
+      "to": "api",
+      "label": "API Requests",
+      "variant": "emphasis"
+    },
+    {
+      "id": "platform-to-cognito",
+      "from": "platform",
+      "to": "cognito",
+      "label": "OAuth PKCE",
+      "variant": "security"
+    },
+    {
+      "id": "api-to-cognito",
+      "from": "api",
+      "to": "cognito",
+      "label": "Verify JWT",
+      "variant": "security"
+    },
+    {
+      "id": "api-to-postgres",
+      "from": "api",
+      "to": "postgres",
+      "label": "Prisma SQL",
+      "variant": "emphasis"
+    },
+    {
+      "id": "api-to-s3",
+      "from": "api",
+      "to": "s3",
+      "label": "Presign URL",
+      "variant": "default"
+    },
+    {
+      "id": "platform-to-s3",
+      "from": "platform",
+      "to": "s3",
+      "label": "Upload Media",
+      "variant": "dashed"
+    },
+    {
+      "id": "api-to-stripe",
+      "from": "api",
+      "to": "stripe",
+      "label": "Subscriptions",
+      "variant": "default"
+    },
+    {
+      "id": "api-to-ses",
+      "from": "api",
+      "to": "ses",
+      "label": "Send Email",
+      "variant": "default"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Monorepo & Applications",
+      "items": [
+        "npm workspaces with apps/platform and apps/marketing",
+        "Next.js 14 App Router platform with Tailwind CSS & Lucide icons",
+        "Marketing landing site with optimized static delivery and lead intake"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Identity & Persistence",
+      "items": [
+        "AWS Cognito Gen 2 with Hosted UI, Email, and Google OAuth 2.0 PKCE",
+        "HMAC SHA-256 signed session cookie (luminus_session)",
+        "PostgreSQL database managed through Prisma ORM with migrations & seed scripts"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Cloud Storage & Integrations",
+      "items": [
+        "Amazon S3 buckets for user avatars and resumes with presigned PUT URLs",
+        "Amazon SES (us-east-1) for transactional notifications and password resets",
+        "Stripe integration for $5/mo Basic tier subscription checkout & management"
+      ]
+    }
+  ]
+}

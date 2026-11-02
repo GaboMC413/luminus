@@ -1,0 +1,220 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Luminus User Journey & Navigation Flow",
+    "subtitle": "End-to-end user path from public discovery to onboarding, community interaction, and membership upgrade",
+    "output": ".archify/workflow-luminus-navigation-20261018-134700/luminus-navigation.html",
+    "quality_profile": "showcase",
+    "locale": "en",
+    "repository": {
+      "url": "https://github.com/GaboMC413/luminus.git",
+      "revision": "5718e0ea767e00c8c07253dc6047c750e7ed9b11",
+      "provider": "github"
+    }
+  },
+  "lanes": [
+    { "id": "visitor", "label": "Public Discovery (Marketing)" },
+    { "id": "auth_gate", "label": "Authentication & Access Gate" },
+    { "id": "member", "label": "Platform Workspace (Member Area)" },
+    { "id": "monetization", "label": "Monetization & Billing" }
+  ],
+  "phases": [
+    { "id": "intake", "label": "Public Discovery", "fromCol": 0, "toCol": 1 },
+    { "id": "access", "label": "Access & Onboarding", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "platform", "label": "Platform & Membership", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "public_discovery", "label": "Public acquisition", "lane": "visitor", "fromCol": 0, "toCol": 1 },
+    { "id": "auth_lifecycle", "label": "Identity verification", "lane": "auth_gate", "fromCol": 2, "toCol": 3, "variant": "security" },
+    { "id": "member_activity", "label": "Platform engagement", "lane": "member", "fromCol": 4, "toCol": 5, "variant": "emphasis" },
+    { "id": "checkout_flow", "label": "Subscription checkout", "lane": "monetization", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": [
+    "landing",
+    "view_events",
+    "signup",
+    "onboard_profile",
+    "feed",
+    "view_plans",
+    "stripe_checkout",
+    "basic_active"
+  ],
+  "nodes": [
+    {
+      "id": "landing",
+      "lane": "visitor",
+      "col": 0,
+      "type": "frontend",
+      "label": "Marketing Landing",
+      "sublabel": "Public home (/)",
+      "tag": "apps/marketing",
+      "sources": [
+        { "path": "apps/marketing/app/page.tsx", "line": 1, "end_line": 20, "label": "Landing Page" }
+      ]
+    },
+    {
+      "id": "view_events",
+      "lane": "visitor",
+      "col": 1,
+      "type": "frontend",
+      "label": "Specialists & Events",
+      "sublabel": "Explore /especialistas, /eventos",
+      "tag": "Catalog"
+    },
+    {
+      "id": "signup",
+      "lane": "auth_gate",
+      "col": 2,
+      "type": "security",
+      "label": "Create Account / Login",
+      "sublabel": "Cognito OAuth / Email",
+      "tag": "PKCE Session",
+      "sources": [
+        { "path": "apps/platform/app/auth/iniciar-sesion/page.tsx", "line": 1, "end_line": 4, "label": "Auth Entry" }
+      ]
+    },
+    {
+      "id": "onboard_profile",
+      "lane": "auth_gate",
+      "col": 3,
+      "type": "backend",
+      "label": "Profile Onboarding",
+      "sublabel": "Interests & Avatar",
+      "tag": "/perfil/completar",
+      "sources": [
+        { "path": "apps/platform/app/perfil/completar/page.tsx", "line": 1, "end_line": 9, "label": "Onboarding Form" }
+      ]
+    },
+    {
+      "id": "feed",
+      "lane": "member",
+      "col": 4,
+      "type": "frontend",
+      "label": "Community & Network",
+      "sublabel": "Feed, /red & Chats (/mensajes)",
+      "tag": "Free Member",
+      "sources": [
+        { "path": "apps/platform/app/comunidad/page.tsx", "line": 1, "end_line": 20, "label": "Community Feed" }
+      ]
+    },
+    {
+      "id": "view_plans",
+      "lane": "monetization",
+      "col": 4,
+      "type": "frontend",
+      "label": "Membership Upgrade",
+      "sublabel": "/membresia (Free vs Basic)",
+      "tag": "Plan Comparison",
+      "sources": [
+        { "path": "apps/platform/app/membresia/page.tsx", "line": 1, "end_line": 9, "label": "Membership Route" }
+      ]
+    },
+    {
+      "id": "stripe_checkout",
+      "lane": "monetization",
+      "col": 5,
+      "type": "external",
+      "label": "Stripe Checkout",
+      "sublabel": "Monthly $5/mo Subscription",
+      "tag": "Payment Intent",
+      "sources": [
+        { "path": "apps/platform/lib/stripe.ts", "line": 1, "end_line": 26, "label": "Stripe Client SDK" }
+      ]
+    },
+    {
+      "id": "basic_active",
+      "lane": "member",
+      "col": 5,
+      "type": "backend",
+      "label": "Basic Tier Active",
+      "sublabel": "Full Specialist Access",
+      "tag": "Tier = BASIC"
+    }
+  ],
+  "edges": [
+    {
+      "id": "landing-to-events",
+      "from": "landing",
+      "to": "view_events",
+      "label": "Browse",
+      "variant": "default"
+    },
+    {
+      "id": "events-to-signup",
+      "from": "view_events",
+      "to": "signup",
+      "label": "Join Now",
+      "variant": "emphasis"
+    },
+    {
+      "id": "landing-to-signup",
+      "from": "landing",
+      "to": "signup",
+      "label": "Direct Signup",
+      "variant": "default"
+    },
+    {
+      "id": "signup-to-onboard",
+      "from": "signup",
+      "to": "onboard_profile",
+      "label": "Authenticated",
+      "variant": "security"
+    },
+    {
+      "id": "onboard-to-feed",
+      "from": "onboard_profile",
+      "to": "feed",
+      "label": "Complete Setup",
+      "variant": "emphasis"
+    },
+    {
+      "id": "feed-to-upgrade",
+      "from": "feed",
+      "to": "view_plans",
+      "label": "Upgrade Tier",
+      "variant": "default"
+    },
+    {
+      "id": "plans-to-checkout",
+      "from": "view_plans",
+      "to": "stripe_checkout",
+      "label": "Select Basic",
+      "variant": "emphasis"
+    },
+    {
+      "id": "checkout-to-active",
+      "from": "stripe_checkout",
+      "to": "basic_active",
+      "label": "Payment Confirmed",
+      "variant": "emphasis",
+      "role": "return"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Visitor Acquisition",
+      "items": [
+        "Public landing page and content catalog drive organic discovery",
+        "Direct conversion paths through 'Unirme' and 'Crear Cuenta' call-to-actions"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Identity & Onboarding",
+      "items": [
+        "Cognito User Pool federated auth with Google OAuth or email/password",
+        "Required interest selection and profile setup before opening platform access"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Monetization Lifecycle",
+      "items": [
+        "Free members access community feed, directory, and direct messaging",
+        "In-app Stripe checkout upgrades users to Basic Tier ($5/mo) with full specialist access"
+      ]
+    }
+  ]
+}

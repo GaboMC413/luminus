@@ -6,3 +6,4 @@ export * from "./passwordReset";
 export * from "./emailChange";
 export * from "./belenEducacionSexualNewsletter";
 export * from "./octoberEventsNewsletter";
+export * from "./novemberNewsletter";
