@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { AdminUser, AdminSpecialist, AdminTab } from "../../types";
 import { InputField } from "@/components/ui/InputField";
 import { SelectInput } from "@/components/ui/SelectInput";
@@ -19,6 +19,10 @@ interface UsersTabProps {
   setActiveTab: (tab: AdminTab) => void;
   setSelectedSpecialistUserId: (id: string | null) => void;
   setSpecialistSubTab: (tab: "lista" | "postulaciones") => void;
+  selectedId?: string;
+  setSelectedId?: (id: string) => void;
+  userSubTab?: "activos" | "mecenas" | "cerradas" | "deshabilitados";
+  setUserSubTab?: (tab: "activos" | "mecenas" | "cerradas" | "deshabilitados") => void;
 }
 
 export function UsersTab({
@@ -28,11 +32,21 @@ export function UsersTab({
   setActiveTab,
   setSelectedSpecialistUserId,
   setSpecialistSubTab,
+  selectedId: propSelectedId,
+  setSelectedId: propSetSelectedId,
+  userSubTab: propUserSubTab,
+  setUserSubTab: propSetUserSubTab,
 }: UsersTabProps) {
-  const [userSubTab, setUserSubTab] = useState<"activos" | "mecenas" | "cerradas" | "deshabilitados">("activos");
+  const [internalUserSubTab, setInternalUserSubTab] = useState<"activos" | "mecenas" | "cerradas" | "deshabilitados">("activos");
+  const userSubTab = propUserSubTab ?? internalUserSubTab;
+  const setUserSubTab = propSetUserSubTab ?? setInternalUserSubTab;
+
   const [search, setSearch] = useState("");
 
-  const [selectedId, setSelectedId] = useState<string>(users[0]?.id ?? "");
+  const [internalSelectedId, setInternalSelectedId] = useState<string>(users[0]?.id ?? "");
+  const selectedId = propSelectedId ?? internalSelectedId;
+  const setSelectedId = propSetSelectedId ?? setInternalSelectedId;
+
   const [selectedRole, setSelectedRole] = useState<string>(users[0]?.role ?? "USER");
   const [selectedStatus, setSelectedStatus] = useState<string>(users[0]?.status ?? "active");
   const [selectedPlan, setSelectedPlan] = useState<string>(users[0]?.profile?.selectedPlan || "Trial");
@@ -84,7 +98,22 @@ export function UsersTab({
     });
   }, [baseUsersList, search]);
 
-  const selectedUser = users.find((user) => user.id === selectedId) ?? filteredUsers[0] ?? null;
+  const selectedUser = filteredUsers.find((user) => user.id === selectedId) ?? filteredUsers[0] ?? null;
+
+  // Keep selection and form states synchronized with the currently active user
+  useEffect(() => {
+    if (selectedUser) {
+      if (selectedId !== selectedUser.id) {
+        setSelectedId(selectedUser.id);
+      }
+      setSelectedRole(selectedUser.role);
+      setSelectedStatus(selectedUser.status);
+      setSelectedPlan(selectedUser.profile?.selectedPlan || "Trial");
+      setSelectedIsGhost(selectedUser.isGhost ?? false);
+    } else if (selectedId) {
+      setSelectedId("");
+    }
+  }, [selectedUser?.id]);
 
   // Available membership plan options for edit dropdown
   const membershipOptions = useMemo(() => {
@@ -197,6 +226,24 @@ export function UsersTab({
         return;
       }
 
+      // Check if user status changes such that it leaves the current subtab
+      const willLeaveSubTab =
+        (userSubTab === "activos" && status !== "active") ||
+        (userSubTab === "cerradas" && status !== "deleted") ||
+        (userSubTab === "deshabilitados" && status !== "disabled");
+
+      if (willLeaveSubTab) {
+        const remaining = filteredUsers.filter((u) => u.id !== selectedUser.id);
+        const nextUser = remaining[0] ?? null;
+        setSelectedId(nextUser ? nextUser.id : "");
+        if (nextUser) {
+          setSelectedRole(nextUser.role);
+          setSelectedStatus(nextUser.status);
+          setSelectedPlan(nextUser.profile?.selectedPlan || "Trial");
+          setSelectedIsGhost(nextUser.isGhost ?? false);
+        }
+      }
+
       setUsers((prev) =>
         prev.map((item) =>
           item.id === selectedUser.id
@@ -275,7 +322,11 @@ export function UsersTab({
                     { label: `Cuentas cerradas · ${closedUsers.length}`, value: "cerradas" },
                     { label: `Deshabilitados · ${disabledUsers.length}`, value: "deshabilitados" },
                   ]}
-                  onSelect={(val) => setUserSubTab(val as "activos" | "mecenas" | "cerradas" | "deshabilitados")}
+                  onSelect={(val) => {
+                    setUserSubTab(val as "activos" | "mecenas" | "cerradas" | "deshabilitados");
+                    setIsEditingUser(false);
+                    setMessage("");
+                  }}
                   className="!h-10 text-xs font-bold"
                 />
               </div>
@@ -1020,12 +1071,32 @@ export function UsersTab({
                       return;
                     }
 
+                    const deletedId = selectedUser.id;
+                    const deletedName = fieldValue(
+                      selectedUser.profile.fullName ||
+                      `${selectedUser.profile.firstName} ${selectedUser.profile.lastName}`
+                    );
+
+                    // Compute next user from current filteredUsers
+                    const remainingInView = filteredUsers.filter((u) => u.id !== deletedId);
+                    const nextUser = remainingInView[0] ?? null;
+
                     // Remove them from state
                     setUsers((prevUsers) =>
-                      prevUsers.filter((u) => u.id !== selectedUser.id)
+                      prevUsers.filter((u) => u.id !== deletedId)
                     );
+
+                    // Explicitly advance selection and reset edit mode
+                    setSelectedId(nextUser ? nextUser.id : "");
+                    if (nextUser) {
+                      setSelectedRole(nextUser.role);
+                      setSelectedStatus(nextUser.status);
+                      setSelectedPlan(nextUser.profile?.selectedPlan || "Trial");
+                      setSelectedIsGhost(nextUser.isGhost ?? false);
+                    }
+                    setIsEditingUser(false);
                     setShowDeleteConfirm(false);
-                    setMessage(`Usuario ${fieldValue(selectedUser.profile.fullName || `${selectedUser.profile.firstName} ${selectedUser.profile.lastName}`)} eliminado permanentemente.`);
+                    setMessage(`Usuario ${deletedName} eliminado permanentemente.`);
                     
                     // Clear success message after 3 seconds
                     setTimeout(() => {

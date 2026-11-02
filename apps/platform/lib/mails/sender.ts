@@ -1032,6 +1032,7 @@ export async function sendBatchEventLiveNotifications(
             speakerName: event.speakerName,
             youtubeUrl: finalYoutubeUrl,
             eventSlug: event.slug,
+            location: event.location || "Estreno en YouTube",
           });
 
           await prisma.eventInscription.update({

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PageLoader } from "@/components/ui/PageLoader";
+import { DirectorySkeleton } from "@/components/ui/Skeleton";
 
 type Specialist = {
   id: string;
@@ -106,7 +106,7 @@ export default function EspecialistasPage() {
   const hasFilters = Boolean(country || specialty);
   const isPending = application?.status === "pending_review";
 
-  if (loading) return <PageLoader className="min-h-[70vh]" />;
+  if (loading) return <DirectorySkeleton />;
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-3 pb-8 pt-4 font-sans sm:px-6 md:gap-6 md:py-6">

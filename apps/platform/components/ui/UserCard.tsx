@@ -1,6 +1,7 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { formatLocationDisplay } from '@/utils/locationUtils';
+import { User } from 'lucide-react';
 
 interface UserCardProps {
   user: {
@@ -55,9 +56,7 @@ export function UserCard({ user, actionMenu }: UserCardProps) {
           />
         ) : (
           <div className="w-full h-full bg-slate-50 flex items-center justify-center">
-            <span className="material-symbols-outlined text-zinc-300 select-none !text-[44px] sm:!text-[56px] md:!text-[72px]">
-              person
-            </span>
+            <User className="w-8 h-8 sm:w-10 sm:h-10 text-slate-300" strokeWidth={1.5} />
           </div>
         )}
       </div>

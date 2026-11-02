@@ -4,7 +4,7 @@ import React, { Suspense, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { formatRelativeTime } from "@/components/ui/PlatformNavbar";
 import { OnboardingProgressCard } from "@/components/ui/NotificationPopup";
-import { PageLoader } from "@/components/ui/PageLoader";
+import { NotificationsSkeleton, Skeleton } from "@/components/ui/Skeleton";
 import { DotSpinner } from "@/components/ui/DotSpinner";
 import { formatMessageBody } from "@/utils/messages";
 
@@ -374,7 +374,18 @@ function NotificationsContent() {
               {/* Scrollable Notifications List */}
               <div className="flex-1 overflow-y-auto thin-scrollbar bg-white divide-y divide-slate-100">
                 {isLoading ? (
-                  <div className="p-8 flex justify-center items-center"><DotSpinner size={32} color="black" /></div>
+                  <div className="divide-y divide-slate-100">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="p-4 sm:p-5 flex items-start gap-4">
+                        <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-3/4 rounded-md" />
+                          <Skeleton className="h-3 w-1/3 rounded-md" />
+                        </div>
+                        <Skeleton className="h-3 w-12 rounded-md shrink-0" />
+                      </div>
+                    ))}
+                  </div>
                 ) : filteredNotifications.length === 0 ? (
                   <div className="p-12 text-center text-slate-400 text-sm flex flex-col items-center gap-4">
                     <span className="material-symbols-rounded text-slate-300 text-[48px]">notifications_off</span>
@@ -522,7 +533,7 @@ function NotificationsContent() {
 
 export default function NotificationsPage() {
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={<NotificationsSkeleton />}>
       <NotificationsContent />
     </Suspense>
   );

@@ -3,6 +3,8 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { UserCard } from "@/components/ui/UserCard";
+import { ArrowRight } from "lucide-react";
+import { CarouselNavControls } from "./molecules/CarouselNavControls";
 
 interface MobileMembersCarouselProps {
   members: any[];
@@ -73,42 +75,22 @@ export function MobileMembersCarousel({ members, loading }: MobileMembersCarouse
     <section className="w-full flex flex-col gap-3 py-1 relative">
       {/* Header: Clean title with Right-Aligned Navigation Controls */}
       <div className="flex items-center justify-between px-0.5">
-        <h3 className="text-base font-bold text-slate-900 font-jakarta tracking-tight">
+        <h3 className="text-sm font-semibold text-slate-900 font-jakarta">
           Nuevos miembros
         </h3>
 
-        {/* Header Navigation Arrows */}
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => scroll("left")}
-            disabled={!canScrollLeft}
-            aria-label="Desplazar a la izquierda"
-            className="w-8 h-8 rounded-full border border-slate-200 bg-white text-slate-700 flex items-center justify-center transition-all hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 active:scale-95 cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed disabled:pointer-events-none disabled:border-slate-100 disabled:bg-slate-50 disabled:text-slate-300 shadow-none"
-          >
-            <span className="material-symbols-outlined text-[20px] select-none leading-none">
-              chevron_left
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => scroll("right")}
-            disabled={!canScrollRight}
-            aria-label="Desplazar a la derecha"
-            className="w-8 h-8 rounded-full border border-slate-200 bg-white text-slate-700 flex items-center justify-center transition-all hover:bg-slate-50 hover:text-slate-900 hover:border-slate-300 active:scale-95 cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed disabled:pointer-events-none disabled:border-slate-100 disabled:bg-slate-50 disabled:text-slate-300 shadow-none"
-          >
-            <span className="material-symbols-outlined text-[20px] select-none leading-none">
-              chevron_right
-            </span>
-          </button>
-        </div>
+        {/* Molecule: Header Navigation Arrows */}
+        <CarouselNavControls
+          onPrev={() => scroll("left")}
+          onNext={() => scroll("right")}
+          canPrev={canScrollLeft}
+          canNext={canScrollRight}
+        />
       </div>
 
       {/* Carousel Wrapper */}
       <div className="relative w-full group/carousel">
-
-        {/* Horizontal Carousel (Mobile: edge bleed; Desktop: strictly contained within post margins) */}
+        {/* Horizontal Carousel */}
         <div
           ref={carouselRef}
           className="flex items-stretch gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory custom-scrollbar -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 scroll-px-4 sm:scroll-px-6 md:scroll-px-0 py-1"
@@ -136,15 +118,13 @@ export function MobileMembersCarousel({ members, loading }: MobileMembersCarouse
                 </div>
               ))}
 
-              {/* End Card: Giant grey button with border, arrow directly inside without white container box */}
+              {/* End Card: Ver todos los miembros */}
               <button
                 type="button"
                 onClick={() => router.push("/inicio/miembros")}
                 className="w-[145px] sm:w-[155px] shrink-0 snap-start bg-slate-50 hover:bg-slate-100/90 border border-slate-200 rounded-2xl p-4 flex flex-col items-center justify-center gap-3 text-center cursor-pointer transition-all outline-none group select-none"
               >
-                <span className="material-symbols-outlined text-[32px] text-slate-700 group-hover:text-slate-900 group-hover:translate-x-1 transition-all select-none">
-                  arrow_forward
-                </span>
+                <ArrowRight className="w-7 h-7 text-slate-700 group-hover:text-slate-900 group-hover:translate-x-1 transition-transform" />
                 <span className="text-xs font-bold text-slate-800 font-jakarta leading-snug px-1">
                   Ver todos los miembros
                 </span>

@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { checkIsUpcoming } from "@/lib/events";
+import { formatEventDateTime } from "@/lib/eventDateUtils";
 
 export interface EventItem {
   id?: string;
@@ -123,11 +125,19 @@ function isSpeakerNameValid(speakerName?: string, title?: string) {
 }
 
 export function EventCard({ item }: EventCardProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const ytId = item.youtube_id || getYoutubeId(item.link) || "";
   const thumbUrl = item.coverUrl || item.cover_url || "/placeholder-video.jpg";
   const isUpcoming = checkIsUpcoming(item);
-  const upcomingHeader = isUpcoming ? formatUpcomingDateHeader(item.date, item.time_text) : { tag: "", dateText: "" };
-  const displayDate = isUpcoming ? upcomingHeader.dateText : (item.date ? formatDate(item.date) : item.publishTimeText || "");
+  const formattedUpcoming = mounted && isUpcoming ? formatEventDateTime(item.date, item.time_text || item.timeText) : null;
+  const displayTag = item.location || "Estreno en YouTube";
+  const displayDate = isUpcoming
+    ? (formattedUpcoming?.dateText || (item.date ? formatUpcomingDateHeader(item.date, item.time_text || item.timeText).dateText : ""))
+    : (item.date ? formatDate(item.date) : item.publishTimeText || "");
   const videoLink = item.link || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : undefined);
   const hasVideo = Boolean(ytId || videoLink);
 
@@ -170,11 +180,11 @@ export function EventCard({ item }: EventCardProps) {
           {/* 1. Date / PROXIMAMENTE at the top */}
           {isUpcoming ? (
             <div className="w-full flex justify-start items-center gap-1.5 text-xs font-medium truncate h-4">
-              <span className="font-medium text-slate-900 tracking-tight shrink-0">
-                {upcomingHeader.tag}
+              <span className="font-semibold text-slate-900 tracking-tight shrink-0">
+                {displayTag}
               </span>
               <span className="text-slate-500 truncate">
-                {upcomingHeader.dateText}
+                {displayDate}
               </span>
             </div>
           ) : displayDate ? (

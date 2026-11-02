@@ -17,6 +17,8 @@ export interface EventRegistrationEmailPayload {
   speakerName?: string | null;
   youtubeUrl?: string | null;
   eventSlug?: string | null;
+  location?: string | null;
+  userTimezone?: string | null;
 }
 
 export async function sendEventRegistrationEmail(data: EventRegistrationEmailPayload) {
@@ -29,6 +31,8 @@ export async function sendEventRegistrationEmail(data: EventRegistrationEmailPay
     speakerName: data.speakerName,
     youtubeUrl: data.youtubeUrl,
     eventSlug: data.eventSlug,
+    location: data.location,
+    userTimezone: data.userTimezone,
   });
 }
 

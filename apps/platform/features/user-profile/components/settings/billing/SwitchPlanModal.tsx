@@ -104,11 +104,11 @@ export function SwitchPlanModal({
 
         {/* Clean summary card without divider lines */}
         <div className="p-4 bg-slate-50 border border-slate-200/80 rounded-2xl flex flex-col gap-2">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-sm font-bold text-slate-900 font-jakarta">
               {isSwitchingToAnnual ? "Mecenas Anual" : "Mecenas Mensual"}
             </span>
-            <div className="flex items-baseline gap-1">
+            <div className="flex items-baseline gap-1.5">
               <span className="text-base font-extrabold text-slate-900 font-jakarta">
                 {isSwitchingToAnnual ? "USD 45" : "USD 5"}
               </span>

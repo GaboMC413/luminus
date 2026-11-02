@@ -29,8 +29,8 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({
 
   const defaultStyles = variant === 'bordered'
     ? `w-full h-11 px-3.5 bg-white border ${
-        error ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500' : 'border-slate-200 focus:border-slate-900 focus:ring-slate-900'
-      } rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition-colors font-sans text-xs sm:text-sm disabled:bg-slate-50 disabled:border-slate-200/90 disabled:text-slate-600 disabled:cursor-default`
+        error ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500' : 'border-slate-200 focus:border-slate-400 focus:ring-1 focus:ring-slate-400/20'
+      } rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none transition-colors font-sans text-xs sm:text-sm disabled:bg-slate-50 disabled:border-slate-200/90 disabled:text-slate-600 disabled:cursor-default`
     : 'w-full h-11 border-b border-input-border text-base text-primary placeholder:text-placeholder focus:outline-none focus:border-primary transition-colors bg-transparent';
 
   const alignmentClasses = {
@@ -56,11 +56,11 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({
           type={isPassword && showPassword ? 'text' : type}
           {...props}
           className={`${defaultStyles} ${alignmentClasses[textAlign]} ${className} ${
-            isPassword && onTogglePassword ? 'pr-11' : rightIcon ? 'pr-11' : ''
+            isPassword && onTogglePassword ? 'pr-9.5' : rightIcon ? 'pr-9.5' : ''
           }`}
         />
         {rightIcon && !isPassword && (
-          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none text-slate-400">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none text-slate-400">
             {rightIcon}
           </div>
         )}
@@ -68,7 +68,7 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({
           <button 
             type="button"
             onClick={onTogglePassword}
-            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors p-1 bg-transparent border-none cursor-pointer flex items-center justify-center"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 transition-colors p-1.5 rounded-lg hover:bg-slate-50 bg-transparent border-none cursor-pointer flex items-center justify-center"
             tabIndex={-1}
             aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
             title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
