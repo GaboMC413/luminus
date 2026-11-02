@@ -8,6 +8,7 @@ import { LocationInput } from "@/components/ui/LocationInput";
 import { Button } from "@/components/ui/Button";
 import { trackEventInscription } from "@/lib/meta-pixel";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
+import { formatEventDateTime } from "@/lib/eventDateUtils";
 
 interface EventItem {
   id?: string;
@@ -226,6 +227,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           eventSlug: event.slug,
           isResend: true,
           turnstileToken,
+          userTimezone: typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "America/Argentina/Buenos_Aires",
         }),
       });
       const data = await res.json();
@@ -267,6 +269,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
           youtubeUrl: event.youtube_id ? `https://www.youtube.com/watch?v=${event.youtube_id}` : null,
           eventSlug: event.slug,
           turnstileToken,
+          userTimezone: typeof Intl !== "undefined" ? Intl.DateTimeFormat().resolvedOptions().timeZone : "America/Argentina/Buenos_Aires",
         }),
       });
       const data = await res.json();
@@ -289,7 +292,7 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
 
   // Defer locale-dependent date formatting to client to avoid SSR/client hydration mismatch (#418/#423)
   const formattedDateTime = mounted
-    ? formatDateTimeFull(event.date, event.time_text)
+    ? formatEventDateTime(event.date, event.time_text).dateText
     : "Cargando fecha...";
 
   return (
@@ -341,15 +344,13 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
               </div>
               <span className="text-base font-semibold text-slate-900">{formattedDateTime}</span>
             </div>
-            {event.location && <div className="w-full border-t border-slate-100" />}
-            {event.location && (
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
-                  <span className="material-symbols-outlined text-[20px] text-slate-800 select-none">videocam</span>
-                </div>
-                <span className="text-base font-semibold text-slate-900">{event.location}</span>
+            <div className="w-full border-t border-slate-100" />
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
+                <span className="material-symbols-outlined text-[20px] text-slate-800 select-none">videocam</span>
               </div>
-            )}
+              <span className="text-base font-semibold text-slate-900">{event.location || "Estreno en YouTube"}</span>
+            </div>
           </div>
 
           {/* 5. Botón de inscripción (1st CTA) */}
@@ -513,15 +514,13 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
                 </div>
                 <span className="text-base font-semibold text-slate-900">{formattedDateTime}</span>
               </div>
-              {event.location && <div className="w-full border-t border-slate-100" />}
-              {event.location && (
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
-                    <span className="material-symbols-outlined text-[20px] text-slate-800 select-none">videocam</span>
-                  </div>
-                  <span className="text-base font-semibold text-slate-900">{event.location}</span>
+              <div className="w-full border-t border-slate-100" />
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-800 shrink-0">
+                  <span className="material-symbols-outlined text-[20px] text-slate-800 select-none">videocam</span>
                 </div>
-              )}
+                <span className="text-base font-semibold text-slate-900">{event.location || "Estreno en YouTube"}</span>
+              </div>
             </div>
           </div>
         </div>

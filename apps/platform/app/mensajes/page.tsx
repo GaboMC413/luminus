@@ -8,7 +8,7 @@ import Modal from "@/components/ui/Modal";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { formatRelativeTime } from "@/components/ui/PlatformNavbar";
 import { isUuid } from "@/utils/validation";
-import { PageLoader } from "@/components/ui/PageLoader";
+import { MessagesSkeleton, Skeleton } from "@/components/ui/Skeleton";
 import { DotSpinner } from "@/components/ui/DotSpinner";
 import { formatMessageBody, formatShortTime, formatChatDateDivider } from "@/utils/messages";
 
@@ -714,7 +714,20 @@ function MessagesContent() {
 
               <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar p-2 flex flex-col gap-2">
                 {isLoading && (
-                  <div className="p-8 flex justify-center items-center"><DotSpinner size={24} color="black" /></div>
+                  <div className="flex flex-col gap-2 p-1">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 p-2">
+                        <Skeleton className="w-12 h-12 rounded-xl shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="flex justify-between">
+                            <Skeleton className="h-3.5 w-24 rounded-md" />
+                            <Skeleton className="h-2.5 w-10 rounded-md" />
+                          </div>
+                          <Skeleton className="h-3 w-36 rounded-md" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
 
                 {!isLoading && filteredConversations.length === 0 && (
@@ -1213,7 +1226,7 @@ function MessagesContent() {
 
 export default function MessagesPage() {
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={<MessagesSkeleton />}>
       <MessagesContent />
     </Suspense>
   );

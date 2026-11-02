@@ -18,7 +18,7 @@ import { CoverSelectorModal } from "../modals/CoverSelectorModal";
 import { ProfileHeaderCover } from "./ProfileHeaderCover";
 import { ProfileSidebar } from "./ProfileSidebar";
 import { ProfileAboutSection } from "./ProfileAboutSection";
-import { PageLoader } from "@/components/ui/PageLoader";
+import { ProfileSkeleton } from "@/components/ui/Skeleton";
 import { ProfileInterestsSection } from "./ProfileInterestsSection";
 import { ProfileMembershipCard } from "./ProfileMembershipCard";
 import { ProfileCompletionCard } from "./ProfileCompletionCard";
@@ -257,7 +257,7 @@ export function ProfileContent() {
   };
 
   if (loading) {
-    return <PageLoader />;
+    return <ProfileSkeleton />;
   }
 
   if (!profile) return null;

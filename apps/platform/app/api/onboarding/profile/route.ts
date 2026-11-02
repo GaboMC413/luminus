@@ -172,8 +172,27 @@ export async function POST(request: Request) {
       try {
         const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
         await sendWelcomeMessage(prisma, session.userId);
-        const { sendWelcomeEmail } = await import("@/lib/mails/sender");
-        await sendWelcomeEmail(session.email, firstName || profile?.firstName || undefined);
+
+        const fullUser = await prisma.user.findUnique({
+          where: { id: session.userId },
+          select: { tier: true, stripeSubscriptionId: true, profile: { select: { selectedPlan: true } } },
+        });
+
+        const isUserMecenas = fullUser?.tier === "MECENAS" || Boolean(fullUser?.stripeSubscriptionId);
+        const userName = firstName || profile?.firstName || undefined;
+
+        if (isUserMecenas) {
+          const { sendMecenasWelcomeEmail } = await import("@/lib/mails/sender");
+          const plan = fullUser?.profile?.selectedPlan?.toLowerCase() || "";
+          const isAnnual = plan.includes("annual") || plan.includes("year") || plan.includes("anual");
+          await sendMecenasWelcomeEmail(session.email, {
+            name: userName,
+            interval: isAnnual ? "year" : "month",
+          });
+        } else {
+          const { sendWelcomeEmail } = await import("@/lib/mails/sender");
+          await sendWelcomeEmail(session.email, userName);
+        }
       } catch (welcomeError) {
         console.error("Welcome message/email trigger during onboarding completion failed:", welcomeError);
       }

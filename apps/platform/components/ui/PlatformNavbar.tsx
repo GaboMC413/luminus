@@ -6,9 +6,9 @@ import Link from "next/link";
 import {
   Home,
   HeartHandshake,
-  Globe,
-  Layers,
-  Sun,
+  CalendarHeart,
+  TvMinimalPlay,
+  HouseHeart,
   MessageSquare,
   Bell,
   User,
@@ -56,9 +56,9 @@ export function formatRelativeTime(timestamp: any): string {
 const NAV_ITEMS = [
   { id: "inicio", label: "Inicio", path: "/inicio", icon: Home },
   { id: "especialistas", label: "Especialistas", path: "/especialistas", icon: HeartHandshake },
-  { id: "espacios", label: "Espacios", path: "/espacios", icon: Globe },
-  { id: "grupos", label: "Grupos", path: "/grupos", icon: Layers },
-  { id: "faro", label: "Faro", path: "/faro", icon: Sun },
+  { id: "actividades", label: "Actividades", path: "/actividades", icon: CalendarHeart },
+  { id: "grabaciones", label: "Grabaciones", path: "/grabaciones", icon: TvMinimalPlay },
+  { id: "espacios", label: "Espacios", path: "/espacios", icon: HouseHeart },
 ];
 
 const INITIAL_NOTIFICATIONS: any[] = [];
@@ -397,6 +397,8 @@ export function PlatformNavbar() {
     }
     if (pathname === "/" || pathname.startsWith("/inicio") || pathname.startsWith("/comunidad")) return "inicio";
     if (pathname.includes("/especialistas")) return "especialistas";
+    if (pathname.includes("/actividades")) return "actividades";
+    if (pathname.includes("/grabaciones")) return "grabaciones";
     if (pathname.includes("/espacios")) return "espacios";
     if (pathname.includes("/grupos")) return "grupos";
     if (pathname.includes("/mapa")) return "espacios";
@@ -653,8 +655,11 @@ export function PlatformNavbar() {
           {/* User Profile Button & Dropdown */}
           <div className="relative flex items-center h-full" ref={dropdownRef}>
             <button
+              type="button"
               onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-              className={`group flex items-center gap-2 p-1.5 pr-2.5 rounded-xl transition-colors duration-150 cursor-pointer ${
+              aria-label="Menú de perfil"
+              aria-expanded={isProfileDropdownOpen}
+              className={`group flex items-center gap-1.5 lg:gap-2 p-1.5 pr-2 lg:pr-2.5 rounded-xl transition-colors duration-150 cursor-pointer ${
                 isProfileDropdownOpen ? "bg-slate-100 text-slate-900" : "hover:bg-slate-50 text-slate-700"
               }`}
             >
@@ -663,7 +668,7 @@ export function PlatformNavbar() {
                 {profileName}
               </span>
               <ChevronDown
-                className={`w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 transition-transform duration-150 hidden lg:block ${
+                className={`w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 transition-transform duration-150 shrink-0 ${
                   isProfileDropdownOpen ? "rotate-180" : ""
                 }`}
               />

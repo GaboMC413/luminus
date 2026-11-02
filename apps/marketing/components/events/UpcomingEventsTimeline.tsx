@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { checkIsUpcoming } from "@/lib/events";
+import { formatEventDateTime } from "@/lib/eventDateUtils";
 
 interface EventItem {
   id?: string;
@@ -15,6 +16,7 @@ interface EventItem {
   category?: string;
   date?: string;
   time_text?: string;
+  timeText?: string;
   location?: string;
   coverUrl?: string | null;
   cover_url?: string | null;
@@ -153,11 +155,12 @@ export function UpcomingEventsTimeline({ events }: UpcomingEventsTimelineProps) 
             {upcomingList.map((item, index) => {
               const isLast = index === upcomingList.length - 1;
               const eventSlug = item.slug || item.id || `evento-${index}`;
-              const { dayMonth, weekday } = getLumaDateHeader(item.date);
+              const fallbackHeader = getLumaDateHeader(item.date);
+              const formattedDate = mounted ? formatEventDateTime(item.date, item.time_text || item.timeText) : null;
 
-              const localTimeText = mounted
-                ? getLocalTimeString(item.date, item.time_text)
-                : cleanTimeString(item.time_text);
+              const localTimeText = formattedDate?.timeString || (item.time_text || item.timeText || "18:00 hs (GMT-3)");
+              const dayMonth = formattedDate?.dayMonth || fallbackHeader.dayMonth;
+              const weekday = formattedDate?.weekday || fallbackHeader.weekday;
 
               const coverUrl = item.coverUrl || item.cover_url || "/placeholder-video.jpg";
 
@@ -189,11 +192,9 @@ export function UpcomingEventsTimeline({ events }: UpcomingEventsTimelineProps) 
                           <span className="text-lg sm:text-xl font-semibold text-slate-900 tracking-tight leading-none">
                             {localTimeText}
                           </span>
-                          {item.location && (
-                            <span className="inline-flex items-center justify-center px-3.5 py-1.5 bg-white text-slate-700 rounded-full text-xs font-medium border border-slate-200">
-                              {item.location}
-                            </span>
-                          )}
+                          <span className="inline-flex items-center justify-center px-3.5 py-1.5 bg-white text-slate-700 rounded-full text-xs font-medium border border-slate-200">
+                            {item.location || "Estreno en YouTube"}
+                          </span>
                         </div>
 
                         <div className="flex flex-col gap-2.5 my-auto py-2">

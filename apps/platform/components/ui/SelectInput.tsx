@@ -209,7 +209,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
     const variantClass =
       variant === "clean"
         ? "reg-input-clean"
-        : "w-full h-11 px-3.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-colors text-slate-900 font-sans";
+        : "w-full h-11 px-3.5 text-xs sm:text-sm bg-white border border-slate-200 rounded-xl focus:border-slate-400 focus:ring-1 focus:ring-slate-400/20 transition-colors text-slate-900 font-sans";
 
     const handleSelectOption = (optValue: string) => {
       onSelect(optValue);

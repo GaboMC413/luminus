@@ -4,7 +4,7 @@ import React, { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { PageLoader } from "@/components/ui/PageLoader";
+import { NetworkSkeleton, UserCardSkeleton } from "@/components/ui/Skeleton";
 import { UserCard } from "@/components/ui/UserCard";
 import { Sparkles, Check } from "lucide-react";
 
@@ -334,10 +334,7 @@ function NetworkContent() {
           {isLoading && connections.length === 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 w-full">
               {[...Array(8)].map((_, idx) => (
-                <div
-                  key={idx}
-                  className="h-[240px] bg-white rounded-2xl border border-slate-200 p-5 animate-pulse shadow-none"
-                />
+                <UserCardSkeleton key={idx} />
               ))}
             </div>
           ) : filteredList.length === 0 ? (
@@ -490,7 +487,7 @@ function NetworkContent() {
 
 export default function NetworkPage() {
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={<NetworkSkeleton />}>
       <NetworkContent />
     </Suspense>
   );

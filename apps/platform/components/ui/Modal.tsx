@@ -34,7 +34,7 @@ export function Modal({
   headerClassName,
   contentClassName,
   footerClassName,
-  hideDividers = true,
+  hideDividers = false,
   disableInnerScroll = false,
 }: ModalProps) {
   const [mounted, setMounted] = useState(false);
@@ -66,16 +66,26 @@ export function Modal({
   if (!mounted || typeof document === 'undefined') return null;
 
   return createPortal(
-    <div className={`fixed inset-0 ${backdropClassName || "bg-black/60 backdrop-blur-sm"} z-[9999] overflow-y-auto overscroll-contain custom-scrollbar animate-in fade-in duration-200`}>
-      <div className="min-h-full flex items-center justify-center p-4">
+    <div
+      className={`fixed inset-0 ${
+        backdropClassName || "bg-black/40 backdrop-blur-sm"
+      } z-[9999] overflow-y-auto overscroll-contain custom-scrollbar animate-in fade-in duration-200`}
+    >
+      <div className="min-h-full flex items-center justify-center p-3 sm:p-4">
         <div
-          className={`w-full bg-white rounded-[16px] overflow-hidden flex flex-col ${containerClassName || "shadow-none"} animate-in zoom-in-95 duration-200`}
+          className={`w-full bg-white rounded-2xl border border-slate-200/90 shadow-2xl overflow-hidden flex flex-col ${
+            containerClassName || ""
+          } animate-in zoom-in-95 duration-200`}
           style={{ maxWidth }}
         >
           {/* Header */}
-          <div className={`flex justify-between items-start shrink-0 ${hideDividers ? "" : "border-b border-slate-100/70"} ${headerClassName || "px-6 pt-6 pb-4 sm:px-7 sm:pt-7 sm:pb-4"}`}>
-            <div className="flex flex-col gap-1 pr-4">
-              <h3 className="font-sans font-bold text-black text-[15px] md:text-base leading-snug">
+          <div
+            className={`flex justify-between items-start shrink-0 ${
+              hideDividers ? "" : "border-b border-slate-100"
+            } ${headerClassName || "px-5 sm:px-6 py-4 sm:py-4.5"}`}
+          >
+            <div className="flex flex-col gap-0.5 pr-3">
+              <h3 className="font-jakarta font-bold text-slate-900 text-base sm:text-lg leading-snug">
                 {title}
               </h3>
               {subtitle && (
@@ -88,20 +98,30 @@ export function Modal({
               onClick={onClose}
               aria-label="Cerrar modal"
               title="Cerrar modal"
-              className="p-1 hover:bg-slate-50 rounded-full transition-colors text-slate-400 hover:text-slate-600 cursor-pointer bg-transparent border-none outline-none shrink-0"
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-100 transition-colors cursor-pointer border-none bg-transparent shrink-0"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
 
           {/* Content */}
-          <div className={`${disableInnerScroll ? "" : "overflow-y-auto max-h-[75vh] custom-scrollbar"} ${contentClassName || (footer ? "px-6 py-0 sm:px-7" : "px-6 pb-6 pt-1 sm:px-7 sm:pb-7 sm:pt-1")}`}>
+          <div
+            className={`${
+              disableInnerScroll ? "" : "overflow-y-auto max-h-[75vh] custom-scrollbar"
+            } ${contentClassName || (footer ? "px-5 sm:px-6 py-4" : "px-5 sm:px-6 pb-6 pt-2")}`}
+          >
             {children}
           </div>
 
           {/* Footer */}
           {footer && (
-            <div className={`mt-auto shrink-0 ${hideDividers ? "" : "border-t border-slate-50"} relative z-10 bg-white ${footerClassName || "flex flex-col-reverse md:flex-row md:justify-end gap-3 px-6 pb-6 pt-4 sm:px-7 sm:pb-7 sm:pt-4"}`}>
+            <div
+              className={`mt-auto shrink-0 ${
+                hideDividers ? "" : "border-t border-slate-100"
+              } relative z-10 bg-white ${
+                footerClassName || "flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 sm:gap-3 px-5 sm:px-6 py-3.5 sm:py-4"
+              }`}
+            >
               {footer}
             </div>
           )}

@@ -173,6 +173,21 @@ export async function POST(request: Request) {
       console.error("Failed to log membership activation:", logErr);
     }
 
+    // Trigger upgrade email only if this is an existing user who already completed onboarding
+    const isAlreadyOnboarded = Boolean(updatedUser.profile?.isOnboarded);
+    if (isAlreadyOnboarded) {
+      try {
+        const { sendMecenasUpgradeEmail } = await import("@/lib/mails/sender");
+        const upgradeName = updatedUser.profile?.firstName || updatedUser.profile?.fullName || undefined;
+        await sendMecenasUpgradeEmail(resolvedEmail, {
+          name: upgradeName,
+          interval: billingInterval === "annual" ? "year" : "month",
+        });
+      } catch (emailErr) {
+        console.error("Failed to send mecenas upgrade email:", emailErr);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       tier: updatedUser.tier,

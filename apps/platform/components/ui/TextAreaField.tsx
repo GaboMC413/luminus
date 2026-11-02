@@ -25,8 +25,8 @@ export const TextAreaField = React.forwardRef<HTMLTextAreaElement, TextAreaField
   const defaultStyles = `w-full p-3.5 bg-white border ${
     error
       ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500'
-      : 'border-slate-200 focus:border-slate-900 focus:ring-slate-900'
-  } rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-1 transition-colors font-sans text-xs sm:text-sm disabled:bg-slate-50 disabled:border-slate-200/90 disabled:text-slate-600 disabled:cursor-default resize-none`;
+      : 'border-slate-200 focus:border-slate-400 focus:ring-1 focus:ring-slate-400/20'
+  } rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none transition-colors font-sans text-xs sm:text-sm disabled:bg-slate-50 disabled:border-slate-200/90 disabled:text-slate-600 disabled:cursor-default resize-none`;
 
   return (
     <div className="w-full flex flex-col gap-1.5">

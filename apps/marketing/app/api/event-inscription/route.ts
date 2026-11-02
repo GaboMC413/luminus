@@ -21,6 +21,7 @@ export async function POST(req: Request) {
       eventSlug,
       isResend,
       turnstileToken,
+      userTimezone,
     } = body || {};
 
     const turnstileResult = await verifyTurnstileToken(turnstileToken);
@@ -176,6 +177,8 @@ export async function POST(req: Request) {
         speakerName: speakerName || dbEvent?.speakerName || null,
         youtubeUrl: finalYoutubeUrl,
         eventSlug: eventSlug || dbEvent?.slug || null,
+        location: dbEvent?.location || "Estreno en YouTube",
+        userTimezone: userTimezone || null,
       });
       console.log(`[Event Registration Email Sent]: ${cleanEmail} (resend=${!!isResend}) MessageId:`, (emailRes as any)?.messageId || "local-preview");
     } catch (emailErr: any) {

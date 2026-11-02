@@ -135,8 +135,8 @@ All data entry fields across **Sign-in**, **Sign-up**, **Specialist Onboarding**
 │ • Text:        font-sans text-xs sm:text-sm            │
 │ • Color:       text-slate-900                          │
 │ • Placeholder: placeholder:text-slate-400              │
-│ • Focus State: focus:border-slate-900 focus:ring-1     │
-│                focus:ring-slate-900 outline-none       │
+│ • Focus State: focus:border-slate-400 focus:ring-1     │
+│                focus:ring-slate-400/20 outline-none   │
 │ • Error State: border-rose-500 focus:border-rose-500   │
 │                focus:ring-rose-500                     │
 ├────────────────────────────────────────────────────────┤
@@ -289,7 +289,7 @@ Molecules are standardized combinations of atoms designed **only for patterns th
 * **Anatomy & Tokens**:
   * Input height is locked to `h-11 (44px)`.
   * Left icon: Lucide `<Search className="w-4 h-4 text-slate-400 ml-3.5" />`.
-  * Input field: `bg-white border border-slate-200 rounded-xl pl-10 pr-9 text-sm font-sans focus:border-slate-900 focus:ring-1 focus:ring-slate-900`.
+  * Input field: `bg-white border border-slate-200 rounded-xl pl-10 pr-9 text-sm font-sans focus:border-slate-400 focus:ring-1 focus:ring-slate-400/20`.
   * Right clear button: Appears only when input has value, uses Lucide `<X className="w-3.5 h-3.5 text-slate-400" />`.
 
 ### 4.4 Empty State (`<EmptyState />`)
@@ -307,6 +307,41 @@ Molecules are standardized combinations of atoms designed **only for patterns th
   </div>
   ```
 
+### 4.5 Ghost Skeleton Primitive (`<Skeleton />`) & Layout Presets
+* **Path**: `@/components/ui/Skeleton.tsx`
+* **Architectural Law (1:1 Layout Mirroring)**: A skeleton is **NEVER** an arbitrary approximation or generic placeholder. It must be an **exact 1:1 structural wireframe** of the target screen, faithfully replicating container widths, column grids (`md:grid-cols-12`, 3-column feed, 4-column directory), element aspect ratios, padding, and corner radii. This guarantees **zero Cumulative Layout Shift (0 CLS)** when real data resolves.
+* **Core Primitive**:
+  ```tsx
+  export function Skeleton({ className = "", ...props }: React.HTMLAttributes<HTMLDivElement>) {
+    return <div className={`animate-pulse bg-slate-200/70 rounded-xl ${className}`} {...props} />;
+  }
+  ```
+* **Visual Tokens & Laws**:
+  * Surface color: Strictly `bg-slate-200/70` (never zinc or gray).
+  * Motion: Smooth native CSS `animate-pulse`.
+  * Corner Radii:
+    * Avatars / Badges: `rounded-xl`, `rounded-2xl`, or `rounded-full` (mirrors avatar component)
+    * Content lines / Titles: `rounded-md` or `rounded-lg`
+    * Outer Cards / Containers: `rounded-2xl` or `rounded-3xl` with `border border-slate-200`
+* **Canonical Screen Presets**:
+  * `<FeedSkeleton />`: Exact 3-column layout for `/inicio` (Left: cover + avatar + Mi red grid; Center: title + CreatePostCard + PostCards; Right: RecentMembersCard).
+  * `<NetworkSkeleton />`: Exact header, tabs ("En mi red", "Me sumaron"), search bar and responsive grid of `UserCardSkeleton` for `/red`.
+  * `<DirectorySkeleton />`: Exact search bar with tune button and 4-column grid of `SpecialistCardSkeleton` for `/especialistas`.
+  * `<MessagesSkeleton />`: Exact 12-column split for `/mensajes` (4-cols conversation list with search + 8-cols chat window with header & speech bubbles).
+  * `<NotificationsSkeleton />`: Exact 12-column split for `/notificaciones` (4-cols category filters + 8-cols notification rows with avatar).
+  * `<ProfileSkeleton />`: Exact layout for `/perfil-usuario` (aspect ratio cover + 4-cols sidebar with negative margin overlap + 8-cols content sections).
+  * `<UnifiedBannerSkeleton />`: Exact layout for `/espacios`, `/grupos`, `/faro`, `/mapa` (rounded-3xl box, banner ratio, and bottom card).
+  * `<PostCardSkeleton />`, `<UserCardSkeleton />`, `<SpecialistCardSkeleton />`: Granular card wireframes.
+* **Usage in Next.js**:
+  Always place the corresponding layout skeleton in the route's `loading.tsx` and inside `<Suspense fallback={<...Skeleton />} />`:
+  ```tsx
+  // app/mi-pantalla/loading.tsx
+  import { NetworkSkeleton } from "@/components/ui/Skeleton";
+  export default function Loading() {
+    return <NetworkSkeleton />;
+  }
+  ```
+
 ---
 
 ## 5. Platform Surface Mapping
@@ -322,10 +357,11 @@ Molecules are standardized combinations of atoms designed **only for patterns th
 
 ---
 
-## 5. Absolute Anti-Patterns & Prohibitions
+## 6. Absolute Anti-Patterns & Prohibitions
 
 1. **NO inline arbitrary font sizes**: Never use `text-[10px]`, `text-[13px]`, `text-[17px]`, or `text-[26px]` outside the 6 approved tokens.
 2. **NO raw `<button>` elements**: Any clickable control must use the unified `<Button>` component or be explicitly styled using the button variant classes.
 3. **NO Google Material Symbols**: Never write `<span className="material-symbols-outlined">`. Always import the semantic SVG from `lucide-react`.
 4. **NO Palette Drift**: Do not introduce `zinc-*`, `gray-*`, `indigo-*`, or raw hex codes into component files. All neutrals are `slate-*`.
 5. **NO duplicated button styles**: Do not create separate "pill buttons", "square buttons", or "custom profile buttons". Use `<Button variant="..." size="...">`.
+6. **NO Full-Screen Blocking Spinners**: Never use circular spinners or spinners centered on blank screens (`DotSpinner`) as page-level loading states. Every screen and route must provide a layout-matching `<...Skeleton />` in `loading.tsx` and `Suspense` fallbacks. Spinners are reserved exclusively for micro-states inside action buttons while submitting.

@@ -1,4 +1,5 @@
 import React from 'react';
+import { ArrowLeft } from 'lucide-react';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'soft' | 'ghost' | 'destructive' | 'danger' | 'link' | 'back' | 'slate' | 'small';
@@ -35,21 +36,20 @@ export function Button({ variant = 'primary', size, fullWidth, children, classNa
 
   if (variant === 'back') {
     return (
-      <button className={`${variants.back} ${className}`} {...props}>
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
-          className="text-slate-400 group-hover:text-slate-900 transition-colors"
-        >
-          <path d="M19 12H5M12 19l-7-7 7-7" />
-        </svg>
-        <span className="text-slate-400 text-sm font-bold group-hover:text-slate-900 transition-colors font-jakarta">
-          {children || 'Volver'}
-        </span>
+      <button
+        type="button"
+        className={`group inline-flex items-center gap-2 text-sm font-semibold font-jakarta text-slate-600 hover:text-slate-900 transition-colors outline-none cursor-pointer bg-transparent border-none p-0 w-fit select-none ${className}`}
+        onClick={(e) => {
+          if (props.onClick) {
+            props.onClick(e);
+          } else if (typeof window !== 'undefined') {
+            window.history.back();
+          }
+        }}
+        {...props}
+      >
+        <ArrowLeft className="w-4 h-4 shrink-0 transition-transform duration-150 group-hover:-translate-x-0.5" />
+        <span>{children || 'Volver'}</span>
       </button>
     );
   }

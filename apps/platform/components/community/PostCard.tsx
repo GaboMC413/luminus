@@ -6,12 +6,15 @@ import { PostItem, PostComment } from "./mockPostsData";
 import { InterestPill } from "@/components/ui/InterestPill";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import { CommunityReportModal } from "./CommunityReportModal";
 import { EditPostModal } from "./EditPostModal";
 import { formatLocationDisplay } from "@/utils/locationUtils";
 import { formatPostDate } from "@/lib/community/posts";
-
-const formatCityCountry = formatLocationDisplay;
+import { PostAuthorHeader, MenuActionItem } from "./molecules/PostAuthorHeader";
+import { PostActionBar } from "./molecules/PostActionBar";
+import { CommentInputBox } from "./molecules/CommentInputBox";
+import { ExternalLink, Pin, Pencil, Trash2, Flag, Send } from "lucide-react";
 
 interface PostCardProps {
   post: PostItem;
@@ -32,11 +35,6 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
   const [newCommentText, setNewCommentText] = useState("");
   const commentTextareaRef = useRef<HTMLTextAreaElement>(null);
   const [imgError, setImgError] = useState(false);
-  const [avatarError, setAvatarError] = useState(false);
-
-  // Author & Menu state
-  const [showPostMenu, setShowPostMenu] = useState(false);
-  const postMenuRef = useRef<HTMLDivElement>(null);
 
   // Edit & Delete & Report Modals state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -48,21 +46,6 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
     id: string;
     author?: string;
   }>({ type: "post", id: post.id, author: post.authorName });
-
-  // Click outside to close post menu
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (postMenuRef.current && !postMenuRef.current.contains(event.target as Node)) {
-        setShowPostMenu(false);
-      }
-    }
-    if (showPostMenu) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showPostMenu]);
 
   useEffect(() => {
     setIsLiked(post.isLiked || false);
@@ -118,22 +101,18 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
     ? `${currentUserProfile.first_name || ""} ${currentUserProfile.last_name || ""}`.trim() || "Tú"
     : "Tú";
 
+  const currentUserLocation = useMemo(() => {
+    const city = currentUserProfile?.city?.trim();
+    const country = currentUserProfile?.country?.trim();
+    if (city && country) return `${city}, ${country}`;
+    return city || country || "Montevideo, Uruguay";
+  }, [currentUserProfile]);
+
   const isPostAuthor = Boolean(
     (post.authorId && currentUserId && post.authorId === currentUserId) ||
     (post.authorId === "current-user") ||
     (post.authorName && currentUserName && post.authorName.toLowerCase() === currentUserName.toLowerCase())
   );
-
-  const userCity = currentUserProfile?.city?.trim();
-  const userCountry = currentUserProfile?.country?.trim();
-  let currentUserLocation = "Montevideo, Uruguay";
-  if (userCity && userCountry) {
-    currentUserLocation = `${userCity}, ${userCountry}`;
-  } else if (currentUserProfile?.location) {
-    currentUserLocation = formatLocationDisplay(currentUserProfile.location);
-  } else if (userCity || userCountry) {
-    currentUserLocation = userCity || userCountry;
-  }
 
   const isAdmin = Boolean(
     currentUserProfile?.role === "ADMIN" ||
@@ -142,19 +121,16 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
   );
 
   const isAuthorAdmin = Boolean(
-    post.isAuthorAdmin ||
     post.isOfficial ||
-    (isPostAuthor && isAdmin) ||
+    post.authorRole?.toLowerCase() === "administrador" ||
+    post.authorRole?.toLowerCase() === "admin" ||
     post.authorName?.toLowerCase() === "luminus" ||
     post.authorId === "mock-luminus" ||
     post.authorId === "50d13047-bab8-44f1-9541-a821113845cc"
   );
 
-  const handlePostAuthorClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isOfficialAccount) {
-      return;
-    }
+  const handlePostAuthorClick = () => {
+    if (isOfficialAccount) return;
     if (isPostAuthor || post.authorId === "current-user") {
       router.push("/perfil-usuario");
     } else {
@@ -163,17 +139,15 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
     }
   };
 
-  const handleCommentAuthorClick = (e: React.MouseEvent, comment: PostComment) => {
-    e.stopPropagation();
+  const handleCommentAuthorClick = (comment: PostComment) => {
     const isOfficialComment = Boolean(
       (comment as any).isOfficial ||
       comment.authorName?.toLowerCase() === "luminus" ||
       comment.authorId === "mock-luminus" ||
       comment.authorId === "50d13047-bab8-44f1-9541-a821113845cc"
     );
-    if (isOfficialComment) {
-      return;
-    }
+    if (isOfficialComment) return;
+
     const isCurrent = Boolean(
       (comment.authorId && currentUserId && comment.authorId === currentUserId) ||
       (comment.authorId === "current-user") ||
@@ -204,7 +178,6 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
           setLikesCount(data.likesCount);
         }
       } else {
-        // Revert on failure
         setIsLiked(!nextLiked);
         setLikesCount((prev) => (!nextLiked ? prev + 1 : Math.max(0, prev - 1)));
       }
@@ -219,7 +192,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
     setNewCommentText(e.target.value);
     const target = e.target;
     target.style.height = "auto";
-    const maxHeight = 115; // ~5 lines of text
+    const maxHeight = 115;
     if (target.scrollHeight > maxHeight) {
       target.style.height = `${maxHeight}px`;
       target.style.overflowY = "auto";
@@ -241,7 +214,6 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
     const trimmed = newCommentText.trim();
     if (!trimmed) return;
 
-    // Temporary optimistic comment
     const tempComment: PostComment = {
       id: `c-${Date.now()}`,
       authorId: currentUserId || "current-user",
@@ -280,7 +252,6 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
     }
   };
 
-  // Inline markdown parser for bold, italic, underline, links, and URL badges
   const parseInlineMarkdown = (text: string): React.ReactNode[] => {
     const tokenRegex = /(\[[^\]]+\]\(https?:\/\/[^\s\)]+\)|https?:\/\/[^\s]+|\*\*[^*]+\*\*|\*[^*]+\*|<u>.*?<\/u>)/g;
     const parts = text.split(tokenRegex);
@@ -288,7 +259,6 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
     return parts.map((part, index) => {
       if (!part) return null;
 
-      // Markdown link: [label](url)
       const mdLinkMatch = part.match(/^\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)$/);
       if (mdLinkMatch) {
         const [, label, url] = mdLinkMatch;
@@ -299,28 +269,15 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 font-semibold text-slate-900 underline underline-offset-2 decoration-slate-900 hover:text-slate-600 hover:decoration-slate-600 transition-colors mx-0.5 cursor-pointer"
+            className="inline-flex items-center gap-1 font-semibold text-slate-900 underline underline-offset-2 decoration-slate-900 hover:text-slate-600 transition-colors mx-0.5 cursor-pointer"
             title={url}
           >
             <span>{label}</span>
-            <svg
-              className="w-3.5 h-3.5 shrink-0 text-slate-800 inline-block -mt-0.5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-              <polyline points="15 3 21 3 21 9" />
-              <line x1="10" y1="14" x2="21" y2="3" />
-            </svg>
+            <ExternalLink className="w-3.5 h-3.5 text-slate-700 shrink-0 inline-block -mt-0.5" />
           </a>
         );
       }
 
-      // Raw URL
       if (/^https?:\/\/[^\s]+$/.test(part)) {
         let displayLabel = part;
         try {
@@ -339,28 +296,15 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 font-semibold text-slate-900 underline underline-offset-2 decoration-slate-900 hover:text-slate-600 hover:decoration-slate-600 transition-colors mx-0.5 cursor-pointer"
+            className="inline-flex items-center gap-1 font-semibold text-slate-900 underline underline-offset-2 decoration-slate-900 hover:text-slate-600 transition-colors mx-0.5 cursor-pointer"
             title={part}
           >
             <span>{displayLabel}</span>
-            <svg
-              className="w-3.5 h-3.5 shrink-0 text-slate-800 inline-block -mt-0.5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-              <polyline points="15 3 21 3 21 9" />
-              <line x1="10" y1="14" x2="21" y2="3" />
-            </svg>
+            <ExternalLink className="w-3.5 h-3.5 text-slate-700 shrink-0 inline-block -mt-0.5" />
           </a>
         );
       }
 
-      // Bold: **text**
       if (part.startsWith("**") && part.endsWith("**") && part.length >= 4) {
         return (
           <strong key={index} className="font-bold text-slate-900 font-sans">
@@ -369,7 +313,6 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
         );
       }
 
-      // Italic: *text*
       if (part.startsWith("*") && part.endsWith("*") && part.length >= 2) {
         return (
           <em key={index} className="italic text-slate-800 font-sans">
@@ -378,10 +321,9 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
         );
       }
 
-      // Underline: <u>text</u>
       if (part.startsWith("<u>") && part.endsWith("</u>") && part.length >= 7) {
         return (
-          <span key={index} className="underline underline-offset-2 decoration-slate-400">
+          <span key={index} className="underline text-slate-800 font-sans">
             {part.slice(3, -4)}
           </span>
         );
@@ -391,12 +333,10 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
     });
   };
 
-  // Helper to render text with markdown and URLs converted into stylish pill badges
   const renderFormattedContent = (content: string) => {
     const lines = content.split("\n");
-
     return (
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         {lines.map((line, idx) => {
           const bulletMatch = line.match(/^([•\-])\s+(.*)$/);
           const numberMatch = line.match(/^(\d+)\.\s+(.*)$/);
@@ -435,190 +375,70 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
     );
   };
 
+  // Build Contextual Menu Actions for PostAuthorHeader
+  const menuActions: MenuActionItem[] = useMemo(() => {
+    if (hideActions) return [];
+    const actions: MenuActionItem[] = [];
+
+    if (isAdmin && isAuthorAdmin && onTogglePin) {
+      actions.push({
+        label: post.isPinned ? "Desfijar publicación" : "Fijar publicación",
+        icon: <Pin className="w-3.5 h-3.5 text-slate-500" />,
+        onClick: () => onTogglePin(post.id),
+      });
+    }
+
+    if (isPostAuthor || (isAdmin && isAuthorAdmin)) {
+      actions.push({
+        label: "Editar",
+        icon: <Pencil className="w-3.5 h-3.5 text-slate-500" />,
+        onClick: () => setIsEditModalOpen(true),
+      });
+      actions.push({
+        label: "Eliminar",
+        icon: <Trash2 className="w-3.5 h-3.5 text-rose-600" />,
+        onClick: () => setIsDeleteConfirmOpen(true),
+        variant: "destructive",
+      });
+    } else if (isAdmin) {
+      actions.push({
+        label: "Eliminar",
+        icon: <Trash2 className="w-3.5 h-3.5 text-rose-600" />,
+        onClick: () => setIsDeleteConfirmOpen(true),
+        variant: "destructive",
+      });
+    } else {
+      actions.push({
+        label: "Reportar",
+        icon: <Flag className="w-3.5 h-3.5 text-rose-600" />,
+        onClick: () => {
+          setReportTarget({ type: "post", id: post.id, author: post.authorName });
+          setIsReportModalOpen(true);
+        },
+        variant: "destructive",
+      });
+    }
+
+    return actions;
+  }, [hideActions, isAdmin, isAuthorAdmin, onTogglePin, isPostAuthor, post.id, post.isPinned, post.authorName]);
+
   return (
-    <article
-      className={`bg-white rounded-2xl border border-zinc-200 flex flex-col shadow-none transition-all ${
-        showPostMenu ? "relative z-40 overflow-visible" : "overflow-hidden"
-      }`}
-    >
-      {/* 1. Header: Author info and Post date */}
-      <div className="px-4 pt-3.5 pb-2.5 sm:px-5 sm:pt-4 sm:pb-3 flex items-center justify-between gap-3">
-        <div
-          onClick={isOfficialAccount ? undefined : handlePostAuthorClick}
-          className={`flex items-center gap-3 min-w-0 ${isOfficialAccount ? "cursor-default select-none" : "cursor-pointer group/author"
-            }`}
-          title={isOfficialAccount ? undefined : `Ver perfil de ${post.authorName}`}
-        >
-          {/* Author avatar */}
-          <div className={`w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-100 flex items-center justify-center shrink-0 transition-colors duration-200 ${isOfficialAccount ? "" : "group-hover/author:border-slate-200"
-            }`}>
-            {post.authorAvatar && !avatarError ? (
-              <img
-                src={post.authorAvatar}
-                alt={post.authorName}
-                className="w-full h-full object-cover"
-                onError={() => setAvatarError(true)}
-              />
-            ) : (
-              <span className="material-symbols-outlined text-slate-400 text-[20px]">person</span>
-            )}
-          </div>
-
-          {/* Author details */}
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className={`font-jakarta text-sm font-semibold text-slate-900 truncate ${isOfficialAccount ? "" : "group-hover/author:text-slate-700 transition-colors"
-                }`}>
-                {post.authorName}
-              </span>
-              {post.isOfficial && (
-                <span className="px-2 py-0.5 rounded-full bg-violet-100 text-violet-800 text-[10px] font-bold uppercase tracking-wider font-jakarta">
-                  Oficial
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium font-sans">
-              <span className="truncate max-w-[180px] sm:max-w-[240px]">
-                {authorSubtitle}
-              </span>
-              {displayDate && (
-                <>
-                  <span className="text-slate-300 font-normal select-none">&bull;</span>
-                  {/* Post date */}
-                  <span className="text-slate-400 whitespace-nowrap">{displayDate}</span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Post Actions & Pin Indicator */}
-        <div className="flex items-center gap-1 shrink-0">
-          {post.isPinned && (
-            <div
-              className="flex items-center justify-center w-8 h-8 text-slate-400 select-none"
-              title="Publicación fijada"
-            >
-              <span className="material-symbols-rounded text-slate-400 text-[18px] rotate-45">
-                push_pin
-              </span>
-            </div>
-          )}
-
-          {!hideActions && (isAdmin || !isAuthorAdmin) && (
-            <div ref={postMenuRef} className={`relative flex items-center ${showPostMenu ? "z-30" : "z-0"}`}>
-              <button
-                type="button"
-                onClick={() => setShowPostMenu((prev) => !prev)}
-                className={`flex items-center justify-center w-8 h-8 rounded-full transition-all border-none cursor-pointer bg-transparent ${
-                  showPostMenu ? "bg-slate-100" : "hover:bg-slate-50"
-                }`}
-                aria-label="Opciones"
-                title="Opciones"
-              >
-                <span className="material-symbols-rounded text-slate-400 hover:text-black transition-colors text-[20px]">
-                  more_vert
-                </span>
-              </button>
-
-              {showPostMenu && (
-                <div
-                  style={{ backgroundColor: "#ffffff" }}
-                  className="absolute right-0 top-full mt-1.5 w-52 !bg-white border border-slate-200/90 rounded-2xl overflow-hidden z-[50] shadow-none animate-in zoom-in-95 duration-150 origin-top-right"
-                >
-                  {isAdmin && isAuthorAdmin && onTogglePin && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowPostMenu(false);
-                        onTogglePin(post.id);
-                      }}
-                      className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left border-b border-slate-100"
-                    >
-                      <span className={`material-symbols-rounded text-[18px] text-slate-500 group-hover:text-slate-900 transition-colors ${post.isPinned ? "" : "rotate-45"}`}>
-                        {post.isPinned ? "keep_off" : "push_pin"}
-                      </span>
-                      <span className="font-semibold text-slate-500 group-hover:text-slate-900 transition-colors">
-                        {post.isPinned ? "Desfijar publicación" : "Fijar publicación"}
-                      </span>
-                    </button>
-                  )}
-                  {isPostAuthor || (isAdmin && isAuthorAdmin) ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowPostMenu(false);
-                          setIsEditModalOpen(true);
-                        }}
-                        className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-slate-50 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
-                      >
-                        <span className="material-symbols-rounded text-slate-500 group-hover:text-slate-900 text-[18px] transition-colors">
-                          edit
-                        </span>
-                        <span className="font-semibold text-slate-500 group-hover:text-slate-900 transition-colors">
-                          Editar
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowPostMenu(false);
-                          setIsDeleteConfirmOpen(true);
-                        }}
-                        className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
-                      >
-                        <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">
-                          delete
-                        </span>
-                        <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">
-                          Eliminar
-                        </span>
-                      </button>
-                    </>
-                  ) : isAdmin ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowPostMenu(false);
-                        setIsDeleteConfirmOpen(true);
-                      }}
-                      className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
-                    >
-                      <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">
-                        delete
-                      </span>
-                      <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">
-                        Eliminar
-                      </span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowPostMenu(false);
-                        setReportTarget({ type: "post", id: post.id, author: post.authorName });
-                        setIsReportModalOpen(true);
-                      }}
-                      className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
-                    >
-                      <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">
-                        flag
-                      </span>
-                      <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">
-                        Reportar
-                      </span>
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+    <article className="bg-white rounded-2xl border border-slate-200/90 flex flex-col shadow-none overflow-hidden">
+      {/* 1. Molecule: Author Header */}
+      <div className="px-4 pt-4 pb-3 sm:px-5">
+        <PostAuthorHeader
+          authorName={post.authorName}
+          authorAvatar={post.authorAvatar}
+          authorSubtitle={authorSubtitle}
+          displayDate={displayDate}
+          isPinned={post.isPinned}
+          isOfficial={isOfficialAccount}
+          onAuthorClick={isOfficialAccount ? undefined : handlePostAuthorClick}
+          menuActions={menuActions}
+        />
       </div>
 
-      {/* 2. Content Order: MEDIA FIRST (YouTube video or Image if present) */}
+      {/* 2. Media: YouTube video or Image if present */}
       {post.youtubeId ? (
         <div className="px-4 sm:px-5 pb-3">
           <div className="w-full aspect-video rounded-xl overflow-hidden bg-black border border-slate-100">
@@ -644,17 +464,17 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
         </div>
       ) : null}
 
-      {/* Optional Post Title for Announcement Board Style */}
+      {/* Optional Post Title */}
       {post.title && (
-        <h3 className="px-4 sm:px-5 pb-2.5 text-base sm:text-[17px] font-bold text-slate-900 font-jakarta leading-snug">
+        <h3 className="px-4 sm:px-5 pb-2 text-base font-bold text-slate-900 font-jakarta leading-snug">
           {post.title}
         </h3>
       )}
 
-      {/* 3. Text content (with inline Facebook/Instagram style truncation) */}
+      {/* 3. Text content */}
       <div
         className={`px-4 sm:px-5 text-sm text-slate-700 font-sans leading-relaxed ${
-          ((post.areas && post.areas.length > 0) || post.area) ? "pb-3 sm:pb-3.5" : "pb-3.5 sm:pb-4"
+          ((post.areas && post.areas.length > 0) || post.area) ? "pb-3" : "pb-4"
         }`}
       >
         {!isExpanded && isTruncatable ? (
@@ -664,7 +484,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
             <button
               type="button"
               onClick={() => setIsExpanded(true)}
-              className="font-bold text-slate-900 hover:text-slate-600 transition-colors inline cursor-pointer border-none bg-transparent p-0 select-none font-sans text-sm ml-0.5"
+              className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors inline cursor-pointer border-none bg-transparent p-0 select-none font-jakarta ml-1"
             >
               Ver más
             </button>
@@ -676,7 +496,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
               <button
                 type="button"
                 onClick={() => setIsExpanded(false)}
-                className="mt-3 font-bold text-slate-900 hover:text-slate-600 transition-colors block cursor-pointer border-none bg-transparent p-0 select-none font-sans text-sm"
+                className="mt-2 text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors block cursor-pointer border-none bg-transparent p-0 select-none font-jakarta"
               >
                 Ver menos
               </button>
@@ -685,81 +505,41 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
         )}
       </div>
 
-      {/* 4. Area / Interest Pills at the end of the post (small) */}
+      {/* 4. Area / Interest Pills */}
       {((post.areas && post.areas.length > 0) || post.area) && (
-        <div className="px-4 sm:px-5 pb-3.5 sm:pb-4 flex flex-wrap items-center gap-1.5">
+        <div className="px-4 sm:px-5 pb-3.5 flex flex-wrap items-center gap-1.5">
           {(post.areas && post.areas.length > 0 ? post.areas : [post.area!]).map((areaTag) => (
             <InterestPill key={areaTag} interest={areaTag} size="sm" />
           ))}
         </div>
       )}
 
-      {/* 4. Action Buttons: Like & Comment (Icon + Number only, no text) */}
+      {/* 5. Molecule: Post Action Bar (Like & Comments) */}
       {!hideActions && (
-        <div className={`p-1.5 sm:p-2 border-t border-zinc-100 flex items-center gap-1.5 ${showComments ? "border-b border-zinc-100 bg-slate-50/40" : ""
-          }`}>
-          {/* Like button */}
-          <button
-            type="button"
-            onClick={handleToggleLike}
-            aria-label={isLiked ? "Ya no me gusta" : "Me gusta"}
-            className={`flex items-center gap-1.5 p-1.5 rounded-lg text-xs font-semibold font-jakarta transition-all cursor-pointer border-none select-none ${isLiked
-              ? "bg-rose-50 text-rose-600 font-bold"
-              : "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-              }`}
-          >
-            <span
-              className="material-symbols-outlined text-[19px]"
-              style={{
-                fontVariationSettings: isLiked ? "'FILL' 1" : "'FILL' 0",
-              }}
-            >
-              favorite
-            </span>
-            {likesCount > 0 && (
-              <span className={`text-xs font-bold ${isLiked ? "text-rose-600" : "text-slate-700"}`}>
-                {likesCount}
-              </span>
-            )}
-          </button>
-
-          {/* Comment toggle button */}
-          <button
-            type="button"
-            onClick={() => setShowComments((prev) => !prev)}
-            aria-label="Comentarios"
-            className={`flex items-center gap-1.5 p-1.5 rounded-lg text-xs font-semibold font-jakarta transition-all cursor-pointer border-none select-none ${showComments
-              ? "bg-slate-200/60 text-slate-900 font-bold"
-              : "bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-              }`}
-          >
-            <span className="material-symbols-outlined text-[19px]">chat_bubble_outline</span>
-            {comments.length > 0 && (
-              <span className={`text-xs font-bold ${showComments ? "text-slate-900" : "text-slate-700"}`}>
-                {comments.length}
-              </span>
-            )}
-          </button>
+        <div className="px-4 sm:px-5 pb-3">
+          <PostActionBar
+            isLiked={isLiked}
+            likesCount={likesCount}
+            commentsCount={comments.length}
+            onToggleLike={handleToggleLike}
+            onToggleComments={() => setShowComments((prev) => !prev)}
+            showComments={showComments}
+          />
         </div>
       )}
 
-      {/* 5. Comments Section */}
+      {/* 6. Comments Section — Clean Thread Stream (No heavy boxes) */}
       {!hideActions && showComments && (
-        <div className="px-4 sm:px-5 py-3 bg-slate-50/70 flex flex-col gap-3">
-          {/* List of existing comments (Read mode with actions) */}
+        <div className="px-4 sm:px-5 pt-2 pb-4 border-t border-slate-100 flex flex-col gap-3 bg-slate-50/40">
+          {/* List of existing comments as fluid thread rows */}
           {comments.length > 0 && (
-            <div className="flex flex-col gap-4">
+            <div className="divide-y divide-slate-100">
               {comments.map((comment) => {
-                const commentLoc = formatLocationDisplay(
-                  comment.authorLocation || (comment.authorRole && comment.authorRole !== "Miembro" ? comment.authorRole : "Montevideo, Uruguay")
-                );
-
                 const isCommentAuthor = Boolean(
                   (comment.authorId && currentUserId && comment.authorId === currentUserId) ||
                   (comment.authorId === "current-user") ||
                   (comment.authorName && currentUserName && comment.authorName.toLowerCase() === currentUserName.toLowerCase())
                 );
-
                 const isOfficialComment = Boolean(
                   (comment as any).isOfficial ||
                   comment.authorName?.toLowerCase() === "luminus" ||
@@ -768,86 +548,75 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
                 );
 
                 return (
-                  <div
-                    key={comment.id}
-                    className="flex items-start gap-2.5 sm:gap-3 group/comment"
-                  >
-                    {/* Avatar */}
+                  <div key={comment.id} className="py-2.5 flex items-start gap-3 group/comment first:pt-1 last:pb-1">
                     <div
-                      onClick={isOfficialComment ? undefined : (e) => handleCommentAuthorClick(e, comment)}
-                      className={`w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-100 flex items-center justify-center shrink-0 transition-colors duration-200 ${isOfficialComment ? "cursor-default" : "cursor-pointer hover:border-slate-200"
-                        }`}
+                      onClick={isOfficialComment ? undefined : () => handleCommentAuthorClick(comment)}
+                      className={isOfficialComment ? "shrink-0 mt-0.5" : "cursor-pointer hover:opacity-90 shrink-0 mt-0.5"}
                       title={isOfficialComment ? undefined : `Ver perfil de ${comment.authorName}`}
                     >
-                      {comment.authorAvatar ? (
-                        <img
-                          src={comment.authorAvatar}
-                          alt={comment.authorName}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <span className="material-symbols-outlined text-slate-400 text-[20px]">person</span>
-                      )}
+                      <UserAvatar
+                        src={comment.authorAvatar}
+                        alt={comment.authorName}
+                        size="md"
+                      />
                     </div>
 
-                    {/* Content without frame, directly in background */}
-                    <div className="flex-1 min-w-0 flex flex-col pt-0.5 relative pr-6">
-                      <div className="flex items-baseline gap-2 flex-wrap leading-tight">
-                        <span
-                          onClick={isOfficialComment ? undefined : (e) => handleCommentAuthorClick(e, comment)}
-                          className={`text-xs font-semibold text-slate-900 font-jakarta ${isOfficialComment ? "cursor-default select-none" : "cursor-pointer hover:text-slate-700 transition-colors"
+                    <div className="flex-1 min-w-0 flex flex-col pt-0.5">
+                      {/* Name + Dot + Date together */}
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
+                          <span
+                            onClick={isOfficialComment ? undefined : () => handleCommentAuthorClick(comment)}
+                            className={`text-sm font-semibold text-slate-900 font-jakarta truncate ${
+                              isOfficialComment ? "cursor-default select-none" : "cursor-pointer hover:text-slate-700 transition-colors"
                             }`}
-                          title={isOfficialComment ? undefined : `Ver perfil de ${comment.authorName}`}
-                        >
-                          {comment.authorName}
-                        </span>
-                        {commentLoc && (
-                          <span className="text-xs text-slate-500 font-medium font-sans">
-                            {commentLoc}
+                          >
+                            {comment.authorName}
                           </span>
-                        )}
-                        {comment.date && (
-                          <>
-                            <span className="text-slate-300 font-normal select-none">&bull;</span>
-                            <span className="text-xs text-slate-400 font-medium font-sans">
-                              {formatPostDate(comment.createdAt || comment.date)}
-                            </span>
-                          </>
-                        )}
+                          {comment.date && (
+                            <>
+                              <span className="text-slate-300 select-none text-[10px]">•</span>
+                              <span className="text-xs font-normal text-slate-400 font-sans shrink-0">
+                                {formatPostDate(comment.createdAt || comment.date)}
+                              </span>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Hover actions (Delete / Report) */}
+                        <div className="opacity-0 group-hover/comment:opacity-100 transition-opacity shrink-0">
+                          {isCommentAuthor ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setComments((prev) => prev.filter((c) => c.id !== comment.id));
+                              }}
+                              className="w-5 h-5 rounded flex items-center justify-center text-slate-400 hover:text-rose-600 transition-colors border-none bg-transparent cursor-pointer p-0"
+                              title="Eliminar comentario"
+                              aria-label="Eliminar comentario"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setReportTarget({ type: "comment", id: comment.id, author: comment.authorName });
+                                setIsReportModalOpen(true);
+                              }}
+                              className="w-5 h-5 rounded flex items-center justify-center text-slate-400 hover:text-rose-600 transition-colors border-none bg-transparent cursor-pointer p-0"
+                              title="Reportar comentario"
+                              aria-label="Reportar comentario"
+                            >
+                              <Flag className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </div>
 
-                      <div className="text-xs sm:text-sm text-slate-700 font-sans leading-snug">
+                      {/* Comment text */}
+                      <div className="text-sm text-slate-700 font-sans leading-relaxed mt-0.5 break-words [overflow-wrap:anywhere]">
                         {parseInlineMarkdown(comment.content)}
-                      </div>
-
-                      {/* Action: Delete if author, Report if not author (appears on hover) */}
-                      <div className="absolute right-0 top-0 flex items-center opacity-0 group-hover/comment:opacity-100 transition-opacity">
-                        {isCommentAuthor ? (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setComments((prev) => prev.filter((c) => c.id !== comment.id));
-                            }}
-                            className="w-5 h-5 rounded flex items-center justify-center text-slate-400 hover:text-[#FF4B4B] hover:bg-[#FF4B4B]/10 transition-colors border-none bg-transparent cursor-pointer p-0"
-                            title="Eliminar"
-                            aria-label="Eliminar"
-                          >
-                            <span className="material-symbols-rounded text-[15px]">delete</span>
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setReportTarget({ type: "comment", id: comment.id, author: comment.authorName });
-                              setIsReportModalOpen(true);
-                            }}
-                            className="w-5 h-5 rounded flex items-center justify-center text-slate-400 hover:text-[#FF4B4B] hover:bg-[#FF4B4B]/10 transition-colors border-none bg-transparent cursor-pointer p-0"
-                            title="Reportar"
-                            aria-label="Reportar"
-                          >
-                            <span className="material-symbols-rounded text-[15px]">flag</span>
-                          </button>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -856,52 +625,18 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
             </div>
           )}
 
-          {/* Form to add a new comment (Auto-expanding up to 5 lines with inline Comentar button) */}
-          <form
+          {/* Molecule: CommentInputBox */}
+          <CommentInputBox
+            userAvatar={currentUserProfile?.profile_picture_url}
+            userName={currentUserName}
+            value={newCommentText}
+            onChange={setNewCommentText}
             onSubmit={handleAddComment}
-            className="flex items-start gap-2.5 sm:gap-3"
-          >
-            {/* Current user avatar */}
-            <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/80 flex items-center justify-center shrink-0 mt-0.5">
-              {currentUserProfile?.profile_picture_url ? (
-                <img
-                  src={currentUserProfile.profile_picture_url}
-                  alt={currentUserName}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="material-symbols-outlined text-slate-400 text-[20px]">person</span>
-              )}
-            </div>
-
-            {/* Auto-growing Textarea container with button inside */}
-            <div className="flex-1 min-w-0 bg-white rounded-xl border border-zinc-200/80 focus-within:border-slate-800 transition-all flex items-end gap-2 pl-3.5 pr-2 py-1.5 sm:py-2 min-h-[44px]">
-              <textarea
-                ref={commentTextareaRef}
-                rows={1}
-                value={newCommentText}
-                onChange={handleCommentChange}
-                onKeyDown={handleCommentKeyDown}
-                placeholder="Escribe un comentario..."
-                style={{ overflowY: "hidden" }}
-                className="flex-1 min-w-0 bg-transparent border-none outline-none resize-none text-xs sm:text-sm text-slate-800 placeholder:text-slate-400 font-sans leading-snug max-h-[115px] visible-scrollbar p-0 block my-auto"
-              />
-
-              {/* Standardized Comentar button inside the input */}
-              <Button
-                variant="primary"
-                type="submit"
-                disabled={!newCommentText.trim()}
-                className="!w-auto !h-8 sm:!h-[34px] !px-3.5 !text-xs !font-semibold !rounded-lg shrink-0 self-end"
-              >
-                Comentar
-              </Button>
-            </div>
-          </form>
+          />
         </div>
       )}
 
-      {/* Edit Post Modal (Exact same modal as publicar, pre-filled with post data) */}
+      {/* Edit Post Modal */}
       <EditPostModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -918,25 +653,27 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
         onClose={() => setIsDeleteConfirmOpen(false)}
         title="¿Eliminar publicación?"
         maxWidth="400px"
-        containerClassName="shadow-none"
-        footerClassName="px-5 py-3.5 border-t border-zinc-100 flex flex-row items-center gap-2.5 w-full"
+        footerClassName="px-5 py-3.5 border-t border-slate-100 flex flex-row items-center gap-2.5 w-full"
         footer={
           <>
             <Button
               variant="secondary"
+              size="md"
               type="button"
               onClick={() => setIsDeleteConfirmOpen(false)}
-              className="flex-1 !h-9 sm:!h-10 !text-xs sm:!text-[13px] !font-medium !rounded-[12px]"
+              className="flex-1"
             >
               Cancelar
             </Button>
             <Button
+              variant="destructive"
+              size="md"
               type="button"
               onClick={() => {
                 setIsDeleteConfirmOpen(false);
                 onDeletePost?.(post.id);
               }}
-              className="flex-1 !h-9 sm:!h-10 !text-xs sm:!text-[13px] !font-medium !bg-rose-600 hover:!bg-rose-700 !text-white !rounded-[12px]"
+              className="flex-1"
             >
               Eliminar
             </Button>

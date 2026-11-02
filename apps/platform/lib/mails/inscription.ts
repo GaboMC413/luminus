@@ -1,4 +1,5 @@
 import { renderEmailLayout, LOGO_IMAGE_URL } from "./EmailLayout";
+import { formatEventDateTime } from "../eventDateUtils";
 
 export interface EventInscriptionEmailOptions {
   firstName?: string;
@@ -9,6 +10,8 @@ export interface EventInscriptionEmailOptions {
   speakerName?: string | null;
   youtubeUrl?: string | null;
   eventSlug?: string | null;
+  location?: string | null;
+  userTimezone?: string | null;
 }
 
 function parseCalendarDate(dateStr?: string | Date | null): Date | null {
@@ -48,8 +51,10 @@ export function formatDateSpanish(dateString?: string | null): string {
 export function renderEventRegistrationEmailHtml(data: EventInscriptionEmailOptions): string {
   const firstName = data.firstName || "Usuario";
   const eventTitle = data.eventTitle || "Taller de Bienestar LUMINUS";
+  const dtFormatted = formatEventDateTime(data.eventDate, data.timeText, data.userTimezone);
   const formattedDate = formatDateSpanish(data.eventDate);
-  const formattedTime = data.timeText || "18:00 hs (GMT-3)";
+  const formattedTime = dtFormatted.timeString;
+  const eventLocation = data.location || "Estreno en YouTube";
   
   let youtubeLink = "https://www.youtube.com/@luminus_latam";
   if (data.youtubeUrl && data.youtubeUrl.trim()) {
@@ -73,7 +78,7 @@ export function renderEventRegistrationEmailHtml(data: EventInscriptionEmailOpti
     </p>
 
     <p style="font-size: 15px; line-height: 1.6; color: #000000 !important; margin: 0 0 28px 0; text-align: center;">
-      Podrás ver el estreno el ${formattedDate}.
+      Podrás ver el estreno el ${formattedDate} a las ${formattedTime}.
     </p>
 
     <!-- Official Newsletter Card: #f8fafc, border-radius 20px, border 0 -->
@@ -88,7 +93,7 @@ export function renderEventRegistrationEmailHtml(data: EventInscriptionEmailOpti
         ${data.speakerName ? `<p style="font-size: 16px; font-weight: 600; color: #000000 !important; margin: 0 0 6px 0; text-align: center;">Con ${data.speakerName}</p>` : ''}
         
         <p style="font-size: 15px; font-weight: 500; color: #000000 !important; margin: 0 0 20px 0; text-align: center;">
-          ${formattedDate} • YouTube
+          ${formattedDate} • ${formattedTime} • ${eventLocation}
         </p>
         
         <a href="${youtubeLink}" target="_blank" style="display: inline-block; background-color: #000000 !important; color: #ffffff !important; text-decoration: none; padding: 13px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center; border: 0;">
@@ -174,7 +179,7 @@ export function renderEventLiveEmailHtml(data: EventInscriptionEmailOptions): st
         ${data.speakerName ? `<p style="font-size: 16px; font-weight: 600; color: #000000 !important; margin: 0 0 6px 0; text-align: center;">Con ${data.speakerName}</p>` : ''}
         
         <p style="font-size: 15px; font-weight: 500; color: #000000 !important; margin: 0 0 20px 0; text-align: center;">
-          ${formattedDate} • YouTube
+          ${formattedDate} • ${data.location || "Estreno en YouTube"}
         </p>
         
         <a href="${youtubeLink}" target="_blank" style="display: inline-block; background-color: #000000 !important; color: #ffffff !important; text-decoration: none; padding: 13px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center; border: 0;">

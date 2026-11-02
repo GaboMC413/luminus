@@ -49,15 +49,31 @@ export async function POST(request: Request) {
         .substring(0, 80) + "-" + Math.random().toString(36).substring(2, 6);
 
     let dateVal: Date | null = null;
+    let finalTimeText = timeText || null;
+
     if (date) {
+      let hh = "18";
+      let mm = "00";
+      if (timeText) {
+        const match = String(timeText).match(/(\d{1,2}):(\d{2})/);
+        if (match) {
+          hh = match[1].padStart(2, "0");
+          mm = match[2];
+          finalTimeText = `${hh}:${mm} hs (GMT-3)`;
+        }
+      }
+
       if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
-        dateVal = new Date(`${date.trim()}T12:00:00.000Z`);
+        const isoStringWithOffset = `${date.trim()}T${hh}:${mm}:00-03:00`;
+        const parsed = new Date(isoStringWithOffset);
+        if (!isNaN(parsed.getTime())) dateVal = parsed;
       } else {
         const parsed = new Date(date);
         if (!isNaN(parsed.getTime())) dateVal = parsed;
       }
     }
 
+    const finalLocation = (location && String(location).trim()) ? String(location).trim() : "Estreno en YouTube";
     const finalYoutubeId = youtubeId || extractYoutubeId(link) || null;
 
     if (id) {
@@ -77,8 +93,8 @@ export async function POST(request: Request) {
           speakerBio: speakerBio || null,
           category: category || null,
           date: dateVal && !isNaN(dateVal.getTime()) ? dateVal : null,
-          timeText: timeText || null,
-          location: location || null,
+          timeText: finalTimeText,
+          location: finalLocation,
           coverUrl: coverUrl || null,
           youtubeId: finalYoutubeId,
           link: link || null,
@@ -109,8 +125,8 @@ export async function POST(request: Request) {
           speakerBio: speakerBio || null,
           category: category || null,
           date: dateVal && !isNaN(dateVal.getTime()) ? dateVal : null,
-          timeText: timeText || null,
-          location: location || null,
+          timeText: finalTimeText,
+          location: finalLocation,
           coverUrl: coverUrl || null,
           youtubeId: finalYoutubeId,
           link: link || null,

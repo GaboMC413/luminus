@@ -37,7 +37,7 @@ export function SearchBar({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         autoFocus={autoFocus}
-        className="w-full h-11 pl-10 pr-10 bg-white border border-slate-200 rounded-xl text-sm font-sans text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-colors"
+        className="w-full h-11 pl-10 pr-9 bg-white border border-slate-200 rounded-xl text-sm font-sans text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-400/20 transition-colors"
       />
       {value && (
         <button

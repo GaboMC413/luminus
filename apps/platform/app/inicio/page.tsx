@@ -3,22 +3,22 @@
 import { useEffect, useState, useMemo, Fragment } from "react";
 import { useRouter } from "next/navigation";
 import { Suspense } from "react";
-import { PageLoader } from "@/components/ui/PageLoader";
+import { FeedSkeleton, PostCardSkeleton, Skeleton } from "@/components/ui/Skeleton";
 import { PostItem } from "@/components/community/mockPostsData";
 import { CreatePostCard } from "@/components/community/CreatePostCard";
 import { PostCard } from "@/components/community/PostCard";
 import { RecentMembersCard } from "@/components/community/RecentMembersCard";
 import { MobileMembersCarousel } from "@/components/community/MobileMembersCarousel";
 import { UpcomingEventsCarousel, EventItem as CommunityEventItem } from "@/components/community/UpcomingEventsCarousel";
-import { Button, SquareButton } from "@/components/ui/Button";
+import { Button } from "@/components/ui/Button";
 import { CardHeader } from "@/components/ui/CardHeader";
-import { User } from "lucide-react";
+import { User, Users, UserCheck } from "lucide-react";
 import { Toast } from "@/components/ui/Toast";
 import { formatLocationDisplay } from "@/utils/locationUtils";
 
 export default function PlatformPage() {
   return (
-    <Suspense fallback={<PageLoader className="h-screen" />}>
+    <Suspense fallback={<FeedSkeleton />}>
       <PlatformContent />
     </Suspense>
   );
@@ -330,7 +330,7 @@ function PlatformContent() {
   };
 
   if (!currentUserProfile && loading) {
-    return <PageLoader className="h-screen" />;
+    return <FeedSkeleton />;
   }
 
   return (
@@ -379,7 +379,7 @@ function PlatformContent() {
             <div className="p-4 flex flex-col items-center text-center gap-3">
               <div className="flex flex-col items-center gap-1 w-full">
                 <h3
-                  className="font-jakarta text-base font-bold text-slate-900 line-clamp-1 hover:text-slate-600 transition-colors cursor-pointer"
+                  className="font-jakarta text-sm font-semibold text-slate-900 line-clamp-1 hover:text-slate-600 transition-colors cursor-pointer"
                   onClick={() => router.push("/perfil-usuario")}
                 >
                   {currentUserProfile
@@ -412,8 +412,10 @@ function PlatformContent() {
             <CardHeader title="Mi red" />
 
             {connectionsLoading ? (
-              <div className="py-6 flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-800 rounded-full animate-spin" />
+              <div className="grid grid-cols-4 gap-2">
+                {[...Array(8)].map((_, i) => (
+                  <Skeleton key={i} className="w-10 h-10 rounded-xl" />
+                ))}
               </div>
             ) : activeConnections.length === 0 ? (
               <p className="text-xs text-slate-400 py-2 text-center font-sans">
@@ -474,33 +476,35 @@ function PlatformContent() {
               />
             </div>
 
-            {/* Mobile quick actions: Mi red (hub) and Miembros (group) */}
+            {/* Mobile quick actions: Mi red and Miembros */}
             <div className="flex md:hidden items-center gap-2 shrink-0">
-              <SquareButton
-                icon="hub"
-                variant="outline"
+              <button
                 type="button"
                 onClick={() => router.push("/red")}
                 title="Mi red"
                 aria-label="Mi red"
-              />
-              <SquareButton
-                icon="group"
-                variant="outline"
+                className="w-11 h-11 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-700 transition-all cursor-pointer shadow-none active:scale-95"
+              >
+                <Users className="w-4 h-4" />
+              </button>
+              <button
                 type="button"
                 onClick={() => router.push("/inicio/miembros")}
                 title="Miembros"
                 aria-label="Miembros"
-              />
+                className="w-11 h-11 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-700 transition-all cursor-pointer shadow-none active:scale-95"
+              >
+                <UserCheck className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
           {/* 2. Posts Stream & Embedded Carousels in Exact 5-Slot Order */}
           <div className="flex flex-col gap-4">
             {postsLoading ? (
-              <div className="bg-white rounded-2xl border border-zinc-200 p-8 flex flex-col items-center justify-center gap-3 text-slate-400 font-sans">
-                <div className="w-6 h-6 border-2 border-slate-300 border-t-slate-800 rounded-full animate-spin" />
-                <span className="text-xs font-medium">Cargando publicaciones...</span>
+              <div className="flex flex-col gap-4">
+                <PostCardSkeleton />
+                <PostCardSkeleton />
               </div>
             ) : publicPosts.length === 0 ? (
               <div className="flex flex-col gap-4">
@@ -508,7 +512,7 @@ function PlatformContent() {
                   <MobileMembersCarousel members={users} loading={loading} />
                 </div>
                 <UpcomingEventsCarousel events={events} loading={eventsLoading} />
-                <div className="bg-white rounded-2xl border border-zinc-200 p-8 text-center text-slate-400 font-sans text-xs sm:text-sm">
+                <div className="bg-white rounded-2xl border border-slate-200/90 p-8 text-center text-slate-400 font-sans text-xs sm:text-sm">
                   No hay publicaciones visibles en la comunidad en este momento.
                 </div>
               </div>

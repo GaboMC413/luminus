@@ -99,8 +99,8 @@ export function AdminUsersClient({
   const [selectedSpecialistUserId, setSelectedSpecialistUserId] = useState<string | null>(null);
 
   // Shared User selection state
-  const [, setSelectedId] = useState<string>(initialUsers[0]?.id ?? "");
-  const [, setUserSubTab] = useState<"activos" | "cerradas" | "deshabilitados">("activos");
+  const [selectedId, setSelectedId] = useState<string>(initialUsers[0]?.id ?? "");
+  const [userSubTab, setUserSubTab] = useState<"activos" | "mecenas" | "cerradas" | "deshabilitados">("activos");
 
   const pendingSuggestionsCount = useMemo(() => {
     return suggestions.filter((s) => s.status === "pending").length;
@@ -241,6 +241,10 @@ export function AdminUsersClient({
               setActiveTab={handleTabChange}
               setSelectedSpecialistUserId={setSelectedSpecialistUserId}
               setSpecialistSubTab={setSpecialistSubTab}
+              selectedId={selectedId}
+              setSelectedId={setSelectedId}
+              userSubTab={userSubTab}
+              setUserSubTab={setUserSubTab}
             />
           )}
 

@@ -30,7 +30,7 @@ export function CardHeader({
       } ${className}`}
     >
       <div className="flex flex-col min-w-0">
-        <h3 className="font-jakarta text-xs sm:text-sm font-semibold text-slate-700 truncate m-0">
+        <h3 className="font-jakarta text-sm font-semibold text-slate-900 truncate m-0">
           {title}
         </h3>
         {description && (
