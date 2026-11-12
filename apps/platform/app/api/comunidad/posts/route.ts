@@ -6,14 +6,21 @@ import { serializePost } from "@/lib/community/posts";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await getCurrentActiveUser();
 
   try {
+    const { searchParams } = new URL(request.url);
+    const limitParam = searchParams.get("limit");
+    const cursor = searchParams.get("cursor");
+    const limit = Math.min(Math.max(parseInt(limitParam || "25", 10) || 25, 1), 50);
+
     const rawPosts = await prisma.communityPost.findMany({
       where: {
         status: "approved",
       },
+      take: limit + 1,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
       include: {
         user: {
           select: {
@@ -68,8 +75,12 @@ export async function GET() {
       ],
     });
 
-    const posts = rawPosts.map((p) => serializePost(p, session?.userId));
-    return NextResponse.json({ posts });
+    const hasMore = rawPosts.length > limit;
+    const items = hasMore ? rawPosts.slice(0, limit) : rawPosts;
+    const nextCursor = hasMore ? items[items.length - 1].id : null;
+
+    const posts = items.map((p) => serializePost(p, session?.userId));
+    return NextResponse.json({ posts, nextCursor, hasMore });
   } catch (error) {
     console.error("Failed to fetch community posts:", error);
     return NextResponse.json(

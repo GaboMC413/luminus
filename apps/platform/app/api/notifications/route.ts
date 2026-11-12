@@ -80,25 +80,26 @@ export async function GET() {
 
   try {
     const { prisma } = await import("@/lib/db");
-    const notifications = await prisma.notification.findMany({
-      where: {
-        userId: session.userId,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: 30,
-    });
+    const [notifications, isDismissed] = await Promise.all([
+      prisma.notification.findMany({
+        where: {
+          userId: session.userId,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 30,
+      }),
+      prisma.notification.findFirst({
+        where: {
+          userId: session.userId,
+          type: "onboarding_progress_dismissed",
+        },
+        select: { id: true },
+      }),
+    ]);
 
     const serialized: any[] = notifications.map(serializeNotification);
-
-    // Calculate onboarding quests progress
-    const isDismissed = await prisma.notification.findFirst({
-      where: {
-        userId: session.userId,
-        type: "onboarding_progress_dismissed",
-      },
-    });
 
     if (!isDismissed) {
       const onboardingData = await getOnboardingQuests(session.userId);

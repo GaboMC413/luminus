@@ -17,8 +17,8 @@ export async function GET(request: Request) {
     today.setHours(0, 0, 0, 0);
 
     const session = await getCurrentSession();
-    let userEmail = "";
-    if (session?.userId) {
+    let userEmail = session?.email || "";
+    if (!userEmail && session?.userId) {
       const user = await prisma.user.findUnique({
         where: { id: session.userId },
         select: { email: true },

@@ -13,14 +13,17 @@ interface CoverSelectorModalProps {
 }
 
 export function CoverSelectorModal({ isOpen, onClose, onSelect, currentCover }: CoverSelectorModalProps) {
-  const [selectedCover, setSelectedCover] = useState(currentCover);
   const covers = Array.from({ length: 9 }, (_, i) => `/covers/cover-${i + 1}.png`);
+  const [selectedCover, setSelectedCover] = useState(currentCover || covers[0]);
 
   useEffect(() => {
-    if (isOpen) setSelectedCover(currentCover);
+    if (isOpen) {
+      setSelectedCover(currentCover || covers[0]);
+    }
   }, [isOpen, currentCover]);
 
   const handleSave = () => {
+    if (!selectedCover) return;
     onSelect(selectedCover);
     onClose();
   };
@@ -36,7 +39,7 @@ export function CoverSelectorModal({ isOpen, onClose, onSelect, currentCover }: 
           <Button variant="secondary" onClick={onClose} className="w-full md:flex-1">
             Cancelar
           </Button>
-          <Button variant="primary" onClick={handleSave} className="w-full md:flex-1">
+          <Button variant="primary" onClick={handleSave} disabled={!selectedCover} className="w-full md:flex-1">
             Guardar cambios
           </Button>
         </>

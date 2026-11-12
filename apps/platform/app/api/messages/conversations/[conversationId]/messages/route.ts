@@ -68,19 +68,44 @@ export async function GET(request: Request, props: { params: Promise<{ conversat
       return NextResponse.json({ message: "Conversacion no encontrada." }, { status: 404 });
     }
 
-    const messages = await prisma.message.findMany({
-      where: {
-        conversationId,
-        deletedAt: null,
-        createdAt: participant.deletedAt ? { gt: participant.deletedAt } : undefined,
-      },
-      take: limit + 1,
-      cursor: cursor ? { id: cursor } : undefined,
-      skip: cursor ? 1 : 0,
-      orderBy: {
-        createdAt: "desc" as const,
-      },
-    });
+    const [messages, , otherParticipant] = await Promise.all([
+      prisma.message.findMany({
+        where: {
+          conversationId,
+          deletedAt: null,
+          createdAt: participant.deletedAt ? { gt: participant.deletedAt } : undefined,
+        },
+        take: limit + 1,
+        cursor: cursor ? { id: cursor } : undefined,
+        skip: cursor ? 1 : 0,
+        orderBy: {
+          createdAt: "desc" as const,
+        },
+      }),
+      prisma.conversationParticipant.update({
+        where: {
+          conversationId_userId: {
+            conversationId,
+            userId: session.userId,
+          },
+        },
+        data: {
+          lastReadAt: new Date(),
+        },
+      }),
+      prisma.conversationParticipant.findFirst({
+        where: {
+          conversationId,
+          userId: {
+            not: session.userId,
+          },
+        },
+        select: {
+          userId: true,
+          lastReadAt: true,
+        },
+      }),
+    ]);
 
     const hasMore = messages.length > limit;
     const paginatedMessages = hasMore ? messages.slice(0, limit) : messages;
@@ -88,31 +113,6 @@ export async function GET(request: Request, props: { params: Promise<{ conversat
     // Reverse to return ascending order for client
     const sortedMessages = [...paginatedMessages].reverse();
     const nextCursor = hasMore ? paginatedMessages[paginatedMessages.length - 1].id : null;
-
-    await prisma.conversationParticipant.update({
-      where: {
-        conversationId_userId: {
-          conversationId,
-          userId: session.userId,
-        },
-      },
-      data: {
-        lastReadAt: new Date(),
-      },
-    });
-
-    const otherParticipant = await prisma.conversationParticipant.findFirst({
-      where: {
-        conversationId,
-        userId: {
-          not: session.userId,
-        },
-      },
-      select: {
-        userId: true,
-        lastReadAt: true,
-      },
-    });
 
     let connectionInfo = null;
     if (otherParticipant) {

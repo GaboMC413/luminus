@@ -15,6 +15,7 @@ export async function GET() {
 
   try {
     const rawPosts = await prisma.communityPost.findMany({
+      take: 100,
       include: {
         user: {
           select: {
@@ -34,6 +35,7 @@ export async function GET() {
           },
         },
         comments: {
+          take: 20,
           include: {
             user: {
               select: {

@@ -30,6 +30,7 @@ vi.mock("@/lib/db", () => {
 // 3. Mock de Onboarding (para que no falle si intentan importar la función)
 vi.mock("@/lib/onboarding", () => ({
   checkAndTriggerQuestCompletion: vi.fn(),
+  checkAndTriggerQuestsCompletion: vi.fn().mockResolvedValue([]),
 }));
 
 describe("/api/profile", () => {
@@ -153,6 +154,31 @@ describe("/api/profile", () => {
           })
         })
       );
+    });
+
+    it("debería responder con 500 si la base de datos falla al leer el perfil sin mock fallback", async () => {
+      vi.mocked(getCurrentSession).mockResolvedValue({ userId: "user-123", email: "user@test.com", role: "USER" } as any);
+      vi.mocked(prisma.user.findUnique).mockRejectedValue(new Error("DB connection error"));
+
+      const res = await GET();
+      const data = await res.json();
+
+      expect(res.status).toBe(500);
+      expect(data.message).toBe("No fue posible cargar el perfil.");
+      expect(data.profile).toBeUndefined();
+    });
+
+    it("debería responder con 500 si la base de datos falla al actualizar el perfil sin mock fallback", async () => {
+      vi.mocked(getCurrentSession).mockResolvedValue({ userId: "user-123", email: "user@test.com", role: "USER" } as any);
+      vi.mocked(prisma.$transaction).mockRejectedValue(new Error("DB connection error"));
+
+      const req = createRequest({ first_name: "Juan" });
+      const res = await PATCH(req);
+      const data = await res.json();
+
+      expect(res.status).toBe(500);
+      expect(data.message).toBe("No fue posible actualizar el perfil.");
+      expect(data.profile).toBeUndefined();
     });
   });
 });

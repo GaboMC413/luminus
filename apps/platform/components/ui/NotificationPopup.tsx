@@ -252,19 +252,23 @@ interface OnboardingProgressCardProps {
   progressPercentage: number;
   onClose: () => void;
   onDismiss?: () => void;
+  className?: string;
+  defaultExpanded?: boolean;
 }
 
 export function OnboardingProgressCard({
   quests,
   progressPercentage,
   onClose,
-  onDismiss
+  onDismiss,
+  className = "",
+  defaultExpanded,
 }: OnboardingProgressCardProps) {
   const router = useRouter();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded ?? progressPercentage < 100);
 
   return (
-    <div className="bg-slate-50/70 border-b border-slate-100 p-4 flex flex-col gap-3">
+    <div className={`p-4 flex flex-col gap-3 ${className || "bg-slate-50/70 border-b border-slate-100"}`}>
       <div
         className="flex items-center justify-between cursor-pointer select-none group"
         onClick={() => setIsExpanded(!isExpanded)}

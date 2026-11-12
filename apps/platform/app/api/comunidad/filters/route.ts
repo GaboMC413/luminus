@@ -17,23 +17,6 @@ export async function GET(request: Request) {
   try {
     const { prisma } = await import("@/lib/db");
 
-    // Group countries of active onboarded users
-    const countryGroups = await prisma.userProfile.groupBy({
-      by: ["country"],
-      where: {
-        isOnboarded: true,
-        user: {
-          status: "active",
-          isGhost: false,
-        },
-        country: {
-          not: null,
-          notIn: [""],
-        },
-      },
-    });
-
-    // Group cities of active onboarded users
     const cityWhere: any = {
       isOnboarded: true,
       user: {
@@ -49,26 +32,40 @@ export async function GET(request: Request) {
       cityWhere.country = country;
     }
 
-    const cityGroups = await prisma.userProfile.groupBy({
-      by: ["city"],
-      where: cityWhere,
-    });
-
-    // Fetch all active interests that have users
-    const activeInterests = await prisma.interest.findMany({
-      where: {
-        isActive: true,
-        userInterests: {
-          some: {},
+    const [countryGroups, cityGroups, activeInterests] = await Promise.all([
+      prisma.userProfile.groupBy({
+        by: ["country"],
+        where: {
+          isOnboarded: true,
+          user: {
+            status: "active",
+            isGhost: false,
+          },
+          country: {
+            not: null,
+            notIn: [""],
+          },
         },
-      },
-      select: {
-        name: true,
-      },
-      orderBy: {
-        name: "asc",
-      },
-    });
+      }),
+      prisma.userProfile.groupBy({
+        by: ["city"],
+        where: cityWhere,
+      }),
+      prisma.interest.findMany({
+        where: {
+          isActive: true,
+          userInterests: {
+            some: {},
+          },
+        },
+        select: {
+          name: true,
+        },
+        orderBy: {
+          name: "asc",
+        },
+      }),
+    ]);
 
     const countries = countryGroups.map((g: any) => g.country).sort();
     const cities = cityGroups.map((g: any) => g.city).sort();

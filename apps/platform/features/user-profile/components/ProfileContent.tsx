@@ -134,7 +134,7 @@ export function ProfileContent() {
     if (!loading && profile) {
       const editParam = searchParams.get("edit");
       if (editParam) {
-        if (editParam === "interests" || editParam === "intereses") {
+        if (editParam === "user_interests" || editParam === "interests" || editParam === "intereses") {
           setShowEditInterests(true);
         } else if (editParam === "bio") {
           setShowEditAbout(true);
@@ -142,9 +142,17 @@ export function ProfileContent() {
           setShowEditPrompts(true);
         } else if (editParam === "cover") {
           setShowCoverModal(true);
+        } else if (editParam === "profession") {
+          handleOpenEditPersonal("profession");
         } else if (editParam === "personal") {
           setShowEditPersonal(true);
         }
+
+        // Clear query parameter from URL so subsequent state updates don't re-trigger the modal
+        if (typeof window !== "undefined") {
+          window.history.replaceState(null, "", window.location.pathname);
+        }
+
         // Wait a frame for the DOM to render the .glow-highlight class, then scroll to it smoothly
         setTimeout(() => {
           const highlightedEl = document.querySelector(".glow-highlight");
@@ -183,6 +191,11 @@ export function ProfileContent() {
     }
 
     const data = await response.json();
+    if (data.newlyCompletedQuests && Array.isArray(data.newlyCompletedQuests)) {
+      data.newlyCompletedQuests.forEach((quest: any) => {
+        window.dispatchEvent(new CustomEvent("luminus_quest_completed", { detail: quest }));
+      });
+    }
     const savedProfile = data.profile as Profile;
     setProfile(savedProfile);
     setCoverUrl(savedProfile.cover_url || "");
