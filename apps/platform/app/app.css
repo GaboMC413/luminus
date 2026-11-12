@@ -82,30 +82,30 @@
 
   /* PREMIUM FLAT FORM INPUTS (No shadows, rounded-xl) */
   .input-text-field, .reg-input-clean, .reg-input-bordered {
-    @apply w-full h-11 md:h-12 px-4 bg-white border border-zinc-200/80 rounded-xl text-[13px] md:text-base text-zinc-900 placeholder-zinc-400 focus-within:border-slate-800 outline-none transition-all duration-300;
+    @apply w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus-within:border-slate-400 focus-within:ring-1 focus-within:ring-slate-400/20 outline-none transition-all duration-150;
   }
 
   /* PREMIUM FLAT BUTTONS (No shadows, rounded-xl) */
   .btn-pill-primary {
-    @apply h-12 px-6 rounded-xl bg-black hover:bg-zinc-900 text-white font-medium text-sm flex items-center justify-center transition-all duration-300 active:scale-95 cursor-pointer select-none border-none outline-none;
+    @apply h-11 px-5 rounded-xl bg-slate-900 hover:bg-black text-white font-semibold font-jakarta text-sm flex items-center justify-center transition-all duration-150 active:scale-[0.99] cursor-pointer select-none border-none outline-none;
   }
 
   .btn-pill-secondary {
-    @apply h-12 px-6 rounded-xl bg-white hover:bg-slate-50 text-slate-900 font-medium text-sm flex items-center justify-center border border-zinc-200 transition-all duration-300 active:scale-95 cursor-pointer select-none;
+    @apply h-11 px-5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 font-semibold font-jakarta text-sm flex items-center justify-center border border-slate-200 transition-all duration-150 active:scale-[0.99] cursor-pointer select-none;
   }
 
   /* FLAT CONTAINERS & INTERACTIVE ITEMS (No shadows, rounded-2xl, flat borders) */
   .card-container {
-    @apply bg-white rounded-2xl p-6 border border-zinc-200/40;
+    @apply bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-none;
   }
 
   .card-interactive {
-    @apply bg-white rounded-2xl p-6 border border-zinc-200/40 hover:bg-slate-50/50 cursor-pointer transition-all duration-300 ease-out;
+    @apply bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 hover:border-slate-300 hover:bg-slate-50/40 cursor-pointer transition-all duration-150 ease-out shadow-none;
   }
 
   /* Navigation & Panels */
   .panel-navbar {
-    @apply bg-white/90 border-b border-zinc-200/50;
+    @apply bg-white border-b border-slate-200/90;
   }
 
   .material-icon-premium {
@@ -416,5 +416,82 @@ body.mobile-viewport-height-override div.w-full.h-\[100svh\] {
   /* Surface Container Card */
   .card-surface {
     @apply bg-white border border-slate-200/90 rounded-2xl p-4 sm:p-5 shadow-none;
+  }
+
+  /* ==========================================================================
+     CURATED SEMANTIC WELLNESS CATEGORY TOKENS (Zero Inline Styles)
+     8 Wellness Areas + Institutional Slate Fallback (WCAG AA >= 4.5:1)
+     ========================================================================== */
+
+  /* 1. Crecimiento Personal (Amber) */
+  .category-pill-crecimiento {
+    @apply bg-amber-50 text-amber-800 border-amber-200/80;
+  }
+  .category-text-crecimiento {
+    @apply text-amber-700;
+  }
+
+  /* 2. Bienestar Emocional (Pink) */
+  .category-pill-emocional {
+    @apply bg-pink-50 text-pink-800 border-pink-200/80;
+  }
+  .category-text-emocional {
+    @apply text-pink-700;
+  }
+
+  /* 3. Salud Integral (Blue) */
+  .category-pill-salud {
+    @apply bg-blue-50 text-blue-800 border-blue-200/80;
+  }
+  .category-text-salud {
+    @apply text-blue-700;
+  }
+
+  /* 4. Movimiento Físico (Rose/Red) */
+  .category-pill-movimiento {
+    @apply bg-rose-50 text-rose-800 border-rose-200/80;
+  }
+  .category-text-movimiento {
+    @apply text-rose-700;
+  }
+
+  /* 5. Nutrición (Lime/Emerald) */
+  .category-pill-nutricion {
+    @apply bg-lime-50 text-lime-800 border-lime-200/80;
+  }
+  .category-text-nutricion {
+    @apply text-lime-700;
+  }
+
+  /* 6. Espiritualidad (Purple) */
+  .category-pill-espiritualidad {
+    @apply bg-purple-50 text-purple-800 border-purple-200/80;
+  }
+  .category-text-espiritualidad {
+    @apply text-purple-700;
+  }
+
+  /* 7. Vínculos y Relaciones (Orange) */
+  .category-pill-vinculos {
+    @apply bg-orange-50 text-orange-800 border-orange-200/80;
+  }
+  .category-text-vinculos {
+    @apply text-orange-700;
+  }
+
+  /* 8. Terapias Complementarias (Teal) */
+  .category-pill-terapias {
+    @apply bg-teal-50 text-teal-800 border-teal-200/80;
+  }
+  .category-text-terapias {
+    @apply text-teal-700;
+  }
+
+  /* 9. Institutional & Neutral Default (Slate) */
+  .category-pill-slate {
+    @apply bg-slate-100 text-slate-700 border-slate-200/80;
+  }
+  .category-text-slate {
+    @apply text-slate-700;
   }
 }

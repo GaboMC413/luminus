@@ -2,7 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { DirectorySkeleton } from "@/components/ui/Skeleton";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { DirectoryToolbar } from "@/components/ui/DirectoryToolbar";
+import { UserCard } from "@/components/ui/UserCard";
+import { SelectInput } from "@/components/ui/SelectInput";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/Button";
+import { DirectoryGridSkeleton } from "@/components/ui/Skeleton";
 
 type Specialist = {
   id: string;
@@ -17,47 +23,6 @@ type ApplicationStatus = {
   hasApplication: boolean;
   status: string | null;
 };
-
-function SpecialistCard({ specialist }: { specialist: Specialist }) {
-  const router = useRouter();
-  const [imageError, setImageError] = useState(false);
-  const location = [specialist.city, specialist.country].filter(Boolean).join(", ");
-
-  return (
-    <article
-      className="group flex min-h-[220px] cursor-pointer flex-col items-center rounded-2xl border border-slate-200 bg-white px-3 py-4 text-center transition-colors hover:border-slate-400"
-      onClick={() => {
-        router.push(`/inicio/public-profile?id=${encodeURIComponent(specialist.id)}&from=especialistas`);
-      }}
-    >
-      <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-slate-100 sm:h-20 sm:w-20">
-        {specialist.avatar && !imageError ? (
-          <img
-            src={specialist.avatar}
-            alt={specialist.name}
-            className="h-full w-full object-cover"
-            onError={() => setImageError(true)}
-          />
-        ) : (
-          <span className="material-symbols-outlined text-[42px] text-slate-300">person</span>
-        )}
-      </div>
-
-      <h2 className="mt-3 line-clamp-1 text-sm font-semibold text-slate-950 sm:text-base">
-        {specialist.name}
-      </h2>
-      <p className="mt-1 line-clamp-1 min-h-5 text-xs text-slate-500 sm:text-sm">
-        {location || "Ubicación no especificada"}
-      </p>
-      <p className="mt-3 line-clamp-2 font-jakarta text-sm font-bold text-fuchsia-500">
-        {specialist.specialty}
-      </p>
-      <span className="mt-auto pt-3 text-xs font-semibold text-slate-500 transition-colors group-hover:text-slate-900">
-        Ver especialista
-      </span>
-    </article>
-  );
-}
 
 export default function EspecialistasPage() {
   const router = useRouter();
@@ -87,131 +52,187 @@ export default function EspecialistasPage() {
 
   const countries = useMemo(
     () => Array.from(new Set(specialists.map((item) => item.country).filter(Boolean))).sort(),
-    [specialists],
+    [specialists]
   );
   const specialties = useMemo(
     () => Array.from(new Set(specialists.map((item) => item.specialty).filter(Boolean))).sort(),
-    [specialists],
+    [specialists]
   );
 
   const visibleSpecialists = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase("es");
     return specialists.filter((item) => {
-      const matchesQuery = !normalizedQuery || [item.name, item.city, item.country, item.specialty]
-        .some((value) => value.toLocaleLowerCase("es").includes(normalizedQuery));
+      const matchesQuery =
+        !normalizedQuery ||
+        [item.name, item.city, item.country, item.specialty].some((value) =>
+          value?.toLocaleLowerCase("es").includes(normalizedQuery)
+        );
       return matchesQuery && (!country || item.country === country) && (!specialty || item.specialty === specialty);
     });
   }, [specialists, query, country, specialty]);
 
-  const hasFilters = Boolean(country || specialty);
+  const activeFiltersCount = (country ? 1 : 0) + (specialty ? 1 : 0);
   const isPending = application?.status === "pending_review";
 
-  if (loading) return <DirectorySkeleton />;
+  const activeChips = useMemo(() => {
+    const chips = [];
+    if (country) {
+      chips.push({
+        id: "country",
+        label: `País: ${country}`,
+        onRemove: () => setCountry(""),
+      });
+    }
+    if (specialty) {
+      chips.push({
+        id: "specialty",
+        label: `Especialidad: ${specialty}`,
+        onRemove: () => setSpecialty(""),
+      });
+    }
+    return chips;
+  }, [country, specialty]);
+
+  if (loading) return <DirectoryGridSkeleton count={8} />;
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-3 pb-8 pt-4 font-sans sm:px-6 md:gap-6 md:py-6">
+    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-5 px-4 pb-12 pt-4 font-sans sm:px-6 md:gap-6 md:py-6">
+      {/* 1. Standardized In-App Page Header */}
+      <PageHeader
+        title="Especialistas"
+        description="Profesionales verificados para acompañarte en tu bienestar."
+      />
+
+      {/* 2. Pending Application Notice */}
       {isPending && (
-        <section className="order-[-3] rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
-          <strong>Tu aplicación está en revisión.</strong>{" "}
-          <button className="underline" onClick={() => router.push("/especialistas/unirme")}>Ver estado</button>
+        <section className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 flex items-center justify-between gap-3">
+          <span>Tu aplicación como especialista está en revisión por el equipo LUMINUS.</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push("/especialistas/unirme")}
+            className="text-emerald-800 hover:text-emerald-950 hover:bg-emerald-100/60"
+          >
+            Ver estado
+          </Button>
         </section>
       )}
 
-      <div className="order-[-2] relative flex items-center gap-2">
-        <span className="material-symbols-outlined pointer-events-none absolute left-4 text-[21px] text-slate-500">search</span>
-        <input
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="Buscar especialistas"
-          className="h-12 min-w-0 flex-1 rounded-xl border border-slate-300 bg-white pl-12 pr-4 text-sm outline-none transition focus:border-slate-500"
-        />
-        <button
-          type="button"
-          aria-label="Mostrar filtros"
-          onClick={() => setShowFilters((current) => !current)}
-          className={`relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border bg-white transition ${showFilters || hasFilters ? "border-slate-700 text-slate-950" : "border-slate-300 text-slate-600"}`}
-        >
-          <span className="material-symbols-outlined">tune</span>
-          {hasFilters && <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-fuchsia-500" />}
-        </button>
-      </div>
+      {/* 3. Unified Directory Search & Filter Toolbar */}
+      <DirectoryToolbar
+        searchValue={query}
+        onSearchChange={setQuery}
+        searchPlaceholder="Buscar por nombre, especialidad o ubicación..."
+        filtersOpen={showFilters}
+        onToggleFilters={() => setShowFilters((prev) => !prev)}
+        activeFiltersCount={activeFiltersCount}
+        activeFilterChips={activeChips}
+        onClearAllFilters={() => {
+          setCountry("");
+          setSpecialty("");
+        }}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SelectInput
+            label="País"
+            value={country}
+            options={[
+              { label: "Todos los países", value: "" },
+              ...countries.map((c) => ({ label: c, value: c })),
+            ]}
+            onSelect={setCountry}
+          />
 
-      {showFilters && (
-        <section className="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:grid-cols-2">
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-slate-600">
-            País
-            <select value={country} onChange={(event) => setCountry(event.target.value)} className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-800">
-              <option value="">Todos los países</option>
-              {countries.map((item) => <option key={item}>{item}</option>)}
-            </select>
-          </label>
-          <label className="flex flex-col gap-1.5 text-xs font-semibold text-slate-600">
-            Especialidad
-            <select value={specialty} onChange={(event) => setSpecialty(event.target.value)} className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-normal text-slate-800">
-              <option value="">Todas las especialidades</option>
-              {specialties.map((item) => <option key={item}>{item}</option>)}
-            </select>
-          </label>
-          {hasFilters && (
-            <button type="button" onClick={() => { setCountry(""); setSpecialty(""); }} className="justify-self-start text-xs font-semibold text-slate-600 underline sm:col-span-2">
-              Limpiar filtros
-            </button>
-          )}
-        </section>
-      )}
+          <SelectInput
+            label="Especialidad"
+            value={specialty}
+            options={[
+              { label: "Todas las especialidades", value: "" },
+              ...specialties.map((s) => ({ label: s, value: s })),
+            ]}
+            onSelect={setSpecialty}
+          />
+        </div>
+      </DirectoryToolbar>
 
+      {/* 4. Directory Grid or Empty/Error State */}
       {error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-700">{error}</div>
-      ) : visibleSpecialists.length ? (
-        <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-5 lg:grid-cols-4">
-          {visibleSpecialists.map((specialist) => <SpecialistCard key={specialist.id} specialist={specialist} />)}
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-700">
+          {error}
+        </div>
+      ) : visibleSpecialists.length > 0 ? (
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">
+          {visibleSpecialists.map((specialist) => (
+            <UserCard
+              key={specialist.id}
+              user={{
+                id: specialist.id,
+                name: specialist.name,
+                avatar: specialist.avatar,
+                city: specialist.city,
+                country: specialist.country,
+                specialty: specialist.specialty,
+              }}
+              profileHref={`/inicio/public-profile?id=${encodeURIComponent(specialist.id)}&from=especialistas`}
+              actionLabel="Ver perfil"
+            />
+          ))}
         </section>
       ) : (
-        <section className="rounded-2xl border border-slate-200 bg-white p-10 text-center">
-          <span className="material-symbols-outlined text-4xl text-slate-300">person_search</span>
-          <h2 className="mt-2 font-semibold text-slate-900">No encontramos especialistas</h2>
-          <p className="mt-1 text-sm text-slate-500">Prueba con otra búsqueda o limpia los filtros.</p>
-        </section>
+        <EmptyState
+          title="No encontramos especialistas"
+          description="Prueba con otra búsqueda o limpia los filtros para ver todos los especialistas disponibles."
+          actionLabel={activeFiltersCount > 0 ? "Limpiar filtros" : undefined}
+          onAction={
+            activeFiltersCount > 0
+              ? () => {
+                  setQuery("");
+                  setCountry("");
+                  setSpecialty("");
+                }
+              : undefined
+          }
+        />
       )}
 
+      {/* 5. Institutional CTA Banner for Specialists */}
       {!application?.hasApplication && (
-        <section className="relative flex w-full flex-col gap-6 overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-wellness-sage-100/10 via-white to-wellness-clay-100/20 p-5 md:p-8">
-          <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-wellness-sage-200/10 blur-3xl" />
-          <div className="pointer-events-none absolute bottom-0 left-0 h-64 w-64 rounded-full bg-wellness-clay-200/10 blur-3xl" />
-
-          <div className="relative z-10 flex w-full flex-1 flex-col gap-5">
-            <div className="flex flex-col gap-3">
-              <span className="text-sm font-medium text-slate-500">¿Eres un especialista en bienestar?</span>
-              <h2 className="font-jakarta text-2xl font-bold leading-tight tracking-tight text-slate-900 md:text-3xl">
+        <section className="relative flex w-full flex-col gap-6 overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 md:p-8">
+          <div className="flex w-full flex-1 flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-jakarta">
+                Comunidad de especialistas
+              </span>
+              <h2 className="font-jakarta text-xl sm:text-2xl font-bold leading-tight tracking-tight text-slate-900">
                 Haz visible tu forma de acompañar
               </h2>
-              <p className="max-w-3xl text-sm leading-relaxed text-slate-600">
+              <p className="max-w-3xl text-sm leading-relaxed text-slate-600 mt-1">
                 LUMINUS reúne a personas que están explorando bienestar, cambio personal, salud integral y nuevas formas de vivir con más conciencia. Tu lugar como especialista no es solo aparecer en una lista, sino ayudar a que más personas encuentren orientación clara, humana y confiable.
               </p>
             </div>
 
-            <div className="flex items-stretch gap-3">
-              <div className="luminus-gradient w-[2px] shrink-0 rounded-full" />
-              <p className="font-jakarta text-[13px] font-medium italic text-slate-500">
+            <div className="flex items-stretch gap-3 py-1">
+              <div className="w-[3px] bg-slate-900 shrink-0 rounded-full" />
+              <p className="font-jakarta text-xs sm:text-sm font-medium italic text-slate-500">
                 “Un espacio para mostrar quién eres, cómo trabajas y qué puedes aportar.”
               </p>
             </div>
 
-            <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-              <button
-                type="button"
+            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center pt-2">
+              <Button
+                variant="primary"
                 onClick={() => router.push("/especialistas/unirme")}
-                className="w-full rounded-xl bg-black px-6 py-3 text-sm font-semibold text-white hover:bg-zinc-900 sm:w-auto"
+                className="w-full sm:w-auto"
               >
                 Aplicar como Especialista
-              </button>
+              </Button>
               <a
                 href="https://luminuslatam.com/especialistas"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-jakarta text-[13px] font-semibold text-slate-500 underline underline-offset-4 transition-colors hover:text-black"
+                className="font-jakarta text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors px-2 py-1"
               >
-                Ver más acerca del programa
+                Conocer más sobre el programa
               </a>
             </div>
           </div>

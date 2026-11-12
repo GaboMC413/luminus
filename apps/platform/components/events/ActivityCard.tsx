@@ -67,10 +67,10 @@ export function ActivityCard({ event }: ActivityCardProps) {
   return (
     <article
       onClick={handleCardClick}
-      className="group relative w-full bg-white border border-slate-200/90 hover:border-slate-300 rounded-2xl overflow-hidden transition-colors shadow-none cursor-pointer flex flex-col md:flex-row md:items-stretch"
+      className="group relative w-full bg-white border border-slate-200/90 hover:border-slate-300 rounded-2xl overflow-hidden transition-colors shadow-none cursor-pointer flex flex-col md:flex-row md:items-center"
     >
-      {/* Content Side: Left on desktop, Bottom on mobile */}
-      <div className="flex-1 min-w-0 flex flex-col justify-between gap-5 p-5 sm:p-6 md:p-7 order-last md:order-first">
+      {/* Content Side: Left on desktop, Bottom on mobile - flexible relative width up to margins */}
+      <div className="flex-1 min-w-0 flex flex-col justify-between gap-4 p-5 sm:p-6 lg:p-7 order-last md:order-first">
         {/* Top Badges (Time & Location / Status Badge - simple, no icons, no category) */}
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-base sm:text-lg font-bold font-jakarta text-slate-900 leading-none">
@@ -88,19 +88,19 @@ export function ActivityCard({ event }: ActivityCardProps) {
         <div className="flex flex-col gap-2 py-1">
           <Link
             href={`/actividades/${eventSlug}`}
-            className="text-xl sm:text-2xl font-bold font-jakarta text-slate-900 tracking-tight leading-snug group-hover:text-black transition-colors"
+            className="text-lg sm:text-xl lg:text-2xl font-bold font-jakarta text-slate-900 tracking-tight leading-snug group-hover:text-black transition-colors"
           >
             {event.title}
           </Link>
 
-          {event.speakerName && (
+          {event.speakerName && event.speakerName.toLowerCase() !== "especialista luminus" && (
             <p className="text-sm sm:text-base font-semibold font-jakarta text-slate-700">
               Con {event.speakerName}
             </p>
           )}
 
           {event.description && (
-            <p className="text-sm font-normal font-sans text-slate-600 line-clamp-3 leading-relaxed mt-1">
+            <p className="text-sm font-normal font-sans text-slate-600 line-clamp-2 leading-relaxed mt-1">
               {cleanDescriptionText(event.description)}
             </p>
           )}
@@ -128,16 +128,16 @@ export function ActivityCard({ event }: ActivityCardProps) {
         </div>
       </div>
 
-      {/* Media Side: Right on desktop, Top on mobile */}
+      {/* Media Side: Right on desktop, Top on mobile - strictly 16:9 aspect-video like YouTube */}
       <Link
         href={`/actividades/${eventSlug}`}
-        className="w-full md:w-1/2 shrink-0 aspect-video md:aspect-auto relative overflow-hidden bg-slate-100 order-first md:order-last min-h-[200px] block"
+        className="w-full md:w-[420px] lg:w-[480px] xl:w-[500px] shrink-0 aspect-video relative overflow-hidden bg-slate-100 order-first md:order-last block"
       >
         <Image
           src={coverUrl}
           alt={event.title}
           fill
-          sizes="(max-width: 768px) 100vw, 50vw"
+          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 480px, 500px"
           className="object-cover object-center transition-transform duration-300 group-hover:scale-[1.02]"
           unoptimized
         />

@@ -2,12 +2,15 @@
 
 import React from "react";
 import { Inbox } from "lucide-react";
+import { Button } from "./Button";
 
 export interface EmptyStateProps {
   title: string;
   description?: string;
   icon?: React.ReactNode;
   action?: React.ReactNode;
+  actionLabel?: string;
+  onAction?: () => void;
   className?: string;
 }
 
@@ -16,6 +19,8 @@ export function EmptyState({
   description,
   icon,
   action,
+  actionLabel,
+  onAction,
   className = "",
 }: EmptyStateProps) {
   return (
@@ -34,6 +39,13 @@ export function EmptyState({
         </p>
       )}
       {action && <div className="mt-1">{action}</div>}
+      {!action && actionLabel && onAction && (
+        <div className="mt-1">
+          <Button variant="secondary" size="sm" onClick={onAction}>
+            {actionLabel}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

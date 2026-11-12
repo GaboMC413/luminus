@@ -1086,6 +1086,7 @@ export interface ContactNotificationPayload {
   pais?: string;
   motivo: string;
   mensaje: string;
+  responderA?: string;
 }
 
 const DEFAULT_CONTACT_RECIPIENTS = [
@@ -1102,7 +1103,20 @@ export async function sendContactNotificationEmail(data: ContactNotificationPayl
     ? process.env.CONTACT_NOTIFICATION_EMAILS.split(",").map((e) => e.trim()).filter(Boolean)
     : null;
 
-  const toAddresses = envRecipients && envRecipients.length > 0 ? envRecipients : DEFAULT_CONTACT_RECIPIENTS;
+  let dynamicRecipients: string[] | null = null;
+  try {
+    const { getContactRecipients } = await import("@/lib/contactRecipients");
+    dynamicRecipients = await getContactRecipients();
+  } catch (err) {
+    console.warn("[sendContactNotificationEmail] Could not load dynamic recipients:", err);
+  }
+
+  const toAddresses =
+    dynamicRecipients && dynamicRecipients.length > 0
+      ? dynamicRecipients
+      : envRecipients && envRecipients.length > 0
+      ? envRecipients
+      : DEFAULT_CONTACT_RECIPIENTS;
 
   const subject = `[LUMINUS Contacto] ${data.motivo} - ${data.nombre} ${data.apellido}`;
 

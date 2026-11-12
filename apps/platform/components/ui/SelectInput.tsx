@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
+import { ChevronDown } from "lucide-react";
 
 interface SelectInputProps {
   label?: string;
@@ -278,7 +279,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
           maxHeight: `${coords.maxHeight}px`,
           zIndex: 10000,
         }}
-        className="bg-white rounded-xl border border-zinc-200/90 shadow-[0_8px_20px_-4px_rgba(0,0,0,0.08)] overflow-y-auto overflow-x-hidden overscroll-contain animate-in fade-in duration-150"
+        className="bg-white rounded-xl border border-slate-200/90 shadow-[0_8px_20px_-4px_rgba(0,0,0,0.08)] overflow-y-auto overflow-x-hidden overscroll-contain animate-in fade-in duration-150"
       >
         {filteredOptions.length > 0 ? (
           filteredOptions.map((option, index) => {
@@ -330,9 +331,8 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
 
     return (
       <div
-        className={`flex flex-col ${label ? "gap-1.5" : ""} relative w-full ${className}`}
+        className={`flex flex-col ${label ? "gap-1.5" : ""} relative w-full scroll-mt-[100px] ${className}`}
         ref={containerRef}
-        style={{ scrollMarginTop: "100px" }}
       >
         {label && (
           <label className="text-xs font-semibold text-slate-700 font-jakarta">{label}</label>
@@ -397,7 +397,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
           }}
           className={`
             ${variantClass} ${size === "sm" ? "!h-9 !px-3 !rounded-xl" : "px-3.5"} flex items-center cursor-pointer transition-colors group outline-none w-full min-w-0
-            ${error ? "!border-[#FF3D3D]" : ""}
+            ${error ? "!border-rose-500 focus:!border-rose-500" : ""}
             ${isOpen ? "border-slate-800 ring-1 ring-slate-800" : ""}
             ${disabled ? `${disabledOpacity ? "opacity-50" : ""} cursor-not-allowed` : ""}
           `}
@@ -441,23 +441,11 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
           )}
 
           {!disabled && (
-            <svg
-              width={size === "sm" ? "8" : "10"}
-              height={size === "sm" ? "5" : "6"}
-              viewBox="0 0 10 6"
-              fill="none"
-              className={`ml-1.5 shrink-0 transition-transform duration-300 pointer-events-none ${
-                isOpen ? "rotate-180" : ""
-              }`}
-            >
-              <path
-                d="M1 1L5 5L9 1"
-                stroke="#94A3B8"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <ChevronDown
+              className={`ml-1.5 shrink-0 text-slate-400 transition-transform duration-300 pointer-events-none ${
+                size === "sm" ? "w-3.5 h-3.5" : "w-4 h-4"
+              } ${isOpen ? "rotate-180" : ""}`}
+            />
           )}
         </div>
 

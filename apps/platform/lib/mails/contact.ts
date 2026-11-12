@@ -8,6 +8,7 @@ export interface ContactNotificationEmailOptions {
   pais?: string;
   motivo: string;
   mensaje: string;
+  responderA?: string;
 }
 
 export function renderContactNotificationEmailHtml(data: ContactNotificationEmailOptions): string {
@@ -15,7 +16,7 @@ export function renderContactNotificationEmailHtml(data: ContactNotificationEmai
     <!-- Top Operational Badge -->
     <div style="margin-bottom: 20px; text-align: left;">
       <span style="display: inline-block; background-color: #f1f5f9; color: #334155; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; padding: 5px 12px; border-radius: 20px; border: 1px solid #cbd5e1;">
-        Nuevo contacto desde la Web
+        Nuevo mensaje de contacto
       </span>
     </div>
 
@@ -24,14 +25,14 @@ export function renderContactNotificationEmailHtml(data: ContactNotificationEmai
     </h1>
     
     <p style="font-size: 14px; color: #64748b; margin: 0 0 22px 0; text-align: left;">
-      Se ha puesto en contacto a través de la web.
+      Se ha puesto en contacto a través de la plataforma.
     </p>
 
     <!-- Data Summary Table Card -->
     <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-bottom: 24px; text-align: left;">
       <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
         <tr>
-          <td style="padding: 6px 0; color: #64748b; font-weight: 600; width: 110px;">Motivo:</td>
+          <td style="padding: 6px 0; color: #64748b; font-weight: 600; width: 130px;">Motivo:</td>
           <td style="padding: 6px 0; color: #0f172a; font-weight: 700;">${data.motivo}</td>
         </tr>
         <tr>
@@ -42,6 +43,14 @@ export function renderContactNotificationEmailHtml(data: ContactNotificationEmai
           <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Teléfono:</td>
           <td style="padding: 6px 0; color: #0f172a;">${data.telefono || "No proporcionado"}</td>
         </tr>
+        ${
+          data.responderA
+            ? `<tr>
+          <td style="padding: 6px 0; color: #64748b; font-weight: 600;">Responder a:</td>
+          <td style="padding: 6px 0; color: #0f172a; font-weight: 700;">${data.responderA}</td>
+        </tr>`
+            : ""
+        }
         <tr>
           <td style="padding: 6px 0; color: #64748b; font-weight: 600;">País:</td>
           <td style="padding: 6px 0; color: #0f172a;">${data.pais || "No especificado"}</td>
@@ -59,7 +68,7 @@ ${data.mensaje}
   `;
 
   return renderEmailLayout({
-    title: `[LUMINUS WEB] ${data.motivo} - ${data.nombre} ${data.apellido}`,
+    title: `[LUMINUS Contacto] ${data.motivo} - ${data.nombre} ${data.apellido}`,
     contentHtml,
     alignCenter: false,
   });

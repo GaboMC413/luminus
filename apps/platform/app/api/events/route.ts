@@ -2,12 +2,17 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentSession } from "@/lib/auth/session";
 import { sendEventRegistrationEmail } from "@/lib/mails/sender";
+import fs from "fs";
+import path from "path";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const type = searchParams.get("type");
+
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -21,7 +26,88 @@ export async function GET(request: Request) {
       userEmail = user?.email || "";
     }
 
-    // Only return active upcoming events whose date is today or in the future
+    if (type === "past") {
+      let pastEvents = await prisma.event.findMany({
+        where: {
+          OR: [
+            { isUpcoming: false },
+            {
+              AND: [
+                { date: { not: null } },
+                { date: { lt: today } },
+              ],
+            },
+          ],
+          AND: [
+            {
+              OR: [
+                { youtubeId: { not: null } },
+                { link: { contains: "youtube" } },
+                { link: { contains: "youtu.be" } },
+              ],
+            },
+          ],
+        },
+        orderBy: { date: "desc" },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          description: true,
+          speakerName: true,
+          speakerBio: true,
+          category: true,
+          coverUrl: true,
+          date: true,
+          timeText: true,
+          location: true,
+          link: true,
+          youtubeId: true,
+          isUpcoming: true,
+        },
+      });
+
+      // Fallback to local json data if DB has no recordings
+      if (!pastEvents || pastEvents.length === 0) {
+        try {
+          const possiblePaths = [
+            path.join(process.cwd(), "apps", "marketing", "data", "youtube_videos.json"),
+            path.join(process.cwd(), "data", "youtube_videos.json"),
+            path.join(process.cwd(), "..", "marketing", "data", "youtube_videos.json"),
+          ];
+          for (const jsonPath of possiblePaths) {
+            if (fs.existsSync(jsonPath)) {
+              const fileData = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
+              if (Array.isArray(fileData)) {
+                pastEvents = fileData.map((item: any) => ({
+                  id: item.youtube_id || item.id,
+                  slug: item.slug || null,
+                  title: item.title,
+                  description: item.description || "",
+                  speakerName: item.speaker_name || item.speakerName || null,
+                  speakerBio: item.speaker_bio || item.speakerBio || null,
+                  category: item.category || null,
+                  coverUrl: item.cover_url || item.coverUrl || null,
+                  date: item.date || null,
+                  timeText: item.timeText || item.publishTimeText || null,
+                  location: item.location || "YouTube",
+                  link: item.link || (item.youtube_id ? `https://www.youtube.com/watch?v=${item.youtube_id}` : null),
+                  youtubeId: item.youtube_id || item.youtubeId || null,
+                  isUpcoming: false,
+                }));
+                break;
+              }
+            }
+          }
+        } catch (fsErr) {
+          console.warn("[Platform /api/events] Error reading fallback youtube_videos.json:", fsErr);
+        }
+      }
+
+      return NextResponse.json({ events: pastEvents || [] });
+    }
+
+    // Default: Only return active upcoming events whose date is today or in the future
     const events = await prisma.event.findMany({
       where: {
         isUpcoming: true,

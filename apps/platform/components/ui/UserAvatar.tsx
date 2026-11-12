@@ -14,7 +14,7 @@ const SIZE_STYLES = {
   xs: "w-6 h-6 rounded-lg text-slate-400",
   sm: "w-8 h-8 rounded-lg text-slate-400",
   md: "w-10 h-10 rounded-xl text-slate-400",
-  lg: "w-16 h-16 rounded-2xl text-slate-400",
+  lg: "w-16 h-16 sm:w-20 sm:h-20 rounded-2xl text-slate-400",
   xl: "w-24 h-24 rounded-2xl text-slate-400",
 };
 
@@ -22,7 +22,7 @@ const ICON_SIZES = {
   xs: "w-3.5 h-3.5",
   sm: "w-4 h-4",
   md: "w-5 h-5",
-  lg: "w-8 h-8",
+  lg: "w-7 h-7 sm:w-8 sm:h-8",
   xl: "w-12 h-12",
 };
 

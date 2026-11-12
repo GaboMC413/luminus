@@ -13,6 +13,8 @@ import { UpcomingEventsCarousel, EventItem as CommunityEventItem } from "@/compo
 import { Button } from "@/components/ui/Button";
 import { CardHeader } from "@/components/ui/CardHeader";
 import { User, Users, UserCheck } from "lucide-react";
+import { UserAvatar } from "@/components/ui/UserAvatar";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Toast } from "@/components/ui/Toast";
 import { formatLocationDisplay } from "@/utils/locationUtils";
 
@@ -30,7 +32,11 @@ function PlatformContent() {
   // Feed Posts state (synced with database - only real approved posts)
   const [posts, setPosts] = useState<PostItem[]>([]);
   const [postsLoading, setPostsLoading] = useState(true);
-  const [postNotice, setPostNotice] = useState<{ title: string; message: string } | null>(null);
+  const [toastState, setToastState] = useState<{
+    title: string;
+    message: string;
+    type?: "success" | "error";
+  } | null>(null);
 
   const fetchPosts = async () => {
     try {
@@ -199,23 +205,33 @@ function PlatformContent() {
         const data = await res.json();
         if (data.post && (data.post.status === "approved" || !data.post.status)) {
           setPosts((prev) => [data.post, ...prev]);
-          setPostNotice({
+          setToastState({
             title: "¡Publicación creada!",
             message: "Tu publicación ya está disponible para toda la comunidad.",
+            type: "success",
           });
         } else {
-          setPostNotice({
+          setToastState({
             title: "¡Publicación enviada!",
             message: "Tu publicación ha sido enviada con éxito y está en revisión antes de publicarse en la comunidad.",
+            type: "success",
           });
         }
       } else {
         const errData = await res.json().catch(() => null);
-        alert(errData?.error || "Error al crear la publicación.");
+        setToastState({
+          title: "Error al publicar",
+          message: errData?.error || "Error al crear la publicación.",
+          type: "error",
+        });
       }
     } catch (err) {
       console.error("Error creating community post:", err);
-      alert("Error al conectar con el servidor para publicar.");
+      setToastState({
+        title: "Error de conexión",
+        message: "Error al conectar con el servidor para publicar.",
+        type: "error",
+      });
     }
   };
 
@@ -261,7 +277,11 @@ function PlatformContent() {
         }
       } else {
         const errData = await res.json().catch(() => null);
-        alert(errData?.message || "No se pudo actualizar el estado de fijado.");
+        setToastState({
+          title: "Error",
+          message: errData?.message || "No se pudo actualizar el estado de fijado.",
+          type: "error",
+        });
         fetchPosts();
       }
     } catch (err) {
@@ -279,7 +299,11 @@ function PlatformContent() {
         setPosts((prev) => prev.filter((p) => p.id !== postId));
       } else {
         const errData = await res.json().catch(() => null);
-        alert(errData?.error || "No se pudo eliminar la publicación.");
+        setToastState({
+          title: "Error",
+          message: errData?.error || "No se pudo eliminar la publicación.",
+          type: "error",
+        });
       }
     } catch (err) {
       console.error("Error deleting post:", err);
@@ -314,18 +338,27 @@ function PlatformContent() {
           setPosts((prev) =>
             prev.map((p) => (p.id === updatedPost.id ? data.post : p))
           );
-          setPostNotice({
+          setToastState({
             title: "¡Publicación actualizada!",
             message: "Los cambios en tu publicación se guardaron correctamente.",
+            type: "success",
           });
         }
       } else {
         const errData = await res.json().catch(() => null);
-        alert(errData?.message || "No se pudo actualizar la publicación.");
+        setToastState({
+          title: "Error al actualizar",
+          message: errData?.message || "No se pudo actualizar la publicación.",
+          type: "error",
+        });
       }
     } catch (err) {
       console.error("Error updating community post:", err);
-      alert("Error al conectar con el servidor para actualizar.");
+      setToastState({
+        title: "Error de conexión",
+        message: "Error al conectar con el servidor para actualizar.",
+        type: "error",
+      });
     }
   };
 
@@ -353,25 +386,22 @@ function PlatformContent() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-r from-violet-600 to-indigo-600 opacity-80" />
+                <div className="w-full h-full bg-slate-200/90" />
               )}
             </div>
 
             {/* 2. Photo */}
-            <div className="flex justify-center -mt-[55px] relative z-10">
-              <div className="w-[100px] h-[100px] rounded-[22px] overflow-hidden bg-white border-4 border-white shrink-0 flex items-center justify-center">
-                {currentUserProfile?.profile_picture_url && !profileImgError ? (
-                  <img
-                    src={currentUserProfile.profile_picture_url}
-                    alt="Avatar"
-                    className="w-full h-full object-cover"
-                    onError={() => setProfileImgError(true)}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">
-                    <User className="w-12 h-12" strokeWidth={1.5} />
-                  </div>
-                )}
+            <div className="flex justify-center -mt-12 relative z-10">
+              <div className="rounded-2xl overflow-hidden bg-white border-4 border-white shrink-0 flex items-center justify-center shadow-sm">
+                <UserAvatar
+                  src={currentUserProfile?.profile_picture_url}
+                  alt={
+                    currentUserProfile
+                      ? `${currentUserProfile.first_name || ""} ${currentUserProfile.last_name || ""}`.trim() || "Usuario"
+                      : "Usuario"
+                  }
+                  size="xl"
+                />
               </div>
             </div>
 
@@ -460,9 +490,9 @@ function PlatformContent() {
         {/* COLUMN 2 (CENTER): Community Announcements & Posts Feed                   */}
         {/* ========================================================================= */}
         <main className="flex-1 min-w-0 max-w-2xl flex flex-col gap-4">
-          {/* Section Heading: Exact admin style */}
+          {/* Section Heading: Exact canonical in-app page title token */}
           <div className="shrink-0 pt-0.5">
-            <h1 className="text-[28px] font-bold leading-tight font-jakarta text-slate-900">
+            <h1 className="font-jakarta font-bold text-slate-900 tracking-tight text-xl sm:text-2xl m-0 leading-tight">
               Comunidad
             </h1>
           </div>
@@ -512,9 +542,10 @@ function PlatformContent() {
                   <MobileMembersCarousel members={users} loading={loading} />
                 </div>
                 <UpcomingEventsCarousel events={events} loading={eventsLoading} />
-                <div className="bg-white rounded-2xl border border-slate-200/90 p-8 text-center text-slate-400 font-sans text-xs sm:text-sm">
-                  No hay publicaciones visibles en la comunidad en este momento.
-                </div>
+                <EmptyState
+                  title="No hay publicaciones visibles aún"
+                  description="Sé la primera persona en compartir una reflexión, pregunta o experiencia con la comunidad."
+                />
               </div>
             ) : (
               <>
@@ -578,13 +609,13 @@ function PlatformContent() {
         </aside>
       </div>
 
-      {/* Floating Confirmation Toast */}
+      {/* Floating Notification Toast */}
       <Toast
-        isOpen={Boolean(postNotice)}
-        onClose={() => setPostNotice(null)}
-        title={postNotice?.title || "¡Publicación enviada!"}
-        message={postNotice?.message || ""}
-        type="success"
+        isOpen={Boolean(toastState)}
+        onClose={() => setToastState(null)}
+        title={toastState?.title || "Notificación"}
+        message={toastState?.message || ""}
+        type={toastState?.type || "success"}
         autoCloseMs={5000}
       />
     </div>

@@ -1,42 +1,75 @@
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { formatLocationDisplay } from '@/utils/locationUtils';
-import { User } from 'lucide-react';
+"use client";
 
-interface UserCardProps {
-  user: {
-    id: string;
-    name: string;
-    location: string;
-    avatar: string;
-    interests?: string[];
-    categories?: any[];
-  };
-  actionMenu?: React.ReactNode;
+import React from "react";
+import { useRouter } from "next/navigation";
+import { formatLocationDisplay } from "@/utils/locationUtils";
+import { UserAvatar } from "./UserAvatar";
+import { getCategoryTextClass } from "./InterestPill";
+
+export interface UserCardData {
+  id: string;
+  name: string;
+  location?: string | null;
+  city?: string | null;
+  country?: string | null;
+  avatar?: string | null;
+  interests?: string[];
+  categories?: any[];
+  specialty?: string | null;
 }
 
-export function UserCard({ user, actionMenu }: UserCardProps) {
+export interface UserCardProps {
+  user: UserCardData;
+  specialty?: string | null;
+  actionLabel?: string;
+  actionMenu?: React.ReactNode;
+  profileHref?: string;
+  onSelect?: () => void;
+  className?: string;
+}
+
+/**
+ * Standardized directory card for both Members and Specialists across LUMINUS.
+ * Conforms strictly to DESIGN.md Section 2.2, 2.3, and 5.
+ */
+export function UserCard({
+  user,
+  specialty,
+  actionLabel = "Ver perfil",
+  actionMenu,
+  profileHref,
+  onSelect,
+  className = "",
+}: UserCardProps) {
   const router = useRouter();
-  const [imgError, setImgError] = React.useState(false);
 
   const isOfficial =
     user.name?.toLowerCase() === "luminus" ||
     user.id === "50d13047-bab8-44f1-9541-a821113845cc" ||
     user.id === "mock-luminus";
 
-  const handleViewProfile = () => {
+  const defaultHref = `/inicio/public-profile?id=${encodeURIComponent(user.id)}`;
+  const destination = profileHref || defaultHref;
+
+  const handleCardClick = () => {
     if (isOfficial) return;
-    router.push(`/inicio/public-profile?id=${encodeURIComponent(user.id)}`);
+    if (onSelect) {
+      onSelect();
+    } else {
+      router.push(destination);
+    }
   };
 
-  const hasAvatar = user.avatar && !imgError;
+  const rawLocation = user.location || [user.city, user.country].filter(Boolean).join(", ");
+  const displayLocation = formatLocationDisplay(rawLocation);
+  const activeSpecialty = specialty || user.specialty;
 
   return (
-    <div
-      onClick={isOfficial ? undefined : handleViewProfile}
-      className={`relative bg-white rounded-2xl p-3 md:p-4 flex flex-col items-center gap-2.5 md:gap-3 border border-slate-200 transition-all ${
-        isOfficial ? "cursor-default select-none shadow-none" : "group hover:border-slate-300 shadow-none cursor-pointer"
-      }`}
+    <article
+      onClick={handleCardClick}
+      className={`group relative bg-white rounded-2xl p-3.5 sm:p-4 flex flex-col items-center gap-2.5 sm:gap-3 border border-slate-200/90 hover:border-slate-300 transition-colors shadow-none select-none ${
+        isOfficial ? "cursor-default" : "cursor-pointer"
+      } ${className}`}
     >
       {actionMenu && (
         <div
@@ -46,21 +79,16 @@ export function UserCard({ user, actionMenu }: UserCardProps) {
           {actionMenu}
         </div>
       )}
-      <div className="w-[64px] h-[64px] sm:w-[72px] sm:h-[72px] md:w-[80px] md:h-[80px] rounded-[16px] sm:rounded-[18px] md:rounded-[22px] overflow-hidden bg-slate-50 shrink-0 border border-transparent group-hover:border-slate-200 transition-colors relative flex items-center justify-center">
-        {hasAvatar ? (
-          <img
-            src={user.avatar}
-            alt={user.name}
-            className="w-full h-full object-cover"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <div className="w-full h-full bg-slate-50 flex items-center justify-center">
-            <User className="w-8 h-8 sm:w-10 sm:h-10 text-slate-300" strokeWidth={1.5} />
-          </div>
-        )}
-      </div>
 
+      {/* Standardized Avatar Molecule */}
+      <UserAvatar
+        src={user.avatar}
+        alt={user.name}
+        size="lg"
+        className="transition-transform duration-150 group-hover:scale-[1.02]"
+      />
+
+      {/* User Information */}
       <div className="flex flex-col items-center gap-0.5 text-center w-full min-w-0">
         <h3
           className="font-jakarta text-sm font-semibold text-slate-900 leading-snug truncate w-full px-0.5 group-hover:text-slate-700 transition-colors"
@@ -68,26 +96,40 @@ export function UserCard({ user, actionMenu }: UserCardProps) {
         >
           {user.name}
         </h3>
+
         <p
           className="text-xs font-medium text-slate-500 font-sans truncate w-full px-0.5"
-          title={formatLocationDisplay(user.location)}
+          title={displayLocation || "Ubicación no especificada"}
         >
-          {formatLocationDisplay(user.location)}
+          {displayLocation || "Ubicación no especificada"}
         </p>
+
+        {activeSpecialty && (
+          <span
+            className={`text-xs font-semibold mt-1 truncate max-w-full px-1 ${getCategoryTextClass(
+              activeSpecialty
+            )}`}
+            title={activeSpecialty}
+          >
+            {activeSpecialty}
+          </span>
+        )}
       </div>
 
+      {/* Standardized Action CTA */}
       {!isOfficial && (
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
-            handleViewProfile();
+            handleCardClick();
           }}
           className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors shrink-0 cursor-pointer bg-transparent border-none outline-none font-jakarta mt-auto pt-1"
         >
-          Ver perfil
+          {actionLabel}
         </button>
       )}
-    </div>
+    </article>
   );
 }
 
