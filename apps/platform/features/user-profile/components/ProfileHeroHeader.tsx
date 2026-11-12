@@ -24,10 +24,14 @@ import {
   Sparkle,
   Blend,
   Flower,
-  Tag
+  Tag,
+  Camera,
+  Pencil
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { isMecenas } from "@/lib/membership/access";
+import { getCategoryPillClass } from "@/components/ui/InterestPill";
+import { formatLocationDisplay } from "@/utils/locationUtils";
 
 interface ProfileHeroHeaderProps {
   profile: any;
@@ -48,38 +52,21 @@ interface ProfileHeroHeaderProps {
   onSendMessage?: () => void;
   onSchedule?: () => void;
   onShareProfile?: () => void;
+  // Owner mode actions
+  isOwnProfile?: boolean;
+  onEditProfile?: () => void;
+  onEditPhoto?: () => void;
+  onEditCover?: () => void;
 }
 
-const SPECIALTY_COLOR_MAP: Record<string, { color: string; bg: string; border: string }> = {
-  "salud integral": { color: "#1D4ED8", bg: "#EFF6FF", border: "#BFDBFE" },
-  "bienestar emocional": { color: "#BE185D", bg: "#FDF2F8", border: "#FBCFE8" },
-  "crecimiento personal": { color: "#B45309", bg: "#FFFBEB", border: "#FDE68A" },
-  "movimiento físico": { color: "#B91C1C", bg: "#FEF2F2", border: "#FECACA" },
-  "movimiento fisico": { color: "#B91C1C", bg: "#FEF2F2", border: "#FECACA" },
-  "nutrición": { color: "#4D7C0F", bg: "#F7FEE7", border: "#D9F99D" },
-  "nutricion": { color: "#4D7C0F", bg: "#F7FEE7", border: "#D9F99D" },
-  "espiritualidad": { color: "#6D28D9", bg: "#F5F3FF", border: "#DDD6FE" },
-  "vínculos": { color: "#C2410C", bg: "#FFF7ED", border: "#FED7AA" },
-  "vinculos": { color: "#C2410C", bg: "#FFF7ED", border: "#FED7AA" },
-  "terapias complementarias": { color: "#0F766E", bg: "#F0FDFA", border: "#99F6E4" },
-};
-
-function getSpecialtyBadgeStyle(specialtyText?: string) {
-  if (!specialtyText) {
-    return { color: "#334155", bg: "#F1F5F9", border: "#E2E8F0" };
-  }
-  const key = specialtyText.toLowerCase().trim();
-  return SPECIALTY_COLOR_MAP[key] || { color: "#334155", bg: "#F1F5F9", border: "#E2E8F0" };
-}
-
-function renderSpecialtyIcon(title?: string, color?: string) {
+function renderSpecialtyIcon(title?: string) {
   if (!title) return null;
   const t = title
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
-  const props = { className: "w-3.5 h-3.5 shrink-0", strokeWidth: 2, style: { color } };
+  const props = { className: "w-3.5 h-3.5 shrink-0", strokeWidth: 2 };
   if (t.includes("crecimiento")) return <Sun {...props} />;
   if (t.includes("emocional")) return <Smile {...props} />;
   if (t.includes("integral") || t.includes("salud")) return <HeartPulse {...props} />;
@@ -109,7 +96,12 @@ export function ProfileHeroHeader({
   onSendMessage,
   onSchedule,
   onShareProfile,
+  isOwnProfile = false,
+  onEditProfile,
+  onEditPhoto,
+  onEditCover,
 }: ProfileHeroHeaderProps) {
+  const isOwn = isOwnProfile || Boolean(profile?.is_own_profile);
   const MONTH_NAMES = [
     "enero", "febrero", "marzo", "abril", "mayo", "junio",
     "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
@@ -144,15 +136,16 @@ export function ProfileHeroHeader({
 
   const fullName = `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim() || "Usuario LUMINUS";
   const hasCover = profile?.cover_url && profile.cover_url !== "" && !profile.cover_url.includes("empty");
-  const hasLocation = profile?.city || profile?.country;
-  const formattedLocation = [profile?.city?.split(",")[0], profile?.country].filter(Boolean).join(", ");
+  const rawLocation = [profile?.city, profile?.country].filter(Boolean).join(", ");
+  const formattedLocation = formatLocationDisplay(rawLocation);
+  const hasLocation = Boolean(formattedLocation);
   const formattedBirthdate = formatDisplayDate(profile?.birthdate);
   const specialist = profile?.specialistProfile;
   const specialtyText = specialist?.specialty || specialist?.title || "Bienestar";
   const specialtyLabel = specialtyText.toLowerCase().startsWith("especialista en")
     ? specialtyText
     : `Especialista en ${specialtyText}`;
-  const specialtyStyle = getSpecialtyBadgeStyle(specialtyText);
+  const specialtyCategoryPill = getCategoryPillClass(specialtyText);
 
   const getConnectionLabel = () => {
     if (connectionLoading) return "Guardando...";
@@ -172,6 +165,17 @@ export function ProfileHeroHeader({
             className="w-full h-full object-cover"
           />
         )}
+        {isOwn && onEditCover && (
+          <button
+            type="button"
+            onClick={onEditCover}
+            className="absolute bottom-3 right-4 sm:bottom-4 sm:right-6 lg:right-8 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/90 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 shadow-xs text-xs font-semibold font-jakarta backdrop-blur-sm transition-all cursor-pointer"
+            title="Cambiar portada"
+          >
+            <Camera className="w-3.5 h-3.5" />
+            <span>Cambiar portada</span>
+          </button>
+        )}
       </div>
 
       {/* 2. Overlapping Master Identity Card (2/3 over cover, 1/3 below) */}
@@ -182,7 +186,7 @@ export function ProfileHeroHeader({
               {/* Left: Avatar + Identity Details */}
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 md:gap-6 min-w-0">
                 {/* Avatar */}
-                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden border-4 border-white bg-white shadow-xs shrink-0 relative z-10">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden border-4 border-white bg-white shadow-xs shrink-0 relative z-10 group">
                   {profile?.profile_picture_url ? (
                     <img
                       src={profile.profile_picture_url}
@@ -193,6 +197,17 @@ export function ProfileHeroHeader({
                     <div className="w-full h-full border border-slate-200/80 rounded-xl bg-slate-50 flex items-center justify-center">
                       <User className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300 stroke-[1.5]" />
                     </div>
+                  )}
+                  {isOwn && onEditPhoto && (
+                    <button
+                      type="button"
+                      onClick={onEditPhoto}
+                      className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity cursor-pointer backdrop-blur-[1px]"
+                      title="Cambiar foto de perfil"
+                    >
+                      <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
+                      <span className="text-[10px] font-semibold mt-1">Editar</span>
+                    </button>
                   )}
                 </div>
 
@@ -210,7 +225,7 @@ export function ProfileHeroHeader({
                       </span>
                     )}
 
-                    {profile?.has_in_network && (
+                    {profile?.has_in_network && !isOwn && (
                       <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-semibold font-jakarta border border-blue-200/60 flex items-center select-none">
                         Te sumó a su red
                       </span>
@@ -221,14 +236,9 @@ export function ProfileHeroHeader({
                   {isSpecialist ? (
                     <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
                       <span
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-[13px] font-bold font-jakarta border shadow-xs select-none"
-                        style={{
-                          backgroundColor: specialtyStyle.bg,
-                          color: specialtyStyle.color,
-                          borderColor: specialtyStyle.border,
-                        }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-[13px] font-bold font-jakarta border shadow-xs select-none ${specialtyCategoryPill}`}
                       >
-                        {renderSpecialtyIcon(specialtyText, specialtyStyle.color)}
+                        {renderSpecialtyIcon(specialtyText)}
                         <span>{specialtyLabel}</span>
                       </span>
 
@@ -264,7 +274,7 @@ export function ProfileHeroHeader({
                         <span>Miembro desde {(() => {
                           try {
                             const d = new Date(profile.member_since);
-                            return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+                            return `${MONTH_NAMES[d.getMonth()]} de ${d.getFullYear()}`;
                           } catch {
                             return "";
                           }
@@ -277,7 +287,29 @@ export function ProfileHeroHeader({
 
               {/* Right: Desktop Actions Bar */}
               <div className="hidden md:flex items-center gap-2 shrink-0 z-10">
-                {!profile?.is_own_profile ? (
+                {isOwn ? (
+                  <>
+                    {onEditProfile && (
+                      <Button
+                        onClick={onEditProfile}
+                        variant="secondary"
+                        className="gap-1.5 px-3.5 text-xs font-semibold"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>Editar perfil</span>
+                      </Button>
+                    )}
+                    <Button
+                      onClick={onShareProfile}
+                      variant="secondary"
+                      className="gap-1.5 px-3.5 text-xs font-semibold"
+                      title="Compartir perfil"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span>Compartir</span>
+                    </Button>
+                  </>
+                ) : (
                   <>
                     {/* Slot 1: Unified Relationship Action */}
                     {profile?.connection_status === "accepted" ? (
@@ -325,11 +357,11 @@ export function ProfileHeroHeader({
                       </Button>
                     )}
 
-                    {/* Slot 2: Chat Message (Primary CTA in header) */}
+                    {/* Slot 2: Chat Message */}
                     {profile?.connection_status !== "blocked" && (
                       <Button
                         onClick={onSendMessage}
-                        variant="primary"
+                        variant={profile?.connection_status === "accepted" ? "primary" : "secondary"}
                         className="gap-1.5 px-4 text-xs font-semibold"
                       >
                         <Mail className="w-3.5 h-3.5" />
@@ -347,22 +379,36 @@ export function ProfileHeroHeader({
                       <Share2 className="w-4 h-4 text-slate-700" />
                     </Button>
                   </>
-                ) : (
-                  <Button
-                    onClick={onShareProfile}
-                    variant="secondary"
-                    className="gap-2 px-3.5 text-xs font-semibold"
-                  >
-                    <Share2 className="w-3.5 h-3.5" />
-                    <span>Compartir mi perfil</span>
-                  </Button>
                 )}
               </div>
             </div>
 
             {/* Mobile Action Buttons */}
             <div className="flex md:hidden flex-col gap-2 pt-3">
-              {!profile?.is_own_profile ? (
+              {isOwn ? (
+                <div className="flex items-center gap-2 w-full">
+                  {onEditProfile && (
+                    <Button
+                      onClick={onEditProfile}
+                      variant="secondary"
+                      fullWidth
+                      className="gap-1.5 text-xs font-semibold"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      <span>Editar perfil</span>
+                    </Button>
+                  )}
+                  <Button
+                    onClick={onShareProfile}
+                    variant="secondary"
+                    fullWidth
+                    className="gap-1.5 text-xs font-semibold"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>Compartir</span>
+                  </Button>
+                </div>
+              ) : (
                 <div className="flex items-center gap-2 w-full">
                   {profile?.connection_status === "accepted" ? (
                     <div className="relative flex-1" ref={connectionDropdownRefMobile}>
@@ -415,7 +461,7 @@ export function ProfileHeroHeader({
                   {profile?.connection_status !== "blocked" && (
                     <Button
                       onClick={onSendMessage}
-                      variant="primary"
+                      variant={profile?.connection_status === "accepted" ? "primary" : "secondary"}
                       className="flex-1 gap-1 text-xs"
                     >
                       <Mail className="w-3.5 h-3.5" />
@@ -432,16 +478,6 @@ export function ProfileHeroHeader({
                     <Share2 className="w-4 h-4 text-slate-700" />
                   </Button>
                 </div>
-              ) : (
-                <Button
-                  onClick={onShareProfile}
-                  variant="secondary"
-                  fullWidth
-                  className="gap-2 text-xs"
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span>Compartir mi perfil</span>
-                </Button>
               )}
             </div>
           </div>

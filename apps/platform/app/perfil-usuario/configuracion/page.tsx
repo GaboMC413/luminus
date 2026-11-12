@@ -2,11 +2,11 @@
 
 import { useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { PageLoader } from "@/components/ui/PageLoader";
+import { SettingsGhostLoader } from "@/features/user-profile/components/settings/SettingsGhostLoader";
 
 export default function SettingsIndexPage() {
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={<SettingsGhostLoader />}>
       <SettingsRedirectHandler />
     </Suspense>
   );
@@ -34,18 +34,18 @@ function SettingsRedirectHandler() {
       router.replace(`/perfil-usuario/configuracion/celular${queryString}`);
       return;
     }
+    if (tab === "personal") {
+      router.replace(`/perfil-usuario?edit=personal`);
+      return;
+    }
     if (tab === "email") {
       router.replace(`/perfil-usuario/configuracion/email${queryString}`);
       return;
     }
-    if (tab === "personal") {
-      router.replace(`/perfil-usuario/configuracion/personal${queryString}`);
-      return;
-    }
 
-    // Default desktop users to /personal subpage
+    // Default desktop users to /email subpage
     if (window.innerWidth >= 768) {
-      router.replace(`/perfil-usuario/configuracion/personal${queryString}`);
+      router.replace(`/perfil-usuario/configuracion/email${queryString}`);
     }
   }, [router, searchParams]);
 

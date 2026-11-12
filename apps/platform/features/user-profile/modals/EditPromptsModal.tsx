@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { CheckCircle2, X } from "lucide-react";
 import { Button, ProfileButton } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { ALL_PROMPTS, Prompt } from "../components/ProfilePrompts";
@@ -44,31 +45,32 @@ export function EditPromptsModal({ isOpen, onClose, onSave, initialPrompts, init
     <>
       {activeStep === 'list' && (
         <>
-          <Button variant="secondary" onClick={onClose} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !rounded-[10px] md:!rounded-[12px]">
+          <Button variant="secondary" onClick={onClose} className="w-full md:flex-1">
             Cancelar
           </Button>
           <Button
+            variant="primary"
             onClick={() => {
               onSave(selectedPrompts);
               onClose();
             }}
-            className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !bg-black !text-white hover:!bg-slate-800 !rounded-[10px] md:!rounded-[12px]"
+            className="w-full md:flex-1"
           >
             Guardar cambios
           </Button>
         </>
       )}
       {activeStep === 'select' && (
-        <Button variant="secondary" onClick={() => setActiveStep('list')} className="w-full !h-11 !text-[13px] !font-normal !rounded-[10px] md:!rounded-[12px]">
+        <Button variant="secondary" onClick={() => setActiveStep('list')} className="w-full">
           Volver
         </Button>
       )}
       {activeStep === 'edit' && (
         <>
-          <Button variant="secondary" onClick={() => setActiveStep('select')} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !rounded-[10px] md:!rounded-[12px]">
+          <Button variant="secondary" onClick={() => setActiveStep('select')} className="w-full md:flex-1">
             Volver
           </Button>
-          <Button onClick={handleSaveTemp} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !bg-black !text-white !rounded-[10px] md:!rounded-[12px]">
+          <Button variant="primary" onClick={handleSaveTemp} className="w-full md:flex-1">
             Aceptar
           </Button>
         </>
@@ -80,7 +82,7 @@ export function EditPromptsModal({ isOpen, onClose, onSave, initialPrompts, init
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={activeStep === 'list' ? 'Editar Mis Reflexiones' : activeStep === 'select' ? 'Selecciona una reflexión' : 'Escribe tu respuesta'}
+      title={activeStep === 'list' ? 'Editar reflexiones' : activeStep === 'select' ? 'Selecciona una reflexión' : 'Escribe tu respuesta'}
       maxWidth="720px"
       footer={modalFooter}
     >
@@ -93,18 +95,16 @@ export function EditPromptsModal({ isOpen, onClose, onSave, initialPrompts, init
                 const cleanA = p.answer.charAt(0).toLowerCase() + p.answer.slice(1);
 
                 return (
-                  <div key={i} className="p-2.5 md:p-3 rounded-[10px] md:rounded-[12px] bg-slate-50 flex flex-col justify-center relative min-h-[70px] md:min-h-[80px]">
-                    <p className="text-sm md:text-base text-secondary italic pr-12 md:pr-16 leading-relaxed">
-                      "<span className="text-secondary">{cleanQ}</span> {cleanA}"
+                  <div key={i} className="p-3 md:p-3.5 rounded-xl bg-slate-50 flex flex-col justify-center relative min-h-[70px] md:min-h-[80px] border border-slate-200/60">
+                    <p className="text-sm md:text-base text-slate-700 italic pr-12 md:pr-16 leading-relaxed">
+                      "<span className="text-slate-900 font-medium">{cleanQ}</span> {cleanA}"
                     </p>
                     <button
                       onClick={() => handleRemove(i)}
-                      className="absolute top-1/2 -translate-y-1/2 right-4 p-1 hover:bg-red-50 hover:text-red-500 rounded-full transition-colors text-slate-300 bg-transparent border-none outline-none cursor-pointer"
+                      className="absolute top-1/2 -translate-y-1/2 right-4 p-1.5 hover:bg-rose-50 hover:text-rose-600 rounded-full transition-colors text-slate-400 bg-transparent border-none outline-none cursor-pointer"
+                      title="Eliminar reflexión"
                     >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                      </svg>
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
                 );
@@ -127,15 +127,15 @@ export function EditPromptsModal({ isOpen, onClose, onSave, initialPrompts, init
                 <button
                   key={cat.id}
                   onClick={() => handleSelectCategory(cat)}
-                  className="reg-input-bordered !text-secondary !font-normal !justify-start !px-4 md:!px-6 hover:bg-slate-50 transition-colors !h-10 md:!h-12 !text-[13px] md:!text-[14px]"
+                  className="input-text-field text-left flex items-center px-4 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   {cat.question}
                 </button>
               ))
             ) : (
               <div className="py-12 text-center flex flex-col items-center gap-3">
-                <span className="material-symbols-rounded text-[40px] text-slate-200">check_circle</span>
-                <p className="text-sm md:text-base text-muted">Has completado todas las reflexiones disponibles.</p>
+                <CheckCircle2 className="w-10 h-10 text-slate-300" />
+                <p className="text-sm md:text-base text-slate-500">Has completado todas las reflexiones disponibles.</p>
               </div>
             )}
           </div>
@@ -178,7 +178,7 @@ export function EditPromptsModal({ isOpen, onClose, onSave, initialPrompts, init
                     type="text"
                     value={tempPrompt.answer}
                     onChange={(e) => setTempPrompt({ ...tempPrompt, answer: e.target.value })}
-                    className="reg-input-bordered !h-10 md:!h-12 !text-[13px] md:!text-[14px]"
+                    className="input-text-field"
                     placeholder="Escribe aquí tu reflexión..."
                     autoFocus
                   />

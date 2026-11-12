@@ -10,7 +10,8 @@ import {
   Copy,
   Info,
   Ban,
-  Sparkles
+  Sparkles,
+  Pencil
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ProfileHeroHeader } from "@/features/user-profile/components/ProfileHeroHeader";
@@ -19,11 +20,11 @@ import { ProfileInterestsSection } from "@/features/user-profile/components/Prof
 import { ProfileCompletionCard } from "@/features/user-profile/components/ProfileCompletionCard";
 import { SpecialistProfileView } from "@/features/user-profile/components/SpecialistProfileView";
 import { Modal } from "@/components/ui/Modal";
-import { PageLoader } from "@/components/ui/PageLoader";
+import { ProfileSkeleton } from "@/components/ui/Skeleton";
 
 export default function PublicProfilePage() {
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={<ProfileSkeleton />}>
       <PublicProfileContent />
     </Suspense>
   );
@@ -299,44 +300,98 @@ function PublicProfileContent() {
     }
   };
 
+  const fromParam = searchParams.get("from");
+  const isOwn = Boolean(profile?.is_own_profile);
+
+  const getBackInfo = () => {
+    switch (fromParam) {
+      case "especialistas":
+        return { label: "Volver a Especialistas", fallback: "/especialistas" };
+      case "miembros":
+        return { label: "Volver a Miembros", fallback: "/inicio/miembros" };
+      case "red":
+        return { label: "Volver a Mi red", fallback: "/red" };
+      case "inicio":
+        return { label: "Volver a Inicio", fallback: "/inicio" };
+      default:
+        return { label: "Volver", fallback: "/inicio" };
+    }
+  };
+
+  const backInfo = getBackInfo();
+
+  const handleGoBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 2) {
+      router.back();
+    } else {
+      router.push(backInfo.fallback);
+    }
+  };
+
   if (loading) {
-    return <PageLoader />;
+    return (
+      <div className="w-full flex flex-col relative bg-slate-50 min-h-screen font-sans">
+        {/* Context-Aware Back Bar */}
+        <div className="w-full bg-white border-b border-slate-200/80 sticky top-[64px] z-30">
+          <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between gap-4">
+            <button
+              type="button"
+              onClick={handleGoBack}
+              className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold font-jakarta text-slate-600 hover:text-slate-900 transition-colors cursor-pointer group"
+            >
+              <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-slate-800 group-hover:-translate-x-0.5 transition-all" />
+              <span>{backInfo.label}</span>
+            </button>
+          </div>
+        </div>
+        <ProfileSkeleton />
+      </div>
+    );
   }
 
   if (error || !profile) {
     const isRestricted = error === "restricted";
-    const handleGoBack = () => {
-      if (typeof window !== "undefined" && window.history.length > 1) {
-        router.back();
-      } else {
-        router.push("/inicio");
-      }
-    };
 
     return (
-      <div className="w-full flex-1 min-h-[calc(100vh-80px)] bg-slate-50 flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-slate-200/90 shadow-none flex flex-col items-center text-center gap-5">
-          <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500">
-            {isRestricted ? <Lock className="w-6 h-6" /> : <UserX className="w-6 h-6" />}
+      <div className="w-full flex flex-col relative bg-slate-50 min-h-screen font-sans">
+        {/* Context-Aware Back Bar */}
+        <div className="w-full bg-white border-b border-slate-200/80 sticky top-[64px] z-30">
+          <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between gap-4">
+            <button
+              type="button"
+              onClick={handleGoBack}
+              className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold font-jakarta text-slate-600 hover:text-slate-900 transition-colors cursor-pointer group"
+            >
+              <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-slate-800 group-hover:-translate-x-0.5 transition-all" />
+              <span>{backInfo.label}</span>
+            </button>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <h2 className="text-title-page font-bold tracking-tight text-slate-900 font-jakarta">
-              Perfil no disponible
-            </h2>
-            <p className="text-body text-slate-500 font-sans leading-relaxed">
-              {isRestricted 
-                ? "Este perfil no está disponible." 
-                : "Este perfil ya no está disponible o la cuenta ha sido eliminada."}
-            </p>
+        </div>
+
+        <div className="w-full flex-1 min-h-[calc(100vh-140px)] flex flex-col items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-slate-200/90 shadow-none flex flex-col items-center text-center gap-5">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500">
+              {isRestricted ? <Lock className="w-6 h-6" /> : <UserX className="w-6 h-6" />}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <h2 className="text-title-page font-bold tracking-tight text-slate-900 font-jakarta">
+                Perfil no disponible
+              </h2>
+              <p className="text-body text-slate-500 font-sans leading-relaxed">
+                {isRestricted 
+                  ? "Este perfil no está disponible." 
+                  : "Este perfil ya no está disponible o la cuenta ha sido eliminada."}
+              </p>
+            </div>
+            <Button
+              onClick={handleGoBack}
+              variant="primary"
+              className="gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{backInfo.label}</span>
+            </Button>
           </div>
-          <Button
-            onClick={handleGoBack}
-            variant="primary"
-            className="gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Volver
-          </Button>
         </div>
       </div>
     );
@@ -344,6 +399,32 @@ function PublicProfileContent() {
 
   return (
     <div className="w-full flex flex-col relative bg-slate-50 min-h-screen font-sans">
+      {/* Context-Aware Back Bar */}
+      <div className="w-full bg-white border-b border-slate-200/80 sticky top-[64px] z-30">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between gap-4">
+          <button
+            type="button"
+            onClick={handleGoBack}
+            className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold font-jakarta text-slate-600 hover:text-slate-900 transition-colors cursor-pointer group"
+          >
+            <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-slate-800 group-hover:-translate-x-0.5 transition-all" />
+            <span>{backInfo.label}</span>
+          </button>
+
+          {isOwn && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => router.push("/perfil-usuario")}
+              className="gap-1.5 text-xs font-semibold"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              <span>Editar mi perfil</span>
+            </Button>
+          )}
+        </div>
+      </div>
+
       {profile.specialistProfile ? (
         <SpecialistProfileView
           profile={profile}
@@ -359,6 +440,7 @@ function PublicProfileContent() {
           connectionDropdownRefMobile={connectionDropdownRefMobile}
           onSendMessage={handleSendMessage}
           onShareProfile={handleShareProfile}
+          onEditProfile={isOwn ? () => router.push("/perfil-usuario") : undefined}
         />
       ) : (
         <div className="w-full flex flex-col font-sans">
@@ -366,6 +448,8 @@ function PublicProfileContent() {
           <ProfileHeroHeader
             profile={profile}
             isSpecialist={false}
+            isOwnProfile={isOwn}
+            onEditProfile={isOwn ? () => router.push("/perfil-usuario") : undefined}
             onConnect={handleConnect}
             onDeclineConnect={handleDeclineConnect}
             onRemoveConnection={handleRemoveConnection}
@@ -408,7 +492,7 @@ function PublicProfileContent() {
 
                 {/* Community Member Card */}
                 <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 flex flex-col gap-3 shadow-none">
-                  <h4 className="text-title-section text-slate-900 font-jakarta uppercase tracking-wider text-xs font-bold">
+                  <h4 className="text-title-section text-slate-900 font-bold">
                     Comunidad LUMINUS
                   </h4>
                   <p className="text-body text-slate-600 text-xs sm:text-sm leading-relaxed font-sans">

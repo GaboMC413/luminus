@@ -128,7 +128,7 @@ export function PromptsDisplay({ prompts, onEdit, isPublic = false, firstName, h
   return (
     <div className="bg-white rounded-2xl p-5 sm:p-6 flex flex-col gap-4 border border-slate-200/90 shadow-none transition-all">
       <div className="flex items-center gap-2.5">
-        <h3 className="text-title-section text-slate-900 font-jakarta uppercase tracking-wider text-xs font-bold">Reflexiones</h3>
+        <h3 className="text-title-section text-slate-900 font-bold">Reflexiones</h3>
       </div>
 
       {hasPrompts ? (

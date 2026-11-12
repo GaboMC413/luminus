@@ -456,7 +456,7 @@ function PlatformContent() {
                 {activeConnections.slice(0, 12).map((conn: any) => (
                   <div
                     key={conn.id}
-                    onClick={() => router.push(`/inicio/public-profile?id=${conn.user.id}`)}
+                    onClick={() => router.push(`/inicio/public-profile?id=${conn.user.id}&from=inicio`)}
                     className="relative group cursor-pointer"
                   >
                     <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 group-hover:border-slate-200 transition-colors duration-200 flex items-center justify-center shrink-0">

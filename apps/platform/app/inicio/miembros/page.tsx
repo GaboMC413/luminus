@@ -14,7 +14,7 @@ import { DirectoryGridSkeleton } from "@/components/ui/Skeleton";
 
 export default function MiembrosPage() {
   return (
-    <Suspense fallback={<DirectoryGridSkeleton count={8} />}>
+    <Suspense fallback={<DirectoryGridSkeleton count={10} />}>
       <MiembrosContent />
     </Suspense>
   );
@@ -203,7 +203,7 @@ function MiembrosContent() {
     appliedFilters.selectedInterests.length;
 
   if (loading && users.length === 0) {
-    return <DirectoryGridSkeleton count={8} />;
+    return <DirectoryGridSkeleton count={10} />;
   }
 
   return (
@@ -348,9 +348,14 @@ function MiembrosContent() {
         />
       ) : (
         <div className="flex flex-col gap-6 w-full pb-8">
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 w-full">
             {users.map((user: any) => (
-              <UserCard key={user.id} user={user} actionLabel="Ver perfil" />
+              <UserCard
+                key={user.id}
+                user={user}
+                actionLabel="Ver perfil"
+                profileHref={`/inicio/public-profile?id=${encodeURIComponent(user.id)}&from=miembros`}
+              />
             ))}
           </div>
 

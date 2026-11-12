@@ -93,7 +93,7 @@ export default function EspecialistasPage() {
     return chips;
   }, [country, specialty]);
 
-  if (loading) return <DirectoryGridSkeleton count={8} />;
+  if (loading) return <DirectoryGridSkeleton count={10} />;
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-5 px-4 pb-12 pt-4 font-sans sm:px-6 md:gap-6 md:py-6">
@@ -161,7 +161,7 @@ export default function EspecialistasPage() {
           {error}
         </div>
       ) : visibleSpecialists.length > 0 ? (
-        <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4 lg:grid-cols-4">
+        <section className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
           {visibleSpecialists.map((specialist) => (
             <UserCard
               key={specialist.id}

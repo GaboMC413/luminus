@@ -21,6 +21,7 @@ import { ProfileHeroHeader } from "./ProfileHeroHeader";
 import { ProfileAboutSection } from "./ProfileAboutSection";
 import { ProfileInterestsSection } from "./ProfileInterestsSection";
 import { ProfileCompletionCard } from "./ProfileCompletionCard";
+import { formatSpaceAddress } from "@/utils/locationUtils";
 
 const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const MONTH_LABELS = [
@@ -71,6 +72,15 @@ interface SpecialistProfileViewProps {
   connectionDropdownRefMobile?: React.RefObject<HTMLDivElement>;
   onSendMessage?: () => void;
   onShareProfile?: () => void;
+  // Owner mode actions
+  onEditProfile?: () => void;
+  onEditPhoto?: () => void;
+  onEditCover?: () => void;
+  onEditBio?: () => void;
+  onEditInterests?: () => void;
+  onEditPrompts?: (step?: 'list' | 'select') => void;
+  membershipCard?: React.ReactNode;
+  onSignOut?: () => void;
 }
 
 export function SpecialistProfileView({
@@ -87,6 +97,14 @@ export function SpecialistProfileView({
   connectionDropdownRefMobile,
   onSendMessage,
   onShareProfile,
+  onEditProfile,
+  onEditPhoto,
+  onEditCover,
+  onEditBio,
+  onEditInterests,
+  onEditPrompts,
+  membershipCard,
+  onSignOut,
 }: SpecialistProfileViewProps) {
   const [mainTab, setMainTab] = useState<"profesional" | "personal">("profesional");
   const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
@@ -148,6 +166,10 @@ export function SpecialistProfileView({
         connectionDropdownRefMobile={connectionDropdownRefMobile}
         onSendMessage={onSendMessage}
         onShareProfile={onShareProfile}
+        isOwnProfile={!isPublic || Boolean(profile?.is_own_profile)}
+        onEditProfile={onEditProfile}
+        onEditPhoto={onEditPhoto}
+        onEditCover={onEditCover}
       />
 
       {/* 2. Balanced 8:4 Grid Content Container */}
@@ -186,7 +208,7 @@ export function SpecialistProfileView({
                 {/* Card 1: Sobre mi Práctica */}
                 <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 flex flex-col gap-3.5 shadow-none">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-title-section text-slate-900 font-jakarta uppercase tracking-wider text-xs font-bold">
+                    <h3 className="text-title-section text-slate-900 font-bold">
                       Sobre mi práctica
                     </h3>
                   </div>
@@ -245,9 +267,9 @@ export function SpecialistProfileView({
                 {/* Card 2: Espacios de Atención */}
                 <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 flex flex-col gap-4 shadow-none">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-title-section text-slate-900 font-jakarta uppercase tracking-wider text-xs font-bold flex items-center gap-2">
+                    <h3 className="text-title-section text-slate-900 font-bold flex items-center gap-2">
                       <Building2 className="w-4 h-4 text-slate-400" />
-                      Espacios de Atención
+                      Espacios de atención
                     </h3>
                     {spaces.length > 0 && (
                       <span className="text-meta text-slate-400 font-medium">
@@ -295,10 +317,10 @@ export function SpecialistProfileView({
                           )}
 
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500 pt-1">
-                            {(space.address || space.city || space.country) && (
+                            {formatSpaceAddress(space.address, space.city, space.country) && (
                               <span className="flex items-center gap-1.5">
                                 <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                {[space.address, space.city, space.country].filter(Boolean).join(", ")}
+                                {formatSpaceAddress(space.address, space.city, space.country)}
                               </span>
                             )}
                             {space.phone && (
@@ -340,9 +362,9 @@ export function SpecialistProfileView({
                 {courses.length > 0 && (
                   <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 flex flex-col gap-4 shadow-none">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-title-section text-slate-900 font-jakarta uppercase tracking-wider text-xs font-bold flex items-center gap-2">
+                      <h3 className="text-title-section text-slate-900 font-bold flex items-center gap-2">
                         <BookOpen className="w-4 h-4 text-slate-400" />
-                        Cursos & Talleres
+                        Cursos y talleres
                       </h3>
                       <span className="text-meta text-slate-400 font-medium">
                         {courses.length} activo{courses.length > 1 ? "s" : ""}
@@ -403,7 +425,7 @@ export function SpecialistProfileView({
                     </div>
                     <div>
                       <h4 className="text-title-section text-slate-900 font-bold font-jakarta text-sm">
-                        Sesión Introductoria
+                        Sesión introductoria
                       </h4>
                       <p className="text-meta text-slate-400 font-sans">
                         15 minutos · Sin costo
@@ -495,13 +517,15 @@ export function SpecialistProfileView({
               <div className="lg:col-span-8 flex flex-col gap-5">
                 <ProfileAboutSection
                   bio={profile.bio}
-                  isPublic={true}
+                  isPublic={isPublic}
+                  onEdit={onEditBio}
                   firstName={profile.first_name}
                 />
 
                 <ProfileCompletionCard
                   prompts={profile.prompts}
-                  isPublic={true}
+                  isPublic={isPublic}
+                  onEditPrompts={onEditPrompts}
                   firstName={profile.first_name}
                 />
               </div>
@@ -511,25 +535,42 @@ export function SpecialistProfileView({
                 <ProfileInterestsSection
                   interests={profile.interests}
                   otherInterests={profile.other_interests}
-                  isPublic={true}
+                  isPublic={isPublic}
+                  onEdit={onEditInterests}
                   firstName={profile.first_name}
                 />
 
-                {/* Community Tenure Card */}
-                <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 flex flex-col gap-3 shadow-none">
-                  <h4 className="text-title-section text-slate-900 font-jakarta uppercase tracking-wider text-xs font-bold">
-                    Comunidad LUMINUS
-                  </h4>
-                  <p className="text-body text-slate-600 text-xs sm:text-sm leading-relaxed font-sans">
-                    {profile.first_name || "Este usuario"} es parte de la comunidad de bienestar y crecimiento consciente en LUMINUS.
-                  </p>
-                  {profile?.member_since && (
-                    <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-meta text-slate-500">
-                      <Sparkles className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Conectando personas con el bienestar.</span>
-                    </div>
-                  )}
-                </div>
+                {!isPublic && membershipCard ? (
+                  membershipCard
+                ) : (
+                  /* Community Tenure Card */
+                  <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 flex flex-col gap-3 shadow-none">
+                    <h4 className="text-title-section text-slate-900 font-bold">
+                      Comunidad LUMINUS
+                    </h4>
+                    <p className="text-body text-slate-600 text-xs sm:text-sm leading-relaxed font-sans">
+                      {profile.first_name || "Este usuario"} es parte de la comunidad de bienestar y crecimiento consciente en LUMINUS.
+                    </p>
+                    {profile?.member_since && (
+                      <div className="pt-3 border-t border-slate-100 flex items-center gap-2 text-meta text-slate-500">
+                        <Sparkles className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Conectando personas con el bienestar.</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {!isPublic && onSignOut && (
+                  <div className="w-full flex justify-center pt-1">
+                    <button
+                      type="button"
+                      onClick={onSignOut}
+                      className="group flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-red-600 transition-colors bg-transparent border-none outline-none cursor-pointer"
+                    >
+                      <span>Cerrar sesión</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </>
           )}

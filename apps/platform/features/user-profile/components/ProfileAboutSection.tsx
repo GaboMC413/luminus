@@ -30,7 +30,7 @@ export function ProfileAboutSection({ bio, onEdit, isPublic = false, firstName, 
         </button>
       )}
       <div className="flex items-center gap-1.5">
-        <h3 className="text-title-section text-slate-900 font-jakarta uppercase tracking-wider text-xs font-bold">
+        <h3 className="text-title-section text-slate-900 font-bold">
           Sobre mí
         </h3>
       </div>
