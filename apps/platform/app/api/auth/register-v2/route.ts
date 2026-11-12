@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getCognitoErrorMessage, getCognitoErrorStatus, signUpWithCognito, resendConfirmationCode } from "@/lib/auth/cognito-password";
 import { adminConfirmUser, adminCreateAndConfirmUser } from "@/lib/auth/cognito-admin";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
@@ -253,17 +253,7 @@ export async function POST(request: Request) {
         include: { profile: true },
       });
 
-      // 4. Send background welcome messages
-      try {
-        const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
-        await sendWelcomeMessage(prisma, user.id);
-        const { sendWelcomeEmail } = await import("@/lib/mails/sender");
-        await sendWelcomeEmail(user.email, user.profile?.firstName || undefined);
-      } catch (welcomeError) {
-        console.error("Welcome communications error (non-fatal):", welcomeError);
-      }
-
-      // 5. Establish Session Cookie
+      // 4. Establish Session Cookie
       const token = createSessionToken({
         userId: user.id,
         email: user.email,
@@ -272,17 +262,34 @@ export async function POST(request: Request) {
 
       await setSessionCookie(token);
 
-      // 6. Log activity
+      // 5. Non-blocking welcome communications & activity log
+      const runPostRegistrationTasks = async () => {
+        try {
+          const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
+          await sendWelcomeMessage(prisma, user.id);
+          const { sendWelcomeEmail } = await import("@/lib/mails/sender");
+          await sendWelcomeEmail(user.email, user.profile?.firstName || undefined);
+        } catch (welcomeError) {
+          console.error("Welcome communications error (non-fatal):", welcomeError);
+        }
+
+        try {
+          await prisma.activityLog.create({
+            data: {
+              userId: user.id,
+              action: isPaidMember ? "MEMBER_JOINED" : "USER_JOINED_FREE",
+              details: JSON.stringify({ email: user.email, plan }),
+            },
+          });
+        } catch (logErr) {
+          console.error("Failed to log activity:", logErr);
+        }
+      };
+
       try {
-        await prisma.activityLog.create({
-          data: {
-            userId: user.id,
-            action: isPaidMember ? "MEMBER_JOINED" : "USER_JOINED_FREE",
-            details: JSON.stringify({ email: user.email, plan }),
-          },
-        });
-      } catch (logErr) {
-        console.error("Failed to log activity:", logErr);
+        after(runPostRegistrationTasks);
+      } catch {
+        void runPostRegistrationTasks();
       }
 
       return NextResponse.json({

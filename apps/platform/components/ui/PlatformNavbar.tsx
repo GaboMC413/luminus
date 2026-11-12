@@ -98,6 +98,7 @@ export function PlatformNavbar() {
   const [isMessagesOpen, setIsMessagesOpen] = useState(false);
 
   // States for onboarding achievement popup modal
+  const [questQueue, setQuestQueue] = useState<{ id: string; title: string; body: string }[]>([]);
   const [completedQuest, setCompletedQuest] = useState<{ id: string; title: string; body: string } | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
@@ -315,8 +316,7 @@ export function PlatformNavbar() {
     const handleQuestCompleted = (event: Event) => {
       const customEvent = event as CustomEvent;
       if (customEvent.detail) {
-        setCompletedQuest(customEvent.detail);
-        setShowSuccessModal(true);
+        setQuestQueue((prev) => [...prev, customEvent.detail]);
         loadNotifications();
       }
     };
@@ -326,32 +326,16 @@ export function PlatformNavbar() {
     };
   }, []);
 
-  // 2. Global fetch interceptor to automatically dispatch luminus_quest_completed
-  // when any API returns newlyCompletedQuests
   useEffect(() => {
-    if (typeof window !== "undefined" && !(window as any).__luminus_fetch_intercepted) {
-      (window as any).__luminus_fetch_intercepted = true;
-      const originalFetch = window.fetch;
-      window.fetch = async function (...args) {
-        const response = await originalFetch(...args);
-        const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url || "";
-        if (url.includes("/api/")) {
-          try {
-            const clone = response.clone();
-            const data = await clone.json();
-            if (data && data.newlyCompletedQuests && Array.isArray(data.newlyCompletedQuests)) {
-              data.newlyCompletedQuests.forEach((quest: any) => {
-                window.dispatchEvent(new CustomEvent("luminus_quest_completed", { detail: quest }));
-              });
-            }
-          } catch (e) {
-            // Ignore non-json or parsing errors
-          }
-        }
-        return response;
-      };
+    if (!showSuccessModal && questQueue.length > 0) {
+      const [nextQuest, ...remaining] = questQueue;
+      setCompletedQuest(nextQuest);
+      setShowSuccessModal(true);
+      setQuestQueue(remaining);
     }
-  }, []);
+  }, [showSuccessModal, questQueue]);
+
+
 
   useEffect(() => {
     const handleOpenChat = (event: Event) => {

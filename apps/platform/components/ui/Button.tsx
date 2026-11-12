@@ -1,5 +1,48 @@
 import React from 'react';
-import { ArrowLeft } from 'lucide-react';
+import {
+  ArrowLeft,
+  Camera,
+  ChevronRight,
+  Lock,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Search,
+  Settings,
+  SlidersHorizontal,
+  X,
+} from 'lucide-react';
+
+function renderMappedIcon(icon: string, className: string = 'w-4 h-4 shrink-0') {
+  switch (icon) {
+    case 'add':
+      return <Plus className={className} />;
+    case 'autorenew':
+      return <RefreshCw className={className} />;
+    case 'settings':
+      return <Settings className={className} />;
+    case 'lock':
+      return <Lock className={className} />;
+    case 'photo_camera':
+      return <Camera className={className} />;
+    case 'edit':
+      return <Pencil className={className} />;
+    case 'tune':
+    case 'manage_search':
+    case 'filter_list':
+      return <SlidersHorizontal className={className} />;
+    case 'search':
+      return <Search className={className} />;
+    case 'close':
+      return <X className={className} />;
+    case 'arrow_back':
+      return <ArrowLeft className={className} />;
+    case 'chevron_right':
+      return <ChevronRight className={className} />;
+    default:
+      return <Plus className={className} />;
+  }
+}
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'soft' | 'ghost' | 'destructive' | 'danger' | 'link' | 'back' | 'slate' | 'small';
@@ -84,7 +127,7 @@ export const ProfileButton = React.forwardRef<HTMLButtonElement, ProfileButtonPr
           {showDot && (
             <div className="w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-white shrink-0" />
           )}
-          <span className="material-symbols-rounded text-[18px] md:text-[22px] shrink-0">{icon}</span>
+          {renderMappedIcon(icon, "w-[18px] h-[18px] md:w-5 md:h-5 shrink-0")}
           {label && <span className="truncate">{label}</span>}
         </button>
       );
@@ -99,7 +142,7 @@ export const ProfileButton = React.forwardRef<HTMLButtonElement, ProfileButtonPr
         {showDot && (
           <div className="w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-white shrink-0" />
         )}
-        <span className="material-symbols-rounded text-[18px] md:text-[22px] shrink-0">{icon}</span>
+        {renderMappedIcon(icon, "w-[18px] h-[18px] md:w-5 md:h-5 shrink-0")}
         {label && <span className="truncate">{label}</span>}
       </button>
     );
@@ -120,15 +163,13 @@ export function EmptyProfileButton({ label, icon, className = "", ...props }: Em
     >
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-slate-900 group-hover:bg-slate-100 transition-colors">
-          <span className="material-symbols-rounded text-[20px]">{icon || "add"}</span>
+          {renderMappedIcon(icon || "add", "w-5 h-5 shrink-0")}
         </div>
         <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 transition-colors font-jakarta">
           {label}
         </span>
       </div>
-      <span className="material-symbols-rounded text-slate-400 group-hover:text-slate-900 group-hover:translate-x-0.5 transition-all text-[20px]">
-        chevron_right
-      </span>
+      <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-900 group-hover:translate-x-0.5 transition-all shrink-0" />
     </button>
   );
 }
@@ -153,7 +194,7 @@ export const SquareButton = React.forwardRef<HTMLButtonElement, SquareButtonProp
         {...props}
         className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl border flex items-center justify-center shrink-0 transition-all duration-200 active:scale-[0.98] cursor-pointer select-none outline-none ${variants[variant]} ${className}`}
       >
-        <span className="material-symbols-outlined text-[20px] select-none leading-none flex items-center justify-center">{icon}</span>
+        {renderMappedIcon(icon, "w-5 h-5 shrink-0")}
       </button>
     );
   }

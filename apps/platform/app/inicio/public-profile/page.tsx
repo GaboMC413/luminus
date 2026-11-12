@@ -19,11 +19,11 @@ import { ProfileInterestsSection } from "@/features/user-profile/components/Prof
 import { ProfileCompletionCard } from "@/features/user-profile/components/ProfileCompletionCard";
 import { SpecialistProfileView } from "@/features/user-profile/components/SpecialistProfileView";
 import { Modal } from "@/components/ui/Modal";
-import { PageLoader } from "@/components/ui/PageLoader";
+import { ProfileSkeleton } from "@/components/ui/Skeleton";
 
 export default function PublicProfilePage() {
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={<ProfileSkeleton />}>
       <PublicProfileContent />
     </Suspense>
   );
@@ -111,11 +111,19 @@ function PublicProfileContent() {
     const id = searchParams.get("id");
     if (!id || connectionLoading) return;
 
+    const previousProfile = profile ? { ...profile } : null;
+
     try {
       setConnectionLoading(true);
 
       // Scenario 0: Blocked connection -> unblock
       if (profile?.connection_status === "blocked") {
+        setProfile((current: any) => ({
+          ...current,
+          connection_status: null,
+          connection_direction: null,
+        }));
+
         const response = await fetch("/api/connections", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -125,29 +133,14 @@ function PublicProfileContent() {
         const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
+          if (previousProfile) setProfile(previousProfile);
           throw new Error(data.message || "No pudimos desbloquear al usuario.");
         }
-
-        setProfile((current: any) => ({
-          ...current,
-          connection_status: null,
-          connection_direction: null,
-        }));
         return;
       }
 
-      // Scenario 1: Already in network -> remove
+      // Scenario 1: Already in network -> remove (Optimistic UI)
       if (profile?.connection_status === "accepted") {
-        const response = await fetch(`/api/connections?recipientId=${id}`, {
-          method: "DELETE",
-          credentials: "include",
-        });
-        const data = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-          throw new Error(data.message || "No pudimos eliminar de tu red.");
-        }
-
         setProfile((current: any) => ({
           ...current,
           connection_status: null,
@@ -155,10 +148,29 @@ function PublicProfileContent() {
           is_in_network: false,
           is_mutual: false,
         }));
+
+        const response = await fetch(`/api/connections?recipientId=${id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          if (previousProfile) setProfile(previousProfile);
+          throw new Error(data.message || "No pudimos eliminar de tu red.");
+        }
         return;
       }
 
-      // Scenario 2: Add to network (instant 1-way)
+      // Scenario 2: Add to network (instant 1-way) - Optimistic UI
+      setProfile((current: any) => ({
+        ...current,
+        connection_status: "accepted",
+        connection_direction: "outgoing",
+        is_in_network: true,
+        is_mutual: Boolean(current?.has_in_network),
+      }));
+
       const response = await fetch("/api/connections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -168,16 +180,9 @@ function PublicProfileContent() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
+        if (previousProfile) setProfile(previousProfile);
         throw new Error(data.message || "No pudimos sumar a tu red.");
       }
-
-      setProfile((current: any) => ({
-        ...current,
-        connection_status: "accepted",
-        connection_direction: "outgoing",
-        is_in_network: true,
-        is_mutual: Boolean(current?.has_in_network),
-      }));
     } catch (err: any) {
       console.error("Error managing connection:", err);
       setConnectionError(err.message || "No pudimos procesar la acción.");
@@ -186,34 +191,6 @@ function PublicProfileContent() {
     }
   };
 
-  const handleDeclineConnect = async () => {
-    const id = searchParams.get("id");
-    if (!id || connectionLoading) return;
-
-    try {
-      setConnectionLoading(true);
-      const response = await fetch(`/api/connections?recipientId=${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(data.message || "No pudimos rechazar la solicitud.");
-      }
-
-      setProfile((current: any) => ({
-        ...current,
-        connection_status: null,
-        connection_direction: null,
-      }));
-    } catch (err: any) {
-      console.error("Error declining connection:", err);
-      setConnectionError(err.message || "No pudimos rechazar la solicitud.");
-    } finally {
-      setConnectionLoading(false);
-    }
-  };
 
   const handleRemoveConnection = async (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -221,8 +198,20 @@ function PublicProfileContent() {
     const id = searchParams.get("id");
     if (!id || connectionLoading) return;
 
+    const previousProfile = profile ? { ...profile } : null;
+
     try {
       setConnectionLoading(true);
+
+      // Optimistic update
+      setProfile((current: any) => ({
+        ...current,
+        connection_status: null,
+        connection_direction: null,
+        is_in_network: false,
+        is_mutual: false,
+      }));
+
       const response = await fetch(`/api/connections?recipientId=${id}`, {
         method: "DELETE",
         credentials: "include",
@@ -230,14 +219,9 @@ function PublicProfileContent() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
+        if (previousProfile) setProfile(previousProfile);
         throw new Error(data.message || "No pudimos eliminar de tu red.");
       }
-
-      setProfile((current: any) => ({
-        ...current,
-        connection_status: null,
-        connection_direction: null,
-      }));
     } catch (err: any) {
       console.error("Error removing connection:", err);
       setConnectionError(err.message || "No pudimos eliminar de tu red.");
@@ -299,44 +283,67 @@ function PublicProfileContent() {
     }
   };
 
+  const fromParam = searchParams.get("from");
+  const isOwn = Boolean(profile?.is_own_profile);
+
+  const getBackInfo = () => {
+    switch (fromParam) {
+      case "especialistas":
+        return { label: "Volver a Especialistas", fallback: "/especialistas" };
+      case "miembros":
+        return { label: "Volver a Miembros", fallback: "/inicio/miembros" };
+      case "red":
+        return { label: "Volver a Mi red", fallback: "/red" };
+      case "inicio":
+        return { label: "Volver a Inicio", fallback: "/inicio" };
+      default:
+        return { label: "Volver", fallback: "/inicio" };
+    }
+  };
+
+  const backInfo = getBackInfo();
+
+  const handleGoBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 2) {
+      router.back();
+    } else {
+      router.push(backInfo.fallback);
+    }
+  };
+
   if (loading) {
-    return <PageLoader />;
+    return <ProfileSkeleton />;
   }
 
   if (error || !profile) {
     const isRestricted = error === "restricted";
-    const handleGoBack = () => {
-      if (typeof window !== "undefined" && window.history.length > 1) {
-        router.back();
-      } else {
-        router.push("/inicio");
-      }
-    };
 
     return (
-      <div className="w-full flex-1 min-h-[calc(100vh-80px)] bg-slate-50 flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-slate-200/90 shadow-none flex flex-col items-center text-center gap-5">
-          <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500">
-            {isRestricted ? <Lock className="w-6 h-6" /> : <UserX className="w-6 h-6" />}
+      <div className="w-full flex flex-col relative bg-slate-50 min-h-screen font-sans">
+        <div className="w-full flex-1 min-h-[calc(100vh-140px)] flex flex-col items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-slate-200/90 shadow-none flex flex-col items-center text-center gap-5">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500">
+              {isRestricted ? <Lock className="w-6 h-6" /> : <UserX className="w-6 h-6" />}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <h2 className="text-title-page font-bold tracking-tight text-slate-900 font-jakarta">
+                Perfil no disponible
+              </h2>
+              <p className="text-body text-slate-500 font-sans leading-relaxed">
+                {isRestricted 
+                  ? "Este perfil no está disponible." 
+                  : "Este perfil ya no está disponible o la cuenta ha sido eliminada."}
+              </p>
+            </div>
+            <Button
+              onClick={handleGoBack}
+              variant="primary"
+              className="gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{backInfo.label}</span>
+            </Button>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <h2 className="text-title-page font-bold tracking-tight text-slate-900 font-jakarta">
-              Perfil no disponible
-            </h2>
-            <p className="text-body text-slate-500 font-sans leading-relaxed">
-              {isRestricted 
-                ? "Este perfil no está disponible." 
-                : "Este perfil ya no está disponible o la cuenta ha sido eliminada."}
-            </p>
-          </div>
-          <Button
-            onClick={handleGoBack}
-            variant="primary"
-            className="gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Volver
-          </Button>
         </div>
       </div>
     );
@@ -349,7 +356,6 @@ function PublicProfileContent() {
           profile={profile}
           isPublic={true}
           onConnect={handleConnect}
-          onDeclineConnect={handleDeclineConnect}
           onRemoveConnection={handleRemoveConnection}
           onBlockConnection={handleBlockConnection}
           connectionLoading={connectionLoading}
@@ -359,6 +365,7 @@ function PublicProfileContent() {
           connectionDropdownRefMobile={connectionDropdownRefMobile}
           onSendMessage={handleSendMessage}
           onShareProfile={handleShareProfile}
+          onEditProfile={isOwn ? () => router.push("/perfil-usuario") : undefined}
         />
       ) : (
         <div className="w-full flex flex-col font-sans">
@@ -366,8 +373,9 @@ function PublicProfileContent() {
           <ProfileHeroHeader
             profile={profile}
             isSpecialist={false}
+            isOwnProfile={isOwn}
+            onEditProfile={isOwn ? () => router.push("/perfil-usuario") : undefined}
             onConnect={handleConnect}
-            onDeclineConnect={handleDeclineConnect}
             onRemoveConnection={handleRemoveConnection}
             onBlockConnection={handleBlockConnection}
             connectionLoading={connectionLoading}
@@ -408,7 +416,7 @@ function PublicProfileContent() {
 
                 {/* Community Member Card */}
                 <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 flex flex-col gap-3 shadow-none">
-                  <h4 className="text-title-section text-slate-900 font-jakarta uppercase tracking-wider text-xs font-bold">
+                  <h4 className="text-title-section text-slate-900 font-bold">
                     Comunidad LUMINUS
                   </h4>
                   <p className="text-body text-slate-600 text-xs sm:text-sm leading-relaxed font-sans">

@@ -1,33 +1,25 @@
 "use client";
 
 import React from "react";
-import { 
-  User, 
-  MapPin, 
-  Cake, 
-  Sparkles, 
-  Mail, 
-  Share2, 
-  Calendar, 
-  Orbit, 
-  Heart, 
-  Check, 
-  X, 
-  ChevronDown, 
-  UserMinus, 
+import {
+  User,
+  MapPin,
+  Mail,
+  Share2,
+  Orbit,
+  Heart,
+  Check,
+  X,
+  ChevronDown,
+  UserMinus,
   Ban,
-  Sun,
-  Smile,
-  HeartPulse,
-  Dumbbell,
-  Apple,
-  Sparkle,
-  Blend,
-  Flower,
-  Tag
+  Camera,
+  Pencil
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { isMecenas } from "@/lib/membership/access";
+import { formatLocationDisplay } from "@/utils/locationUtils";
+import { getCategoryPillClass, getCategoryTextClass, getCategoryCustomStyles, useDynamicCategories } from "@/components/ui/InterestPill";
 
 interface ProfileHeroHeaderProps {
   profile: any;
@@ -36,7 +28,6 @@ interface ProfileHeroHeaderProps {
   onTabChange?: (tab: "profesional" | "personal") => void;
   // Actions
   onConnect?: () => void;
-  onDeclineConnect?: () => void;
   onRemoveConnection?: () => void;
   onBlockConnection?: () => void;
   connectionLoading?: boolean;
@@ -48,47 +39,21 @@ interface ProfileHeroHeaderProps {
   onSendMessage?: () => void;
   onSchedule?: () => void;
   onShareProfile?: () => void;
+  // Owner mode actions
+  isOwnProfile?: boolean;
+  onEditProfile?: () => void;
+  onEditPhoto?: () => void;
+  onEditCover?: () => void;
 }
 
-const SPECIALTY_COLOR_MAP: Record<string, { color: string; bg: string; border: string }> = {
-  "salud integral": { color: "#1D4ED8", bg: "#EFF6FF", border: "#BFDBFE" },
-  "bienestar emocional": { color: "#BE185D", bg: "#FDF2F8", border: "#FBCFE8" },
-  "crecimiento personal": { color: "#B45309", bg: "#FFFBEB", border: "#FDE68A" },
-  "movimiento físico": { color: "#B91C1C", bg: "#FEF2F2", border: "#FECACA" },
-  "movimiento fisico": { color: "#B91C1C", bg: "#FEF2F2", border: "#FECACA" },
-  "nutrición": { color: "#4D7C0F", bg: "#F7FEE7", border: "#D9F99D" },
-  "nutricion": { color: "#4D7C0F", bg: "#F7FEE7", border: "#D9F99D" },
-  "espiritualidad": { color: "#6D28D9", bg: "#F5F3FF", border: "#DDD6FE" },
-  "vínculos": { color: "#C2410C", bg: "#FFF7ED", border: "#FED7AA" },
-  "vinculos": { color: "#C2410C", bg: "#FFF7ED", border: "#FED7AA" },
-  "terapias complementarias": { color: "#0F766E", bg: "#F0FDFA", border: "#99F6E4" },
-};
-
-function getSpecialtyBadgeStyle(specialtyText?: string) {
-  if (!specialtyText) {
-    return { color: "#334155", bg: "#F1F5F9", border: "#E2E8F0" };
-  }
-  const key = specialtyText.toLowerCase().trim();
-  return SPECIALTY_COLOR_MAP[key] || { color: "#334155", bg: "#F1F5F9", border: "#E2E8F0" };
-}
-
-function renderSpecialtyIcon(title?: string, color?: string) {
-  if (!title) return null;
+function renderSpecialtyIcon(title?: string, className = "w-3.5 h-3.5 shrink-0") {
+  if (!title) return <Heart className={className} />;
   const t = title
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
-  const props = { className: "w-3.5 h-3.5 shrink-0", strokeWidth: 2, style: { color } };
-  if (t.includes("crecimiento")) return <Sun {...props} />;
-  if (t.includes("emocional")) return <Smile {...props} />;
-  if (t.includes("integral") || t.includes("salud")) return <HeartPulse {...props} />;
-  if (t.includes("ejercicio") || t.includes("movimiento") || t.includes("fisico")) return <Dumbbell {...props} />;
-  if (t.includes("nutricion")) return <Apple {...props} />;
-  if (t.includes("espiritualidad")) return <Sparkle {...props} />;
-  if (t.includes("vinculo") || t.includes("relacion")) return <Blend {...props} />;
-  if (t.includes("terapia")) return <Flower {...props} />;
-  return <Tag {...props} />;
+  return <Heart className={className} />;
 }
 
 export function ProfileHeroHeader({
@@ -97,7 +62,6 @@ export function ProfileHeroHeader({
   activeTab = "profesional",
   onTabChange,
   onConnect,
-  onDeclineConnect,
   onRemoveConnection,
   onBlockConnection,
   connectionLoading = false,
@@ -109,53 +73,35 @@ export function ProfileHeroHeader({
   onSendMessage,
   onSchedule,
   onShareProfile,
+  isOwnProfile = false,
+  onEditProfile,
+  onEditPhoto,
+  onEditCover,
 }: ProfileHeroHeaderProps) {
+  const isOwn = isOwnProfile || Boolean(profile?.is_own_profile);
   const MONTH_NAMES = [
     "enero", "febrero", "marzo", "abril", "mayo", "junio",
     "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
   ];
 
-  const formatDisplayDate = (dateStr: string) => {
-    if (!dateStr || dateStr === "No definido" || dateStr === "Sin fecha de nacimiento") return null;
-
-    let day: number | null = null;
-    let monthIndex: number | null = null;
-
-    if (dateStr.includes("/")) {
-      const parts = dateStr.split("/").map((p) => p.trim());
-      if (parts.length >= 2) {
-        day = parseInt(parts[0], 10);
-        monthIndex = parseInt(parts[1], 10) - 1;
-      }
-    } else if (dateStr.includes("-")) {
-      const parts = dateStr.split("-").map((p) => p.trim());
-      if (parts.length === 3) {
-        day = parseInt(parts[2], 10);
-        monthIndex = parseInt(parts[1], 10) - 1;
-      }
-    }
-
-    if (day && monthIndex !== null && monthIndex >= 0 && monthIndex < 12 && !isNaN(day) && !isNaN(monthIndex)) {
-      return `${day} de ${MONTH_NAMES[monthIndex]}`;
-    }
-
-    return null;
-  };
-
   const fullName = `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim() || "Usuario LUMINUS";
   const hasCover = profile?.cover_url && profile.cover_url !== "" && !profile.cover_url.includes("empty");
-  const hasLocation = profile?.city || profile?.country;
-  const formattedLocation = [profile?.city?.split(",")[0], profile?.country].filter(Boolean).join(", ");
-  const formattedBirthdate = formatDisplayDate(profile?.birthdate);
+  const rawLocation = [profile?.city, profile?.country].filter(Boolean).join(", ");
+  const formattedLocation = formatLocationDisplay(rawLocation);
+  const hasLocation = Boolean(formattedLocation);
+  const dbCategories = useDynamicCategories();
   const specialist = profile?.specialistProfile;
   const specialtyText = specialist?.specialty || specialist?.title || "Bienestar";
+  const specialtyCustomStyles = getCategoryCustomStyles(specialtyText, dbCategories);
   const specialtyLabel = specialtyText.toLowerCase().startsWith("especialista en")
     ? specialtyText
     : `Especialista en ${specialtyText}`;
-  const specialtyStyle = getSpecialtyBadgeStyle(specialtyText);
-
   const getConnectionLabel = () => {
-    if (connectionLoading) return "Guardando...";
+    if (connectionLoading) {
+      if (profile?.connection_status === "blocked") return "Desbloqueando...";
+      if (profile?.connection_status === "accepted") return "Eliminando...";
+      return "Sumando...";
+    }
     if (profile?.connection_status === "blocked") return "Desbloquear";
     if (profile?.connection_status === "accepted") return "En mi red";
     return "Sumar a mi red";
@@ -172,17 +118,28 @@ export function ProfileHeroHeader({
             className="w-full h-full object-cover"
           />
         )}
+        {isOwn && onEditCover && (
+          <button
+            type="button"
+            onClick={onEditCover}
+            className="absolute bottom-3 right-4 sm:bottom-4 sm:right-6 lg:right-8 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/90 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 shadow-xs text-xs font-semibold font-jakarta backdrop-blur-sm transition-all cursor-pointer"
+            title="Cambiar portada"
+          >
+            <Camera className="w-3.5 h-3.5" />
+            <span>Cambiar portada</span>
+          </button>
+        )}
       </div>
 
       {/* 2. Overlapping Master Identity Card (2/3 over cover, 1/3 below) */}
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white border border-slate-200/90 rounded-2xl shadow-none -mt-20 sm:-mt-24 md:-mt-32 lg:-mt-36 relative z-30">
           <div className="p-6 sm:p-7 md:p-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 sm:gap-6">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 sm:gap-6">
               {/* Left: Avatar + Identity Details */}
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 md:gap-6 min-w-0">
                 {/* Avatar */}
-                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden border-4 border-white bg-white shadow-xs shrink-0 relative z-10">
+                <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden border-4 border-white bg-white shadow-xs shrink-0 relative z-10 group">
                   {profile?.profile_picture_url ? (
                     <img
                       src={profile.profile_picture_url}
@@ -194,23 +151,27 @@ export function ProfileHeroHeader({
                       <User className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300 stroke-[1.5]" />
                     </div>
                   )}
+                  {isOwn && onEditPhoto && (
+                    <button
+                      type="button"
+                      onClick={onEditPhoto}
+                      className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity cursor-pointer backdrop-blur-[1px]"
+                      title="Cambiar foto de perfil"
+                    >
+                      <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
+                      <span className="text-[10px] font-semibold mt-1">Editar</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Identity Lockup */}
-                <div className="flex flex-col gap-2 min-w-0">
+                <div className="flex flex-col gap-1.5 min-w-0">
                   <div className="flex flex-wrap items-center gap-2.5">
-                    <h1 className="text-xl sm:text-2xl font-bold font-jakarta text-slate-900 tracking-tight leading-snug">
+                    <h1 className="text-lg sm:text-xl font-bold font-jakarta text-slate-900 tracking-tight leading-snug">
                       {fullName}
                     </h1>
 
-                    {isMecenas({ tier: profile?.tier }) && (
-                      <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold font-jakarta border border-slate-200/80 flex items-center gap-1 select-none">
-                        <Sparkles className="w-3 h-3 text-slate-700" />
-                        Mecenas
-                      </span>
-                    )}
-
-                    {profile?.has_in_network && (
+                    {profile?.has_in_network && !isOwn && (
                       <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-semibold font-jakarta border border-blue-200/60 flex items-center select-none">
                         Te sumó a su red
                       </span>
@@ -218,66 +179,88 @@ export function ProfileHeroHeader({
                   </div>
 
                   {/* Headline / Specialty / Profession */}
-                  {isSpecialist ? (
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-                      <span
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-[13px] font-bold font-jakarta border shadow-xs select-none"
-                        style={{
-                          backgroundColor: specialtyStyle.bg,
-                          color: specialtyStyle.color,
-                          borderColor: specialtyStyle.border,
-                        }}
-                      >
-                        {renderSpecialtyIcon(specialtyText, specialtyStyle.color)}
-                        <span>{specialtyLabel}</span>
-                      </span>
+                  {!isSpecialist && profile?.profession && profile.profession !== "Miembro de la Comunidad" ? (
+                    <p className="text-sm sm:text-[15px] font-medium text-slate-600 font-jakarta leading-normal">
+                      {profile.profession}
+                    </p>
+                  ) : null}
 
-                      {specialist?.title && specialist.title.toLowerCase() !== specialtyText.toLowerCase() && (
-                        <span className="text-xs sm:text-sm font-medium text-slate-600 font-jakarta">
-                          {specialist.title}
+                  {/* Location */}
+                  {hasLocation && (
+                    <div className="flex items-center gap-1.5 text-[13px] font-medium text-slate-500 font-jakarta">
+                      <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                      <span>{formattedLocation}</span>
+                    </div>
+                  )}
+
+                  {/* Badges Row (Especialista, Mecenas & Community Tenure) */}
+                  {(isSpecialist || isMecenas({ tier: profile?.tier }) || profile?.member_since) && (
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      {isSpecialist && (
+                        <span
+                          style={
+                            specialtyCustomStyles?.color && specialtyCustomStyles?.bgColor
+                              ? {
+                                  backgroundColor: specialtyCustomStyles.bgColor,
+                                  color: specialtyCustomStyles.color,
+                                  borderColor: specialtyCustomStyles.borderColor,
+                                }
+                              : undefined
+                          }
+                          className={`inline-flex items-center h-6 px-2.5 rounded-full text-[11px] font-semibold font-jakarta border select-none ${getCategoryPillClass(specialtyText, dbCategories)}`}
+                        >
+                          Especialista LUMINUS
+                        </span>
+                      )}
+
+                      {isMecenas({ tier: profile?.tier }) && (
+                        <span className="inline-flex items-center h-6 px-2.5 rounded-full text-[11px] font-semibold font-jakarta luminus-pill-gradient select-none">
+                          Mecenas
+                        </span>
+                      )}
+
+                      {profile?.member_since && (
+                        <span className="inline-flex items-center h-6 px-2.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium font-jakarta border border-slate-200/80 select-none">
+                          Miembro desde {(() => {
+                            try {
+                              const d = new Date(profile.member_since);
+                              return `${MONTH_NAMES[d.getMonth()]} de ${d.getFullYear()}`;
+                            } catch {
+                              return "";
+                            }
+                          })()}
                         </span>
                       )}
                     </div>
-                  ) : (
-                    <p className="text-sm sm:text-[15px] font-medium text-slate-600 font-jakarta leading-normal">
-                      {profile?.profession || "Miembro de la Comunidad"}
-                    </p>
                   )}
-
-                  {/* Metadata Row */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500 font-sans pt-0.5">
-                    {hasLocation && (
-                      <span className="flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>{formattedLocation}</span>
-                      </span>
-                    )}
-                    {formattedBirthdate && (
-                      <span className="flex items-center gap-1.5">
-                        <Cake className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>{formattedBirthdate}</span>
-                      </span>
-                    )}
-                    {profile?.member_since && (
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>Miembro desde {(() => {
-                          try {
-                            const d = new Date(profile.member_since);
-                            return `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
-                          } catch {
-                            return "";
-                          }
-                        })()}</span>
-                      </span>
-                    )}
-                  </div>
                 </div>
               </div>
 
               {/* Right: Desktop Actions Bar */}
               <div className="hidden md:flex items-center gap-2 shrink-0 z-10">
-                {!profile?.is_own_profile ? (
+                {isOwn ? (
+                  <>
+                    {onEditProfile && (
+                      <Button
+                        onClick={onEditProfile}
+                        variant="secondary"
+                        className="gap-1.5 px-3.5 text-xs font-semibold"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                        <span>Editar perfil</span>
+                      </Button>
+                    )}
+                    <Button
+                      onClick={onShareProfile}
+                      variant="secondary"
+                      className="gap-1.5 px-3.5 text-xs font-semibold"
+                      title="Compartir perfil"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span>Compartir</span>
+                    </Button>
+                  </>
+                ) : (
                   <>
                     {/* Slot 1: Unified Relationship Action */}
                     {profile?.connection_status === "accepted" ? (
@@ -325,11 +308,11 @@ export function ProfileHeroHeader({
                       </Button>
                     )}
 
-                    {/* Slot 2: Chat Message (Primary CTA in header) */}
+                    {/* Slot 2: Chat Message */}
                     {profile?.connection_status !== "blocked" && (
                       <Button
                         onClick={onSendMessage}
-                        variant="primary"
+                        variant={profile?.connection_status === "accepted" ? "primary" : "secondary"}
                         className="gap-1.5 px-4 text-xs font-semibold"
                       >
                         <Mail className="w-3.5 h-3.5" />
@@ -347,22 +330,36 @@ export function ProfileHeroHeader({
                       <Share2 className="w-4 h-4 text-slate-700" />
                     </Button>
                   </>
-                ) : (
-                  <Button
-                    onClick={onShareProfile}
-                    variant="secondary"
-                    className="gap-2 px-3.5 text-xs font-semibold"
-                  >
-                    <Share2 className="w-3.5 h-3.5" />
-                    <span>Compartir mi perfil</span>
-                  </Button>
                 )}
               </div>
             </div>
 
             {/* Mobile Action Buttons */}
             <div className="flex md:hidden flex-col gap-2 pt-3">
-              {!profile?.is_own_profile ? (
+              {isOwn ? (
+                <div className="flex items-center gap-2 w-full">
+                  {onEditProfile && (
+                    <Button
+                      onClick={onEditProfile}
+                      variant="secondary"
+                      fullWidth
+                      className="gap-1.5 text-xs font-semibold"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      <span>Editar perfil</span>
+                    </Button>
+                  )}
+                  <Button
+                    onClick={onShareProfile}
+                    variant="secondary"
+                    fullWidth
+                    className="gap-1.5 text-xs font-semibold"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>Compartir</span>
+                  </Button>
+                </div>
+              ) : (
                 <div className="flex items-center gap-2 w-full">
                   {profile?.connection_status === "accepted" ? (
                     <div className="relative flex-1" ref={connectionDropdownRefMobile}>
@@ -415,7 +412,7 @@ export function ProfileHeroHeader({
                   {profile?.connection_status !== "blocked" && (
                     <Button
                       onClick={onSendMessage}
-                      variant="primary"
+                      variant={profile?.connection_status === "accepted" ? "primary" : "secondary"}
                       className="flex-1 gap-1 text-xs"
                     >
                       <Mail className="w-3.5 h-3.5" />
@@ -432,16 +429,6 @@ export function ProfileHeroHeader({
                     <Share2 className="w-4 h-4 text-slate-700" />
                   </Button>
                 </div>
-              ) : (
-                <Button
-                  onClick={onShareProfile}
-                  variant="secondary"
-                  fullWidth
-                  className="gap-2 text-xs"
-                >
-                  <Share2 className="w-3.5 h-3.5" />
-                  <span>Compartir mi perfil</span>
-                </Button>
               )}
             </div>
           </div>

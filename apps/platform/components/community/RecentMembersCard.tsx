@@ -58,7 +58,7 @@ export function RecentMembersCard({ members, loading, onViewAllMembers }: Recent
               avatar={member.avatar}
               name={member.name}
               subtitle={formatLocationDisplay(member.location) || "Miembro de la comunidad"}
-              onClick={() => router.push(`/inicio/public-profile?id=${encodeURIComponent(member.id)}`)}
+              onClick={() => router.push(`/inicio/public-profile?id=${encodeURIComponent(member.id)}&from=inicio`)}
             />
           ))}
         </div>

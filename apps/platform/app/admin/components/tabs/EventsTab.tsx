@@ -45,33 +45,17 @@ function extractTimeHHMM(timeText?: string | null): string {
 }
 
 function getCategoryBadgeStyle(category?: string | null): string {
-  if (!category) return "bg-slate-100 text-slate-700 border-slate-200";
+  if (!category) return "category-pill-slate";
   const norm = category.toLowerCase();
-  if (norm.includes("crecimiento")) {
-    return "bg-amber-50 text-amber-800 border-amber-200/80";
-  }
-  if (norm.includes("emocional")) {
-    return "bg-pink-50 text-pink-700 border-pink-200/80";
-  }
-  if (norm.includes("salud") || norm.includes("integral")) {
-    return "bg-sky-50 text-sky-700 border-sky-200/80";
-  }
-  if (norm.includes("movimiento") || norm.includes("físico") || norm.includes("fisico")) {
-    return "bg-rose-50 text-rose-700 border-rose-200/80";
-  }
-  if (norm.includes("nutrición") || norm.includes("nutricion")) {
-    return "bg-lime-50 text-lime-800 border-lime-200/80";
-  }
-  if (norm.includes("espiritualidad")) {
-    return "bg-purple-50 text-purple-700 border-purple-200/80";
-  }
-  if (norm.includes("vínculos") || norm.includes("vinculos")) {
-    return "bg-orange-50 text-orange-700 border-orange-200/80";
-  }
-  if (norm.includes("terapias") || norm.includes("complementarias")) {
-    return "bg-teal-50 text-teal-700 border-teal-200/80";
-  }
-  return "bg-slate-100 text-slate-700 border-slate-200";
+  if (norm.includes("crecimiento")) return "category-pill-crecimiento";
+  if (norm.includes("emocional")) return "category-pill-emocional";
+  if (norm.includes("salud") || norm.includes("integral")) return "category-pill-salud";
+  if (norm.includes("movimiento") || norm.includes("físico") || norm.includes("fisico")) return "category-pill-movimiento";
+  if (norm.includes("nutrición") || norm.includes("nutricion")) return "category-pill-nutricion";
+  if (norm.includes("espiritualidad")) return "category-pill-espiritualidad";
+  if (norm.includes("vínculos") || norm.includes("vinculos")) return "category-pill-vinculos";
+  if (norm.includes("terapias") || norm.includes("complementarias")) return "category-pill-terapias";
+  return "category-pill-slate";
 }
 
 function parseCalendarDate(dateStr?: string | Date | null): Date | null {

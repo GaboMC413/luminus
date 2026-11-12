@@ -12,6 +12,7 @@ import { SelectInput } from "@/components/ui/SelectInput";
 import { Button } from "@/components/ui/Button";
 import { COUNTRIES, Country } from "@/utils/countries";
 import { INTEREST_CATEGORIES } from "@/utils/constants";
+import { renderCategoryIconByKey } from "@/components/ui/InterestPill";
 import { PhotoEditor } from "@/components/ui/PhotoEditor";
 import { uploadAvatar } from "@/lib/uploadAvatar";
 import {
@@ -859,7 +860,7 @@ export default function CompleteProfileView() {
                       className="flex items-center gap-1.5 text-xs font-bold font-jakarta m-0"
                       style={{ color: category.color }}
                     >
-                      {renderCategoryIcon(category.title, category.color)}
+                      {renderCategoryIconByKey(category.icon, category.title, "w-4 h-4 shrink-0")}
                       {category.title}
                     </h3>
 

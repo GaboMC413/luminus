@@ -3,23 +3,42 @@
 import React, { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, User, Mail, Phone, Lock, Award, Trash2 } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Lock, Award, Trash2 } from "lucide-react";
 import { SettingsProvider, useSettings } from "@/features/user-profile/context/SettingsContext";
 import { Toast } from "@/components/ui/Toast";
 import { AccountClosureModal } from "@/features/user-profile/components/settings/AccountClosureModal";
-import { PageLoader } from "@/components/ui/PageLoader";
+import { SettingsGhostLoader } from "@/features/user-profile/components/settings/SettingsGhostLoader";
 
 const SETTINGS_TABS = [
-  { id: "personal", href: "/perfil-usuario/configuracion/personal", label: "Información personal", icon: User },
   { id: "email", href: "/perfil-usuario/configuracion/email", label: "Email", icon: Mail },
   { id: "phone", href: "/perfil-usuario/configuracion/celular", label: "Celular", icon: Phone },
   { id: "password", href: "/perfil-usuario/configuracion/contrasena", label: "Contraseña", icon: Lock },
   { id: "membership", href: "/perfil-usuario/configuracion/membresia", label: "Membresía y pagos", icon: Award },
 ];
 
+function SettingsPageSkeleton() {
+  return (
+    <div className="flex-1 w-full flex flex-col bg-slate-50 font-sans">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pt-4 pb-6 md:py-8">
+        <div className="w-full max-w-6xl mx-auto">
+          <div className="h-8 w-60 bg-slate-200/80 rounded-xl mb-7 animate-pulse" />
+          <div className="flex flex-col md:flex-row gap-5 lg:gap-8 items-start w-full">
+            <div className="hidden md:flex flex-col gap-3 w-64 shrink-0">
+              <div className="h-48 bg-white rounded-2xl border border-slate-200/90 animate-pulse" />
+            </div>
+            <div className="flex-1 w-full bg-white rounded-2xl border border-slate-200/90 p-7 min-h-[460px]">
+              <SettingsGhostLoader />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={<SettingsPageSkeleton />}>
       <SettingsProvider>
         <SettingsLayoutContent>{children}</SettingsLayoutContent>
       </SettingsProvider>

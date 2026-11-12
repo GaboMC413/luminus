@@ -22,7 +22,7 @@ export function Skeleton({ className = "", ...props }: SkeletonProps) {
  */
 export function PostCardSkeleton() {
   return (
-    <article className="bg-white rounded-2xl border border-zinc-200 flex flex-col shadow-none overflow-hidden">
+    <article className="bg-white rounded-2xl border border-slate-200/90 flex flex-col shadow-none overflow-hidden">
       {/* 1. Header: Author info and Post date */}
       <div className="px-4 pt-3.5 pb-2.5 sm:px-5 sm:pt-4 sm:pb-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -60,39 +60,32 @@ export function PostCardSkeleton() {
 }
 
 /**
- * Skeleton replicating a User Card (`UserCard.tsx`).
+ * Skeleton replicating a User Card (`UserCard.tsx`) or Specialist Card.
  */
 export function UserCardSkeleton() {
   return (
-    <div className="relative bg-white rounded-2xl p-3 md:p-4 flex flex-col items-center gap-2.5 md:gap-3 border border-slate-200 shadow-none">
-      {/* Avatar Box */}
-      <Skeleton className="w-[64px] h-[64px] sm:w-[72px] sm:h-[72px] md:w-[80px] md:h-[80px] rounded-[16px] sm:rounded-[18px] md:rounded-[22px] shrink-0" />
+    <div className="relative bg-white rounded-2xl p-3.5 sm:p-4 flex flex-col items-center gap-2.5 sm:gap-3 border border-slate-200/90 shadow-none">
+      {/* Avatar Box matches UserAvatar size="lg" */}
+      <Skeleton className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shrink-0" />
       
-      {/* Name and Location */}
+      {/* Name, Location & Specialty */}
       <div className="flex flex-col items-center gap-1.5 text-center w-full min-w-0">
-        <Skeleton className="h-4 w-24 rounded-md" />
+        <Skeleton className="h-4 w-28 rounded-md" />
+        <Skeleton className="h-3 w-20 rounded-md" />
         <Skeleton className="h-3 w-16 rounded-md" />
       </div>
 
-      {/* Action Button */}
-      <Skeleton className="w-full mt-0.5 h-8 sm:h-9 rounded-xl" />
+      {/* Action link */}
+      <Skeleton className="w-16 mt-auto pt-1 h-3 rounded-md" />
     </div>
   );
 }
 
 /**
- * Skeleton replicating Specialist Card in Directory (`SpecialistCard`).
+ * Skeleton replicating Specialist Card in Directory.
  */
 export function SpecialistCardSkeleton() {
-  return (
-    <article className="flex min-h-[220px] flex-col items-center rounded-2xl border border-slate-200 bg-white px-3 py-4 text-center">
-      <Skeleton className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl shrink-0" />
-      <Skeleton className="mt-3 h-4 w-28 rounded-md" />
-      <Skeleton className="mt-1 h-3.5 w-20 rounded-md" />
-      <Skeleton className="mt-3 h-4 w-24 rounded-md" />
-      <Skeleton className="mt-auto pt-3 h-3 w-16 rounded-md" />
-    </article>
-  );
+  return <UserCardSkeleton />;
 }
 
 /**
@@ -144,7 +137,7 @@ export function FeedSkeleton() {
           </div>
 
           {/* Create Post Input */}
-          <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-zinc-200 flex items-center gap-3">
+          <div className="card-surface p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 flex items-center gap-3">
             <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
             <Skeleton className="h-10 flex-1 rounded-xl" />
           </div>
@@ -229,25 +222,9 @@ export function NetworkSkeleton() {
 
 /**
  * Exact layout skeleton for Specialist Directory (`/especialistas`).
- * Matches DOM structure: Search input + filter button + 4-column SpecialistCard grid.
  */
 export function DirectorySkeleton() {
-  return (
-    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-3 pb-8 pt-4 font-sans sm:px-6 md:gap-6 md:py-6">
-      {/* Search Bar & Tune Button */}
-      <div className="flex items-center gap-2">
-        <Skeleton className="h-12 min-w-0 flex-1 rounded-xl" />
-        <Skeleton className="h-12 w-12 rounded-xl shrink-0" />
-      </div>
-
-      {/* Specialists 4-Column Grid */}
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-5 lg:grid-cols-4">
-        {[...Array(8)].map((_, i) => (
-          <SpecialistCardSkeleton key={i} />
-        ))}
-      </section>
-    </div>
-  );
+  return <DirectoryGridSkeleton count={10} />;
 }
 
 /**
@@ -386,66 +363,75 @@ export function NotificationsSkeleton() {
 }
 
 /**
- * Exact layout skeleton for User Profile (`/perfil-usuario`).
- * Matches ProfileContent DOM: ProfileHeaderCover + 12-col layout (Left 4-cols sidebar with negative top margin, Right 8-cols sections).
+ * Exact layout skeleton for User Profile (`/perfil-usuario` and `/inicio/public-profile`).
+ * Matches ProfileHeroHeader DOM: Full-width cover + overlapping horizontal identity card + 8:4 grid.
  */
 export function ProfileSkeleton() {
   return (
-    <div className="w-full flex flex-col relative">
-      {/* Cover Skeleton */}
-      <Skeleton className="w-full aspect-[3/1] sm:aspect-[4/1] md:aspect-[5/1] max-h-[320px] rounded-none" />
+    <div className="w-full flex flex-col font-sans">
+      {/* 1. Full-Width Cover Skeleton */}
+      <Skeleton className="w-full h-48 sm:h-56 md:h-64 lg:h-72 rounded-none shrink-0" />
 
-      {/* Main Container */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pb-6 md:pb-12">
-        <div className="w-full max-w-6xl mx-auto pt-4 lg:pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-4 lg:gap-8 items-start">
-            
-            {/* LEFT COLUMN (4 cols with negative margin overlapping cover) */}
-            <div className="md:col-span-4 flex flex-col gap-4 lg:gap-6 mt-0 md:-mt-[136px] lg:-mt-[224px]">
-              {/* Profile Card */}
-              <div className="w-full bg-white rounded-2xl border border-slate-200 p-5 flex flex-col items-center text-center gap-4 shadow-none">
-                <Skeleton className="w-28 h-28 sm:w-32 sm:h-32 rounded-3xl shrink-0 shadow-md border-4 border-white" />
-                <div className="flex flex-col items-center gap-1.5 w-full">
-                  <Skeleton className="h-5 w-36 rounded-md" />
-                  <Skeleton className="h-3.5 w-24 rounded-md" />
-                  <Skeleton className="h-3 w-28 rounded-md" />
+      {/* 2. Overlapping Master Identity Card */}
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white border border-slate-200/90 rounded-2xl shadow-none -mt-20 sm:-mt-24 md:-mt-32 lg:-mt-36 p-6 sm:p-7 md:p-8 relative z-30">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 sm:gap-6">
+            {/* Left: Avatar + Details */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 md:gap-6 min-w-0">
+              <Skeleton className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl shrink-0" />
+              <div className="flex flex-col gap-2 min-w-0">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-6 w-44 rounded-md" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
                 </div>
-                <Skeleton className="h-9 w-full rounded-xl mt-1" />
-              </div>
-
-              {/* Membership Card */}
-              <div className="hidden md:flex flex-col gap-4 bg-white rounded-2xl border border-slate-200 p-5 space-y-3">
-                <Skeleton className="h-4 w-28 rounded-md" />
-                <Skeleton className="h-3.5 w-full rounded-md" />
-                <Skeleton className="h-9 w-full rounded-xl" />
+                <Skeleton className="h-4 w-32 rounded-md" />
+                <div className="flex items-center gap-3 pt-1">
+                  <Skeleton className="h-3.5 w-24 rounded-md" />
+                  <Skeleton className="h-3.5 w-28 rounded-md" />
+                </div>
               </div>
             </div>
 
-            {/* RIGHT COLUMN (8 cols): About, Interests, Prompts */}
-            <div className="md:col-span-8 flex flex-col gap-4 lg:gap-6">
-              {/* About Section */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 space-y-3">
-                <Skeleton className="h-4 w-28 rounded-md mb-2" />
-                <Skeleton className="h-3.5 w-full rounded-md" />
-                <Skeleton className="h-3.5 w-4/5 rounded-md" />
-              </div>
+            {/* Right: Actions */}
+            <div className="hidden md:flex items-center gap-2 shrink-0">
+              <Skeleton className="h-10 w-28 rounded-xl" />
+              <Skeleton className="h-10 w-24 rounded-xl" />
+            </div>
+          </div>
+        </div>
+      </div>
 
-              {/* Interests Section */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 space-y-3">
-                <Skeleton className="h-4 w-24 rounded-md mb-2" />
-                <div className="flex flex-wrap gap-2">
-                  <Skeleton className="h-7 w-20 rounded-full" />
-                  <Skeleton className="h-7 w-24 rounded-full" />
-                  <Skeleton className="h-7 w-16 rounded-full" />
-                  <Skeleton className="h-7 w-28 rounded-full" />
-                </div>
-              </div>
+      {/* 3. Balanced 8:4 Grid */}
+      <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 mt-5 lg:mt-6 items-start">
+          {/* Main Column (8 cols) */}
+          <div className="lg:col-span-8 flex flex-col gap-5">
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 space-y-3">
+              <Skeleton className="h-4 w-28 rounded-md mb-2" />
+              <Skeleton className="h-3.5 w-full rounded-md" />
+              <Skeleton className="h-3.5 w-4/5 rounded-md" />
+            </div>
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 space-y-4">
+              <Skeleton className="h-4 w-32 rounded-md" />
+              <Skeleton className="h-20 w-full rounded-xl" />
+            </div>
+          </div>
 
-              {/* Prompts Section */}
-              <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 space-y-4">
-                <Skeleton className="h-4 w-36 rounded-md" />
-                <Skeleton className="h-20 w-full rounded-xl" />
+          {/* Sidebar Column (4 cols) */}
+          <div className="lg:col-span-4 flex flex-col gap-5">
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 space-y-3">
+              <Skeleton className="h-4 w-24 rounded-md mb-2" />
+              <div className="flex flex-wrap gap-2">
+                <Skeleton className="h-7 w-20 rounded-full" />
+                <Skeleton className="h-7 w-24 rounded-full" />
+                <Skeleton className="h-7 w-16 rounded-full" />
+                <Skeleton className="h-7 w-28 rounded-full" />
               </div>
+            </div>
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 space-y-3">
+              <Skeleton className="h-4 w-36 rounded-md" />
+              <Skeleton className="h-3.5 w-full rounded-md" />
+              <Skeleton className="h-10 w-full rounded-xl mt-2" />
             </div>
           </div>
         </div>
@@ -477,6 +463,124 @@ export function UnifiedBannerSkeleton() {
           </div>
           <Skeleton className="h-11 w-full md:w-44 rounded-xl shrink-0" />
         </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Exact layout skeleton for Activities timeline (/actividades).
+ */
+export function ActivitiesSkeleton() {
+  return (
+    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 pb-12 pt-4 sm:px-6 md:py-6">
+      {/* Page Header */}
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-7 w-36 rounded-md" />
+        <Skeleton className="h-4 w-64 rounded-md" />
+      </div>
+
+      {/* Timeline item skeletons */}
+      <div className="flex flex-col gap-8 max-w-3xl">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="flex gap-4 sm:gap-6">
+            {/* Timeline date bullet */}
+            <div className="flex flex-col items-center shrink-0">
+              <Skeleton className="w-3 h-3 rounded-full" />
+              <div className="w-0.5 flex-1 bg-slate-200/80 my-2" />
+            </div>
+
+            {/* Event Card */}
+            <div className="flex-1 bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-6 flex flex-col md:flex-row gap-5">
+              <div className="flex-1 flex flex-col gap-2.5 min-w-0">
+                <Skeleton className="h-4 w-32 rounded-md" />
+                <Skeleton className="h-6 w-3/4 rounded-md" />
+                <Skeleton className="h-4 w-40 rounded-md" />
+                <Skeleton className="h-4 w-full rounded-md mt-1" />
+                <Skeleton className="h-10 w-32 rounded-xl mt-3" />
+              </div>
+              <Skeleton className="w-full md:w-64 aspect-video rounded-xl shrink-0" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Exact layout skeleton for Recordings (/grabaciones).
+ */
+export function RecordingsSkeleton() {
+  return (
+    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 pb-12 pt-4 sm:px-6 md:py-6">
+      {/* Page Header */}
+      <div className="flex flex-col gap-2">
+        <Skeleton className="h-7 w-40 rounded-md" />
+        <Skeleton className="h-4 w-72 rounded-md" />
+      </div>
+
+      {/* Category Pills Bar */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+        {[...Array(6)].map((_, i) => (
+          <Skeleton key={i} className="h-9 w-28 rounded-full shrink-0" />
+        ))}
+      </div>
+
+      {/* 4-column video card grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {[...Array(8)].map((_, i) => (
+          <div key={i} className="bg-white rounded-2xl border border-slate-200/90 overflow-hidden flex flex-col">
+            <Skeleton className="w-full aspect-video rounded-none" />
+            <div className="p-4 flex flex-col gap-2">
+              <Skeleton className="h-3 w-24 rounded-md" />
+              <Skeleton className="h-4 w-full rounded-md" />
+              <Skeleton className="h-3.5 w-3/4 rounded-md" />
+              <Skeleton className="h-3 w-28 rounded-md mt-2" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Standardized directory skeleton for /especialistas and /inicio/miembros.
+ * Mirrors the exact DOM geometry of PageHeader + DirectoryToolbar (SearchBar + inline desktop filters) + 5-col grid.
+ */
+export function DirectoryGridSkeleton({
+  count = 10,
+  showBack = false,
+}: {
+  count?: number;
+  showBack?: boolean;
+}) {
+  return (
+    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-5 px-4 pb-12 pt-4 sm:px-6 md:gap-6 md:py-6">
+      {/* Header */}
+      <div className="flex flex-col gap-1.5">
+        {showBack && <Skeleton className="h-5 w-16 rounded-md mb-1.5" />}
+        <Skeleton className="h-7 w-40 rounded-md" />
+        <Skeleton className="h-4 w-72 rounded-md mt-0.5" />
+      </div>
+
+      {/* Search & Inline Filter Toolbar */}
+      <div className="flex items-center gap-2.5 w-full">
+        <Skeleton className="h-11 flex-1 rounded-xl" />
+        <div className="hidden md:flex items-center gap-2.5 shrink-0">
+          <Skeleton className="h-11 w-[165px] lg:w-[180px] rounded-xl" />
+          <Skeleton className="h-11 w-[165px] lg:w-[180px] rounded-xl" />
+          <Skeleton className="h-11 w-[155px] rounded-xl" />
+        </div>
+        <Skeleton className="flex md:hidden h-11 w-24 rounded-xl shrink-0" />
+      </div>
+
+      {/* 5-Column Desktop / 2-Column Mobile Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4 w-full">
+        {[...Array(count)].map((_, i) => (
+          <UserCardSkeleton key={i} />
+        ))}
       </div>
     </div>
   );

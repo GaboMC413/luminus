@@ -11,7 +11,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@aws-sdk/client-ses": "^3.1111.0",
     "@aws-sdk/client-sesv2": "^3.1116.0",
     "@marsidev/react-turnstile": "^1.6.1",
     "@prisma/client": "^5.22.0",

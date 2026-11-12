@@ -45,6 +45,62 @@ export function formatLocationDisplay(location?: string | null): string {
 }
 
 /**
+ * Formats a physical space address cleanly without Google Places duplicate artifacts
+ * (e.g. "Departamento de ...", repeated city or country).
+ * e.g. ("Juan D. Jackson 1220, 11200 Montevideo, Departamento de Montevideo, Uruguay", "Montevideo", "Uruguay")
+ *   -> "Juan D. Jackson 1220, 11200 Montevideo, Uruguay"
+ */
+export function formatSpaceAddress(
+  address?: string | null,
+  city?: string | null,
+  country?: string | null
+): string {
+  const cleanAddr = (address || "").trim();
+  const cleanCity = (city || "").trim();
+  const cleanCountry = (country || "").trim();
+
+  if (!cleanAddr && !cleanCity && !cleanCountry) return "";
+  if (!cleanAddr) {
+    return [cleanCity, cleanCountry].filter(Boolean).join(", ");
+  }
+
+  // Split address into comma-separated segments
+  const rawParts = cleanAddr
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  // Filter out redundant administrative subdivision segments (Departamento de ..., Provincia de ..., etc.)
+  const adminRegex = /^(departamento|provincia|estado|regi[oó]n)\s+(de\s+|metropolitana\b)/i;
+  const filteredParts = rawParts.filter((part) => !adminRegex.test(part));
+
+  // Build a normalized representation to check for existing city and country
+  const fullTextNormalized = filteredParts.join(" ").toLowerCase();
+
+  const finalParts = [...filteredParts];
+
+  // Append city only if not already present in the address
+  if (cleanCity && !fullTextNormalized.includes(cleanCity.toLowerCase())) {
+    finalParts.push(cleanCity);
+  }
+
+  // Append country only if not already present in the address
+  if (cleanCountry && !fullTextNormalized.includes(cleanCountry.toLowerCase())) {
+    finalParts.push(cleanCountry);
+  }
+
+  // Deduplicate case-insensitively while preserving original casing
+  const uniqueParts: string[] = [];
+  for (const part of finalParts) {
+    if (!uniqueParts.some((existing) => existing.toLowerCase() === part.toLowerCase())) {
+      uniqueParts.push(part);
+    }
+  }
+
+  return uniqueParts.join(", ");
+}
+
+/**
  * Reordena las predicciones de Google Places para que los países de Latinoamérica aparezcan primero.
  */
 export function sortLatamFirst<T extends { description?: string; secondary_text?: string; structured_formatting?: { secondary_text?: string } }>(

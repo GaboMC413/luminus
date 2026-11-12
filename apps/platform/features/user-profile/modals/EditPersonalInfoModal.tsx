@@ -194,14 +194,14 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Editar Información Personal"
+      title="Editar información personal"
       maxWidth="720px"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !rounded-[10px] md:!rounded-[12px]">
+          <Button variant="secondary" onClick={onClose} className="w-full md:flex-1">
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !bg-black !text-white hover:!bg-slate-800 !rounded-[10px] md:!rounded-[12px]">
+          <Button variant="primary" onClick={handleSubmit} className="w-full md:flex-1">
             Guardar cambios
           </Button>
         </>
@@ -257,13 +257,43 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
               setLocationError("");
             }}
             autoFocus={initialFocusField === 'city'}
-            className={locationError ? '[&_input]:!border-[#FF3D3D] [&_input]:!ring-1 [&_input]:!ring-[#FF3D3D]' : ''}
+            className={locationError ? '[&_input]:!border-red-500 [&_input]:!ring-1 [&_input]:!ring-red-500' : ''}
           />
-          {locationError && <p className="text-[#FF3D3D] text-[12px] font-bold mt-1 ml-1">{locationError}</p>}
+          {locationError && <p className="text-red-500 text-[12px] font-bold mt-1 ml-1">{locationError}</p>}
         </div>
 
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-          <span>La fecha de nacimiento y género se gestionan desde los Ajustes de Cuenta.</span>
+        <div className="flex flex-col gap-1.5 md:gap-2">
+          <label className="text-label text-[11px] md:text-xs ml-1">Fecha de nacimiento</label>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3" ref={dayRef}>
+            <SelectInput
+              value={birthDay}
+              options={DAYS}
+              placeholder="Día"
+              onSelect={(val) => {
+                setBirthDay(val);
+                setDateError("");
+              }}
+            />
+            <SelectInput
+              value={birthMonth}
+              options={MONTHS}
+              placeholder="Mes"
+              onSelect={(val) => {
+                setBirthMonth(val);
+                setDateError("");
+              }}
+            />
+            <SelectInput
+              value={birthYear}
+              options={YEARS}
+              placeholder="Año"
+              onSelect={(val) => {
+                setBirthYear(val);
+                setDateError("");
+              }}
+            />
+          </div>
+          {dateError && <p className="text-red-500 text-[12px] font-bold mt-0.5 ml-1">{dateError}</p>}
         </div>
       </form>
     </Modal>

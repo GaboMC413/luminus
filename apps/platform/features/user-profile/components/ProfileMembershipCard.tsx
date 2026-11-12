@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Sparkles, Award } from "lucide-react";
 import { ProfileButton } from "@/components/ui/Button";
 import { isMecenas } from "@/lib/membership/access";
 
@@ -14,8 +15,8 @@ interface ProfileMembershipCardProps {
 }
 
 const MONTHS = [
-  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+  "enero", "febrero", "marzo", "abril", "mayo", "junio",
+  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
 ];
 
 export function ProfileMembershipCard({
@@ -33,7 +34,7 @@ export function ProfileMembershipCard({
     if (!rawDate) return "";
     const date = new Date(rawDate);
     if (isNaN(date.getTime())) return "";
-    return `${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+    return `${MONTHS[date.getMonth()]} de ${date.getFullYear()}`;
   };
 
   const memberSinceText = getMemberSinceText();
@@ -43,9 +44,7 @@ export function ProfileMembershipCard({
       <div className="w-full flex items-start gap-4">
         <div className="mt-1">
           <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isMember ? "bg-amber-100 text-amber-600" : "bg-slate-100 text-slate-400"}`}>
-            <span className="material-symbols-rounded text-[20px]">
-              {isMember ? "verified" : "award_star"}
-            </span>
+            {isMember ? <Sparkles className="w-4 h-4" /> : <Award className="w-4 h-4" />}
           </div>
         </div>
         <div className="flex flex-col min-w-0 self-center gap-1">
@@ -55,7 +54,7 @@ export function ProfileMembershipCard({
 
           {isMember ? (
             <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-50 border border-amber-200/90 w-fit">
-              <span className="material-symbols-rounded text-amber-600 text-[14px]">stars</span>
+              <Sparkles className="w-3 h-3 text-amber-600" />
               <span className="text-amber-900 font-bold text-[11px] font-sans">
                 Mecenas desde {memberSinceText}
               </span>
@@ -83,7 +82,7 @@ export function ProfileMembershipCard({
 
           {showSettingsButtons && (
             <div className="flex flex-col gap-2 w-full">
-              <Link href="/perfil-usuario/configuracion/personal" className="w-full">
+              <Link href="/perfil-usuario/configuracion" className="w-full">
                 <ProfileButton
                   onClick={() => { }}
                   icon="settings"

@@ -386,6 +386,7 @@ function NetworkContent() {
                     <UserCard
                       key={conn.id}
                       user={conn.user}
+                      profileHref={`/inicio/public-profile?id=${conn.user.id}&from=red`}
                       actionMenu={
                         activeTab === "following" ? (
                           <div className="relative network-menu-container">
@@ -404,7 +405,7 @@ function NetworkContent() {
                             {openMenuConnectionId === conn.user.id && (
                               <div className="absolute top-full right-0 mt-1 w-44 bg-white border border-slate-200 rounded-xl py-1 z-50 animate-in fade-in zoom-in-95 duration-100 shadow-none">
                                 <Link
-                                  href={`/inicio/public-profile?id=${conn.user.id}`}
+                                  href={`/inicio/public-profile?id=${conn.user.id}&from=red`}
                                   className="w-full px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 flex items-center gap-2 font-jakarta text-decoration-none"
                                 >
                                   <span className="material-symbols-rounded text-[16px]">visibility</span>

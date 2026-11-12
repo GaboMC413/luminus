@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Calendar } from "lucide-react";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ActivitiesSkeleton } from "@/components/ui/Skeleton";
 import { ActivityCard, ActivityEventItem } from "@/components/events/ActivityCard";
 
 function parseCalendarDate(dateStr?: string | Date | null): Date | null {
@@ -64,50 +66,26 @@ export default function ActividadesPage() {
     fetchEvents();
   }, []);
 
-  return (
-    <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 pb-16 pt-6 font-sans sm:px-6 md:py-10">
-      {/* Header: Clean, only Title and Subtitle, no eyebrow, no search, no categories */}
-      <header className="flex flex-col gap-2 text-left">
-        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold font-jakarta text-slate-900 tracking-tight">
-          Actividades
-        </h1>
-        <p className="text-base sm:text-lg text-slate-600 font-sans leading-relaxed">
-          Eventos y actividades sobre bienestar.
-        </p>
-      </header>
+  if (loading) return <ActivitiesSkeleton />;
 
-      {/* Main Content: Timeline */}
-      {loading ? (
-        <div className="flex flex-col gap-8 py-4">
-          {[1, 2].map((i) => (
-            <div key={i} className="flex gap-4 sm:gap-6 animate-pulse">
-              <div className="w-6 flex flex-col items-center">
-                <div className="w-3 h-3 rounded-full bg-slate-300 shrink-0 mt-1" />
-                <div className="w-[2px] flex-1 bg-slate-200 mt-2" />
-              </div>
-              <div className="flex-1 flex flex-col gap-3">
-                <div className="h-6 w-36 bg-slate-200 rounded-md" />
-                <div className="w-full h-56 bg-slate-200 rounded-2xl" />
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-center text-sm text-red-700">
+  return (
+    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 pb-12 pt-4 font-sans sm:px-6 md:gap-7 md:py-6">
+      {/* 1. Standardized In-App Header */}
+      <PageHeader
+        title="Actividades"
+        description="Eventos y actividades sobre bienestar."
+      />
+
+      {/* 2. Main Content: Timeline */}
+      {error ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-700">
           {error}
         </div>
       ) : events.length === 0 ? (
-        <div className="w-full py-16 px-6 text-center bg-white rounded-2xl border border-slate-200/90 flex flex-col items-center justify-center gap-4 my-4 shadow-none">
-          <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500">
-            <Calendar className="w-7 h-7" />
-          </div>
-          <h2 className="text-xl sm:text-2xl font-bold font-jakarta text-slate-900 tracking-tight">
-            Actualmente no hay próximas actividades disponibles
-          </h2>
-          <p className="text-sm font-normal font-sans text-slate-600 max-w-md leading-relaxed">
-            Muy pronto estaremos compartiendo nuevas charlas, talleres y experiencias LUMINUS.
-          </p>
-        </div>
+        <EmptyState
+          title="No hay próximas actividades disponibles"
+          description="Muy pronto estaremos compartiendo nuevas charlas, talleres y experiencias LUMINUS."
+        />
       ) : (
         <div className="w-full flex flex-col">
           {events.map((item, index) => {
@@ -116,15 +94,12 @@ export default function ActividadesPage() {
 
             return (
               <div key={item.id} className="flex gap-4 sm:gap-6 md:gap-7 items-stretch group">
-                {/* Axis Column */}
+                {/* Timeline Indicator Column */}
                 <div className="w-6 shrink-0 flex flex-col items-center">
                   <div className="w-3 h-3 rounded-full bg-slate-400 group-hover:bg-slate-900 transition-colors border-2 border-white ring-2 ring-slate-100 shrink-0 mt-1.5 z-10" />
                   {!isLast && <div className="flex-1 w-[2px] bg-slate-200" />}
                   {isLast && (
-                    <div
-                      className="flex-1 w-[2px]"
-                      style={{ background: "linear-gradient(to bottom, #E2E8F0, transparent)" }}
-                    />
+                    <div className="flex-1 w-[2px] bg-gradient-to-b from-slate-200 to-transparent" />
                   )}
                 </div>
 

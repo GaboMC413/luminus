@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
 import { deleteS3FileByUrl } from "@/lib/storage/s3FileCleanup";
@@ -140,33 +140,7 @@ export async function GET() {
     return NextResponse.json(serializeProfile(user));
   } catch (error) {
     console.error("Profile read failed.", error);
-    console.warn("Database not available, using mock profile GET bypass.");
-    return NextResponse.json({
-      email: session.email,
-      profile: {
-        first_name: "Nancy",
-        last_name: "Núñez",
-        city: "Puntarenas",
-        country: "Costa Rica",
-        profession: "Fotógrafa",
-        interests: ["Estilo de Vida", "Naturaleza", "Fotografía Consciente"],
-        prompts: [
-          {
-            question: "Mi objetivo de vida es…",
-            answer: "Vivir con más calma, claridad y propósito de vida."
-          }
-        ],
-        profile_picture_url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop",
-        cover_url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&fit=crop",
-        gender: "Femenino",
-        birthdate: "1994-05-15",
-        phone_number: "+506 8888-8888",
-        selected_plan: "Mensual",
-        created_at: new Date().toISOString(),
-        bio: "Apasionada por capturar la esencia de la vida a través de la fotografía y vivir en conexión con la naturaleza.",
-        other_interests: "Crecimiento personal",
-      }
-    });
+    return NextResponse.json({ message: "No fue posible cargar el perfil." }, { status: 500 });
   }
 }
 
@@ -336,58 +310,55 @@ export async function PATCH(request: Request) {
       });
     });
 
-    const newlyCompletedQuests = [];
+    const newlyCompletedQuests: any[] = [];
     try {
-      const { checkAndTriggerQuestCompletion } = await import("@/lib/onboarding");
-      if (profession !== undefined) {
-        const r1 = await checkAndTriggerQuestCompletion(session.userId, "profession");
-        if (r1) newlyCompletedQuests.push(r1);
-      }
-      if (bio !== undefined) {
-        const r2 = await checkAndTriggerQuestCompletion(session.userId, "bio");
-        if (r2) newlyCompletedQuests.push(r2);
-      }
-      if (shouldUpdatePrompts) {
-        const r3 = await checkAndTriggerQuestCompletion(session.userId, "interests");
-        if (r3) newlyCompletedQuests.push(r3);
-      }
-      if (coverUrl !== undefined) {
-        const r4 = await checkAndTriggerQuestCompletion(session.userId, "cover");
-        if (r4) newlyCompletedQuests.push(r4);
-      }
-      if (shouldUpdateInterests) {
-        const r5 = await checkAndTriggerQuestCompletion(session.userId, "user_interests");
-        if (r5) newlyCompletedQuests.push(r5);
+      const { checkAndTriggerQuestsCompletion } = await import("@/lib/onboarding");
+      const questCandidates: string[] = [];
+      if (profession !== undefined) questCandidates.push("profession");
+      if (bio !== undefined) questCandidates.push("bio");
+      if (shouldUpdatePrompts) questCandidates.push("interests");
+      if (coverUrl !== undefined) questCandidates.push("cover");
+      if (shouldUpdateInterests || intention !== undefined) questCandidates.push("user_interests");
+
+      if (questCandidates.length > 0) {
+        const completed = await checkAndTriggerQuestsCompletion(session.userId, questCandidates, user);
+        newlyCompletedQuests.push(...completed);
       }
     } catch (questError) {
       console.error("Failed to check onboarding quests completion status:", questError);
     }
 
-    try {
-      await prisma.activityLog.create({
-        data: {
-          userId: session.userId,
-          action: "UPDATE_PROFILE",
-          details: JSON.stringify({
-            updatedFields: Object.keys(profileData),
-          }),
-        },
-      });
-    } catch (logErr) {
-      console.error("Failed to log UPDATE_PROFILE activity:", logErr);
-    }
+    const runSideEffects = async () => {
+      try {
+        await prisma.activityLog.create({
+          data: {
+            userId: session.userId,
+            action: "UPDATE_PROFILE",
+            details: JSON.stringify({
+              updatedFields: Object.keys(profileData),
+            }),
+          },
+        });
+      } catch (logErr) {
+        console.error("Failed to log UPDATE_PROFILE activity:", logErr);
+      }
 
-    // Clean up previous S3 avatar if a new avatar was successfully saved
-    if (
-      profileData.avatarUrl !== undefined &&
-      existingProfile?.avatarUrl &&
-      existingProfile.avatarUrl !== profileData.avatarUrl
-    ) {
-      await deleteS3FileByUrl(existingProfile.avatarUrl, {
-        expectedUserId: session.userId,
-        expectedFolder: "avatars",
-      });
-    }
+      if (
+        profileData.avatarUrl !== undefined &&
+        existingProfile?.avatarUrl &&
+        existingProfile.avatarUrl !== profileData.avatarUrl
+      ) {
+        try {
+          await deleteS3FileByUrl(existingProfile.avatarUrl, {
+            expectedUserId: session.userId,
+            expectedFolder: "avatars",
+          });
+        } catch (s3Err) {
+          console.error("Failed to clean up old avatar from S3:", s3Err);
+        }
+      }
+    };
+    try { after(runSideEffects); } catch { void runSideEffects(); }
 
     const serialized = serializeProfile(user);
     return NextResponse.json({
@@ -396,33 +367,6 @@ export async function PATCH(request: Request) {
     });
   } catch (error) {
     console.error("Profile update failed.", error);
-    console.warn("Database not available, using mock profile PATCH bypass.");
-    const mockProfile = {
-      first_name: firstName !== undefined ? firstName : "Nancy",
-      last_name: lastName !== undefined ? lastName : "Núñez",
-      city: city !== undefined ? city : "Puntarenas",
-      country: country !== undefined ? country : "Costa Rica",
-      profession: profession !== undefined ? profession : "Fotógrafa",
-      interests: shouldUpdateInterests ? (data.interests as string[]) : ["Estilo de Vida", "Naturaleza", "Fotografía Consciente"],
-      prompts: shouldUpdatePrompts ? (data.prompts as any[]) : [
-        {
-          question: "Mi objetivo de vida es…",
-          answer: "Vivir con más calma, claridad y propósito de vida."
-        }
-      ],
-      profile_picture_url: avatarUrl !== undefined ? avatarUrl : "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop",
-      cover_url: coverUrl !== undefined ? coverUrl : "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&fit=crop",
-      gender: gender !== undefined ? gender : "Femenino",
-      birthdate: birthdate !== undefined ? formatBirthdate(birthdate) : "1994-05-15",
-      phone_number: phoneNumber !== undefined ? phoneNumber : "+506 8888-8888",
-      selected_plan: selectedPlan !== undefined ? selectedPlan : "Mensual",
-      created_at: new Date().toISOString(),
-      bio: bio !== undefined ? bio : "Apasionada por capturar la esencia de la vida a través de la fotografía y vivir en conexión con la naturaleza.",
-      other_interests: intention !== undefined ? intention : "Crecimiento personal",
-    };
-    return NextResponse.json({
-      email: session.email,
-      profile: mockProfile
-    });
+    return NextResponse.json({ message: "No fue posible actualizar el perfil." }, { status: 500 });
   }
 }

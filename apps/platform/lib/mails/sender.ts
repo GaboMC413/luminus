@@ -19,6 +19,9 @@ function isSesConfigured() {
 }
 
 function writeLocalEmailPreview(email: string, subject: string, htmlBody: string) {
+  if (process.env.NODE_ENV === "production") {
+    return;
+  }
   try {
     const publicDir = path.join(process.cwd(), "public");
     if (!fs.existsSync(publicDir)) {
@@ -55,7 +58,7 @@ async function logSentEmail(
   options?: EmailLogOptions
 ) {
   try {
-    const { prisma } = await import("@/lib/db");
+    const { prisma } = await import("../db");
     await prisma.sentEmailLog.create({
       data: {
         recipient,
@@ -68,19 +71,18 @@ async function logSentEmail(
       },
     });
 
-    // Mantener un límite estricto de máximo 100 correos guardados (Auto-prune FIFO)
-    const count = await prisma.sentEmailLog.count();
-    if (count > 100) {
-      const excess = count - 100;
-      const oldestRecords = await prisma.sentEmailLog.findMany({
-        orderBy: { createdAt: "asc" },
-        take: excess,
+    // Auto-prune FIFO probabilistically so we don't query 3 times on every single email
+    if (Math.random() < 0.1) {
+      const excess = await prisma.sentEmailLog.findMany({
+        orderBy: { createdAt: "desc" },
+        skip: 100,
+        take: 50,
         select: { id: true },
       });
-      if (oldestRecords.length > 0) {
+      if (excess.length > 0) {
         await prisma.sentEmailLog.deleteMany({
           where: {
-            id: { in: oldestRecords.map((r: { id: string }) => r.id) },
+            id: { in: excess.map((r: { id: string }) => r.id) },
           },
         });
       }
@@ -286,7 +288,7 @@ async function sendStandardTransactionalEmail({
 }) {
   if (checkDuplicateSubject) {
     try {
-      const { prisma } = await import("@/lib/db");
+      const { prisma } = await import("../db");
       const existingLog = await prisma.sentEmailLog.findFirst({
         where: {
           recipient: email,
@@ -966,7 +968,7 @@ export async function sendBatchEventLiveNotifications(
   eventId: string,
   batchSize: number = 10
 ) {
-  const { prisma } = await import("@/lib/db");
+  const { prisma } = await import("../db");
 
   const event = await prisma.event.findUnique({
     where: { id: eventId },
@@ -1086,6 +1088,7 @@ export interface ContactNotificationPayload {
   pais?: string;
   motivo: string;
   mensaje: string;
+  responderA?: string;
 }
 
 const DEFAULT_CONTACT_RECIPIENTS = [
@@ -1102,7 +1105,20 @@ export async function sendContactNotificationEmail(data: ContactNotificationPayl
     ? process.env.CONTACT_NOTIFICATION_EMAILS.split(",").map((e) => e.trim()).filter(Boolean)
     : null;
 
-  const toAddresses = envRecipients && envRecipients.length > 0 ? envRecipients : DEFAULT_CONTACT_RECIPIENTS;
+  let dynamicRecipients: string[] | null = null;
+  try {
+    const { getContactRecipients } = await import("../contactRecipients");
+    dynamicRecipients = await getContactRecipients();
+  } catch (err) {
+    console.warn("[sendContactNotificationEmail] Could not load dynamic recipients:", err);
+  }
+
+  const toAddresses =
+    dynamicRecipients && dynamicRecipients.length > 0
+      ? dynamicRecipients
+      : envRecipients && envRecipients.length > 0
+      ? envRecipients
+      : DEFAULT_CONTACT_RECIPIENTS;
 
   const subject = `[LUMINUS Contacto] ${data.motivo} - ${data.nombre} ${data.apellido}`;
 

@@ -18,19 +18,20 @@ export function EditAboutModal({ isOpen, onClose, onSave, initialBio }: EditAbou
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Editar Sobre mí"
+      title="Editar sobre mí"
       maxWidth="720px"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !rounded-[10px] md:!rounded-[12px]">
+          <Button variant="secondary" onClick={onClose} className="w-full md:flex-1">
             Cancelar
           </Button>
           <Button
+            variant="primary"
             onClick={() => {
               onSave(bio);
               onClose();
             }}
-            className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !bg-black !text-white hover:!bg-slate-800 !rounded-[10px] md:!rounded-[12px]"
+            className="w-full md:flex-1"
           >
             Guardar cambios
           </Button>

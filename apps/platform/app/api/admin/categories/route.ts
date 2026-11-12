@@ -3,6 +3,38 @@ import { getCurrentSession } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
 
+const LEGACY_ICON_UPGRADE: Record<string, string> = {
+  sunny: "sun",
+  mood: "smile",
+  stethoscope: "heart-pulse",
+  ecg_heart: "heart-pulse",
+  directions_run: "dumbbell",
+  exercise: "dumbbell",
+  nutrition: "apple",
+  self_improvement: "sparkle",
+  person_celebrate: "blend",
+  join_inner: "blend",
+  spa: "flower",
+  label: "tag",
+};
+
+const LEGACY_COLOR_UPGRADE: Record<string, { color: string; bgColor: string }> = {
+  "#F59E0B": { color: "#D97706", bgColor: "#FFFBEB" },
+  "#B45309": { color: "#D97706", bgColor: "#FFFBEB" },
+  "#F472B6": { color: "#DB2777", bgColor: "#FDF2F8" },
+  "#BE185D": { color: "#DB2777", bgColor: "#FDF2F8" },
+  "#0450FB": { color: "#2563EB", bgColor: "#EFF6FF" },
+  "#1D4ED8": { color: "#2563EB", bgColor: "#EFF6FF" },
+  "#EF4444": { color: "#DC2626", bgColor: "#FEF2F2" },
+  "#BE123C": { color: "#DC2626", bgColor: "#FEF2F2" },
+  "#84CC16": { color: "#4D7C0F", bgColor: "#F7FEE7" },
+  "#6D28D9": { color: "#9333EA", bgColor: "#FAF5FF" },
+  "#7E22CE": { color: "#9333EA", bgColor: "#FAF5FF" },
+  "#F97316": { color: "#EA580C", bgColor: "#FFF7ED" },
+  "#C2410C": { color: "#EA580C", bgColor: "#FFF7ED" },
+  "#14B8A6": { color: "#0F766E", bgColor: "#F0FDFA" },
+};
+
 function slugify(value: string) {
   return value
     .normalize("NFD")
@@ -60,7 +92,34 @@ export async function GET() {
       },
     });
 
-    return NextResponse.json({ categories, suggestions });
+    const normalizedCategories = await Promise.all(
+      categories.map(async (cat) => {
+        const rawIcon = (cat.icon || "tag").trim().toLowerCase();
+        const nextIcon = LEGACY_ICON_UPGRADE[rawIcon] || rawIcon;
+        const rawColor = (cat.color || "#2563EB").trim().toUpperCase();
+        const upgradedColors = LEGACY_COLOR_UPGRADE[rawColor];
+        const nextColor = upgradedColors ? upgradedColors.color : cat.color || "#2563EB";
+        const nextBgColor = upgradedColors ? upgradedColors.bgColor : cat.bgColor || "#EFF6FF";
+
+        if (nextIcon !== cat.icon || nextColor !== cat.color || nextBgColor !== cat.bgColor) {
+          await prisma.interestCategory
+            .update({
+              where: { id: cat.id },
+              data: { icon: nextIcon, color: nextColor, bgColor: nextBgColor },
+            })
+            .catch(() => {});
+        }
+
+        return {
+          ...cat,
+          icon: nextIcon,
+          color: nextColor,
+          bgColor: nextBgColor,
+        };
+      })
+    );
+
+    return NextResponse.json({ categories: normalizedCategories, suggestions });
   } catch (error) {
     console.error("Failed to fetch admin categories:", error);
     return NextResponse.json({ message: "Error al obtener categorías." }, { status: 500 });

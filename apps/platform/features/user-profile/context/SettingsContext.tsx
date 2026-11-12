@@ -151,7 +151,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       throw new Error("Could not save profile.");
     }
 
-    return response.json();
+    const data = await response.json();
+    if (data.newlyCompletedQuests && Array.isArray(data.newlyCompletedQuests)) {
+      data.newlyCompletedQuests.forEach((quest: any) => {
+        window.dispatchEvent(new CustomEvent("luminus_quest_completed", { detail: quest }));
+      });
+    }
+    return data;
   };
 
   return (

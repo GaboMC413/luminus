@@ -20,6 +20,7 @@ export async function GET() {
         userId: true,
         specialty: true,
         title: true,
+        selectedAreas: true,
         user: {
           select: {
             profile: {
@@ -42,13 +43,18 @@ export async function GET() {
     const specialists = profiles.map((specialist) => {
       const profile = specialist.user.profile;
       const fallbackName = `${profile?.firstName || ""} ${profile?.lastName || ""}`.trim();
+      const rawAreas = Array.isArray(specialist.selectedAreas)
+        ? specialist.selectedAreas.filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+        : [];
       return {
         id: specialist.userId,
         name: profile?.fullName || fallbackName || "Especialista LUMINUS",
         avatar: profile?.avatarUrl || "",
         city: profile?.city || "",
         country: profile?.country || "",
-        specialty: specialist.specialty || specialist.title,
+        specialty: specialist.specialty || "",
+        title: specialist.title || specialist.specialty || "",
+        areas: rawAreas,
       };
     });
 
