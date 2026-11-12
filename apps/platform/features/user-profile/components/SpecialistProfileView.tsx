@@ -22,6 +22,7 @@ import { ProfileAboutSection } from "./ProfileAboutSection";
 import { ProfileInterestsSection } from "./ProfileInterestsSection";
 import { ProfileCompletionCard } from "./ProfileCompletionCard";
 import { formatSpaceAddress } from "@/utils/locationUtils";
+import { getCategoryTextClass, getCategoryPillClass, renderCategoryIcon, getCategoryCustomStyles, useDynamicCategories } from "@/components/ui/InterestPill";
 
 const DAY_LABELS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const MONTH_LABELS = [
@@ -61,7 +62,6 @@ interface SpecialistProfileViewProps {
   profile: any;
   isPublic?: boolean;
   onConnect?: () => void;
-  onDeclineConnect?: () => void;
   onRemoveConnection?: () => void;
   onBlockConnection?: () => void;
   connectionLoading?: boolean;
@@ -83,11 +83,12 @@ interface SpecialistProfileViewProps {
   onSignOut?: () => void;
 }
 
+
+
 export function SpecialistProfileView({
   profile,
   isPublic = true,
   onConnect,
-  onDeclineConnect,
   onRemoveConnection,
   onBlockConnection,
   connectionLoading,
@@ -111,7 +112,9 @@ export function SpecialistProfileView({
   const [selectedDateForModal, setSelectedDateForModal] = useState<Date | null>(null);
   const [inlineWeekOffset, setInlineWeekOffset] = useState(0);
   
+  const dbCategories = useDynamicCategories();
   const specialist = profile.specialistProfile;
+  const specialtyCustomStyles = getCategoryCustomStyles(specialist?.specialty || specialist?.title, dbCategories);
   const courses = specialist?.courses || [];
   const spaces = specialist?.spaces || [];
 
@@ -156,7 +159,6 @@ export function SpecialistProfileView({
         activeTab={mainTab}
         onTabChange={setMainTab}
         onConnect={onConnect}
-        onDeclineConnect={onDeclineConnect}
         onRemoveConnection={onRemoveConnection}
         onBlockConnection={onBlockConnection}
         connectionLoading={connectionLoading}
@@ -205,6 +207,62 @@ export function SpecialistProfileView({
             <>
               {/* MAIN COLUMN (lg:col-span-8) */}
               <div className="lg:col-span-8 flex flex-col gap-5">
+                {/* Card 0: Especialidad & Áreas de acompañamiento */}
+                {(specialist?.title || specialist?.specialty) && (
+                  <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 flex flex-col gap-3.5 shadow-none">
+                    <div className="flex flex-col gap-1">
+                      {/* Line 1: Especialista en [General Area] */}
+                      <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-jakarta">
+                        {specialist?.specialty?.toLowerCase().startsWith("especialista en")
+                          ? specialist.specialty
+                          : `Especialista en ${specialist?.specialty || "Bienestar"}`}
+                      </span>
+
+                      {/* Line 2: [Area Icon] [Professional Title] */}
+                      <div
+                        style={specialtyCustomStyles?.color ? { color: specialtyCustomStyles.color } : undefined}
+                        className={`flex items-center gap-2 pt-0.5 ${getCategoryTextClass(specialist?.specialty || specialist?.title, dbCategories)}`}
+                      >
+                        {renderCategoryIcon(specialist?.specialty || specialist?.title, "w-5 h-5 shrink-0", dbCategories)}
+                        <h3 className="text-lg sm:text-xl font-bold font-jakarta leading-snug text-current">
+                          {specialist?.title || specialist?.specialty}
+                        </h3>
+                      </div>
+                    </div>
+
+                    {/* Line 3: Áreas de acompañamiento pills */}
+                    {specialist?.selectedAreas && Array.isArray(specialist.selectedAreas) && specialist.selectedAreas.length > 0 && (
+                      <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
+                        <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 font-jakarta">
+                          Áreas de acompañamiento
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {specialist.selectedAreas.map((area: string, idx: number) => {
+                            const areaStyles = getCategoryCustomStyles(area, dbCategories) || specialtyCustomStyles;
+                            return (
+                              <span
+                                key={idx}
+                                style={
+                                  areaStyles?.color && areaStyles?.bgColor
+                                    ? {
+                                        backgroundColor: areaStyles.bgColor,
+                                        color: areaStyles.color,
+                                        borderColor: areaStyles.borderColor,
+                                      }
+                                    : undefined
+                                }
+                                className={`px-2.5 py-0.5 rounded-full text-xs font-medium font-jakarta border select-none ${getCategoryPillClass(area || specialist?.specialty, dbCategories)}`}
+                              >
+                                {area}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Card 1: Sobre mi Práctica */}
                 <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 flex flex-col gap-3.5 shadow-none">
                   <div className="flex items-center gap-2">

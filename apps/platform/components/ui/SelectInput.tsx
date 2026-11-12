@@ -65,6 +65,12 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
       return () => setMounted(false);
     }, []);
 
+    const emptyOptionLabel = useMemo(() => {
+      if (!options || options.length === 0 || typeof options[0] === "string") return "";
+      const emptyOpt = (options as { label: string; value: string }[]).find((opt) => opt.value === "");
+      return emptyOpt ? emptyOpt.label : "";
+    }, [options]);
+
     const currentOptionLabel = useMemo(() => {
       if (!value) return "";
       if (typeof options[0] === "string") {
@@ -279,7 +285,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
           maxHeight: `${coords.maxHeight}px`,
           zIndex: 10000,
         }}
-        className="bg-white rounded-xl border border-slate-200/90 shadow-[0_8px_20px_-4px_rgba(0,0,0,0.08)] overflow-y-auto overflow-x-hidden overscroll-contain animate-in fade-in duration-150"
+        className="bg-white rounded-xl border border-slate-200/90 shadow-none overflow-y-auto overflow-x-hidden overscroll-contain animate-in fade-in duration-150"
       >
         {filteredOptions.length > 0 ? (
           filteredOptions.map((option, index) => {
@@ -328,6 +334,8 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
         )}
       </div>
     );
+
+    const displayLabel = currentOptionLabel || emptyOptionLabel || placeholder;
 
     return (
       <div
@@ -408,7 +416,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
               type="text"
               disabled={disabled}
               value={isOpen ? searchTerm : currentOptionLabel}
-              placeholder={placeholder}
+              placeholder={emptyOptionLabel || placeholder}
               onClick={(e) => {
                 e.stopPropagation();
                 if (!isOpen) {
@@ -432,11 +440,11 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
             />
           ) : (
             <span
-              className={`${!value ? "!text-slate-400" : "text-slate-900"} ${
+              className={`${!value ? "text-slate-500" : "text-slate-900 font-medium"} ${
                 size === "sm" ? "!text-xs" : "text-xs sm:text-sm"
               } font-normal truncate select-none min-w-0 flex-1 font-sans`}
             >
-              {currentOptionLabel || placeholder}
+              {displayLabel}
             </span>
           )}
 

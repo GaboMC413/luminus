@@ -41,9 +41,9 @@ function serializeNotification(notification: any) {
   } else if (notification.type === "connection_accepted") {
     title = "Solicitud aceptada";
     body = "aceptó tu solicitud de conexión.";
-  } else if (notification.type === "connection_request") {
-    title = "Nueva solicitud";
-    body = "quiere conectarse contigo.";
+  } else if (notification.type === "connection_request" || notification.type === "network_add") {
+    title = "Nueva conexión";
+    body = "te sumó a su red.";
   } else {
     // If long paragraph, take the first sentence
     const firstSentence = body.split(/[.!?]\s+/)[0];
@@ -56,9 +56,11 @@ function serializeNotification(notification: any) {
   const actorIdMatch = (notification.actionUrl || "").match(/[?&]id=([^&]+)/);
   const actorId = actorIdMatch ? actorIdMatch[1] : undefined;
 
+  const normalizedType = notification.type === "connection_request" ? "network_add" : notification.type;
+
   return {
     id: notification.id,
-    type: notification.type,
+    type: normalizedType,
     title,
     user: notification.actorName || "LUMINUS",
     avatar: isQuestCompleted ? "" : (notification.actorAvatarUrl || ""),
@@ -98,6 +100,21 @@ export async function GET() {
         select: { id: true },
       }),
     ]);
+
+    const hasLegacyRequests = notifications.some((n: any) => n.type === "connection_request");
+    if (hasLegacyRequests) {
+      prisma.notification.updateMany({
+        where: {
+          userId: session.userId,
+          type: "connection_request",
+        },
+        data: {
+          type: "network_add",
+          title: "Nueva conexión",
+          body: "te sumó a su red.",
+        },
+      }).catch((notifUpdateErr) => console.error("Auto-heal legacy notifications failed:", notifUpdateErr));
+    }
 
     const serialized: any[] = notifications.map(serializeNotification);
 

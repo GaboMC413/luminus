@@ -4,7 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { formatLocationDisplay } from "@/utils/locationUtils";
 import { UserAvatar } from "./UserAvatar";
-import { getCategoryTextClass } from "./InterestPill";
+import { getCategoryTextClass, getCategoryCustomStyles, useDynamicCategories } from "./InterestPill";
 
 export interface UserCardData {
   id: string;
@@ -16,11 +16,13 @@ export interface UserCardData {
   interests?: string[];
   categories?: any[];
   specialty?: string | null;
+  title?: string | null;
 }
 
 export interface UserCardProps {
   user: UserCardData;
   specialty?: string | null;
+  title?: string | null;
   actionLabel?: string;
   actionMenu?: React.ReactNode;
   profileHref?: string;
@@ -35,6 +37,7 @@ export interface UserCardProps {
 export function UserCard({
   user,
   specialty,
+  title,
   actionLabel = "Ver perfil",
   actionMenu,
   profileHref,
@@ -62,7 +65,11 @@ export function UserCard({
 
   const rawLocation = user.location || [user.city, user.country].filter(Boolean).join(", ");
   const displayLocation = formatLocationDisplay(rawLocation);
-  const activeSpecialty = specialty || user.specialty;
+  const activeTitle = title !== undefined ? title : user.title;
+  const activeSpecialty = specialty !== undefined ? specialty : user.specialty;
+  const dbCategories = useDynamicCategories();
+  const displayRole = activeTitle || activeSpecialty;
+  const roleCustomStyles = displayRole ? getCategoryCustomStyles(activeSpecialty || displayRole, dbCategories) : null;
 
   return (
     <article
@@ -104,14 +111,16 @@ export function UserCard({
           {displayLocation || "Ubicación no especificada"}
         </p>
 
-        {activeSpecialty && (
+        {displayRole && (
           <span
+            style={roleCustomStyles?.color ? { color: roleCustomStyles.color } : undefined}
             className={`text-xs font-semibold mt-1 truncate max-w-full px-1 ${getCategoryTextClass(
-              activeSpecialty
+              activeSpecialty || displayRole,
+              dbCategories
             )}`}
-            title={activeSpecialty}
+            title={displayRole}
           >
-            {activeSpecialty}
+            {displayRole}
           </span>
         )}
       </div>

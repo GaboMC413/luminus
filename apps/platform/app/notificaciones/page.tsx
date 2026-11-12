@@ -155,55 +155,7 @@ function NotificationsContent() {
     });
   };
 
-  const getRequesterIdFromUrl = (url?: string) => {
-    if (!url) return null;
-    const match = url.match(/[?&]id=([^&]+)/);
-    return match ? match[1] : null;
-  };
 
-  const handleAcceptPage = async (e: React.MouseEvent, actionUrl: string, notificationId: string) => {
-    e.stopPropagation();
-    const requesterId = getRequesterIdFromUrl(actionUrl);
-    if (!requesterId) return;
-
-    try {
-      const res = await fetch("/api/connections", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipientId: requesterId }),
-      });
-      if (res.ok) {
-        await fetch("/api/notifications", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: notificationId }),
-        });
-        window.dispatchEvent(new Event("luminus_notifications_update"));
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleDeclinePage = async (e: React.MouseEvent, actionUrl: string, notificationId: string) => {
-    e.stopPropagation();
-    const requesterId = getRequesterIdFromUrl(actionUrl);
-    if (!requesterId) return;
-
-    try {
-      const res = await fetch(`/api/connections?recipientId=${requesterId}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        await fetch(`/api/notifications?id=${notificationId}`, {
-          method: "DELETE",
-        });
-        window.dispatchEvent(new Event("luminus_notifications_update"));
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const filteredNotifications = notifications.filter((n) => {
     // 1. Search filter
@@ -479,7 +431,7 @@ function NotificationsContent() {
                             )}
                             {formatMessageBody(n.action)}
                           </p>
-                          {n.type === "network_add" && (
+                          {(n.type === "network_add" || n.type === "connection_request") && (
                             <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
                               {n.action_url && (
                                 <button
@@ -488,28 +440,6 @@ function NotificationsContent() {
                                     router.push(n.action_url);
                                   }}
                                   className="h-8 px-4 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-xl transition duration-200 cursor-pointer border-none outline-none font-jakarta"
-                                >
-                                  Ver perfil
-                                </button>
-                              )}
-                            </div>
-                          )}
-
-                          {n.type === "connection_request" && n.isUnread && (
-                            <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
-                              <button
-                                onClick={(e) => handleAcceptPage(e, n.action_url, n.id)}
-                                className="h-8 px-4 bg-black hover:bg-zinc-800 text-white text-xs font-semibold rounded-xl transition duration-200 cursor-pointer border-none outline-none"
-                              >
-                                Aceptar
-                              </button>
-                              {n.action_url && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    router.push(n.action_url);
-                                  }}
-                                  className="h-8 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition duration-200 cursor-pointer outline-none"
                                 >
                                   Ver perfil
                                 </button>

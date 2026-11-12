@@ -13,7 +13,8 @@
     "db:studio": "prisma studio",
     "start": "next start",
     "lint": "next lint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "db:auto-accept-connections": "node scripts/auto-accept-pending-connections.cjs"
   },
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.1062.0",

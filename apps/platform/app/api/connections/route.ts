@@ -107,6 +107,20 @@ export async function GET() {
       orderBy: { updatedAt: "desc" },
     });
 
+    // Auto-heal any legacy pending connections involving this user
+    const pendingConnections = connections.filter((conn: any) => conn.status === "pending");
+    if (pendingConnections.length > 0) {
+      const pendingIds = pendingConnections.map((conn: any) => conn.id);
+      await prisma.userConnection.updateMany({
+        where: { id: { in: pendingIds } },
+        data: { status: "accepted" },
+      }).catch((healErr) => console.error("Auto-heal pending connections failed:", healErr));
+
+      pendingConnections.forEach((conn: any) => {
+        conn.status = "accepted";
+      });
+    }
+
     const serialized = connections.map((conn: any) => serializeConnection(conn, session.userId));
     
     // In our directed model:
@@ -205,6 +219,16 @@ export async function POST(request: Request) {
       recipientName: targetName,
     });
 
+    // If recipient had previously sent a pending request to current user, auto-heal it concurrently
+    const healReversePromise = prisma.userConnection.updateMany({
+      where: {
+        requesterId: recipientId,
+        recipientId: session.userId,
+        status: "pending",
+      },
+      data: { status: "accepted" },
+    }).catch((healErr) => console.error("Auto-heal reverse pending connection failed:", healErr));
+
     if (reverseConnection) {
       return NextResponse.json({ message: "No puedes sumar a este usuario a tu red." }, { status: 403 });
     }
@@ -267,6 +291,7 @@ export async function POST(request: Request) {
           },
         }),
         sendNotification(),
+        healReversePromise,
       ]);
 
       return NextResponse.json({
@@ -289,6 +314,8 @@ export async function POST(request: Request) {
           status: "accepted",
         },
       }),
+      sendNotification(),
+      healReversePromise,
       prisma.activityLog.create({
         data: {
           userId: session.userId,
@@ -296,7 +323,6 @@ export async function POST(request: Request) {
           details: targetDetails,
         },
       }).catch((logError) => console.error("Failed to log ADD_TO_NETWORK activity:", logError)),
-      sendNotification(),
     ]);
 
     const newlyCompletedQuests = [];

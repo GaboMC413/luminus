@@ -1,41 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { 
-  Sun, 
-  Smile, 
-  HeartPulse, 
-  Dumbbell, 
-  Apple, 
-  Sparkle, 
-  Blend, 
-  Flower, 
-  Tag, 
-  Sparkles 
-} from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { INTEREST_CATEGORIES } from "@/utils/constants";
-import { getCategoryTextClass } from "@/components/ui/InterestPill";
-
-function renderCategoryIcon(title?: string) {
-  if (!title) return null;
-  const t = title
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-  const props = { className: "w-4 h-4 shrink-0", strokeWidth: 2 };
-  if (t.includes("crecimiento")) return <Sun {...props} />;
-  if (t.includes("emocional")) return <Smile {...props} />;
-  if (t.includes("integral") || t.includes("salud")) return <HeartPulse {...props} />;
-  if (t.includes("ejercicio") || t.includes("movimiento") || t.includes("fisico")) return <Dumbbell {...props} />;
-  if (t.includes("nutricion")) return <Apple {...props} />;
-  if (t.includes("espiritualidad")) return <Sparkle {...props} />;
-  if (t.includes("vinculo") || t.includes("relacion")) return <Blend {...props} />;
-  if (t.includes("terapia")) return <Flower {...props} />;
-  return <Tag {...props} />;
-}
+import {
+  getCategoryTextClass,
+  renderCategoryIconByKey,
+} from "@/components/ui/InterestPill";
 
 interface EditInterestsModalProps {
   isOpen: boolean;
@@ -45,7 +18,13 @@ interface EditInterestsModalProps {
   initialOtherInterests: string;
 }
 
-export function EditInterestsModal({ isOpen, onClose, onSave, initialInterests, initialOtherInterests }: EditInterestsModalProps) {
+export function EditInterestsModal({
+  isOpen,
+  onClose,
+  onSave,
+  initialInterests,
+  initialOtherInterests,
+}: EditInterestsModalProps) {
   const [selected, setSelected] = useState<string[]>(initialInterests);
   const [other, setOther] = useState(initialOtherInterests);
   const [categories, setCategories] = useState<any[]>(INTEREST_CATEGORIES);
@@ -55,22 +34,20 @@ export function EditInterestsModal({ isOpen, onClose, onSave, initialInterests, 
       setSelected(initialInterests);
       setOther(initialOtherInterests);
 
-      fetch("/api/categories")
+      fetch(`/api/categories?_t=${Date.now()}`, { cache: "no-store" })
         .then((res) => res.json())
         .then((data) => {
           if (data?.categories && Array.isArray(data.categories) && data.categories.length > 0) {
             setCategories(data.categories);
           }
         })
-        .catch(() => { });
+        .catch(() => {});
     }
   }, [isOpen, initialInterests, initialOtherInterests]);
 
   const toggleInterest = (interest: string) => {
-    setSelected(prev =>
-      prev.includes(interest)
-        ? prev.filter(i => i !== interest)
-        : [...prev, interest]
+    setSelected((prev) =>
+      prev.includes(interest) ? prev.filter((i) => i !== interest) : [...prev, interest]
     );
   };
 
@@ -102,11 +79,15 @@ export function EditInterestsModal({ isOpen, onClose, onSave, initialInterests, 
         {categories.map((category) => {
           const categoryTitle = category.title || category.name;
           const textClass = getCategoryTextClass(categoryTitle, categories);
+          const customColor = category.color || undefined;
 
           return (
             <div key={categoryTitle} className="flex flex-col gap-2.5 md:gap-4">
-              <h3 className={`flex items-center gap-1.5 md:gap-2 text-[13px] md:text-[15px] font-bold ${textClass}`}>
-                {renderCategoryIcon(categoryTitle)}
+              <h3
+                style={customColor ? { color: customColor } : undefined}
+                className={`flex items-center gap-1.5 md:gap-2 text-[13px] md:text-[15px] font-bold ${textClass}`}
+              >
+                {renderCategoryIconByKey(category.icon, categoryTitle, "w-4 h-4 shrink-0")}
                 <span>{categoryTitle}</span>
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -117,10 +98,11 @@ export function EditInterestsModal({ isOpen, onClose, onSave, initialInterests, 
                       key={item}
                       type="button"
                       onClick={() => toggleInterest(item)}
-                      className={`h-8 md:h-9 px-3.5 md:px-4 rounded-full text-[12px] md:text-[13px] font-medium transition-all duration-200 border cursor-pointer ${isSelected
-                          ? 'bg-slate-900 border-slate-900 text-white'
-                          : 'bg-white border-slate-200 text-slate-900 hover:border-slate-300'
-                        }`}
+                      className={`h-8 md:h-9 px-3.5 md:px-4 rounded-full text-[12px] md:text-[13px] font-medium transition-all duration-200 border cursor-pointer ${
+                        isSelected
+                          ? "bg-slate-900 border-slate-900 text-white"
+                          : "bg-white border-slate-200 text-slate-900 hover:border-slate-300"
+                      }`}
                     >
                       {item}
                     </button>

@@ -91,6 +91,22 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: "Este perfil no está disponible." }, { status: 403 });
     }
 
+    // Auto-heal pending connections on profile access
+    if (outgoingConnection && outgoingConnection.status === "pending") {
+      prisma.userConnection.update({
+        where: { id: outgoingConnection.id },
+        data: { status: "accepted" },
+      }).catch(() => null);
+      outgoingConnection.status = "accepted";
+    }
+    if (incomingConnection && incomingConnection.status === "pending") {
+      prisma.userConnection.update({
+        where: { id: incomingConnection.id },
+        data: { status: "accepted" },
+      }).catch(() => null);
+      incomingConnection.status = "accepted";
+    }
+
     const isFollowing = outgoingConnection?.status === "accepted";
     const isFollower = incomingConnection?.status === "accepted";
     const isBlocked = outgoingConnection?.status === "blocked";
@@ -133,6 +149,7 @@ export async function GET(request: Request) {
         specialistProfile: user.specialistProfile ? {
           specialty: user.specialistProfile.specialty,
           title: user.specialistProfile.title,
+          selectedAreas: user.specialistProfile.selectedAreas || [],
           clinicName: user.specialistProfile.clinicName,
           bio: user.specialistProfile.bio,
           institution: user.specialistProfile.institution,

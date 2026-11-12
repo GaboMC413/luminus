@@ -138,9 +138,6 @@ function PlatformContent() {
     });
   }, [userConnections]);
 
-  const pendingIncomingCount = useMemo(() => {
-    return userConnections.filter((c: any) => c.status === "pending" && c.direction === "incoming").length;
-  }, [userConnections]);
 
   // Fetch Latest 10 Members for right sidebar and mobile carousel
   useEffect(() => {

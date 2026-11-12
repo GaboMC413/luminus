@@ -10,8 +10,7 @@ import {
   Copy,
   Info,
   Ban,
-  Sparkles,
-  Pencil
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ProfileHeroHeader } from "@/features/user-profile/components/ProfileHeroHeader";
@@ -112,11 +111,19 @@ function PublicProfileContent() {
     const id = searchParams.get("id");
     if (!id || connectionLoading) return;
 
+    const previousProfile = profile ? { ...profile } : null;
+
     try {
       setConnectionLoading(true);
 
       // Scenario 0: Blocked connection -> unblock
       if (profile?.connection_status === "blocked") {
+        setProfile((current: any) => ({
+          ...current,
+          connection_status: null,
+          connection_direction: null,
+        }));
+
         const response = await fetch("/api/connections", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -126,29 +133,14 @@ function PublicProfileContent() {
         const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
+          if (previousProfile) setProfile(previousProfile);
           throw new Error(data.message || "No pudimos desbloquear al usuario.");
         }
-
-        setProfile((current: any) => ({
-          ...current,
-          connection_status: null,
-          connection_direction: null,
-        }));
         return;
       }
 
-      // Scenario 1: Already in network -> remove
+      // Scenario 1: Already in network -> remove (Optimistic UI)
       if (profile?.connection_status === "accepted") {
-        const response = await fetch(`/api/connections?recipientId=${id}`, {
-          method: "DELETE",
-          credentials: "include",
-        });
-        const data = await response.json().catch(() => ({}));
-
-        if (!response.ok) {
-          throw new Error(data.message || "No pudimos eliminar de tu red.");
-        }
-
         setProfile((current: any) => ({
           ...current,
           connection_status: null,
@@ -156,10 +148,29 @@ function PublicProfileContent() {
           is_in_network: false,
           is_mutual: false,
         }));
+
+        const response = await fetch(`/api/connections?recipientId=${id}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          if (previousProfile) setProfile(previousProfile);
+          throw new Error(data.message || "No pudimos eliminar de tu red.");
+        }
         return;
       }
 
-      // Scenario 2: Add to network (instant 1-way)
+      // Scenario 2: Add to network (instant 1-way) - Optimistic UI
+      setProfile((current: any) => ({
+        ...current,
+        connection_status: "accepted",
+        connection_direction: "outgoing",
+        is_in_network: true,
+        is_mutual: Boolean(current?.has_in_network),
+      }));
+
       const response = await fetch("/api/connections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -169,16 +180,9 @@ function PublicProfileContent() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
+        if (previousProfile) setProfile(previousProfile);
         throw new Error(data.message || "No pudimos sumar a tu red.");
       }
-
-      setProfile((current: any) => ({
-        ...current,
-        connection_status: "accepted",
-        connection_direction: "outgoing",
-        is_in_network: true,
-        is_mutual: Boolean(current?.has_in_network),
-      }));
     } catch (err: any) {
       console.error("Error managing connection:", err);
       setConnectionError(err.message || "No pudimos procesar la acción.");
@@ -187,34 +191,6 @@ function PublicProfileContent() {
     }
   };
 
-  const handleDeclineConnect = async () => {
-    const id = searchParams.get("id");
-    if (!id || connectionLoading) return;
-
-    try {
-      setConnectionLoading(true);
-      const response = await fetch(`/api/connections?recipientId=${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      });
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(data.message || "No pudimos rechazar la solicitud.");
-      }
-
-      setProfile((current: any) => ({
-        ...current,
-        connection_status: null,
-        connection_direction: null,
-      }));
-    } catch (err: any) {
-      console.error("Error declining connection:", err);
-      setConnectionError(err.message || "No pudimos rechazar la solicitud.");
-    } finally {
-      setConnectionLoading(false);
-    }
-  };
 
   const handleRemoveConnection = async (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -222,8 +198,20 @@ function PublicProfileContent() {
     const id = searchParams.get("id");
     if (!id || connectionLoading) return;
 
+    const previousProfile = profile ? { ...profile } : null;
+
     try {
       setConnectionLoading(true);
+
+      // Optimistic update
+      setProfile((current: any) => ({
+        ...current,
+        connection_status: null,
+        connection_direction: null,
+        is_in_network: false,
+        is_mutual: false,
+      }));
+
       const response = await fetch(`/api/connections?recipientId=${id}`, {
         method: "DELETE",
         credentials: "include",
@@ -231,14 +219,9 @@ function PublicProfileContent() {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
+        if (previousProfile) setProfile(previousProfile);
         throw new Error(data.message || "No pudimos eliminar de tu red.");
       }
-
-      setProfile((current: any) => ({
-        ...current,
-        connection_status: null,
-        connection_direction: null,
-      }));
     } catch (err: any) {
       console.error("Error removing connection:", err);
       setConnectionError(err.message || "No pudimos eliminar de tu red.");
@@ -329,24 +312,7 @@ function PublicProfileContent() {
   };
 
   if (loading) {
-    return (
-      <div className="w-full flex flex-col relative bg-slate-50 min-h-screen font-sans">
-        {/* Context-Aware Back Bar */}
-        <div className="w-full bg-white border-b border-slate-200/80 sticky top-[64px] z-30">
-          <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between gap-4">
-            <button
-              type="button"
-              onClick={handleGoBack}
-              className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold font-jakarta text-slate-600 hover:text-slate-900 transition-colors cursor-pointer group"
-            >
-              <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-slate-800 group-hover:-translate-x-0.5 transition-all" />
-              <span>{backInfo.label}</span>
-            </button>
-          </div>
-        </div>
-        <ProfileSkeleton />
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (error || !profile) {
@@ -354,20 +320,6 @@ function PublicProfileContent() {
 
     return (
       <div className="w-full flex flex-col relative bg-slate-50 min-h-screen font-sans">
-        {/* Context-Aware Back Bar */}
-        <div className="w-full bg-white border-b border-slate-200/80 sticky top-[64px] z-30">
-          <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between gap-4">
-            <button
-              type="button"
-              onClick={handleGoBack}
-              className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold font-jakarta text-slate-600 hover:text-slate-900 transition-colors cursor-pointer group"
-            >
-              <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-slate-800 group-hover:-translate-x-0.5 transition-all" />
-              <span>{backInfo.label}</span>
-            </button>
-          </div>
-        </div>
-
         <div className="w-full flex-1 min-h-[calc(100vh-140px)] flex flex-col items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-slate-200/90 shadow-none flex flex-col items-center text-center gap-5">
             <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500">
@@ -399,38 +351,11 @@ function PublicProfileContent() {
 
   return (
     <div className="w-full flex flex-col relative bg-slate-50 min-h-screen font-sans">
-      {/* Context-Aware Back Bar */}
-      <div className="w-full bg-white border-b border-slate-200/80 sticky top-[64px] z-30">
-        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-12 flex items-center justify-between gap-4">
-          <button
-            type="button"
-            onClick={handleGoBack}
-            className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold font-jakarta text-slate-600 hover:text-slate-900 transition-colors cursor-pointer group"
-          >
-            <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-slate-800 group-hover:-translate-x-0.5 transition-all" />
-            <span>{backInfo.label}</span>
-          </button>
-
-          {isOwn && (
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => router.push("/perfil-usuario")}
-              className="gap-1.5 text-xs font-semibold"
-            >
-              <Pencil className="w-3.5 h-3.5" />
-              <span>Editar mi perfil</span>
-            </Button>
-          )}
-        </div>
-      </div>
-
       {profile.specialistProfile ? (
         <SpecialistProfileView
           profile={profile}
           isPublic={true}
           onConnect={handleConnect}
-          onDeclineConnect={handleDeclineConnect}
           onRemoveConnection={handleRemoveConnection}
           onBlockConnection={handleBlockConnection}
           connectionLoading={connectionLoading}
@@ -451,7 +376,6 @@ function PublicProfileContent() {
             isOwnProfile={isOwn}
             onEditProfile={isOwn ? () => router.push("/perfil-usuario") : undefined}
             onConnect={handleConnect}
-            onDeclineConnect={handleDeclineConnect}
             onRemoveConnection={handleRemoveConnection}
             onBlockConnection={handleBlockConnection}
             connectionLoading={connectionLoading}

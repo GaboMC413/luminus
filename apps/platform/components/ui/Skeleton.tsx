@@ -546,21 +546,34 @@ export function RecordingsSkeleton() {
 }
 
 /**
- * Standardized directory skeleton for /especialistas, /inicio/miembros, and /red.
+ * Standardized directory skeleton for /especialistas and /inicio/miembros.
+ * Mirrors the exact DOM geometry of PageHeader + DirectoryToolbar (SearchBar + inline desktop filters) + 5-col grid.
  */
-export function DirectoryGridSkeleton({ count = 10 }: { count?: number }) {
+export function DirectoryGridSkeleton({
+  count = 10,
+  showBack = false,
+}: {
+  count?: number;
+  showBack?: boolean;
+}) {
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4 px-4 pb-12 pt-4 sm:px-6 md:gap-6 md:py-6">
+    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-5 px-4 pb-12 pt-4 sm:px-6 md:gap-6 md:py-6">
       {/* Header */}
       <div className="flex flex-col gap-1.5">
-        <Skeleton className="h-7 w-36 rounded-md" />
-        <Skeleton className="h-4 w-64 rounded-md" />
+        {showBack && <Skeleton className="h-5 w-16 rounded-md mb-1.5" />}
+        <Skeleton className="h-7 w-40 rounded-md" />
+        <Skeleton className="h-4 w-72 rounded-md mt-0.5" />
       </div>
 
-      {/* Search Toolbar */}
-      <div className="flex items-center gap-3 w-full">
+      {/* Search & Inline Filter Toolbar */}
+      <div className="flex items-center gap-2.5 w-full">
         <Skeleton className="h-11 flex-1 rounded-xl" />
-        <Skeleton className="h-11 w-28 rounded-xl shrink-0" />
+        <div className="hidden md:flex items-center gap-2.5 shrink-0">
+          <Skeleton className="h-11 w-[165px] lg:w-[180px] rounded-xl" />
+          <Skeleton className="h-11 w-[165px] lg:w-[180px] rounded-xl" />
+          <Skeleton className="h-11 w-[155px] rounded-xl" />
+        </div>
+        <Skeleton className="flex md:hidden h-11 w-24 rounded-xl shrink-0" />
       </div>
 
       {/* 5-Column Desktop / 2-Column Mobile Grid */}

@@ -32,7 +32,7 @@ export async function GET(request: Request) {
       cityWhere.country = country;
     }
 
-    const [countryGroups, cityGroups, activeInterests] = await Promise.all([
+    const [countryGroups, cityGroups, activeInterests, activeProfiles] = await Promise.all([
       prisma.userProfile.groupBy({
         by: ["country"],
         where: {
@@ -65,16 +65,44 @@ export async function GET(request: Request) {
           name: "asc",
         },
       }),
+      prisma.userProfile.findMany({
+        where: {
+          isOnboarded: true,
+          avatarUrl: {
+            not: null,
+            notIn: ["", " "],
+          },
+          user: {
+            id: { not: session.userId },
+            status: "active",
+            isGhost: false,
+          },
+        },
+        select: {
+          fullName: true,
+          firstName: true,
+          lastName: true,
+        },
+        take: 250,
+      }),
     ]);
 
     const countries = countryGroups.map((g: any) => g.country).sort();
     const cities = cityGroups.map((g: any) => g.city).sort();
     const interests = activeInterests.map((i: any) => i.name);
+    const names = Array.from(
+      new Set(
+        activeProfiles
+          .map((p: any) => p.fullName || `${p.firstName || ""} ${p.lastName || ""}`.trim())
+          .filter(Boolean)
+      )
+    ).sort();
 
     return NextResponse.json({
       countries,
       cities,
       interests,
+      names,
     });
   } catch (error) {
     console.error("Failed to fetch filter options.", error);

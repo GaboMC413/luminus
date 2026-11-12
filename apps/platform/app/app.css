@@ -59,6 +59,13 @@
     background-image: linear-gradient(135deg, #FF7700 0%, #E855C8 33%, #0450FB 66%, #A8C800 100%);
   }
 
+  /* LUMINUS SOFT BRAND GRADIENT PILL (TRANSLUCENT) */
+  .luminus-pill-gradient {
+    background: linear-gradient(135deg, rgba(255, 119, 0, 0.12) 0%, rgba(232, 85, 200, 0.12) 33%, rgba(4, 80, 251, 0.12) 66%, rgba(168, 200, 0, 0.12) 100%);
+    border: 1px solid rgba(232, 85, 200, 0.25);
+    color: #0f172a;
+  }
+
   /* LUMINUS SOFT LIGHT GRADIENT (MARKETING HERO STYLE - EXACT 1:1 MATCH) */
   .luminus-light-gradient {
     background-color: #ffffff;
@@ -423,65 +430,65 @@ body.mobile-viewport-height-override div.w-full.h-\[100svh\] {
      8 Wellness Areas + Institutional Slate Fallback (WCAG AA >= 4.5:1)
      ========================================================================== */
 
-  /* 1. Crecimiento Personal (Amber) */
+  /* 1. Crecimiento Personal (Amber - #D97706) */
   .category-pill-crecimiento {
-    @apply bg-amber-50 text-amber-800 border-amber-200/80;
+    @apply bg-amber-50 text-amber-600 border-amber-200/80;
   }
   .category-text-crecimiento {
-    @apply text-amber-700;
+    @apply text-amber-600;
   }
 
-  /* 2. Bienestar Emocional (Pink) */
+  /* 2. Bienestar Emocional (Pink - #DB2777) */
   .category-pill-emocional {
-    @apply bg-pink-50 text-pink-800 border-pink-200/80;
+    @apply bg-pink-50 text-pink-600 border-pink-200/80;
   }
   .category-text-emocional {
-    @apply text-pink-700;
+    @apply text-pink-600;
   }
 
-  /* 3. Salud Integral (Blue) */
+  /* 3. Salud Integral (Blue - #2563EB) */
   .category-pill-salud {
-    @apply bg-blue-50 text-blue-800 border-blue-200/80;
+    @apply bg-blue-50 text-blue-600 border-blue-200/80;
   }
   .category-text-salud {
-    @apply text-blue-700;
+    @apply text-blue-600;
   }
 
-  /* 4. Movimiento Físico (Rose/Red) */
+  /* 4. Movimiento Físico (Red - #DC2626) */
   .category-pill-movimiento {
-    @apply bg-rose-50 text-rose-800 border-rose-200/80;
+    @apply bg-red-50 text-red-600 border-red-200/80;
   }
   .category-text-movimiento {
-    @apply text-rose-700;
+    @apply text-red-600;
   }
 
-  /* 5. Nutrición (Lime/Emerald) */
+  /* 5. Nutrición (Lime - #4D7C0F) */
   .category-pill-nutricion {
-    @apply bg-lime-50 text-lime-800 border-lime-200/80;
+    @apply bg-lime-50 text-lime-700 border-lime-200/80;
   }
   .category-text-nutricion {
     @apply text-lime-700;
   }
 
-  /* 6. Espiritualidad (Purple) */
+  /* 6. Espiritualidad (Purple - #9333EA) */
   .category-pill-espiritualidad {
-    @apply bg-purple-50 text-purple-800 border-purple-200/80;
+    @apply bg-purple-50 text-purple-600 border-purple-200/80;
   }
   .category-text-espiritualidad {
-    @apply text-purple-700;
+    @apply text-purple-600;
   }
 
-  /* 7. Vínculos y Relaciones (Orange) */
+  /* 7. Vínculos y Relaciones (Orange - #EA580C) */
   .category-pill-vinculos {
-    @apply bg-orange-50 text-orange-800 border-orange-200/80;
+    @apply bg-orange-50 text-orange-600 border-orange-200/80;
   }
   .category-text-vinculos {
-    @apply text-orange-700;
+    @apply text-orange-600;
   }
 
-  /* 8. Terapias Complementarias (Teal) */
+  /* 8. Terapias Complementarias (Teal - #0F766E) */
   .category-pill-terapias {
-    @apply bg-teal-50 text-teal-800 border-teal-200/80;
+    @apply bg-teal-50 text-teal-700 border-teal-200/80;
   }
   .category-text-terapias {
     @apply text-teal-700;

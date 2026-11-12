@@ -61,49 +61,7 @@ function NotificationItem({
     return match ? match[1] : null;
   };
 
-  const handleAccept = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const requesterId = actorId || getRequesterIdFromUrl(actionUrl);
-    if (!requesterId) return;
 
-    try {
-      const res = await fetch("/api/connections", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipientId: requesterId }),
-      });
-      if (res.ok) {
-        await fetch("/api/notifications", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id }),
-        });
-        window.dispatchEvent(new Event("luminus_notifications_update"));
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleDecline = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const requesterId = actorId || getRequesterIdFromUrl(actionUrl);
-    if (!requesterId) return;
-
-    try {
-      const res = await fetch(`/api/connections?recipientId=${requesterId}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        await fetch(`/api/notifications?id=${id}`, {
-          method: "DELETE",
-        });
-        window.dispatchEvent(new Event("luminus_notifications_update"));
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const handleCardClick = () => {
     if (isUnread) {
@@ -116,9 +74,8 @@ function NotificationItem({
   };
 
   const isQuest = String(type).startsWith("quest_completed_");
-  const isNetworkAdd = type === "network_add";
+  const isNetworkAdd = type === "network_add" || type === "connection_request";
   const isConnectionAccepted = type === "connection_accepted";
-  const isConnectionRequest = type === "connection_request";
 
   return (
     <div
@@ -174,8 +131,6 @@ function NotificationItem({
             ? "Te sumó a su red."
             : isConnectionAccepted
             ? "Aceptó tu solicitud de conexión."
-            : isConnectionRequest
-            ? "Quiere conectarse contigo."
             : formatMessageBody(action || title)}
         </p>
 
@@ -220,28 +175,7 @@ function NotificationItem({
           </div>
         )}
 
-        {isConnectionRequest && isUnread && (
-          <div className="flex items-center gap-2 mt-2" onClick={(e) => e.stopPropagation()}>
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={handleAccept}
-              className="!w-auto !h-7 !px-3 !text-xs !rounded-lg"
-            >
-              Aceptar
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleDecline}
-              className="!w-auto !h-7 !px-3 !text-xs !rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50"
-            >
-              Rechazar
-            </Button>
-          </div>
-        )}
+
       </div>
     </div>
   );

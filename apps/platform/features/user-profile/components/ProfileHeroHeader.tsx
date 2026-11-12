@@ -1,37 +1,25 @@
 "use client";
 
 import React from "react";
-import { 
-  User, 
-  MapPin, 
-  Cake, 
-  Sparkles, 
-  Mail, 
-  Share2, 
-  Calendar, 
-  Orbit, 
-  Heart, 
-  Check, 
-  X, 
-  ChevronDown, 
-  UserMinus, 
+import {
+  User,
+  MapPin,
+  Mail,
+  Share2,
+  Orbit,
+  Heart,
+  Check,
+  X,
+  ChevronDown,
+  UserMinus,
   Ban,
-  Sun,
-  Smile,
-  HeartPulse,
-  Dumbbell,
-  Apple,
-  Sparkle,
-  Blend,
-  Flower,
-  Tag,
   Camera,
   Pencil
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { isMecenas } from "@/lib/membership/access";
-import { getCategoryPillClass } from "@/components/ui/InterestPill";
 import { formatLocationDisplay } from "@/utils/locationUtils";
+import { getCategoryPillClass, getCategoryTextClass, getCategoryCustomStyles, useDynamicCategories } from "@/components/ui/InterestPill";
 
 interface ProfileHeroHeaderProps {
   profile: any;
@@ -40,7 +28,6 @@ interface ProfileHeroHeaderProps {
   onTabChange?: (tab: "profesional" | "personal") => void;
   // Actions
   onConnect?: () => void;
-  onDeclineConnect?: () => void;
   onRemoveConnection?: () => void;
   onBlockConnection?: () => void;
   connectionLoading?: boolean;
@@ -59,23 +46,14 @@ interface ProfileHeroHeaderProps {
   onEditCover?: () => void;
 }
 
-function renderSpecialtyIcon(title?: string) {
-  if (!title) return null;
+function renderSpecialtyIcon(title?: string, className = "w-3.5 h-3.5 shrink-0") {
+  if (!title) return <Heart className={className} />;
   const t = title
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
-  const props = { className: "w-3.5 h-3.5 shrink-0", strokeWidth: 2 };
-  if (t.includes("crecimiento")) return <Sun {...props} />;
-  if (t.includes("emocional")) return <Smile {...props} />;
-  if (t.includes("integral") || t.includes("salud")) return <HeartPulse {...props} />;
-  if (t.includes("ejercicio") || t.includes("movimiento") || t.includes("fisico")) return <Dumbbell {...props} />;
-  if (t.includes("nutricion")) return <Apple {...props} />;
-  if (t.includes("espiritualidad")) return <Sparkle {...props} />;
-  if (t.includes("vinculo") || t.includes("relacion")) return <Blend {...props} />;
-  if (t.includes("terapia")) return <Flower {...props} />;
-  return <Tag {...props} />;
+  return <Heart className={className} />;
 }
 
 export function ProfileHeroHeader({
@@ -84,7 +62,6 @@ export function ProfileHeroHeader({
   activeTab = "profesional",
   onTabChange,
   onConnect,
-  onDeclineConnect,
   onRemoveConnection,
   onBlockConnection,
   connectionLoading = false,
@@ -107,48 +84,24 @@ export function ProfileHeroHeader({
     "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
   ];
 
-  const formatDisplayDate = (dateStr: string) => {
-    if (!dateStr || dateStr === "No definido" || dateStr === "Sin fecha de nacimiento") return null;
-
-    let day: number | null = null;
-    let monthIndex: number | null = null;
-
-    if (dateStr.includes("/")) {
-      const parts = dateStr.split("/").map((p) => p.trim());
-      if (parts.length >= 2) {
-        day = parseInt(parts[0], 10);
-        monthIndex = parseInt(parts[1], 10) - 1;
-      }
-    } else if (dateStr.includes("-")) {
-      const parts = dateStr.split("-").map((p) => p.trim());
-      if (parts.length === 3) {
-        day = parseInt(parts[2], 10);
-        monthIndex = parseInt(parts[1], 10) - 1;
-      }
-    }
-
-    if (day && monthIndex !== null && monthIndex >= 0 && monthIndex < 12 && !isNaN(day) && !isNaN(monthIndex)) {
-      return `${day} de ${MONTH_NAMES[monthIndex]}`;
-    }
-
-    return null;
-  };
-
   const fullName = `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim() || "Usuario LUMINUS";
   const hasCover = profile?.cover_url && profile.cover_url !== "" && !profile.cover_url.includes("empty");
   const rawLocation = [profile?.city, profile?.country].filter(Boolean).join(", ");
   const formattedLocation = formatLocationDisplay(rawLocation);
   const hasLocation = Boolean(formattedLocation);
-  const formattedBirthdate = formatDisplayDate(profile?.birthdate);
+  const dbCategories = useDynamicCategories();
   const specialist = profile?.specialistProfile;
   const specialtyText = specialist?.specialty || specialist?.title || "Bienestar";
+  const specialtyCustomStyles = getCategoryCustomStyles(specialtyText, dbCategories);
   const specialtyLabel = specialtyText.toLowerCase().startsWith("especialista en")
     ? specialtyText
     : `Especialista en ${specialtyText}`;
-  const specialtyCategoryPill = getCategoryPillClass(specialtyText);
-
   const getConnectionLabel = () => {
-    if (connectionLoading) return "Guardando...";
+    if (connectionLoading) {
+      if (profile?.connection_status === "blocked") return "Desbloqueando...";
+      if (profile?.connection_status === "accepted") return "Eliminando...";
+      return "Sumando...";
+    }
     if (profile?.connection_status === "blocked") return "Desbloquear";
     if (profile?.connection_status === "accepted") return "En mi red";
     return "Sumar a mi red";
@@ -182,7 +135,7 @@ export function ProfileHeroHeader({
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white border border-slate-200/90 rounded-2xl shadow-none -mt-20 sm:-mt-24 md:-mt-32 lg:-mt-36 relative z-30">
           <div className="p-6 sm:p-7 md:p-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 sm:gap-6">
+            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-5 sm:gap-6">
               {/* Left: Avatar + Identity Details */}
               <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 md:gap-6 min-w-0">
                 {/* Avatar */}
@@ -212,18 +165,11 @@ export function ProfileHeroHeader({
                 </div>
 
                 {/* Identity Lockup */}
-                <div className="flex flex-col gap-2 min-w-0">
+                <div className="flex flex-col gap-1.5 min-w-0">
                   <div className="flex flex-wrap items-center gap-2.5">
-                    <h1 className="text-xl sm:text-2xl font-bold font-jakarta text-slate-900 tracking-tight leading-snug">
+                    <h1 className="text-lg sm:text-xl font-bold font-jakarta text-slate-900 tracking-tight leading-snug">
                       {fullName}
                     </h1>
-
-                    {isMecenas({ tier: profile?.tier }) && (
-                      <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[11px] font-bold font-jakarta border border-slate-200/80 flex items-center gap-1 select-none">
-                        <Sparkles className="w-3 h-3 text-slate-700" />
-                        Mecenas
-                      </span>
-                    )}
 
                     {profile?.has_in_network && !isOwn && (
                       <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-semibold font-jakarta border border-blue-200/60 flex items-center select-none">
@@ -233,55 +179,60 @@ export function ProfileHeroHeader({
                   </div>
 
                   {/* Headline / Specialty / Profession */}
-                  {isSpecialist ? (
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs sm:text-[13px] font-bold font-jakarta border shadow-xs select-none ${specialtyCategoryPill}`}
-                      >
-                        {renderSpecialtyIcon(specialtyText)}
-                        <span>{specialtyLabel}</span>
-                      </span>
+                  {!isSpecialist && profile?.profession && profile.profession !== "Miembro de la Comunidad" ? (
+                    <p className="text-sm sm:text-[15px] font-medium text-slate-600 font-jakarta leading-normal">
+                      {profile.profession}
+                    </p>
+                  ) : null}
 
-                      {specialist?.title && specialist.title.toLowerCase() !== specialtyText.toLowerCase() && (
-                        <span className="text-xs sm:text-sm font-medium text-slate-600 font-jakarta">
-                          {specialist.title}
+                  {/* Location */}
+                  {hasLocation && (
+                    <div className="flex items-center gap-1.5 text-[13px] font-medium text-slate-500 font-jakarta">
+                      <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                      <span>{formattedLocation}</span>
+                    </div>
+                  )}
+
+                  {/* Badges Row (Especialista, Mecenas & Community Tenure) */}
+                  {(isSpecialist || isMecenas({ tier: profile?.tier }) || profile?.member_since) && (
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      {isSpecialist && (
+                        <span
+                          style={
+                            specialtyCustomStyles?.color && specialtyCustomStyles?.bgColor
+                              ? {
+                                  backgroundColor: specialtyCustomStyles.bgColor,
+                                  color: specialtyCustomStyles.color,
+                                  borderColor: specialtyCustomStyles.borderColor,
+                                }
+                              : undefined
+                          }
+                          className={`inline-flex items-center h-6 px-2.5 rounded-full text-[11px] font-semibold font-jakarta border select-none ${getCategoryPillClass(specialtyText, dbCategories)}`}
+                        >
+                          Especialista LUMINUS
+                        </span>
+                      )}
+
+                      {isMecenas({ tier: profile?.tier }) && (
+                        <span className="inline-flex items-center h-6 px-2.5 rounded-full text-[11px] font-semibold font-jakarta luminus-pill-gradient select-none">
+                          Mecenas
+                        </span>
+                      )}
+
+                      {profile?.member_since && (
+                        <span className="inline-flex items-center h-6 px-2.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium font-jakarta border border-slate-200/80 select-none">
+                          Miembro desde {(() => {
+                            try {
+                              const d = new Date(profile.member_since);
+                              return `${MONTH_NAMES[d.getMonth()]} de ${d.getFullYear()}`;
+                            } catch {
+                              return "";
+                            }
+                          })()}
                         </span>
                       )}
                     </div>
-                  ) : (
-                    <p className="text-sm sm:text-[15px] font-medium text-slate-600 font-jakarta leading-normal">
-                      {profile?.profession || "Miembro de la Comunidad"}
-                    </p>
                   )}
-
-                  {/* Metadata Row */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500 font-sans pt-0.5">
-                    {hasLocation && (
-                      <span className="flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>{formattedLocation}</span>
-                      </span>
-                    )}
-                    {formattedBirthdate && (
-                      <span className="flex items-center gap-1.5">
-                        <Cake className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>{formattedBirthdate}</span>
-                      </span>
-                    )}
-                    {profile?.member_since && (
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>Miembro desde {(() => {
-                          try {
-                            const d = new Date(profile.member_since);
-                            return `${MONTH_NAMES[d.getMonth()]} de ${d.getFullYear()}`;
-                          } catch {
-                            return "";
-                          }
-                        })()}</span>
-                      </span>
-                    )}
-                  </div>
                 </div>
               </div>
 

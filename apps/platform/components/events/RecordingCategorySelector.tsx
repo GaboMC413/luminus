@@ -15,6 +15,11 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { SelectInput } from "@/components/ui/SelectInput";
+import {
+  useDynamicCategories,
+  getCategoryIconComponent,
+  getCategoryCustomStyles,
+} from "@/components/ui/InterestPill";
 
 export interface CategoryItem {
   id: string;
@@ -43,7 +48,7 @@ export const RECORDING_CATEGORIES: CategoryItem[] = [
     label: "Crecimiento Personal",
     icon: Sun,
     activeIconBg: "bg-amber-100 text-amber-600",
-    activeText: "text-amber-800 font-semibold",
+    activeText: "text-amber-600 font-semibold",
     activeBorder: "border-amber-500",
     hoverIconBg: "group-hover:bg-amber-50 group-hover:text-amber-600",
     hoverText: "group-hover:text-amber-700",
@@ -53,7 +58,7 @@ export const RECORDING_CATEGORIES: CategoryItem[] = [
     label: "Bienestar Emocional",
     icon: Smile,
     activeIconBg: "bg-pink-100 text-pink-600",
-    activeText: "text-pink-800 font-semibold",
+    activeText: "text-pink-600 font-semibold",
     activeBorder: "border-pink-500",
     hoverIconBg: "group-hover:bg-pink-50 group-hover:text-pink-600",
     hoverText: "group-hover:text-pink-700",
@@ -63,7 +68,7 @@ export const RECORDING_CATEGORIES: CategoryItem[] = [
     label: "Salud Integral",
     icon: HeartPulse,
     activeIconBg: "bg-blue-100 text-blue-600",
-    activeText: "text-blue-800 font-semibold",
+    activeText: "text-blue-600 font-semibold",
     activeBorder: "border-blue-600",
     hoverIconBg: "group-hover:bg-blue-50 group-hover:text-blue-600",
     hoverText: "group-hover:text-blue-700",
@@ -73,7 +78,7 @@ export const RECORDING_CATEGORIES: CategoryItem[] = [
     label: "Movimiento Físico",
     icon: Dumbbell,
     activeIconBg: "bg-red-100 text-red-600",
-    activeText: "text-red-800 font-semibold",
+    activeText: "text-red-600 font-semibold",
     activeBorder: "border-red-500",
     hoverIconBg: "group-hover:bg-red-50 group-hover:text-red-600",
     hoverText: "group-hover:text-red-700",
@@ -83,7 +88,7 @@ export const RECORDING_CATEGORIES: CategoryItem[] = [
     label: "Nutrición",
     icon: Apple,
     activeIconBg: "bg-lime-100 text-lime-700",
-    activeText: "text-lime-800 font-semibold",
+    activeText: "text-lime-700 font-semibold",
     activeBorder: "border-lime-600",
     hoverIconBg: "group-hover:bg-lime-50 group-hover:text-lime-700",
     hoverText: "group-hover:text-lime-700",
@@ -93,7 +98,7 @@ export const RECORDING_CATEGORIES: CategoryItem[] = [
     label: "Espiritualidad",
     icon: Sparkle,
     activeIconBg: "bg-purple-100 text-purple-600",
-    activeText: "text-purple-800 font-semibold",
+    activeText: "text-purple-600 font-semibold",
     activeBorder: "border-purple-600",
     hoverIconBg: "group-hover:bg-purple-50 group-hover:text-purple-600",
     hoverText: "group-hover:text-purple-700",
@@ -103,7 +108,7 @@ export const RECORDING_CATEGORIES: CategoryItem[] = [
     label: "Vínculos y Relaciones",
     icon: Blend,
     activeIconBg: "bg-orange-100 text-orange-600",
-    activeText: "text-orange-800 font-semibold",
+    activeText: "text-orange-600 font-semibold",
     activeBorder: "border-orange-500",
     hoverIconBg: "group-hover:bg-orange-50 group-hover:text-orange-600",
     hoverText: "group-hover:text-orange-700",
@@ -113,7 +118,7 @@ export const RECORDING_CATEGORIES: CategoryItem[] = [
     label: "Terapias Complementarias",
     icon: Flower,
     activeIconBg: "bg-teal-100 text-teal-700",
-    activeText: "text-teal-800 font-semibold",
+    activeText: "text-teal-700 font-semibold",
     activeBorder: "border-teal-600",
     hoverIconBg: "group-hover:bg-teal-50 group-hover:text-teal-700",
     hoverText: "group-hover:text-teal-700",
@@ -129,6 +134,7 @@ export function RecordingCategorySelector({
   selectedCategory,
   onSelectCategory,
 }: RecordingCategorySelectorProps) {
+  const dbCategories = useDynamicCategories();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -229,14 +235,25 @@ export function RecordingCategorySelector({
           className="w-full flex items-center gap-6 overflow-x-auto scroll-smooth custom-scrollbar pb-2 pt-1 select-none"
         >
           {RECORDING_CATEGORIES.map((category) => {
+            const isAll = category.id === "Todas las grabaciones";
             const isSelected = selectedCategory === category.id;
-            const Icon = category.icon;
+            const Icon = isAll
+              ? category.icon
+              : getCategoryIconComponent(category.id, dbCategories) || category.icon;
+            const customStyles = isAll
+              ? null
+              : getCategoryCustomStyles(category.id, dbCategories);
 
             return (
               <button
                 key={category.id}
                 type="button"
                 onClick={() => onSelectCategory(category.id)}
+                style={
+                  isSelected && customStyles?.color
+                    ? { borderColor: customStyles.color }
+                    : undefined
+                }
                 className={`flex flex-col items-center gap-2 pb-2 px-1 shrink-0 group transition-all relative cursor-pointer border-b-2 ${
                   isSelected
                     ? category.activeBorder
@@ -245,6 +262,14 @@ export function RecordingCategorySelector({
               >
                 {/* Icon Container */}
                 <div
+                  style={
+                    isSelected && customStyles?.color && customStyles?.bgColor
+                      ? {
+                          backgroundColor: customStyles.bgColor,
+                          color: customStyles.color,
+                        }
+                      : undefined
+                  }
                   className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 group-hover:scale-105 ${
                     isSelected
                       ? category.activeIconBg
@@ -256,6 +281,11 @@ export function RecordingCategorySelector({
 
                 {/* Category Label */}
                 <span
+                  style={
+                    isSelected && customStyles?.color
+                      ? { color: customStyles.color }
+                      : undefined
+                  }
                   className={`text-xs whitespace-nowrap font-jakarta transition-colors duration-150 ${
                     isSelected
                       ? category.activeText
