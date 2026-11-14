@@ -244,7 +244,11 @@ export default function CondicionesEspecialistasPage() {
               LUMINUS no será responsable por incumplimientos, cancelaciones, falta de respuesta, demoras, mala calidad del servicio, disconformidad con una sesión, resultados no alcanzados, información incorrecta, daños, perjuicios, conflictos, reclamos, fraudes, estafas o cualquier otra situación derivada directa o indirectamente de la relación entre usuarios y especialistas.
             </p>
             <p>
-              Los usuarios deberán evaluar bajo su propio criterio la trayectoria, formación, experiencia, condiciones, precios, modalidad de trabajo, habilitaciones, certificaciones y pertinencia de cada especialista antes de contratar, reservar, participar o continuar cualquier servicio, sesión, tratamiento, programa, curso o actividad.
+              Los usuarios deberán evaluar bajo su propio criterio la trayectoria, formación, experiencia, condiciones, precios, modalidad de trabajo, habilitaciones, certificaciones y pertinencia de cada especialista antes de contratar, reservar, participar o continuar cualquier servicio, sesión, tratamiento, programa, curso o actividad. Las sesiones introductorias también se rigen por las{" "}
+              <Link href="/legal/sesiones-introductorias" className="text-slate-900 underline hover:text-black transition-colors">
+                Condiciones de Sesiones Introductorias
+              </Link>
+              .
             </p>
           </div>
 

@@ -4,6 +4,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 import { formatLocationDisplay } from "@/utils/locationUtils";
 import { UserAvatar } from "./UserAvatar";
+import { Skeleton } from "./Skeleton";
 import { getCategoryTextClass, getCategoryCustomStyles, useDynamicCategories } from "./InterestPill";
 
 export interface UserCardData {
@@ -139,6 +140,23 @@ export function UserCard({
         </button>
       )}
     </article>
+  );
+}
+
+/**
+ * Co-located low-detail skeleton for UserCard.
+ * Matches exact card padding, avatar size, and guaranteed text lines without speculative badges.
+ */
+export function UserCardSkeleton() {
+  return (
+    <div className="relative bg-white rounded-2xl p-3.5 sm:p-4 flex flex-col items-center gap-2.5 sm:gap-3 border border-slate-200/90 shadow-none">
+      <Skeleton className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shrink-0" />
+      <div className="flex flex-col items-center gap-1.5 text-center w-full min-w-0">
+        <Skeleton className="h-4 w-28 rounded-md" />
+        <Skeleton className="h-3 w-20 rounded-md" />
+      </div>
+      <Skeleton className="w-16 mt-auto pt-1 h-3 rounded-md" />
+    </div>
   );
 }
 

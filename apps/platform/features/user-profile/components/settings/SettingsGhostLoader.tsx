@@ -6,7 +6,7 @@ interface SettingsGhostLoaderProps {
   activeTab?: string;
 }
 
-export function SettingsGhostLoader({ activeTab = "personal" }: SettingsGhostLoaderProps) {
+export function SettingsGhostLoader({ activeTab = "default" }: SettingsGhostLoaderProps) {
   return (
     <div className="w-full flex flex-col font-sans animate-pulse select-none">
       {/* Header Skeleton */}
@@ -74,56 +74,6 @@ export function SettingsGhostLoader({ activeTab = "personal" }: SettingsGhostLoa
             </div>
           </div>
         </div>
-      ) : activeTab === "personal" ? (
-        /* Personal Info Grid Skeleton - 1:1 match with real 5 fields in grid */
-        <div className="flex flex-col gap-6 w-full">
-          {/* Row 1: Nombre | Apellido */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="flex flex-col gap-1.5 w-full max-w-lg">
-              <div className="h-3 w-16 bg-slate-200/80 rounded" />
-              <div className="flex items-center gap-2">
-                <div className="h-11 flex-1 bg-slate-50 border border-slate-200/70 rounded-xl" />
-                <div className="w-9 h-9 rounded-full bg-slate-100 shrink-0" />
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5 w-full max-w-lg">
-              <div className="h-3 w-16 bg-slate-200/80 rounded" />
-              <div className="flex items-center gap-2">
-                <div className="h-11 flex-1 bg-slate-50 border border-slate-200/70 rounded-xl" />
-                <div className="w-9 h-9 rounded-full bg-slate-100 shrink-0" />
-              </div>
-            </div>
-          </div>
-
-          {/* Row 2: Profesión | Ciudad */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="flex flex-col gap-1.5 w-full max-w-lg">
-              <div className="h-3 w-20 bg-slate-200/80 rounded" />
-              <div className="flex items-center gap-2">
-                <div className="h-11 flex-1 bg-slate-50 border border-slate-200/70 rounded-xl" />
-                <div className="w-9 h-9 rounded-full bg-slate-100 shrink-0" />
-              </div>
-            </div>
-            <div className="flex flex-col gap-1.5 w-full max-w-lg">
-              <div className="h-3 w-16 bg-slate-200/80 rounded" />
-              <div className="flex items-center gap-2">
-                <div className="h-11 flex-1 bg-slate-50 border border-slate-200/70 rounded-xl" />
-                <div className="w-9 h-9 rounded-full bg-slate-100 shrink-0" />
-              </div>
-            </div>
-          </div>
-
-          {/* Row 3: Fecha de nacimiento */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="flex flex-col gap-1.5 w-full max-w-lg">
-              <div className="h-3 w-36 bg-slate-200/80 rounded" />
-              <div className="flex items-center gap-2">
-                <div className="h-11 flex-1 bg-slate-50 border border-slate-200/70 rounded-xl" />
-                <div className="w-9 h-9 rounded-full bg-slate-100 shrink-0" />
-              </div>
-            </div>
-          </div>
-        </div>
       ) : activeTab === "phone" ? (
         /* Phone Section Skeleton */
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
@@ -139,18 +89,7 @@ export function SettingsGhostLoader({ activeTab = "personal" }: SettingsGhostLoa
             </div>
           </div>
         </div>
-      ) : activeTab === "email" ? (
-        /* Email Section Skeleton */
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-          <div className="flex flex-col gap-1.5 w-full max-w-lg">
-            <div className="h-3 w-16 bg-slate-200/80 rounded" />
-            <div className="flex items-center gap-2">
-              <div className="h-11 flex-1 bg-slate-50 border border-slate-200/70 rounded-xl" />
-              <div className="w-9 h-9 rounded-full bg-slate-100 shrink-0" />
-            </div>
-          </div>
-        </div>
-      ) : (
+      ) : activeTab === "password" ? (
         /* Password Section Skeleton */
         <div className="w-full max-w-md flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
@@ -166,6 +105,17 @@ export function SettingsGhostLoader({ activeTab = "personal" }: SettingsGhostLoa
             <div className="h-11 w-full bg-slate-50 border border-slate-200/70 rounded-xl" />
           </div>
           <div className="h-9 w-36 bg-slate-200/80 rounded-xl mt-2" />
+        </div>
+      ) : (
+        /* Default / Email Section Skeleton */
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+          <div className="flex flex-col gap-1.5 w-full max-w-lg">
+            <div className="h-3 w-16 bg-slate-200/80 rounded" />
+            <div className="flex items-center gap-2">
+              <div className="h-11 flex-1 bg-slate-50 border border-slate-200/70 rounded-xl" />
+              <div className="w-9 h-9 rounded-full bg-slate-100 shrink-0" />
+            </div>
+          </div>
         </div>
       )}
     </div>

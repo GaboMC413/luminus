@@ -6,16 +6,26 @@ import {
   renderPasswordResetEmailHtml,
   renderEmailChangeVerificationHtml,
   renderContactNotificationEmailHtml,
+  renderSpecialistApprovedEmailHtml,
 } from "@/lib/mails";
 
 export default function EmailPreviewPage() {
-  const [activeTab, setActiveTab] = useState<"welcome" | "passwordReset" | "emailChange" | "contact">("welcome");
+  const [activeTab, setActiveTab] = useState<"welcome" | "specialistApproved" | "passwordReset" | "emailChange" | "contact">("welcome");
   const [name, setName] = useState("Gabriel");
   const [code, setCode] = useState("849204");
 
   let currentHtml = "";
   if (activeTab === "welcome") {
     currentHtml = renderWelcomeEmailHtml(name);
+  } else if (activeTab === "specialistApproved") {
+    currentHtml = renderSpecialistApprovedEmailHtml({
+      name,
+      title: "Lic. en Psicología",
+      specialty: "Psicología Clínica",
+      selectedAreas: ["Bienestar Emocional", "Mindfulness"],
+      clinicName: "Espacio Calma",
+      coursesCount: 2,
+    });
   } else if (activeTab === "passwordReset") {
     currentHtml = renderPasswordResetEmailHtml(code);
   } else if (activeTab === "emailChange") {
@@ -55,6 +65,16 @@ export default function EmailPreviewPage() {
             Bienvenida
           </button>
           <button
+            onClick={() => setActiveTab("specialistApproved")}
+            className={`px-3.5 py-2 text-xs font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer ${
+              activeTab === "specialistApproved"
+                ? "bg-black text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            Aprobación Especialista
+          </button>
+          <button
             onClick={() => setActiveTab("passwordReset")}
             className={`px-3.5 py-2 text-xs font-semibold rounded-lg transition-all whitespace-nowrap cursor-pointer ${
               activeTab === "passwordReset"
@@ -88,7 +108,7 @@ export default function EmailPreviewPage() {
 
         {/* Dynamic Inputs for Live Testing */}
         <div className="flex items-center gap-2">
-          {activeTab === "welcome" || activeTab === "contact" ? (
+          {activeTab === "welcome" || activeTab === "specialistApproved" || activeTab === "contact" ? (
             <div className="flex items-center gap-2 text-xs text-slate-600">
               <span className="font-medium">Nombre:</span>
               <input

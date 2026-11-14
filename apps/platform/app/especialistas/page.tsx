@@ -6,11 +6,11 @@ import { Check } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DirectoryToolbar, DirectoryTagPopover } from "@/components/ui/DirectoryToolbar";
 import { SearchSuggestion } from "@/components/ui/SearchBar";
-import { UserCard } from "@/components/ui/UserCard";
+import { UserCard, UserCardSkeleton } from "@/components/ui/UserCard";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
-import { DirectoryGridSkeleton } from "@/components/ui/Skeleton";
+import { Modal } from "@/components/ui/Modal";
 
 type Specialist = {
   id: string;
@@ -51,6 +51,7 @@ export default function EspecialistasPage() {
   });
 
   const [showFilters, setShowFilters] = useState(false);
+  const [showProgramModal, setShowProgramModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -268,14 +269,23 @@ export default function EspecialistasPage() {
     return chips;
   }, [appliedQuery, appliedFilters]);
 
-  if (loading) return <DirectoryGridSkeleton count={10} />;
-
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-5 px-4 pb-12 pt-4 font-sans sm:px-6 md:gap-6 md:py-6">
       {/* 1. Standardized In-App Page Header */}
       <PageHeader
         title="Especialistas"
         description="Profesionales verificados para acompañarte en tu bienestar."
+        rightSlot={
+          !loading && application && !application.hasApplication ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setShowProgramModal(true)}
+            >
+              Ser especialista
+            </Button>
+          ) : undefined
+        }
       />
 
       {/* 2. Pending Application Notice */}
@@ -484,7 +494,13 @@ export default function EspecialistasPage() {
       </DirectoryToolbar>
 
       {/* 4. Directory Grid or Empty/Error State */}
-      {error ? (
+      {loading && visibleSpecialists.length === 0 ? (
+        <section className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+          {[...Array(10)].map((_, i) => (
+            <UserCardSkeleton key={i} />
+          ))}
+        </section>
+      ) : error ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-700">
           {error}
         </div>
@@ -518,49 +534,46 @@ export default function EspecialistasPage() {
         />
       )}
 
-      {/* 5. Institutional CTA Banner for Specialists */}
-      {!application?.hasApplication && (
-        <section className="relative flex w-full flex-col gap-6 overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-5 md:p-8">
-          <div className="flex w-full flex-1 flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-jakarta">
-                Comunidad de especialistas
-              </span>
-              <h2 className="font-jakarta text-xl sm:text-2xl font-bold leading-tight tracking-tight text-slate-900">
-                Haz visible tu forma de acompañar
-              </h2>
-              <p className="max-w-3xl text-sm leading-relaxed text-slate-600 mt-1">
-                LUMINUS reúne a personas que están explorando bienestar, cambio personal, salud integral y nuevas formas de vivir con más conciencia. Tu lugar como especialista no es solo aparecer en una lista, sino ayudar a que más personas encuentren orientación clara, humana y confiable.
-              </p>
-            </div>
-
-            <div className="flex items-stretch gap-3 py-1">
-              <div className="w-[3px] bg-slate-900 shrink-0 rounded-full" />
-              <p className="font-jakarta text-xs sm:text-sm font-medium italic text-slate-500">
-                “Un espacio para mostrar quién eres, cómo trabajas y qué puedes aportar.”
-              </p>
-            </div>
-
-            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center pt-2">
-              <Button
-                variant="primary"
-                onClick={() => router.push("/especialistas/unirme")}
-                className="w-full sm:w-auto"
-              >
-                Aplicar como Especialista
-              </Button>
-              <a
-                href="https://luminuslatam.com/especialistas"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-jakarta text-xs sm:text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors px-2 py-1"
-              >
-                Conocer más sobre el programa
-              </a>
-            </div>
+      {/* 5. Specialist Program Info Modal */}
+      <Modal
+        isOpen={showProgramModal}
+        onClose={() => setShowProgramModal(false)}
+        title="Programa de especialistas"
+        subtitle="Forma parte del directorio de profesionales verificados de LUMINUS."
+        footer={
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2 w-full">
+            <a
+              href="https://luminuslatam.com/especialistas"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-jakarta text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors text-center sm:text-left py-2"
+            >
+              Conocer más sobre el programa
+            </a>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => {
+                setShowProgramModal(false);
+                router.push("/especialistas/unirme");
+              }}
+            >
+              Aplicar como especialista
+            </Button>
           </div>
-        </section>
-      )}
+        }
+      >
+        <div className="flex flex-col gap-3 text-sm text-slate-600 leading-relaxed">
+          <p className="m-0">
+            Si acompañas procesos de bienestar, salud integral o desarrollo personal, puedes postularte para integrar la red.
+          </p>
+          <ul className="m-0 pl-4 flex flex-col gap-1.5 text-slate-700">
+            <li>Perfil profesional público en el directorio.</li>
+            <li>Sesiones introductorias de 15 minutos para primer contacto.</li>
+            <li>Publicación de espacios, grupos y propuestas formativas.</li>
+          </ul>
+        </div>
+      </Modal>
     </div>
   );
 }

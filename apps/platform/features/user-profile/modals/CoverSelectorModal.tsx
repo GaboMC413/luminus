@@ -50,12 +50,12 @@ export function CoverSelectorModal({ isOpen, onClose, onSelect, currentCover }: 
           <div
             key={url}
             onClick={() => setSelectedCover(url)}
-            className={`relative aspect-[4/3] md:aspect-[16/7] rounded-xl overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-black group ${selectedCover === url ? 'ring-2 ring-black shadow-none' : 'border border-slate-100'}`}
+            className={`relative aspect-[4/3] md:aspect-[16/7] rounded-xl overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-slate-900 group ${selectedCover === url ? 'ring-2 ring-slate-900 shadow-none' : 'border border-slate-200/80'}`}
           >
             <img src={url} alt="Cover option" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
             {selectedCover === url && (
-              <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
-                <div className="bg-black text-white rounded-full w-8 h-8 flex items-center justify-center shadow-none">
+              <div className="absolute inset-0 bg-slate-900/10 flex items-center justify-center">
+                <div className="bg-slate-900 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-none">
                   <Check className="w-4 h-4 text-white stroke-[2.5]" />
                 </div>
               </div>

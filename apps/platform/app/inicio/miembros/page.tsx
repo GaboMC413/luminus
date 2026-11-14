@@ -259,16 +259,11 @@ function MiembrosContent() {
     (appliedFilters.city ? 1 : 0) +
     appliedFilters.selectedInterests.length;
 
-  if (loading && users.length === 0 && !hasActiveFilters) {
-    return <DirectoryGridSkeleton count={10} showBack />;
-  }
-
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-5 px-4 pb-12 pt-4 font-sans sm:px-6 md:gap-6 md:py-6">
       {/* 1. Standardized In-App Header with Back Navigation */}
       <PageHeader
         title="Miembros"
-        description="Personas que forman parte de la comunidad LUMINUS."
         backHref="/inicio"
       />
 

@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from 'react';
-import { CheckCircle2, X } from "lucide-react";
-import { Button, ProfileButton } from "@/components/ui/Button";
+import { CheckCircle2, Plus, X } from "lucide-react";
+import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { InputField } from "@/components/ui/InputField";
 import { ALL_PROMPTS, Prompt } from "../components/ProfilePrompts";
 import { SelectInput } from "@/components/ui/SelectInput";
 
@@ -83,26 +84,28 @@ export function EditPromptsModal({ isOpen, onClose, onSave, initialPrompts, init
       isOpen={isOpen}
       onClose={onClose}
       title={activeStep === 'list' ? 'Editar reflexiones' : activeStep === 'select' ? 'Selecciona una reflexión' : 'Escribe tu respuesta'}
-      maxWidth="720px"
+      maxWidth="540px"
       footer={modalFooter}
     >
-      <div className="flex flex-col gap-3 md:gap-4">
+      <div className="flex flex-col gap-3">
         {activeStep === 'list' && (
-          <div className="flex flex-col gap-3 md:gap-4">
-            <div className="flex flex-col gap-2.5 md:gap-3">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2.5">
               {selectedPrompts.map((p, i) => {
                 const cleanQ = p.question.trim().replace(/[…\. ]+$/, '');
                 const cleanA = p.answer.charAt(0).toLowerCase() + p.answer.slice(1);
 
                 return (
-                  <div key={i} className="p-3 md:p-3.5 rounded-xl bg-slate-50 flex flex-col justify-center relative min-h-[70px] md:min-h-[80px] border border-slate-200/60">
-                    <p className="text-sm md:text-base text-slate-700 italic pr-12 md:pr-16 leading-relaxed">
-                      "<span className="text-slate-900 font-medium">{cleanQ}</span> {cleanA}"
+                  <div key={i} className="p-3.5 rounded-xl bg-slate-50 flex flex-col justify-center relative border border-slate-200/80">
+                    <p className="text-body text-slate-700 italic pr-10">
+                      &ldquo;<span className="text-slate-900 font-medium">{cleanQ}</span> {cleanA}&rdquo;
                     </p>
                     <button
+                      type="button"
                       onClick={() => handleRemove(i)}
-                      className="absolute top-1/2 -translate-y-1/2 right-4 p-1.5 hover:bg-rose-50 hover:text-rose-600 rounded-full transition-colors text-slate-400 bg-transparent border-none outline-none cursor-pointer"
+                      className="absolute top-1/2 -translate-y-1/2 right-3 w-8 h-8 flex items-center justify-center hover:bg-rose-50 hover:text-rose-600 rounded-xl transition-colors text-slate-400 bg-transparent border-none outline-none cursor-pointer"
                       title="Eliminar reflexión"
+                      aria-label="Eliminar reflexión"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -111,12 +114,17 @@ export function EditPromptsModal({ isOpen, onClose, onSave, initialPrompts, init
               })}
             </div>
 
-            <ProfileButton
+            <Button
+              type="button"
+              variant="soft"
+              size="md"
+              fullWidth
               onClick={handleAddPrompt}
-              icon="add"
-              label="Agregar otra reflexión"
-              className="w-full mt-1"
-            />
+              className="gap-1.5 mt-1"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Agregar otra reflexión</span>
+            </Button>
           </div>
         )}
 
@@ -126,25 +134,26 @@ export function EditPromptsModal({ isOpen, onClose, onSave, initialPrompts, init
               ALL_PROMPTS.filter(cat => !selectedPrompts.some(p => p.question === cat.question)).map((cat) => (
                 <button
                   key={cat.id}
+                  type="button"
                   onClick={() => handleSelectCategory(cat)}
-                  className="input-text-field text-left flex items-center px-4 hover:bg-slate-50 transition-colors cursor-pointer"
+                  className="w-full min-h-11 px-4 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-left text-body text-slate-700 hover:text-slate-900 transition-colors cursor-pointer"
                 >
                   {cat.question}
                 </button>
               ))
             ) : (
-              <div className="py-12 text-center flex flex-col items-center gap-3">
+              <div className="py-10 text-center flex flex-col items-center gap-3">
                 <CheckCircle2 className="w-10 h-10 text-slate-300" />
-                <p className="text-sm md:text-base text-slate-500">Has completado todas las reflexiones disponibles.</p>
+                <p className="text-body text-slate-500">Has completado todas las reflexiones disponibles.</p>
               </div>
             )}
           </div>
         )}
 
         {activeStep === 'edit' && tempPrompt && (
-          <div className="flex flex-col gap-4 md:gap-6">
-            <div className="flex flex-col gap-2.5 md:gap-3">
-              <p className="text-sm md:text-base text-secondary italic px-1 leading-relaxed">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2.5">
+              <p className="text-body text-slate-600 italic px-0.5">
                 {tempPrompt.question}
               </p>
 
@@ -159,7 +168,7 @@ export function EditPromptsModal({ isOpen, onClose, onSave, initialPrompts, init
                     label: opt,
                     value: opt
                   })),
-                  { label: '✍️ Escribir mi propia respuesta...', value: 'custom' }
+                  { label: 'Escribir mi propia respuesta...', value: 'custom' }
                 ]}
                 onSelect={(val) => {
                   if (val === 'custom') {
@@ -173,12 +182,11 @@ export function EditPromptsModal({ isOpen, onClose, onSave, initialPrompts, init
 
             {(!ALL_PROMPTS.find(c => c.question === tempPrompt.question)?.options.includes(tempPrompt.answer) ||
               tempPrompt.answer === '') && (
-                <div className="flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <input
+                <div className="animate-in fade-in duration-200">
+                  <InputField
                     type="text"
                     value={tempPrompt.answer}
                     onChange={(e) => setTempPrompt({ ...tempPrompt, answer: e.target.value })}
-                    className="input-text-field"
                     placeholder="Escribe aquí tu reflexión..."
                     autoFocus
                   />

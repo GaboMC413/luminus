@@ -100,6 +100,8 @@ model User {
   communityPosts           CommunityPost[]
   communityPostComments    CommunityPostComment[]
   communityPostLikes       CommunityPostLike[]
+  requestedIntroSessions   IntroSession[]            @relation("RequestedIntroSessions")
+  specialistIntroSessions  IntroSession[]            @relation("SpecialistIntroSessions")
 
   @@index([status, purgeAt])
   @@map("users")
@@ -727,5 +729,41 @@ model CommunityPostLike {
   @@unique([postId, userId])
   @@index([postId])
   @@map("community_post_likes")
+}
+
+enum IntroSessionStatus {
+  pending
+  accepted
+  declined
+  cancelled
+
+  @@map("intro_session_status")
+}
+
+model IntroSession {
+  id             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requesterId    String             @map("requester_id") @db.Uuid
+  specialistId   String             @map("specialist_id") @db.Uuid
+  scheduledDate  String             @map("scheduled_date") @db.VarChar
+  startTime      String             @map("start_time") @db.VarChar
+  endTime        String             @map("end_time") @db.VarChar
+  timezone       String             @default("America/Montevideo") @db.VarChar
+  status         IntroSessionStatus @default(pending)
+  requesterNote    String?            @map("requester_note") @db.Text
+  meetingLink      String?            @map("meeting_link") @db.VarChar
+  hostMeetingLink  String?            @map("host_meeting_link") @db.VarChar
+  wherebyMeetingId          String?            @map("whereby_meeting_id") @db.VarChar
+  specialistNote            String?            @map("specialist_note") @db.Text
+  requesterTermsAcceptedAt  DateTime?          @map("requester_terms_accepted_at") @db.Timestamptz
+  specialistTermsAcceptedAt DateTime?          @map("specialist_terms_accepted_at") @db.Timestamptz
+  createdAt                 DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  requester      User               @relation("RequestedIntroSessions", fields: [requesterId], references: [id], onDelete: Cascade)
+  specialist     User               @relation("SpecialistIntroSessions", fields: [specialistId], references: [id], onDelete: Cascade)
+
+  @@index([specialistId, scheduledDate, status])
+  @@index([requesterId, status])
+  @@map("intro_sessions")
 }
 

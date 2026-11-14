@@ -76,6 +76,7 @@ function NotificationItem({
   const isQuest = String(type).startsWith("quest_completed_");
   const isNetworkAdd = type === "network_add" || type === "connection_request";
   const isConnectionAccepted = type === "connection_accepted";
+  const isSessionNotification = String(type).startsWith("session_");
 
   return (
     <div
@@ -171,6 +172,22 @@ function NotificationItem({
             >
               <MessageSquare className="w-3 h-3 text-slate-500" />
               <span>Enviar mensaje</span>
+            </button>
+          </div>
+        )}
+
+        {isSessionNotification && actionUrl && (
+          <div className="mt-2.5 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onMarkRead(id);
+                router.push(actionUrl);
+              }}
+              className="inline-flex items-center gap-1.5 h-7.5 px-3 rounded-lg text-xs font-semibold font-jakarta text-white bg-slate-900 hover:bg-black transition-colors border-none cursor-pointer"
+            >
+              <span>Ver sesión</span>
             </button>
           </div>
         )}

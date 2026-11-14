@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Modal from "@/components/ui/Modal";
+import { BackButton } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { formatRelativeTime } from "@/components/ui/PlatformNavbar";
 import { isUuid } from "@/utils/validation";
@@ -674,16 +676,12 @@ function MessagesContent() {
           : "px-4 md:px-6 py-4 md:py-4"
       }`}>
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden">
-          <div className={`items-center gap-3 mb-3 md:mb-4 shrink-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
-            <button
-              onClick={() => router.back()}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900 cursor-pointer"
-              title="Volver"
-            >
-              <span className="material-symbols-rounded text-[20px]">arrow_back</span>
-            </button>
-            <h1 className="text-xl md:text-2xl text-slate-900 font-semibold font-jakarta">Mensajes</h1>
-          </div>
+          <PageHeader
+            title="Mensajes"
+            showBack
+            backFallbackHref="/inicio"
+            className={`mb-3 md:mb-4 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}
+          />
 
           {error && (
             <div className="mb-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 flex items-center justify-between shadow-none">
@@ -800,7 +798,7 @@ function MessagesContent() {
                 <div className={`border-b border-slate-100 flex items-center gap-3 bg-white shrink-0 touch-none ${
                   mobileView === "chat" ? "py-2 px-3 md:p-3" : "p-3"
                 }`}>
-                  <button
+                  <BackButton
                     onClick={() => {
                       if (document.activeElement === textareaRef.current) {
                         textareaRef.current?.blur();
@@ -814,11 +812,9 @@ function MessagesContent() {
                         setMobileView('list');
                       }
                     }}
-                    className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer mr-1"
                     title="Volver"
-                  >
-                    <span className="material-symbols-rounded text-[22px]">arrow_back</span>
-                  </button>
+                    className="md:hidden mr-1"
+                  />
                   <div className={`bg-slate-100 animate-pulse shrink-0 ${
                     mobileView === "chat"
                       ? "w-8 h-8 rounded-lg md:w-11 md:h-11 md:rounded-[10px]"
@@ -872,7 +868,7 @@ function MessagesContent() {
                 }`}>
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Mobile Back Button */}
-                    <button
+                    <BackButton
                       onClick={() => {
                         if (document.activeElement === textareaRef.current) {
                           textareaRef.current?.blur();
@@ -886,11 +882,9 @@ function MessagesContent() {
                           setMobileView('list');
                         }
                       }}
-                      className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer mr-1 shrink-0"
                       title="Volver"
-                    >
-                      <span className="material-symbols-rounded text-[22px]">arrow_back</span>
-                    </button>
+                      className="md:hidden mr-1"
+                    />
 
                     <img
                       src={selectedConv.participant.avatar_url || fallbackAvatar(selectedConv.participant.name)}

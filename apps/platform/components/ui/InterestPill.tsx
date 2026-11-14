@@ -422,7 +422,7 @@ export const InterestPill = ({ interest, className = "", size = "md" }: Interest
 
   const pillTokenClass = getCategoryPillClass(interest, dbCategories);
   const customStyles = getCategoryCustomStyles(interest, dbCategories);
-  const heightClass = size === 'sm' ? 'h-7 px-2.5' : 'h-8.5 px-3.5';
+  const heightClass = size === 'sm' ? 'h-6 px-2.5' : 'h-8.5 px-3.5';
   const textClass = size === 'sm' ? 'text-meta' : 'text-xs';
 
   return (

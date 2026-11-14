@@ -10,6 +10,16 @@ import { renderMecenasUpgradeEmailHtml, MecenasUpgradeEmailOptions } from "./mec
 import { renderMembershipCanceledEmailHtml, MembershipCanceledEmailOptions } from "./membershipCanceled";
 import { renderMembershipSwitchAnnualEmailHtml, MembershipSwitchAnnualEmailOptions } from "./membershipSwitchAnnual";
 import { renderMembershipSwitchMonthlyEmailHtml, MembershipSwitchMonthlyEmailOptions } from "./membershipSwitchMonthly";
+import {
+  getIntroSessionEmailSubject,
+  renderIntroSessionEmailHtml,
+  type IntroSessionEmailOptions,
+} from "./introSession";
+import {
+  renderSpecialistApprovedEmailHtml,
+  SPECIALIST_APPROVED_EMAIL_SUBJECT,
+  type SpecialistApprovedEmailOptions,
+} from "./specialistApproved";
 
 function isSesConfigured() {
   if (process.env.NODE_ENV === "production") {
@@ -447,6 +457,24 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
     textBody,
     actionName: "Email de Bienvenida Gratuito",
     checkDuplicateSubject: "bienvenida a LUMINUS",
+  });
+}
+
+export async function sendSpecialistApprovedEmail(
+  email: string,
+  options: SpecialistApprovedEmailOptions = {}
+) {
+  const name = options.name?.trim() || "Especialista";
+  const subject = SPECIALIST_APPROVED_EMAIL_SUBJECT;
+  const htmlBody = renderSpecialistApprovedEmailHtml(options);
+  const textBody = `Hola ${name}, tu postulación fue aprobada y nos alegra darte la bienvenida a la Red de Especialistas LUMINUS. Ya puedes revisar tu perfil en https://app.luminuslatam.com/perfil-usuario`;
+  return sendStandardTransactionalEmail({
+    email,
+    subject,
+    htmlBody,
+    textBody,
+    actionName: "Aprobación de Especialista",
+    checkDuplicateSubject: SPECIALIST_APPROVED_EMAIL_SUBJECT,
   });
 }
 
@@ -1310,3 +1338,109 @@ export async function sendRegistrationErrorAlertEmail(data: {
   }
 }
 
+
+export async function sendIntroSessionEmail(
+  toEmail: string,
+  options: IntroSessionEmailOptions
+) {
+  if (!toEmail?.trim()) {
+    return { success: false, error: "Missing recipient email" };
+  }
+
+  const startTime = new Date().toISOString();
+  const rawFrom =
+    process.env.NOTIFICATION_FROM_EMAIL ||
+    process.env.SES_FROM_EMAIL ||
+    "notificaciones@luminuslatam.com";
+  const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM");
+  const subject = getIntroSessionEmailSubject(options);
+  const htmlBody = renderIntroSessionEmailHtml(options);
+  const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
+  const configurationSet =
+    process.env.SES_CONFIGURATION_NOTIFICACIONES || "luminus-notificaciones";
+
+  writeLocalEmailPreview(toEmail, subject, htmlBody);
+
+  const baseMetadata: any = {
+    sender: fromEmail,
+    region,
+    configurationSet,
+    recipients: [toEmail],
+    variant: options.variant,
+    timeline: [
+      { step: "Solicitud de envío recibida", timestamp: startTime, success: true },
+      {
+        step: "Plantilla HTML renderizada",
+        timestamp: new Date().toISOString(),
+        details: `${Math.round(htmlBody.length / 1024)} KB`,
+        success: true,
+      },
+    ],
+  };
+
+  if (!isSesConfigured()) {
+    const endTime = new Date().toISOString();
+    baseMetadata.rawLog = buildRawLog({
+      action: `Sesión Introductoria (${options.variant})`,
+      recipient: toEmail,
+      sender: fromEmail,
+      subject,
+      region,
+      configurationSet,
+      status: "LOCAL_PREVIEW",
+      startTime,
+      endTime,
+    });
+    await logSentEmail(toEmail, subject, htmlBody, {
+      status: "LOCAL_PREVIEW",
+      metadata: baseMetadata,
+    });
+    return { success: true, mode: "local-preview" };
+  }
+
+  const sesClient = getSesV2Client();
+  const command = new SendEmailCommand({
+    FromEmailAddress: fromEmail,
+    Destination: { ToAddresses: [toEmail] },
+    Content: {
+      Simple: {
+        Subject: { Data: subject, Charset: "UTF-8" },
+        Body: {
+          Html: { Data: htmlBody, Charset: "UTF-8" },
+        },
+      },
+    },
+    ...(configurationSet && { ConfigurationSetName: configurationSet }),
+  });
+
+  try {
+    const response = await sesClient.send(command);
+    const endTime = new Date().toISOString();
+    baseMetadata.rawLog = buildRawLog({
+      action: `Sesión Introductoria (${options.variant})`,
+      recipient: toEmail,
+      sender: fromEmail,
+      subject,
+      region,
+      configurationSet,
+      status: "SUCCESS",
+      messageId: response.MessageId || null,
+      startTime,
+      endTime,
+    });
+    await logSentEmail(toEmail, subject, htmlBody, {
+      status: "SUCCESS",
+      messageId: response.MessageId || null,
+      metadata: baseMetadata,
+    });
+    return { success: true, messageId: response.MessageId };
+  } catch (error: any) {
+    console.error("[SES ERROR] Failed to send intro session email:", error);
+    await logSentEmail(toEmail, subject, htmlBody, {
+      status: "FAILED",
+      errorDetails: error?.message || String(error),
+      metadata: baseMetadata,
+    });
+    return { success: false, error: error?.message };
+  }
+}

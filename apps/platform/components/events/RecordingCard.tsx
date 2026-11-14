@@ -2,6 +2,7 @@
 
 import React from "react";
 import { PlayCircle } from "lucide-react";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 export interface RecordingItem {
   id?: string;
@@ -168,6 +169,31 @@ export function RecordingCard({ recording }: RecordingCardProps) {
             <span>Ver en YouTube</span>
             <PlayCircle className="w-4 h-4 text-slate-500 group-hover/link:text-slate-900 shrink-0 transition-colors" />
           </a>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+/**
+ * Co-located skeleton for RecordingCard.
+ * Matches exact h-[350px] sm:h-[370px] card height, 16:9 thumbnail, and footer border.
+ */
+export function RecordingCardSkeleton() {
+  return (
+    <article className="w-full h-[350px] sm:h-[370px] bg-white rounded-2xl border border-slate-200/90 overflow-hidden flex flex-col shadow-none">
+      <Skeleton className="w-full aspect-video rounded-none shrink-0" />
+      <div className="w-full flex-1 p-3.5 sm:p-4 flex flex-col justify-between items-start min-h-0">
+        <div className="w-full flex flex-col gap-2">
+          <Skeleton className="h-3 w-24 rounded-md" />
+          <div className="flex flex-col gap-1.5">
+            <Skeleton className="h-4 w-full rounded-md" />
+            <Skeleton className="h-4 w-3/4 rounded-md" />
+            <Skeleton className="h-3 w-28 rounded-md mt-0.5" />
+          </div>
+        </div>
+        <div className="w-full mt-auto pt-3 border-t border-slate-100 flex items-center justify-between">
+          <Skeleton className="h-4 w-28 rounded-md" />
         </div>
       </div>
     </article>

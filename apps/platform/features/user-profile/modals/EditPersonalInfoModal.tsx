@@ -195,58 +195,52 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
       isOpen={isOpen}
       onClose={onClose}
       title="Editar información personal"
-      maxWidth="720px"
+      maxWidth="540px"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} className="w-full md:flex-1">
+          <Button variant="secondary" onClick={onClose} className="w-full sm:flex-1">
             Cancelar
           </Button>
-          <Button variant="primary" onClick={handleSubmit} className="w-full md:flex-1">
+          <Button variant="primary" onClick={handleSubmit} className="w-full sm:flex-1">
             Guardar cambios
           </Button>
         </>
       }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 md:gap-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-3.5 md:gap-y-5">
-          <div className="flex flex-col gap-1.5 md:gap-2">
-            <label className="text-label text-[11px] md:text-xs ml-1">Nombre</label>
-            <InputField
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleChange}
-              placeholder="Ingresa tu nombre"
-              error={firstNameError}
-              variant="bordered"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5 md:gap-2">
-            <label className="text-label text-[11px] md:text-xs ml-1">Apellido</label>
-            <InputField
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleChange}
-              placeholder="Ingresa tu apellido"
-              error={lastNameError}
-              variant="bordered"
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1.5 md:gap-2">
-          <label className="text-label text-[11px] md:text-xs ml-1">Profesión</label>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <InputField
-            ref={professionRef}
-            name="profession"
-            value={formData.profession}
+            label="Nombre"
+            name="first_name"
+            value={formData.first_name}
             onChange={handleChange}
-            placeholder="Ingresa tu profesión"
+            placeholder="Ingresa tu nombre"
+            error={firstNameError}
             variant="bordered"
-            autoFocus={initialFocusField === 'profession'}
+          />
+          <InputField
+            label="Apellido"
+            name="last_name"
+            value={formData.last_name}
+            onChange={handleChange}
+            placeholder="Ingresa tu apellido"
+            error={lastNameError}
+            variant="bordered"
           />
         </div>
 
-        <div>
+        <InputField
+          ref={professionRef}
+          label="Profesión"
+          name="profession"
+          value={formData.profession}
+          onChange={handleChange}
+          placeholder="Ingresa tu profesión"
+          variant="bordered"
+          autoFocus={initialFocusField === 'profession'}
+        />
+
+        <div className="flex flex-col gap-1">
           <LocationInput
             ref={cityRef}
             label="Ciudad"
@@ -257,13 +251,13 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
               setLocationError("");
             }}
             autoFocus={initialFocusField === 'city'}
-            className={locationError ? '[&_input]:!border-red-500 [&_input]:!ring-1 [&_input]:!ring-red-500' : ''}
+            className={locationError ? '[&_input]:!border-rose-500 [&_input]:!ring-1 [&_input]:!ring-rose-500' : ''}
           />
-          {locationError && <p className="text-red-500 text-[12px] font-bold mt-1 ml-1">{locationError}</p>}
+          {locationError && <p className="text-xs font-medium text-rose-600 mt-0.5 px-0.5">{locationError}</p>}
         </div>
 
-        <div className="flex flex-col gap-1.5 md:gap-2">
-          <label className="text-label text-[11px] md:text-xs ml-1">Fecha de nacimiento</label>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-label">Fecha de nacimiento</label>
           <div className="grid grid-cols-3 gap-2 sm:gap-3" ref={dayRef}>
             <SelectInput
               value={birthDay}
@@ -293,7 +287,7 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
               }}
             />
           </div>
-          {dateError && <p className="text-red-500 text-[12px] font-bold mt-0.5 ml-1">{dateError}</p>}
+          {dateError && <p className="text-xs font-medium text-rose-600 mt-0.5 px-0.5">{dateError}</p>}
         </div>
       </form>
     </Modal>
