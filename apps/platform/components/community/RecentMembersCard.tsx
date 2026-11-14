@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CardHeader } from "@/components/ui/CardHeader";
 import { ListItemRow } from "@/components/ui/ListItemRow";
 import { Button } from "@/components/ui/Button";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { formatLocationDisplay } from "@/utils/locationUtils";
 
 interface RecentMembersCardProps {
@@ -37,11 +38,11 @@ export function RecentMembersCard({ members, loading, onViewAllMembers }: Recent
       {loading && members.length === 0 ? (
         <div className="flex flex-col gap-3 py-1">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center gap-3 animate-pulse p-2">
-              <div className="w-10 h-10 rounded-xl bg-slate-100 shrink-0" />
+            <div key={i} className="flex items-center gap-3 p-2">
+              <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
               <div className="flex-1 flex flex-col gap-1.5">
-                <div className="w-24 h-3 bg-slate-100 rounded" />
-                <div className="w-16 h-2.5 bg-slate-100 rounded" />
+                <Skeleton className="w-24 h-3 rounded-md" />
+                <Skeleton className="w-16 h-2.5 rounded-md" />
               </div>
             </div>
           ))}

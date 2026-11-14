@@ -7,6 +7,7 @@ import { InterestPill } from "@/components/ui/InterestPill";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { CommunityReportModal } from "./CommunityReportModal";
 import { EditPostModal } from "./EditPostModal";
 import { formatLocationDisplay } from "@/utils/locationUtils";
@@ -693,6 +694,41 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
         targetId={reportTarget.id}
         authorName={reportTarget.author}
       />
+    </article>
+  );
+}
+
+/**
+ * Co-located low-detail skeleton for PostCard.
+ * Omits speculative media placeholders so text-only posts do not suffer vertical layout collapse.
+ */
+export function PostCardSkeleton() {
+  return (
+    <article className="bg-white rounded-2xl border border-slate-200/90 flex flex-col shadow-none overflow-hidden">
+      <div className="px-4 pt-3.5 pb-2.5 sm:px-5 sm:pt-4 sm:pb-3 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0">
+          <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
+          <div className="flex flex-col gap-1.5 min-w-0">
+            <Skeleton className="h-4 w-32 rounded-md" />
+            <Skeleton className="h-3 w-20 rounded-md" />
+          </div>
+        </div>
+        <Skeleton className="w-8 h-8 rounded-lg shrink-0" />
+      </div>
+
+      <div className="px-4 py-3 sm:px-5 space-y-2.5">
+        <Skeleton className="h-4 w-3/4 rounded-md" />
+        <Skeleton className="h-3.5 w-full rounded-md" />
+        <Skeleton className="h-3.5 w-2/3 rounded-md" />
+      </div>
+
+      <div className="px-4 py-3 sm:px-5 border-t border-slate-100 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-8 w-16 rounded-xl" />
+          <Skeleton className="h-8 w-16 rounded-xl" />
+        </div>
+        <Skeleton className="h-8 w-8 rounded-xl" />
+      </div>
     </article>
   );
 }

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { InputField } from "@/components/ui/InputField";
 import { INTEREST_CATEGORIES } from "@/utils/constants";
 import {
   getCategoryTextClass,
@@ -82,10 +83,10 @@ export function EditInterestsModal({
           const customColor = category.color || undefined;
 
           return (
-            <div key={categoryTitle} className="flex flex-col gap-2.5 md:gap-4">
+            <div key={categoryTitle} className="flex flex-col gap-3">
               <h3
                 style={customColor ? { color: customColor } : undefined}
-                className={`flex items-center gap-1.5 md:gap-2 text-[13px] md:text-[15px] font-bold ${textClass}`}
+                className={`flex items-center gap-2 text-title-section font-bold ${textClass}`}
               >
                 {renderCategoryIconByKey(category.icon, categoryTitle, "w-4 h-4 shrink-0")}
                 <span>{categoryTitle}</span>
@@ -98,10 +99,10 @@ export function EditInterestsModal({
                       key={item}
                       type="button"
                       onClick={() => toggleInterest(item)}
-                      className={`h-8 md:h-9 px-3.5 md:px-4 rounded-full text-[12px] md:text-[13px] font-medium transition-all duration-200 border cursor-pointer ${
+                      className={`h-8.5 px-3.5 rounded-full text-xs font-medium font-sans transition-all duration-150 border cursor-pointer ${
                         isSelected
                           ? "bg-slate-900 border-slate-900 text-white"
-                          : "bg-white border-slate-200 text-slate-900 hover:border-slate-300"
+                          : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
                       }`}
                     >
                       {item}
@@ -113,17 +114,16 @@ export function EditInterestsModal({
           );
         })}
 
-        <div className="flex flex-col gap-2.5 md:gap-4 w-full mt-2">
-          <h3 className="flex items-center gap-1.5 md:gap-2 text-slate-700 text-[13px] md:text-[15px] font-bold">
+        <div className="flex flex-col gap-2.5 w-full mt-1">
+          <h3 className="flex items-center gap-2 text-title-section text-slate-700 font-bold">
             <Sparkles className="w-4 h-4 text-slate-400 shrink-0" />
             <span>¿Algo más que te interese?</span>
           </h3>
-          <input
+          <InputField
             type="text"
             value={other}
             onChange={(e) => setOther(e.target.value)}
             placeholder="Escribe otros temas aquí..."
-            className="input-text-field"
           />
         </div>
       </div>

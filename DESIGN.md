@@ -243,6 +243,18 @@ To eliminate fragmentation between the Navbar, Feed, Member Directory, and Setti
 
 Molecules are standardized combinations of atoms designed **only for patterns that repeat across 3 or more screens**. Never create one-off molecules for single-use features.
 
+### 4.0 Back Button (`<BackButton />`) & Single-Line Page Header (`<PageHeader />`)
+* **Paths**: `@/components/ui/Button.tsx` (`BackButton`) and `@/components/ui/PageHeader.tsx` (`PageHeader`)
+* **Repeated In**: `perfil-usuario/configuracion`, `red/page.tsx`, `inicio/miembros`, `mensajes/page.tsx`, `notificaciones/page.tsx`, `actividades/[slug]`, and `inicio/public-profile` (mobile cover overlay).
+* **Anatomy & Tokens**:
+  * **`<BackButton />` Atom**: `w-10 h-10 shrink-0 flex items-center justify-center rounded-xl` with Lucide `<ArrowLeft className="w-5 h-5" />`.
+    * `variant="default"`: `bg-white border border-slate-200/90 hover:bg-slate-50 text-slate-500 hover:text-slate-900` (standard surfaces).
+    * `variant="translucent"`: `bg-white/75 backdrop-blur-md border border-white/60 hover:bg-white/90 text-slate-700 hover:text-slate-900` (mobile cover banner overlays).
+  * **`<PageHeader />` Molecule**: Strictly a **single-line** horizontal header (`flex items-center justify-between gap-3`) without subtitles:
+    ```tsx
+    <PageHeader title="Mi red" showBack backFallbackHref="/inicio" />
+    ```
+
 ### 4.1 List Item Row (`<ListItemRow />`)
 * **Path**: `@/components/ui/ListItemRow.tsx`
 * **Repeated In**: `RecentMembersCard` (Inicio), `red/page.tsx` (My Network), `mensajes/page.tsx` (Chat threads), `notificaciones/page.tsx` (Notification items), and `inicio/miembros` (Directory).
@@ -365,3 +377,9 @@ Molecules are standardized combinations of atoms designed **only for patterns th
 4. **NO Palette Drift**: Do not introduce `zinc-*`, `gray-*`, `indigo-*`, or raw hex codes into component files. All neutrals are `slate-*`.
 5. **NO duplicated button styles**: Do not create separate "pill buttons", "square buttons", or "custom profile buttons". Use `<Button variant="..." size="...">`.
 6. **NO Full-Screen Blocking Spinners**: Never use circular spinners or spinners centered on blank screens (`DotSpinner`) as page-level loading states. Every screen and route must provide a layout-matching `<...Skeleton />` in `loading.tsx` and `Suspense` fallbacks. Spinners are reserved exclusively for micro-states inside action buttons while submitting.
+
+### 4.6 Profile Section & Tab Primitives (`<ProfileSectionCard />`, `<UnderlineTabs />`)
+* **Paths**: `@/components/ui/ProfileSectionCard.tsx`, `@/components/ui/UnderlineTabs.tsx`
+* **`<ProfileSectionCard />`**: Canonical wrapper for all profile content blocks (Member & Specialist). Enforces `bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-none`, `text-title-section` header, `text-meta` subtitle/count, and top-right `<Edit3 />` button in owner mode.
+* **Public Empty-State Law**: When `isPublic={true}` and `isEmpty={true}`, `<ProfileSectionCard />` MUST return `null`. Never render empty placeholder divs or generic filler cards ("Comunidad LUMINUS") on public profiles. When `isPublic={false}` and `isEmpty={true}`, it renders `<EmptyProfileButton />` with `emptyLabel`.
+* **`<UnderlineTabs />`**: Canonical underline tab bar (`role="tablist"`, `border-b border-slate-200/80`, `pb-3`, active `after:h-0.5 after:bg-slate-900`). Never use button-styled pill tabs for primary view switching on profiles.

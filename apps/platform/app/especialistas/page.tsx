@@ -6,11 +6,10 @@ import { Check } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DirectoryToolbar, DirectoryTagPopover } from "@/components/ui/DirectoryToolbar";
 import { SearchSuggestion } from "@/components/ui/SearchBar";
-import { UserCard } from "@/components/ui/UserCard";
+import { UserCard, UserCardSkeleton } from "@/components/ui/UserCard";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
-import { DirectoryGridSkeleton } from "@/components/ui/Skeleton";
 
 type Specialist = {
   id: string;
@@ -268,8 +267,6 @@ export default function EspecialistasPage() {
     return chips;
   }, [appliedQuery, appliedFilters]);
 
-  if (loading) return <DirectoryGridSkeleton count={10} />;
-
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-5 px-4 pb-12 pt-4 font-sans sm:px-6 md:gap-6 md:py-6">
       {/* 1. Standardized In-App Page Header */}
@@ -484,7 +481,13 @@ export default function EspecialistasPage() {
       </DirectoryToolbar>
 
       {/* 4. Directory Grid or Empty/Error State */}
-      {error ? (
+      {loading && visibleSpecialists.length === 0 ? (
+        <section className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+          {[...Array(10)].map((_, i) => (
+            <UserCardSkeleton key={i} />
+          ))}
+        </section>
+      ) : error ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-700">
           {error}
         </div>

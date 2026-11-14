@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Clock, MapPin, Share2, Check, Loader2, TvMinimalPlay } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { Button, BackButton } from "@/components/ui/Button";
 import { Toast, ToastProps } from "@/components/ui/Toast";
 
 export interface DetailEventItem {
@@ -361,9 +361,7 @@ export function ActividadDetailView({ event }: { event: DetailEventItem }) {
 
       {/* Back button */}
       <div>
-        <Button variant="back" onClick={() => router.push("/actividades")}>
-          Volver
-        </Button>
+        <BackButton href="/actividades" title="Volver a Actividades" />
       </div>
 
       {/* MOBILE LAYOUT (lg:hidden) */}

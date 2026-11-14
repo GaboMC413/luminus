@@ -30,6 +30,10 @@ This repository has the following specialized skills installed under [`skills/`]
   * `/ponytail-debt`: Ledger of shortcuts and deferred items.
 
 
+### Design System & Anti-Drift Guardrails
+* **Canonical Reference**: [DESIGN.md](./DESIGN.md) and [`.agents/rules/design-system.md`](./.agents/rules/design-system.md).
+* **Automated Check**: Run `npm --prefix apps/platform run lint:design` after modifying profile or shared UI components.
+
 <!-- BEGIN AWS Agent Toolkit rules -->
 # AWS Guidance
 

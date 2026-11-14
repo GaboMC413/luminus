@@ -44,6 +44,9 @@ function serializeNotification(notification: any) {
   } else if (notification.type === "connection_request" || notification.type === "network_add") {
     title = "Nueva conexión";
     body = "te sumó a su red.";
+  } else if (String(notification.type).startsWith("session_")) {
+    title = notification.title || title;
+    body = notification.body || body;
   } else {
     // If long paragraph, take the first sentence
     const firstSentence = body.split(/[.!?]\s+/)[0];

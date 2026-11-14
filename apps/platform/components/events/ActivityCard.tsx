@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Check, ArrowRight } from "lucide-react";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 export interface ActivityEventItem {
   id: string;
@@ -142,6 +143,32 @@ export function ActivityCard({ event }: ActivityCardProps) {
           unoptimized
         />
       </Link>
+    </article>
+  );
+}
+
+/**
+ * Co-located skeleton for ActivityCard.
+ * Matches exact responsive order (media top on mobile, right on desktop) and 16:9 media dimensions.
+ */
+export function ActivityCardSkeleton() {
+  return (
+    <article className="w-full bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-none flex flex-col md:flex-row md:items-center">
+      <div className="flex-1 min-w-0 flex flex-col justify-between gap-4 p-5 sm:p-6 lg:p-7 order-last md:order-first">
+        <div className="flex flex-wrap items-center gap-3">
+          <Skeleton className="h-5 w-20 rounded-md" />
+          <Skeleton className="h-6 w-28 rounded-full" />
+        </div>
+        <div className="flex flex-col gap-2 py-1">
+          <Skeleton className="h-7 w-3/4 rounded-md" />
+          <Skeleton className="h-4 w-40 rounded-md" />
+          <Skeleton className="h-4 w-full rounded-md mt-1" />
+        </div>
+        <div className="flex justify-start pt-1">
+          <Skeleton className="w-full sm:w-36 h-11 rounded-xl" />
+        </div>
+      </div>
+      <Skeleton className="w-full md:w-[420px] lg:w-[480px] xl:w-[500px] shrink-0 aspect-video rounded-none order-first md:order-last" />
     </article>
   );
 }

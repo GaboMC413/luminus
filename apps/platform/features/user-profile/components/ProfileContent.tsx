@@ -2,10 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/Button";
 import { Toast } from "@/components/ui/Toast";
-import { Modal } from "@/components/ui/Modal";
-import { Copy, Check } from "lucide-react";
 import { PhotoEditor } from "@/components/ui/PhotoEditor";
 import { Prompt } from "./ProfilePrompts";
 
@@ -15,6 +12,11 @@ import { EditAboutModal } from "../modals/EditAboutModal";
 import { EditInterestsModal } from "../modals/EditInterestsModal";
 import { EditPromptsModal } from "../modals/EditPromptsModal";
 import { CoverSelectorModal } from "../modals/CoverSelectorModal";
+import { ShareProfileModal } from "../modals/ShareProfileModal";
+import { EditSpecialistPracticeModal, type SpecialistPracticeFormData } from "../modals/EditSpecialistPracticeModal";
+import { EditSpecialistSpacesModal, type SpecialistSpaceItem } from "../modals/EditSpecialistSpacesModal";
+import { EditSpecialistCoursesModal, type SpecialistCourseItem } from "../modals/EditSpecialistCoursesModal";
+import { EditSpecialistAvailabilityModal, type AvailabilitySlotInput } from "../modals/EditSpecialistAvailabilityModal";
 
 // Sub-components
 import { ProfileHeroHeader } from "./ProfileHeroHeader";
@@ -84,9 +86,13 @@ export function ProfileContent() {
   const [showEditPrompts, setShowEditPrompts] = useState(false);
   const [promptsStep, setPromptsStep] = useState<'list' | 'select'>('list');
 
+  const [showEditSpecialistPractice, setShowEditSpecialistPractice] = useState(false);
+  const [showEditSpecialistSpaces, setShowEditSpecialistSpaces] = useState(false);
+  const [showEditSpecialistCourses, setShowEditSpecialistCourses] = useState(false);
+  const [showEditSpecialistAvailability, setShowEditSpecialistAvailability] = useState(false);
+
   // Share modal state
   const [isShareOpen, setIsShareOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   // Toast feedback state
   const [toast, setToast] = useState<{ isOpen: boolean; title: string; message?: string; type: "success" | "error" }>({
@@ -274,6 +280,27 @@ export function ProfileContent() {
     }
   };
 
+  const handleSaveSpecialist = async (payload: Record<string, unknown>, message: string) => {
+    try {
+      await patchProfile({ specialistProfile: payload });
+      setToast({
+        isOpen: true,
+        title: "Perfil profesional actualizado",
+        message,
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Error saving specialist profile:", error);
+      setToast({
+        isOpen: true,
+        title: "Error",
+        message: "No pudimos guardar tu perfil profesional. Intenta nuevamente.",
+        type: "error",
+      });
+      throw error;
+    }
+  };
+
   const handleOpenEditPersonal = (field?: string) => {
     setFocusedField(field || null);
     setShowEditPersonal(true);
@@ -348,15 +375,6 @@ export function ProfileContent() {
     setShowEditPrompts(true);
   };
 
-  const handleCopyLink = () => {
-    if (typeof window !== "undefined") {
-      const publicUrl = `${window.location.origin}/inicio/public-profile?id=${profile?.id || ""}`;
-      navigator.clipboard.writeText(publicUrl);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  };
-
   if (loading) {
     return <ProfileSkeleton />;
   }
@@ -382,6 +400,10 @@ export function ProfileContent() {
           onEditBio={() => setShowEditAbout(true)}
           onEditInterests={() => setShowEditInterests(true)}
           onEditPrompts={handleOpenPrompts}
+          onEditSpecialistPractice={() => setShowEditSpecialistPractice(true)}
+          onEditSpecialistSpaces={() => setShowEditSpecialistSpaces(true)}
+          onEditSpecialistCourses={() => setShowEditSpecialistCourses(true)}
+          onEditSpecialistAvailability={() => setShowEditSpecialistAvailability(true)}
           onShareProfile={() => setIsShareOpen(true)}
           membershipCard={
             <ProfileMembershipCard
@@ -409,9 +431,9 @@ export function ProfileContent() {
 
           {/* Balanced 8:4 Grid Content for Member */}
           <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 mt-5 lg:mt-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-5 lg:gap-6 mt-3.5 sm:mt-5 lg:mt-6 items-start">
               {/* MAIN COLUMN (lg:col-span-8) */}
-              <div className="lg:col-span-8 flex flex-col gap-5">
+              <div className="lg:col-span-8 flex flex-col gap-3.5 sm:gap-5">
                 <ProfileAboutSection
                   bio={profile.bio}
                   onEdit={() => setShowEditAbout(true)}
@@ -430,7 +452,7 @@ export function ProfileContent() {
               </div>
 
               {/* SIDEBAR COLUMN (lg:col-span-4) */}
-              <div className="lg:col-span-4 flex flex-col gap-5">
+              <div className="lg:col-span-4 flex flex-col gap-3.5 sm:gap-5">
                 <ProfileInterestsSection
                   interests={profile.interests}
                   otherInterests={profile.other_interests}
@@ -452,7 +474,7 @@ export function ProfileContent() {
                   <button
                     type="button"
                     onClick={handleSignOut}
-                    className="group flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-red-600 transition-colors bg-transparent border-none outline-none cursor-pointer"
+                    className="group flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-rose-600 transition-colors bg-transparent border-none outline-none cursor-pointer"
                   >
                     <span>Cerrar sesión</span>
                   </button>
@@ -555,35 +577,70 @@ export function ProfileContent() {
         />
       )}
 
-      {/* Share Profile Modal */}
-      <Modal
+      {profile.specialistProfile && (
+        <>
+          <EditSpecialistPracticeModal
+            isOpen={showEditSpecialistPractice}
+            onClose={() => setShowEditSpecialistPractice(false)}
+            initialData={{
+              specialty: profile.specialistProfile.specialty ?? "",
+              title: profile.specialistProfile.title ?? "",
+              selectedAreas: Array.isArray(profile.specialistProfile.selectedAreas)
+                ? profile.specialistProfile.selectedAreas
+                : [],
+              bio: profile.specialistProfile.bio ?? "",
+              institution: profile.specialistProfile.institution ?? "",
+              instagramUrl: profile.specialistProfile.instagramUrl ?? "",
+              linkedinUrl: profile.specialistProfile.linkedinUrl ?? "",
+              websiteUrl: profile.specialistProfile.websiteUrl ?? "",
+            }}
+            onSave={(data: SpecialistPracticeFormData) =>
+              handleSaveSpecialist(data as unknown as Record<string, unknown>, "Especialidad y práctica actualizadas.")
+            }
+          />
+
+          <EditSpecialistSpacesModal
+            isOpen={showEditSpecialistSpaces}
+            onClose={() => setShowEditSpecialistSpaces(false)}
+            initialSpaces={(profile.specialistProfile.spaces || []) as SpecialistSpaceItem[]}
+            onSave={(spaces: SpecialistSpaceItem[]) =>
+              handleSaveSpecialist({ spaces }, "Espacios de atención actualizados.")
+            }
+          />
+
+          <EditSpecialistCoursesModal
+            isOpen={showEditSpecialistCourses}
+            onClose={() => setShowEditSpecialistCourses(false)}
+            initialCourses={(profile.specialistProfile.courses || []) as SpecialistCourseItem[]}
+            onSave={(courses: SpecialistCourseItem[]) =>
+              handleSaveSpecialist({ courses }, "Cursos y talleres actualizados.")
+            }
+          />
+
+          <EditSpecialistAvailabilityModal
+            isOpen={showEditSpecialistAvailability}
+            onClose={() => setShowEditSpecialistAvailability(false)}
+            initialSlots={(
+              profile.specialistProfile.spaces?.flatMap((sp: any) => sp.availability || []) || []
+            ) as AvailabilitySlotInput[]}
+            onSave={(availability: AvailabilitySlotInput[]) =>
+              handleSaveSpecialist({ availability }, "Disponibilidad de sesión introductoria actualizada.")
+            }
+          />
+        </>
+      )}
+
+      <ShareProfileModal
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
-        title="Compartir perfil"
-        maxWidth="420px"
-      >
-        <div className="flex flex-col gap-4 font-sans pt-1">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              readOnly
-              value={typeof window !== "undefined" ? `${window.location.origin}/inicio/public-profile?id=${profile?.id || ""}` : ""}
-              className="flex-1 h-11 bg-slate-50 border border-slate-200 rounded-xl px-3.5 text-xs text-slate-600 outline-none select-all font-sans"
-            />
-            <Button
-              onClick={handleCopyLink}
-              variant={copied ? "primary" : "secondary"}
-              className="gap-1.5 text-xs shrink-0"
-            >
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-              <span>{copied ? "Copiado" : "Copiar"}</span>
-            </Button>
-          </div>
-          <p className="text-[12px] text-slate-400 leading-normal">
-            Copia este enlace para que otros miembros puedan ver tu perfil en la comunidad.
-          </p>
-        </div>
-      </Modal>
+        shareUrl={
+          typeof window !== "undefined"
+            ? `${window.location.origin}/inicio/public-profile?id=${profile?.id || ""}`
+            : ""
+        }
+        includeWhatsApp={false}
+        helperText="Copia este enlace para que otros miembros puedan ver tu perfil en la comunidad."
+      />
 
       {/* Toast Notification */}
       <Toast

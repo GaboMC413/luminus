@@ -1,4 +1,8 @@
+"use client";
+
 import React from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   Camera,
@@ -79,21 +83,11 @@ export function Button({ variant = 'primary', size, fullWidth, children, classNa
 
   if (variant === 'back') {
     return (
-      <button
-        type="button"
-        className={`group inline-flex items-center gap-2 text-sm font-semibold font-jakarta text-slate-600 hover:text-slate-900 transition-colors outline-none cursor-pointer bg-transparent border-none p-0 w-fit select-none ${className}`}
-        onClick={(e) => {
-          if (props.onClick) {
-            props.onClick(e);
-          } else if (typeof window !== 'undefined') {
-            window.history.back();
-          }
-        }}
-        {...props}
-      >
-        <ArrowLeft className="w-4 h-4 shrink-0 transition-transform duration-150 group-hover:-translate-x-0.5" />
-        <span>{children || 'Volver'}</span>
-      </button>
+      <BackButton
+        onClick={props.onClick as (() => void) | undefined}
+        title={typeof children === 'string' ? children : props.title || 'Volver'}
+        className={className}
+      />
     );
   }
 
@@ -103,6 +97,66 @@ export function Button({ variant = 'primary', size, fullWidth, children, classNa
   return (
     <button className={`${baseStyles} ${variants[variant as keyof typeof variants] || variants.primary} ${sizeClass} ${widthClass} ${className}`} {...props}>
       {children}
+    </button>
+  );
+}
+
+export interface BackButtonProps {
+  href?: string;
+  onClick?: () => void;
+  fallbackHref?: string;
+  title?: string;
+  variant?: 'default' | 'translucent';
+  className?: string;
+}
+
+/**
+ * Canonical Back Arrow Atom (`w-10 h-10 rounded-xl` + Lucide `ArrowLeft w-5 h-5`).
+ * Derived from Account Settings (`Configuración`) as the single platform standard.
+ */
+export function BackButton({
+  href,
+  onClick,
+  fallbackHref = '/inicio',
+  title = 'Volver',
+  variant = 'default',
+  className = '',
+}: BackButtonProps) {
+  const router = useRouter();
+  const surfaceClass =
+    variant === 'translucent'
+      ? 'bg-white/75 backdrop-blur-md border border-white/60 hover:bg-white/90 text-slate-700 hover:text-slate-900'
+      : 'bg-white border border-slate-200/90 hover:bg-slate-50 text-slate-500 hover:text-slate-900';
+
+  const baseClass = `w-10 h-10 shrink-0 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-[0.98] shadow-none cursor-pointer select-none ${surfaceClass} ${className}`;
+
+  if (href) {
+    return (
+      <Link href={href} className={baseClass} title={title} aria-label={title}>
+        <ArrowLeft className="w-5 h-5" />
+      </Link>
+    );
+  }
+
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    } else if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(fallbackHref);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={baseClass}
+      title={title}
+      aria-label={title}
+    >
+      <ArrowLeft className="w-5 h-5" />
     </button>
   );
 }

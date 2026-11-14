@@ -14,6 +14,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
+    "lint:design": "vitest run features/user-profile/__tests__/design-system-guard.test.ts",
     "db:auto-accept-connections": "node scripts/auto-accept-pending-connections.cjs"
   },
   "dependencies": {

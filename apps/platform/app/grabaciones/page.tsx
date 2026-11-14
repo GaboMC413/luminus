@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { RecordingCard, RecordingItem } from "@/components/events/RecordingCard";
+import { RecordingCard, RecordingCardSkeleton, RecordingItem } from "@/components/events/RecordingCard";
 import {
   RecordingCategorySelector,
   RECORDING_CATEGORIES,
 } from "@/components/events/RecordingCategorySelector";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { RecordingsSkeleton } from "@/components/ui/Skeleton";
 
 function normalizeCategoryString(cat?: string | null): string {
   if (!cat) return "";
@@ -87,8 +86,6 @@ export default function GrabacionesPage() {
     });
   }, [recordings, selectedCategory]);
 
-  if (loading) return <RecordingsSkeleton />;
-
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 pb-12 pt-4 font-sans sm:px-6 md:gap-7 md:py-6">
       {/* 1. Standardized In-App Header */}
@@ -106,7 +103,13 @@ export default function GrabacionesPage() {
       </section>
 
       {/* 3. Recordings Grid / Empty States */}
-      {error ? (
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 py-1">
+          {[...Array(8)].map((_, i) => (
+            <RecordingCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : error ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-700">
           <p className="font-semibold mb-1">Hubo un problema al cargar las grabaciones</p>
           <p className="text-xs text-rose-600 mb-3">{error}</p>

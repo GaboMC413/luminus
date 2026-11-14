@@ -12,7 +12,7 @@ import { MobileMembersCarousel } from "@/components/community/MobileMembersCarou
 import { UpcomingEventsCarousel, EventItem as CommunityEventItem } from "@/components/community/UpcomingEventsCarousel";
 import { Button } from "@/components/ui/Button";
 import { CardHeader } from "@/components/ui/CardHeader";
-import { User, Users, UserCheck } from "lucide-react";
+import { User, GraphStar, UserRoundGroup } from "lucide-react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Toast } from "@/components/ui/Toast";
@@ -359,9 +359,7 @@ function PlatformContent() {
     }
   };
 
-  if (!currentUserProfile && loading) {
-    return <FeedSkeleton />;
-  }
+  const isProfileLoading = !currentUserProfile && loading;
 
   return (
     <div className="flex-1 w-full flex flex-col h-full overflow-visible">
@@ -404,24 +402,31 @@ function PlatformContent() {
 
             {/* Profile Details */}
             <div className="p-4 flex flex-col items-center text-center gap-3">
-              <div className="flex flex-col items-center gap-1 w-full">
-                <h3
-                  className="font-jakarta text-sm font-semibold text-slate-900 line-clamp-1 hover:text-slate-600 transition-colors cursor-pointer"
-                  onClick={() => router.push("/perfil-usuario")}
-                >
-                  {currentUserProfile
-                    ? `${currentUserProfile.first_name || ""} ${currentUserProfile.last_name || ""}`.trim() ||
-                    "Usuario sin nombre"
-                    : "Cargando..."}
-                </h3>
-                <p className="font-sans text-xs text-slate-500 font-medium truncate max-w-full">
-                  {formatLocationDisplay(
-                    currentUserProfile?.city && currentUserProfile?.country
-                      ? `${currentUserProfile.city}, ${currentUserProfile.country}`
-                      : currentUserProfile?.location || currentUserProfile?.city || currentUserProfile?.country
-                  ) || "Montevideo, Uruguay"}
-                </p>
-              </div>
+              {isProfileLoading ? (
+                <div className="flex flex-col items-center gap-1.5 w-full py-0.5">
+                  <Skeleton className="h-4 w-32 rounded-md" />
+                  <Skeleton className="h-3 w-24 rounded-md" />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-1 w-full">
+                  <h3
+                    className="font-jakarta text-sm font-semibold text-slate-900 line-clamp-1 hover:text-slate-600 transition-colors cursor-pointer"
+                    onClick={() => router.push("/perfil-usuario")}
+                  >
+                    {currentUserProfile
+                      ? `${currentUserProfile.first_name || ""} ${currentUserProfile.last_name || ""}`.trim() ||
+                      "Usuario sin nombre"
+                      : "Usuario"}
+                  </h3>
+                  <p className="font-sans text-xs text-slate-500 font-medium truncate max-w-full">
+                    {formatLocationDisplay(
+                      currentUserProfile?.city && currentUserProfile?.country
+                        ? `${currentUserProfile.city}, ${currentUserProfile.country}`
+                        : currentUserProfile?.location || currentUserProfile?.city || currentUserProfile?.country
+                    ) || "Montevideo, Uruguay"}
+                  </p>
+                </div>
+              )}
 
               <Button
                 variant="soft"
@@ -512,7 +517,7 @@ function PlatformContent() {
                 aria-label="Mi red"
                 className="w-11 h-11 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-700 transition-all cursor-pointer shadow-none active:scale-95"
               >
-                <Users className="w-4 h-4" />
+                <GraphStar className="w-4 h-4" />
               </button>
               <button
                 type="button"
@@ -521,7 +526,7 @@ function PlatformContent() {
                 aria-label="Miembros"
                 className="w-11 h-11 rounded-xl border border-slate-200/90 bg-white hover:bg-slate-50 flex items-center justify-center text-slate-700 transition-all cursor-pointer shadow-none active:scale-95"
               >
-                <UserCheck className="w-4 h-4" />
+                <UserRoundGroup className="w-4 h-4" />
               </button>
             </div>
           </div>

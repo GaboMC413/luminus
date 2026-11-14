@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ActivitiesSkeleton } from "@/components/ui/Skeleton";
-import { ActivityCard, ActivityEventItem } from "@/components/events/ActivityCard";
+import { ActivityCard, ActivityCardSkeleton, ActivityEventItem } from "@/components/events/ActivityCard";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 function parseCalendarDate(dateStr?: string | Date | null): Date | null {
   if (!dateStr) return null;
@@ -66,8 +66,6 @@ export default function ActividadesPage() {
     fetchEvents();
   }, []);
 
-  if (loading) return <ActivitiesSkeleton />;
-
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 pb-12 pt-4 font-sans sm:px-6 md:gap-7 md:py-6">
       {/* 1. Standardized In-App Header */}
@@ -77,7 +75,28 @@ export default function ActividadesPage() {
       />
 
       {/* 2. Main Content: Timeline */}
-      {error ? (
+      {loading ? (
+        <div className="w-full flex flex-col">
+          {[...Array(3)].map((_, index) => {
+            const isLast = index === 2;
+            return (
+              <div key={index} className="flex gap-4 sm:gap-6 md:gap-7 items-stretch">
+                <div className="w-6 shrink-0 flex flex-col items-center">
+                  <Skeleton className="w-3 h-3 rounded-full shrink-0 mt-1.5" />
+                  {!isLast && <div className="flex-1 w-[2px] bg-slate-200" />}
+                </div>
+                <div className={`flex-1 min-w-0 flex flex-col gap-3.5 ${isLast ? "pb-4" : "pb-10 sm:pb-12"}`}>
+                  <div className="flex items-baseline gap-2">
+                    <Skeleton className="h-5 w-16 rounded-md" />
+                    <Skeleton className="h-4 w-20 rounded-md" />
+                  </div>
+                  <ActivityCardSkeleton />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : error ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-700">
           {error}
         </div>

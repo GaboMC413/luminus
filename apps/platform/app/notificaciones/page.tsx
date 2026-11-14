@@ -2,6 +2,7 @@
 
 import React, { Suspense, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { formatRelativeTime } from "@/components/ui/PlatformNavbar";
 import { OnboardingProgressCard } from "@/components/ui/NotificationPopup";
 import { NotificationsSkeleton, Skeleton } from "@/components/ui/Skeleton";
@@ -170,7 +171,7 @@ function NotificationsContent() {
     if (activeFilter === "leidas") return !n.isUnread;
     if (activeFilter === "no_leidas") return n.isUnread;
     if (activeFilter === "especialistas") {
-      return String(n.type).includes("follow");
+      return String(n.type).includes("follow") || String(n.type).startsWith("session_");
     }
     if (activeFilter === "comunidad") {
       return (
@@ -183,6 +184,7 @@ function NotificationsContent() {
     if (activeFilter === "generales") {
       const isSpecOrComm =
         String(n.type).includes("follow") ||
+        String(n.type).startsWith("session_") ||
         String(n.type).includes("connect") ||
         String(n.type).includes("connection") ||
         n.type === "onboarding-progress";
@@ -197,16 +199,12 @@ function NotificationsContent() {
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden lg:overflow-visible">
           
           {/* Header */}
-          <div className="flex items-center gap-3 mb-4 md:mb-6 shrink-0">
-            <button
-              onClick={() => router.back()}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900 cursor-pointer"
-              title="Volver"
-            >
-              <span className="material-symbols-rounded text-[20px]">arrow_back</span>
-            </button>
-            <h1 className="text-xl md:text-2xl text-slate-900 font-semibold font-jakarta">Notificaciones</h1>
-          </div>
+          <PageHeader
+            title="Notificaciones"
+            showBack
+            backFallbackHref="/inicio"
+            className="mb-4 md:mb-6"
+          />
 
           {error && (
             <div className="mb-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 flex items-center justify-between shadow-none shrink-0">
@@ -444,6 +442,20 @@ function NotificationsContent() {
                                   Ver perfil
                                 </button>
                               )}
+                            </div>
+                          )}
+
+                          {String(n.type).startsWith("session_") && n.action_url && (
+                            <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push(n.action_url);
+                                }}
+                                className="h-8 px-4 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-xl transition duration-200 cursor-pointer border-none outline-none font-jakarta"
+                              >
+                                Ver sesión
+                              </button>
                             </div>
                           )}
                         </div>

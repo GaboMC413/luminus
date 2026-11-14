@@ -7,6 +7,7 @@ import {
   Home,
   HeartHandshake,
   CalendarHeart,
+  CalendarCheck,
   TvMinimalPlay,
   HouseHeart,
   MessageSquare,
@@ -684,6 +685,14 @@ export function PlatformNavbar() {
                   >
                     <User className="w-4 h-4 text-slate-400 group-hover:text-slate-900 transition-colors shrink-0" strokeWidth={2} />
                     <span>Ver mi perfil</span>
+                  </Link>
+                  <Link
+                    href="/sesiones"
+                    onClick={() => setIsProfileDropdownOpen(false)}
+                    className="group w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium font-jakarta text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                  >
+                    <CalendarCheck className="w-4 h-4 text-slate-400 group-hover:text-slate-900 transition-colors shrink-0" strokeWidth={2} />
+                    <span>Mis sesiones</span>
                   </Link>
                   <Link
                     href="/perfil-usuario/configuracion"
