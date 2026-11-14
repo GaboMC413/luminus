@@ -26,6 +26,51 @@ export async function GET(request: Request) {
       userEmail = user?.email || "";
     }
 
+    if (type === "inscriptions") {
+      if (!session?.userId || !userEmail) {
+        return NextResponse.json({ events: [], error: "No autorizado." }, { status: 401 });
+      }
+
+      const inscriptions = await prisma.eventInscription.findMany({
+        where: {
+          guest: {
+            email: userEmail.toLowerCase().trim(),
+          },
+        },
+        orderBy: [
+          { event: { date: "desc" } },
+          { createdAt: "desc" },
+        ],
+        select: {
+          event: {
+            select: {
+              id: true,
+              slug: true,
+              title: true,
+              description: true,
+              speakerName: true,
+              speakerBio: true,
+              category: true,
+              coverUrl: true,
+              date: true,
+              timeText: true,
+              location: true,
+              link: true,
+              youtubeId: true,
+              isUpcoming: true,
+            },
+          },
+        },
+      });
+
+      const inscribedEvents = inscriptions.map((item) => ({
+        ...item.event,
+        isRegistered: true,
+      }));
+
+      return NextResponse.json({ events: inscribedEvents });
+    }
+
     if (type === "past") {
       let pastEvents = await prisma.event.findMany({
         where: {
@@ -264,6 +309,78 @@ export async function POST(request: Request) {
     console.error("[Platform Inscribe Event Error]:", error);
     return NextResponse.json(
       { error: "Error al inscribirse al evento." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const session = await getCurrentSession();
+    if (!session?.userId) {
+      return NextResponse.json({ error: "No autorizado. Inicia sesión." }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { eventId } = body || {};
+
+    if (!eventId) {
+      return NextResponse.json({ error: "Falta el ID del evento." }, { status: 400 });
+    }
+
+    const [user, event] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: session.userId },
+        select: { email: true },
+      }),
+      prisma.event.findUnique({
+        where: { id: eventId },
+        select: { id: true, isUpcoming: true, date: true },
+      }),
+    ]);
+
+    if (!user?.email) {
+      return NextResponse.json({ error: "Usuario no encontrado." }, { status: 404 });
+    }
+
+    if (!event) {
+      return NextResponse.json({ error: "Evento no encontrado." }, { status: 404 });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const isPast = event.isUpcoming === false || (event.date !== null && event.date < today);
+
+    if (isPast) {
+      return NextResponse.json(
+        { error: "No se puede cancelar la inscripción de una actividad finalizada." },
+        { status: 400 }
+      );
+    }
+
+    const cleanEmail = user.email.toLowerCase().trim();
+    const guest = await prisma.eventGuest.findUnique({
+      where: { email: cleanEmail },
+      select: { id: true },
+    });
+
+    if (guest) {
+      await prisma.eventInscription.deleteMany({
+        where: {
+          eventId: event.id,
+          guestId: guest.id,
+        },
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Tu inscripción ha sido cancelada.",
+    });
+  } catch (error: any) {
+    console.error("[Platform Cancel Event Inscription Error]:", error);
+    return NextResponse.json(
+      { error: "Error al cancelar la inscripción." },
       { status: 500 }
     );
   }

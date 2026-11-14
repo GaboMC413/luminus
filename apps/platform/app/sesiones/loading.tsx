@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function SesionesLoading() {
   return (
-    <div className="w-full flex-1 flex flex-col bg-slate-50 min-h-screen">
+    <div className="w-full flex-1 flex flex-col bg-slate-50">
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6 flex flex-col gap-5">
         <div className="flex items-center gap-3">
           <Skeleton className="w-10 h-10 rounded-xl shrink-0" />

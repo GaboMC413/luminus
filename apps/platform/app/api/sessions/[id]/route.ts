@@ -178,17 +178,17 @@ export async function PATCH(
     const requesterName = formatUserDisplayName(introSession.requester);
     const requesterAvatar = introSession.requester?.profile?.avatarUrl || "";
 
+    const requesterFirstName = requesterName.split(/\s+/)[0] || requesterName;
+    const specialistFirstName = specialistName.split(/\s+/)[0] || specialistName;
+
     if (action === "accept") {
       const chatLines = [
-        `¡Confirmado! Acepté tu sesión introductoria de 15 min para el ${friendlyDate} a las ${introSession.startTime} (${introSession.timezone}).`,
-        `Enlace / acceso: ${resolvedMeetingLink}`,
+        `Hola ${requesterFirstName}, confirmé nuestra sesión introductoria para el ${friendlyDate} a las ${introSession.startTime} hs.`,
+        `Enlace de acceso: ${resolvedMeetingLink}`,
       ];
       if (specialistNote) {
-        chatLines.push(`Nota: "${specialistNote}"`);
+        chatLines.push(specialistNote);
       }
-      chatLines.push(
-        "Recuerda: es una charla inicial para conocernos; LUMINUS facilita la conexión pero no interviene en servicios profesionales posteriores."
-      );
 
       await Promise.allSettled([
         createSessionNotification({
@@ -198,7 +198,7 @@ export async function PATCH(
           title: "Sesión confirmada",
           actorName: specialistName,
           actorAvatarUrl: specialistAvatar,
-          body: `confirmó tu sesión introductoria del ${friendlyDate} a las ${introSession.startTime}.`,
+          body: "Confirmó tu sesión introductoria.",
           actionUrl: "/sesiones",
         }),
         sendSessionChatMessage({
@@ -236,8 +236,8 @@ export async function PATCH(
       ]);
     } else if (action === "decline") {
       const chatText = specialistNote
-        ? `No podré asistir a la sesión introductoria solicitada para el ${friendlyDate} a las ${introSession.startTime}. Nota: "${specialistNote}"`
-        : `No podré asistir a la sesión introductoria solicitada para el ${friendlyDate} a las ${introSession.startTime}. Puedes elegir otro horario disponible en mi perfil.`;
+        ? `Hola ${requesterFirstName}, no voy a poder tomar la sesión del ${friendlyDate} a las ${introSession.startTime} hs.\n\n${specialistNote}`
+        : `Hola ${requesterFirstName}, no voy a poder tomar la sesión del ${friendlyDate} a las ${introSession.startTime} hs. Puedes elegir otro horario disponible en mi perfil.`;
 
       await Promise.allSettled([
         createSessionNotification({
@@ -247,7 +247,7 @@ export async function PATCH(
           title: "Sesión no disponible",
           actorName: specialistName,
           actorAvatarUrl: specialistAvatar,
-          body: `no pudo confirmar tu solicitud del ${friendlyDate} a las ${introSession.startTime}.`,
+          body: "No pudo confirmar tu sesión.",
           actionUrl: "/sesiones",
         }),
         sendSessionChatMessage({
@@ -277,6 +277,7 @@ export async function PATCH(
         ? introSession.requester?.email
         : introSession.specialist?.email;
       const targetName = isSpecialist ? requesterName : specialistName;
+      const targetFirstName = isSpecialist ? requesterFirstName : specialistFirstName;
       const actorName = isSpecialist ? specialistName : requesterName;
       const actorAvatar = isSpecialist ? specialistAvatar : requesterAvatar;
 
@@ -289,14 +290,14 @@ export async function PATCH(
           title: "Sesión cancelada",
           actorName,
           actorAvatarUrl: actorAvatar,
-          body: `canceló la sesión introductoria del ${friendlyDate} a las ${introSession.startTime}.`,
+          body: "Canceló la sesión introductoria.",
           actionUrl: isSpecialist ? "/sesiones" : "/sesiones?tab=recibidas",
         }),
         sendSessionChatMessage({
           prisma,
           senderId: session.userId,
           recipientId: targetUserId,
-          body: `Cancelé la sesión introductoria del ${friendlyDate} a las ${introSession.startTime}.`,
+          body: `Hola ${targetFirstName}, tuve que cancelar nuestra sesión introductoria del ${friendlyDate} a las ${introSession.startTime} hs.`,
         }),
         targetEmail
           ? sendIntroSessionEmail(targetEmail, {

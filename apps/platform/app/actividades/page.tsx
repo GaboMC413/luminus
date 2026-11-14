@@ -1,10 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { CalendarCheck } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ActivityCard, ActivityCardSkeleton, ActivityEventItem } from "@/components/events/ActivityCard";
-import { Skeleton } from "@/components/ui/Skeleton";
+import { UnderlineTabs } from "@/components/ui/UnderlineTabs";
+import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
+import { Toast, ToastProps } from "@/components/ui/Toast";
+import { ActivityCard, ActivityEventItem } from "@/components/events/ActivityCard";
+import { ActivitiesTimelineSkeleton } from "@/components/ui/Skeleton";
 
 function parseCalendarDate(dateStr?: string | Date | null): Date | null {
   if (!dateStr) return null;
@@ -43,20 +48,40 @@ function formatTimelineDate(dateStr?: string | null) {
 }
 
 export default function ActividadesPage() {
-  const [events, setEvents] = useState<ActivityEventItem[]>([]);
+  const [activeTab, setActiveTab] = useState<"upcoming" | "inscriptions">("upcoming");
+  const [upcomingEvents, setUpcomingEvents] = useState<ActivityEventItem[]>([]);
+  const [inscribedEvents, setInscribedEvents] = useState<ActivityEventItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [cancelTarget, setCancelTarget] = useState<ActivityEventItem | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [toastConfig, setToastConfig] = useState<Omit<ToastProps, "onClose">>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "success",
+  });
 
   useEffect(() => {
     async function fetchEvents() {
       try {
         setLoading(true);
-        const res = await fetch("/api/events", { cache: "no-store" });
-        if (!res.ok) {
+        const [upcomingRes, inscriptionsRes] = await Promise.all([
+          fetch("/api/events", { cache: "no-store" }),
+          fetch("/api/events?type=inscriptions", { cache: "no-store" }),
+        ]);
+
+        if (!upcomingRes.ok) {
           throw new Error("No se pudieron cargar las actividades.");
         }
-        const data = await res.json();
-        setEvents(data.events || []);
+
+        const upcomingData = await upcomingRes.json();
+        setUpcomingEvents(upcomingData.events || []);
+
+        if (inscriptionsRes.ok) {
+          const inscriptionsData = await inscriptionsRes.json();
+          setInscribedEvents(inscriptionsData.events || []);
+        }
       } catch (err: any) {
         setError(err.message || "Error al cargar actividades.");
       } finally {
@@ -66,6 +91,49 @@ export default function ActividadesPage() {
     fetchEvents();
   }, []);
 
+  const handleConfirmCancel = async () => {
+    if (!cancelTarget || isCancelling) return;
+    setIsCancelling(true);
+    try {
+      const res = await fetch("/api/events", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: cancelTarget.id }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "No se pudo cancelar la inscripción.");
+      }
+
+      const targetId = cancelTarget.id;
+      const targetTitle = cancelTarget.title;
+
+      setInscribedEvents((prev) => prev.filter((item) => item.id !== targetId));
+      setUpcomingEvents((prev) =>
+        prev.map((item) => (item.id === targetId ? { ...item, isRegistered: false } : item))
+      );
+      setCancelTarget(null);
+      setToastConfig({
+        isOpen: true,
+        title: "Inscripción cancelada",
+        message: `Se canceló tu inscripción a "${targetTitle}".`,
+        type: "success",
+      });
+    } catch (err: any) {
+      setToastConfig({
+        isOpen: true,
+        title: "Error al cancelar",
+        message: err.message || "Ocurrió un problema inesperado.",
+        type: "error",
+      });
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const displayedEvents = activeTab === "upcoming" ? upcomingEvents : inscribedEvents;
+
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 pb-12 pt-4 font-sans sm:px-6 md:gap-7 md:py-6">
       {/* 1. Standardized In-App Header */}
@@ -74,41 +142,47 @@ export default function ActividadesPage() {
         description="Eventos y actividades sobre bienestar."
       />
 
-      {/* 2. Main Content: Timeline */}
+      {/* 2. Navigation Tabs */}
+      <UnderlineTabs
+        tabs={[
+          { id: "upcoming", label: "Próximas actividades" },
+          { id: "inscriptions", label: "Mis inscripciones" },
+        ]}
+        activeTab={activeTab}
+        onChange={(tab) => setActiveTab(tab as "upcoming" | "inscriptions")}
+      />
+
+      {/* 3. Main Content: Timeline */}
       {loading ? (
-        <div className="w-full flex flex-col">
-          {[...Array(3)].map((_, index) => {
-            const isLast = index === 2;
-            return (
-              <div key={index} className="flex gap-4 sm:gap-6 md:gap-7 items-stretch">
-                <div className="w-6 shrink-0 flex flex-col items-center">
-                  <Skeleton className="w-3 h-3 rounded-full shrink-0 mt-1.5" />
-                  {!isLast && <div className="flex-1 w-[2px] bg-slate-200" />}
-                </div>
-                <div className={`flex-1 min-w-0 flex flex-col gap-3.5 ${isLast ? "pb-4" : "pb-10 sm:pb-12"}`}>
-                  <div className="flex items-baseline gap-2">
-                    <Skeleton className="h-5 w-16 rounded-md" />
-                    <Skeleton className="h-4 w-20 rounded-md" />
-                  </div>
-                  <ActivityCardSkeleton />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <ActivitiesTimelineSkeleton />
       ) : error ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-700">
           {error}
         </div>
-      ) : events.length === 0 ? (
-        <EmptyState
-          title="No hay próximas actividades disponibles"
-          description="Muy pronto estaremos compartiendo nuevas charlas, talleres y experiencias LUMINUS."
-        />
+      ) : displayedEvents.length === 0 ? (
+        activeTab === "upcoming" ? (
+          <EmptyState
+            title="No hay próximas actividades disponibles"
+            description="Muy pronto estaremos compartiendo nuevas charlas, talleres y experiencias LUMINUS."
+          />
+        ) : (
+          <div className="w-full bg-white rounded-2xl border border-slate-200/90">
+            <EmptyState
+              icon={<CalendarCheck className="w-6 h-6 stroke-[1.75]" />}
+              title="Aún no tienes inscripciones"
+              description="Cuando te inscribas a una charla o taller, aparecerá aquí junto con su historial y grabaciones."
+              action={
+                <Button variant="primary" size="md" onClick={() => setActiveTab("upcoming")}>
+                  Explorar próximas actividades
+                </Button>
+              }
+            />
+          </div>
+        )
       ) : (
         <div className="w-full flex flex-col">
-          {events.map((item, index) => {
-            const isLast = index === events.length - 1;
+          {displayedEvents.map((item, index) => {
+            const isLast = index === displayedEvents.length - 1;
             const { dayMonth, weekday } = formatTimelineDate(item.date);
 
             return (
@@ -135,13 +209,64 @@ export default function ActividadesPage() {
                   </div>
 
                   {/* Standardized Activity Card */}
-                  <ActivityCard event={item} />
+                  <ActivityCard event={item} onRequestCancel={setCancelTarget} />
                 </div>
               </div>
             );
           })}
         </div>
       )}
+
+      {/* Cancel Subscription Confirmation Modal */}
+      <Modal
+        isOpen={Boolean(cancelTarget)}
+        onClose={() => !isCancelling && setCancelTarget(null)}
+        title="¿Cancelar inscripción?"
+        maxWidth="400px"
+        hideDividers
+        containerClassName="!shadow-none"
+        headerClassName="px-5 pt-5 pb-2"
+        contentClassName="px-5 py-2"
+        footerClassName="px-5 pt-3 pb-5 flex flex-row items-center gap-2.5 w-full"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setCancelTarget(null)}
+              disabled={isCancelling}
+              className="flex-1"
+            >
+              Volver
+            </Button>
+            <Button
+              variant="destructive"
+              size="md"
+              onClick={handleConfirmCancel}
+              disabled={isCancelling}
+              className="flex-1"
+            >
+              {isCancelling ? "Cancelando..." : "Sí, cancelar"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm font-sans text-slate-600 leading-relaxed">
+          Se liberará tu lugar en{" "}
+          <span className="font-semibold text-slate-900">
+            {cancelTarget?.title}
+          </span>
+          .
+        </p>
+      </Modal>
+
+      <Toast
+        isOpen={toastConfig.isOpen}
+        title={toastConfig.title}
+        message={toastConfig.message}
+        type={toastConfig.type}
+        onClose={() => setToastConfig((prev) => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarCheck, Clock, Check, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -45,6 +45,10 @@ export function IntroSessionScheduler({
   const [step, setStep] = useState<"select" | "confirm" | "success">("select");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [noteError, setNoteError] = useState("");
+  const [termsError, setTermsError] = useState("");
+  const noteInputRef = useRef<HTMLTextAreaElement>(null);
+  const termsInputRef = useRef<HTMLInputElement>(null);
 
   const selectedDay = useMemo(
     () => availableDates.find((d) => d.dateKey === selectedDateKey) || null,
@@ -64,8 +68,27 @@ export function IntroSessionScheduler({
     : "";
 
   const handleConfirm = async () => {
+    if (!selectedDateKey || !selectedTime || isSubmitting) return;
+
     const trimmedNote = requesterNote.trim();
-    if (!selectedDateKey || !selectedTime || !trimmedNote || !acceptedTerms || isSubmitting) return;
+    const nextNoteError = trimmedNote
+      ? ""
+      : "Cuéntale brevemente qué te gustaría conversar para continuar.";
+    const nextTermsError = acceptedTerms
+      ? ""
+      : "Acepta las condiciones de las sesiones introductorias para continuar.";
+
+    setNoteError(nextNoteError);
+    setTermsError(nextTermsError);
+
+    if (nextNoteError || nextTermsError) {
+      if (nextNoteError) {
+        noteInputRef.current?.focus();
+      } else {
+        termsInputRef.current?.focus();
+      }
+      return;
+    }
 
     setIsSubmitting(true);
     setError("");
@@ -143,7 +166,7 @@ export function IntroSessionScheduler({
             <Button
               variant="primary"
               fullWidth
-              disabled={isSubmitting || !requesterNote.trim() || !acceptedTerms}
+              disabled={isSubmitting}
               onClick={handleConfirm}
             >
               {isSubmitting ? "Enviando..." : "Solicitar sesión"}
@@ -288,44 +311,60 @@ export function IntroSessionScheduler({
           </div>
 
           <TextAreaField
+            ref={noteInputRef}
             id="intro-session-note"
             label="¿Qué te gustaría conversar?"
             placeholder="Cuéntale brevemente tu objetivo o consulta para aprovechar mejor los 15 minutos..."
             value={requesterNote}
             onChange={(e) => {
               setRequesterNote(e.target.value);
+              if (noteError) setNoteError("");
               if (error) setError("");
             }}
+            error={noteError}
             maxLength={500}
             showCount
             required
             rows={3}
           />
 
-          <label className="flex items-start gap-2.5 rounded-xl bg-slate-50 border border-slate-200/80 p-3 cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={acceptedTerms}
-              onChange={(e) => {
-                setAcceptedTerms(e.target.checked);
-                if (error) setError("");
-              }}
-              className="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 shrink-0 cursor-pointer"
-            />
-            <span className="text-xs leading-relaxed text-slate-600">
-              Entiendo que es una sesión introductoria gratuita (no una consulta médica ni terapéutica), que LUMINUS no interviene ni responde por el servicio, asistencia o fallos técnicos, y acepto las{" "}
-              <a
-                href="https://luminuslatam.com/legal/sesiones-introductorias"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="font-semibold text-slate-900 underline hover:text-slate-700"
-              >
-                Condiciones de Sesiones Introductorias
-              </a>
-              .
-            </span>
-          </label>
+          <div className="flex flex-col gap-1.5">
+            <label
+              className={`flex items-start gap-2.5 rounded-xl bg-slate-50 border p-3 cursor-pointer select-none transition-colors ${
+                termsError ? "border-rose-500" : "border-slate-200/80"
+              }`}
+            >
+              <input
+                ref={termsInputRef}
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => {
+                  setAcceptedTerms(e.target.checked);
+                  if (termsError) setTermsError("");
+                  if (error) setError("");
+                }}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 shrink-0 cursor-pointer"
+              />
+              <span className="text-xs leading-relaxed text-slate-600">
+                Entiendo que es una sesión introductoria gratuita (no una consulta médica ni terapéutica), que LUMINUS no interviene ni responde por el servicio, asistencia o fallos técnicos, y acepto las{" "}
+                <a
+                  href="https://luminuslatam.com/legal/sesiones-introductorias"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="font-semibold text-slate-900 underline hover:text-slate-700"
+                >
+                  Condiciones de Sesiones Introductorias
+                </a>
+                .
+              </span>
+            </label>
+            {termsError && (
+              <p className="text-xs font-medium text-rose-600 px-0.5">
+                {termsError}
+              </p>
+            )}
+          </div>
 
           {error && (
             <p className="text-xs font-medium text-rose-600 px-0.5">{error}</p>

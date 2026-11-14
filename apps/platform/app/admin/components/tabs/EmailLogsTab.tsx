@@ -14,6 +14,8 @@ import {
   renderEmailChangeVerificationHtml,
   renderContactNotificationEmailHtml,
   renderEventRegistrationEmailHtml,
+  renderSpecialistApprovedEmailHtml,
+  SPECIALIST_APPROVED_EMAIL_SUBJECT,
 } from "@/lib/mails";
 
 interface EmailLogsTabProps {
@@ -61,6 +63,18 @@ const templatesData = {
       youtubeUrl: "https://www.youtube.com/@luminus_latam",
     }),
   },
+  specialistApproved: {
+    name: "Aprobación de Especialista (Specialist Approved)",
+    subject: SPECIALIST_APPROVED_EMAIL_SUBJECT,
+    htmlBody: renderSpecialistApprovedEmailHtml({
+      name: "Sofía Martínez",
+      title: "Lic. en Psicología",
+      specialty: "Psicología Clínica",
+      selectedAreas: ["Bienestar Emocional", "Mindfulness"],
+      clinicName: "Espacio Calma",
+      coursesCount: 2,
+    }),
+  },
 };
 
 export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
@@ -70,7 +84,7 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
   const [emailStartDate, setEmailStartDate] = useState("");
   const [emailEndDate, setEmailEndDate] = useState("");
   const [selectedEmailLogId, setSelectedEmailLogId] = useState<string>(emailLogs[0]?.id ?? "");
-  const [selectedTemplate, setSelectedTemplate] = useState<"welcome" | "recovery" | "emailChange" | "contact" | "eventRegistration">("welcome");
+  const [selectedTemplate, setSelectedTemplate] = useState<"welcome" | "recovery" | "emailChange" | "contact" | "eventRegistration" | "specialistApproved">("welcome");
   const [showTraceModal, setShowTraceModal] = useState<boolean>(false);
   const [copiedLog, setCopiedLog] = useState<boolean>(false);
 
@@ -601,6 +615,17 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
                 }`}
               >
                 Inscripción a Eventos
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedTemplate("specialistApproved")}
+                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-semibold transition-all cursor-pointer border-none outline-none ${
+                  selectedTemplate === "specialistApproved"
+                    ? "bg-black text-white font-bold"
+                    : "bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+              >
+                Aprobación de Especialista
               </button>
             </div>
           </AdminCard>

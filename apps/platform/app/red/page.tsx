@@ -215,8 +215,8 @@ function NetworkContent() {
           {/* Main Navigation Tabs */}
           <UnderlineTabs
             tabs={[
-              { id: "following", label: "Siguiendo", count: followingList.length },
-              { id: "followers", label: "Seguidores", count: followersList.length },
+              { id: "following", label: "Siguiendo" },
+              { id: "followers", label: "Seguidores" },
             ]}
             activeTab={activeTab}
             onChange={(tab) => setActiveTab(tab as "following" | "followers")}

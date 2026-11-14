@@ -95,7 +95,9 @@ function SesionesContent() {
   const [specialistTab, setSpecialistTab] = useState<"recibidas" | "solicitadas">(
     initialTabParam === "recibidas" ? "recibidas" : "solicitadas"
   );
-  const [memberTab, setMemberTab] = useState<"proximas" | "historial">("proximas");
+  const [memberTab, setMemberTab] = useState<"proximas" | "historial">(
+    initialTabParam === "historial" ? "historial" : "proximas"
+  );
 
   // Modal states
   const [acceptTarget, setAcceptTarget] = useState<IntroSessionItem | null>(null);
@@ -104,7 +106,6 @@ function SesionesContent() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
   const [guideDefaultTab, setGuideDefaultTab] = useState<"miembros" | "especialistas">("miembros");
-  const [showBetaBanner, setShowBetaBanner] = useState(true);
   const [declineTarget, setDeclineTarget] = useState<IntroSessionItem | null>(null);
   const [declineNote, setDeclineNote] = useState("");
   const [cancelTarget, setCancelTarget] = useState<IntroSessionItem | null>(null);
@@ -140,18 +141,23 @@ function SesionesContent() {
       const data = await res.json();
       const reqs: IntroSessionItem[] = data.requestedSessions || [];
       const recs: IntroSessionItem[] = data.receivedSessions || [];
-      const specFlag = Boolean(data.isSpecialist || recs.length > 0);
+      const specFlag = Boolean(data.isSpecialist);
 
       setRequestedSessions(reqs);
       setReceivedSessions(recs);
       setIsSpecialist(specFlag);
       setWherebyEnabled(Boolean(data.wherebyEnabled));
 
-      if (specFlag && !initialTabParam) {
-        const hasPendingReceived = recs.some((s) => s.status === "pending");
-        if (hasPendingReceived || reqs.length === 0) {
-          setSpecialistTab("recibidas");
+      if (specFlag) {
+        if (!initialTabParam) {
+          const hasPendingReceived = recs.some((s) => s.status === "pending");
+          const defaultTab =
+            hasPendingReceived || reqs.length === 0 ? "recibidas" : "solicitadas";
+          setSpecialistTab(defaultTab);
+          router.replace(`/sesiones?tab=${defaultTab}`, { scroll: false });
         }
+      } else if (!initialTabParam) {
+        router.replace("/sesiones?tab=proximas", { scroll: false });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al cargar sesiones.");
@@ -163,11 +169,6 @@ function SesionesContent() {
   useEffect(() => {
     loadSessions();
   }, [loadSessions]);
-
-  const pendingReceivedCount = useMemo(
-    () => receivedSessions.filter((s) => s.status === "pending").length,
-    [receivedSessions]
-  );
 
   const memberUpcoming = useMemo(
     () =>
@@ -327,8 +328,20 @@ function SesionesContent() {
 
   const isViewingReceived = isSpecialist && specialistTab === "recibidas";
 
+  const handleSpecialistTabChange = (tab: string) => {
+    const next = tab === "recibidas" ? "recibidas" : "solicitadas";
+    setSpecialistTab(next);
+    router.replace(`/sesiones?tab=${next}`, { scroll: false });
+  };
+
+  const handleMemberTabChange = (tab: string) => {
+    const next = tab === "historial" ? "historial" : "proximas";
+    setMemberTab(next);
+    router.replace(`/sesiones?tab=${next}`, { scroll: false });
+  };
+
   return (
-    <div className="w-full flex-1 flex flex-col bg-slate-50 min-h-screen font-sans">
+    <div className="w-full flex-1 flex flex-col bg-slate-50 font-sans">
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-6 flex flex-col gap-5">
         <PageHeader
           title="Sesiones introductorias"
@@ -350,54 +363,19 @@ function SesionesContent() {
           }
         />
 
-        {showBetaBanner && (
-          <div className="rounded-2xl bg-amber-50/70 border border-amber-200/80 px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <p className="text-xs sm:text-sm text-amber-950 m-0">
-              <strong>En etapa de pruebas:</strong> Estamos estrenando las sesiones introductorias de 15 min para ayudarte a conectar mejor.
-            </p>
-            <div className="flex items-center gap-2 shrink-0">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  setGuideDefaultTab(isViewingReceived ? "especialistas" : "miembros");
-                  setShowGuide(true);
-                }}
-              >
-                Ver guía
-              </Button>
-              <Link
-                href="/contacto"
-                className="inline-flex items-center gap-1.5 h-8.5 px-3 rounded-xl text-xs font-medium bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 no-underline font-jakarta"
-              >
-                Contactarnos
-              </Link>
-              <button
-                type="button"
-                aria-label="Cerrar aviso"
-                onClick={() => setShowBetaBanner(false)}
-                className="p-1.5 rounded-lg text-amber-800/70 hover:text-amber-950 hover:bg-amber-100/60 bg-transparent border-none cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+        {loading ? (
+          <div className="flex gap-6 border-b border-slate-200/80 pb-3">
+            <Skeleton className="h-5 w-36 rounded-md" />
+            <Skeleton className="h-5 w-28 rounded-md" />
           </div>
-        )}
-
-        {isSpecialist ? (
+        ) : isSpecialist ? (
           <UnderlineTabs
             tabs={[
-              {
-                id: "recibidas",
-                label:
-                  pendingReceivedCount > 0
-                    ? `Solicitudes recibidas (${pendingReceivedCount})`
-                    : "Solicitudes recibidas",
-              },
+              { id: "recibidas", label: "Solicitudes recibidas" },
               { id: "solicitadas", label: "Mis solicitudes" },
             ]}
             activeTab={specialistTab}
-            onChange={(tab) => setSpecialistTab(tab as "recibidas" | "solicitadas")}
+            onChange={handleSpecialistTabChange}
           />
         ) : (
           <UnderlineTabs
@@ -406,7 +384,7 @@ function SesionesContent() {
               { id: "historial", label: "Historial" },
             ]}
             activeTab={memberTab}
-            onChange={(tab) => setMemberTab(tab as "proximas" | "historial")}
+            onChange={handleMemberTabChange}
           />
         )}
 

@@ -15,6 +15,11 @@ import {
   renderIntroSessionEmailHtml,
   type IntroSessionEmailOptions,
 } from "./introSession";
+import {
+  renderSpecialistApprovedEmailHtml,
+  SPECIALIST_APPROVED_EMAIL_SUBJECT,
+  type SpecialistApprovedEmailOptions,
+} from "./specialistApproved";
 
 function isSesConfigured() {
   if (process.env.NODE_ENV === "production") {
@@ -452,6 +457,24 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
     textBody,
     actionName: "Email de Bienvenida Gratuito",
     checkDuplicateSubject: "bienvenida a LUMINUS",
+  });
+}
+
+export async function sendSpecialistApprovedEmail(
+  email: string,
+  options: SpecialistApprovedEmailOptions = {}
+) {
+  const name = options.name?.trim() || "Especialista";
+  const subject = SPECIALIST_APPROVED_EMAIL_SUBJECT;
+  const htmlBody = renderSpecialistApprovedEmailHtml(options);
+  const textBody = `Hola ${name}, tu postulación fue aprobada y nos alegra darte la bienvenida a la Red de Especialistas LUMINUS. Ya puedes revisar tu perfil en https://app.luminuslatam.com/perfil-usuario`;
+  return sendStandardTransactionalEmail({
+    email,
+    subject,
+    htmlBody,
+    textBody,
+    actionName: "Aprobación de Especialista",
+    checkDuplicateSubject: SPECIALIST_APPROVED_EMAIL_SUBJECT,
   });
 }
 

@@ -273,6 +273,37 @@ export function NotificationsSkeleton() {
 }
 
 /**
+ * Timeline list skeleton for Activities (`/actividades`) — used inline for Shell-First loading.
+ */
+export function ActivitiesTimelineSkeleton() {
+  return (
+    <div className="w-full flex flex-col">
+      {[...Array(3)].map((_, index) => {
+        const isLast = index === 2;
+        return (
+          <div key={index} className="flex gap-4 sm:gap-6 md:gap-7 items-stretch">
+            <div className="w-6 shrink-0 flex flex-col items-center">
+              <Skeleton className="w-3 h-3 rounded-full shrink-0 mt-1.5" />
+              {!isLast && <div className="flex-1 w-[2px] bg-slate-200" />}
+              {isLast && (
+                <div className="flex-1 w-[2px] bg-gradient-to-b from-slate-200 to-transparent" />
+              )}
+            </div>
+            <div className={`flex-1 min-w-0 flex flex-col gap-3.5 ${isLast ? "pb-4" : "pb-10 sm:pb-12"}`}>
+              <div className="flex items-baseline gap-2">
+                <Skeleton className="h-5 sm:h-6 w-16 rounded-md" />
+                <Skeleton className="h-4 sm:h-5 w-20 rounded-md" />
+              </div>
+              <ActivityCardSkeleton />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
  * Standardized timeline skeleton for Activities (`/actividades`).
  */
 export function ActivitiesSkeleton() {
@@ -282,26 +313,7 @@ export function ActivitiesSkeleton() {
         <Skeleton className="h-7 w-36 rounded-md" />
         <Skeleton className="h-4 w-64 rounded-md" />
       </div>
-      <div className="w-full flex flex-col">
-        {[...Array(3)].map((_, index) => {
-          const isLast = index === 2;
-          return (
-            <div key={index} className="flex gap-4 sm:gap-6 md:gap-7 items-stretch">
-              <div className="w-6 shrink-0 flex flex-col items-center">
-                <Skeleton className="w-3 h-3 rounded-full shrink-0 mt-1.5" />
-                {!isLast && <div className="flex-1 w-[2px] bg-slate-200" />}
-              </div>
-              <div className={`flex-1 min-w-0 flex flex-col gap-3.5 ${isLast ? "pb-4" : "pb-10 sm:pb-12"}`}>
-                <div className="flex items-baseline gap-2">
-                  <Skeleton className="h-5 w-16 rounded-md" />
-                  <Skeleton className="h-4 w-20 rounded-md" />
-                </div>
-                <ActivityCardSkeleton />
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <ActivitiesTimelineSkeleton />
     </div>
   );
 }

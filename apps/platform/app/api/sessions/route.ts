@@ -357,15 +357,13 @@ export async function POST(request: Request) {
     const specialistAvatar = specialist?.profile?.avatarUrl || "";
     const friendlyDate = formatSessionDate(scheduledDate);
 
+    const specialistFirstName = specialistName.split(/\s+/)[0] || specialistName;
     const chatLines = [
-      `Solicité una sesión introductoria gratuita de 15 min para el ${friendlyDate} a las ${startTime} (${timezone}).`,
+      `Hola ${specialistFirstName}, solicité una sesión introductoria para el ${friendlyDate} a las ${startTime} hs.`,
     ];
     if (requesterNote) {
-      chatLines.push(`Nota: "${requesterNote}"`);
+      chatLines.push(`Consulta: ${requesterNote}`);
     }
-    chatLines.push(
-      "Recuerda: es un encuentro breve para conocernos; LUMINUS facilita la conexión inicial pero no interviene en servicios profesionales posteriores."
-    );
 
     // Fire notifications, emails & chat message without failing the booking if a side effect errors
     await Promise.allSettled([
@@ -376,18 +374,8 @@ export async function POST(request: Request) {
         title: "Nueva solicitud de sesión",
         actorName: requesterName,
         actorAvatarUrl: requesterAvatar,
-        body: `solicitó una sesión introductoria para el ${friendlyDate} a las ${startTime} (${timezone}).`,
+        body: "Solicitó una sesión introductoria.",
         actionUrl: "/sesiones?tab=recibidas",
-      }),
-      createSessionNotification({
-        prisma,
-        userId: session.userId,
-        type: "session_requested",
-        title: "Solicitud enviada",
-        actorName: specialistName,
-        actorAvatarUrl: specialistAvatar,
-        body: `recibió tu solicitud de sesión introductoria para el ${friendlyDate} a las ${startTime}.`,
-        actionUrl: "/sesiones",
       }),
       sendSessionChatMessage({
         prisma,

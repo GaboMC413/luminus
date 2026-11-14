@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Clock, MapPin, Share2, Check, Loader2, TvMinimalPlay } from "lucide-react";
 import { Button, BackButton } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { Toast, ToastProps } from "@/components/ui/Toast";
 
 export interface DetailEventItem {
@@ -137,6 +138,8 @@ export function ActividadDetailView({ event }: { event: DetailEventItem }) {
   const router = useRouter();
   const [isRegistered, setIsRegistered] = useState(Boolean(event.isRegistered));
   const [isEnrolling, setIsEnrolling] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const [toastConfig, setToastConfig] = useState<Omit<ToastProps, "onClose">>({
@@ -194,6 +197,41 @@ export function ActividadDetailView({ event }: { event: DetailEventItem }) {
       });
     } finally {
       setIsEnrolling(false);
+    }
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!isRegistered || isCancelling || isPast) return;
+    setIsCancelling(true);
+    try {
+      const res = await fetch("/api/events", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ eventId: event.id }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "No se pudo cancelar la inscripción.");
+      }
+
+      setIsRegistered(false);
+      setIsCancelModalOpen(false);
+      setToastConfig({
+        isOpen: true,
+        title: "Inscripción cancelada",
+        message: `Se canceló tu inscripción a "${event.title}".`,
+        type: "success",
+      });
+    } catch (err: any) {
+      setToastConfig({
+        isOpen: true,
+        title: "Error al cancelar",
+        message: err.message || "Ocurrió un problema inesperado.",
+        type: "error",
+      });
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -282,10 +320,17 @@ export function ActividadDetailView({ event }: { event: DetailEventItem }) {
     if (isRegistered) {
       return (
         <div className="flex items-center gap-3">
-          <div className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-semibold font-jakarta">
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            onClick={() => setIsCancelModalOpen(true)}
+            className="bg-emerald-50 hover:bg-emerald-100/80 border-emerald-200 text-emerald-800 hover:text-emerald-900"
+            title="Presiona para cancelar tu inscripción"
+          >
             <Check className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
             <span>Inscripto</span>
-          </div>
+          </Button>
           <Button
             variant="secondary"
             onClick={handleShare}
@@ -505,6 +550,46 @@ export function ActividadDetailView({ event }: { event: DetailEventItem }) {
           </div>
         </div>
       </div>
+
+      {/* Cancel Subscription Confirmation Modal */}
+      <Modal
+        isOpen={isCancelModalOpen}
+        onClose={() => !isCancelling && setIsCancelModalOpen(false)}
+        title="¿Cancelar inscripción?"
+        maxWidth="400px"
+        hideDividers
+        containerClassName="!shadow-none"
+        headerClassName="px-5 pt-5 pb-2"
+        contentClassName="px-5 py-2"
+        footerClassName="px-5 pt-3 pb-5 flex flex-row items-center gap-2.5 w-full"
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setIsCancelModalOpen(false)}
+              disabled={isCancelling}
+              className="flex-1"
+            >
+              Volver
+            </Button>
+            <Button
+              variant="destructive"
+              size="md"
+              onClick={handleConfirmCancel}
+              disabled={isCancelling}
+              className="flex-1"
+            >
+              {isCancelling ? "Cancelando..." : "Sí, cancelar"}
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm font-sans text-slate-600 leading-relaxed">
+          Se liberará tu lugar en{" "}
+          <span className="font-semibold text-slate-900">{event.title}</span>.
+        </p>
+      </Modal>
     </div>
   );
 }

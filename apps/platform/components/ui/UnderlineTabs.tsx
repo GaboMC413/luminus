@@ -5,7 +5,6 @@ import React from "react";
 export interface UnderlineTabItem<T extends string = string> {
   id: T;
   label: string;
-  count?: number;
 }
 
 export interface UnderlineTabsProps<T extends string = string> {
@@ -45,17 +44,6 @@ export function UnderlineTabs<T extends string = string>({
             }`}
           >
             <span>{tab.label}</span>
-            {typeof tab.count === "number" && (
-              <span
-                className={`px-2 py-0.5 rounded-full text-meta leading-none font-semibold ${
-                  isActive
-                    ? "bg-slate-900 text-white"
-                    : "bg-slate-100 text-slate-600"
-                }`}
-              >
-                {tab.count}
-              </span>
-            )}
           </button>
         );
       })}
