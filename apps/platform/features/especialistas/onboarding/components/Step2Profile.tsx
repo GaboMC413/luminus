@@ -5,6 +5,7 @@ import { InputField } from "@/components/ui/InputField";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { TextAreaField } from "@/components/ui/TextAreaField";
 import { SocialLink } from "../types";
+import { isValidUrl, normalizeSocialLinkByPlatform } from "@/utils/socialLinks";
 import {
   StepHeader,
   TagSelector,
@@ -120,16 +121,7 @@ export const TAG_GROUPS: Record<string, string[]> = {
   ],
 };
 
-export const isValidUrl = (url: string): boolean => {
-  if (!url) return false;
-  try {
-    const formatted = url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`;
-    new URL(formatted);
-    return true;
-  } catch {
-    return false;
-  }
-};
+export { isValidUrl };
 
 interface Step2ProfileProps {
   specialty: string;
@@ -239,7 +231,7 @@ export function Step2Profile({
     const invalidLinkIndex = socialLinks.findIndex((l) => {
       const url = l.url.trim();
       if (!url) return false;
-      return !isValidUrl(url);
+      return !normalizeSocialLinkByPlatform(l.platform, url);
     });
     if (invalidLinkIndex !== -1) {
       setErrorField(`socialLink_${invalidLinkIndex}`);
@@ -248,6 +240,16 @@ export function Step2Profile({
       inputEl?.focus();
       return;
     }
+
+    const normalizedLinks = socialLinks.map((l) => {
+      const url = l.url.trim();
+      if (!url) return l;
+      return {
+        ...l,
+        url: normalizeSocialLinkByPlatform(l.platform, url) ?? url,
+      };
+    });
+    setSocialLinks(normalizedLinks);
 
     setErrorField(null);
     onNext();

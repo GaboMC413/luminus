@@ -2,17 +2,29 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Calendar, CalendarCheck, Clock, HelpCircle } from "lucide-react";
+import {
+  BookOpen,
+  Calendar,
+  CalendarCheck,
+  ChevronRight,
+  Clock,
+  Globe,
+  HelpCircle,
+  MapPin,
+} from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ProfileSectionCard } from "@/components/ui/ProfileSectionCard";
 import { UnderlineTabs } from "@/components/ui/UnderlineTabs";
 import { IntroSessionScheduler } from "./IntroSessionScheduler";
 import { IntroSessionGuideModal } from "./IntroSessionGuideModal";
+import { CourseDetailModal, type CourseDetailItem } from "../modals/CourseDetailModal";
+import { SpaceDetailModal, type SpaceDetailItem } from "../modals/SpaceDetailModal";
 import { ProfileHeroHeader } from "./ProfileHeroHeader";
 import { ProfileAboutSection } from "./ProfileAboutSection";
 import { ProfileInterestsSection } from "./ProfileInterestsSection";
 import { ProfileCompletionCard } from "./ProfileCompletionCard";
 import { formatSpaceAddress } from "@/utils/locationUtils";
+import { resolveSocialHref } from "@/utils/socialLinks";
 import {
   getAvailableDatesWithSlots,
   formatShortSessionDate,
@@ -37,7 +49,52 @@ const FULL_DAY_LABELS = [
 ];
 
 function normalizeUrl(url: string) {
-  return url.startsWith("http") ? url : `https://${url}`;
+  return resolveSocialHref("website", url);
+}
+
+function InstagramIcon({ className = "w-3.5 h-3.5 shrink-0" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
+
+function LinkedInIcon({ className = "w-3.5 h-3.5 shrink-0" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+      <rect width="4" height="12" x="2" y="9" />
+      <circle cx="4" cy="4" r="2" />
+    </svg>
+  );
+}
+
+const SPACE_TYPE_LABELS: Record<string, string> = {
+  CONSULTORIO: "Consultorio",
+  CENTRO: "Centro / Clínica",
+  ESTUDIO: "Estudio / Sala",
+  ONLINE: "Atención Online",
+};
+
+function formatSpaceType(spaceType?: string | null, customSpaceType?: string | null) {
+  if (customSpaceType?.trim()) return customSpaceType.trim();
+  if (!spaceType) return null;
+  if (spaceType === "OTRO" || spaceType === "Otro") return null;
+  return SPACE_TYPE_LABELS[spaceType] || spaceType;
+}
+
+const COURSE_TYPE_LABELS: Record<string, string> = {
+  CURSO: "Curso",
+  TALLER: "Taller",
+  PROGRAMA: "Programa",
+};
+
+function formatCourseType(type?: string | null) {
+  if (!type) return null;
+  return COURSE_TYPE_LABELS[type] || type;
 }
 
 interface SpecialistProfileViewProps {
@@ -104,6 +161,8 @@ export function SpecialistProfileView({
   const [isSchedulerOpen, setIsSchedulerOpen] = useState(false);
   const [selectedDateKeyForModal, setSelectedDateKeyForModal] = useState<string | null>(null);
   const [showSessionGuide, setShowSessionGuide] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<CourseDetailItem | null>(null);
+  const [selectedSpace, setSelectedSpace] = useState<SpaceDetailItem | null>(null);
   const [bookedSlots, setBookedSlots] = useState<BookedSlot[]>([]);
   const [myActiveSession, setMyActiveSession] = useState<any>(null);
   const [loadingSessions, setLoadingSessions] = useState(false);
@@ -165,6 +224,34 @@ export function SpecialistProfileView({
       specialist?.linkedinUrl ||
       specialist?.websiteUrl
   );
+
+  const hasBio = Boolean(specialist?.bio?.trim());
+  const hasInstitution = Boolean(specialist?.institution?.trim());
+  const socialLinks = [
+    specialist?.instagramUrl && {
+      key: "instagram",
+      label: "Instagram",
+      href: resolveSocialHref("instagram", specialist.instagramUrl),
+      icon: InstagramIcon,
+    },
+    specialist?.linkedinUrl && {
+      key: "linkedin",
+      label: "LinkedIn",
+      href: resolveSocialHref("linkedin", specialist.linkedinUrl),
+      icon: LinkedInIcon,
+    },
+    specialist?.websiteUrl && {
+      key: "website",
+      label: "Sitio web",
+      href: resolveSocialHref("website", specialist.websiteUrl),
+      icon: Globe,
+    },
+  ].filter(Boolean) as Array<{
+    key: string;
+    label: string;
+    href: string;
+    icon: React.ComponentType<{ className?: string }>;
+  }>;
 
   return (
     <div className="w-full flex flex-col font-sans">
@@ -237,11 +324,6 @@ export function SpecialistProfileView({
               <div className="lg:col-span-8 flex flex-col gap-3.5 sm:gap-5">
                 {/* Card 0: Especialidad & Áreas de acompañamiento */}
                 <ProfileSectionCard
-                  title={
-                    specialist?.specialty?.toLowerCase().startsWith("especialista en")
-                      ? specialist.specialty
-                      : `Especialista en ${specialist?.specialty || "Bienestar"}`
-                  }
                   isPublic={isPublic}
                   isEmpty={!hasPracticeHeader}
                   onEdit={onEditSpecialistPractice}
@@ -256,17 +338,17 @@ export function SpecialistProfileView({
                             ? { color: specialtyCustomStyles.color }
                             : undefined
                         }
-                        className={`flex items-center gap-2 ${getCategoryTextClass(
+                        className={`flex items-center gap-2 ${!isPublic ? "pr-11" : ""} ${getCategoryTextClass(
                           specialist?.specialty || specialist?.title,
                           dbCategories
                         )}`}
                       >
                         {renderCategoryIcon(
                           specialist?.specialty || specialist?.title,
-                          "w-4 h-4 shrink-0",
+                          "w-5 h-5 shrink-0",
                           dbCategories
                         )}
-                        <span className="text-body font-semibold text-current">
+                        <span className="text-base font-jakarta font-bold text-current leading-snug">
                           {specialist?.title || specialist?.specialty}
                         </span>
                       </div>
@@ -314,53 +396,46 @@ export function SpecialistProfileView({
                   editTitle="Editar sobre mi práctica"
                   emptyActionLabel="Contar sobre tu práctica"
                 >
-                  <div className="flex flex-col gap-2.5">
-                    {specialist?.bio && (
+                  <div className="flex flex-col gap-5">
+                    {hasBio && (
                       <p className="text-body text-slate-600 whitespace-pre-wrap">
                         {specialist.bio}
                       </p>
                     )}
 
-                    {specialist?.institution && (
-                      <p className="text-meta text-slate-500">
-                        {specialist.institution}
-                      </p>
+                    {hasInstitution && (
+                      <div className="flex flex-col gap-1.5">
+                        <h4 className="text-title-section text-slate-900 font-bold">
+                          Formación
+                        </h4>
+                        <p className="text-body text-slate-600">
+                          {specialist.institution}
+                        </p>
+                      </div>
                     )}
 
-                    {(specialist?.instagramUrl ||
-                      specialist?.linkedinUrl ||
-                      specialist?.websiteUrl) && (
-                      <div className="flex flex-wrap items-center gap-4 pt-1">
-                        {specialist?.instagramUrl && (
-                          <a
-                            href={normalizeUrl(specialist.instagramUrl)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-meta text-slate-600 hover:text-slate-900 font-medium"
-                          >
-                            Instagram
-                          </a>
-                        )}
-                        {specialist?.linkedinUrl && (
-                          <a
-                            href={normalizeUrl(specialist.linkedinUrl)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-meta text-slate-600 hover:text-slate-900 font-medium"
-                          >
-                            LinkedIn
-                          </a>
-                        )}
-                        {specialist?.websiteUrl && (
-                          <a
-                            href={normalizeUrl(specialist.websiteUrl)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-meta text-slate-600 hover:text-slate-900 font-medium"
-                          >
-                            Sitio web
-                          </a>
-                        )}
+                    {socialLinks.length > 0 && (
+                      <div className="flex flex-col gap-2.5">
+                        <h4 className="text-title-section text-slate-900 font-bold">
+                          Redes sociales
+                        </h4>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {socialLinks.map((item) => {
+                            const Icon = item.icon;
+                            return (
+                              <a
+                                key={item.key}
+                                href={item.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group inline-flex items-center gap-2 h-9 px-3.5 rounded-xl bg-slate-50 hover:bg-slate-900 text-slate-700 hover:text-white border border-slate-200/80 hover:border-slate-900 font-jakarta text-xs font-semibold transition-all duration-150 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400/40"
+                              >
+                                <Icon className="w-3.5 h-3.5 text-slate-600 group-hover:text-white transition-colors shrink-0" />
+                                <span>{item.label}</span>
+                              </a>
+                            );
+                          })}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -375,71 +450,100 @@ export function SpecialistProfileView({
                   editTitle="Editar espacios de atención"
                   emptyActionLabel="Agregar espacio de atención"
                 >
-                  <div className="divide-y divide-slate-100">
+                  <div className="flex flex-col gap-3.5">
                     {spaces.map((space: any) => {
+                      const spaceTypeLabel = formatSpaceType(
+                        space.spaceType,
+                        space.customSpaceType
+                      );
                       const formattedAddress = formatSpaceAddress(
                         space.address,
                         space.city,
                         space.country
                       );
-                      const metaParts = [formattedAddress, space.phone].filter(Boolean);
+                      const locationSummary =
+                        [space.city, space.country].filter(Boolean).join(", ") ||
+                        formattedAddress;
+                      const previewServices = (space.services || []).slice(0, 2);
+                      const extraServicesCount = Math.max(
+                        0,
+                        (space.services || []).length - previewServices.length
+                      );
 
                       return (
-                        <div
-                          key={space.id}
-                          className="py-3 first:pt-0 last:pb-0 flex flex-col gap-1.5"
+                        <button
+                          key={space.id || space.name}
+                          type="button"
+                          onClick={() => setSelectedSpace(space)}
+                          className="group w-full text-left bg-slate-50/70 hover:bg-slate-50 border border-slate-200/80 hover:border-slate-300 rounded-2xl p-3.5 sm:p-4 transition-all flex flex-col sm:flex-row sm:items-center gap-3.5 sm:gap-4 cursor-pointer"
                         >
-                          <div className="flex items-baseline justify-between gap-3">
-                            <h4 className="text-body font-semibold text-slate-900">
-                              {space.name}
-                            </h4>
-                            {space.googleMapsUrl && (
-                              <a
-                                href={space.googleMapsUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-meta text-slate-600 hover:text-slate-900 font-medium shrink-0"
-                              >
-                                Ver mapa
-                              </a>
+                          <div className="relative w-full sm:w-56 md:w-64 aspect-video shrink-0 rounded-xl bg-slate-100 overflow-hidden">
+                            {space.coverUrl ? (
+                              <img
+                                src={space.coverUrl}
+                                alt={space.name}
+                                className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 text-slate-400">
+                                <MapPin className="w-6 h-6 stroke-[1.75]" />
+                                {space.city && (
+                                  <span className="text-meta text-slate-500 font-medium">
+                                    {space.city}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            {spaceTypeLabel && (
+                              <span className="absolute top-2 left-2 h-6 px-2.5 inline-flex items-center rounded-full bg-white/90 backdrop-blur-sm text-meta text-slate-700 font-medium">
+                                {spaceTypeLabel}
+                              </span>
                             )}
                           </div>
 
-                          {space.description && (
-                            <p className="text-body text-slate-600">{space.description}</p>
-                          )}
+                          <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                            <h4 className="text-title-section text-slate-900 font-semibold line-clamp-1">
+                              {space.name}
+                            </h4>
 
-                          {(metaParts.length > 0 || space.website) && (
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-meta text-slate-500">
-                              {metaParts.length > 0 && (
-                                <span>{metaParts.join(" · ")}</span>
-                              )}
-                              {space.website && (
-                                <a
-                                  href={normalizeUrl(space.website)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-slate-600 hover:text-slate-900 font-medium"
-                                >
-                                  Sitio web
-                                </a>
-                              )}
-                            </div>
-                          )}
+                            {locationSummary && (
+                              <div className="flex items-center gap-1.5 text-meta text-slate-500 min-w-0">
+                                <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                <span className="truncate">{locationSummary}</span>
+                              </div>
+                            )}
 
-                          {space.services && space.services.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 pt-1">
-                              {space.services.map((service: any) => (
-                                <span
-                                  key={service.id}
-                                  className="h-6 px-2.5 inline-flex items-center rounded-full bg-slate-50 border border-slate-200/80 text-meta text-slate-600"
-                                >
-                                  {service.name}
-                                </span>
-                              ))}
+                            {space.description && (
+                              <p className="text-body text-slate-600 line-clamp-2">
+                                {space.description}
+                              </p>
+                            )}
+
+                            {previewServices.length > 0 && (
+                              <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                                {previewServices.map((service: any) => (
+                                  <span
+                                    key={service.id || service.name}
+                                    className="h-6 px-2.5 inline-flex items-center rounded-full bg-white text-meta text-slate-600"
+                                  >
+                                    {service.name}
+                                  </span>
+                                ))}
+                                {extraServicesCount > 0 && (
+                                  <span className="text-meta text-slate-400 font-medium px-1">
+                                    +{extraServicesCount}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+
+                            <div className="mt-auto pt-1 flex items-center justify-between text-label text-slate-500 group-hover:text-slate-900 transition-colors">
+                              <span>Ver espacio y mapa</span>
+                              <ChevronRight className="w-4 h-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -454,43 +558,63 @@ export function SpecialistProfileView({
                   editTitle="Editar cursos y talleres"
                   emptyActionLabel="Agregar curso o taller"
                 >
-                  <div className="divide-y divide-slate-100">
+                  <div className="flex flex-col gap-3.5">
                     {courses.map((course: any) => {
+                      const typeLabel = formatCourseType(course.type);
                       const metaLine = [course.modality, course.institution]
                         .filter(Boolean)
                         .join(" · ");
 
                       return (
-                        <div
+                        <button
                           key={course.id || course.name}
-                          className="py-3 first:pt-0 last:pb-0 flex flex-col gap-1.5"
+                          type="button"
+                          onClick={() => setSelectedCourse(course)}
+                          className="group w-full text-left bg-slate-50/70 hover:bg-slate-50 border border-slate-200/80 hover:border-slate-300 rounded-2xl p-3.5 sm:p-4 transition-all flex flex-col sm:flex-row sm:items-center gap-3.5 sm:gap-4 cursor-pointer"
                         >
-                          <div className="flex items-baseline justify-between gap-3">
-                            <h4 className="text-body font-semibold text-slate-900">
-                              {course.name}
-                            </h4>
-                            {course.url && (
-                              <a
-                                href={normalizeUrl(course.url)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-meta text-slate-600 hover:text-slate-900 font-medium shrink-0"
-                              >
-                                Ver curso
-                              </a>
+                          <div className="relative w-full sm:w-56 md:w-64 aspect-video shrink-0 rounded-xl bg-slate-100 overflow-hidden">
+                            {course.coverUrl ? (
+                              <img
+                                src={course.coverUrl}
+                                alt={course.name}
+                                className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-slate-400">
+                                <BookOpen className="w-6 h-6 stroke-[1.75]" />
+                              </div>
+                            )}
+
+                            {typeLabel && (
+                              <span className="absolute top-2 left-2 h-6 px-2.5 inline-flex items-center rounded-full bg-white/90 backdrop-blur-sm text-meta text-slate-700 font-medium">
+                                {typeLabel}
+                              </span>
                             )}
                           </div>
 
-                          {metaLine && (
-                            <p className="text-meta text-slate-500">{metaLine}</p>
-                          )}
+                          <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                            <h4 className="text-title-section text-slate-900 font-semibold line-clamp-2">
+                              {course.name}
+                            </h4>
 
-                          {course.description && (
-                            <p className="text-body text-slate-600 whitespace-pre-wrap">
-                              {course.description}
-                            </p>
-                          )}
-                        </div>
+                            {metaLine && (
+                              <p className="text-meta text-slate-500 truncate">
+                                {metaLine}
+                              </p>
+                            )}
+
+                            {course.description && (
+                              <p className="text-body text-slate-600 line-clamp-2">
+                                {course.description}
+                              </p>
+                            )}
+
+                            <div className="mt-auto pt-1 flex items-center justify-between text-label text-slate-500 group-hover:text-slate-900 transition-colors">
+                              <span>Ver detalles</span>
+                              <ChevronRight className="w-4 h-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                            </div>
+                          </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -512,7 +636,7 @@ export function SpecialistProfileView({
                   }
                   onEdit={onEditSpecialistAvailability}
                   editTitle="Editar disponibilidad de sesión introductoria"
-                  emptyActionLabel="Configurar horarios disponibles"
+                  emptyActionLabel="Añadir horarios"
                 >
                   {!isPublic ? (
                     <div className="flex flex-col gap-2">
@@ -711,6 +835,16 @@ export function SpecialistProfileView({
         isOpen={showSessionGuide}
         onClose={() => setShowSessionGuide(false)}
         defaultTab={isPublic ? "miembros" : "especialistas"}
+      />
+
+      <CourseDetailModal
+        course={selectedCourse}
+        onClose={() => setSelectedCourse(null)}
+      />
+
+      <SpaceDetailModal
+        space={selectedSpace}
+        onClose={() => setSelectedSpace(null)}
       />
     </div>
   );

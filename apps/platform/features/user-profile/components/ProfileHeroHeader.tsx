@@ -132,17 +132,6 @@ export function ProfileHeroHeader({
             className="md:hidden absolute top-3 left-4 sm:left-6 z-20"
           />
         )}
-        {isOwn && onEditCover && (
-          <button
-            type="button"
-            onClick={onEditCover}
-            className="absolute bottom-3 right-4 sm:bottom-4 sm:right-6 lg:right-8 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/90 hover:bg-white text-slate-700 hover:text-slate-900 border border-slate-200/80 shadow-xs text-xs font-semibold font-jakarta backdrop-blur-sm transition-all cursor-pointer"
-            title="Cambiar portada"
-          >
-            <Camera className="w-3.5 h-3.5" />
-            <span>Cambiar portada</span>
-          </button>
-        )}
       </div>
 
       {/* 2. Overlapping Master Identity Card (2/3 over cover, 1/3 below) */}
@@ -164,17 +153,6 @@ export function ProfileHeroHeader({
                     <div className="w-full h-full border border-slate-200/80 rounded-xl bg-slate-50 flex items-center justify-center">
                       <User className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300 stroke-[1.5]" />
                     </div>
-                  )}
-                  {isOwn && onEditPhoto && (
-                    <button
-                      type="button"
-                      onClick={onEditPhoto}
-                      className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center text-white transition-opacity cursor-pointer backdrop-blur-[1px]"
-                      title="Cambiar foto de perfil"
-                    >
-                      <Camera className="w-5 h-5 sm:w-6 sm:h-6" />
-                      <span className="text-meta text-white font-semibold mt-1">Editar</span>
-                    </button>
                   )}
                 </div>
 

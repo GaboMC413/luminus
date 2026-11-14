@@ -20,6 +20,11 @@ export function serializeAdminUser(user: any) {
     stripeCustomerId: user.stripeCustomerId ?? null,
     stripeSubscriptionId: user.stripeSubscriptionId ?? null,
     memberSince: toDate(user.memberSince),
+    paidUntil: toDate(user.paidUntil),
+    closedAt: toDate(user.closedAt),
+    purgeAt: toDate(user.purgeAt),
+    closureReason: user.closureReason ?? null,
+    closureFeedback: user.closureFeedback ?? null,
     createdAt: toDate(user.createdAt),
     updatedAt: toDate(user.updatedAt),
     lastLoginAt: toDate(user.lastLoginAt),
@@ -117,12 +122,23 @@ export function normalizeAdminUserPatch(input: unknown) {
       ? (body.profileData as Record<string, unknown>)
       : body;
 
-  const userData: { role?: UserRole; status?: UserStatus; isGhost?: boolean; email?: string } = {};
+  const userData: {
+    role?: UserRole;
+    status?: UserStatus;
+    tier?: "FREE" | "MECENAS";
+    isGhost?: boolean;
+    email?: string;
+  } = {};
   const profileData: Record<string, string | boolean | Date | null> = {};
 
   const roleCandidate = rawUserData.role ?? body.role;
   if (roleCandidate === "USER" || roleCandidate === "ADMIN") {
     userData.role = roleCandidate;
+  }
+
+  const tierCandidate = rawUserData.tier ?? body.tier;
+  if (tierCandidate === "FREE" || tierCandidate === "MECENAS") {
+    userData.tier = tierCandidate;
   }
 
   const statusCandidate = rawUserData.status ?? body.status;

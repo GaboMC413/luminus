@@ -26,6 +26,8 @@ const TARGET_FILES = [
   "features/user-profile/modals/EditSpecialistSpacesModal.tsx",
   "features/user-profile/modals/EditSpecialistCoursesModal.tsx",
   "features/user-profile/modals/EditSpecialistAvailabilityModal.tsx",
+  "features/user-profile/modals/CourseDetailModal.tsx",
+  "features/user-profile/modals/SpaceDetailModal.tsx",
   "app/inicio/public-profile/page.tsx",
 ];
 

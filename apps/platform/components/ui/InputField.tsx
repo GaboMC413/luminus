@@ -9,6 +9,7 @@ export interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElem
   textAlign?: 'left' | 'center' | 'right';
   enterKeyHint?: 'enter' | 'done' | 'go' | 'next' | 'previous' | 'search' | 'send';
   rightIcon?: React.ReactNode;
+  leftPrefix?: string;
   error?: string;
 }
 
@@ -22,6 +23,7 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({
   onTogglePassword,
   textAlign = 'left',
   rightIcon,
+  leftPrefix,
   error,
   ...props 
 }, ref) => {
@@ -50,15 +52,36 @@ export const InputField = React.forwardRef<HTMLInputElement, InputFieldProps>(({
         </label>
       )}
       <div className="relative w-full">
-        <input
-          id={id}
-          ref={ref}
-          type={isPassword && showPassword ? 'text' : type}
-          {...props}
-          className={`${defaultStyles} ${alignmentClasses[textAlign]} ${className} ${
-            isPassword && onTogglePassword ? 'pr-9.5' : rightIcon ? 'pr-9.5' : ''
-          }`}
-        />
+        {leftPrefix && variant === 'bordered' ? (
+          <div
+            className={`w-full h-11 flex items-stretch bg-white border ${
+              error
+                ? 'border-rose-500 focus-within:border-rose-500 focus-within:ring-1 focus-within:ring-rose-500'
+                : 'border-slate-200 focus-within:border-slate-400 focus-within:ring-1 focus-within:ring-slate-400/20'
+            } rounded-xl overflow-hidden transition-colors`}
+          >
+            <span className="px-3 bg-slate-50 border-r border-slate-200 text-slate-500 font-sans text-xs sm:text-sm flex items-center select-none shrink-0">
+              {leftPrefix}
+            </span>
+            <input
+              id={id}
+              ref={ref}
+              type={isPassword && showPassword ? 'text' : type}
+              {...props}
+              className={`flex-1 min-w-0 h-full px-3 bg-transparent text-slate-900 placeholder:text-slate-400 focus:outline-none font-sans text-xs sm:text-sm disabled:bg-slate-50 disabled:text-slate-600 disabled:cursor-default ${alignmentClasses[textAlign]} ${className}`}
+            />
+          </div>
+        ) : (
+          <input
+            id={id}
+            ref={ref}
+            type={isPassword && showPassword ? 'text' : type}
+            {...props}
+            className={`${defaultStyles} ${alignmentClasses[textAlign]} ${className} ${
+              isPassword && onTogglePassword ? 'pr-9.5' : rightIcon ? 'pr-9.5' : ''
+            }`}
+          />
+        )}
         {rightIcon && !isPassword && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none text-slate-400">
             {rightIcon}

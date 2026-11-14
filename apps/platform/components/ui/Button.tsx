@@ -213,13 +213,13 @@ export function EmptyProfileButton({ label, icon, className = "", ...props }: Em
   return (
     <button
       {...props}
-      className={`group relative flex items-center justify-between w-full p-4 rounded-2xl bg-white border border-slate-200/90 hover:border-slate-300 transition-all duration-200 cursor-pointer shadow-none ${className}`}
+      className={`group relative flex items-center justify-between gap-3 w-full p-4 rounded-2xl bg-white border border-slate-200/90 hover:border-slate-300 transition-all duration-200 cursor-pointer shadow-none text-left ${className}`}
     >
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-slate-900 group-hover:bg-slate-100 transition-colors">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center shrink-0 text-slate-400 group-hover:text-slate-900 group-hover:bg-slate-100 transition-colors">
           {renderMappedIcon(icon || "add", "w-5 h-5 shrink-0")}
         </div>
-        <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 transition-colors font-jakarta">
+        <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 transition-colors font-jakarta truncate text-left">
           {label}
         </span>
       </div>

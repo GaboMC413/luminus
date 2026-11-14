@@ -126,8 +126,8 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "mem-1",
         question: "¿Cómo funciona la membresía de LUMINUS?",
         paragraphs: [
-          "La membresía permite acceder a la experiencia, servicios y herramientas disponibles dentro de la plataforma según el plan elegido.",
-          "Las nuevas cuentas comienzan con un período inicial de 3 meses sin costo y sin ingresar tarjeta. Antes de finalizar, LUMINUS informará al usuario para decidir si desea continuar.",
+          "Puedes unirte gratis a LUMINUS sin ingresar datos de pago para explorar la comunidad, conectar con especialistas y descubrir actividades.",
+          "Si deseas apoyar el crecimiento de la red, puedes sumarte como Mecenas (USD 5/mes o USD 45/año), impulsando nuevas herramientas y accediendo a beneficios exclusivos a medida que estén disponibles. Puedes cancelar cuando quieras.",
         ],
       },
       {
@@ -182,8 +182,8 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "esp-4",
         question: "¿Necesito pagar una membresía adicional?",
         paragraphs: [
-          "Para iniciar una aplicación como Especialista necesitas contar con una membresía activa dentro de la plataforma LUMINUS.",
-          "La membresía permite formar parte de la plataforma y acceder a sus herramientas, mientras que la aprobación del perfil profesional es un proceso independiente sujeto a revisión.",
+          "No. Sumarte y postularte como Especialista en LUMINUS es gratuito; solo necesitas tener una cuenta en la plataforma.",
+          "La aprobación del perfil profesional es un proceso independiente sujeto a revisión por parte de nuestro equipo.",
         ],
       },
       {

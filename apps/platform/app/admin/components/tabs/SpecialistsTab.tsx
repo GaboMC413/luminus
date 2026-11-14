@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { AdminSpecialist, AdminPostulation, AdminUser, AdminTab } from "../../types";
+import { AdminIntroSession, AdminSpecialist, AdminPostulation, AdminUser, AdminTab } from "../../types";
 import { InputField } from "@/components/ui/InputField";
 import { Button } from "@/components/ui/Button";
 import { fieldValue, formatShortTime } from "../../utils";
 import { AdminBadge, AdminCard, AdminDetailRow } from "../AdminDesignSystem";
+import { resolveSocialHref } from "@/utils/socialLinks";
 
 const DAY_NAMES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 
@@ -13,6 +14,7 @@ interface SpecialistsTabProps {
   specialists: AdminSpecialist[];
   postulations: AdminPostulation[];
   users: AdminUser[];
+  introSessions?: AdminIntroSession[];
   setSpecialists: React.Dispatch<React.SetStateAction<AdminSpecialist[]>>;
   setPostulations: React.Dispatch<React.SetStateAction<AdminPostulation[]>>;
   specialistSubTab: "lista" | "postulaciones";
@@ -22,12 +24,14 @@ interface SpecialistsTabProps {
   setSelectedId: (id: string) => void;
   setUserSubTab: (tab: "activos" | "cerradas" | "deshabilitados") => void;
   setActiveTab: (tab: AdminTab) => void;
+  onOpenSession?: (sessionId: string) => void;
 }
 
 export function SpecialistsTab({
   specialists,
   postulations,
   users,
+  introSessions = [],
   setSpecialists,
   setPostulations,
   specialistSubTab,
@@ -37,6 +41,7 @@ export function SpecialistsTab({
   setSelectedId,
   setUserSubTab,
   setActiveTab,
+  onOpenSession,
 }: SpecialistsTabProps) {
   const [specialistSearch, setSpecialistSearch] = useState("");
   const [postulationSearch, setPostulationSearch] = useState("");
@@ -80,6 +85,11 @@ export function SpecialistsTab({
 
   const selectedSpecialist =
     specialists.find((s) => s.userId === selectedSpecialistUserId) ?? filteredSpecialists[0] ?? null;
+
+  const specialistSessions = useMemo(() => {
+    if (!selectedSpecialist) return [];
+    return introSessions.filter((s) => s.specialistId === selectedSpecialist.userId);
+  }, [introSessions, selectedSpecialist?.userId]);
 
   const selectedPostulation =
     postulations.find((p) => p.id === selectedPostulationId) ?? filteredPostulations[0] ?? null;
@@ -775,7 +785,7 @@ export function SpecialistsTab({
                     <div className="flex flex-wrap gap-2 text-xs">
                       {selectedSpecialist.linkedinUrl && (
                         <a
-                          href={selectedSpecialist.linkedinUrl}
+                          href={resolveSocialHref("linkedin", selectedSpecialist.linkedinUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:text-[#0077B5] transition-colors font-medium text-[13px]"
@@ -788,7 +798,7 @@ export function SpecialistsTab({
                       )}
                       {selectedSpecialist.instagramUrl && (
                         <a
-                          href={selectedSpecialist.instagramUrl}
+                          href={resolveSocialHref("instagram", selectedSpecialist.instagramUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:text-[#E1306C] transition-colors font-medium text-[13px]"
@@ -801,7 +811,7 @@ export function SpecialistsTab({
                       )}
                       {selectedSpecialist.websiteUrl && (
                         <a
-                          href={selectedSpecialist.websiteUrl}
+                          href={resolveSocialHref("website", selectedSpecialist.websiteUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:text-black transition-colors font-medium text-[13px]"
@@ -842,6 +852,57 @@ export function SpecialistsTab({
                         </div>
                       </div>
                     )}
+
+                  {/* Introductory Sessions Received */}
+                  <div>
+                    <h3 className="text-[11.5px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                      Sesiones Introductorias Recibidas ({specialistSessions.length})
+                    </h3>
+                    {specialistSessions.length === 0 ? (
+                      <div className="bg-slate-50/50 rounded-xl p-4 text-xs text-slate-400 italic">
+                        No tiene sesiones introductorias registradas.
+                      </div>
+                    ) : (
+                      <div className="bg-slate-50/50 rounded-xl border border-slate-100 divide-y divide-slate-100">
+                        {specialistSessions.slice(0, 6).map((s) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => onOpenSession?.(s.id)}
+                            className="w-full flex items-center justify-between gap-3 px-3.5 py-2.5 text-left hover:bg-slate-100/60 transition-colors bg-transparent border-none cursor-pointer"
+                          >
+                            <div className="min-w-0">
+                              <span className="text-xs font-semibold text-slate-900 block truncate">
+                                {s.requester.name}
+                              </span>
+                              <span className="text-[11px] text-slate-500">
+                                {s.scheduledDate} · {s.startTime} - {s.endTime}
+                              </span>
+                            </div>
+                            <AdminBadge
+                              variant={
+                                s.status === "accepted"
+                                  ? "active"
+                                  : s.status === "pending"
+                                    ? "pending"
+                                    : s.status === "cancelled"
+                                      ? "deleted"
+                                      : "disabled"
+                              }
+                            >
+                              {s.status === "accepted"
+                                ? "Confirmada"
+                                : s.status === "pending"
+                                  ? "Pendiente"
+                                  : s.status === "cancelled"
+                                    ? "Cancelada"
+                                    : "Rechazada"}
+                            </AdminBadge>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
                   {/* Remove Specialist Button */}
                   <div className="pt-2">
@@ -1127,7 +1188,7 @@ export function SpecialistsTab({
                     <div className="flex flex-wrap gap-2">
                       {selectedPostulation.linkedinUrl && (
                         <a
-                          href={selectedPostulation.linkedinUrl}
+                          href={resolveSocialHref("linkedin", selectedPostulation.linkedinUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 hover:text-[#0077B5] transition-colors font-medium text-xs font-jakarta"
@@ -1140,7 +1201,7 @@ export function SpecialistsTab({
                       )}
                       {selectedPostulation.instagramUrl && (
                         <a
-                          href={selectedPostulation.instagramUrl}
+                          href={resolveSocialHref("instagram", selectedPostulation.instagramUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 hover:text-[#E1306C] transition-colors font-medium text-xs font-jakarta"
@@ -1153,7 +1214,7 @@ export function SpecialistsTab({
                       )}
                       {selectedPostulation.websiteUrl && (
                         <a
-                          href={selectedPostulation.websiteUrl}
+                          href={resolveSocialHref("website", selectedPostulation.websiteUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 hover:text-black transition-colors font-medium text-xs font-jakarta"

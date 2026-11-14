@@ -98,7 +98,7 @@ export function PhotoEditor({ image, onSave, onCancel }: PhotoEditorProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
       <div className="w-full max-w-[390px] bg-white rounded-2xl border border-zinc-200/90 shadow-2xl overflow-hidden flex flex-col">
         {/* Modal Header */}
         <div className="flex justify-between items-center px-6 py-4 border-b border-zinc-100">

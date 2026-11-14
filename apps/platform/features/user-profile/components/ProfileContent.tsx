@@ -193,7 +193,8 @@ export function ProfileContent() {
     });
 
     if (!response.ok) {
-      throw new Error("Could not save profile.");
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.detail || errorData?.message || "Could not save profile.");
     }
 
     const data = await response.json();
@@ -503,6 +504,23 @@ export function ProfileContent() {
         />
       )}
 
+      {showEditPersonal && (
+        <EditPersonalInfoModal
+          isOpen={showEditPersonal}
+          onClose={() => {
+            setShowEditPersonal(false);
+            setFocusedField(null);
+          }}
+          onSave={handleSavePersonal}
+          initialData={profile}
+          initialFocusField={focusedField}
+          photoUrl={effectiveProfile.profile_picture_url}
+          coverUrl={effectiveProfile.cover_url}
+          onEditPhoto={() => fileInputRef.current?.click()}
+          onEditCover={() => setShowCoverModal(true)}
+        />
+      )}
+
       <CoverSelectorModal
         isOpen={showCoverModal}
         onClose={() => setShowCoverModal(false)}
@@ -531,19 +549,6 @@ export function ProfileContent() {
           setShowCoverModal(false);
         }}
       />
-
-      {showEditPersonal && (
-        <EditPersonalInfoModal
-          isOpen={showEditPersonal}
-          onClose={() => {
-            setShowEditPersonal(false);
-            setFocusedField(null);
-          }}
-          onSave={handleSavePersonal}
-          initialData={profile}
-          initialFocusField={focusedField}
-        />
-      )}
 
       {showEditAbout && (
         <EditAboutModal

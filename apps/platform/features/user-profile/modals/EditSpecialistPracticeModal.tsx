@@ -8,7 +8,15 @@ import { TextAreaField } from "@/components/ui/TextAreaField";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { useDynamicCategories } from "@/components/ui/InterestPill";
 import { TagSelector } from "@/features/especialistas/onboarding/components/molecules/TagSelector";
-import { TAG_GROUPS, isValidUrl } from "@/features/especialistas/onboarding/components/Step2Profile";
+import { TAG_GROUPS } from "@/features/especialistas/onboarding/components/Step2Profile";
+import {
+  normalizeInstagramInput,
+  normalizeLinkedinInput,
+  normalizeWebsiteUrl,
+  stripInstagramPrefix,
+  stripLinkedinInPrefix,
+  stripHttpsPrefix,
+} from "@/utils/socialLinks";
 
 export interface SpecialistPracticeFormData {
   specialty: string;
@@ -54,9 +62,9 @@ export function EditSpecialistPracticeModal({
     setSelectedAreas(Array.isArray(initialData.selectedAreas) ? initialData.selectedAreas : []);
     setBio(initialData.bio ?? "");
     setInstitution(initialData.institution ?? "");
-    setInstagramUrl(initialData.instagramUrl ?? "");
-    setLinkedinUrl(initialData.linkedinUrl ?? "");
-    setWebsiteUrl(initialData.websiteUrl ?? "");
+    setInstagramUrl(stripInstagramPrefix(initialData.instagramUrl ?? ""));
+    setLinkedinUrl(stripLinkedinInPrefix(initialData.linkedinUrl ?? ""));
+    setWebsiteUrl(stripHttpsPrefix(initialData.websiteUrl ?? ""));
     setErrors({});
   }, [isOpen, initialData]);
 
@@ -87,14 +95,18 @@ export function EditSpecialistPracticeModal({
 
   const handleSave = async () => {
     const nextErrors: Record<string, string> = {};
-    if (instagramUrl.trim() && !isValidUrl(instagramUrl.trim())) {
-      nextErrors.instagramUrl = "Ingresa una URL válida (ej. https://instagram.com/...)";
+    const normalizedInstagram = instagramUrl.trim() ? normalizeInstagramInput(instagramUrl) : "";
+    const normalizedLinkedin = linkedinUrl.trim() ? normalizeLinkedinInput(linkedinUrl) : "";
+    const normalizedWebsite = websiteUrl.trim() ? normalizeWebsiteUrl(websiteUrl) : "";
+
+    if (instagramUrl.trim() && !normalizedInstagram) {
+      nextErrors.instagramUrl = "Ingresa tu usuario (ej. tuusuario) o un enlace válido de Instagram";
     }
-    if (linkedinUrl.trim() && !isValidUrl(linkedinUrl.trim())) {
-      nextErrors.linkedinUrl = "Ingresa una URL válida (ej. https://linkedin.com/in/...)";
+    if (linkedinUrl.trim() && !normalizedLinkedin) {
+      nextErrors.linkedinUrl = "Ingresa tu perfil (ej. tuperfil) o un enlace válido de LinkedIn";
     }
-    if (websiteUrl.trim() && !isValidUrl(websiteUrl.trim())) {
-      nextErrors.websiteUrl = "Ingresa una URL válida (ej. https://tusitio.com)";
+    if (websiteUrl.trim() && !normalizedWebsite) {
+      nextErrors.websiteUrl = "Ingresa una URL válida (ej. tusitio.com)";
     }
 
     if (Object.keys(nextErrors).length > 0) {
@@ -110,9 +122,9 @@ export function EditSpecialistPracticeModal({
         selectedAreas,
         bio: bio.trim(),
         institution: institution.trim(),
-        instagramUrl: instagramUrl.trim(),
-        linkedinUrl: linkedinUrl.trim(),
-        websiteUrl: websiteUrl.trim(),
+        instagramUrl: normalizedInstagram ?? "",
+        linkedinUrl: normalizedLinkedin ?? "",
+        websiteUrl: normalizedWebsite ?? "",
       });
       onClose();
     } catch (err) {
@@ -195,23 +207,35 @@ export function EditSpecialistPracticeModal({
           <span className="text-label text-slate-600">Redes y sitio web (opcional)</span>
           <InputField
             label="Instagram"
-            placeholder="https://instagram.com/tuusuario"
+            leftPrefix="instagram.com/"
+            placeholder="tuusuario"
             value={instagramUrl}
-            onChange={(e) => setInstagramUrl(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setInstagramUrl(/instagram\.com\/|instagr\.am\//i.test(val) ? stripInstagramPrefix(val) : val);
+            }}
             error={errors.instagramUrl}
           />
           <InputField
             label="LinkedIn"
-            placeholder="https://linkedin.com/in/tuperfil"
+            leftPrefix="linkedin.com/in/"
+            placeholder="tuperfil"
             value={linkedinUrl}
-            onChange={(e) => setLinkedinUrl(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setLinkedinUrl(/linkedin\.com\/in\//i.test(val) ? stripLinkedinInPrefix(val) : val);
+            }}
             error={errors.linkedinUrl}
           />
           <InputField
             label="Sitio web"
-            placeholder="https://tusitio.com"
+            leftPrefix="https://"
+            placeholder="tusitio.com"
             value={websiteUrl}
-            onChange={(e) => setWebsiteUrl(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setWebsiteUrl(/^https:\/\//i.test(val) ? stripHttpsPrefix(val) : val);
+            }}
             error={errors.websiteUrl}
           />
         </div>

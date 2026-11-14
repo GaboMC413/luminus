@@ -33,35 +33,48 @@ export function CoverSelectorModal({ isOpen, onClose, onSelect, currentCover }: 
       isOpen={isOpen}
       onClose={onClose}
       title="Selecciona una portada"
+      subtitle="Elige una imagen para el encabezado de tu perfil."
       maxWidth="720px"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} className="w-full md:flex-1">
+          <Button variant="secondary" size="md" onClick={onClose}>
             Cancelar
           </Button>
-          <Button variant="primary" onClick={handleSave} disabled={!selectedCover} className="w-full md:flex-1">
+          <Button variant="primary" size="md" onClick={handleSave} disabled={!selectedCover}>
             Guardar cambios
           </Button>
         </>
       }
     >
-      <div className="grid grid-cols-3 gap-3 md:gap-4">
-        {covers.map((url) => (
-          <div
-            key={url}
-            onClick={() => setSelectedCover(url)}
-            className={`relative aspect-[4/3] md:aspect-[16/7] rounded-xl overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-slate-900 group ${selectedCover === url ? 'ring-2 ring-slate-900 shadow-none' : 'border border-slate-200/80'}`}
-          >
-            <img src={url} alt="Cover option" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-            {selectedCover === url && (
-              <div className="absolute inset-0 bg-slate-900/10 flex items-center justify-center">
-                <div className="bg-slate-900 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-none">
-                  <Check className="w-4 h-4 text-white stroke-[2.5]" />
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 p-0.5">
+        {covers.map((url, idx) => {
+          const isSelected = selectedCover === url;
+          return (
+            <button
+              key={url}
+              type="button"
+              onClick={() => setSelectedCover(url)}
+              aria-pressed={isSelected}
+              aria-label={`Seleccionar portada ${idx + 1}`}
+              className={`relative aspect-[16/7] rounded-xl overflow-hidden cursor-pointer transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 ${
+                isSelected
+                  ? "ring-2 ring-slate-900 ring-offset-2"
+                  : "border border-slate-200/80 hover:border-slate-400"
+              }`}
+            >
+              <img
+                src={url}
+                alt={`Portada ${idx + 1}`}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              {isSelected && (
+                <span className="absolute top-2 right-2 bg-slate-900 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-xs">
+                  <Check className="w-3.5 h-3.5 text-white stroke-[2.5]" />
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
     </Modal>
   );

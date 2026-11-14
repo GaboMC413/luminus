@@ -2,6 +2,11 @@ import { NextResponse, after } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
 import { deleteS3FileByUrl } from "@/lib/storage/s3FileCleanup";
+import {
+  normalizeInstagramInput,
+  normalizeLinkedinInput,
+  normalizeWebsiteUrl,
+} from "@/utils/socialLinks";
 
 export const runtime = "nodejs";
 
@@ -125,7 +130,12 @@ export async function GET() {
               where: { isActive: true },
               include: {
                 category: true,
-                services: true,
+                spaceCategories: {
+                  include: { category: true },
+                },
+                services: {
+                  include: { category: true },
+                },
                 availability: {
                   where: { isActive: true },
                   orderBy: { dayOfWeek: "asc" },
@@ -305,9 +315,18 @@ export async function PATCH(request: Request) {
         if (typeof sp.title === "string") spUpdate.title = sp.title.trim() || null;
         if (typeof sp.bio === "string") spUpdate.bio = sp.bio.trim() || null;
         if (typeof sp.institution === "string") spUpdate.institution = sp.institution.trim() || null;
-        if (typeof sp.instagramUrl === "string") spUpdate.instagramUrl = sp.instagramUrl.trim() || null;
-        if (typeof sp.linkedinUrl === "string") spUpdate.linkedinUrl = sp.linkedinUrl.trim() || null;
-        if (typeof sp.websiteUrl === "string") spUpdate.websiteUrl = sp.websiteUrl.trim() || null;
+        if (typeof sp.instagramUrl === "string") {
+          const val = sp.instagramUrl.trim();
+          spUpdate.instagramUrl = val ? (normalizeInstagramInput(val) ?? val) : null;
+        }
+        if (typeof sp.linkedinUrl === "string") {
+          const val = sp.linkedinUrl.trim();
+          spUpdate.linkedinUrl = val ? (normalizeLinkedinInput(val) ?? val) : null;
+        }
+        if (typeof sp.websiteUrl === "string") {
+          const val = sp.websiteUrl.trim();
+          spUpdate.websiteUrl = val ? (normalizeWebsiteUrl(val) ?? val) : null;
+        }
         if (Array.isArray(sp.selectedAreas)) {
           spUpdate.selectedAreas = sp.selectedAreas
             .filter((area): area is string => typeof area === "string" && area.trim().length > 0)
@@ -331,23 +350,47 @@ export async function PATCH(request: Request) {
             const incomingSpaces = sp.spaces as Array<Record<string, unknown>>;
             const keptIds: string[] = [];
 
+            const allDbCategories = await tx.interestCategory.findMany();
+            const categoryMap = new Map<string, string>();
+            for (const cat of allDbCategories) {
+              categoryMap.set(cat.name.toLowerCase(), cat.id);
+            }
+
             for (const item of incomingSpaces) {
               const name = typeof item.name === "string" ? item.name.trim() : "";
               if (!name) continue;
+
+              const rawCategories = Array.isArray(item.spaceCategories)
+                ? (item.spaceCategories as unknown[]).filter((c): c is string => typeof c === "string" && c.trim() !== "")
+                : [];
+              const primaryCategoryName =
+                rawCategories[0] ||
+                (typeof item.categoryArea === "string" ? item.categoryArea.trim() || null : null);
+              const primaryCategoryId = primaryCategoryName
+                ? categoryMap.get(primaryCategoryName.toLowerCase()) || null
+                : null;
+
               const spaceData = {
                 name,
-                spaceType: typeof item.spaceType === "string" ? item.spaceType.trim() || "CONSULTORIO" : "CONSULTORIO",
+                spaceType: typeof item.spaceType === "string" ? item.spaceType.trim() || "Consultorio" : "Consultorio",
                 customSpaceType: typeof item.customSpaceType === "string" ? item.customSpaceType.trim() || null : null,
+                categoryArea: primaryCategoryName,
+                categoryId: primaryCategoryId,
                 description: typeof item.description === "string" ? item.description.trim() || null : null,
                 address: typeof item.address === "string" ? item.address.trim() || null : null,
                 city: typeof item.city === "string" ? item.city.trim() || null : null,
                 country: typeof item.country === "string" ? item.country.trim() || null : null,
+                lat: item.lat !== null && item.lat !== undefined && !Number.isNaN(Number(item.lat)) ? Number(item.lat) : null,
+                lng: item.lng !== null && item.lng !== undefined && !Number.isNaN(Number(item.lng)) ? Number(item.lng) : null,
+                googlePlaceId: typeof item.googlePlaceId === "string" ? item.googlePlaceId.trim() || null : null,
                 phone: typeof item.phone === "string" ? item.phone.trim() || null : null,
                 website: typeof item.website === "string" ? item.website.trim() || null : null,
                 googleMapsUrl: typeof item.googleMapsUrl === "string" ? item.googleMapsUrl.trim() || null : null,
+                coverUrl: typeof item.coverUrl === "string" ? item.coverUrl.trim() || null : null,
                 isActive: true,
               };
 
+              let spaceId: string | null = null;
               if (typeof item.id === "string" && item.id) {
                 const owned = await tx.specialistSpace.findFirst({
                   where: { id: item.id, userId: session.userId },
@@ -358,19 +401,60 @@ export async function PATCH(request: Request) {
                     where: { id: owned.id },
                     data: spaceData,
                   });
-                  keptIds.push(owned.id);
-                  continue;
+                  spaceId = owned.id;
                 }
               }
 
-              const created = await tx.specialistSpace.create({
-                data: {
-                  userId: session.userId,
-                  ...spaceData,
-                },
-                select: { id: true },
-              });
-              keptIds.push(created.id);
+              if (!spaceId) {
+                const created = await tx.specialistSpace.create({
+                  data: {
+                    userId: session.userId,
+                    ...spaceData,
+                  },
+                  select: { id: true },
+                });
+                spaceId = created.id;
+              }
+
+              keptIds.push(spaceId as string);
+
+              if (Array.isArray(item.spaceCategories)) {
+                await tx.specialistSpaceCategory.deleteMany({ where: { spaceId } });
+                const categoryIds = rawCategories
+                  .map((c) => categoryMap.get(c.trim().toLowerCase()))
+                  .filter((id): id is string => Boolean(id));
+                if (categoryIds.length > 0) {
+                  await tx.specialistSpaceCategory.createMany({
+                    data: categoryIds.map((catId) => ({ spaceId, categoryId: catId })),
+                    skipDuplicates: true,
+                  });
+                }
+              }
+
+              if (Array.isArray(item.spaceServices)) {
+                await tx.specialistSpaceService.deleteMany({ where: { spaceId } });
+                const rawServices = item.spaceServices as Array<{ name?: unknown; categoryName?: unknown; isCustom?: unknown }>;
+                const servicesToInsert = rawServices
+                  .map((svc) => {
+                    const svcName = typeof svc.name === "string" ? svc.name.trim() : "";
+                    const catName = typeof svc.categoryName === "string" ? svc.categoryName.trim() : "";
+                    const matchedId = categoryMap.get(catName.toLowerCase()) || primaryCategoryId;
+                    if (!svcName || !matchedId) return null;
+                    return {
+                      spaceId,
+                      categoryId: matchedId,
+                      name: svcName,
+                      isCustom: Boolean(svc.isCustom),
+                    };
+                  })
+                  .filter((svc): svc is { spaceId: string; categoryId: string; name: string; isCustom: boolean } => Boolean(svc));
+                if (servicesToInsert.length > 0) {
+                  await tx.specialistSpaceService.createMany({
+                    data: servicesToInsert,
+                    skipDuplicates: true,
+                  });
+                }
+              }
             }
 
             await tx.specialistSpace.updateMany({
@@ -487,7 +571,12 @@ export async function PATCH(request: Request) {
                 where: { isActive: true },
                 include: {
                   category: true,
-                  services: true,
+                  spaceCategories: {
+                    include: { category: true },
+                  },
+                  services: {
+                    include: { category: true },
+                  },
                   availability: {
                     where: { isActive: true },
                     orderBy: { dayOfWeek: "asc" },
@@ -498,7 +587,7 @@ export async function PATCH(request: Request) {
           },
         },
       });
-    });
+    }, { maxWait: 10000, timeout: 15000 });
 
     const newlyCompletedQuests: any[] = [];
     try {
@@ -557,6 +646,13 @@ export async function PATCH(request: Request) {
     });
   } catch (error) {
     console.error("Profile update failed.", error);
-    return NextResponse.json({ message: "No fue posible actualizar el perfil." }, { status: 500 });
+    const detail =
+      process.env.NODE_ENV !== "production" && error instanceof Error
+        ? error.message
+        : undefined;
+    return NextResponse.json(
+      { message: "No fue posible actualizar el perfil.", ...(detail ? { detail } : {}) },
+      { status: 500 }
+    );
   }
 }

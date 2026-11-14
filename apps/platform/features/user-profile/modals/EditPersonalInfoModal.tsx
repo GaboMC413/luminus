@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import { Camera, User } from 'lucide-react';
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { InputField } from "@/components/ui/InputField";
@@ -24,6 +25,10 @@ interface EditPersonalInfoModalProps {
   onSave: (data: Partial<ProfileData>) => void;
   initialData: ProfileData;
   initialFocusField?: string | null;
+  photoUrl?: string | null;
+  coverUrl?: string | null;
+  onEditPhoto?: () => void;
+  onEditCover?: () => void;
 }
 
 const MONTHS = [
@@ -70,7 +75,17 @@ const isValidBirthdate = (val: string): boolean => {
   return true;
 };
 
-export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, initialFocusField }: EditPersonalInfoModalProps) {
+export function EditPersonalInfoModal({
+  isOpen,
+  onClose,
+  onSave,
+  initialData,
+  initialFocusField,
+  photoUrl,
+  coverUrl,
+  onEditPhoto,
+  onEditCover,
+}: EditPersonalInfoModalProps) {
   const [formData, setFormData] = useState<ProfileData>(initialData);
   
   // Split birthdate states
@@ -190,11 +205,16 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
     onClose();
   };
 
+  const hasCover = Boolean(coverUrl && coverUrl !== "" && !coverUrl.includes("empty"));
+  const iconButtonClass =
+    "rounded-full bg-white/85 hover:bg-white text-slate-600 hover:text-slate-900 border border-white/70 shadow-xs backdrop-blur-md flex items-center justify-center transition-all cursor-pointer active:scale-[0.97]";
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Editar información personal"
+      title="Editar perfil"
+      subtitle="Actualiza tu foto, portada y datos personales."
       maxWidth="540px"
       footer={
         <>
@@ -207,7 +227,62 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
         </>
       }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        {(onEditPhoto || onEditCover) && (
+          <div
+            className={`relative w-full h-28 sm:h-32 rounded-2xl overflow-hidden border border-slate-200/80 flex items-center justify-start pl-4 ${
+              !hasCover ? "luminus-light-gradient" : "bg-slate-100"
+            }`}
+          >
+            {hasCover && (
+              <img
+                src={coverUrl!}
+                alt="Portada actual"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            )}
+
+            {onEditCover && (
+              <button
+                type="button"
+                onClick={onEditCover}
+                aria-label="Cambiar portada"
+                title="Cambiar portada"
+                className={`absolute top-2.5 right-2.5 z-10 w-8 h-8 ${iconButtonClass}`}
+              >
+                <Camera className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            {onEditPhoto && (
+              <div className="relative z-10 w-20 h-20 sm:w-24 sm:h-24 shrink-0">
+                <div
+                  onClick={onEditPhoto}
+                  className="w-full h-full rounded-2xl overflow-hidden border-4 border-white bg-slate-50 shadow-sm flex items-center justify-center cursor-pointer group"
+                >
+                  {photoUrl ? (
+                    <img
+                      src={photoUrl}
+                      alt="Foto de perfil"
+                      className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
+                    />
+                  ) : (
+                    <User className="w-8 h-8 text-slate-300 stroke-[1.5]" />
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={onEditPhoto}
+                  aria-label="Cambiar foto"
+                  title="Cambiar foto"
+                  className={`absolute bottom-2 right-2 w-7 h-7 ${iconButtonClass}`}
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <InputField
             label="Nombre"
