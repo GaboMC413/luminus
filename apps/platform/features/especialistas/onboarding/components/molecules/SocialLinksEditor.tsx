@@ -6,19 +6,11 @@ import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/InputField";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { SocialLink } from "../../types";
+import { isValidUrl } from "@/utils/socialLinks";
 
 const ALL_PLATFORMS = ["Instagram", "LinkedIn", "YouTube", "Facebook", "X", "Website"];
 
-export const isValidUrl = (url: string): boolean => {
-  if (!url) return false;
-  try {
-    const formatted = url.startsWith("http://") || url.startsWith("https://") ? url : `https://${url}`;
-    new URL(formatted);
-    return true;
-  } catch {
-    return false;
-  }
-};
+export { isValidUrl };
 
 const getSocialPlaceholder = (platform: string): string => {
   if (!platform) return "https://...";
@@ -26,11 +18,11 @@ const getSocialPlaceholder = (platform: string): string => {
     case "youtube":
       return "https://www.youtube.com/...";
     case "instagram":
-      return "https://www.instagram.com/...";
+      return "@tuusuario o https://instagram.com/...";
     case "facebook":
       return "https://www.facebook.com/...";
     case "linkedin":
-      return "https://www.linkedin.com/in/...";
+      return "tuperfil o https://linkedin.com/in/...";
     case "x":
     case "twitter":
       return "https://x.com/...";
@@ -97,11 +89,22 @@ export function SocialLinksEditor({
               <div className="flex-1">
                 <InputField
                   id={`social-input-${idx}`}
-                  type="url"
+                  type={
+                    link.platform.toLowerCase() === "instagram" ||
+                    link.platform.toLowerCase() === "linkedin"
+                      ? "text"
+                      : "url"
+                  }
                   value={link.url}
                   onChange={(e) => handleLinkChange(idx, "url", e.target.value)}
                   placeholder={getSocialPlaceholder(link.platform)}
-                  error={isError ? "Ingresa una URL válida (ej. https://...)" : undefined}
+                  error={
+                    isError
+                      ? link.platform.toLowerCase() === "instagram"
+                        ? "Ingresa un usuario válido (ej. @tuusuario) o URL de Instagram"
+                        : "Ingresa una URL válida (ej. https://...)"
+                      : undefined
+                  }
                 />
               </div>
 

@@ -92,6 +92,8 @@ export function getActionBadge(action: string) {
       return <span className="rounded-full bg-red-50 text-red-500 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider">Eliminó Red</span>;
     case "UPDATE_PROFILE":
       return <span className="rounded-full bg-violet-50 text-violet-700 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider">Actualizó Perfil</span>;
+    case "MEMBERSHIP_ACTIVATED":
+      return <span className="rounded-full bg-amber-50 text-amber-800 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider">Mecenas Activado</span>;
     default:
       return <span className="rounded-full bg-slate-50 text-slate-700 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider">{action}</span>;
   }
@@ -130,6 +132,8 @@ export function renderLogDetails(action: string, detailsStr: string | null) {
         return `Eliminó de su red a ${details.targetName || details.targetEmail || "un usuario"}`;
       case "UPDATE_PROFILE":
         return `Actualizó campos de perfil: ${details.updatedFields ? details.updatedFields.join(", ") : "todos"}`;
+      case "MEMBERSHIP_ACTIVATED":
+        return `Activó membresía ${details.tier || "MECENAS"}${details.subscriptionId ? ` (${details.subscriptionId})` : ""}`;
       default:
         return detailsStr;
     }

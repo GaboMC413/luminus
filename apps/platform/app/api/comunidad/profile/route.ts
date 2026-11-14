@@ -48,7 +48,12 @@ export async function GET(request: Request) {
                 where: { isActive: true },
                 include: {
                   category: true,
-                  services: true,
+                  spaceCategories: {
+                    include: { category: true },
+                  },
+                  services: {
+                    include: { category: true },
+                  },
                   availability: {
                     where: { isActive: true },
                     orderBy: { dayOfWeek: "asc" },
@@ -173,14 +178,24 @@ export async function GET(request: Request) {
             address: s.address,
             city: s.city,
             country: s.country,
+            lat: s.lat != null ? Number(s.lat) : null,
+            lng: s.lng != null ? Number(s.lng) : null,
+            googleMapsUrl: s.googleMapsUrl,
             phone: s.phone,
             website: s.website,
-            googleMapsUrl: s.googleMapsUrl,
             coverUrl: s.coverUrl,
             spaceType: s.spaceType,
+            customSpaceType: s.customSpaceType,
+            categoryArea: s.categoryArea,
+            spaceCategories: (s.spaceCategories || []).map((sc: any) => ({
+              categoryId: sc.categoryId,
+              category: sc.category ? { id: sc.category.id, name: sc.category.name } : null,
+            })),
             services: (s.services || []).map((srv: any) => ({
               id: srv.id,
               name: srv.name,
+              isCustom: srv.isCustom,
+              category: srv.category ? { id: srv.category.id, name: srv.category.name } : null,
             })),
             availability: (s.availability || []).map((av: any) => ({
               dayOfWeek: av.dayOfWeek,

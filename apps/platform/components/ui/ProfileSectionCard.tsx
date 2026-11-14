@@ -47,11 +47,14 @@ export function ProfileSectionCard({
     onEdit?.();
   };
 
+  const hasHeaderRow = Boolean(title || meta);
+  const showFloatingEdit = !hasHeaderRow && !isPublic && Boolean(onEdit) && !isEmpty;
+
   return (
     <section
       className={`bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 flex flex-col gap-3.5 shadow-none relative ${className}`}
     >
-      {(title || meta || (!isPublic && onEdit && !isEmpty)) && (
+      {hasHeaderRow && (
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2 min-w-0">
             {title && (
@@ -82,6 +85,20 @@ export function ProfileSectionCard({
             )}
           </div>
         </div>
+      )}
+
+      {showFloatingEdit && (
+        <button
+          type="button"
+          onClick={handleEditClick}
+          className={`absolute top-5 right-5 sm:top-6 sm:right-6 w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 flex items-center justify-center transition-all cursor-pointer border border-slate-200/60 shadow-none ${
+            highlight ? "glow-highlight" : ""
+          }`}
+          title={editTitle || "Editar sección"}
+          aria-label={editTitle || "Editar sección"}
+        >
+          <Edit3 className="w-3.5 h-3.5" />
+        </button>
       )}
 
       {isEmpty && !isPublic && onEdit && emptyActionLabel ? (
