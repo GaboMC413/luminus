@@ -5,7 +5,7 @@ import { serializeUser } from "@/lib/auth/validation";
 export const runtime = "nodejs";
 
 export async function GET() {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ user: null }, { status: 401 });
@@ -23,7 +23,7 @@ export async function GET() {
     }
 
     if (user.status !== "active") {
-      clearSessionCookie();
+      await clearSessionCookie();
       return NextResponse.json({ user: null }, { status: 401 });
     }
 

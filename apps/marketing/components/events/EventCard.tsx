@@ -1,7 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { checkIsUpcoming } from "@/lib/events";
+import { formatEventDateTime } from "@/lib/eventDateUtils";
 
 export interface EventItem {
   id?: string;
@@ -12,6 +15,7 @@ export interface EventItem {
   category?: string;
   date?: string;
   publishTimeText?: string;
+  coverUrl?: string | null;
   cover_url?: string | null;
   youtube_id?: string;
   link?: string;
@@ -25,12 +29,44 @@ interface EventCardProps {
   item: EventItem;
 }
 
+function parseCalendarDate(dateStr?: string | Date | null): Date | null {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? null : dateStr;
+  const str = String(dateStr).trim();
+  if (!str) return null;
+
+  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    return new Date(year, month, day);
+  }
+
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+const MONTH_NAMES_ES = [
+  "ene", "feb", "mar", "abr", "may", "jun",
+  "jul", "ago", "sep", "oct", "nov", "dic"
+];
+
 function formatDate(dateStr?: string): string {
   if (!dateStr) return "";
   try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" });
+    const d = parseCalendarDate(dateStr);
+    if (!d) return dateStr;
+
+    const now = new Date();
+    const sameYear = d.getFullYear() === now.getFullYear();
+    const day = d.getDate();
+    const month = MONTH_NAMES_ES[d.getMonth()];
+
+    if (sameYear) {
+      return `${day} de ${month}`;
+    }
+    return `${day} de ${month} de ${d.getFullYear()}`;
   } catch {
     return dateStr;
   }
@@ -46,21 +82,18 @@ function getYoutubeId(url?: string): string | null {
 function formatUpcomingDateHeader(dateStr?: string, timeText?: string) {
   if (!dateStr) return { tag: "PRÓXIMAMENTE", dateText: "" };
   try {
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return { tag: "PRÓXIMAMENTE", dateText: dateStr };
+    const d = parseCalendarDate(dateStr);
+    if (!d) return { tag: "PRÓXIMAMENTE", dateText: dateStr };
 
     const weekdayRaw = d.toLocaleDateString("es-ES", { weekday: "long" });
     const weekday = weekdayRaw.charAt(0).toUpperCase() + weekdayRaw.slice(1);
 
     const day = d.getDate();
+    const month = MONTH_NAMES_ES[d.getMonth()];
 
-    const monthRaw = d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "");
-    const month = monthRaw.charAt(0).toUpperCase() + monthRaw.slice(1);
-
-    // Local converted time from Date object (no GMT label)
-    const hours = d.getHours().toString().padStart(2, "0");
-    const minutes = d.getMinutes().toString().padStart(2, "0");
-    const cleanTime = `${hours}:${minutes} hs`;
+    const cleanTime = timeText
+      ? timeText.replace(/\s*\([^)]*GMT[^)]*\)/gi, "").replace(/\s*\([^)]*UTC[^)]*\)/gi, "").trim()
+      : "18:00 hs";
 
     return {
       tag: "PRÓXIMAMENTE",
@@ -92,43 +125,49 @@ function isSpeakerNameValid(speakerName?: string, title?: string) {
 }
 
 export function EventCard({ item }: EventCardProps) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const ytId = item.youtube_id || getYoutubeId(item.link) || "";
-  const thumbUrl =
-    item.cover_url ||
-    (ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : "/placeholder-video.jpg");
-  const isUpcoming = item.is_upcoming === true || (Boolean(item.date) && !isNaN(new Date(item.date!).getTime()) && new Date(item.date!) >= new Date());
-  const upcomingHeader = isUpcoming ? formatUpcomingDateHeader(item.date, item.time_text) : { tag: "", dateText: "" };
-  const displayDate = isUpcoming ? upcomingHeader.dateText : (item.date ? formatDate(item.date) : item.publishTimeText || "");
+  const thumbUrl = item.coverUrl || item.cover_url || "/placeholder-video.jpg";
+  const isUpcoming = checkIsUpcoming(item);
+  const formattedUpcoming = mounted && isUpcoming ? formatEventDateTime(item.date, item.time_text || item.timeText) : null;
+  const displayTag = item.location || "Estreno en YouTube";
+  const displayDate = isUpcoming
+    ? (formattedUpcoming?.dateText || (item.date ? formatUpcomingDateHeader(item.date, item.time_text || item.timeText).dateText : ""))
+    : (item.date ? formatDate(item.date) : item.publishTimeText || "");
   const videoLink = item.link || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : undefined);
   const hasVideo = Boolean(ytId || videoLink);
 
   return (
     <div className="w-full h-[390px] bg-white rounded-2xl border border-slate-200 hover:border-slate-300 transition-colors overflow-hidden flex flex-col group shadow-none">
 
-      {/* Thumbnail — edge-to-edge, no extra border radius */}
+      {/* Thumbnail — edge-to-edge with matching top rounded corners */}
       {hasVideo && videoLink ? (
         <a
           href={videoLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-full aspect-video relative overflow-hidden bg-slate-200 shrink-0 block hover:opacity-95 transition-opacity"
+          className="w-full aspect-video relative overflow-hidden bg-slate-100 shrink-0 block hover:opacity-95 transition-opacity rounded-t-[15px]"
         >
           <Image
             src={thumbUrl}
             alt={item.title}
             fill
-            className="object-cover object-center"
+            className="object-cover object-center rounded-t-[15px]"
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             unoptimized
           />
         </a>
       ) : (
-        <div className="w-full aspect-video relative overflow-hidden bg-slate-200 shrink-0 block">
+        <div className="w-full aspect-video relative overflow-hidden bg-slate-100 shrink-0 block rounded-t-[15px]">
           <Image
             src={thumbUrl}
             alt={item.title}
             fill
-            className="object-cover object-center"
+            className="object-cover object-center rounded-t-[15px]"
             sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
             unoptimized
           />
@@ -141,11 +180,11 @@ export function EventCard({ item }: EventCardProps) {
           {/* 1. Date / PROXIMAMENTE at the top */}
           {isUpcoming ? (
             <div className="w-full flex justify-start items-center gap-1.5 text-xs font-medium truncate h-4">
-              <span className="font-medium text-slate-900 tracking-tight shrink-0">
-                {upcomingHeader.tag}
+              <span className="font-semibold text-slate-900 tracking-tight shrink-0">
+                {displayTag}
               </span>
               <span className="text-slate-500 truncate">
-                {upcomingHeader.dateText}
+                {displayDate}
               </span>
             </div>
           ) : displayDate ? (

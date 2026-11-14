@@ -1,8 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminContactMessage } from "../../types";
-import { Mail, Search, Calendar, User, Phone, Globe, MessageSquare, ChevronRight, X } from "lucide-react";
+import {
+  Mail,
+  Search,
+  Calendar,
+  User,
+  Phone,
+  Globe,
+  MessageSquare,
+  ChevronRight,
+  X,
+  Bell,
+  Plus,
+  Trash2,
+  Loader2,
+  CheckCircle2,
+} from "lucide-react";
 
 type ContactTabProps = {
   messages: AdminContactMessage[];
@@ -11,6 +26,103 @@ type ContactTabProps = {
 export function ContactTab({ messages }: ContactTabProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMessage, setSelectedMessage] = useState<AdminContactMessage | null>(null);
+
+  // Recipient management states
+  const [recipients, setRecipients] = useState<string[]>([
+    "gabrielmedcap@hotmail.com",
+    "info@luminuslatam.com",
+  ]);
+  const [newEmail, setNewEmail] = useState("");
+  const [isLoadingRecipients, setIsLoadingRecipients] = useState(false);
+  const [isAddingRecipient, setIsAddingRecipient] = useState(false);
+  const [recipientError, setRecipientError] = useState("");
+  const [recipientSuccess, setRecipientSuccess] = useState("");
+
+  useEffect(() => {
+    async function loadRecipients() {
+      setIsLoadingRecipients(true);
+      try {
+        const res = await fetch("/api/admin/contact/recipients");
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data.recipients)) {
+            setRecipients(data.recipients);
+          }
+        }
+      } catch (err) {
+        console.error("Error loading recipients:", err);
+      } finally {
+        setIsLoadingRecipients(false);
+      }
+    }
+    loadRecipients();
+  }, []);
+
+  const handleAddRecipient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRecipientError("");
+    setRecipientSuccess("");
+
+    const clean = newEmail.trim().toLowerCase();
+    if (!clean || !clean.includes("@")) {
+      setRecipientError("Por favor ingresa un correo válido.");
+      return;
+    }
+
+    if (recipients.includes(clean)) {
+      setRecipientError("Este correo ya está en la lista de destinatarios.");
+      return;
+    }
+
+    setIsAddingRecipient(true);
+    try {
+      const res = await fetch("/api/admin/contact/recipients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: clean }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Error al agregar destinatario.");
+      }
+
+      setRecipients(data.recipients);
+      setNewEmail("");
+      setRecipientSuccess(`Se agregó ${clean} a las notificaciones.`);
+      setTimeout(() => setRecipientSuccess(""), 4000);
+    } catch (err: any) {
+      setRecipientError(err.message || "No se pudo agregar el correo.");
+    } finally {
+      setIsAddingRecipient(false);
+    }
+  };
+
+  const handleRemoveRecipient = async (emailToRemove: string) => {
+    if (recipients.length <= 1) {
+      setRecipientError("Debe haber al menos un correo receptor configurado.");
+      setTimeout(() => setRecipientError(""), 4000);
+      return;
+    }
+
+    setRecipientError("");
+    setRecipientSuccess("");
+
+    try {
+      const res = await fetch(`/api/admin/contact/recipients?email=${encodeURIComponent(emailToRemove)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || "Error al eliminar destinatario.");
+      }
+
+      setRecipients(data.recipients);
+      setRecipientSuccess(`Se eliminó ${emailToRemove} de las notificaciones.`);
+      setTimeout(() => setRecipientSuccess(""), 4000);
+    } catch (err: any) {
+      setRecipientError(err.message || "No se pudo eliminar el correo.");
+    }
+  };
 
   const filteredMessages = messages.filter((msg) => {
     const term = searchTerm.toLowerCase();
@@ -25,6 +137,95 @@ export function ContactTab({ messages }: ContactTabProps) {
 
   return (
     <div className="space-y-6">
+      {/* Notification Recipients Management Card */}
+      <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+              <Bell className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900 font-jakarta">
+                Destinatarios de Notificación por Email
+              </h3>
+              <p className="text-xs text-slate-500">
+                Correos que reciben automáticamente una copia con el diseño oficial de LUMINUS al enviarse un mensaje.
+              </p>
+            </div>
+          </div>
+          {isLoadingRecipients && (
+            <div className="flex items-center gap-1.5 text-xs text-slate-400">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Cargando...</span>
+            </div>
+          )}
+        </div>
+
+        {/* Feedback alerts */}
+        {recipientError && (
+          <div className="text-xs font-medium text-rose-600 bg-rose-50 border border-rose-200 px-3 py-2 rounded-xl">
+            {recipientError}
+          </div>
+        )}
+        {recipientSuccess && (
+          <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>{recipientSuccess}</span>
+          </div>
+        )}
+
+        {/* Recipients List Chips */}
+        <div className="flex flex-wrap items-center gap-2 pt-1">
+          {recipients.map((email) => (
+            <div
+              key={email}
+              className="group inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-700 hover:bg-slate-100/80 transition-colors"
+            >
+              <Mail className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition-colors" />
+              <span className="font-mono text-[11px] sm:text-xs">{email}</span>
+              <button
+                type="button"
+                onClick={() => handleRemoveRecipient(email)}
+                title={`Eliminar ${email}`}
+                aria-label={`Eliminar ${email}`}
+                className="w-4 h-4 rounded-full flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer ml-0.5"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {/* Add new recipient input */}
+        <form onSubmit={handleAddRecipient} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-2 border-t border-slate-100">
+          <div className="relative flex-1">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="email"
+              placeholder="nuevo-destinatario@correo.com"
+              value={newEmail}
+              onChange={(e) => {
+                setNewEmail(e.target.value);
+                if (recipientError) setRecipientError("");
+              }}
+              className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-900 placeholder:text-slate-400"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={isAddingRecipient || !newEmail.trim()}
+            className="h-9 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+          >
+            {isAddingRecipient ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Plus className="w-3.5 h-3.5" />
+            )}
+            <span>Agregar destinatario</span>
+          </button>
+        </form>
+      </div>
+
       {/* Header & Search Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
         <div>
@@ -101,15 +302,9 @@ export function ContactTab({ messages }: ContactTabProps) {
                       })}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedMessage(msg);
-                        }}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-800"
-                      >
-                        Ver detalle <ChevronRight className="w-3.5 h-3.5" />
-                      </button>
+                      <span className="inline-flex items-center text-xs font-semibold text-blue-600 hover:text-blue-700">
+                        Ver detalles <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -119,85 +314,71 @@ export function ContactTab({ messages }: ContactTabProps) {
         )}
       </div>
 
-      {/* Detail Drawer Modal */}
+      {/* Message Details Modal */}
       {selectedMessage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-xl rounded-2xl shadow-xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-bold text-lg">
-                  {selectedMessage.nombre.charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900 text-lg">
-                    {selectedMessage.nombre} {selectedMessage.apellido}
-                  </h3>
-                  <p className="text-xs text-slate-500">{selectedMessage.email}</p>
-                </div>
-              </div>
-
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-100">
+                {selectedMessage.motivo}
+              </span>
               <button
                 onClick={() => setSelectedMessage(null)}
-                className="p-2 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition-colors"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="p-6 space-y-6 overflow-y-auto">
-              <div className="grid grid-cols-2 gap-4 text-sm bg-slate-50 p-4 rounded-xl border border-slate-100">
-                <div>
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">
-                    Motivo
-                  </span>
-                  <span className="font-medium text-slate-800">{selectedMessage.motivo}</span>
-                </div>
-
-                <div>
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">
-                    Fecha de recepción
-                  </span>
-                  <span className="text-slate-600 text-xs">
-                    {new Date(selectedMessage.createdAt).toLocaleString("es-ES")}
-                  </span>
-                </div>
-
-                {selectedMessage.telefono && (
-                  <div>
-                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">
-                      Teléfono
-                    </span>
-                    <span className="text-slate-800 font-mono text-xs">{selectedMessage.telefono}</span>
-                  </div>
-                )}
-
-                {selectedMessage.pais && (
-                  <div>
-                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">
-                      País
-                    </span>
-                    <span className="text-slate-800 text-xs">{selectedMessage.pais}</span>
-                  </div>
-                )}
-              </div>
-
+            <div className="mt-5 space-y-4">
               <div>
-                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">
-                  Mensaje completo
-                </span>
-                <div className="p-4 bg-slate-900 text-slate-100 rounded-xl text-sm leading-relaxed whitespace-pre-wrap font-sans">
-                  {selectedMessage.mensaje}
+                <h3 className="text-lg font-bold text-slate-900">
+                  {selectedMessage.nombre} {selectedMessage.apellido}
+                </h3>
+                <div className="flex flex-wrap items-center gap-4 mt-2 text-xs text-slate-500">
+                  <span className="flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-slate-400" />
+                    <a
+                      href={`mailto:${selectedMessage.email}`}
+                      className="text-blue-600 hover:underline font-mono"
+                    >
+                      {selectedMessage.email}
+                    </a>
+                  </span>
+                  {selectedMessage.telefono && (
+                    <span className="flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{selectedMessage.telefono}</span>
+                    </span>
+                  )}
+                  {selectedMessage.pais && (
+                    <span className="flex items-center gap-1.5">
+                      <Globe className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{selectedMessage.pais}</span>
+                    </span>
+                  )}
                 </div>
               </div>
-            </div>
 
-            <div className="p-4 border-t border-slate-100 bg-slate-50/50 flex justify-end">
-              <a
-                href={`mailto:${selectedMessage.email}?subject=RE: ${encodeURIComponent(selectedMessage.motivo)}`}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-sm transition-colors flex items-center gap-2"
-              >
-                <Mail className="w-4 h-4" /> Responder por Email
-              </a>
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                {selectedMessage.mensaje}
+              </div>
+
+              <div className="text-[11px] text-slate-400 pt-2 flex items-center justify-between">
+                <span>
+                  Recibido el{" "}
+                  {new Date(selectedMessage.createdAt).toLocaleString("es-ES", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                  })}
+                </span>
+                <a
+                  href={`mailto:${selectedMessage.email}?subject=Re: Consulta LUMINUS - ${selectedMessage.motivo}`}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:underline"
+                >
+                  <Mail className="w-3.5 h-3.5" /> Responder por correo
+                </a>
+              </div>
             </div>
           </div>
         </div>

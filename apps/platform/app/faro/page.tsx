@@ -49,7 +49,7 @@ export default function FaroPage() {
           </div>
           <Button
             variant="secondary"
-            onClick={() => router.push("/comunidad")}
+            onClick={() => router.push("/inicio")}
             className="w-full md:!w-auto px-5 h-10 md:h-11 text-sm font-semibold shrink-0 flex items-center justify-center gap-1.5 group cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 border-none"
           >
             <svg

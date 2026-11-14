@@ -7,17 +7,17 @@ const PROCESS_STEPS = [
   {
     num: 2,
     title: "Completa tu perfil",
-    desc: "Agrega tu formación, experiencia, áreas de trabajo y enfoque profesional.",
+    desc: "Cuéntanos sobre tu formación, trayectoria, áreas de trabajo y propuesta profesional.",
   },
   {
     num: 3,
     title: "Envía tu aplicación",
-    desc: "Revisa tu información y postúlate para integrar la Red de Especialistas.",
+    desc: "Revisa tus datos y envía tu perfil para formar parte de la Red de Especialistas.",
   },
   {
     num: 4,
-    title: "Revisión y activación",
-    desc: "Evaluaremos tu aplicación y, si es aprobada, activaremos tu perfil como Especialista LUMINUS.",
+    title: "Revisamos tu perfil",
+    desc: "Nuestro equipo evaluará la información y, una vez aprobada tu aplicación, activará tu perfil como Especialista LUMINUS.",
   },
 ];
 
@@ -31,8 +31,11 @@ export function SpecialistsProcessSteps() {
         {/* Section Header */}
         <div className="flex flex-col items-center gap-4 max-w-[960px]">
           <h2 className="text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
-            Cómo formar parte de la Red de Especialistas
+            Sumarte hoy es gratis. Empezar es simple.
           </h2>
+          <p className="text-lg sm:text-xl font-normal text-slate-700 leading-relaxed max-w-[880px]">
+            Queremos que puedas conocer LUMINUS desde dentro. Por eso, durante esta primera etapa puedes sumarte a la plataforma y participar de forma totalmente gratutita.
+          </p>
         </div>
 
         {/* 4 Steps Grid */}
@@ -61,13 +64,13 @@ export function SpecialistsProcessSteps() {
         <div className="flex flex-col items-center gap-6 max-w-[800px] w-full pt-4">
 
           <a
-            href="https://app.luminuslatam.com/auth/registrarse"
-            className="px-8 py-3.5 bg-black hover:bg-slate-800 text-white text-base font-normal rounded-2xl min-w-[280px] transition-colors"
+            href="https://app.luminuslatam.com/auth/registrarse/especialista"
+            className="flex items-center justify-center text-center px-8 py-3.5 bg-black hover:bg-slate-800 text-white text-base font-normal rounded-2xl w-full sm:w-auto sm:min-w-[280px] transition-colors"
           >
-            Comenzar mi aplicación
+            Registrarme como Especialista
           </a>
           <p className="text-body-medium font-normal text-slate-900 leading-relaxed">
-            La Red de Especialistas LUMINUS está formada por perfiles revisados y validados de manera individual. Cada incorporación considera la formación, experiencia, trayectoria y enfoque profesional; por eso, la aprobación no es automática y para postularte necesitas una cuenta activa en LUMINUS.
+            La Red de Especialistas está formada por profesionales cuyos perfiles revisamos de manera individual. Para cada incorporación consideramos la formación, trayectoria y área de trabajo, con el objetivo de construir una red confiable y diversa.
           </p>
         </div>
 

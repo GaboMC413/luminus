@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendEventRegistrationEmail } from "@/lib/ses";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export async function POST(req: Request) {
   try {
@@ -18,9 +19,20 @@ export async function POST(req: Request) {
       speakerName,
       youtubeUrl,
       eventSlug,
+      isResend,
+      turnstileToken,
+      userTimezone,
     } = body || {};
 
-    if (!email || !firstName) {
+    const turnstileResult = await verifyTurnstileToken(turnstileToken);
+    if (!turnstileResult.success) {
+      return NextResponse.json(
+        { success: false, error: turnstileResult.error },
+        { status: 400 }
+      );
+    }
+
+    if (!email || (!firstName && !isResend)) {
       return NextResponse.json(
         { success: false, error: "Faltan campos obligatorios (email y nombre)." },
         { status: 400 }
@@ -28,89 +40,159 @@ export async function POST(req: Request) {
     }
 
     const cleanEmail = email.trim().toLowerCase();
-    const cleanFirstName = firstName.trim();
+    const cleanFirstName = firstName ? firstName.trim() : "";
     const cleanLastName = lastName ? lastName.trim() : "";
-    const cleanCity = city ? city.trim() : null;
+    
+    // Parse location string into city, state, country
+    const rawLoc = body?.location || city;
+    const parts = rawLoc ? String(rawLoc).split(",").map((p: string) => p.trim()).filter(Boolean) : [];
+    const parsedCity = parts.length > 0 ? parts[0] : null;
+    const parsedState = parts.length >= 3 ? parts.slice(1, -1).join(", ") : (parts.length === 2 ? parts[1] : null);
+    const parsedCountry = parts.length >= 3 ? parts[parts.length - 1] : null;
 
-    // 1. Upsert EventGuest in Database
+    // 1. Resolve Event ID and event details from DB
+    let resolvedEventId: string | null = null;
+    let dbEvent: any = null;
+
+    if (eventId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId)) {
+      resolvedEventId = eventId;
+    }
+
+    try {
+      if (resolvedEventId) {
+        dbEvent = await prisma.event.findUnique({ where: { id: resolvedEventId } });
+      } else if (eventSlug || eventTitle) {
+        dbEvent = await prisma.event.findFirst({
+          where: {
+            OR: [
+              ...(eventSlug ? [{ slug: eventSlug }] : []),
+              ...(eventTitle ? [{ title: eventTitle }] : []),
+            ],
+          },
+        });
+        if (dbEvent) {
+          resolvedEventId = dbEvent.id;
+        }
+      }
+    } catch (findErr: any) {
+      console.warn("[Event Lookup Error]:", findErr.message || findErr);
+    }
+
+    // 2. Upsert EventGuest in Database
     let guest = null;
     try {
       guest = await prisma.eventGuest.upsert({
         where: { email: cleanEmail },
         update: {
-          firstName: cleanFirstName,
-          lastName: cleanLastName,
-          city: cleanCity,
+          ...(cleanFirstName ? { firstName: cleanFirstName } : {}),
+          ...(cleanLastName ? { lastName: cleanLastName } : {}),
+          ...(parsedCity ? { city: parsedCity } : {}),
+          ...(parsedState ? { state: parsedState } : {}),
+          ...(parsedCountry ? { country: parsedCountry } : {}),
           isGuest: true,
         },
         create: {
           email: cleanEmail,
-          firstName: cleanFirstName,
+          firstName: cleanFirstName || "Invitado",
           lastName: cleanLastName,
-          city: cleanCity,
+          city: parsedCity,
+          state: parsedState,
+          country: parsedCountry,
           isGuest: true,
         },
       });
     } catch (dbErr: any) {
       console.error("[Database EventGuest Error]:", dbErr.message || dbErr);
+      return NextResponse.json(
+        { success: false, error: "Error de base de datos al guardar los datos de la persona." },
+        { status: 500 }
+      );
     }
 
-    // 2. Upsert EventInscription if valid eventId UUID is provided
-    if (guest && eventId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(eventId)) {
+    // 3. Check & Upsert EventInscription if resolvedEventId is present
+    let alreadyRegistered = false;
+    if (guest && resolvedEventId) {
       try {
+        const existingInscription = await prisma.eventInscription.findUnique({
+          where: {
+            eventId_guestId: {
+              eventId: resolvedEventId,
+              guestId: guest.id,
+            },
+          },
+        });
+
+        if (existingInscription) {
+          alreadyRegistered = true;
+        }
+
         await prisma.eventInscription.upsert({
           where: {
             eventId_guestId: {
-              eventId,
+              eventId: resolvedEventId,
               guestId: guest.id,
             },
           },
           update: {},
           create: {
-            eventId,
+            eventId: resolvedEventId,
             guestId: guest.id,
           },
         });
       } catch (insErr: any) {
         console.error("[Database EventInscription Error]:", insErr.message || insErr);
+        return NextResponse.json(
+          { success: false, error: "Error de base de datos al vincular la inscripción." },
+          { status: 500 }
+        );
       }
     }
 
-    // 3. Send confirmation email via AWS SES from eventos@luminuslatam.com
+    // 4. Send confirmation email via AWS SES from eventos@luminuslatam.com
+    // Always trigger email for every event registration or confirmation request
     let emailStatus = "sent";
+    let emailError: string | undefined = undefined;
+
+    const rawYt = youtubeUrl || body?.youtubeId || null;
+    let finalYoutubeUrl: string | undefined = undefined;
+    if (rawYt && rawYt.trim()) {
+      const trimmed = rawYt.trim();
+      finalYoutubeUrl = (trimmed.startsWith("http://") || trimmed.startsWith("https://")) ? trimmed : `https://www.youtube.com/watch?v=${trimmed}`;
+    } else if (dbEvent?.youtubeId) {
+      finalYoutubeUrl = `https://www.youtube.com/watch?v=${dbEvent.youtubeId}`;
+    } else if (dbEvent?.link && (dbEvent.link.includes("youtube") || dbEvent.link.includes("youtu.be"))) {
+      finalYoutubeUrl = dbEvent.link;
+    }
+
     try {
-      await sendEventRegistrationEmail({
-        firstName: cleanFirstName,
-        lastName: cleanLastName,
+      console.log(`[SES START] Procesando envío de email para ${cleanEmail} (evento: ${eventTitle || dbEvent?.title || "Evento LUMINUS"})...`);
+      const emailRes = await sendEventRegistrationEmail({
+        firstName: guest.firstName || cleanFirstName || "Invitado",
+        lastName: guest.lastName || cleanLastName,
         email: cleanEmail,
-        eventTitle: eventTitle || "Evento de Bienestar LUMINUS",
-        eventCoverUrl,
-        eventDate,
-        timeText,
-        speakerName,
-        youtubeUrl,
-        eventSlug,
+        eventTitle: eventTitle || dbEvent?.title || "Evento de Bienestar LUMINUS",
+        eventCoverUrl: eventCoverUrl || dbEvent?.coverUrl || null,
+        eventDate: eventDate || (dbEvent?.date ? dbEvent.date.toISOString() : null),
+        timeText: timeText || dbEvent?.timeText || null,
+        speakerName: speakerName || dbEvent?.speakerName || null,
+        youtubeUrl: finalYoutubeUrl,
+        eventSlug: eventSlug || dbEvent?.slug || null,
+        location: dbEvent?.location || "Estreno en YouTube",
+        userTimezone: userTimezone || null,
       });
-      console.log(`[Event Registration Email Sent]: ${cleanEmail} via eventos@luminuslatam.com`);
+      console.log(`[Event Registration Email Sent]: ${cleanEmail} (resend=${!!isResend}) MessageId:`, (emailRes as any)?.messageId || "local-preview");
     } catch (emailErr: any) {
-      console.error("[SES Send Email Error]:", emailErr.message || emailErr);
+      console.error("❌ Error enviando email de confirmación:", JSON.stringify(emailErr, null, 2));
       emailStatus = "failed";
+      emailError = emailErr?.message || String(emailErr);
     }
 
-    // 4. Log sent email in SentEmailLog
-    try {
-      await prisma.sentEmailLog.create({
-        data: {
-          recipient: cleanEmail,
-          subject: `[LUMINUS] Confirmación de inscripción: ${eventTitle || "Evento de Bienestar"}`,
-          htmlBody: `Inscripción enviada desde eventos@luminuslatam.com. Estado: ${emailStatus}`,
-        },
-      });
-    } catch (logErr: any) {
-      console.error("[SentEmailLog Error]:", logErr.message || logErr);
-    }
-
-    return NextResponse.json({ success: true, emailStatus });
+    return NextResponse.json({
+      success: true,
+      alreadyRegistered,
+      emailStatus,
+      ...(emailError ? { emailError } : {}),
+    });
   } catch (err: any) {
     console.error("[Event Inscription Route Error]:", err.message || err);
     return NextResponse.json(

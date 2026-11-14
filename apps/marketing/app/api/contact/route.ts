@@ -1,11 +1,20 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendContactNotificationEmail } from "@/lib/ses";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { nombre, apellido, email, telefono, pais, motivo, mensaje } = body;
+    const { nombre, apellido, email, telefono, pais, motivo, mensaje, turnstileToken } = body;
+
+    const turnstileResult = await verifyTurnstileToken(turnstileToken);
+    if (!turnstileResult.success) {
+      return NextResponse.json(
+        { error: turnstileResult.error },
+        { status: 400 }
+      );
+    }
 
     // Validación de campos requeridos
     if (!nombre || !apellido || !email || !motivo || !mensaje) {
@@ -60,22 +69,20 @@ export async function POST(request: Request) {
         mensaje: cleanMensaje,
       });
       emailSuccess = true;
-
-      // 3. Registrar email enviado en SentEmailLog
-      try {
-        await prisma.sentEmailLog.create({
-          data: {
-            recipient: "info@luminuslatam.com",
-            subject: `[LUMINUS Contacto] ${cleanMotivo} - ${cleanNombre} ${cleanApellido}`,
-            htmlBody: `Mensaje de contacto de ${cleanEmail}: ${cleanMensaje.substring(0, 200)}...`,
-          },
-        });
-      } catch (logErr: any) {
-        console.error("[SentEmailLog Error]:", logErr.message || logErr);
-      }
+      console.log(`[API Contact] Notificación por email enviada exitosamente para ${cleanEmail}`);
     } catch (err: any) {
-      console.error("[AWS SES Error] Error al enviar email de notificación:", err);
+      console.error("[AWS SES Error] Error al enviar email de notificación:", err?.message || err);
       emailError = `${err?.name || "SESError"}: ${err?.message || "Error al enviar correo electrónico"}`;
+    }
+
+    if (!dbSuccess && !emailSuccess) {
+      return NextResponse.json(
+        {
+          error: "No pudimos procesar tu mensaje en este momento. Por favor intenta de nuevo más tarde o escríbenos directamente a info@luminuslatam.com.",
+          details: { dbError, emailError },
+        },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({

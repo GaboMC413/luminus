@@ -6,11 +6,9 @@ import { isRateLimited, RATE_LIMITS } from "@/utils/rateLimit";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function DELETE(
-  _: Request,
-  { params }: { params: { conversationId: string } }
-) {
-  const session = getCurrentSession();
+export async function DELETE(_: Request, props: { params: Promise<{ conversationId: string }> }) {
+  const params = await props.params;
+  const session = await getCurrentSession();
   const { conversationId } = params;
 
   if (!session) {
@@ -101,11 +99,9 @@ export async function DELETE(
   }
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { conversationId: string } }
-) {
-  const session = getCurrentSession();
+export async function PATCH(request: Request, props: { params: Promise<{ conversationId: string }> }) {
+  const params = await props.params;
+  const session = await getCurrentSession();
   const { conversationId } = params;
 
   if (!session) {

@@ -18,7 +18,7 @@ export function AdminCard({ children, className = "" }: AdminCardProps) {
 }
 
 export interface AdminBadgeProps {
-  variant?: "active" | "pending" | "disabled" | "deleted" | "admin" | "specialist" | "user" | "plan" | "default";
+  variant?: "active" | "pending" | "disabled" | "deleted" | "admin" | "specialist" | "user" | "plan" | "ghost" | "default";
   children: React.ReactNode;
   className?: string;
 }
@@ -33,6 +33,7 @@ export function AdminBadge({ variant = "default", children, className = "" }: Ad
     specialist: "bg-teal-50 text-teal-700 border-teal-200/60",
     user: "bg-slate-100 text-slate-700 border-slate-200/60",
     plan: "bg-violet-50 text-violet-700 border-violet-200/60",
+    ghost: "bg-zinc-100 text-zinc-700 border-zinc-300",
     default: "bg-slate-100 text-slate-600 border-slate-200/60",
   };
 

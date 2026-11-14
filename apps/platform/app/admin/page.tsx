@@ -23,7 +23,7 @@ async function loadAdminSection<T>(
 }
 
 export default async function AdminPage() {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     redirect("/auth/iniciar-sesion");
@@ -42,36 +42,183 @@ export default async function AdminPage() {
 
   const { prisma } = await import("@/lib/db");
   const loadWarnings: string[] = [];
-  const users = await loadAdminSection("usuarios", loadWarnings, () => listAdminUsers(prisma), []);
-  const chats = await loadAdminSection("chats", loadWarnings, () => listAdminChats(prisma), []);
-  const supportChats = await loadAdminSection(
-    "soporte",
-    loadWarnings,
-    () => listAdminSupportChats(prisma),
-    [],
-  );
 
-  const logsRaw = await loadAdminSection("actividad", loadWarnings, () => prisma.activityLog.findMany({
-    include: {
-      user: {
-        select: {
-          email: true,
-          profile: {
-            select: {
-              firstName: true,
-              lastName: true,
-              fullName: true,
-              avatarUrl: true,
+  const [
+    users,
+    chats,
+    supportChats,
+    logsRaw,
+    emailLogsRaw,
+    searchesRaw,
+    specialistsRaw,
+    postulationsRaw,
+    categoriesRaw,
+    suggestionsRaw,
+    eventsRaw,
+    inscriptionsRaw,
+    contactMessagesRaw,
+  ] = await Promise.all([
+    loadAdminSection("usuarios", loadWarnings, () => listAdminUsers(prisma), []),
+    loadAdminSection("chats", loadWarnings, () => listAdminChats(prisma), []),
+    loadAdminSection("soporte", loadWarnings, () => listAdminSupportChats(prisma), []),
+    loadAdminSection("actividad", loadWarnings, () => prisma.activityLog.findMany({
+      include: {
+        user: {
+          select: {
+            email: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+                fullName: true,
+                avatarUrl: true,
+              },
             },
           },
         },
       },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 500,
-  }), []);
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }), []),
+    loadAdminSection("correos", loadWarnings, () => prisma.sentEmailLog.findMany({
+      select: {
+        id: true,
+        recipient: true,
+        subject: true,
+        htmlBody: true,
+        status: true,
+        messageId: true,
+        errorDetails: true,
+        metadata: true,
+        createdAt: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }), []),
+    loadAdminSection("búsquedas", loadWarnings, () => prisma.activityLog.findMany({
+      where: { action: "COMMUNITY_SEARCH" },
+      include: {
+        user: {
+          select: {
+            email: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+                fullName: true,
+                avatarUrl: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }), []),
+    loadAdminSection("especialistas", loadWarnings, () => prisma.specialistProfile.findMany({
+      include: {
+        spaces: {
+          select: {
+            id: true,
+            userId: true,
+            spaceType: true,
+            name: true,
+            address: true,
+            city: true,
+            country: true,
+            lat: true,
+            lng: true,
+            googlePlaceId: true,
+            googleMapsUrl: true,
+            phone: true,
+            website: true,
+            coverUrl: true,
+            isActive: true,
+            createdAt: true,
+            updatedAt: true,
+            availability: true,
+          },
+        },
+        courses: true,
+        user: {
+          select: {
+            email: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+                fullName: true,
+                avatarUrl: true,
+                city: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    }), []),
+    loadAdminSection("postulaciones", loadWarnings, () => prisma.specialistPostulation.findMany({
+      where: { status: "pending" },
+      include: {
+        user: {
+          select: {
+            email: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+                fullName: true,
+                avatarUrl: true,
+                city: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    }), []),
+    loadAdminSection("categorías", loadWarnings, () => prisma.interestCategory.findMany({
+      orderBy: { sortOrder: "asc" },
+      include: {
+        interests: { orderBy: { sortOrder: "asc" } },
+        specialistAreas: { orderBy: { sortOrder: "asc" } },
+      },
+    }), []),
+    loadAdminSection("sugerencias", loadWarnings, () => prisma.categorySuggestion.findMany({
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: {
+          select: {
+            email: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+                fullName: true,
+              },
+            },
+          },
+        },
+        category: { select: { id: true, name: true } },
+      },
+    }), []),
+    loadAdminSection("eventos", loadWarnings, () => prisma.event.findMany({
+      include: {
+        inscriptions: {
+          include: { guest: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    }), []),
+    loadAdminSection("inscripciones", loadWarnings, () => prisma.eventInscription.findMany({
+      include: { guest: true },
+      orderBy: { createdAt: "desc" },
+    }), []),
+    loadAdminSection("contacto", loadWarnings, () => prisma.contactMessage.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    }), []),
+  ]);
 
   const logs = logsRaw.map((log: any) => ({
     id: log.id,
@@ -90,45 +237,17 @@ export default async function AdminPage() {
     },
   }));
 
-  const emailLogsRaw = await loadAdminSection("correos", loadWarnings, () => prisma.sentEmailLog.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 500,
-  }), []);
-
   const emailLogs = emailLogsRaw.map((log: any) => ({
     id: log.id,
     recipient: log.recipient,
     subject: log.subject,
-    htmlBody: log.htmlBody,
+    htmlBody: "",
+    status: log.status || "SUCCESS",
+    messageId: log.messageId || null,
+    errorDetails: log.errorDetails || null,
+    metadata: log.metadata || null,
     createdAt: log.createdAt.toISOString(),
   }));
-
-  const searchesRaw = await loadAdminSection("búsquedas", loadWarnings, () => prisma.activityLog.findMany({
-    where: {
-      action: "COMMUNITY_SEARCH",
-    },
-    include: {
-      user: {
-        select: {
-          email: true,
-          profile: {
-            select: {
-              firstName: true,
-              lastName: true,
-              fullName: true,
-              avatarUrl: true,
-            },
-          },
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 1000,
-  }), []);
 
   const searches = searchesRaw.map((log: any) => {
     let queryText = "";
@@ -156,51 +275,6 @@ export default async function AdminPage() {
     };
   });
 
-  const specialistsRaw = await loadAdminSection("especialistas", loadWarnings, () => prisma.specialistProfile.findMany({
-    include: {
-      spaces: {
-        select: {
-          id: true,
-          userId: true,
-          spaceType: true,
-          name: true,
-          address: true,
-          city: true,
-          country: true,
-          lat: true,
-          lng: true,
-          googlePlaceId: true,
-          googleMapsUrl: true,
-          phone: true,
-          website: true,
-          coverUrl: true,
-          isActive: true,
-          createdAt: true,
-          updatedAt: true,
-          availability: true,
-        },
-      },
-      courses: true,
-      user: {
-        select: {
-          email: true,
-          profile: {
-            select: {
-              firstName: true,
-              lastName: true,
-              fullName: true,
-              avatarUrl: true,
-              city: true,
-            },
-          },
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  }), []);
-
   const specialists = specialistsRaw.map((spec: any) => ({
     userId: spec.userId,
     specialty: spec.specialty,
@@ -227,31 +301,6 @@ export default async function AdminPage() {
       },
     },
   }));
-
-  const postulationsRaw = await loadAdminSection("postulaciones", loadWarnings, () => prisma.specialistPostulation.findMany({
-    where: {
-      status: "pending",
-    },
-    include: {
-      user: {
-        select: {
-          email: true,
-          profile: {
-            select: {
-              firstName: true,
-              lastName: true,
-              fullName: true,
-              avatarUrl: true,
-              city: true,
-            },
-          },
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  }), []);
 
   const postulations = postulationsRaw.map((post: any) => ({
     id: post.id,
@@ -283,14 +332,6 @@ export default async function AdminPage() {
     },
   }));
 
-  const categoriesRaw = await loadAdminSection("categorías", loadWarnings, () => prisma.interestCategory.findMany({
-    orderBy: { sortOrder: "asc" },
-    include: {
-      interests: { orderBy: { sortOrder: "asc" } },
-      specialistAreas: { orderBy: { sortOrder: "asc" } },
-    },
-  }), []);
-
   const categories = categoriesRaw.map((cat: any) => ({
     id: cat.id,
     name: cat.name,
@@ -320,27 +361,6 @@ export default async function AdminPage() {
     })),
   }));
 
-  const suggestionsRaw = await loadAdminSection("sugerencias", loadWarnings, () => prisma.categorySuggestion.findMany({
-    orderBy: { createdAt: "desc" },
-    include: {
-      user: {
-        select: {
-          email: true,
-          profile: {
-            select: {
-              firstName: true,
-              lastName: true,
-              fullName: true,
-            },
-          },
-        },
-      },
-      category: {
-        select: { id: true, name: true },
-      },
-    },
-  }), []);
-
   const suggestions = suggestionsRaw.map((sugg: any) => ({
     id: sugg.id,
     type: sugg.type,
@@ -355,19 +375,6 @@ export default async function AdminPage() {
     } : null,
     categoryName: sugg.category?.name || null,
   }));
-
-  const eventsRaw = await loadAdminSection("eventos", loadWarnings, () => prisma.event.findMany({
-    include: {
-      inscriptions: {
-        include: {
-          guest: true,
-        },
-      },
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  }), []);
 
   const events = eventsRaw.map((ev: any) => ({
     id: ev.id,
@@ -388,15 +395,6 @@ export default async function AdminPage() {
     inscriptionsCount: ev.inscriptions?.length || 0,
   }));
 
-  const inscriptionsRaw = await loadAdminSection("inscripciones", loadWarnings, () => prisma.eventInscription.findMany({
-    include: {
-      guest: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  }), []);
-
   const inscriptions = inscriptionsRaw.map((ins: any) => ({
     id: ins.id,
     eventId: ins.eventId,
@@ -405,6 +403,9 @@ export default async function AdminPage() {
     guestLastName: ins.guest?.lastName || ins.guestLastName || null,
     guestEmail: ins.guest?.email || ins.guestEmail || null,
     guestCity: ins.guest?.city || ins.guestCity || null,
+    guestState: ins.guest?.state || ins.guestState || null,
+    guestCountry: ins.guest?.country || ins.guestCountry || null,
+    marketingConsent: ins.guest?.marketingConsent ?? true,
     createdAt: ins.createdAt.toISOString(),
     user: ins.user ? {
       email: ins.user.email,
@@ -416,13 +417,6 @@ export default async function AdminPage() {
       },
     } : undefined,
   }));
-
-  const contactMessagesRaw = await loadAdminSection("contacto", loadWarnings, () => prisma.contactMessage.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-    take: 500,
-  }), []);
 
   const contactMessages = contactMessagesRaw.map((msg: any) => ({
     id: msg.id,

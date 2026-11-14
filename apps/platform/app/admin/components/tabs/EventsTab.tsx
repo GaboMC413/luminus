@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useRef } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { AdminEvent, AdminEventInscription } from "../../types";
 import { InputField } from "@/components/ui/InputField";
 import { SelectInput } from "@/components/ui/SelectInput";
@@ -11,6 +11,14 @@ import { AdminBadge, AdminCard, AdminDetailRow } from "../AdminDesignSystem";
 interface EventsTabProps {
   events: AdminEvent[];
   inscriptions: AdminEventInscription[];
+}
+
+function TrashIcon({ className = "w-3.5 h-3.5" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+    </svg>
+  );
 }
 
 const EVENT_CATEGORIES = [
@@ -25,57 +33,67 @@ const EVENT_CATEGORIES = [
   { label: "Otro", value: "Otro" },
 ];
 
-const TIME_OPTIONS = [
-  { label: "18:00 hs (GMT-3)", value: "18:00 hs (GMT-3)" },
-  { label: "18:30 hs (GMT-3)", value: "18:30 hs (GMT-3)" },
-  { label: "19:00 hs (GMT-3)", value: "19:00 hs (GMT-3)" },
-  { label: "19:30 hs (GMT-3)", value: "19:30 hs (GMT-3)" },
-  { label: "20:00 hs (GMT-3)", value: "20:00 hs (GMT-3)" },
-  { label: "20:30 hs (GMT-3)", value: "20:30 hs (GMT-3)" },
-  { label: "21:00 hs (GMT-3)", value: "21:00 hs (GMT-3)" },
-  { label: "10:00 hs (GMT-3)", value: "10:00 hs (GMT-3)" },
-  { label: "11:00 hs (GMT-3)", value: "11:00 hs (GMT-3)" },
-  { label: "12:00 hs (GMT-3)", value: "12:00 hs (GMT-3)" },
-  { label: "14:00 hs (GMT-3)", value: "14:00 hs (GMT-3)" },
-  { label: "15:00 hs (GMT-3)", value: "15:00 hs (GMT-3)" },
-  { label: "16:00 hs (GMT-3)", value: "16:00 hs (GMT-3)" },
-  { label: "17:00 hs (GMT-3)", value: "17:00 hs (GMT-3)" },
-];
+function extractTimeHHMM(timeText?: string | null): string {
+  if (!timeText) return "18:00";
+  const match = String(timeText).match(/(\d{1,2}):(\d{2})/);
+  if (match) {
+    const hh = match[1].padStart(2, "0");
+    const mm = match[2];
+    return `${hh}:${mm}`;
+  }
+  return "18:00";
+}
 
 function getCategoryBadgeStyle(category?: string | null): string {
-  if (!category) return "bg-slate-100 text-slate-700 border-slate-200";
+  if (!category) return "category-pill-slate";
   const norm = category.toLowerCase();
-  if (norm.includes("crecimiento")) {
-    return "bg-amber-50 text-amber-800 border-amber-200/80";
+  if (norm.includes("crecimiento")) return "category-pill-crecimiento";
+  if (norm.includes("emocional")) return "category-pill-emocional";
+  if (norm.includes("salud") || norm.includes("integral")) return "category-pill-salud";
+  if (norm.includes("movimiento") || norm.includes("físico") || norm.includes("fisico")) return "category-pill-movimiento";
+  if (norm.includes("nutrición") || norm.includes("nutricion")) return "category-pill-nutricion";
+  if (norm.includes("espiritualidad")) return "category-pill-espiritualidad";
+  if (norm.includes("vínculos") || norm.includes("vinculos")) return "category-pill-vinculos";
+  if (norm.includes("terapias") || norm.includes("complementarias")) return "category-pill-terapias";
+  return "category-pill-slate";
+}
+
+function parseCalendarDate(dateStr?: string | Date | null): Date | null {
+  if (!dateStr) return null;
+  if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? null : dateStr;
+  const str = String(dateStr).trim();
+  if (!str) return null;
+
+  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (match) {
+    const year = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10) - 1;
+    const day = parseInt(match[3], 10);
+    return new Date(year, month, day);
   }
-  if (norm.includes("emocional")) {
-    return "bg-pink-50 text-pink-700 border-pink-200/80";
+
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function formatDateForInput(dateStr?: string | Date | null): string {
+  if (!dateStr) return "";
+  if (typeof dateStr === "string" && /^\d{4}-\d{2}-\d{2}/.test(dateStr.trim())) {
+    return dateStr.trim().substring(0, 10);
   }
-  if (norm.includes("salud") || norm.includes("integral")) {
-    return "bg-sky-50 text-sky-700 border-sky-200/80";
-  }
-  if (norm.includes("movimiento") || norm.includes("físico") || norm.includes("fisico")) {
-    return "bg-rose-50 text-rose-700 border-rose-200/80";
-  }
-  if (norm.includes("nutrición") || norm.includes("nutricion")) {
-    return "bg-lime-50 text-lime-800 border-lime-200/80";
-  }
-  if (norm.includes("espiritualidad")) {
-    return "bg-purple-50 text-purple-700 border-purple-200/80";
-  }
-  if (norm.includes("vínculos") || norm.includes("vinculos")) {
-    return "bg-orange-50 text-orange-700 border-orange-200/80";
-  }
-  if (norm.includes("terapias") || norm.includes("complementarias")) {
-    return "bg-teal-50 text-teal-700 border-teal-200/80";
-  }
-  return "bg-slate-100 text-slate-700 border-slate-200";
+  const d = parseCalendarDate(dateStr);
+  if (!d) return "";
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 function isUpcomingEvent(ev: Partial<AdminEvent>): boolean {
+  if (ev.isUpcoming === false) return false;
   if (!ev.date) return Boolean(ev.isUpcoming);
-  const d = new Date(ev.date);
-  if (isNaN(d.getTime())) return Boolean(ev.isUpcoming);
+  const d = parseCalendarDate(ev.date);
+  if (!d) return Boolean(ev.isUpcoming);
   const now = new Date();
   now.setHours(0, 0, 0, 0);
   return d.getTime() >= now.getTime();
@@ -98,6 +116,8 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
   // Selection & Detail Panel State
   const [selectedEventId, setSelectedEventId] = useState<string>(initialEvents[0]?.id ?? "");
   const [detailSubTab, setDetailSubTab] = useState<"info" | "inscriptos">("info");
+  const [showMobileDetail, setShowMobileDetail] = useState<boolean>(false);
+  const [selectedGuestForModal, setSelectedGuestForModal] = useState<AdminEventInscription | null>(null);
 
   // In-Place Inline Editing State (matching UsersTab)
   const [isEditingEvent, setIsEditingEvent] = useState<boolean>(false);
@@ -140,16 +160,97 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
   // Selected Event object
   const selectedEvent = eventsList.find((ev) => ev.id === selectedEventId) ?? filteredEvents[0] ?? eventsList[0] ?? null;
 
+  const [inscriptionsList, setInscriptionsList] = useState<AdminEventInscription[]>(inscriptions);
+  const [deletingInscriptionId, setDeletingInscriptionId] = useState<string | null>(null);
+  const [confirmingInscriptionId, setConfirmingInscriptionId] = useState<string | null>(null);
+
+  const [isNotifyingLive, setIsNotifyingLive] = useState<boolean>(false);
+  const [showNotifyLiveConfirmModal, setShowNotifyLiveConfirmModal] = useState<boolean>(false);
+  const [notifySuccessMessage, setNotifySuccessMessage] = useState<string | null>(null);
+
+  const handleNotifyLive = async () => {
+    if (!selectedEvent) return;
+    setIsNotifyingLive(true);
+    setNotifySuccessMessage(null);
+    try {
+      const res = await fetch(`/api/admin/events/${selectedEvent.id}/notify-live`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setEventsList((prev) =>
+          prev.map((ev) =>
+            ev.id === selectedEvent.id
+              ? { ...ev, liveNotificationSent: true, liveNotificationSentAt: new Date().toISOString() }
+              : ev
+          )
+        );
+        setShowNotifyLiveConfirmModal(false);
+        setNotifySuccessMessage(
+          `Notificación enviada con éxito a ${data.totalNotified || 0} inscriptos.`
+        );
+      } else {
+        alert(data.error || "Error al enviar las notificaciones.");
+      }
+    } catch (err) {
+      console.error("Error notifying live event:", err);
+      alert("Error de red al notificar evento.");
+    } finally {
+      setIsNotifyingLive(false);
+    }
+  };
+
+  useEffect(() => {
+    setInscriptionsList(inscriptions);
+  }, [inscriptions]);
+
+  const handleDeleteInscription = async (inscriptionId: string) => {
+    setDeletingInscriptionId(inscriptionId);
+    try {
+      const res = await fetch(`/api/admin/event-inscriptions/${inscriptionId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setInscriptionsList((prev) => prev.filter((ins) => ins.id !== inscriptionId));
+        setConfirmingInscriptionId(null);
+      } else {
+        alert(data.error || "No se pudo eliminar la inscripción.");
+      }
+    } catch (err) {
+      console.error("Error deleting inscription:", err);
+      alert("Error de conexión al eliminar la inscripción.");
+    } finally {
+      setDeletingInscriptionId(null);
+    }
+  };
+
   // Inscriptions for the currently selected event
   const selectedEventInscriptions = useMemo(() => {
     if (!selectedEvent) return [];
-    return inscriptions.filter((ins) => ins.eventId === selectedEvent.id);
-  }, [inscriptions, selectedEvent]);
+    return inscriptionsList.filter((ins) => ins.eventId === selectedEvent.id);
+  }, [inscriptionsList, selectedEvent]);
+
+  // Distinct tag options for Event Type (starting with "Estreno en YouTube", plus any custom tags)
+  const availableTags = useMemo(() => {
+    const tagsSet = new Set<string>(["Estreno en YouTube"]);
+    eventsList.forEach((ev) => {
+      const loc = (ev.location || "").trim();
+      if (loc && loc !== "En vivo por Zoom / LUMINUS" && loc !== "En vivo / YouTube") {
+        tagsSet.add(loc);
+      }
+    });
+    return Array.from(tagsSet);
+  }, [eventsList]);
 
   // Start editing existing event
   const handleStartEdit = () => {
     if (!selectedEvent) return;
-    setEditingEventData({ ...selectedEvent });
+    setEditingEventData({
+      ...selectedEvent,
+      timeText: extractTimeHHMM(selectedEvent.timeText),
+      location: selectedEvent.location || "Estreno en YouTube",
+    });
     setIsEditingEvent(true);
   };
 
@@ -161,12 +262,13 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
       speakerName: "",
       category: "Bienestar Emocional",
       date: new Date().toISOString().substring(0, 10),
-      timeText: "18:00 hs (GMT-3)",
-      location: "En vivo por Zoom / LUMINUS",
+      timeText: "18:00",
+      location: "Estreno en YouTube",
       coverUrl: "",
       isUpcoming: true,
     });
     setIsEditingEvent(true);
+    setShowMobileDetail(true);
   };
 
   // Cancel inline editing
@@ -266,6 +368,10 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
 
     setIsSubmitting(true);
     const calculatedUpcoming = isUpcomingEvent(editingEventData);
+    const timeHHMM = extractTimeHHMM(editingEventData.timeText);
+    const locationVal = (editingEventData.location && editingEventData.location.trim())
+      ? editingEventData.location.trim()
+      : "Estreno en YouTube";
 
     try {
       const res = await fetch("/api/admin/events", {
@@ -273,6 +379,8 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...editingEventData,
+          timeText: timeHHMM,
+          location: locationVal,
           isUpcoming: calculatedUpcoming,
         }),
       });
@@ -318,11 +426,11 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
 
   return (
     <div className="w-full p-6 md:p-8 h-[calc(100vh-64px)] overflow-hidden flex flex-col box-border">
-      {/* 2-Column Master-Detail Grid matching UsersTab */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.08fr_1fr] gap-6 items-start flex-1 min-h-0 h-full">
+      {/* 2-Column Master-Detail Grid: 38% Lista / 62% Panel de Detalle Amplio */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.6fr] gap-6 items-start flex-1 min-h-0 h-full">
         
         {/* LEFT COLUMN: Master Events List */}
-        <div className="flex flex-col gap-4 min-w-0 h-full overflow-hidden">
+        <div className={`${showMobileDetail ? "hidden lg:flex" : "flex"} flex-col gap-4 min-w-0 h-full overflow-hidden`}>
           {/* Page Heading Area */}
           <div className="shrink-0">
             <h1 className="text-[28px] font-bold leading-tight font-jakarta text-slate-900">
@@ -335,7 +443,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
             {/* Card Toolbar: Status Dropdown + Search Input + "+ Nuevo" Button */}
             <div className="p-4 border-b border-slate-200/80 bg-white flex items-center gap-3 shrink-0">
               {/* Filter Dropdown */}
-              <div className="min-w-[145px] shrink-0">
+              <div className="min-w-36 shrink-0">
                 <SelectInput
                   value={eventFilter}
                   options={[
@@ -344,7 +452,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                     { label: `Todos · ${eventsList.length}`, value: "todos" },
                   ]}
                   onSelect={(val) => setEventFilter(val as "proximos" | "pasados" | "todos")}
-                  className="!h-10 text-xs font-bold"
+                  className="h-10! text-xs font-bold"
                 />
               </div>
 
@@ -354,7 +462,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                   value={eventSearch}
                   onChange={(e) => setEventSearch(e.target.value)}
                   placeholder="Buscar por título o speaker"
-                  className="!w-full !h-10 text-xs"
+                  className="w-full! h-10! text-xs"
                 />
               </div>
 
@@ -398,6 +506,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                       onClick={() => {
                         setSelectedEventId(ev.id);
                         setIsEditingEvent(false);
+                        setShowMobileDetail(true);
                       }}
                       className={`grid w-full grid-cols-[55%_25%_20%] items-center px-4 py-3.5 text-left text-[14px] transition outline-none cursor-pointer border-y-0 border-r-0 ${
                         active
@@ -425,14 +534,13 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                         </span>
                       </span>
 
-                      {/* Fecha */}
                       <span className="text-[13px] text-slate-600 font-sans truncate">
                         {ev.date ? (
-                          new Date(ev.date).toLocaleDateString("es-ES", {
+                          parseCalendarDate(ev.date)?.toLocaleDateString("es-ES", {
                             day: "2-digit",
                             month: "2-digit",
                             year: "numeric",
-                          })
+                          }) || "—"
                         ) : (
                           "—"
                         )}
@@ -452,87 +560,137 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
 
         {/* RIGHT COLUMN: Exact Replica of UsersTab Detail Panel Card */}
         {selectedEvent ? (
-          <AdminCard className="flex flex-col min-w-0 h-full overflow-hidden">
+          <AdminCard className={`${showMobileDetail ? "flex" : "hidden lg:flex"} flex-col min-w-0 h-full overflow-hidden relative`}>
+            
+            {/* Mobile Sticky Back Button Header */}
+            <div className="lg:hidden p-3.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowMobileDetail(false)}
+                className="flex items-center gap-2 text-xs font-bold text-white hover:text-slate-200 cursor-pointer bg-transparent border-none"
+              >
+                <span className="material-symbols-rounded text-[18px]">arrow_back</span>
+                <span>Volver a la lista de eventos</span>
+              </button>
+            </div>
             
             {/* Header Profile Summary (matching UsersTab padding & structure) */}
             <div className="border-b border-slate-200/80 p-6 bg-white shrink-0">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-4 min-w-0 flex-1">
-                  {/* Small 16:9 Cover Thumbnail on Left */}
-                  <div className="relative shrink-0">
-                    {selectedEvent.coverUrl ? (
-                      <img
-                        src={selectedEvent.coverUrl}
-                        alt={selectedEvent.title}
-                        className="w-24 h-15 rounded-xl object-cover border border-slate-200 bg-slate-100 shadow-2xs"
-                      />
-                    ) : (
-                      <div className="w-24 h-15 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
-                        <span className="material-symbols-rounded text-[22px]">event</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Title & Badges on Right of Cover */}
-                  <div className="min-w-0 flex-1 pt-0.5">
-                    <h2 className="line-clamp-2 text-lg font-bold text-slate-900 leading-tight font-jakarta">
-                      {selectedEvent.title}
-                    </h2>
-
-                    {/* Badges Bar matching UsersTab */}
-                    <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                      <AdminBadge variant={isUpcomingEvent(selectedEvent) ? "active" : "disabled"}>
-                        {isUpcomingEvent(selectedEvent) ? "Próximo" : "Pasado / Grabación"}
-                      </AdminBadge>
-
-                      {selectedEvent.category && (
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider border ${getCategoryBadgeStyle(selectedEvent.category)}`}
-                        >
-                          {selectedEvent.category}
+              {isEditingEvent && !editingEventData.id ? (
+                /* NEW EVENT CREATION HEADER */
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4 min-w-0 flex-1">
+                    <div className="w-24 h-15 rounded-xl bg-slate-900 border border-slate-900 flex items-center justify-center text-white shrink-0 shadow-2xs">
+                      <span className="material-symbols-rounded text-[24px]">add</span>
+                    </div>
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      <h2 className="text-lg font-bold text-slate-900 leading-tight font-jakarta">
+                        {editingEventData.title || "Crear Nuevo Evento"}
+                      </h2>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <AdminBadge variant="active">Nuevo Evento</AdminBadge>
+                        <span className="text-xs text-slate-500 font-sans">
+                          Completa el formulario para publicar la actividad
                         </span>
-                      )}
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Edit & Delete Buttons matching UsersTab */}
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isEditingEvent) {
-                        handleCancelEdit();
-                      } else {
-                        handleStartEdit();
-                      }
-                    }}
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none cursor-pointer transition-colors ${
-                      isEditingEvent
-                        ? "bg-black text-white hover:bg-slate-800"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
-                    }`}
-                    title={isEditingEvent ? "Cancelar edición" : "Editar evento"}
-                  >
-                    <span className="material-symbols-rounded text-[18px] block">
-                      {isEditingEvent ? "close" : "edit"}
-                    </span>
-                  </button>
-
-                  {!isEditingEvent && (
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
                       type="button"
-                      onClick={() => handleDeleteEvent(selectedEvent.id)}
-                      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none cursor-pointer transition-colors bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700"
-                      title="Eliminar evento"
+                      onClick={handleCancelEdit}
+                      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none cursor-pointer transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+                      title="Cancelar creación"
+                    >
+                      <span className="material-symbols-rounded text-[18px] block">close</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* EXISTING EVENT / EDITING HEADER */
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4 min-w-0 flex-1">
+                    {/* Small 16:9 Cover Thumbnail on Left */}
+                    <div className="relative shrink-0">
+                      {(isEditingEvent ? (editingEventData.coverUrl || selectedEvent.coverUrl) : selectedEvent.coverUrl) ? (
+                        <img
+                          src={(isEditingEvent ? (editingEventData.coverUrl || selectedEvent.coverUrl) : selectedEvent.coverUrl) || ""}
+                          alt={selectedEvent.title}
+                          className="w-24 h-15 rounded-xl object-cover border border-slate-200 bg-slate-100 shadow-2xs"
+                        />
+                      ) : (
+                        <div className="w-24 h-15 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+                          <span className="material-symbols-rounded text-[22px]">event</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Title & Badges on Right of Cover */}
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      {isEditingEvent && (
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
+                          Editando evento
+                        </div>
+                      )}
+                      <h2 className="line-clamp-2 text-lg font-bold text-slate-900 leading-tight font-jakarta">
+                        {isEditingEvent ? (editingEventData.title || selectedEvent.title) : selectedEvent.title}
+                      </h2>
+
+                      {/* Badges Bar matching UsersTab */}
+                      <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                        <AdminBadge variant={isUpcomingEvent(isEditingEvent ? editingEventData : selectedEvent) ? "active" : "disabled"}>
+                          {isUpcomingEvent(isEditingEvent ? editingEventData : selectedEvent) ? "Próximo" : "Pasado / Grabación"}
+                        </AdminBadge>
+
+                        {(isEditingEvent ? editingEventData.category : selectedEvent.category) && (
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider border ${getCategoryBadgeStyle(isEditingEvent ? editingEventData.category : selectedEvent.category)}`}
+                          >
+                            {isEditingEvent ? editingEventData.category : selectedEvent.category}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Edit & Delete Buttons matching UsersTab */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isEditingEvent) {
+                          handleCancelEdit();
+                        } else {
+                          handleStartEdit();
+                        }
+                      }}
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none cursor-pointer transition-colors ${
+                        isEditingEvent
+                          ? "bg-black text-white hover:bg-slate-800"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+                      }`}
+                      title={isEditingEvent ? "Cancelar edición" : "Editar evento"}
                     >
                       <span className="material-symbols-rounded text-[18px] block">
-                        delete
+                        {isEditingEvent ? "close" : "edit"}
                       </span>
                     </button>
-                  )}
+
+                    {!isEditingEvent && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteEvent(selectedEvent.id)}
+                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none cursor-pointer transition-colors bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700"
+                        title="Eliminar evento"
+                      >
+                        <span className="material-symbols-rounded text-[18px] block">
+                          delete
+                        </span>
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* View Switcher Sub-Tabs Bar */}
               {!isEditingEvent && (
@@ -580,7 +738,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                           label="Fecha y hora"
                           value={
                             selectedEvent.date
-                              ? `${new Date(selectedEvent.date).toLocaleDateString("es-ES", {
+                              ? `${parseCalendarDate(selectedEvent.date)?.toLocaleDateString("es-ES", {
                                   weekday: "long",
                                   day: "numeric",
                                   month: "long",
@@ -589,7 +747,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                               : selectedEvent.timeText || "—"
                           }
                         />
-                        <AdminDetailRow label="Ubicación" value={selectedEvent.location || "En vivo / YouTube"} />
+                        <AdminDetailRow label="Tipo de Evento" value={selectedEvent.location || "Estreno en YouTube"} />
                         {selectedEvent.link && (
                           <AdminDetailRow
                             label="Enlace"
@@ -626,6 +784,42 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                         )}
                       </div>
                     </div>
+
+                    {/* Live Notification Card */}
+                    <div className="bg-slate-900 text-white rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                            Notificación de Evento Online
+                          </h4>
+                          {selectedEvent.liveNotificationSent && (
+                            <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
+                              Notificado
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[12.5px] text-slate-300 mt-1 leading-snug">
+                          {selectedEvent.liveNotificationSent
+                            ? `Se envió el aviso a los inscriptos (${selectedEvent.liveNotificationSentAt ? parseCalendarDate(selectedEvent.liveNotificationSentAt)?.toLocaleDateString("es-ES") : "anteriormente"}).`
+                            : `Envía un correo electrónico masivo a los ${selectedEventInscriptions.length} inscriptos avisando que el evento está online.`}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowNotifyLiveConfirmModal(true)}
+                        disabled={isNotifyingLive || selectedEventInscriptions.length === 0}
+                        className="px-4 py-2.5 bg-white hover:bg-slate-100 disabled:opacity-50 text-slate-900 font-bold rounded-xl text-xs transition-colors shrink-0 cursor-pointer whitespace-nowrap"
+                      >
+                        Notificar Evento Online
+                      </button>
+                    </div>
+
+                    {notifySuccessMessage && (
+                      <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold p-3.5 rounded-xl flex items-center gap-2">
+                        <span className="material-symbols-rounded text-[18px]">check_circle</span>
+                        <span>{notifySuccessMessage}</span>
+                      </div>
+                    )}
                   </>
                 )}
 
@@ -640,37 +834,137 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                         Aún no hay personas inscriptas a este evento.
                       </div>
                     ) : (
-                      <div className="bg-slate-50/50 rounded-xl overflow-hidden border border-slate-100">
-                        <table className="w-full text-left text-xs border-collapse table-fixed">
+                      <div className="bg-slate-50/50 rounded-xl border border-slate-100 overflow-x-auto">
+                        <table className="w-full text-left text-xs border-collapse min-w-[540px]">
                           <thead>
                             <tr className="bg-slate-100/60 border-b border-slate-200/60 text-slate-500 font-bold uppercase tracking-wider text-[11px]">
-                              <th className="py-2.5 px-3 w-[28%]">Persona</th>
-                              <th className="py-2.5 px-3 w-[34%]">Email</th>
-                              <th className="py-2.5 px-3 w-[22%]">Ciudad</th>
-                              <th className="py-2.5 px-3 w-[16%] text-right">Fecha</th>
+                              <th className="py-2.5 px-3">Persona</th>
+                              <th className="py-2.5 px-3">Ubicación (Ciudad / Provincia / País)</th>
+                              <th className="py-2.5 px-3 text-right">Fecha</th>
+                              <th className="py-2.5 px-3 text-center">Ficha</th>
+                              <th className="py-2.5 px-3 text-right"></th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-100 text-slate-700">
-                            {selectedEventInscriptions.map((ins) => (
-                              <tr key={ins.id} className="hover:bg-slate-100/50">
-                                <td className="py-2.5 px-3 font-semibold text-slate-900 truncate">
-                                  {ins.guestFirstName} {ins.guestLastName}
-                                </td>
-                                <td className="py-2.5 px-3 font-mono text-slate-600 text-[11px] truncate">
-                                  {ins.guestEmail}
-                                </td>
-                                <td className="py-2.5 px-3 text-slate-700 text-xs truncate">
-                                  {ins.guestCity || "—"}
-                                </td>
-                                <td className="py-2.5 px-3 text-right text-slate-500 text-[11px] whitespace-nowrap">
-                                  {new Date(ins.createdAt).toLocaleDateString("es-ES", {
-                                    day: "2-digit",
-                                    month: "2-digit",
-                                    year: "numeric",
-                                  })}
-                                </td>
-                              </tr>
-                            ))}
+                            {selectedEventInscriptions.map((ins) => {
+                              // Desglosar Ciudad, Provincia y País
+                              let city = ins.guestCity || "";
+                              let state = ins.guestState || "";
+                              let country = ins.guestCountry || "";
+
+                              if (city.includes(",")) {
+                                const parts = city.split(",").map((p) => p.trim()).filter(Boolean);
+                                if (parts.length >= 3) {
+                                  city = parts[0];
+                                  state = state || parts.slice(1, -1).join(", ");
+                                  country = country || parts[parts.length - 1];
+                                } else if (parts.length === 2) {
+                                  city = parts[0];
+                                  state = state || parts[1];
+                                }
+                              }
+
+                              const locationText = [city, state].filter(Boolean).join(", ") || "—";
+
+                              return (
+                                <tr key={ins.id} className="hover:bg-slate-100/50 group transition-colors relative">
+                                  <td className="py-2.5 px-3 font-semibold text-slate-900">
+                                    <div className="font-semibold text-slate-900 leading-snug">
+                                      {ins.guestFirstName} {ins.guestLastName}
+                                    </div>
+                                    <div className="font-mono text-[11px] text-slate-500 font-normal">
+                                      {ins.guestEmail}
+                                    </div>
+                                    {ins.notifiedLiveAt && (
+                                      <div className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 mt-0.5">
+                                        <span>Notificado en vivo</span>
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-slate-700 text-xs">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="font-medium text-slate-800">{locationText}</span>
+                                      {country && (
+                                        <span className="inline-block px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-200/80 text-slate-700 border border-slate-300/50 uppercase">
+                                          {country}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right text-slate-500 text-[11px] whitespace-nowrap">
+                                    {new Date(ins.createdAt).toLocaleDateString("es-ES", {
+                                      day: "2-digit",
+                                      month: "2-digit",
+                                      year: "numeric",
+                                    })}
+                                  </td>
+                                  <td className="py-2.5 px-3 text-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => setSelectedGuestForModal(ins)}
+                                      className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-colors cursor-pointer border border-slate-200/80 inline-flex items-center gap-1"
+                                      title="Ver ficha completa de la persona"
+                                    >
+                                      <span className="material-symbols-rounded text-[14px]">visibility</span>
+                                      <span>Ver</span>
+                                    </button>
+                                  </td>
+                                  <td className="py-2.5 px-3 text-right relative">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setConfirmingInscriptionId((prev) => (prev === ins.id ? null : ins.id))
+                                      }
+                                      className="opacity-0 group-hover:opacity-100 transition-all duration-150 w-7 h-7 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 cursor-pointer inline-flex items-center justify-center shrink-0 border-none bg-transparent"
+                                      title="Eliminar inscripción"
+                                    >
+                                      <TrashIcon className="w-3.5 h-3.5 shrink-0" />
+                                    </button>
+
+                                    {confirmingInscriptionId === ins.id && (
+                                      <>
+                                        {/* Invisible backdrop to dismiss on click outside */}
+                                        <div
+                                          className="fixed inset-0 z-40"
+                                          onClick={() => setConfirmingInscriptionId(null)}
+                                        />
+
+                                        {/* Floating Confirmation Popover */}
+                                        <div className="absolute right-2 top-full mt-1 z-50 bg-white border border-slate-200/90 shadow-none rounded-2xl p-3.5 flex flex-col gap-2.5 min-w-[220px] text-left animate-in fade-in zoom-in-95 duration-150 font-sans">
+                                          <div className="flex flex-col gap-1">
+                                            <span className="text-xs font-bold text-slate-900 leading-tight">
+                                              ¿Deseas realizar esta acción?
+                                            </span>
+                                            <span className="text-xs font-normal text-slate-500 leading-relaxed">
+                                              Se eliminará la inscripción de {ins.guestFirstName} {ins.guestLastName}.
+                                            </span>
+                                          </div>
+
+                                          <div className="flex items-center gap-2 pt-1">
+                                            <button
+                                              type="button"
+                                              onClick={() => handleDeleteInscription(ins.id)}
+                                              disabled={deletingInscriptionId === ins.id}
+                                              className="flex-1 py-1.5 px-3 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs rounded-lg transition-colors cursor-pointer disabled:opacity-50 text-center"
+                                            >
+                                              {deletingInscriptionId === ins.id ? "Eliminando..." : "Aceptar"}
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() => setConfirmingInscriptionId(null)}
+                                              disabled={deletingInscriptionId === ins.id}
+                                              className="flex-1 py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium text-xs rounded-lg transition-colors cursor-pointer disabled:opacity-50 text-center"
+                                            >
+                                              Cancelar
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -691,7 +985,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                     placeholder="Ej: Taller de Bienestar Emocional"
                     value={editingEventData.title || ""}
                     onChange={(e) => setEditingEventData({ ...editingEventData, title: e.target.value })}
-                    className="!w-full !h-10 text-xs"
+                    className="w-full! h-10! text-xs"
                   />
                 </div>
 
@@ -705,7 +999,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                       placeholder="Ej: Dra. Sofía Martínez"
                       value={editingEventData.speakerName || ""}
                       onChange={(e) => setEditingEventData({ ...editingEventData, speakerName: e.target.value })}
-                      className="!w-full !h-10 text-xs"
+                      className="w-full! h-10! text-xs"
                     />
                   </div>
                   <div>
@@ -729,66 +1023,90 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                      Fecha
+                      Fecha *
                     </label>
                     <InputField
                       type="date"
-                      value={editingEventData.date ? new Date(editingEventData.date).toISOString().substring(0, 10) : ""}
+                      required
+                      value={formatDateForInput(editingEventData.date)}
                       onChange={(e) => setEditingEventData({ ...editingEventData, date: e.target.value })}
-                      className="!w-full !h-10 text-xs"
+                      className="w-full! h-10! text-xs font-sans"
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                      Hora
+                      Hora (GMT-3) *
                     </label>
-                    <select
-                      value={editingEventData.timeText || "18:00 hs (GMT-3)"}
+                    <InputField
+                      type="time"
+                      required
+                      value={extractTimeHHMM(editingEventData.timeText)}
                       onChange={(e) => setEditingEventData({ ...editingEventData, timeText: e.target.value })}
-                      className="w-full h-10 px-3 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-slate-400 cursor-pointer"
-                    >
-                      {TIME_OPTIONS.map((time) => (
-                        <option key={time.value} value={time.value}>
-                          {time.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                      Ubicación
-                    </label>
-                    <InputField
-                      type="text"
-                      placeholder="Ej: En vivo por Zoom / LUMINUS"
-                      value={editingEventData.location || ""}
-                      onChange={(e) => setEditingEventData({ ...editingEventData, location: e.target.value })}
-                      className="!w-full !h-10 text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                      Enlace
-                    </label>
-                    <InputField
-                      type="url"
-                      placeholder="https://www.youtube.com/watch?v=..."
-                      value={editingEventData.link || ""}
-                      onChange={(e) => setEditingEventData({ ...editingEventData, link: e.target.value })}
-                      className="!w-full !h-10 text-xs"
+                      className="w-full! h-10! text-xs font-mono"
                     />
                   </div>
                 </div>
 
-                {/* Cover Upload Section */}
-                <div className="space-y-2 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Tipo de Evento
+                    </label>
+                    <span className="text-[11px] text-slate-400">
+                      Elige una etiqueta o escribe una nueva
+                    </span>
+                  </div>
+
+                  {/* Creatable Tag Chips */}
+                  <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                    {availableTags.map((tag) => {
+                      const currentLoc = (editingEventData.location || "Estreno en YouTube").trim().toLowerCase();
+                      const isSelected = currentLoc === tag.trim().toLowerCase();
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => setEditingEventData((prev) => ({ ...prev, location: tag }))}
+                          className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                            isSelected
+                              ? "bg-slate-900 text-white border-slate-900 shadow-2xs"
+                              : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <InputField
+                    type="text"
+                    placeholder="Estreno en YouTube"
+                    value={editingEventData.location || ""}
+                    onChange={(e) => setEditingEventData({ ...editingEventData, location: e.target.value })}
+                    className="w-full! h-10! text-xs font-sans"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Enlace de YouTube / Transmisión
+                  </label>
+                  <InputField
+                    type="url"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    value={editingEventData.link || ""}
+                    onChange={(e) => setEditingEventData({ ...editingEventData, link: e.target.value })}
+                    className="w-full! h-10! text-xs font-sans"
+                  />
+                </div>
+
+                {/* Cover Upload & URL Section */}
+                <div className="space-y-3 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
                     Imagen de Portada
                   </label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                     {editingEventData.coverUrl ? (
                       <img
                         src={editingEventData.coverUrl}
@@ -801,7 +1119,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                       </div>
                     )}
 
-                    <div className="flex-1 min-w-0 flex items-center gap-3">
+                    <div className="flex-1 min-w-0 w-full flex items-center gap-3">
                       <input
                         type="file"
                         ref={coverFileInputRef}
@@ -817,14 +1135,18 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                         className="px-4 h-9 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-xl text-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs whitespace-nowrap"
                       >
                         <span className="material-symbols-rounded text-[16px]">upload</span>
-                        <span>{isUploadingCover ? "Subiendo..." : "Subir portada"}</span>
+                        <span>{isUploadingCover ? "Subiendo..." : "Subir archivo"}</span>
                       </button>
 
-                      {isUploadingCover && (
-                        <span className="text-[11px] font-medium text-amber-600 animate-pulse">
-                          Subiendo archivo...
-                        </span>
-                      )}
+                      <div className="flex-1 min-w-0">
+                        <InputField
+                          type="url"
+                          placeholder="o pega la URL de imagen (https://...)"
+                          value={editingEventData.coverUrl || ""}
+                          onChange={(e) => setEditingEventData({ ...editingEventData, coverUrl: e.target.value })}
+                          className="w-full! h-9! text-xs"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -882,7 +1204,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                     type="button"
                     variant="outline"
                     onClick={handleCancelEdit}
-                    className="!h-10 text-xs px-5"
+                    className="h-10! text-xs px-5"
                   >
                     Cancelar
                   </Button>
@@ -890,7 +1212,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                     type="submit"
                     variant="primary"
                     disabled={isSubmitting || isUploadingCover}
-                    className="!h-10 text-xs px-6"
+                    className="h-10! text-xs px-6"
                   >
                     {isSubmitting ? "Guardando..." : "Guardar cambios"}
                   </Button>
@@ -906,6 +1228,120 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
         )}
 
       </div>
+
+      {/* Modal Ficha Técnica del Inscripto */}
+      {selectedGuestForModal && (
+        <Modal
+          isOpen={Boolean(selectedGuestForModal)}
+          onClose={() => setSelectedGuestForModal(null)}
+          title="Ficha del Inscripto al Evento"
+        >
+          {(() => {
+            let city = selectedGuestForModal.guestCity || "";
+            let state = selectedGuestForModal.guestState || "";
+            let country = selectedGuestForModal.guestCountry || "";
+
+            if (city.includes(",")) {
+              const parts = city.split(",").map((p) => p.trim()).filter(Boolean);
+              if (parts.length >= 3) {
+                city = parts[0];
+                state = state || parts.slice(1, -1).join(", ");
+                country = country || parts[parts.length - 1];
+              } else if (parts.length === 2) {
+                city = parts[0];
+                state = state || parts[1];
+              }
+            }
+
+            return (
+              <div className="flex flex-col gap-5 text-sm p-1">
+                <div className="flex items-center gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+                  <div className="w-12 h-12 rounded-full bg-slate-900 text-white flex items-center justify-center font-bold text-lg shrink-0">
+                    {(selectedGuestForModal.guestFirstName?.[0] || "U").toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-bold text-slate-900 text-base leading-tight">
+                      {selectedGuestForModal.guestFirstName} {selectedGuestForModal.guestLastName}
+                    </h4>
+                    <p className="text-slate-500 font-mono text-xs mt-0.5">{selectedGuestForModal.guestEmail}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200/80">
+                  <h5 className="text-xs font-bold uppercase tracking-wider text-slate-400">Detalles de Ubicación</h5>
+                  
+                  <AdminDetailRow label="Ciudad" value={city || "—"} />
+                  <AdminDetailRow label="Provincia / Estado" value={state || "—"} />
+                  <AdminDetailRow label="País" value={country || "—"} />
+                </div>
+
+                <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200/80">
+                  <h5 className="text-xs font-bold uppercase tracking-wider text-slate-400">Información de Registro</h5>
+                  
+                  <AdminDetailRow
+                    label="Fecha y Hora de Inscripción"
+                    value={new Date(selectedGuestForModal.createdAt).toLocaleString("es-ES", {
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  />
+                  <AdminDetailRow
+                    label="Comunicaciones LUMINUS"
+                    value={selectedGuestForModal.marketingConsent !== false ? "Aceptó recibir novedades por email" : "No aceptó comunicaciones"}
+                  />
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <Button variant="outline" onClick={() => setSelectedGuestForModal(null)} className="h-9 text-xs px-5">
+                    Cerrar
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
+        </Modal>
+      )}
+
+      {/* Confirmation Modal for Live Notification */}
+      {showNotifyLiveConfirmModal && selectedEvent && (
+        <Modal
+          isOpen={showNotifyLiveConfirmModal}
+          onClose={() => setShowNotifyLiveConfirmModal(false)}
+          title="Notificar Evento Online"
+          maxWidth="max-w-md"
+        >
+          <div className="flex flex-col gap-4 p-1 text-sm">
+            <p className="text-slate-600 leading-relaxed">
+              ¿Estás seguro de que deseas enviar el correo de aviso de evento en vivo a los{" "}
+              <strong className="text-slate-900 font-bold">{selectedEventInscriptions.length} inscriptos</strong> del evento{" "}
+              <strong className="text-slate-900 font-bold">"{selectedEvent.title}"</strong>?
+            </p>
+
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-600 space-y-1.5">
+              <p>• Los mails se enviarán en lotes de 10 destinatarios desde <strong>eventos@luminuslatam.com</strong>.</p>
+              <p>• Quienes ya hayan recibido la notificación no recibirán un correo duplicado.</p>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+              <Button
+                variant="outline"
+                onClick={() => setShowNotifyLiveConfirmModal(false)}
+                disabled={isNotifyingLive}
+                className="h-10 text-xs px-4"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleNotifyLive}
+                disabled={isNotifyingLive}
+                className="h-10 text-xs px-5 bg-slate-900 hover:bg-slate-800 text-white font-bold"
+              >
+                {isNotifyingLive ? "Enviando..." : "Confirmar y Enviar Mails"}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

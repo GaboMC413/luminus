@@ -281,12 +281,7 @@ async function main() {
     const savedCategory = await prisma.interestCategory.upsert({
       where: { slug: slugify(category.title) },
       update: {
-        name: category.title,
-        icon: category.icon,
-        iconFilled: category.iconFilled,
-        color: category.color,
-        bgColor: category.bgColor,
-        sortOrder: categoryIndex,
+        // No sobreescribir name, icon, color o bgColor personalizados si ya existen en BD
       },
       create: {
         name: category.title,
@@ -296,6 +291,18 @@ async function main() {
         color: category.color,
         bgColor: category.bgColor,
         sortOrder: categoryIndex,
+      },
+    });
+
+    const validSlugs = category.items.map(slugify);
+
+    await prisma.interest.updateMany({
+      where: {
+        categoryId: savedCategory.id,
+        slug: { notIn: validSlugs },
+      },
+      data: {
+        isActive: false,
       },
     });
 

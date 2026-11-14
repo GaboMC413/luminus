@@ -1,5 +1,11 @@
 import { PrismaClient } from "@prisma/client";
 
+const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+
+if (!process.env.DATABASE_URL && !isBuildPhase) {
+  console.error("❌ DATABASE_URL no está definida en runtime");
+}
+
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };

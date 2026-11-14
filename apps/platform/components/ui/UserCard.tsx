@@ -1,122 +1,161 @@
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { INTEREST_CATEGORIES } from '@/utils/constants';
+"use client";
 
-interface CategoryInfo {
-  id?: string;
-  name?: string;
-  title?: string;
-  icon?: string;
-  iconFilled?: boolean;
-  color?: string;
-  bgColor?: string;
+import React from "react";
+import { useRouter } from "next/navigation";
+import { formatLocationDisplay } from "@/utils/locationUtils";
+import { UserAvatar } from "./UserAvatar";
+import { Skeleton } from "./Skeleton";
+import { getCategoryTextClass, getCategoryCustomStyles, useDynamicCategories } from "./InterestPill";
+
+export interface UserCardData {
+  id: string;
+  name: string;
+  location?: string | null;
+  city?: string | null;
+  country?: string | null;
+  avatar?: string | null;
+  interests?: string[];
+  categories?: any[];
+  specialty?: string | null;
+  title?: string | null;
 }
 
-interface UserCardProps {
-  user: {
-    id: string;
-    name: string;
-    location: string;
-    avatar: string;
-    interests: string[];
-    categories?: CategoryInfo[];
-  };
+export interface UserCardProps {
+  user: UserCardData;
+  specialty?: string | null;
+  title?: string | null;
+  actionLabel?: string;
+  actionMenu?: React.ReactNode;
+  profileHref?: string;
+  onSelect?: () => void;
+  className?: string;
 }
 
-export function UserCard({ user }: UserCardProps) {
+/**
+ * Standardized directory card for both Members and Specialists across LUMINUS.
+ * Conforms strictly to DESIGN.md Section 2.2, 2.3, and 5.
+ */
+export function UserCard({
+  user,
+  specialty,
+  title,
+  actionLabel = "Ver perfil",
+  actionMenu,
+  profileHref,
+  onSelect,
+  className = "",
+}: UserCardProps) {
   const router = useRouter();
-  const [imgError, setImgError] = React.useState(false);
 
-  const handleViewProfile = () => {
-    router.push(`/comunidad/public-profile?id=${encodeURIComponent(user.id)}`);
-  };
+  const isOfficial =
+    user.name?.toLowerCase() === "luminus" ||
+    user.id === "50d13047-bab8-44f1-9541-a821113845cc" ||
+    user.id === "mock-luminus";
 
-  const formatLocation = (loc: string) => {
-    if (!loc) return "";
-    const parts = loc.split(',').map(p => p.trim()).filter(Boolean);
-    if (parts.length <= 2) return loc;
-    return `${parts[0]}, ${parts[parts.length - 1]}`;
-  };
+  const defaultHref = `/inicio/public-profile?id=${encodeURIComponent(user.id)}`;
+  const destination = profileHref || defaultHref;
 
-  const hasAvatar = user.avatar && !imgError;
-
-  const categoriesToRender = React.useMemo(() => {
-    if (user.categories && user.categories.length > 0) {
-      return user.categories;
+  const handleCardClick = () => {
+    if (isOfficial) return;
+    if (onSelect) {
+      onSelect();
+    } else {
+      router.push(destination);
     }
-    const uniqueCatsMap = new Map<string, CategoryInfo>();
-    (user.interests || []).forEach((interestName) => {
-      const cat = INTEREST_CATEGORIES.find((c) =>
-        c.items.some((item) => item.toLowerCase() === interestName.toLowerCase())
-      );
-      if (cat && !uniqueCatsMap.has(cat.title)) {
-        uniqueCatsMap.set(cat.title, {
-          name: cat.title,
-          icon: cat.icon,
-          iconFilled: cat.iconFilled,
-          color: cat.color,
-        });
-      }
-    });
-    return Array.from(uniqueCatsMap.values());
-  }, [user.categories, user.interests]);
+  };
+
+  const rawLocation = user.location || [user.city, user.country].filter(Boolean).join(", ");
+  const displayLocation = formatLocationDisplay(rawLocation);
+  const activeTitle = title !== undefined ? title : user.title;
+  const activeSpecialty = specialty !== undefined ? specialty : user.specialty;
+  const dbCategories = useDynamicCategories();
+  const displayRole = activeTitle || activeSpecialty;
+  const roleCustomStyles = displayRole ? getCategoryCustomStyles(activeSpecialty || displayRole, dbCategories) : null;
 
   return (
-    <div
-      onClick={handleViewProfile}
-      className="bg-white rounded-2xl p-3 md:p-4 flex flex-col items-center gap-2.5 md:gap-3 border border-slate-200 transition-all group hover:border-slate-300 shadow-none cursor-pointer"
+    <article
+      onClick={handleCardClick}
+      className={`group relative bg-white rounded-2xl p-3.5 sm:p-4 flex flex-col items-center gap-2.5 sm:gap-3 border border-slate-200/90 hover:border-slate-300 transition-colors shadow-none select-none ${
+        isOfficial ? "cursor-default" : "cursor-pointer"
+      } ${className}`}
     >
-      <div className="w-[64px] h-[64px] sm:w-[72px] sm:h-[72px] md:w-[80px] md:h-[80px] rounded-[16px] sm:rounded-[18px] md:rounded-[22px] overflow-hidden bg-slate-50 shrink-0 border border-transparent group-hover:border-slate-200 transition-colors relative flex items-center justify-center">
-        {hasAvatar ? (
-          <img
-            src={user.avatar}
-            alt={user.name}
-            className="w-full h-full object-cover"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          <div className="w-full h-full bg-slate-50 flex items-center justify-center">
-            <span className="material-symbols-outlined text-zinc-300 select-none !text-[44px] sm:!text-[56px] md:!text-[72px]">
-              person
-            </span>
-          </div>
+      {actionMenu && (
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="absolute top-2.5 right-2.5 z-10"
+        >
+          {actionMenu}
+        </div>
+      )}
+
+      {/* Standardized Avatar Molecule */}
+      <UserAvatar
+        src={user.avatar}
+        alt={user.name}
+        size="lg"
+        className="transition-transform duration-150 group-hover:scale-[1.02]"
+      />
+
+      {/* User Information */}
+      <div className="flex flex-col items-center gap-0.5 text-center w-full min-w-0">
+        <h3
+          className="font-jakarta text-sm font-semibold text-slate-900 leading-snug truncate w-full px-0.5 group-hover:text-slate-700 transition-colors"
+          title={user.name}
+        >
+          {user.name}
+        </h3>
+
+        <p
+          className="text-xs font-medium text-slate-500 font-sans truncate w-full px-0.5"
+          title={displayLocation || "Ubicación no especificada"}
+        >
+          {displayLocation || "Ubicación no especificada"}
+        </p>
+
+        {displayRole && (
+          <span
+            style={roleCustomStyles?.color ? { color: roleCustomStyles.color } : undefined}
+            className={`text-xs font-semibold mt-1 truncate max-w-full px-1 ${getCategoryTextClass(
+              activeSpecialty || displayRole,
+              dbCategories
+            )}`}
+            title={displayRole}
+          >
+            {displayRole}
+          </span>
         )}
       </div>
 
-      <div className="flex flex-col items-center gap-0.5 md:gap-1 text-center">
-        <h3 className="text-sm md:text-base font-semibold text-slate-900 leading-tight line-clamp-1 font-jakarta px-1">
-          {user.name}
-        </h3>
-        <p className="text-xs md:text-sm font-medium text-slate-500 font-sans tracking-wide">
-          {formatLocation(user.location)}
-        </p>
-      </div>
+      {/* Standardized Action CTA */}
+      {!isOfficial && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleCardClick();
+          }}
+          className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors shrink-0 cursor-pointer bg-transparent border-none outline-none font-jakarta mt-auto pt-1"
+        >
+          {actionLabel}
+        </button>
+      )}
+    </article>
+  );
+}
 
-      <div className="w-full flex flex-wrap items-center justify-center gap-2 md:gap-2.5 py-1 min-h-[34px] my-auto">
-        {categoriesToRender.map((cat, i) => (
-          <span
-            key={i}
-            className="material-symbols-outlined text-[22px] md:text-[25px] transition-transform hover:scale-110 select-none cursor-pointer"
-            style={{
-              color: cat.color || "#3B82F6",
-              fontVariationSettings: cat.iconFilled !== false ? "'FILL' 1" : undefined,
-            }}
-            title={cat.name || cat.title || "Categoría"}
-          >
-            {cat.icon || "label"}
-          </span>
-        ))}
+/**
+ * Co-located low-detail skeleton for UserCard.
+ * Matches exact card padding, avatar size, and guaranteed text lines without speculative badges.
+ */
+export function UserCardSkeleton() {
+  return (
+    <div className="relative bg-white rounded-2xl p-3.5 sm:p-4 flex flex-col items-center gap-2.5 sm:gap-3 border border-slate-200/90 shadow-none">
+      <Skeleton className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl shrink-0" />
+      <div className="flex flex-col items-center gap-1.5 text-center w-full min-w-0">
+        <Skeleton className="h-4 w-28 rounded-md" />
+        <Skeleton className="h-3 w-20 rounded-md" />
       </div>
-
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          handleViewProfile();
-        }}
-        className="text-xs font-semibold text-slate-500 hover:text-slate-900 hover:underline transition-colors shrink-0 cursor-pointer bg-transparent border-none outline-none font-jakarta"
-      >
-        Ver perfil
-      </button>
+      <Skeleton className="w-16 mt-auto pt-1 h-3 rounded-md" />
     </div>
   );
 }

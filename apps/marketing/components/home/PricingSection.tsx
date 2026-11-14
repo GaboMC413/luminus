@@ -17,7 +17,7 @@ export function PricingSection() {
         {/* Header */}
         <div className="w-full max-w-[960px] flex flex-col justify-start items-center gap-6 text-center">
           <h2 className="w-full text-3xl sm:text-4xl lg:text-heading-3 font-normal tracking-tight text-slate-900">
-            Accede a la red con tu membresía
+            Únete gratis o impulsa la red como Mecenas
           </h2>
 
         </div>
@@ -25,14 +25,14 @@ export function PricingSection() {
         {/* Pricing Cards */}
         <div className="w-full max-w-[1080px] grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch pt-4">
 
-          {/* Card 1: Membresía Mensual */}
+          {/* Card 1: Mecenas Mensual */}
           <div className="p-8 bg-white rounded-2xl flex flex-col justify-between items-start gap-6 border border-slate-200/80 shadow-sm">
             <div className="w-full flex flex-col justify-start items-start gap-4">
 
               {/* Badge */}
               <div className="px-3 py-1 bg-black rounded-2xl inline-flex justify-center items-center gap-2.5">
                 <span className="text-white text-xs font-medium uppercase leading-5 tracking-wider">
-                  Membresía Mensual
+                  Mecenas Mensual
                 </span>
               </div>
 
@@ -42,10 +42,10 @@ export function PricingSection() {
                   USD 5 / mes
                 </div>
                 <div className="text-slate-900 text-lg font-bold leading-6">
-                  Luego de tus primeros 3 meses sin costo.
+                  Renovación automática. Cancela cuando quieras.
                 </div>
                 <div className="text-slate-900 text-lg font-normal leading-6">
-                  Para quienes prefieren la flexibilidad de continuar mes a mes.
+                  Para quienes prefieren apoyar la red mes a mes con total flexibilidad.
                 </div>
               </div>
 
@@ -54,17 +54,17 @@ export function PricingSection() {
             {/* CTA & Sub-disclaimer */}
             <div className="w-full flex flex-col justify-start items-start gap-4 pt-2">
               <a
-                href="https://app.luminuslatam.com/auth/registrarse"
+                href="https://app.luminuslatam.com/unirme"
                 className="w-full px-6 py-3.5 bg-black hover:bg-slate-800 rounded-2xl flex justify-center items-center text-white text-base font-normal leading-6 transition-colors"
               >
-                Comenzar 3 meses gratis
+                Ser Mecenas por USD 5/mes
               </a>
 
             </div>
 
           </div>
 
-          {/* Card 2: Membresía Anual */}
+          {/* Card 2: Mecenas Anual */}
           <div className="p-8 bg-white rounded-2xl flex flex-col justify-between items-start gap-6 border border-slate-200/80 shadow-sm">
             <div className="w-full flex flex-col justify-start items-start gap-4">
 
@@ -72,7 +72,7 @@ export function PricingSection() {
               <div className="w-full inline-flex justify-between items-center">
                 <div className="px-3 py-1 bg-black rounded-2xl flex justify-center items-center gap-2.5">
                   <span className="text-white text-xs font-medium uppercase leading-5 tracking-wider">
-                    Membresía Anual
+                    Mecenas Anual
                   </span>
                 </div>
                 <div className="text-slate-900 text-xs font-bold uppercase leading-5 tracking-wider">
@@ -86,10 +86,10 @@ export function PricingSection() {
                   USD 45 / año
                 </div>
                 <div className="text-slate-900 text-lg font-bold leading-6">
-                  Luego de tus primeros 3 meses sin costo.
+                  Ahorra USD 15 al año. Cancela cuando quieras.
                 </div>
                 <div className="text-slate-900 text-lg font-normal leading-6">
-                  Para quienes prefieren ahorrar con una membresía anual. <span className="font-normal">(USD 3,75 / mes)</span>
+                  Una bonificación para quienes prefieren hacer un aporte anual. <span className="font-normal">(USD 3,75 / mes)</span>
                 </div>
               </div>
 
@@ -98,10 +98,10 @@ export function PricingSection() {
             {/* CTA & Sub-disclaimer */}
             <div className="w-full flex flex-col justify-start items-start gap-4 pt-2">
               <a
-                href="https://app.luminuslatam.com/auth/registrarse"
+                href="https://app.luminuslatam.com/unirme"
                 className="w-full px-6 py-3.5 bg-black hover:bg-slate-800 rounded-2xl flex justify-center items-center text-white text-base font-normal leading-6 transition-colors"
               >
-                Comenzar 3 meses gratis
+                Ser Mecenas por USD 45/año
               </a>
 
             </div>
@@ -111,7 +111,7 @@ export function PricingSection() {
         </div>
         <div className="w-full max-w-[800px] flex flex-col justify-start items-center gap-6 text-center">
           <p className="w-full text-body-medium font-normal text-slate-900 leading-relaxed">
-            No solicitamos datos de pago al crear tu cuenta. Te avisaremos antes de que finalicen tus 3 meses sin costo para que puedas decidir si quieres continuar.
+            También puedes unirte gratis sin ingresar datos de pago. Siendo Mecenas, impulsas el desarrollo de nuevas herramientas y experiencias acercando el bienestar a cada vez más personas en Latinoamérica.
           </p>
         </div>
 

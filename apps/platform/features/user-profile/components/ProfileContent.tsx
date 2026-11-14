@@ -2,9 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { ProfileButton } from "@/components/ui/Button";
-import { PhotoEditor } from "@/features/auth/registration/PhotoEditor";
+import { Toast } from "@/components/ui/Toast";
+import { PhotoEditor } from "@/components/ui/PhotoEditor";
 import { Prompt } from "./ProfilePrompts";
 
 // Modals
@@ -13,18 +12,24 @@ import { EditAboutModal } from "../modals/EditAboutModal";
 import { EditInterestsModal } from "../modals/EditInterestsModal";
 import { EditPromptsModal } from "../modals/EditPromptsModal";
 import { CoverSelectorModal } from "../modals/CoverSelectorModal";
+import { ShareProfileModal } from "../modals/ShareProfileModal";
+import { EditSpecialistPracticeModal, type SpecialistPracticeFormData } from "../modals/EditSpecialistPracticeModal";
+import { EditSpecialistSpacesModal, type SpecialistSpaceItem } from "../modals/EditSpecialistSpacesModal";
+import { EditSpecialistCoursesModal, type SpecialistCourseItem } from "../modals/EditSpecialistCoursesModal";
+import { EditSpecialistAvailabilityModal, type AvailabilitySlotInput } from "../modals/EditSpecialistAvailabilityModal";
 
 // Sub-components
-import { ProfileHeaderCover } from "./ProfileHeaderCover";
-import { ProfileSidebar } from "./ProfileSidebar";
+import { ProfileHeroHeader } from "./ProfileHeroHeader";
+import { SpecialistProfileView } from "./SpecialistProfileView";
 import { ProfileAboutSection } from "./ProfileAboutSection";
-import { PageLoader } from "@/components/ui/PageLoader";
+import { ProfileSkeleton } from "@/components/ui/Skeleton";
 import { ProfileInterestsSection } from "./ProfileInterestsSection";
 import { ProfileMembershipCard } from "./ProfileMembershipCard";
 import { ProfileCompletionCard } from "./ProfileCompletionCard";
 import { uploadAvatar } from "@/lib/uploadAvatar";
 
 export interface Profile {
+  id?: string;
   first_name: string;
   last_name: string;
   city: string;
@@ -38,9 +43,12 @@ export interface Profile {
   phone_number: string;
   selected_plan: string;
   created_at: string;
+  member_since?: string | null;
+  tier?: string;
   bio?: string;
   other_interests?: string;
   cover_url?: string;
+  specialistProfile?: any;
 }
 
 function syncProfileToLocalStorage(profile: Profile, email?: string) {
@@ -77,6 +85,22 @@ export function ProfileContent() {
   const [showEditInterests, setShowEditInterests] = useState(false);
   const [showEditPrompts, setShowEditPrompts] = useState(false);
   const [promptsStep, setPromptsStep] = useState<'list' | 'select'>('list');
+
+  const [showEditSpecialistPractice, setShowEditSpecialistPractice] = useState(false);
+  const [showEditSpecialistSpaces, setShowEditSpecialistSpaces] = useState(false);
+  const [showEditSpecialistCourses, setShowEditSpecialistCourses] = useState(false);
+  const [showEditSpecialistAvailability, setShowEditSpecialistAvailability] = useState(false);
+
+  // Share modal state
+  const [isShareOpen, setIsShareOpen] = useState(false);
+
+  // Toast feedback state
+  const [toast, setToast] = useState<{ isOpen: boolean; title: string; message?: string; type: "success" | "error" }>({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "success",
+  });
 
   // Image editing states
   const [isCropping, setIsCropping] = useState(false);
@@ -116,6 +140,25 @@ export function ProfileContent() {
     if (!loading && profile) {
       const editParam = searchParams.get("edit");
       if (editParam) {
+        if (editParam === "user_interests" || editParam === "interests" || editParam === "intereses") {
+          setShowEditInterests(true);
+        } else if (editParam === "bio") {
+          setShowEditAbout(true);
+        } else if (editParam === "prompts") {
+          setShowEditPrompts(true);
+        } else if (editParam === "cover") {
+          setShowCoverModal(true);
+        } else if (editParam === "profession") {
+          handleOpenEditPersonal("profession");
+        } else if (editParam === "personal") {
+          setShowEditPersonal(true);
+        }
+
+        // Clear query parameter from URL so subsequent state updates don't re-trigger the modal
+        if (typeof window !== "undefined") {
+          window.history.replaceState(null, "", window.location.pathname);
+        }
+
         // Wait a frame for the DOM to render the .glow-highlight class, then scroll to it smoothly
         setTimeout(() => {
           const highlightedEl = document.querySelector(".glow-highlight");
@@ -154,6 +197,11 @@ export function ProfileContent() {
     }
 
     const data = await response.json();
+    if (data.newlyCompletedQuests && Array.isArray(data.newlyCompletedQuests)) {
+      data.newlyCompletedQuests.forEach((quest: any) => {
+        window.dispatchEvent(new CustomEvent("luminus_quest_completed", { detail: quest }));
+      });
+    }
     const savedProfile = data.profile as Profile;
     setProfile(savedProfile);
     setCoverUrl(savedProfile.cover_url || "");
@@ -191,9 +239,20 @@ export function ProfileContent() {
       await patchProfile({ avatarUrl: publicUrl });
       setIsCropping(false);
       setTempImage(null);
+      setToast({
+        isOpen: true,
+        title: "Foto actualizada",
+        message: "Foto de perfil actualizada correctamente.",
+        type: "success",
+      });
     } catch (error) {
       console.error("Error uploading avatar:", error);
-      alert("No pudimos subir tu foto. Intenta nuevamente.");
+      setToast({
+        isOpen: true,
+        title: "Error",
+        message: "No pudimos subir tu foto. Intenta nuevamente.",
+        type: "error",
+      });
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -204,9 +263,41 @@ export function ProfileContent() {
       await patchProfile(newData);
       setShowEditPersonal(false);
       setFocusedField(null);
+      setToast({
+        isOpen: true,
+        title: "Perfil actualizado",
+        message: "Información personal actualizada.",
+        type: "success",
+      });
     } catch (error) {
       console.error("Error saving profile:", error);
-      alert("No pudimos guardar tus datos. Intenta nuevamente.");
+      setToast({
+        isOpen: true,
+        title: "Error",
+        message: "No pudimos guardar tus datos. Intenta nuevamente.",
+        type: "error",
+      });
+    }
+  };
+
+  const handleSaveSpecialist = async (payload: Record<string, unknown>, message: string) => {
+    try {
+      await patchProfile({ specialistProfile: payload });
+      setToast({
+        isOpen: true,
+        title: "Perfil profesional actualizado",
+        message,
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Error saving specialist profile:", error);
+      setToast({
+        isOpen: true,
+        title: "Error",
+        message: "No pudimos guardar tu perfil profesional. Intenta nuevamente.",
+        type: "error",
+      });
+      throw error;
     }
   };
 
@@ -219,9 +310,20 @@ export function ProfileContent() {
     try {
       await patchProfile({ bio });
       setShowEditAbout(false);
+      setToast({
+        isOpen: true,
+        title: "Biografía actualizada",
+        message: "Biografía guardada.",
+        type: "success",
+      });
     } catch (error) {
       console.error("Error saving bio:", error);
-      alert("No pudimos guardar tu bio. Intenta nuevamente.");
+      setToast({
+        isOpen: true,
+        title: "Error",
+        message: "No pudimos guardar tu biografía. Intenta nuevamente.",
+        type: "error",
+      });
     }
   };
 
@@ -229,9 +331,20 @@ export function ProfileContent() {
     try {
       await patchProfile({ interests, other_interests });
       setShowEditInterests(false);
+      setToast({
+        isOpen: true,
+        title: "Intereses actualizados",
+        message: "Intereses actualizados.",
+        type: "success",
+      });
     } catch (error) {
       console.error("Error saving interests:", error);
-      alert("No pudimos guardar tus intereses. Intenta nuevamente.");
+      setToast({
+        isOpen: true,
+        title: "Error",
+        message: "No pudimos guardar tus intereses. Intenta nuevamente.",
+        type: "error",
+      });
     }
   };
 
@@ -240,9 +353,20 @@ export function ProfileContent() {
       await patchProfile({ prompts });
       setShowEditPrompts(false);
       setPromptsStep('list');
+      setToast({
+        isOpen: true,
+        title: "Reflexiones actualizadas",
+        message: "Reflexiones guardadas.",
+        type: "success",
+      });
     } catch (error) {
       console.error("Error saving prompts:", error);
-      alert("No pudimos guardar tus reflexiones. Intenta nuevamente.");
+      setToast({
+        isOpen: true,
+        title: "Error",
+        message: "No pudimos guardar tus reflexiones. Intenta nuevamente.",
+        type: "error",
+      });
     }
   };
 
@@ -252,65 +376,70 @@ export function ProfileContent() {
   };
 
   if (loading) {
-    return <PageLoader />;
+    return <ProfileSkeleton />;
   }
 
   if (!profile) return null;
 
   const editParam = searchParams.get("edit") || undefined;
+  const effectiveProfile = {
+    ...profile,
+    is_own_profile: true,
+    cover_url: coverUrl || profile.cover_url,
+  };
 
   return (
-    <div className="w-full flex flex-col relative">
+    <div className="w-full flex flex-col relative bg-slate-50 min-h-screen font-sans">
+      {profile.specialistProfile ? (
+        <SpecialistProfileView
+          profile={effectiveProfile}
+          isPublic={false}
+          onEditProfile={() => handleOpenEditPersonal()}
+          onEditPhoto={() => fileInputRef.current?.click()}
+          onEditCover={() => setShowCoverModal(true)}
+          onEditBio={() => setShowEditAbout(true)}
+          onEditInterests={() => setShowEditInterests(true)}
+          onEditPrompts={handleOpenPrompts}
+          onEditSpecialistPractice={() => setShowEditSpecialistPractice(true)}
+          onEditSpecialistSpaces={() => setShowEditSpecialistSpaces(true)}
+          onEditSpecialistCourses={() => setShowEditSpecialistCourses(true)}
+          onEditSpecialistAvailability={() => setShowEditSpecialistAvailability(true)}
+          onShareProfile={() => setIsShareOpen(true)}
+          membershipCard={
+            <ProfileMembershipCard
+              plan={profile.selected_plan}
+              createdAt={profile.created_at}
+              memberSince={profile.member_since}
+              tier={profile.tier}
+              showSettingsButtons={true}
+            />
+          }
+          onSignOut={handleSignOut}
+        />
+      ) : (
+        <div className="w-full flex flex-col font-sans">
+          {/* Master Profile Hero Header */}
+          <ProfileHeroHeader
+            profile={effectiveProfile}
+            isSpecialist={false}
+            isOwnProfile={true}
+            onEditProfile={() => handleOpenEditPersonal()}
+            onEditPhoto={() => fileInputRef.current?.click()}
+            onEditCover={() => setShowCoverModal(true)}
+            onShareProfile={() => setIsShareOpen(true)}
+          />
 
-      <ProfileHeaderCover
-        coverUrl={coverUrl}
-        onChangeCover={() => setShowCoverModal(true)}
-        highlight={editParam === "cover"}
-      />
-
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pb-6 md:pb-12">
-        <div className="w-full max-w-6xl mx-auto">
-          <div className="w-full h-full bg-transparent pt-4 lg:pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-4 lg:gap-8 items-start">
-
-              {/* LEFT COLUMN */}
-              <div className="md:col-span-4 flex flex-col gap-4 lg:gap-6 mt-0 md:-mt-[136px] lg:-mt-[224px]">
-                <ProfileSidebar
-                  profile={profile}
-                  onEditPhoto={() => fileInputRef.current?.click()}
-                  onEditProfile={handleOpenEditPersonal}
-                  onSignOut={handleSignOut}
-                  onShowCoverModal={() => setShowCoverModal(true)}
-                  coverUrl={coverUrl}
-                  highlightField={editParam}
-                />
-
-                <div className="hidden md:flex flex-col gap-4 lg:gap-6">
-                  <ProfileMembershipCard plan={profile.selected_plan} createdAt={profile.created_at} />
-                  <button
-                    onClick={handleSignOut}
-                    className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[14px] bg-transparent border-none outline-none cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[22px] text-slate-400 group-hover:text-red-500">logout</span>
-                    <span className="font-semibold text-slate-400 group-hover:text-red-500">Cerrar sesión</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* RIGHT COLUMN */}
-              <div className="md:col-span-8 flex flex-col gap-4 lg:gap-6">
+          {/* Balanced 8:4 Grid Content for Member */}
+          <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-5 lg:gap-6 mt-3.5 sm:mt-5 lg:mt-6 items-start">
+              {/* MAIN COLUMN (lg:col-span-8) */}
+              <div className="lg:col-span-8 flex flex-col gap-3.5 sm:gap-5">
                 <ProfileAboutSection
                   bio={profile.bio}
                   onEdit={() => setShowEditAbout(true)}
                   firstName={profile.first_name}
                   highlight={editParam === "bio"}
-                />
-
-                <ProfileInterestsSection
-                  interests={profile.interests}
-                  otherInterests={profile.other_interests}
-                  onEdit={() => setShowEditInterests(true)}
-                  firstName={profile.first_name}
+                  isPublic={false}
                 />
 
                 <ProfileCompletionCard
@@ -318,33 +447,45 @@ export function ProfileContent() {
                   onEditPrompts={handleOpenPrompts}
                   firstName={profile.first_name}
                   highlight={editParam === "prompts"}
+                  isPublic={false}
+                />
+              </div>
+
+              {/* SIDEBAR COLUMN (lg:col-span-4) */}
+              <div className="lg:col-span-4 flex flex-col gap-3.5 sm:gap-5">
+                <ProfileInterestsSection
+                  interests={profile.interests}
+                  otherInterests={profile.other_interests}
+                  onEdit={() => setShowEditInterests(true)}
+                  firstName={profile.first_name}
+                  highlight={editParam === "interests" || editParam === "intereses"}
+                  isPublic={false}
                 />
 
-                {/* Mobile Only Membership */}
-                <div className="md:hidden flex flex-col gap-4">
-                  <ProfileMembershipCard
-                    plan={profile.selected_plan}
-                    createdAt={profile.created_at}
-                    showSettingsButtons={true}
-                  />
+                <ProfileMembershipCard
+                  plan={profile.selected_plan}
+                  createdAt={profile.created_at}
+                  memberSince={profile.member_since}
+                  tier={profile.tier}
+                  showSettingsButtons={true}
+                />
 
-                  <div className="w-full flex justify-center pt-2">
-                    <button
-                      onClick={handleSignOut}
-                      className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-[14px] bg-transparent border-none outline-none cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined text-[22px] text-slate-400 group-hover:text-red-500">logout</span>
-                      <span className="font-semibold text-slate-400 group-hover:text-red-500">Cerrar sesión</span>
-                    </button>
-                  </div>
+                <div className="w-full flex justify-center pt-1">
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="group flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-slate-400 hover:text-rose-600 transition-colors bg-transparent border-none outline-none cursor-pointer"
+                  >
+                    <span>Cerrar sesión</span>
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Hidden File Input */}
+      {/* Hidden File Input for Avatar Upload */}
       <input
         type="file"
         accept="image/png, image/jpeg, image/webp, .png, .jpg, .jpeg, .webp"
@@ -369,10 +510,24 @@ export function ProfileContent() {
         onSelect={(url) => {
           setCoverUrl(url);
           localStorage.setItem("luminus_profile_cover", url);
-          patchProfile({ coverUrl: url }).catch((error) => {
-            console.error("Error saving cover:", error);
-            alert("No pudimos guardar tu portada. Intenta nuevamente.");
-          });
+          patchProfile({ coverUrl: url })
+            .then(() => {
+              setToast({
+                isOpen: true,
+                title: "Portada actualizada",
+                message: "Portada actualizada correctamente.",
+                type: "success",
+              });
+            })
+            .catch((error) => {
+              console.error("Error saving cover:", error);
+              setToast({
+                isOpen: true,
+                title: "Error",
+                message: "No pudimos guardar tu portada. Intenta nuevamente.",
+                type: "error",
+              });
+            });
           setShowCoverModal(false);
         }}
       />
@@ -421,6 +576,80 @@ export function ProfileContent() {
           initialStep={promptsStep}
         />
       )}
+
+      {profile.specialistProfile && (
+        <>
+          <EditSpecialistPracticeModal
+            isOpen={showEditSpecialistPractice}
+            onClose={() => setShowEditSpecialistPractice(false)}
+            initialData={{
+              specialty: profile.specialistProfile.specialty ?? "",
+              title: profile.specialistProfile.title ?? "",
+              selectedAreas: Array.isArray(profile.specialistProfile.selectedAreas)
+                ? profile.specialistProfile.selectedAreas
+                : [],
+              bio: profile.specialistProfile.bio ?? "",
+              institution: profile.specialistProfile.institution ?? "",
+              instagramUrl: profile.specialistProfile.instagramUrl ?? "",
+              linkedinUrl: profile.specialistProfile.linkedinUrl ?? "",
+              websiteUrl: profile.specialistProfile.websiteUrl ?? "",
+            }}
+            onSave={(data: SpecialistPracticeFormData) =>
+              handleSaveSpecialist(data as unknown as Record<string, unknown>, "Especialidad y práctica actualizadas.")
+            }
+          />
+
+          <EditSpecialistSpacesModal
+            isOpen={showEditSpecialistSpaces}
+            onClose={() => setShowEditSpecialistSpaces(false)}
+            initialSpaces={(profile.specialistProfile.spaces || []) as SpecialistSpaceItem[]}
+            onSave={(spaces: SpecialistSpaceItem[]) =>
+              handleSaveSpecialist({ spaces }, "Espacios de atención actualizados.")
+            }
+          />
+
+          <EditSpecialistCoursesModal
+            isOpen={showEditSpecialistCourses}
+            onClose={() => setShowEditSpecialistCourses(false)}
+            initialCourses={(profile.specialistProfile.courses || []) as SpecialistCourseItem[]}
+            onSave={(courses: SpecialistCourseItem[]) =>
+              handleSaveSpecialist({ courses }, "Cursos y talleres actualizados.")
+            }
+          />
+
+          <EditSpecialistAvailabilityModal
+            isOpen={showEditSpecialistAvailability}
+            onClose={() => setShowEditSpecialistAvailability(false)}
+            initialSlots={(
+              profile.specialistProfile.spaces?.flatMap((sp: any) => sp.availability || []) || []
+            ) as AvailabilitySlotInput[]}
+            onSave={(availability: AvailabilitySlotInput[]) =>
+              handleSaveSpecialist({ availability }, "Disponibilidad de sesión introductoria actualizada.")
+            }
+          />
+        </>
+      )}
+
+      <ShareProfileModal
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        shareUrl={
+          typeof window !== "undefined"
+            ? `${window.location.origin}/inicio/public-profile?id=${profile?.id || ""}`
+            : ""
+        }
+        includeWhatsApp={false}
+        helperText="Copia este enlace para que otros miembros puedan ver tu perfil en la comunidad."
+      />
+
+      {/* Toast Notification */}
+      <Toast
+        isOpen={toast.isOpen}
+        onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
+        title={toast.title}
+        message={toast.message}
+        type={toast.type}
+      />
     </div>
   );
 }

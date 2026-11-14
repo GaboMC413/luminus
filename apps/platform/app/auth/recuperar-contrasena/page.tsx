@@ -1,5 +1,5 @@
-import ForgotPasswordView from "@/features/auth/ForgotPasswordView";
+import { redirect } from "next/navigation";
 
-export default function ForgotPasswordPage() {
-  return <ForgotPasswordView />;
+export default function LegacyForgotPasswordRedirect() {
+  redirect("/recuperar-contrasena");
 }

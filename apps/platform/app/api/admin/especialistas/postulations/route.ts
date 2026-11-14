@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function PATCH(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
   if (!session || session.role !== "ADMIN") {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }
@@ -29,6 +29,13 @@ export async function PATCH(request: Request) {
     if (action === "accept") {
       const postulation = await prisma.specialistPostulation.findUnique({
         where: { id },
+        include: {
+          user: {
+            include: {
+              profile: true,
+            },
+          },
+        },
       });
 
       if (!postulation) {
@@ -260,6 +267,58 @@ export async function PATCH(request: Request) {
           details: JSON.stringify({ targetUserId: postulation.userId }),
         },
       });
+
+      // Notify specialist in-app (non-blocking)
+      try {
+        await prisma.notification.create({
+          data: {
+            userId: postulation.userId,
+            type: "specialist_approved",
+            title: "Te damos la bienvenida como Especialista en LUMINUS",
+            actorName: "LUMINUS",
+            body: "Tu postulación fue aprobada. Ya formas parte de la Red de Especialistas LUMINUS.",
+            actionUrl: "/perfil-usuario",
+          },
+        });
+      } catch (notifError) {
+        console.error("Failed to create specialist approval notification:", notifError);
+      }
+
+      // Send corporate welcome email (non-blocking)
+      if (postulation.user?.email) {
+        try {
+          const { sendSpecialistApprovedEmail } = await import("@/lib/mails/sender");
+          const profile = postulation.user.profile;
+          const specialistName =
+            profile?.firstName?.trim() ||
+            profile?.fullName?.trim() ||
+            postulation.user.email.split("@")[0];
+          const selectedAreas = Array.isArray(postulation.selectedAreas)
+            ? postulation.selectedAreas.map((area) => String(area))
+            : [];
+          const clinicData =
+            postulation.clinicData && typeof postulation.clinicData === "object"
+              ? (postulation.clinicData as Record<string, unknown>)
+              : null;
+          const resolvedClinicName =
+            postulation.clinicName ||
+            (typeof clinicData?.clinicName === "string" ? clinicData.clinicName : null);
+          const coursesCount = Array.isArray(postulation.courses)
+            ? postulation.courses.length
+            : 0;
+
+          await sendSpecialistApprovedEmail(postulation.user.email, {
+            name: specialistName,
+            title: postulation.title,
+            specialty: postulation.specialty,
+            selectedAreas,
+            clinicName: resolvedClinicName,
+            coursesCount,
+          });
+        } catch (emailError) {
+          console.error("Failed to send specialist approval email:", emailError);
+        }
+      }
     } else if (action === "decline") {
       const postulation = await prisma.specialistPostulation.findUnique({
         where: { id },

@@ -34,7 +34,7 @@ export function serializeAdminChat(conversation: any) {
       body: lastMessage.body,
       createdAt: toDate(lastMessage.createdAt),
     } : null,
-    messagesCount: conversation.messages?.length || 0,
+    messagesCount: conversation._count?.messages ?? conversation.messages?.length ?? 0,
     messages: (conversation.messages || [])
       .map((msg: any) => ({
         id: msg.id,
@@ -73,6 +73,16 @@ export async function listAdminChats(prisma: PrismaClient) {
         },
         orderBy: {
           createdAt: "desc",
+        },
+        take: 50,
+      },
+      _count: {
+        select: {
+          messages: {
+            where: {
+              deletedAt: null,
+            },
+          },
         },
       },
     },
@@ -121,6 +131,16 @@ export async function listAdminSupportChats(prisma: PrismaClient) {
         },
         orderBy: {
           createdAt: "desc",
+        },
+        take: 50,
+      },
+      _count: {
+        select: {
+          messages: {
+            where: {
+              deletedAt: null,
+            },
+          },
         },
       },
     },

@@ -1,16 +1,18 @@
 "use client";
 
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Modal from "@/components/ui/Modal";
+import { BackButton } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { formatRelativeTime } from "@/components/ui/PlatformNavbar";
 import { isUuid } from "@/utils/validation";
-import { PageLoader } from "@/components/ui/PageLoader";
+import { MessagesSkeleton, Skeleton } from "@/components/ui/Skeleton";
 import { DotSpinner } from "@/components/ui/DotSpinner";
-import { formatMessageBody, formatShortTime } from "@/utils/messages";
+import { formatMessageBody, formatShortTime, formatChatDateDivider } from "@/utils/messages";
 
 type Conversation = {
   id: string;
@@ -167,6 +169,71 @@ function MessagesContent() {
     };
   }, []);
 
+  const [isRefreshingMessages, setIsRefreshingMessages] = useState(false);
+
+  const loadMessages = useCallback(async (isManual = false) => {
+    if (!selectedId) return;
+
+    if (isManual) {
+      setIsRefreshingMessages(true);
+    }
+
+    try {
+      setError(null);
+      const response = await fetch(`/api/messages/conversations/${selectedId}/messages`, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.message || "No pudimos cargar la conversacion.");
+      }
+
+      const data = await response.json();
+      const incomingMessages = data.messages || [];
+
+      setMessages((prev) => {
+        if (prev.length === 0 || prev[0].conversation_id !== selectedId) {
+          shouldScrollToBottomRef.current = true;
+          return incomingMessages;
+        }
+
+        const dbMsgIds = new Set(incomingMessages.map((m: any) => m.id));
+        // Retain local sent messages that are not yet returned by the DB poll
+        const localOnlyMessages = prev.filter(
+          (m) => !dbMsgIds.has(m.id) && m.sender_id !== selectedConv?.participant?.id
+        );
+        const combined = [...incomingMessages, ...localOnlyMessages];
+
+        const container = chatContainerRef.current;
+        const isNearBottom = container
+          ? container.scrollHeight - container.scrollTop - container.clientHeight < 100
+          : true;
+        if (isNearBottom) {
+          shouldScrollToBottomRef.current = true;
+        }
+
+        // Sort chronologically ascending
+        return combined.sort(
+          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+      });
+
+      setNextCursor((prevCursor) => (prevCursor === null ? data.nextCursor : prevCursor));
+      setHasMore((prevHasMore) => (prevHasMore === false ? data.hasMore : prevHasMore));
+      setConnection((prevConn: any) => (prevConn === null ? data.connection : data.connection));
+      setOtherLastReadAt(data.otherLastReadAt || null);
+    } catch (err: any) {
+      setError(err.message || "No pudimos cargar la conversacion.");
+    } finally {
+      setIsLoadingMessages(false);
+      if (isManual) {
+        setIsRefreshingMessages(false);
+      }
+    }
+  }, [selectedId, selectedConv?.participant?.id]);
+
+  // Load conversation messages on selection (pure event-driven, 0 idle polling)
   useEffect(() => {
     if (!selectedId) {
       setMessages([]);
@@ -179,69 +246,8 @@ function MessagesContent() {
     }
 
     setIsLoadingMessages(true);
-
-    async function loadMessages() {
-      try {
-        setError(null);
-        const response = await fetch(`/api/messages/conversations/${selectedId}/messages`, {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
-          throw new Error(data.message || "No pudimos cargar la conversacion.");
-        }
-
-        const data = await response.json();
-        const incomingMessages = data.messages || [];
-
-        setMessages((prev) => {
-          if (prev.length === 0 || prev[0].conversation_id !== selectedId) {
-            shouldScrollToBottomRef.current = true;
-            return incomingMessages;
-          }
-
-          const dbMsgIds = new Set(incomingMessages.map((m: any) => m.id));
-          // Retain local sent messages that are not yet returned by the DB poll
-          const localOnlyMessages = prev.filter(
-            (m) => !dbMsgIds.has(m.id) && m.sender_id !== selectedConv?.participant?.id
-          );
-          const combined = [...incomingMessages, ...localOnlyMessages];
-
-          const container = chatContainerRef.current;
-          const isNearBottom = container
-            ? container.scrollHeight - container.scrollTop - container.clientHeight < 100
-            : true;
-          if (isNearBottom) {
-            shouldScrollToBottomRef.current = true;
-          }
-
-          // Sort chronologically ascending
-          return combined.sort(
-            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          );
-        });
-
-        setNextCursor((prevCursor) => (prevCursor === null ? data.nextCursor : prevCursor));
-        setHasMore((prevHasMore) => (prevHasMore === false ? data.hasMore : prevHasMore));
-        setConnection((prevConn: any) => (prevConn === null ? data.connection : data.connection));
-        setOtherLastReadAt(data.otherLastReadAt || null);
-        window.dispatchEvent(new Event("luminus_messages_update"));
-      } catch (err: any) {
-        setError(err.message || "No pudimos cargar la conversacion.");
-      } finally {
-        setIsLoadingMessages(false);
-      }
-    }
-
     loadMessages();
-
-    // Poll for new messages/status every 10 seconds while chat is active
-    const pollInterval = setInterval(loadMessages, 10000);
-    return () => {
-      clearInterval(pollInterval);
-    };
-  }, [selectedId, selectedConv?.participant?.id]);
+  }, [selectedId, loadMessages]);
 
   async function loadMoreMessages() {
     if (isLoadingMore || !hasMore || !nextCursor || !selectedId) return;
@@ -289,7 +295,11 @@ function MessagesContent() {
 
   useEffect(() => {
     if (shouldScrollToBottomRef.current && chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      if (messages.length === 1) {
+        chatContainerRef.current.scrollTop = 0;
+      } else {
+        chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      }
       shouldScrollToBottomRef.current = false;
     } else if (scrollPreserveRef.current && chatContainerRef.current) {
       const { height, top } = scrollPreserveRef.current;
@@ -657,31 +667,27 @@ function MessagesContent() {
 
   return (
     <div 
-      className="w-full flex-1 flex flex-col bg-slate-50 min-h-0 lg:h-[calc(100vh-80px)] overflow-hidden"
+      className="w-full flex-1 flex flex-col bg-slate-50 min-h-0 md:h-full overflow-hidden"
       style={{ height: dynamicHeight }}
     >
       <div className={`flex-1 w-full max-w-7xl mx-auto flex flex-col min-h-0 overflow-hidden ${
         mobileView === "chat"
-          ? "px-0 py-0 md:px-6 md:py-6"
-          : "px-4 md:px-6 py-4 md:py-6"
+          ? "px-0 py-0 md:px-6 md:py-4"
+          : "px-4 md:px-6 py-4 md:py-4"
       }`}>
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden">
-          <div className={`items-center gap-3 mb-4 md:mb-6 shrink-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
-            <button
-              onClick={() => router.back()}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900 cursor-pointer"
-              title="Volver"
-            >
-              <span className="material-symbols-rounded text-[20px]">arrow_back</span>
-            </button>
-            <h1 className="text-xl md:text-2xl text-slate-900 font-semibold font-jakarta">Mensajes</h1>
-          </div>
+          <PageHeader
+            title="Mensajes"
+            showBack
+            backFallbackHref="/inicio"
+            className={`mb-3 md:mb-4 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}
+          />
 
           {error && (
             <div className="mb-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 flex items-center justify-between shadow-none">
               <span>{error}</span>
               <button
-                onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/comunidad")}
+                onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/inicio")}
                 className="text-xs font-semibold text-slate-900 underline hover:no-underline cursor-pointer bg-transparent border-none font-jakarta"
               >
                 Volver
@@ -704,9 +710,22 @@ function MessagesContent() {
                 </div>
               </div>
 
-              <div className="flex-1 overflow-y-auto thin-scrollbar p-2 flex flex-col gap-2">
+              <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar p-2 flex flex-col gap-2">
                 {isLoading && (
-                  <div className="p-8 flex justify-center items-center"><DotSpinner size={24} color="black" /></div>
+                  <div className="flex flex-col gap-2 p-1">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 p-2">
+                        <Skeleton className="w-12 h-12 rounded-xl shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="flex justify-between">
+                            <Skeleton className="h-3.5 w-24 rounded-md" />
+                            <Skeleton className="h-2.5 w-10 rounded-md" />
+                          </div>
+                          <Skeleton className="h-3 w-36 rounded-md" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
 
                 {!isLoading && filteredConversations.length === 0 && (
@@ -721,7 +740,7 @@ function MessagesContent() {
                       </p>
                     </div>
                     <button
-                      onClick={() => router.push("/comunidad")}
+                      onClick={() => router.push("/inicio")}
                       className="h-10 px-6 bg-black hover:bg-zinc-800 text-white rounded-xl text-sm font-semibold transition duration-200 cursor-pointer border-none shadow-sm flex items-center justify-center"
                     >
                       Ir a la comunidad
@@ -756,7 +775,7 @@ function MessagesContent() {
                         </span>
                       </div>
                       <div className="flex items-center justify-between gap-1.5 min-w-0">
-                        <p className="text-sm text-slate-500 truncate flex-1">{conversation.last_message?.body || "Sin mensajes aun"}</p>
+                        <p className="text-sm text-slate-500 truncate flex-1">{formatMessageBody(conversation.last_message?.body || "Sin mensajes aun")}</p>
                         {conversation.is_muted && (
                           <span className="material-symbols-rounded text-slate-400 text-[16px] shrink-0" title="Silenciado">
                             notifications_off
@@ -770,7 +789,7 @@ function MessagesContent() {
             </div>
 
             {isLoading && isUuid(recipientId) ? (
-              <div className={`flex-col bg-white overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0 relative md:col-span-8 md:rounded-2xl md:border md:border-slate-200 ${
+              <div className={`flex-col bg-white overflow-hidden flex-1 h-full min-h-0 md:flex-initial relative md:col-span-8 md:rounded-2xl md:border md:border-slate-200 ${
                 mobileView === "chat"
                   ? "rounded-none border-none"
                   : "rounded-2xl border border-slate-200"
@@ -779,7 +798,7 @@ function MessagesContent() {
                 <div className={`border-b border-slate-100 flex items-center gap-3 bg-white shrink-0 touch-none ${
                   mobileView === "chat" ? "py-2 px-3 md:p-3" : "p-3"
                 }`}>
-                  <button
+                  <BackButton
                     onClick={() => {
                       if (document.activeElement === textareaRef.current) {
                         textareaRef.current?.blur();
@@ -788,16 +807,14 @@ function MessagesContent() {
                       window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
                       const from = searchParams.get("from");
                       if (from === "profile" && recipientId) {
-                        router.push(`/comunidad/public-profile?id=${recipientId}`);
+                        router.push(`/inicio/public-profile?id=${recipientId}`);
                       } else {
                         setMobileView('list');
                       }
                     }}
-                    className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer mr-1"
                     title="Volver"
-                  >
-                    <span className="material-symbols-rounded text-[22px]">arrow_back</span>
-                  </button>
+                    className="md:hidden mr-1"
+                  />
                   <div className={`bg-slate-100 animate-pulse shrink-0 ${
                     mobileView === "chat"
                       ? "w-8 h-8 rounded-lg md:w-11 md:h-11 md:rounded-[10px]"
@@ -807,7 +824,7 @@ function MessagesContent() {
                 </div>
 
                 {/* Skeleton Body */}
-                <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-4 bg-white overscroll-contain">
+                <div className="flex-1 min-h-0 overflow-y-auto p-3 flex flex-col gap-4 bg-white overscroll-contain">
                   <div className="flex flex-col items-start gap-1">
                     <div className="w-[50%] h-10 bg-slate-50 rounded-xl rounded-tl-none animate-pulse" />
                   </div>
@@ -820,7 +837,7 @@ function MessagesContent() {
                 </div>
 
                 {/* Skeleton Footer */}
-                <div className="p-3 border-t border-slate-100 bg-white shrink-0 touch-none">
+                <div className="p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] border-t border-slate-100 bg-white shrink-0 touch-none">
                   <div className="h-12 w-full bg-slate-50 rounded-[24px] animate-pulse" />
                 </div>
               </div>
@@ -834,14 +851,14 @@ function MessagesContent() {
                   Conecta con personas en la comunidad para iniciar una conversacion y enviarles mensajes privados.
                 </p>
                 <button
-                  onClick={() => router.push("/comunidad")}
+                  onClick={() => router.push("/inicio")}
                   className="h-11 px-6 bg-black text-white rounded-xl text-sm font-semibold hover:bg-zinc-800 transition duration-200"
                 >
                   Explorar la Comunidad
                 </button>
               </div>
             ) : (
-              <div className={`flex-col bg-white overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0 relative md:col-span-8 md:rounded-2xl md:border md:border-slate-200 ${
+              <div className={`flex-col bg-white overflow-hidden flex-1 h-full min-h-0 md:flex-initial relative md:col-span-8 md:rounded-2xl md:border md:border-slate-200 ${
                 mobileView === "chat"
                   ? "rounded-none border-none"
                   : "rounded-2xl border border-slate-200"
@@ -851,7 +868,7 @@ function MessagesContent() {
                 }`}>
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Mobile Back Button */}
-                    <button
+                    <BackButton
                       onClick={() => {
                         if (document.activeElement === textareaRef.current) {
                           textareaRef.current?.blur();
@@ -860,16 +877,14 @@ function MessagesContent() {
                         window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
                         const from = searchParams.get("from");
                         if (from === "profile") {
-                          router.push(`/comunidad/public-profile?id=${selectedConv.participant.id}`);
+                          router.push(`/inicio/public-profile?id=${selectedConv.participant.id}`);
                         } else {
                           setMobileView('list');
                         }
                       }}
-                      className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer mr-1 shrink-0"
                       title="Volver"
-                    >
-                      <span className="material-symbols-rounded text-[22px]">arrow_back</span>
-                    </button>
+                      className="md:hidden mr-1"
+                    />
 
                     <img
                       src={selectedConv.participant.avatar_url || fallbackAvatar(selectedConv.participant.name)}
@@ -884,9 +899,9 @@ function MessagesContent() {
                       <h2 className="text-base font-semibold text-slate-900 leading-none truncate" title={selectedConv.participant.name}>
                         {selectedConv.participant.name}
                       </h2>
-                      {selectedConv.participant.name !== "LUMINUS" && (
+                      {selectedConv.participant.name?.toLowerCase() !== "luminus" && selectedConv.participant.id !== "50d13047-bab8-44f1-9541-a821113845cc" && selectedConv.participant.id !== "mock-luminus" && (
                         <Link
-                          href={`/comunidad/public-profile?id=${selectedConv.participant.id}`}
+                          href={`/inicio/public-profile?id=${selectedConv.participant.id}`}
                           className="h-8 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer font-jakarta flex items-center justify-center shrink-0 text-decoration-none border-none outline-none"
                         >
                           Ver perfil
@@ -895,7 +910,7 @@ function MessagesContent() {
                     </div>
                   </div>
 
-                  {selectedConv.participant.name !== "LUMINUS" && (
+                  {selectedConv.participant.name?.toLowerCase() !== "luminus" && selectedConv.participant.id !== "50d13047-bab8-44f1-9541-a821113845cc" && selectedConv.participant.id !== "mock-luminus" && (
                     <div className="relative" ref={chatMenuRef}>
                       <button
                         onClick={() => setIsChatMenuOpen(!isChatMenuOpen)}
@@ -938,7 +953,7 @@ function MessagesContent() {
                             }}
                             className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
                           >
-                            <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">report</span>
+                            <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">flag</span>
                             <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Reportar usuario</span>
                           </button>
                         </div>
@@ -947,7 +962,7 @@ function MessagesContent() {
                   )}
                 </div>
 
-                <div ref={chatContainerRef} onScroll={handleScroll} onClick={handleChatContainerClick} className="flex-1 overflow-y-auto p-3 thin-scrollbar flex flex-col gap-0.5 bg-white overscroll-contain">
+                <div ref={chatContainerRef} onScroll={handleScroll} onClick={handleChatContainerClick} className="flex-1 min-h-0 overflow-y-auto p-3 thin-scrollbar flex flex-col gap-0.5 bg-white overscroll-contain">
                   {isLoadingMore && (
                     <div className="flex justify-center py-2">
                       <span className="w-4 h-4 border-2 border-slate-400 border-t-transparent rounded-full animate-spin"></span>
@@ -978,46 +993,59 @@ function MessagesContent() {
                   ) : (
                     messages.map((message, index) => {
                       const isMine = message.sender_id !== selectedConv.participant.id;
-                      const isConsecutive = index > 0 && (messages[index - 1].sender_id !== selectedConv.participant.id) === isMine;
+                      const prevMsg = index > 0 ? messages[index - 1] : null;
+                      const prevDateStr = prevMsg ? new Date(prevMsg.created_at).toDateString() : null;
+                      const currentDateStr = new Date(message.created_at).toDateString();
+                      const showDateDivider = prevDateStr !== currentDateStr;
+
+                      const isConsecutive = !showDateDivider && index > 0 && (messages[index - 1].sender_id !== selectedConv.participant.id) === isMine;
                       const isLastMessage = index === messages.length - 1;
                       return (
-                        <div
-                          key={message.id}
-                          className={`flex flex-col ${isMine ? "items-end" : "items-start"} ${isConsecutive ? "mt-0.5" : "mt-2 first:mt-0"}`}
-                        >
-                          <div
-                            className={`max-w-[85%] pl-4 pr-12 pt-2.5 pb-3 text-sm leading-relaxed relative min-w-[75px] ${isMine
-                              ? `bg-black text-white font-medium ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tr-none"}`
-                              : `bg-slate-100 border border-slate-100 text-slate-800 ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tl-none"}`
-                              }`}
-                          >
-                            <span className="block break-words whitespace-pre-wrap">{formatMessageBody(message.body)}</span>
-                            <span 
-                              className={`absolute bottom-1 right-2.5 text-[9px] font-sans font-normal select-none pointer-events-none ${
-                                isMine ? "text-white/60" : "text-slate-400"
-                              }`}
-                            >
-                              {formatShortTime(message.created_at)}
-                            </span>
-                          </div>
-                          {isLastMessage && isMine && (
-                            <span className="text-[10px] text-slate-400 mt-1 mr-1 font-semibold select-none">
-                              {(() => {
-                                if (!otherLastReadAt) return "Enviado";
-                                const msgDate = new Date(message.created_at);
-                                const readDate = new Date(otherLastReadAt);
-                                return readDate >= msgDate ? "Visto" : "Enviado";
-                              })()}
-                            </span>
+                        <React.Fragment key={message.id}>
+                          {showDateDivider && (
+                            <div className="flex justify-center my-3 select-none">
+                              <span className="px-3.5 py-1 rounded-full bg-slate-100 border border-slate-200/80 text-[11px] font-semibold text-slate-500 font-sans tracking-tight shadow-none">
+                                {formatChatDateDivider(message.created_at)}
+                              </span>
+                            </div>
                           )}
-                        </div>
+                          <div
+                            className={`flex flex-col ${isMine ? "items-end" : "items-start"} ${isConsecutive ? "mt-0.5" : "mt-2 first:mt-0"}`}
+                          >
+                            <div
+                              className={`max-w-[85%] pl-4 pr-12 pt-2.5 pb-3 text-sm leading-relaxed relative min-w-[75px] ${isMine
+                                ? `bg-black text-white font-medium ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tr-none"}`
+                                : `bg-slate-100 border border-slate-100 text-slate-800 ${isConsecutive ? "rounded-xl" : "rounded-xl rounded-tl-none"}`
+                                }`}
+                            >
+                              <span className="block break-words whitespace-pre-wrap">{formatMessageBody(message.body)}</span>
+                              <span 
+                                className={`absolute bottom-1 right-2.5 text-[9px] font-sans font-normal select-none pointer-events-none ${
+                                  isMine ? "text-white/60" : "text-slate-400"
+                                }`}
+                              >
+                                {formatShortTime(message.created_at)}
+                              </span>
+                            </div>
+                            {isLastMessage && isMine && (
+                              <span className="text-[10px] text-slate-400 mt-1 mr-1 font-semibold select-none">
+                                {(() => {
+                                  if (!otherLastReadAt) return "Enviado";
+                                  const msgDate = new Date(message.created_at);
+                                  const readDate = new Date(otherLastReadAt);
+                                  return readDate >= msgDate ? "Visto" : "Enviado";
+                                })()}
+                              </span>
+                            )}
+                          </div>
+                        </React.Fragment>
                       );
                     })
                   )}
                   <div ref={messagesEndRef} />
                 </div>
 
-                <div className="p-3 bg-white shrink-0 border-t border-slate-100 touch-none">
+                <div className="p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] bg-white shrink-0 border-t border-slate-100 touch-none">
                   {isPendingForMe ? (
                     <div className="flex flex-col items-center justify-center p-3 bg-slate-50 rounded-2xl gap-3 border border-slate-100">
                       <p className="text-sm font-medium text-slate-700 text-center">
@@ -1065,7 +1093,11 @@ function MessagesContent() {
                           onChange={(event) => setInputText(event.target.value)}
                           onKeyDown={handleKeyDown}
                           onFocus={() => {
-                            // Multiple attempts to scroll after keyboard animation
+                            if (typeof window !== "undefined") {
+                              window.scrollTo(0, 0);
+                              document.body.scrollTop = 0;
+                              document.documentElement.scrollTop = 0;
+                            }
                             const scrollToEnd = () => {
                               if (chatContainerRef.current) {
                                 chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
@@ -1073,7 +1105,6 @@ function MessagesContent() {
                             };
                             setTimeout(scrollToEnd, 100);
                             setTimeout(scrollToEnd, 300);
-                            setTimeout(scrollToEnd, 500);
                           }}
                           onBlur={() => {}}
                           placeholder="Escribe un mensaje..."
@@ -1087,8 +1118,11 @@ function MessagesContent() {
                         />
                         <button
                           onMouseDown={(e) => e.preventDefault()}
-                          onTouchStart={handleSendClick}
-                          onClick={handleSendClick}
+                          onTouchStart={(e) => e.preventDefault()}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleSend();
+                          }}
                           className={`absolute right-1.5 bottom-1.5 w-10 h-10 rounded-full flex items-center justify-center transition-all border-none ${
                             inputText.trim() && !isSending
                               ? "text-slate-800"
@@ -1144,7 +1178,7 @@ function MessagesContent() {
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  <span className="material-symbols-rounded text-[18px]">report</span>
+                  <span className="material-symbols-rounded text-[18px]">flag</span>
                   <span>Reportar</span>
                 </>
               )}
@@ -1186,7 +1220,7 @@ function MessagesContent() {
 
 export default function MessagesPage() {
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={<MessagesSkeleton />}>
       <MessagesContent />
     </Suspense>
   );

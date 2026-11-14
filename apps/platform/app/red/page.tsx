@@ -2,11 +2,20 @@
 
 import React, { Suspense, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { Button } from "@/components/ui/Button";
-import { PageLoader } from "@/components/ui/PageLoader";
-import { DotSpinner } from "@/components/ui/DotSpinner";
-
+import { PageHeader } from "@/components/ui/PageHeader";
+import { NetworkSkeleton } from "@/components/ui/Skeleton";
+import { UserCard, UserCardSkeleton } from "@/components/ui/UserCard";
+import { UnderlineTabs } from "@/components/ui/UnderlineTabs";
+import { SearchBar } from "@/components/ui/SearchBar";
+import { EmptyState } from "@/components/ui/EmptyState";
+import {
+  MoreVertical,
+  UserMinus,
+  Users,
+  UserPlus,
+  Search,
+} from "lucide-react";
 
 interface ProfileDetails {
   id: string;
@@ -16,6 +25,9 @@ interface ProfileDetails {
   location: string;
   bio?: string;
   interests?: string[];
+  categories?: any[];
+  isSpecialist?: boolean;
+  specialty?: string;
   prompts?: { question: string; answer: string }[];
 }
 
@@ -28,21 +40,28 @@ interface ConnectionItem {
 
 function NetworkContent() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [connections, setConnections] = useState<ConnectionItem[]>([]);
+  const [activeTab, setActiveTab] = useState<"following" | "followers">("following");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [visibleCount, setVisibleCount] = useState(50);
+  const [visibleCount, setVisibleCount] = useState(24);
 
   // Active dropdown menu for contacts list
   const [openMenuConnectionId, setOpenMenuConnectionId] = useState<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const loadConnections = async () => {
     try {
       setIsLoading(true);
       setError(null);
       const response = await fetch("/api/connections", {
-        cache: "no-store"
+        cache: "no-store",
       });
 
       if (!response.ok) {
@@ -77,39 +96,59 @@ function NetworkContent() {
   }, [openMenuConnectionId]);
 
   useEffect(() => {
-    setVisibleCount(50);
-  }, [searchQuery]);
+    setVisibleCount(24);
+  }, [searchQuery, activeTab]);
 
-  const handleAcceptRequest = async (userId: string) => {
-    // Optimistic UI updates
-    setConnections((prev) =>
-      prev.map((c) =>
-        c.user.id === userId
-          ? { ...c, status: "accepted" as const }
-          : c
-      )
-    );
+  // Directed relationships:
+  // following = I added them to my network (outgoing)
+  // followers = They added me to their network (incoming)
+  const followingList = connections.filter(
+    (c) => c.direction === "outgoing" && c.status === "accepted"
+  );
+  const followersList = connections.filter(
+    (c) => c.direction === "incoming" && c.status === "accepted"
+  );
 
+  const followingIds = new Set(followingList.map((c) => c.user.id));
+
+  const handleAddToNetwork = async (targetUser: ProfileDetails) => {
     try {
-      const response = await fetch("/api/connections", {
-        method: "PUT",
+      setActionLoadingId(targetUser.id);
+      const res = await fetch("/api/connections", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipientId: userId }),
+        body: JSON.stringify({ recipientId: targetUser.id }),
       });
 
-      if (!response.ok) {
-        throw new Error("No pudimos aceptar la solicitud.");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "No pudimos sumar al usuario.");
       }
-    } catch (err) {
+
+      // Add to local connections state optimistically
+      setConnections((prev) => [
+        {
+          id: `opt-${Date.now()}`,
+          status: "accepted",
+          direction: "outgoing",
+          user: targetUser,
+        },
+        ...prev,
+      ]);
+    } catch (err: any) {
       console.error(err);
-      // Revert state
       loadConnections();
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
-  const handleDeleteConnection = async (userId: string) => {
-    // Optimistic UI updates
-    setConnections((prev) => prev.filter((c) => c.user.id !== userId));
+  const handleRemoveFromNetwork = async (userId: string) => {
+    setOpenMenuConnectionId(null);
+    // Optimistic UI update: remove from following
+    setConnections((prev) =>
+      prev.filter((c) => !(c.direction === "outgoing" && c.user.id === userId))
+    );
 
     try {
       const response = await fetch(`/api/connections?recipientId=${userId}`, {
@@ -117,286 +156,235 @@ function NetworkContent() {
       });
 
       if (!response.ok) {
-        throw new Error("No pudimos procesar la acción.");
+        throw new Error("No pudimos eliminar de tu red.");
       }
     } catch (err) {
       console.error(err);
-      // Revert state
       loadConnections();
     }
   };
 
-  // Classify connections
-  const pendingRequests = connections.filter(
-    (c) => c.status === "pending" && c.direction === "incoming"
-  );
+  // Base list depending on active tab
+  const currentList = activeTab === "following" ? followingList : followersList;
 
-  const activeNetwork = connections
-    .filter((c) => c.status === "accepted")
-    .sort((a: any, b: any) => {
-      const dateA = new Date(a.updated_at || a.created_at || 0).getTime();
-      const dateB = new Date(b.updated_at || b.created_at || 0).getTime();
-      return dateB - dateA;
-    });
-
-  // Filter network by search query
-  const filteredNetwork = activeNetwork.filter((conn) => {
+  // Filter by search query
+  const filteredList = currentList.filter((conn) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     const name = conn.user.name.toLowerCase();
-    const location = conn.user.location.toLowerCase();
-    const profession = conn.user.profession.toLowerCase();
-    return name.includes(query) || location.includes(query) || profession.includes(query);
+    const location = (conn.user.location || "").toLowerCase();
+    const profession = (conn.user.profession || "").toLowerCase();
+    const specialty = (conn.user.specialty || "").toLowerCase();
+    return (
+      name.includes(query) ||
+      location.includes(query) ||
+      profession.includes(query) ||
+      specialty.includes(query)
+    );
   });
 
   return (
-    <div className="w-full flex-1 flex flex-col bg-slate-50 min-h-0 lg:h-auto overflow-hidden lg:overflow-visible">
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 md:px-6 pt-4 pb-6 md:py-6 flex flex-col min-h-0 overflow-hidden lg:overflow-visible">
-        <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden lg:overflow-visible">
-          
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-4 md:mb-6 shrink-0">
+    <div className="w-full flex-1 flex flex-col bg-slate-50 min-h-0 overflow-visible font-sans">
+      <div className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-6 pt-4 pb-12 md:py-6 flex flex-col min-h-0 overflow-visible">
+        {/* Header */}
+        <PageHeader
+          title="Mi red"
+          showBack
+          backFallbackHref="/inicio"
+          className="mb-4 md:mb-6"
+        />
+
+        {error && (
+          <div className="mb-4 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 flex items-center justify-between shadow-none shrink-0">
+            <span>{error}</span>
             <button
-              onClick={() => router.back()}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900 cursor-pointer"
-              title="Volver"
+              onClick={() =>
+                typeof window !== "undefined" && window.history.length > 1
+                  ? router.back()
+                  : router.push("/inicio")
+              }
+              className="text-xs font-semibold text-slate-900 underline hover:no-underline cursor-pointer bg-transparent border-none font-jakarta"
             >
-              <span className="material-symbols-rounded text-[20px]">arrow_back</span>
+              Volver
             </button>
-            <h1 className="text-xl text-slate-900 font-semibold font-jakarta">Mi red</h1>
           </div>
+        )}
 
-          {error && (
-            <div className="mb-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 flex items-center justify-between shadow-none shrink-0">
-              <span>{error}</span>
-              <button
-                onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/comunidad")}
-                className="text-xs font-semibold text-slate-900 underline hover:no-underline cursor-pointer bg-transparent border-none font-jakarta"
-              >
-                Volver
-              </button>
+        {/* Toolbar: Tabs & Search */}
+        <div className="flex flex-col sticky top-0 z-40 bg-slate-50 pb-4 gap-3 w-full">
+          {/* Main Navigation Tabs */}
+          <UnderlineTabs
+            tabs={[
+              { id: "following", label: "Siguiendo" },
+              { id: "followers", label: "Seguidores" },
+            ]}
+            activeTab={activeTab}
+            onChange={(tab) => setActiveTab(tab as "following" | "followers")}
+          />
+
+          {/* Search Bar */}
+          <SearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder={
+              activeTab === "following"
+                ? "Buscar en las personas que sigues..."
+                : "Buscar en tus seguidores..."
+            }
+            className="w-full"
+          />
+        </div>
+
+        {/* Content Area */}
+        <div className="flex-1 w-full overflow-y-auto custom-scrollbar pb-12">
+          {isLoading && connections.length === 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 w-full">
+              {[...Array(8)].map((_, idx) => (
+                <UserCardSkeleton key={idx} />
+              ))}
             </div>
-          )}
-
-          {/* Main Layout Grid */}
-          <div className="flex flex-col md:grid md:grid-cols-12 gap-4 md:gap-6 flex-1 min-h-0 items-stretch md:items-start pb-0 overflow-hidden md:overflow-visible">
-            
-            {/* Left Column: Mi red / active connections */}
-            <div className={`order-2 md:order-1 w-full ${pendingRequests.length > 0 ? "md:col-span-8" : "md:col-span-12"} flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden flex-1 md:flex-initial md:h-full md:min-h-0 shrink-0`}>
-              
-              {/* Search Bar at Top of Active List */}
-              <div className="p-3 border-b border-slate-100 shrink-0 bg-white flex items-center gap-3">
-                {!isLoading && (
-                  <span className="text-slate-500 text-sm font-medium whitespace-nowrap shrink-0 font-jakarta pl-1">
-                    {activeNetwork.length} {activeNetwork.length === 1 ? 'persona' : 'personas'}
-                  </span>
-                )}
-                <div className="relative flex-1">
-                  <span className="material-symbols-rounded absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Buscar por nombre, ubicación o especialidad..."
-                    className="w-full bg-slate-50 border-none rounded-full py-2.5 pl-11 pr-4 text-sm focus:ring-1 focus:ring-slate-200 outline-none transition-all text-slate-850"
-                  />
-                </div>
-              </div>
-
-
-
-              {/* Scrollable Network List */}
-              <div className="w-full flex-1 overflow-y-auto thin-scrollbar divide-y divide-slate-100 bg-white">
-                {isLoading && connections.length === 0 ? (
-                  <div className="p-8 flex justify-center items-center"><DotSpinner size={32} color="black" /></div>
-                ) : filteredNetwork.length === 0 ? (
-                  <div className="p-12 text-center text-slate-400 text-sm flex flex-col items-center gap-4 py-16 max-w-md mx-auto w-full">
-                    <span className="material-symbols-rounded text-slate-300 text-[40px] select-none">group_off</span>
-                    <span className="leading-relaxed">
-                      {searchQuery
-                        ? "No se encontraron resultados para tu búsqueda"
-                        : "Todavía no tienes a nadie en tu red, ve a comunidad y descubre personas para agregar."}
-                    </span>
-                    {!searchQuery && (
+          ) : filteredList.length === 0 ? (
+            <div className="w-full bg-white rounded-2xl border border-slate-200/90">
+              <EmptyState
+                icon={
+                  searchQuery ? (
+                    <Search className="w-6 h-6 stroke-[1.75]" />
+                  ) : activeTab === "following" ? (
+                    <Users className="w-6 h-6 stroke-[1.75]" />
+                  ) : (
+                    <UserPlus className="w-6 h-6 stroke-[1.75]" />
+                  )
+                }
+                title={
+                  searchQuery
+                    ? "No se encontraron resultados"
+                    : activeTab === "following"
+                    ? "Todavía no sigues a nadie"
+                    : "Aún no tienes seguidores"
+                }
+                description={
+                  searchQuery
+                    ? "Prueba con otros términos de búsqueda."
+                    : activeTab === "following"
+                    ? "Explora la comunidad o busca especialistas para seguir."
+                    : "Comparte reflexiones o participa en la comunidad para que otras personas te conozcan y te sigan."
+                }
+                action={
+                  !searchQuery && activeTab === "following" ? (
+                    <div className="flex items-center gap-2">
                       <Button
                         variant="primary"
-                        onClick={() => router.push("/comunidad")}
-                        className="mt-2 px-6 text-xs font-semibold bg-black text-white hover:bg-zinc-900 rounded-xl !w-auto h-10 flex items-center justify-center gap-2"
+                        size="md"
+                        onClick={() => router.push("/inicio/miembros")}
                       >
-                        <span>Ir a la Comunidad</span>
+                        Ver miembros
                       </Button>
-                    )}
-                  </div>
-                ) : (
-                  <>
-                    {filteredNetwork.slice(0, visibleCount).map((conn) => (
-                      <div key={conn.id} className="flex items-center gap-3 p-4 hover:bg-slate-50/30 transition-colors">
-                        {/* Whole user line as a link */}
-                        <Link
-                          href={`/comunidad/public-profile?id=${conn.user.id}`}
-                          className="flex-1 flex items-center gap-3 min-w-0 cursor-pointer group/line text-decoration-none"
-                        >
-                          {/* Avatar */}
-                          <div className="relative shrink-0">
-                            {conn.user.avatar ? (
-                              <img
-                                src={conn.user.avatar}
-                                alt={conn.user.name}
-                                className="w-11 h-11 rounded-[10px] object-cover"
-                              />
-                            ) : (
-                              <div className="w-11 h-11 rounded-[10px] bg-slate-100 flex items-center justify-center text-slate-400">
-                                <span className="material-symbols-rounded text-[24px]">person</span>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Text details */}
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-semibold text-slate-900 truncate font-jakarta group-hover/line:underline leading-snug">
-                              {conn.user.name}
-                            </h4>
-                            <p className="text-xs text-slate-400 font-medium truncate mt-0.5">
-                              {conn.user.location}
-                            </p>
-                          </div>
-                        </Link>
-
-                        {/* Action buttons on the right */}
-                        <div className="relative shrink-0 flex items-center gap-1.5 network-menu-container">
-                          <Link
-                            href={`/comunidad/public-profile?id=${conn.user.id}`}
-                            className="h-8 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer font-jakarta flex items-center justify-center shrink-0 text-decoration-none border-none outline-none"
-                          >
-                            Ver perfil
-                          </Link>
-                          <button
-                            onClick={() => setOpenMenuConnectionId(openMenuConnectionId === conn.id ? null : conn.id)}
-                            className={`flex items-center justify-center w-10 h-10 rounded-full transition-all border-none cursor-pointer bg-transparent ${openMenuConnectionId === conn.id ? "bg-slate-100" : "hover:bg-slate-50"}`}
-                            title="Opciones"
-                          >
-                            <span className="material-symbols-rounded text-slate-400 hover:text-black transition-colors select-none">more_vert</span>
-                          </button>
-
-                          {openMenuConnectionId === conn.id && (
-                            <div className="absolute right-0 mt-2 w-52 bg-white border border-slate-200 rounded-2xl overflow-hidden z-[100] animate-in fade-in zoom-in-95 duration-200 origin-top-right">
-                              <button
-                                onClick={() => {
-                                  handleDeleteConnection(conn.user.id);
-                                  setOpenMenuConnectionId(null);
-                                }}
-                                className="group w-full flex items-center gap-2.5 px-[14px] py-[14px] text-sm hover:bg-[#FF4B4B]/10 transition-colors border-none outline-none cursor-pointer bg-transparent text-left"
-                              >
-                                <span className="material-symbols-rounded text-slate-500 group-hover:text-[#FF4B4B] text-[18px] transition-colors">delete</span>
-                                <span className="font-semibold text-slate-500 group-hover:text-[#FF4B4B] transition-colors">Eliminar de mi red</span>
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-
-                    {filteredNetwork.length > visibleCount && (
-                      <div className="p-4 flex justify-center bg-white border-t border-slate-100">
-                        <button
-                          onClick={() => setVisibleCount((prev) => prev + 50)}
-                          className="h-10 px-6 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-95 cursor-pointer font-jakarta flex items-center gap-2"
-                        >
-                          <span className="material-symbols-rounded text-[18px]">expand_more</span>
-                          Ver más
-                        </button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
+                      <Button
+                        variant="secondary"
+                        size="md"
+                        onClick={() => router.push("/especialistas")}
+                      >
+                        Ver especialistas
+                      </Button>
+                    </div>
+                  ) : undefined
+                }
+              />
             </div>
+          ) : (
+            <div className="flex flex-col gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6 w-full">
+                {filteredList.slice(0, visibleCount).map((conn) => {
+                  const isInMyNetwork = followingIds.has(conn.user.id);
+                  const isActing = actionLoadingId === conn.user.id;
 
-            {/* Right Column: Solicitudes pendientes (col-span-4) */}
-            {pendingRequests.length > 0 && (
-              <div className="order-1 md:order-2 w-full md:col-span-4 flex flex-col bg-white rounded-2xl border border-slate-200 overflow-hidden h-fit md:h-full min-h-0 shrink-0">
-                {/* Header */}
-                <div className="px-6 py-4 border-b border-slate-100 shrink-0 bg-white">
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    Solicitudes pendientes ({pendingRequests.length})
-                  </span>
-                </div>
+                  return (
+                    <UserCard
+                      key={conn.id}
+                      user={conn.user}
+                      specialty={null}
+                      title={null}
+                      profileHref={`/inicio/public-profile?id=${conn.user.id}&from=red`}
+                      actionMenu={
+                        activeTab === "following" ? (
+                          <div className="relative network-menu-container">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setOpenMenuConnectionId(
+                                  openMenuConnectionId === conn.user.id ? null : conn.user.id
+                                )
+                              }
+                              className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-800 hover:bg-slate-100/80 transition-colors cursor-pointer bg-transparent border-none"
+                              title="Opciones"
+                              aria-label="Opciones"
+                            >
+                              <MoreVertical className="w-4 h-4" />
+                            </button>
 
-                {/* Scrollable Requests List */}
-                <div className="flex-1 overflow-y-auto thin-scrollbar divide-y divide-slate-100 md:max-h-full max-h-[300px]">
-                  {isLoading && connections.length === 0 ? (
-                    <div className="p-8 flex justify-center items-center"><DotSpinner size={32} color="black" /></div>
-                  ) : (
-                    pendingRequests.map((conn) => (
-                      <div key={conn.id} className="flex items-center gap-3 p-4 bg-white hover:bg-slate-50/50 transition-colors">
-                        {/* Whole user line as a link */}
-                        <Link
-                          href={`/comunidad/public-profile?id=${conn.user.id}`}
-                          className="flex-1 flex items-center gap-3 min-w-0 cursor-pointer group/line text-decoration-none"
-                        >
-                          {/* Avatar */}
-                          <div className="relative shrink-0">
-                            {conn.user.avatar ? (
-                              <img
-                                src={conn.user.avatar}
-                                alt={conn.user.name}
-                                className="w-11 h-11 rounded-[10px] object-cover"
-                              />
-                            ) : (
-                              <div className="w-11 h-11 rounded-[10px] bg-slate-100 flex items-center justify-center text-slate-400">
-                                <span className="material-symbols-rounded text-[24px]">person</span>
+                            {openMenuConnectionId === conn.user.id && (
+                              <div className="absolute top-full right-0 mt-1 w-max min-w-[148px] bg-white border border-slate-200/90 rounded-xl overflow-hidden py-1 z-50 animate-in fade-in duration-150 shadow-none">
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveFromNetwork(conn.user.id)}
+                                  className="w-full px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50/70 flex items-center gap-2 border-none bg-transparent cursor-pointer font-jakarta text-left whitespace-nowrap transition-colors"
+                                >
+                                  <UserMinus className="w-3.5 h-3.5 shrink-0" />
+                                  <span>Dejar de seguir</span>
+                                </button>
                               </div>
                             )}
                           </div>
-
-                          {/* Text details */}
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-semibold text-slate-900 truncate font-jakarta group-hover/line:underline leading-snug">
-                              {conn.user.name}
-                            </h4>
-                            <p className="text-xs text-slate-400 font-medium truncate mt-0.5">
-                              {conn.user.location}
-                            </p>
+                        ) : (
+                          <div className="flex items-center">
+                            {isInMyNetwork ? (
+                              <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-meta font-jakarta border border-slate-200/80 select-none">
+                                Siguiendo
+                              </span>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="primary"
+                                disabled={isActing}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAddToNetwork(conn.user);
+                                }}
+                                className="h-7 px-3 text-xs font-semibold"
+                              >
+                                <span>{isActing ? "..." : "Seguir"}</span>
+                              </Button>
+                            )}
                           </div>
-                        </Link>
-
-                        {/* Action buttons */}
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <button
-                            onClick={() => handleAcceptRequest(conn.user.id)}
-                            className="h-8 px-3.5 bg-black hover:bg-slate-800 text-white rounded-lg text-xs font-semibold transition cursor-pointer font-jakarta flex items-center justify-center shrink-0"
-                          >
-                            Aceptar
-                          </button>
-                          <button
-                            onClick={() => handleDeleteConnection(conn.user.id)}
-                            className="w-8 h-8 rounded-lg text-slate-400 hover:text-red-500 hover:bg-slate-100 transition-colors cursor-pointer flex items-center justify-center shrink-0 border-none outline-none"
-                            title="Rechazar"
-                          >
-                            <svg className="w-3.5 h-3.5 transition-colors shrink-0 select-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+                        )
+                      }
+                    />
+                  );
+                })}
               </div>
-            )}
 
-          </div>
+              {filteredList.length > visibleCount && (
+                <div className="flex justify-center pt-4">
+                  <Button
+                    onClick={() => setVisibleCount((prev) => prev + 24)}
+                    variant="outline"
+                    className="px-6 h-11 font-bold text-sm"
+                  >
+                    Cargar más contactos
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
-
-
     </div>
   );
 }
 
 export default function NetworkPage() {
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={<NetworkSkeleton />}>
       <NetworkContent />
     </Suspense>
   );

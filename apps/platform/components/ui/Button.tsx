@@ -1,49 +1,162 @@
-import React from 'react';
+"use client";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'outline' | 'slate' | 'small' | 'back' | 'secondary';
+import React from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import {
+  ArrowLeft,
+  Camera,
+  ChevronRight,
+  Lock,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Search,
+  Settings,
+  SlidersHorizontal,
+  X,
+} from 'lucide-react';
+
+function renderMappedIcon(icon: string, className: string = 'w-4 h-4 shrink-0') {
+  switch (icon) {
+    case 'add':
+      return <Plus className={className} />;
+    case 'autorenew':
+      return <RefreshCw className={className} />;
+    case 'settings':
+      return <Settings className={className} />;
+    case 'lock':
+      return <Lock className={className} />;
+    case 'photo_camera':
+      return <Camera className={className} />;
+    case 'edit':
+      return <Pencil className={className} />;
+    case 'tune':
+    case 'manage_search':
+    case 'filter_list':
+      return <SlidersHorizontal className={className} />;
+    case 'search':
+      return <Search className={className} />;
+    case 'close':
+      return <X className={className} />;
+    case 'arrow_back':
+      return <ArrowLeft className={className} />;
+    case 'chevron_right':
+      return <ChevronRight className={className} />;
+    default:
+      return <Plus className={className} />;
+  }
+}
+
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'outline' | 'soft' | 'ghost' | 'destructive' | 'danger' | 'link' | 'back' | 'slate' | 'small';
+  size?: 'sm' | 'md' | 'lg';
+  fullWidth?: boolean;
   children?: React.ReactNode;
 }
 
 // --- STANDARD BUTTON COMPONENT ---
 // Used for general actions, forms, and primary/secondary navigation buttons.
-export function Button({ variant = 'primary', children, className = '', ...props }: ButtonProps) {
+export function Button({ variant = 'primary', size, fullWidth, children, className = '', ...props }: ButtonProps) {
   // Base styles for standard buttons
-  const baseStyles = "transition-all outline-none flex items-center justify-center font-jakarta duration-300 ease-out active:scale-95 cursor-pointer select-none disabled:bg-slate-200 disabled:text-slate-400 disabled:border-transparent disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:bg-slate-200 disabled:hover:text-slate-400";
+  const baseStyles = "transition-all outline-none flex items-center justify-center font-jakarta duration-150 ease-out active:scale-[0.99] cursor-pointer select-none disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100";
+
+  const sizeOverrides = {
+    sm: "!h-8.5 !px-3 !text-xs font-medium",
+    md: "!h-10 !px-4 !text-xs sm:!text-sm font-semibold",
+    lg: "!h-11 !px-5 !text-sm font-semibold",
+  };
 
   const variants = {
-    primary: "w-full h-11 md:h-12 px-5 sm:px-6 rounded-xl text-button font-medium bg-black text-white hover:bg-zinc-900",
-    outline: "w-full h-11 md:h-12 px-5 sm:px-6 rounded-xl text-button font-medium bg-white text-secondary border border-slate-200 hover:bg-slate-50",
-    secondary: "w-full h-11 md:h-12 px-5 sm:px-6 rounded-xl text-button font-medium bg-slate-50 text-secondary border border-slate-200 hover:bg-slate-100",
-    slate: "h-9 px-4 rounded-lg text-button font-medium bg-slate-400 text-white hover:bg-slate-500 gap-2",
-    small: "h-8 md:h-9 px-4 rounded-lg text-label font-semibold bg-slate-100 text-secondary border border-slate-200 hover:bg-slate-200",
-    back: "flex items-center gap-1.5 group w-fit !bg-transparent !border-none !p-0"
+    primary: "h-11 px-5 rounded-xl text-sm font-semibold bg-slate-900 text-white hover:bg-black shadow-none border-none",
+    secondary: "h-11 px-5 rounded-xl text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-none",
+    outline: "h-11 px-5 rounded-xl text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 hover:text-slate-900 shadow-none",
+    soft: "h-8.5 px-3 rounded-xl text-xs font-medium bg-slate-50 hover:bg-slate-100/90 text-slate-600 hover:text-slate-900 border-none shadow-none",
+    ghost: "h-9 px-3 rounded-xl text-xs font-semibold bg-transparent hover:bg-slate-100 text-slate-600 hover:text-slate-900 border-none shadow-none",
+    destructive: "h-11 px-5 rounded-xl text-sm font-semibold bg-rose-600 text-white hover:bg-rose-700 shadow-none border-none",
+    danger: "h-11 px-5 rounded-xl text-sm font-semibold bg-rose-600 text-white hover:bg-rose-700 shadow-none border-none",
+    link: "p-0 h-auto bg-transparent border-none text-slate-900 hover:text-slate-600 text-xs font-semibold hover:underline shadow-none",
+    slate: "h-9 px-4 rounded-lg text-sm font-medium bg-slate-400 text-white hover:bg-slate-500 gap-2 shadow-none border-none",
+    small: "h-9 px-3.5 rounded-xl text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 shadow-none border-none",
+    back: "flex items-center gap-1.5 group w-fit !bg-transparent !border-none !p-0",
   };
 
   if (variant === 'back') {
     return (
-      <button className={`${variants.back} ${className}`} {...props}>
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="3"
-          className="text-slate-400 group-hover:text-slate-900 transition-colors"
-        >
-          <path d="M19 12H5M12 19l-7-7 7-7" />
-        </svg>
-        <span className="text-slate-400 text-[14px] font-bold group-hover:text-slate-900 transition-colors">
-          {children || 'Volver'}
-        </span>
-      </button>
+      <BackButton
+        onClick={props.onClick as (() => void) | undefined}
+        title={typeof children === 'string' ? children : props.title || 'Volver'}
+        className={className}
+      />
     );
   }
 
+  const sizeClass = size ? sizeOverrides[size] : "";
+  const widthClass = fullWidth ? "w-full" : "";
+
   return (
-    <button className={`${baseStyles} ${variants[variant as keyof typeof variants]} ${className}`} {...props}>
+    <button className={`${baseStyles} ${variants[variant as keyof typeof variants] || variants.primary} ${sizeClass} ${widthClass} ${className}`} {...props}>
       {children}
+    </button>
+  );
+}
+
+export interface BackButtonProps {
+  href?: string;
+  onClick?: () => void;
+  fallbackHref?: string;
+  title?: string;
+  variant?: 'default' | 'translucent';
+  className?: string;
+}
+
+/**
+ * Canonical Back Arrow Atom (`w-10 h-10 rounded-xl` + Lucide `ArrowLeft w-5 h-5`).
+ * Derived from Account Settings (`Configuración`) as the single platform standard.
+ */
+export function BackButton({
+  href,
+  onClick,
+  fallbackHref = '/inicio',
+  title = 'Volver',
+  variant = 'default',
+  className = '',
+}: BackButtonProps) {
+  const router = useRouter();
+  const surfaceClass =
+    variant === 'translucent'
+      ? 'bg-white/75 backdrop-blur-md border border-white/60 hover:bg-white/90 text-slate-700 hover:text-slate-900'
+      : 'bg-white border border-slate-200/90 hover:bg-slate-50 text-slate-500 hover:text-slate-900';
+
+  const baseClass = `w-10 h-10 shrink-0 flex items-center justify-center rounded-xl transition-all duration-150 active:scale-[0.98] shadow-none cursor-pointer select-none ${surfaceClass} ${className}`;
+
+  if (href) {
+    return (
+      <Link href={href} className={baseClass} title={title} aria-label={title}>
+        <ArrowLeft className="w-5 h-5" />
+      </Link>
+    );
+  }
+
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    } else if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(fallbackHref);
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={baseClass}
+      title={title}
+      aria-label={title}
+    >
+      <ArrowLeft className="w-5 h-5" />
     </button>
   );
 }
@@ -56,43 +169,41 @@ interface ProfileButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 // --- PROFILE/ACTION BUTTON COMPONENT ---
 // Used for edit actions, section triggers, and icon-based buttons with a premium aesthetic.
-// Features a glassmorphism style (slate-50 background, backdrop-blur).
 export const ProfileButton = React.forwardRef<HTMLButtonElement, ProfileButtonProps>(
   function ProfileButton({ icon, label, showDot, className = "", ...props }, ref) {
-  if (!label && icon !== "photo_camera") {
+    if (!label && icon !== "photo_camera") {
+      return (
+        <button
+          ref={ref}
+          {...props}
+          className={`w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-black hover:bg-slate-100 transition-all duration-200 cursor-pointer shadow-none ${className}`}
+        >
+          {showDot && (
+            <div className="w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-white shrink-0" />
+          )}
+          {renderMappedIcon(icon, "w-[18px] h-[18px] md:w-5 md:h-5 shrink-0")}
+          {label && <span className="truncate">{label}</span>}
+        </button>
+      );
+    }
+
     return (
       <button
         ref={ref}
         {...props}
-        className={`w-8 h-8 md:w-9 md:h-9 flex items-center justify-center rounded-full text-slate-400 hover:text-black hover:bg-slate-100 transition-all duration-300 cursor-pointer shadow-none ${className}`}
+        className={`h-10 md:h-11 ${label ? 'px-3 md:px-4 min-w-[100px] md:min-w-[120px]' : 'w-10 md:w-11'} bg-slate-50/80 hover:bg-black border border-slate-200 hover:border-black text-slate-700 hover:text-white rounded-xl text-xs md:text-sm font-semibold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-none ${className}`}
       >
         {showDot && (
-          <div className="w-3 h-3 rounded-full bg-[#FF4B4B] border-2 border-white shrink-0 shadow-sm" />
+          <div className="w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-white shrink-0" />
         )}
-        <span className="material-symbols-rounded text-[18px] md:text-[22px] shrink-0">{icon}</span>
+        {renderMappedIcon(icon, "w-[18px] h-[18px] md:w-5 md:h-5 shrink-0")}
         {label && <span className="truncate">{label}</span>}
       </button>
     );
   }
-
-  return (
-    <button
-      ref={ref}
-      {...props}
-      className={`h-10 md:h-11 ${label ? 'px-3 md:px-4 min-w-[100px] md:min-w-[120px]' : 'w-10 md:w-11'} bg-[#F8FAFC] hover:bg-black border border-slate-200 hover:border-black text-slate-700 hover:text-white rounded-lg text-[13px] md:text-[14px] font-semibold transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-none ${className}`}
-    >
-      {showDot && (
-        <div className="w-3 h-3 rounded-full bg-[#FF4B4B] border-2 border-white shrink-0 shadow-sm" />
-      )}
-      <span className="material-symbols-rounded text-[18px] md:text-[22px] shrink-0">{icon}</span>
-      {label && <span className="truncate">{label}</span>}
-    </button>
-  );
-  }
 );
 
 // --- EMPTY PROFILE BUTTON COMPONENT ---
-// Used for empty state profile actions with a notification dot
 export interface EmptyProfileButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   label: string;
   icon?: string;
@@ -102,15 +213,45 @@ export function EmptyProfileButton({ label, icon, className = "", ...props }: Em
   return (
     <button
       {...props}
-      className={`relative flex items-center justify-start h-7 md:h-8 px-2 bg-white hover:bg-slate-50 text-slate-400 text-[11px] md:text-[12px] font-bold rounded-lg transition-all w-fit gap-2 ${className}`}
+      className={`group relative flex items-center justify-between w-full p-4 rounded-2xl bg-white border border-slate-200/90 hover:border-slate-300 transition-all duration-200 cursor-pointer shadow-none ${className}`}
     >
-      <span className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 z-10 w-3 h-3 bg-[#FF4B4B] rounded-full border-2 border-white"></span>
-      {icon && (
-        <span className="material-symbols-rounded text-[10px] md:text-[12px] shrink-0">{icon}</span>
-      )}
-      {label}
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-slate-900 group-hover:bg-slate-100 transition-colors">
+          {renderMappedIcon(icon || "add", "w-5 h-5 shrink-0")}
+        </div>
+        <span className="text-sm font-semibold text-slate-700 group-hover:text-slate-900 transition-colors font-jakarta">
+          {label}
+        </span>
+      </div>
+      <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-900 group-hover:translate-x-0.5 transition-all shrink-0" />
     </button>
   );
 }
+
+// --- SQUARE ICON BUTTON COMPONENT ---
+export interface SquareButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  icon: string;
+  variant?: 'outline' | 'secondary' | 'primary';
+}
+
+export const SquareButton = React.forwardRef<HTMLButtonElement, SquareButtonProps>(
+  function SquareButton({ icon, variant = 'outline', className = '', ...props }, ref) {
+    const variants = {
+      outline: "bg-white text-slate-500 hover:text-slate-800 border-slate-200/90 hover:border-slate-300 hover:bg-slate-50/80 shadow-none",
+      secondary: "bg-slate-100 text-slate-500 hover:text-slate-800 border-transparent hover:bg-slate-200 shadow-none",
+      primary: "bg-slate-900 text-white hover:bg-black border-transparent shadow-none",
+    };
+
+    return (
+      <button
+        ref={ref}
+        {...props}
+        className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl border flex items-center justify-center shrink-0 transition-all duration-200 active:scale-[0.98] cursor-pointer select-none outline-none ${variants[variant]} ${className}`}
+      >
+        {renderMappedIcon(icon, "w-5 h-5 shrink-0")}
+      </button>
+    );
+  }
+);
 
 export default Button;

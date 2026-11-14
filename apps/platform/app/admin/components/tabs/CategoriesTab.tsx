@@ -1,8 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { RotateCcw, Pencil, Trash2, Plus, Check } from "lucide-react";
 import { AdminCategory, AdminSuggestion } from "../../types";
 import { formatDate } from "../../utils";
+import {
+  CATEGORY_ICON_OPTIONS,
+  CANONICAL_COLOR_PRESETS,
+  renderCategoryIconByKey,
+  invalidateCategoriesCache,
+} from "@/components/ui/InterestPill";
 
 interface CategoriesTabProps {
   categories: AdminCategory[];
@@ -15,8 +22,6 @@ interface CategoriesTabProps {
 export function CategoriesTab({
   categories,
   suggestions,
-  setCategories,
-  setSuggestions,
   fetchCategoriesData,
 }: CategoriesTabProps) {
   const [categorySubTab, setCategorySubTab] = useState<"lista" | "sugerencias">("lista");
@@ -27,6 +32,8 @@ export function CategoriesTab({
   const [editingInterestValue, setEditingInterestValue] = useState("");
   const [editingAreaId, setEditingAreaId] = useState<string | null>(null);
   const [editingAreaValue, setEditingAreaValue] = useState("");
+  const [isSavingCategory, setIsSavingCategory] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [categoryModal, setCategoryModal] = useState<{
     isOpen: boolean;
     category: Partial<AdminCategory> | null;
@@ -47,12 +54,21 @@ export function CategoriesTab({
     if (!categoryModal.category?.name?.trim()) return;
 
     try {
+      setIsSavingCategory(true);
       const url = "/api/admin/categories";
       const method = categoryModal.category.id ? "PUT" : "POST";
+      const payload = {
+        id: categoryModal.category.id,
+        name: categoryModal.category.name.trim(),
+        icon: categoryModal.category.icon || "tag",
+        iconFilled: categoryModal.category.iconFilled ?? true,
+        color: categoryModal.category.color || "#0450FB",
+        bgColor: categoryModal.category.bgColor || "#DBEAFE",
+      };
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(categoryModal.category),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -62,9 +78,37 @@ export function CategoriesTab({
       }
 
       setCategoryModal({ isOpen: false, category: null });
+      invalidateCategoriesCache();
       await fetchCategoriesData();
     } catch {
       alert("Error de conexión.");
+    } finally {
+      setIsSavingCategory(false);
+    }
+  }
+
+  async function handleResetToDefaults() {
+    if (
+      !confirm(
+        "¿Sincronizar los íconos y colores de las 8 categorías principales con el estándar oficial de Eventos LUMINUS?"
+      )
+    ) {
+      return;
+    }
+    try {
+      setIsResetting(true);
+      const res = await fetch("/api/admin/categories/reset", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.message || "Error al sincronizar categorías.");
+        return;
+      }
+      invalidateCategoriesCache();
+      await fetchCategoriesData();
+    } catch {
+      alert("Error de conexión.");
+    } finally {
+      setIsResetting(false);
     }
   }
 
@@ -77,6 +121,7 @@ export function CategoriesTab({
         alert(data.message || "Error al eliminar categoría.");
         return;
       }
+      invalidateCategoriesCache();
       await fetchCategoriesData();
     } catch {
       alert("Error de conexión.");
@@ -99,6 +144,7 @@ export function CategoriesTab({
         return;
       }
       setNewInterestText({ ...newInterestText, [categoryId]: "" });
+      invalidateCategoriesCache();
       await fetchCategoriesData();
     } catch {
       alert("Error de conexión.");
@@ -114,6 +160,7 @@ export function CategoriesTab({
         body: JSON.stringify({ id, name: name.trim() }),
       });
       setEditingInterestId(null);
+      invalidateCategoriesCache();
       await fetchCategoriesData();
     } catch {
       alert("Error de conexión.");
@@ -124,6 +171,7 @@ export function CategoriesTab({
     if (!confirm("¿Eliminar este interés de usuario?")) return;
     try {
       await fetch(`/api/admin/categories/interests?id=${id}`, { method: "DELETE" });
+      invalidateCategoriesCache();
       await fetchCategoriesData();
     } catch {
       alert("Error de conexión.");
@@ -146,6 +194,7 @@ export function CategoriesTab({
         return;
       }
       setNewAreaText({ ...newAreaText, [categoryId]: "" });
+      invalidateCategoriesCache();
       await fetchCategoriesData();
     } catch {
       alert("Error de conexión.");
@@ -161,6 +210,7 @@ export function CategoriesTab({
         body: JSON.stringify({ id, name: name.trim() }),
       });
       setEditingAreaId(null);
+      invalidateCategoriesCache();
       await fetchCategoriesData();
     } catch {
       alert("Error de conexión.");
@@ -171,6 +221,7 @@ export function CategoriesTab({
     if (!confirm("¿Eliminar esta área de especialista?")) return;
     try {
       await fetch(`/api/admin/categories/specialist-areas?id=${id}`, { method: "DELETE" });
+      invalidateCategoriesCache();
       await fetchCategoriesData();
     } catch {
       alert("Error de conexión.");
@@ -233,6 +284,7 @@ export function CategoriesTab({
         selectedCatId: "",
         targetType: "USER_INTEREST",
       });
+      invalidateCategoriesCache();
       await fetchCategoriesData();
     } catch {
       alert("Error de conexión.");
@@ -255,7 +307,7 @@ export function CategoriesTab({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <div className="flex bg-slate-100 p-1 rounded-xl">
             <button
               type="button"
@@ -288,30 +340,41 @@ export function CategoriesTab({
 
           <button
             type="button"
+            disabled={isResetting}
+            onClick={handleResetToDefaults}
+            className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer h-10 disabled:opacity-50"
+            title="Sincronizar los 8 íconos y colores con el estándar de Eventos LUMINUS"
+          >
+            <RotateCcw className={`w-3.5 h-3.5 ${isResetting ? "animate-spin" : ""}`} />
+            <span>{isResetting ? "Sincronizando..." : "Sincronizar Estándar"}</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() =>
               setCategoryModal({
                 isOpen: true,
                 category: {
                   name: "",
-                  icon: "label",
+                  icon: "sun",
                   iconFilled: true,
-                  color: "#3B82F6",
+                  color: "#0450FB",
                   bgColor: "#DBEAFE",
                 },
               })
             }
             className="px-4 py-2 rounded-xl bg-black hover:bg-zinc-800 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border-none h-10"
           >
-            <span className="material-symbols-rounded text-[18px]">add</span>
-            Nueva Categoría
+            <Plus className="w-4 h-4" />
+            <span>Nueva Categoría</span>
           </button>
         </div>
       </header>
 
       {categorySubTab === "lista" ? (
         <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
-          <div className="grid grid-cols-[1.4fr_2fr_2fr_130px] border-b border-slate-200/80 bg-slate-50/80 px-4 py-3 text-[11.5px] font-bold uppercase tracking-wider text-slate-500">
-            <span>Categoría</span>
+          <div className="grid grid-cols-[1.5fr_2fr_2fr_210px] border-b border-slate-200/80 bg-slate-50/80 px-4 py-3 text-[11.5px] font-bold uppercase tracking-wider text-slate-500">
+            <span>Categoría / Ícono & Color</span>
             <span>Intereses de Usuario</span>
             <span>Áreas de Especialista</span>
             <span className="text-right">Acciones</span>
@@ -319,7 +382,6 @@ export function CategoriesTab({
           <div className="divide-y divide-slate-100 max-h-[680px] overflow-y-auto">
             {categories.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                <span className="material-symbols-rounded text-[48px] mb-3 text-slate-300">category</span>
                 <p className="text-sm font-medium">No hay categorías registradas.</p>
               </div>
             ) : (
@@ -327,32 +389,34 @@ export function CategoriesTab({
                 <div
                   key={category.id}
                   onClick={() => setSelectedCategoryId(category.id)}
-                  className="grid w-full grid-cols-[1.4fr_2fr_2fr_130px] items-center px-4 py-3.5 text-left text-[14px] transition hover:bg-slate-50 bg-white cursor-pointer"
+                  className="grid w-full grid-cols-[1.5fr_2fr_2fr_210px] items-center px-4 py-3.5 text-left text-[14px] transition hover:bg-slate-50 bg-white cursor-pointer"
                 >
                   {/* Category info */}
                   <div className="flex items-center gap-3 pr-2 min-w-0">
                     <div
-                      className="h-9 w-9 rounded-lg flex items-center justify-center border shrink-0"
+                      className="h-10 w-10 rounded-xl flex items-center justify-center border shrink-0 transition-colors"
                       style={{
                         backgroundColor: category.bgColor || "#F1F5F9",
                         color: category.color || "#0F172A",
-                        borderColor: `${category.color}40`,
+                        borderColor: `${category.color || "#94A3B8"}40`,
                       }}
                     >
-                      <span
-                        className="material-symbols-outlined text-[20px]"
-                        style={category.iconFilled ? { fontVariationSettings: "'FILL' 1" } : undefined}
-                      >
-                        {category.icon || "label"}
-                      </span>
+                      {renderCategoryIconByKey(category.icon, category.name, "w-5 h-5 shrink-0")}
                     </div>
                     <div className="min-w-0">
                       <span className="block font-bold text-slate-900 truncate leading-snug">
                         {category.name}
                       </span>
-                      <span className="text-[11px] font-mono text-slate-500 block truncate">
-                        {category.slug}
-                      </span>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full border border-black/10 shrink-0"
+                          style={{ backgroundColor: category.color || "#0F172A" }}
+                          title={`Color: ${category.color}`}
+                        />
+                        <span className="text-[11px] font-mono text-slate-500 truncate">
+                          {category.icon || "auto"} · {category.color}
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -404,18 +468,27 @@ export function CategoriesTab({
                   <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                     <button
                       type="button"
-                      onClick={() => setSelectedCategoryId(category.id)}
-                      className="h-8 px-3 rounded-lg border border-slate-200 hover:bg-slate-100 text-xs font-semibold text-slate-800 cursor-pointer transition-colors"
+                      onClick={() => setCategoryModal({ isOpen: true, category })}
+                      className="h-8 px-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-xs font-semibold text-slate-700 cursor-pointer transition-colors flex items-center gap-1"
+                      title="Editar ícono, nombre y colores"
                     >
-                      Gestionar
+                      <Pencil className="w-3.5 h-3.5" />
+                      <span>Editar</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategoryId(category.id)}
+                      className="h-8 px-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-xs font-semibold text-slate-800 cursor-pointer transition-colors"
+                    >
+                      Items
                     </button>
                     <button
                       type="button"
                       onClick={() => handleDeleteCategory(category.id)}
-                      className="h-8 px-2 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 text-xs font-semibold cursor-pointer transition-colors"
+                      className="h-8 w-8 rounded-lg border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 flex items-center justify-center cursor-pointer transition-colors shrink-0"
                       title="Eliminar categoría"
                     >
-                      <span className="material-symbols-rounded text-[18px]">delete</span>
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
@@ -510,25 +583,20 @@ export function CategoriesTab({
 
       {/* Manage Category Modal (Items & Areas editing) */}
       {selectedCategory && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-40 animate-in fade-in duration-150">
           <div className="bg-white rounded-2xl max-w-2xl w-full p-6 border border-slate-200 flex flex-col gap-6 max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-3">
                 <div
-                  className="h-10 w-10 rounded-xl flex items-center justify-center border"
+                  className="h-11 w-11 rounded-xl flex items-center justify-center border shrink-0"
                   style={{
                     backgroundColor: selectedCategory.bgColor || "#F1F5F9",
                     color: selectedCategory.color || "#0F172A",
                     borderColor: `${selectedCategory.color}40`,
                   }}
                 >
-                  <span
-                    className="material-symbols-outlined text-[22px]"
-                    style={selectedCategory.iconFilled ? { fontVariationSettings: "'FILL' 1" } : undefined}
-                  >
-                    {selectedCategory.icon || "label"}
-                  </span>
+                  {renderCategoryIconByKey(selectedCategory.icon, selectedCategory.name, "w-5 h-5 shrink-0")}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -536,10 +604,11 @@ export function CategoriesTab({
                     <button
                       type="button"
                       onClick={() => setCategoryModal({ isOpen: true, category: selectedCategory })}
-                      className="w-7 h-7 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-600 flex items-center justify-center cursor-pointer transition-colors"
-                      title="Editar ajustes de categoría"
+                      className="h-7 px-2.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 text-xs font-semibold flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Editar ícono y colores de categoría"
                     >
-                      <span className="material-symbols-rounded text-[15px]">edit</span>
+                      <Pencil className="w-3 h-3" />
+                      <span>Editar ícono/color</span>
                     </button>
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
@@ -548,12 +617,12 @@ export function CategoriesTab({
                     </span>
                     <div className="flex items-center gap-1">
                       <span
-                        className="h-3 w-3 rounded-full border"
+                        className="h-3 w-3 rounded-full border border-black/10"
                         style={{ backgroundColor: selectedCategory.color }}
                         title={`Color: ${selectedCategory.color}`}
                       />
                       <span
-                        className="h-3 w-3 rounded-full border"
+                        className="h-3 w-3 rounded-full border border-black/10"
                         style={{ backgroundColor: selectedCategory.bgColor }}
                         title={`Fondo: ${selectedCategory.bgColor}`}
                       />
@@ -586,14 +655,14 @@ export function CategoriesTab({
                 <button
                   type="button"
                   onClick={() => setIsEditingInterests(!isEditingInterests)}
-                  className={`w-8 h-8 rounded-lg border flex items-center justify-center cursor-pointer transition-colors ${
+                  className={`h-8 px-2.5 rounded-lg border flex items-center gap-1.5 text-xs font-semibold cursor-pointer transition-colors ${
                     isEditingInterests
                       ? "bg-black text-white border-black"
                       : "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200"
                   }`}
-                  title="Editar sección de intereses"
                 >
-                  <span className="material-symbols-rounded text-[18px]">edit</span>
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>{isEditingInterests ? "Listo" : "Editar"}</span>
                 </button>
               </div>
 
@@ -627,25 +696,15 @@ export function CategoriesTab({
                                 setEditingInterestId(item.id);
                                 setEditingInterestValue(item.name);
                               }}
-                              className="p-0.5 opacity-40 hover:opacity-100 cursor-pointer border-none bg-transparent text-slate-700 flex items-center justify-center"
+                              className="p-0.5 opacity-50 hover:opacity-100 cursor-pointer border-none bg-transparent text-slate-700 flex items-center justify-center"
                               title="Editar nombre"
                             >
-                              <svg
-                                className="w-2.5 h-2.5"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                              </svg>
+                              <Pencil className="w-2.5 h-2.5" />
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDeleteInterest(item.id)}
-                              className="p-0.5 opacity-40 hover:opacity-100 hover:text-rose-600 cursor-pointer border-none bg-transparent text-slate-700 flex items-center justify-center text-[11px]"
+                              className="p-0.5 opacity-50 hover:opacity-100 hover:text-rose-600 cursor-pointer border-none bg-transparent text-slate-700 flex items-center justify-center text-[11px]"
                               title="Eliminar"
                             >
                               ✕
@@ -695,14 +754,14 @@ export function CategoriesTab({
                 <button
                   type="button"
                   onClick={() => setIsEditingAreas(!isEditingAreas)}
-                  className={`w-8 h-8 rounded-lg border flex items-center justify-center cursor-pointer transition-colors ${
+                  className={`h-8 px-2.5 rounded-lg border flex items-center gap-1.5 text-xs font-semibold cursor-pointer transition-colors ${
                     isEditingAreas
                       ? "bg-black text-white border-black"
                       : "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200"
                   }`}
-                  title="Editar sección de áreas"
                 >
-                  <span className="material-symbols-rounded text-[18px]">edit</span>
+                  <Pencil className="w-3.5 h-3.5" />
+                  <span>{isEditingAreas ? "Listo" : "Editar"}</span>
                 </button>
               </div>
 
@@ -736,25 +795,15 @@ export function CategoriesTab({
                                 setEditingAreaId(area.id);
                                 setEditingAreaValue(area.name);
                               }}
-                              className="p-0.5 opacity-40 hover:opacity-100 cursor-pointer border-none bg-transparent text-slate-700 flex items-center justify-center"
+                              className="p-0.5 opacity-50 hover:opacity-100 cursor-pointer border-none bg-transparent text-slate-700 flex items-center justify-center"
                               title="Editar nombre"
                             >
-                              <svg
-                                className="w-2.5 h-2.5"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                              </svg>
+                              <Pencil className="w-2.5 h-2.5" />
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDeleteSpecialistArea(area.id)}
-                              className="p-0.5 opacity-40 hover:opacity-100 hover:text-rose-600 cursor-pointer border-none bg-transparent text-slate-700 flex items-center justify-center text-[11px]"
+                              className="p-0.5 opacity-50 hover:opacity-100 hover:text-rose-600 cursor-pointer border-none bg-transparent text-slate-700 flex items-center justify-center text-[11px]"
                               title="Eliminar"
                             >
                               ✕
@@ -806,13 +855,13 @@ export function CategoriesTab({
         </div>
       )}
 
-      {/* Category Modal (Create / Edit) */}
+      {/* Category Modal (Create / Edit Icon & Colors) */}
       {categoryModal.isOpen && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 border border-slate-200 flex flex-col gap-5">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 border border-slate-200 flex flex-col gap-5 max-h-[92vh] overflow-y-auto shadow-xl">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="font-bold text-slate-900 text-lg">
-                {categoryModal.category?.id ? "Editar Categoría" : "Nueva Categoría General"}
+                {categoryModal.category?.id ? "Editar Categoría (Ícono y Color)" : "Nueva Categoría General"}
               </h3>
               <button
                 type="button"
@@ -823,7 +872,58 @@ export function CategoriesTab({
               </button>
             </div>
 
-            <form onSubmit={handleSaveCategory} className="flex flex-col gap-4">
+            <form onSubmit={handleSaveCategory} className="flex flex-col gap-5">
+              {/* Live Preview Box */}
+              <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className="h-11 w-11 rounded-xl flex items-center justify-center border shrink-0 transition-all"
+                    style={{
+                      backgroundColor: categoryModal.category?.bgColor || "#DBEAFE",
+                      color: categoryModal.category?.color || "#0450FB",
+                      borderColor: `${categoryModal.category?.color || "#0450FB"}40`,
+                    }}
+                  >
+                    {renderCategoryIconByKey(
+                      categoryModal.category?.icon,
+                      categoryModal.category?.name,
+                      "w-5 h-5 shrink-0"
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                      Vista Previa en Vivo
+                    </span>
+                    <div
+                      className="flex items-center gap-1.5 font-bold text-base truncate"
+                      style={{ color: categoryModal.category?.color || "#0450FB" }}
+                    >
+                      {renderCategoryIconByKey(
+                        categoryModal.category?.icon,
+                        categoryModal.category?.name,
+                        "w-4 h-4 shrink-0"
+                      )}
+                      <span className="truncate">
+                        {categoryModal.category?.name || "Nombre de Categoría"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sample Pill */}
+                <span
+                  className="px-3 py-1 rounded-full text-xs font-semibold border shrink-0"
+                  style={{
+                    backgroundColor: categoryModal.category?.bgColor || "#DBEAFE",
+                    color: categoryModal.category?.color || "#0450FB",
+                    borderColor: `${categoryModal.category?.color || "#0450FB"}35`,
+                  }}
+                >
+                  Píldora de ejemplo
+                </span>
+              </div>
+
+              {/* Category Name */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
                   Nombre de la Categoría
@@ -838,59 +938,120 @@ export function CategoriesTab({
                       category: { ...categoryModal.category, name: e.target.value },
                     })
                   }
-                  placeholder="Ej: Crecimiento Personal"
+                  placeholder="Ej: Salud Integral"
                   className="h-10 px-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-black"
                 />
               </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                  Ícono Material Symbol
-                </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    value={categoryModal.category?.icon || "label"}
-                    onChange={(e) =>
-                      setCategoryModal({
-                        ...categoryModal,
-                        category: { ...categoryModal.category, icon: e.target.value },
-                      })
-                    }
-                    placeholder="Ej: sunny, mood, spa"
-                    className="flex-1 min-w-0 h-10 px-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-black font-mono"
-                  />
-                  <label className="flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer select-none shrink-0">
-                    <input
-                      type="checkbox"
-                      checked={categoryModal.category?.iconFilled ?? true}
-                      onChange={(e) =>
-                        setCategoryModal({
-                          ...categoryModal,
-                          category: { ...categoryModal.category, iconFilled: e.target.checked },
-                        })
-                      }
-                      className="rounded text-black focus:ring-black"
-                    />
-                    Relleno (Filled)
+              {/* Visual Lucide Icon Picker */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                    Seleccionar Ícono (Lucide)
                   </label>
+                  <span className="text-[11px] font-mono text-slate-400">
+                    Activo: {categoryModal.category?.icon || "auto"}
+                  </span>
+                </div>
+                <div className="grid grid-cols-7 gap-2 p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 max-h-44 overflow-y-auto">
+                  {CATEGORY_ICON_OPTIONS.map((opt) => {
+                    const isSelected =
+                      (categoryModal.category?.icon || "").toLowerCase() === opt.key;
+                    const IconComp = opt.Icon;
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() =>
+                          setCategoryModal({
+                            ...categoryModal,
+                            category: { ...categoryModal.category, icon: opt.key },
+                          })
+                        }
+                        title={opt.label}
+                        style={
+                          isSelected
+                            ? {
+                                backgroundColor: categoryModal.category?.bgColor || "#DBEAFE",
+                                color: categoryModal.category?.color || "#0450FB",
+                                borderColor: categoryModal.category?.color || "#0450FB",
+                              }
+                            : undefined
+                        }
+                        className={`h-10 rounded-lg border flex items-center justify-center cursor-pointer transition-all ${
+                          isSelected
+                            ? "border-2 shadow-xs scale-105"
+                            : "bg-white border-slate-200/80 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        }`}
+                      >
+                        <IconComp className="w-5 h-5" strokeWidth={2} />
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
+              {/* Canonical Color Presets */}
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  Paletas Oficiales LUMINUS (Eventos)
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {CANONICAL_COLOR_PRESETS.map((preset) => {
+                    const isActive =
+                      (categoryModal.category?.color || "").toUpperCase() ===
+                      preset.color.toUpperCase();
+                    return (
+                      <button
+                        key={preset.name}
+                        type="button"
+                        onClick={() =>
+                          setCategoryModal({
+                            ...categoryModal,
+                            category: {
+                              ...categoryModal.category,
+                              color: preset.color,
+                              bgColor: preset.bgColor,
+                            },
+                          })
+                        }
+                        className={`h-8 px-2 rounded-lg border text-[11px] font-semibold flex items-center gap-1.5 cursor-pointer transition-all truncate ${
+                          isActive ? "ring-2 ring-slate-900 ring-offset-1" : "hover:opacity-90"
+                        }`}
+                        style={{
+                          backgroundColor: preset.bgColor,
+                          color: preset.color,
+                          borderColor: `${preset.color}40`,
+                        }}
+                        title={preset.name}
+                      >
+                        <span
+                          className="w-2.5 h-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: preset.color }}
+                        />
+                        <span className="truncate">{preset.name.split(" ")[0]}</span>
+                        {isActive && <Check className="w-3 h-3 ml-auto shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Custom Hex Color Pickers */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5 min-w-0">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-500 truncate">
-                    Color Principal
+                    Color Principal (Texto/Ícono)
                   </label>
                   <div className="flex items-center gap-2 min-w-0">
                     <label
-                      className="relative h-10 w-10 rounded-xl border border-slate-200/80 cursor-pointer overflow-hidden shrink-0 transition-transform active:scale-95 shadow-none"
-                      style={{ backgroundColor: categoryModal.category?.color || "#3B82F6" }}
+                      className="relative h-10 w-10 rounded-xl border border-slate-200/80 cursor-pointer overflow-hidden shrink-0 transition-transform active:scale-95"
+                      style={{ backgroundColor: categoryModal.category?.color || "#0450FB" }}
                       title="Seleccionar color principal"
                     >
                       <input
                         type="color"
-                        value={categoryModal.category?.color || "#3B82F6"}
+                        value={categoryModal.category?.color || "#0450FB"}
                         onChange={(e) =>
                           setCategoryModal({
                             ...categoryModal,
@@ -902,25 +1063,25 @@ export function CategoriesTab({
                     </label>
                     <input
                       type="text"
-                      value={categoryModal.category?.color || "#3B82F6"}
+                      value={categoryModal.category?.color || "#0450FB"}
                       onChange={(e) =>
                         setCategoryModal({
                           ...categoryModal,
                           category: { ...categoryModal.category, color: e.target.value },
                         })
                       }
-                      className="flex-1 min-w-0 h-10 px-2 border border-slate-200 rounded-xl text-xs font-mono uppercase focus:outline-none focus:border-black"
+                      className="flex-1 min-w-0 h-10 px-2.5 border border-slate-200 rounded-xl text-xs font-mono uppercase focus:outline-none focus:border-black"
                     />
                   </div>
                 </div>
 
                 <div className="flex flex-col gap-1.5 min-w-0">
                   <label className="text-xs font-bold uppercase tracking-wider text-slate-500 truncate">
-                    Color Fondo
+                    Color Fondo (Píldora)
                   </label>
                   <div className="flex items-center gap-2 min-w-0">
                     <label
-                      className="relative h-10 w-10 rounded-xl border border-slate-200/80 cursor-pointer overflow-hidden shrink-0 transition-transform active:scale-95 shadow-none"
+                      className="relative h-10 w-10 rounded-xl border border-slate-200/80 cursor-pointer overflow-hidden shrink-0 transition-transform active:scale-95"
                       style={{ backgroundColor: categoryModal.category?.bgColor || "#DBEAFE" }}
                       title="Seleccionar color de fondo"
                     >
@@ -945,13 +1106,13 @@ export function CategoriesTab({
                           category: { ...categoryModal.category, bgColor: e.target.value },
                         })
                       }
-                      className="flex-1 min-w-0 h-10 px-2 border border-slate-200 rounded-xl text-xs font-mono uppercase focus:outline-none focus:border-black"
+                      className="flex-1 min-w-0 h-10 px-2.5 border border-slate-200 rounded-xl text-xs font-mono uppercase focus:outline-none focus:border-black"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-slate-100">
+              <div className="flex justify-end gap-2 mt-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setCategoryModal({ isOpen: false, category: null })}
@@ -961,9 +1122,10 @@ export function CategoriesTab({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-black text-white text-xs font-bold hover:bg-slate-800 cursor-pointer border-none"
+                  disabled={isSavingCategory}
+                  className="px-5 py-2 rounded-xl bg-black text-white text-xs font-bold hover:bg-slate-800 cursor-pointer border-none disabled:opacity-50"
                 >
-                  Guardar Categoría
+                  {isSavingCategory ? "Guardando..." : "Guardar Categoría"}
                 </button>
               </div>
             </form>

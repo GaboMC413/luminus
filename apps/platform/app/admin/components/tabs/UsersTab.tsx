@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { AdminUser, AdminSpecialist, AdminTab } from "../../types";
 import { InputField } from "@/components/ui/InputField";
 import { SelectInput } from "@/components/ui/SelectInput";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { InterestPill } from "@/components/ui/InterestPill";
 import { Modal } from "@/components/ui/Modal";
 import { uploadAvatar } from "@/lib/uploadAvatar";
-import { PhotoEditor } from "@/features/auth/registration/PhotoEditor";
+import { PhotoEditor } from "@/components/ui/PhotoEditor";
 import { fieldValue, formatDate } from "../../utils";
 import { AdminBadge, AdminCard, AdminDetailRow } from "../AdminDesignSystem";
 
@@ -19,6 +19,10 @@ interface UsersTabProps {
   setActiveTab: (tab: AdminTab) => void;
   setSelectedSpecialistUserId: (id: string | null) => void;
   setSpecialistSubTab: (tab: "lista" | "postulaciones") => void;
+  selectedId?: string;
+  setSelectedId?: (id: string) => void;
+  userSubTab?: "activos" | "mecenas" | "cerradas" | "deshabilitados";
+  setUserSubTab?: (tab: "activos" | "mecenas" | "cerradas" | "deshabilitados") => void;
 }
 
 export function UsersTab({
@@ -28,14 +32,26 @@ export function UsersTab({
   setActiveTab,
   setSelectedSpecialistUserId,
   setSpecialistSubTab,
+  selectedId: propSelectedId,
+  setSelectedId: propSetSelectedId,
+  userSubTab: propUserSubTab,
+  setUserSubTab: propSetUserSubTab,
 }: UsersTabProps) {
-  const [userSubTab, setUserSubTab] = useState<"activos" | "cerradas" | "deshabilitados">("activos");
+  const [internalUserSubTab, setInternalUserSubTab] = useState<"activos" | "mecenas" | "cerradas" | "deshabilitados">("activos");
+  const userSubTab = propUserSubTab ?? internalUserSubTab;
+  const setUserSubTab = propSetUserSubTab ?? setInternalUserSubTab;
+
   const [search, setSearch] = useState("");
 
-  const [selectedId, setSelectedId] = useState<string>(users[0]?.id ?? "");
+  const [internalSelectedId, setInternalSelectedId] = useState<string>(users[0]?.id ?? "");
+  const selectedId = propSelectedId ?? internalSelectedId;
+  const setSelectedId = propSetSelectedId ?? setInternalSelectedId;
+
   const [selectedRole, setSelectedRole] = useState<string>(users[0]?.role ?? "USER");
   const [selectedStatus, setSelectedStatus] = useState<string>(users[0]?.status ?? "active");
   const [selectedPlan, setSelectedPlan] = useState<string>(users[0]?.profile?.selectedPlan || "Trial");
+  const [selectedIsGhost, setSelectedIsGhost] = useState<boolean>(users[0]?.isGhost ?? false);
+  const [showMobileDetail, setShowMobileDetail] = useState<boolean>(false);
   const [isEditingUser, setIsEditingUser] = useState<boolean>(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -48,10 +64,13 @@ export function UsersTab({
   const [isUploadingAvatar, setIsUploadingAvatar] = useState<boolean>(false);
 
   const activeUsers = useMemo(() => users.filter((u) => u.status === "active"), [users]);
+  const mecenasUsers = useMemo(() => users.filter((u) => u.tier === "MECENAS" || Boolean(u.stripeSubscriptionId)), [users]);
   const closedUsers = useMemo(() => users.filter((u) => u.status === "deleted"), [users]);
   const disabledUsers = useMemo(() => users.filter((u) => u.status === "disabled"), [users]);
 
-  const baseUsersList = userSubTab === "cerradas"
+  const baseUsersList = userSubTab === "mecenas"
+    ? mecenasUsers
+    : userSubTab === "cerradas"
     ? closedUsers
     : userSubTab === "deshabilitados"
       ? disabledUsers
@@ -79,7 +98,22 @@ export function UsersTab({
     });
   }, [baseUsersList, search]);
 
-  const selectedUser = users.find((user) => user.id === selectedId) ?? filteredUsers[0] ?? null;
+  const selectedUser = filteredUsers.find((user) => user.id === selectedId) ?? filteredUsers[0] ?? null;
+
+  // Keep selection and form states synchronized with the currently active user
+  useEffect(() => {
+    if (selectedUser) {
+      if (selectedId !== selectedUser.id) {
+        setSelectedId(selectedUser.id);
+      }
+      setSelectedRole(selectedUser.role);
+      setSelectedStatus(selectedUser.status);
+      setSelectedPlan(selectedUser.profile?.selectedPlan || "Trial");
+      setSelectedIsGhost(selectedUser.isGhost ?? false);
+    } else if (selectedId) {
+      setSelectedId("");
+    }
+  }, [selectedUser?.id]);
 
   // Available membership plan options for edit dropdown
   const membershipOptions = useMemo(() => {
@@ -158,10 +192,12 @@ export function UsersTab({
 
     const role = (formData.get("role") as "USER" | "ADMIN") || selectedUser.role;
     const status = (formData.get("status") as "active" | "disabled" | "deleted") || selectedUser.status;
+    const isGhost = formData.get("isGhost") === "true";
+    const email = String(formData.get("email") || "").trim().toLowerCase();
 
     const payload = {
       id: selectedUser.id,
-      userData: { role, status },
+      userData: { role, status, isGhost, ...(email ? { email } : {}) },
       profileData: {
         firstName: String(formData.get("firstName") || ""),
         lastName: String(formData.get("lastName") || ""),
@@ -171,7 +207,6 @@ export function UsersTab({
         country: String(formData.get("country") || ""),
         phoneNumber: String(formData.get("phoneNumber") || ""),
         selectedPlan: String(formData.get("selectedPlan") || selectedPlan),
-        gender: String(formData.get("gender") || ""),
         birthdate: String(formData.get("birthdate") || ""),
         bio: String(formData.get("bio") || ""),
         isOnboarded: formData.get("isOnboarded") === "on",
@@ -191,13 +226,33 @@ export function UsersTab({
         return;
       }
 
+      // Check if user status changes such that it leaves the current subtab
+      const willLeaveSubTab =
+        (userSubTab === "activos" && status !== "active") ||
+        (userSubTab === "cerradas" && status !== "deleted") ||
+        (userSubTab === "deshabilitados" && status !== "disabled");
+
+      if (willLeaveSubTab) {
+        const remaining = filteredUsers.filter((u) => u.id !== selectedUser.id);
+        const nextUser = remaining[0] ?? null;
+        setSelectedId(nextUser ? nextUser.id : "");
+        if (nextUser) {
+          setSelectedRole(nextUser.role);
+          setSelectedStatus(nextUser.status);
+          setSelectedPlan(nextUser.profile?.selectedPlan || "Trial");
+          setSelectedIsGhost(nextUser.isGhost ?? false);
+        }
+      }
+
       setUsers((prev) =>
         prev.map((item) =>
           item.id === selectedUser.id
             ? {
               ...item,
+              email: email || item.email,
               role,
               status,
+              isGhost,
               profile: {
                 ...item.profile,
                 ...payload.profileData,
@@ -239,10 +294,10 @@ export function UsersTab({
         className="hidden"
       />
 
-      {/* 2-Column Master-Detail Grid: Symmetrical 32px padding on all 4 sides */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1.08fr_1fr] gap-6 items-start flex-1 min-h-0 h-full">
+      {/* 2-Column Master-Detail Grid: 38% Lista / 62% Panel de Detalle Amplio */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.6fr] gap-6 items-start flex-1 min-h-0 h-full">
         {/* Left Side: Heading + Unified User-List Card */}
-        <div className="flex flex-col gap-4 min-w-0 h-full overflow-hidden">
+        <div className={`${showMobileDetail ? "hidden lg:flex" : "flex"} flex-col gap-4 min-w-0 h-full overflow-hidden`}>
           {/* Page Heading Area */}
           <div className="shrink-0">
             <h1 className="text-[28px] font-bold leading-tight font-jakarta text-slate-900">
@@ -263,10 +318,15 @@ export function UsersTab({
                   value={userSubTab}
                   options={[
                     { label: `Activos · ${activeUsers.length}`, value: "activos" },
+                    { label: `Mecenas (Suscritos) · ${mecenasUsers.length}`, value: "mecenas" },
                     { label: `Cuentas cerradas · ${closedUsers.length}`, value: "cerradas" },
                     { label: `Deshabilitados · ${disabledUsers.length}`, value: "deshabilitados" },
                   ]}
-                  onSelect={(val) => setUserSubTab(val as "activos" | "cerradas" | "deshabilitados")}
+                  onSelect={(val) => {
+                    setUserSubTab(val as "activos" | "mecenas" | "cerradas" | "deshabilitados");
+                    setIsEditingUser(false);
+                    setMessage("");
+                  }}
                   className="!h-10 text-xs font-bold"
                 />
               </div>
@@ -341,8 +401,10 @@ export function UsersTab({
                         setSelectedRole(user.role);
                         setSelectedStatus(user.status);
                         setSelectedPlan(user.profile.selectedPlan || "Trial");
+                        setSelectedIsGhost(user.isGhost ?? false);
                         setIsEditingUser(false);
                         setMessage("");
+                        setShowMobileDetail(true);
                       }}
                       className={`grid w-full grid-cols-[43%_16%_25%_16%] items-center px-4 py-3.5 text-left text-[14px] transition outline-none cursor-pointer border-y-0 border-r-0 ${active
                         ? "bg-slate-100/90 font-semibold border-l-4 border-slate-900"
@@ -374,9 +436,24 @@ export function UsersTab({
                           )}
                         </span>
                         <span className="min-w-0 pr-1">
-                          <span className={`block truncate ${active ? "font-bold text-slate-950" : "font-semibold text-slate-900"}`}>
-                            {fieldValue(
-                              user.profile.fullName || `${user.profile.firstName} ${user.profile.lastName}`
+                          <span className="flex items-center gap-1.5 truncate">
+                            <span className={`truncate ${active ? "font-bold text-slate-950" : "font-semibold text-slate-900"}`}>
+                              {fieldValue(
+                                user.profile.fullName || `${user.profile.firstName} ${user.profile.lastName}`
+                              )}
+                            </span>
+                            {(user.tier === "MECENAS" || Boolean(user.stripeSubscriptionId)) && (
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 shrink-0">
+                                Mecenas
+                              </span>
+                            )}
+                            {user.isGhost && (
+                              <span
+                                className="material-symbols-rounded text-slate-400 text-[14px] shrink-0"
+                                title="Usuario fantasma (oculto en comunidad)"
+                              >
+                                visibility_off
+                              </span>
                             )}
                           </span>
                           <span className="block truncate text-[12px] text-slate-500">{user.email}</span>
@@ -408,7 +485,18 @@ export function UsersTab({
 
         {/* Right Side: Expanded User Detail Panel with Inner Scroll */}
         {selectedUser ? (
-          <AdminCard className="flex flex-col min-w-0 h-full overflow-hidden">
+          <AdminCard className={`${showMobileDetail ? "flex" : "hidden lg:flex"} flex-col min-w-0 h-full overflow-hidden relative`}>
+            {/* Mobile Sticky Back Button Header */}
+            <div className="lg:hidden p-3.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowMobileDetail(false)}
+                className="flex items-center gap-2 text-xs font-bold text-white hover:text-slate-200 cursor-pointer bg-transparent border-none"
+              >
+                <span className="material-symbols-rounded text-[18px]">arrow_back</span>
+                <span>Volver a la lista de usuarios</span>
+              </button>
+            </div>
             {/* Header Profile Summary */}
             <div className="border-b border-slate-200/80 p-6 bg-white shrink-0">
               <div className="flex items-start justify-between gap-4">
@@ -505,8 +593,19 @@ export function UsersTab({
                       </AdminBadge>
 
                       <AdminBadge variant="plan">
-                        {selectedUser.profile.selectedPlan ? selectedUser.profile.selectedPlan : "Trial"}
+                        {selectedUser.tier === "MECENAS" || Boolean(selectedUser.stripeSubscriptionId)
+                          ? `Mecenas (${selectedUser.profile.selectedPlan === "Annual" ? "Anual" : "Mensual"})`
+                          : "Cuenta Gratis"}
                       </AdminBadge>
+
+                      {selectedUser.isGhost && (
+                        <AdminBadge variant="ghost">
+                          <span className="material-symbols-rounded text-[12px] mr-1 inline-block align-middle">
+                            visibility_off
+                          </span>
+                          Fantasma
+                        </AdminBadge>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -519,6 +618,7 @@ export function UsersTab({
                         setSelectedRole(selectedUser.role);
                         setSelectedStatus(selectedUser.status);
                         setSelectedPlan(selectedUser.profile.selectedPlan || "Trial");
+                        setSelectedIsGhost(selectedUser.isGhost ?? false);
                       }
                       setIsEditingUser((prev) => !prev);
                     }}
@@ -595,7 +695,6 @@ export function UsersTab({
                     <AdminDetailRow label="Celular" value={fieldValue(selectedUser.profile.phoneNumber)} />
                     <AdminDetailRow label="País" value={fieldValue(selectedUser.profile.country)} />
                     <AdminDetailRow label="Ciudad" value={fieldValue(selectedUser.profile.city)} />
-                    <AdminDetailRow label="Género" value={fieldValue(selectedUser.profile.gender)} />
                     <AdminDetailRow label="Nacimiento" value={fieldValue(selectedUser.profile.birthdate)} />
                     <AdminDetailRow label="Profesión" value={fieldValue(selectedUser.profile.profession)} />
                   </div>
@@ -607,7 +706,34 @@ export function UsersTab({
                     Cuenta y Membresía
                   </h3>
                   <div className="bg-slate-50/50 rounded-xl p-1 divide-y divide-slate-100">
-                    <AdminDetailRow label="Plan Actual" value={fieldValue(selectedUser.profile.selectedPlan)} />
+                    <AdminDetailRow
+                      label="Membresía"
+                      value={selectedUser.tier === "MECENAS" || Boolean(selectedUser.stripeSubscriptionId) ? "Mecenas Activo" : "Cuenta Gratis"}
+                    />
+                    {(selectedUser.tier === "MECENAS" || Boolean(selectedUser.stripeSubscriptionId)) && (
+                      <AdminDetailRow
+                        label="Ciclo de Pago"
+                        value={selectedUser.profile.selectedPlan === "Annual" ? "Anual (USD 45/año)" : "Mensual (USD 5/mes)"}
+                      />
+                    )}
+                    {selectedUser.memberSince && (
+                      <AdminDetailRow label="Mecenas Desde" value={formatDate(selectedUser.memberSince)} />
+                    )}
+                    {selectedUser.stripeCustomerId && (
+                      <AdminDetailRow
+                        label="Stripe Customer"
+                        value={
+                          <a
+                            href={`https://dashboard.stripe.com/test/customers/${selectedUser.stripeCustomerId}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-indigo-600 hover:underline"
+                          >
+                            {selectedUser.stripeCustomerId}
+                          </a>
+                        }
+                      />
+                    )}
                     <AdminDetailRow label="Último Login" value={formatDate(selectedUser.lastLoginAt)} />
                     <AdminDetailRow label="Fecha de Alta" value={formatDate(selectedUser.createdAt)} />
                   </div>
@@ -761,6 +887,34 @@ export function UsersTab({
                         className="!h-9 text-xs"
                       />
                     </div>
+
+                    {/* Usuario Fantasma Toggle */}
+                    <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200/80 mt-1">
+                      <div className="flex flex-col gap-0.5 pr-2">
+                        <span className="text-xs font-bold text-slate-800 font-jakarta flex items-center gap-1.5">
+                          <span className="material-symbols-rounded text-slate-500 text-[16px]">visibility_off</span>
+                          Usuario fantasma
+                        </span>
+                        <span className="text-[11px] text-slate-400 font-sans">
+                          Oculto en comunidad y listados de miembros. Solo puede publicar y enviar mensajes.
+                        </span>
+                      </div>
+                      <input type="hidden" name="isGhost" value={selectedIsGhost ? "true" : "false"} />
+                      <button
+                        type="button"
+                        onClick={() => setSelectedIsGhost((prev) => !prev)}
+                        className={`w-11 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors border-none shrink-0 ${
+                          selectedIsGhost ? "bg-slate-900" : "bg-slate-200"
+                        }`}
+                        title={selectedIsGhost ? "Desactivar modo fantasma" : "Activar modo fantasma"}
+                      >
+                        <div
+                          className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                            selectedIsGhost ? "translate-x-5" : "translate-x-0"
+                          }`}
+                        />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -784,9 +938,10 @@ export function UsersTab({
                     <div className="flex flex-col gap-1">
                       <span className="text-[11px] font-bold uppercase text-slate-400">Mail</span>
                       <InputField
-                        value={selectedUser.email}
-                        disabled
-                        className="!h-9 text-xs bg-slate-100/70 text-slate-500 cursor-not-allowed border-slate-200/80"
+                        name="email"
+                        defaultValue={selectedUser.email}
+                        type="email"
+                        className="!h-9 text-xs"
                       />
                     </div>
 
@@ -806,15 +961,9 @@ export function UsersTab({
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[11px] font-bold uppercase text-slate-400">Género</span>
-                        <InputField name="gender" defaultValue={selectedUser.profile.gender || ""} className="!h-9 text-xs" />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[11px] font-bold uppercase text-slate-400">Nacimiento</span>
-                        <InputField name="birthdate" defaultValue={selectedUser.profile.birthdate || ""} className="!h-9 text-xs" />
-                      </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[11px] font-bold uppercase text-slate-400">Nacimiento</span>
+                      <InputField name="birthdate" defaultValue={selectedUser.profile.birthdate || ""} className="!h-9 text-xs" />
                     </div>
 
                     <div className="flex flex-col gap-1">
@@ -922,12 +1071,32 @@ export function UsersTab({
                       return;
                     }
 
+                    const deletedId = selectedUser.id;
+                    const deletedName = fieldValue(
+                      selectedUser.profile.fullName ||
+                      `${selectedUser.profile.firstName} ${selectedUser.profile.lastName}`
+                    );
+
+                    // Compute next user from current filteredUsers
+                    const remainingInView = filteredUsers.filter((u) => u.id !== deletedId);
+                    const nextUser = remainingInView[0] ?? null;
+
                     // Remove them from state
                     setUsers((prevUsers) =>
-                      prevUsers.filter((u) => u.id !== selectedUser.id)
+                      prevUsers.filter((u) => u.id !== deletedId)
                     );
+
+                    // Explicitly advance selection and reset edit mode
+                    setSelectedId(nextUser ? nextUser.id : "");
+                    if (nextUser) {
+                      setSelectedRole(nextUser.role);
+                      setSelectedStatus(nextUser.status);
+                      setSelectedPlan(nextUser.profile?.selectedPlan || "Trial");
+                      setSelectedIsGhost(nextUser.isGhost ?? false);
+                    }
+                    setIsEditingUser(false);
                     setShowDeleteConfirm(false);
-                    setMessage(`Usuario ${fieldValue(selectedUser.profile.fullName || `${selectedUser.profile.firstName} ${selectedUser.profile.lastName}`)} eliminado permanentemente.`);
+                    setMessage(`Usuario ${deletedName} eliminado permanentemente.`);
                     
                     // Clear success message after 3 seconds
                     setTimeout(() => {

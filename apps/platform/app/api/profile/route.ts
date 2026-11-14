@@ -1,5 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
+import { deleteS3FileByUrl } from "@/lib/storage/s3FileCleanup";
 
 export const runtime = "nodejs";
 
@@ -60,7 +62,14 @@ function serializeProfile(user: any) {
 
   return {
     email: user.email,
+    tier: user.tier ?? "FREE",
+    memberSince: user.memberSince?.toISOString?.() ?? null,
+    member_since: user.memberSince?.toISOString?.() ?? null,
+    stripeSubscriptionId: user.stripeSubscriptionId ?? null,
+    stripeCustomerId: user.stripeCustomerId ?? null,
+    role: user.role ?? "USER",
     profile: {
+      role: user.role ?? "USER",
       first_name: profile.firstName ?? "",
       last_name: profile.lastName ?? "",
       city: profile.city ?? "",
@@ -75,14 +84,19 @@ function serializeProfile(user: any) {
       phone_number: profile.phoneNumber ?? "",
       selected_plan: profile.selectedPlan ?? "Mensual",
       created_at: profile.createdAt?.toISOString?.() ?? user.createdAt?.toISOString?.() ?? "",
+      member_since: user.memberSince?.toISOString?.() ?? null,
+      tier: user.tier ?? "FREE",
       bio: profile.bio ?? "",
       other_interests: profile.intention ?? "",
+      isOnboarded: profile.isOnboarded ?? false,
+      is_onboarded: profile.isOnboarded ?? false,
+      specialistProfile: user.specialistProfile || null,
     },
   };
 }
 
 export async function GET() {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
@@ -102,6 +116,24 @@ export async function GET() {
         profilePrompts: {
           orderBy: { sortOrder: "asc" },
         },
+        specialistProfile: {
+          include: {
+            courses: {
+              where: { isActive: true },
+            },
+            spaces: {
+              where: { isActive: true },
+              include: {
+                category: true,
+                services: true,
+                availability: {
+                  where: { isActive: true },
+                  orderBy: { dayOfWeek: "asc" },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -112,38 +144,12 @@ export async function GET() {
     return NextResponse.json(serializeProfile(user));
   } catch (error) {
     console.error("Profile read failed.", error);
-    console.warn("Database not available, using mock profile GET bypass.");
-    return NextResponse.json({
-      email: session.email,
-      profile: {
-        first_name: "Nancy",
-        last_name: "Núñez",
-        city: "Puntarenas",
-        country: "Costa Rica",
-        profession: "Fotógrafa",
-        interests: ["Estilo de Vida", "Naturaleza", "Fotografía Consciente"],
-        prompts: [
-          {
-            question: "Mi objetivo de vida es…",
-            answer: "Vivir con más calma, claridad y propósito de vida."
-          }
-        ],
-        profile_picture_url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop",
-        cover_url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&fit=crop",
-        gender: "Femenino",
-        birthdate: "1994-05-15",
-        phone_number: "+506 8888-8888",
-        selected_plan: "Mensual",
-        created_at: new Date().toISOString(),
-        bio: "Apasionada por capturar la esencia de la vida a través de la fotografía y vivir en conexión con la naturaleza.",
-        other_interests: "Crecimiento personal",
-      }
-    });
+    return NextResponse.json({ message: "No fue posible cargar el perfil." }, { status: 500 });
   }
 }
 
 export async function PATCH(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
@@ -159,6 +165,20 @@ export async function PATCH(request: Request) {
   const firstName = pickString(data, "first_name", "firstName");
   const lastName = pickString(data, "last_name", "lastName");
   const birthdate = parseBirthdate(data.birthdate ?? data.birthdateString);
+
+  if ((data.first_name !== undefined || data.firstName !== undefined) && !firstName) {
+    return NextResponse.json({ message: "El nombre no puede estar vacío." }, { status: 400 });
+  }
+  if ((data.last_name !== undefined || data.lastName !== undefined) && !lastName) {
+    return NextResponse.json({ message: "El apellido no puede estar vacío." }, { status: 400 });
+  }
+  if (data.city !== undefined && !pickString(data, "city")) {
+    return NextResponse.json({ message: "La ciudad no puede estar vacía." }, { status: 400 });
+  }
+  if ((data.birthdate !== undefined || data.birthdateString !== undefined) && !birthdate) {
+    return NextResponse.json({ message: "La fecha de nacimiento es inválida o no puede estar vacía." }, { status: 400 });
+  }
+
   const shouldUpdateInterests = Array.isArray(data.interests);
   const shouldUpdatePrompts = Array.isArray(data.prompts);
 
@@ -179,7 +199,9 @@ export async function PATCH(request: Request) {
   const intention = pickString(data, "otherInterests", "other_interests", "intention");
   const selectedPlan = pickString(data, "selectedPlan", "selected_plan");
 
-  if (avatarUrl !== undefined) profileData.avatarUrl = avatarUrl;
+  if (avatarUrl !== undefined) {
+    profileData.avatarUrl = await ensureS3AvatarUrl(avatarUrl, session.userId);
+  }
   if (coverUrl !== undefined) profileData.coverUrl = coverUrl;
   if (profession !== undefined) profileData.profession = profession;
   if (city !== undefined) profileData.city = city;
@@ -194,6 +216,14 @@ export async function PATCH(request: Request) {
 
   try {
     const { prisma } = await import("@/lib/db");
+
+    const existingProfile = prisma.userProfile?.findUnique
+      ? await prisma.userProfile.findUnique({
+          where: { userId: session.userId },
+          select: { avatarUrl: true },
+        })
+      : null;
+
     const user = await prisma.$transaction(async (tx: any) => {
       await tx.userProfile.upsert({
         where: { userId: session.userId },
@@ -268,6 +298,174 @@ export async function PATCH(request: Request) {
         }
       }
 
+      if (data.specialistProfile && typeof data.specialistProfile === "object") {
+        const sp = data.specialistProfile as Record<string, unknown>;
+        const spUpdate: Record<string, unknown> = {};
+        if (typeof sp.specialty === "string") spUpdate.specialty = sp.specialty.trim() || null;
+        if (typeof sp.title === "string") spUpdate.title = sp.title.trim() || null;
+        if (typeof sp.bio === "string") spUpdate.bio = sp.bio.trim() || null;
+        if (typeof sp.institution === "string") spUpdate.institution = sp.institution.trim() || null;
+        if (typeof sp.instagramUrl === "string") spUpdate.instagramUrl = sp.instagramUrl.trim() || null;
+        if (typeof sp.linkedinUrl === "string") spUpdate.linkedinUrl = sp.linkedinUrl.trim() || null;
+        if (typeof sp.websiteUrl === "string") spUpdate.websiteUrl = sp.websiteUrl.trim() || null;
+        if (Array.isArray(sp.selectedAreas)) {
+          spUpdate.selectedAreas = sp.selectedAreas
+            .filter((area): area is string => typeof area === "string" && area.trim().length > 0)
+            .map((area) => area.trim());
+        }
+
+        const existingSp = await tx.specialistProfile.findUnique({
+          where: { userId: session.userId },
+          select: { userId: true },
+        });
+
+        if (existingSp) {
+          if (Object.keys(spUpdate).length > 0) {
+            await tx.specialistProfile.update({
+              where: { userId: session.userId },
+              data: spUpdate,
+            });
+          }
+
+          if (Array.isArray(sp.spaces)) {
+            const incomingSpaces = sp.spaces as Array<Record<string, unknown>>;
+            const keptIds: string[] = [];
+
+            for (const item of incomingSpaces) {
+              const name = typeof item.name === "string" ? item.name.trim() : "";
+              if (!name) continue;
+              const spaceData = {
+                name,
+                spaceType: typeof item.spaceType === "string" ? item.spaceType.trim() || "CONSULTORIO" : "CONSULTORIO",
+                customSpaceType: typeof item.customSpaceType === "string" ? item.customSpaceType.trim() || null : null,
+                description: typeof item.description === "string" ? item.description.trim() || null : null,
+                address: typeof item.address === "string" ? item.address.trim() || null : null,
+                city: typeof item.city === "string" ? item.city.trim() || null : null,
+                country: typeof item.country === "string" ? item.country.trim() || null : null,
+                phone: typeof item.phone === "string" ? item.phone.trim() || null : null,
+                website: typeof item.website === "string" ? item.website.trim() || null : null,
+                googleMapsUrl: typeof item.googleMapsUrl === "string" ? item.googleMapsUrl.trim() || null : null,
+                isActive: true,
+              };
+
+              if (typeof item.id === "string" && item.id) {
+                const owned = await tx.specialistSpace.findFirst({
+                  where: { id: item.id, userId: session.userId },
+                  select: { id: true },
+                });
+                if (owned) {
+                  await tx.specialistSpace.update({
+                    where: { id: owned.id },
+                    data: spaceData,
+                  });
+                  keptIds.push(owned.id);
+                  continue;
+                }
+              }
+
+              const created = await tx.specialistSpace.create({
+                data: {
+                  userId: session.userId,
+                  ...spaceData,
+                },
+                select: { id: true },
+              });
+              keptIds.push(created.id);
+            }
+
+            await tx.specialistSpace.updateMany({
+              where: {
+                userId: session.userId,
+                isActive: true,
+                ...(keptIds.length > 0 ? { id: { notIn: keptIds } } : {}),
+              },
+              data: { isActive: false },
+            });
+          }
+
+          if (Array.isArray(sp.courses)) {
+            const incomingCourses = (sp.courses as Array<Record<string, unknown>>)
+              .map((c) => ({
+                name: typeof c.name === "string" ? c.name.trim() : "",
+                type: typeof c.type === "string" ? c.type.trim() || "CURSO" : "CURSO",
+                description: typeof c.description === "string" ? c.description.trim() || null : null,
+                modality: typeof c.modality === "string" ? c.modality.trim() || null : null,
+                url: typeof c.url === "string" ? c.url.trim() || null : null,
+                coverUrl: typeof c.coverUrl === "string" ? c.coverUrl.trim() || null : null,
+                institution: typeof c.institution === "string" ? c.institution.trim() || null : null,
+                isActive: true,
+              }))
+              .filter((c) => c.name.length > 0);
+
+            await tx.specialistCourse.deleteMany({
+              where: { userId: session.userId },
+            });
+
+            if (incomingCourses.length > 0) {
+              await tx.specialistCourse.createMany({
+                data: incomingCourses.map((c) => ({
+                  userId: session.userId,
+                  ...c,
+                })),
+              });
+            }
+          }
+
+          if (Array.isArray(sp.availability)) {
+            const slots = (sp.availability as Array<Record<string, unknown>>)
+              .map((slot) => ({
+                dayOfWeek: typeof slot.dayOfWeek === "number" ? slot.dayOfWeek : -1,
+                startTime: typeof slot.startTime === "string" ? slot.startTime.trim() : "",
+                endTime: typeof slot.endTime === "string" ? slot.endTime.trim() : "",
+              }))
+              .filter((slot) => slot.dayOfWeek >= 0 && slot.dayOfWeek <= 6 && slot.startTime && slot.endTime);
+
+            let primarySpace = await tx.specialistSpace.findFirst({
+              where: { userId: session.userId, isActive: true },
+              orderBy: { createdAt: "asc" },
+              select: { id: true },
+            });
+
+            if (!primarySpace && slots.length > 0) {
+              primarySpace = await tx.specialistSpace.create({
+                data: {
+                  userId: session.userId,
+                  name: "Atención Online / Consultorio",
+                  spaceType: "CONSULTORIO",
+                  isActive: true,
+                },
+                select: { id: true },
+              });
+            }
+
+            if (primarySpace) {
+              const allSpaces = await tx.specialistSpace.findMany({
+                where: { userId: session.userId },
+                select: { id: true },
+              });
+              const spaceIds = allSpaces.map((item: { id: string }) => item.id);
+              if (spaceIds.length > 0) {
+                await tx.specialistAvailability.deleteMany({
+                  where: { spaceId: { in: spaceIds } },
+                });
+              }
+
+              if (slots.length > 0) {
+                await tx.specialistAvailability.createMany({
+                  data: slots.map((slot) => ({
+                    spaceId: primarySpace!.id,
+                    dayOfWeek: slot.dayOfWeek,
+                    startTime: slot.startTime,
+                    endTime: slot.endTime,
+                    isActive: true,
+                  })),
+                });
+              }
+            }
+          }
+        }
+      }
+
       return tx.user.findUnique({
         where: { id: session.userId },
         include: {
@@ -280,46 +478,77 @@ export async function PATCH(request: Request) {
           profilePrompts: {
             orderBy: { sortOrder: "asc" },
           },
+          specialistProfile: {
+            include: {
+              courses: {
+                where: { isActive: true },
+              },
+              spaces: {
+                where: { isActive: true },
+                include: {
+                  category: true,
+                  services: true,
+                  availability: {
+                    where: { isActive: true },
+                    orderBy: { dayOfWeek: "asc" },
+                  },
+                },
+              },
+            },
+          },
         },
       });
     });
 
-    const newlyCompletedQuests = [];
+    const newlyCompletedQuests: any[] = [];
     try {
-      const { checkAndTriggerQuestCompletion } = await import("@/lib/onboarding");
-      if (profession !== undefined) {
-        const r1 = await checkAndTriggerQuestCompletion(session.userId, "profession");
-        if (r1) newlyCompletedQuests.push(r1);
-      }
-      if (bio !== undefined) {
-        const r2 = await checkAndTriggerQuestCompletion(session.userId, "bio");
-        if (r2) newlyCompletedQuests.push(r2);
-      }
-      if (shouldUpdatePrompts) {
-        const r3 = await checkAndTriggerQuestCompletion(session.userId, "interests");
-        if (r3) newlyCompletedQuests.push(r3);
-      }
-      if (coverUrl !== undefined) {
-        const r4 = await checkAndTriggerQuestCompletion(session.userId, "cover");
-        if (r4) newlyCompletedQuests.push(r4);
+      const { checkAndTriggerQuestsCompletion } = await import("@/lib/onboarding");
+      const questCandidates: string[] = [];
+      if (profession !== undefined) questCandidates.push("profession");
+      if (bio !== undefined) questCandidates.push("bio");
+      if (shouldUpdatePrompts) questCandidates.push("interests");
+      if (coverUrl !== undefined) questCandidates.push("cover");
+      if (shouldUpdateInterests || intention !== undefined) questCandidates.push("user_interests");
+
+      if (questCandidates.length > 0) {
+        const completed = await checkAndTriggerQuestsCompletion(session.userId, questCandidates, user);
+        newlyCompletedQuests.push(...completed);
       }
     } catch (questError) {
       console.error("Failed to check onboarding quests completion status:", questError);
     }
 
-    try {
-      await prisma.activityLog.create({
-        data: {
-          userId: session.userId,
-          action: "UPDATE_PROFILE",
-          details: JSON.stringify({
-            updatedFields: Object.keys(profileData),
-          }),
-        },
-      });
-    } catch (logErr) {
-      console.error("Failed to log UPDATE_PROFILE activity:", logErr);
-    }
+    const runSideEffects = async () => {
+      try {
+        await prisma.activityLog.create({
+          data: {
+            userId: session.userId,
+            action: "UPDATE_PROFILE",
+            details: JSON.stringify({
+              updatedFields: Object.keys(profileData),
+            }),
+          },
+        });
+      } catch (logErr) {
+        console.error("Failed to log UPDATE_PROFILE activity:", logErr);
+      }
+
+      if (
+        profileData.avatarUrl !== undefined &&
+        existingProfile?.avatarUrl &&
+        existingProfile.avatarUrl !== profileData.avatarUrl
+      ) {
+        try {
+          await deleteS3FileByUrl(existingProfile.avatarUrl, {
+            expectedUserId: session.userId,
+            expectedFolder: "avatars",
+          });
+        } catch (s3Err) {
+          console.error("Failed to clean up old avatar from S3:", s3Err);
+        }
+      }
+    };
+    try { after(runSideEffects); } catch { void runSideEffects(); }
 
     const serialized = serializeProfile(user);
     return NextResponse.json({
@@ -328,33 +557,6 @@ export async function PATCH(request: Request) {
     });
   } catch (error) {
     console.error("Profile update failed.", error);
-    console.warn("Database not available, using mock profile PATCH bypass.");
-    const mockProfile = {
-      first_name: firstName !== undefined ? firstName : "Nancy",
-      last_name: lastName !== undefined ? lastName : "Núñez",
-      city: city !== undefined ? city : "Puntarenas",
-      country: country !== undefined ? country : "Costa Rica",
-      profession: profession !== undefined ? profession : "Fotógrafa",
-      interests: shouldUpdateInterests ? (data.interests as string[]) : ["Estilo de Vida", "Naturaleza", "Fotografía Consciente"],
-      prompts: shouldUpdatePrompts ? (data.prompts as any[]) : [
-        {
-          question: "Mi objetivo de vida es…",
-          answer: "Vivir con más calma, claridad y propósito de vida."
-        }
-      ],
-      profile_picture_url: avatarUrl !== undefined ? avatarUrl : "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=400&fit=crop",
-      cover_url: coverUrl !== undefined ? coverUrl : "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200&fit=crop",
-      gender: gender !== undefined ? gender : "Femenino",
-      birthdate: birthdate !== undefined ? formatBirthdate(birthdate) : "1994-05-15",
-      phone_number: phoneNumber !== undefined ? phoneNumber : "+506 8888-8888",
-      selected_plan: selectedPlan !== undefined ? selectedPlan : "Mensual",
-      created_at: new Date().toISOString(),
-      bio: bio !== undefined ? bio : "Apasionada por capturar la esencia de la vida a través de la fotografía y vivir en conexión con la naturaleza.",
-      other_interests: intention !== undefined ? intention : "Crecimiento personal",
-    };
-    return NextResponse.json({
-      email: session.email,
-      profile: mockProfile
-    });
+    return NextResponse.json({ message: "No fue posible actualizar el perfil." }, { status: 500 });
   }
 }

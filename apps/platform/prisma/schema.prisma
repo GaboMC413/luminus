@@ -51,7 +51,8 @@ enum ConnectionStatus {
 
 enum UserTier {
   FREE  @map("FREE")
-  BASIC @map("BASIC")
+  MECENAS @map("MECENAS")
+  BASIC   @map("BASIC")
 
   @@map("user_tier")
 }
@@ -66,8 +67,17 @@ model User {
   role                     UserRole                  @default(USER)
   status                   UserStatus                @default(active)
   tier                     UserTier                  @default(FREE)
+  isGhost                  Boolean                   @default(false) @map("is_ghost")
   trialExpiresAt           DateTime?                 @map("trial_expires_at") @db.Timestamptz
+  stripeCustomerId         String?                   @unique @map("stripe_customer_id") @db.VarChar
+  stripeSubscriptionId     String?                   @unique @map("stripe_subscription_id") @db.VarChar
+  memberSince              DateTime?                 @map("member_since") @db.Timestamptz
   lastLoginAt              DateTime?                 @map("last_login_at") @db.Timestamptz
+  closedAt                 DateTime?                 @map("closed_at") @db.Timestamptz
+  purgeAt                  DateTime?                 @map("purge_at") @db.Timestamptz
+  paidUntil                DateTime?                 @map("paid_until") @db.Timestamptz
+  closureReason            String?                   @map("closure_reason") @db.VarChar
+  closureFeedback          String?                   @map("closure_feedback") @db.Text
   createdAt                DateTime                  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt                DateTime                  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   profile                  UserProfile?
@@ -87,7 +97,13 @@ model User {
   specialistProfile        SpecialistProfile?
   specialistPostulations   SpecialistPostulation[]
   categorySuggestions      CategorySuggestion[]
+  communityPosts           CommunityPost[]
+  communityPostComments    CommunityPostComment[]
+  communityPostLikes       CommunityPostLike[]
+  requestedIntroSessions   IntroSession[]            @relation("RequestedIntroSessions")
+  specialistIntroSessions  IntroSession[]            @relation("SpecialistIntroSessions")
 
+  @@index([status, purgeAt])
   @@map("users")
 }
 
@@ -543,35 +559,47 @@ model SpecialistAvailability {
 }
 
 model SentEmailLog {
-  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  recipient String   @db.VarChar
-  subject   String   @db.VarChar
-  htmlBody  String   @db.Text
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  recipient    String    @db.VarChar
+  subject      String    @db.VarChar
+  htmlBody     String    @db.Text
+  status       String?   @db.VarChar
+  messageId    String?   @map("message_id") @db.VarChar
+  errorDetails String?   @map("error_details") @db.Text
+  metadata     String?   @db.Text
+  openedAt     DateTime? @map("opened_at") @db.Timestamptz
+  openCount    Int       @default(0) @map("open_count")
+  clickedAt    DateTime? @map("clicked_at") @db.Timestamptz
+  clickCount   Int       @default(0) @map("click_count")
+  bounceType   String?   @map("bounce_type") @db.VarChar
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   @@index([recipient])
+  @@index([messageId])
   @@index([createdAt])
   @@map("sent_email_logs")
 }
 
 model Event {
-  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  youtubeId   String?            @unique @map("youtube_id") @db.VarChar
-  slug        String?            @unique @db.VarChar
-  title       String             @db.VarChar
-  description String             @db.Text
-  date        DateTime?          @db.Timestamptz
-  timeText    String?            @map("time_text") @db.VarChar
-  location    String?            @db.VarChar
-  speakerName String?            @map("speaker_name") @db.VarChar
-  speakerBio  String?            @map("speaker_bio") @db.Text
-  category    String?            @db.VarChar
-  coverUrl    String?            @map("cover_url") @db.VarChar
-  link        String?            @db.VarChar
-  isUpcoming  Boolean            @default(true) @map("is_upcoming")
-  createdAt   DateTime           @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt   DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  inscriptions EventInscription[]
+  id                     String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  youtubeId              String?            @unique @map("youtube_id") @db.VarChar
+  slug                   String?            @unique @db.VarChar
+  title                  String             @db.VarChar
+  description            String             @db.Text
+  date                   DateTime?          @db.Timestamptz
+  timeText               String?            @map("time_text") @db.VarChar
+  location               String?            @db.VarChar
+  speakerName            String?            @map("speaker_name") @db.VarChar
+  speakerBio             String?            @map("speaker_bio") @db.Text
+  category               String?            @db.VarChar
+  coverUrl               String?            @map("cover_url") @db.VarChar
+  link                   String?            @db.VarChar
+  isUpcoming             Boolean            @default(true) @map("is_upcoming")
+  liveNotificationSent   Boolean            @default(false) @map("live_notification_sent")
+  liveNotificationSentAt DateTime?          @map("live_notification_sent_at") @db.Timestamptz
+  createdAt              DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt              DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  inscriptions           EventInscription[]
 
   @@map("events")
 }
@@ -582,6 +610,8 @@ model EventGuest {
   firstName        String             @map("first_name") @db.VarChar
   lastName         String?            @map("last_name") @db.VarChar
   city             String?            @db.VarChar
+  state            String?            @db.VarChar
+  country          String?            @db.VarChar
   marketingConsent Boolean            @default(true) @map("marketing_consent")
   isGuest          Boolean            @default(true) @map("is_guest")
   createdAt        DateTime           @default(now()) @map("created_at") @db.Timestamptz
@@ -592,13 +622,15 @@ model EventGuest {
 }
 
 model EventInscription {
-  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  eventId   String     @map("event_id") @db.Uuid
-  guestId   String     @map("guest_id") @db.Uuid
-  attended  Boolean    @default(false)
-  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz
-  event     Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  guest     EventGuest @relation(fields: [guestId], references: [id], onDelete: Cascade)
+  id                 String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId            String     @map("event_id") @db.Uuid
+  guestId            String     @map("guest_id") @db.Uuid
+  attended           Boolean    @default(false)
+  notifiedLiveAt     DateTime?  @map("notified_live_at") @db.Timestamptz
+  notifiedLiveStatus String?    @default("pending") @map("notified_live_status") @db.VarChar
+  createdAt          DateTime   @default(now()) @map("created_at") @db.Timestamptz
+  event              Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  guest              EventGuest @relation(fields: [guestId], references: [id], onDelete: Cascade)
 
   @@unique([eventId, guestId])
   @@index([eventId])
@@ -620,5 +652,118 @@ model ContactMessage {
   @@index([email])
   @@index([createdAt])
   @@map("contact_messages")
+}
+
+model UnsubscribedEmail {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email     String   @unique @db.VarChar
+  reason    String?  @db.VarChar
+  source    String?  @default("newsletter") @db.VarChar
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([email])
+  @@map("unsubscribed_emails")
+}
+
+enum PostStatus {
+  pending
+  approved
+  rejected
+
+  @@map("post_status")
+}
+
+model CommunityPost {
+  id         String                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId     String                 @map("user_id") @db.Uuid
+  title      String?                @db.VarChar
+  content    String                 @db.Text
+  imageUrl   String?                @map("image_url") @db.VarChar
+  imageAlt   String?                @map("image_alt") @db.VarChar
+  youtubeUrl String?                @map("youtube_url") @db.VarChar
+  youtubeId  String?                @map("youtube_id") @db.VarChar
+  category   String?                @db.VarChar
+  tags       String[]               @default([]) @db.VarChar
+  status     PostStatus             @default(pending)
+  isPinned   Boolean                @default(false) @map("is_pinned")
+  pinnedAt   DateTime?              @map("pinned_at") @db.Timestamptz
+  createdAt  DateTime               @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  user       User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments   CommunityPostComment[]
+  likes      CommunityPostLike[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([isPinned])
+  @@index([createdAt])
+  @@map("community_posts")
+}
+
+model CommunityPostComment {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId    String        @map("post_id") @db.Uuid
+  userId    String        @map("user_id") @db.Uuid
+  content   String        @db.Text
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([userId])
+  @@map("community_post_comments")
+}
+
+model CommunityPostLike {
+  id        String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  postId    String        @map("post_id") @db.Uuid
+  userId    String        @map("user_id") @db.Uuid
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz
+
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@map("community_post_likes")
+}
+
+enum IntroSessionStatus {
+  pending
+  accepted
+  declined
+  cancelled
+
+  @@map("intro_session_status")
+}
+
+model IntroSession {
+  id             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requesterId    String             @map("requester_id") @db.Uuid
+  specialistId   String             @map("specialist_id") @db.Uuid
+  scheduledDate  String             @map("scheduled_date") @db.VarChar
+  startTime      String             @map("start_time") @db.VarChar
+  endTime        String             @map("end_time") @db.VarChar
+  timezone       String             @default("America/Montevideo") @db.VarChar
+  status         IntroSessionStatus @default(pending)
+  requesterNote    String?            @map("requester_note") @db.Text
+  meetingLink      String?            @map("meeting_link") @db.VarChar
+  hostMeetingLink  String?            @map("host_meeting_link") @db.VarChar
+  wherebyMeetingId          String?            @map("whereby_meeting_id") @db.VarChar
+  specialistNote            String?            @map("specialist_note") @db.Text
+  requesterTermsAcceptedAt  DateTime?          @map("requester_terms_accepted_at") @db.Timestamptz
+  specialistTermsAcceptedAt DateTime?          @map("specialist_terms_accepted_at") @db.Timestamptz
+  createdAt                 DateTime           @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  requester      User               @relation("RequestedIntroSessions", fields: [requesterId], references: [id], onDelete: Cascade)
+  specialist     User               @relation("SpecialistIntroSessions", fields: [specialistId], references: [id], onDelete: Cascade)
+
+  @@index([specialistId, scheduledDate, status])
+  @@index([requesterId, status])
+  @@map("intro_sessions")
 }
 

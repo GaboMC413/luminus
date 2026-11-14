@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { EventItem } from "../events/EventCard";
+import { normalizeCategory, checkIsUpcoming } from "@/lib/events";
 
 interface InterviewsSectionProps {
   events?: EventItem[];
@@ -162,14 +163,46 @@ export function InterviewsSection({
     return (match && match[2].length === 11) ? match[2] : null;
   };
 
+  function parseCalendarDate(dateStr?: string | Date | null): Date | null {
+    if (!dateStr) return null;
+    if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? null : dateStr;
+    const str = String(dateStr).trim();
+    if (!str) return null;
+
+    const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (match) {
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1;
+      const day = parseInt(match[3], 10);
+      return new Date(year, month, day);
+    }
+
+    const d = new Date(str);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  const MONTH_NAMES_ES = [
+    "ene", "feb", "mar", "abr", "may", "jun",
+    "jul", "ago", "sep", "oct", "nov", "dic"
+  ];
+
   // Helper to format date
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '';
     try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return dateStr;
-      return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
-    } catch (e) {
+      const d = parseCalendarDate(dateStr);
+      if (!d) return dateStr;
+
+      const now = new Date();
+      const sameYear = d.getFullYear() === now.getFullYear();
+      const day = d.getDate();
+      const month = MONTH_NAMES_ES[d.getMonth()];
+
+      if (sameYear) {
+        return `${day} de ${month}`;
+      }
+      return `${day} de ${month} de ${d.getFullYear()}`;
+    } catch {
       return dateStr;
     }
   };
@@ -199,28 +232,25 @@ export function InterviewsSection({
   const formatUpcomingDateHeader = (dateStr?: string, timeText?: string) => {
     if (!dateStr) return { tag: "PRÓXIMAMENTE", dateText: "" };
     try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return { tag: "PRÓXIMAMENTE", dateText: dateStr };
+      const d = parseCalendarDate(dateStr);
+      if (!d) return { tag: "PRÓXIMAMENTE", dateText: dateStr };
 
       const weekdayRaw = d.toLocaleDateString("es-ES", { weekday: "long" });
       const weekday = weekdayRaw.charAt(0).toUpperCase() + weekdayRaw.slice(1);
 
       const day = d.getDate();
+      const month = MONTH_NAMES_ES[d.getMonth()];
 
-      const monthRaw = d.toLocaleDateString("es-ES", { month: "short" }).replace(".", "");
-      const month = monthRaw.charAt(0).toUpperCase() + monthRaw.slice(1);
-
-      // Local converted time from Date object (no GMT label)
-      const hours = d.getHours().toString().padStart(2, "0");
-      const minutes = d.getMinutes().toString().padStart(2, "0");
-      const cleanTime = `${hours}:${minutes} hs`;
+      const cleanTime = timeText
+        ? timeText.replace(/\s*\([^)]*GMT[^)]*\)/gi, "").replace(/\s*\([^)]*UTC[^)]*\)/gi, "").trim()
+        : "18:00 hs";
 
       return {
         tag: "PRÓXIMAMENTE",
         dateText: `${weekday} ${day} de ${month}. ${cleanTime}`,
       };
     } catch {
-      return { tag: "PRÓXIMAMENTE", dateText: dateStr || "" };
+      return { tag: "PRÓXIMAMENTE", dateText: dateStr };
     }
   };
 
@@ -243,9 +273,7 @@ export function InterviewsSection({
   // 1. Upcoming events (is_upcoming === true OR date >= now)
   const upcomingMap = new Map<string, EventItem>();
   baseItems.forEach((item) => {
-    const isUpcoming =
-      item.is_upcoming === true ||
-      (item.is_upcoming !== false && item.date && !isNaN(new Date(item.date).getTime()) && new Date(item.date) >= now);
+    const isUpcoming = checkIsUpcoming(item);
 
     if (isUpcoming) {
       const key = item.slug || item.id || item.youtube_id;
@@ -264,9 +292,7 @@ export function InterviewsSection({
   // 2. Past recordings (has YouTube video + date < now)
   const pastMap = new Map<string, EventItem>();
   baseItems.forEach((item) => {
-    const isUpcoming =
-      item.is_upcoming === true ||
-      (item.is_upcoming !== false && item.date && !isNaN(new Date(item.date).getTime()) && new Date(item.date) >= now);
+    const isUpcoming = checkIsUpcoming(item);
 
     if (!isUpcoming) {
       const hasYoutubeVideo = Boolean(
@@ -292,9 +318,13 @@ export function InterviewsSection({
   const sortedItems = [...upcomingItems, ...pastItems];
 
   // Filter items based on active category
-  const filteredItemsRaw = activeCategory === "Todos"
+  const normActiveCategory = normalizeCategory(activeCategory);
+  const filteredItemsRaw = (activeCategory === "Todos" || activeCategory === "Todas las grabaciones")
     ? sortedItems
-    : sortedItems.filter(item => item.category === activeCategory);
+    : sortedItems.filter(item => {
+        const normCat = normalizeCategory(item.category);
+        return normCat === normActiveCategory || item.category === activeCategory;
+      });
 
   // In carousel mode (!isGrid), limit to the 6 most recent items
   const filteredItems = isGrid ? filteredItemsRaw : filteredItemsRaw.slice(0, 6);
@@ -364,9 +394,7 @@ export function InterviewsSection({
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10 max-w-[1440px] mx-auto px-4 md:px-10">
               {paginatedItems.map((item) => {
                 const ytId = item.youtube_id || getYoutubeId(item.link) || '';
-                const isUpcomingEvent =
-                  item.is_upcoming === true ||
-                  (item.is_upcoming !== false && item.date && !isNaN(new Date(item.date).getTime()) && new Date(item.date) >= now);
+                const isUpcomingEvent = checkIsUpcoming(item);
 
                 const upcomingHeader = isUpcomingEvent
                   ? formatUpcomingDateHeader(item.date, item.time_text)
@@ -380,7 +408,7 @@ export function InterviewsSection({
                   ? `/proximasfechas/${item.slug || item.id}`
                   : (item.link || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : '#'));
 
-                const thumbUrl = item.cover_url || (ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : '/placeholder-video.jpg');
+                const thumbUrl = item.coverUrl || item.cover_url || '/placeholder-video.jpg';
 
                 return (
                   <div
@@ -564,9 +592,7 @@ export function InterviewsSection({
               />
               {filteredItems.map((item) => {
                 const ytId = item.youtube_id || getYoutubeId(item.link) || '';
-                const isUpcomingEvent =
-                  item.is_upcoming === true ||
-                  (item.is_upcoming !== false && item.date && !isNaN(new Date(item.date).getTime()) && new Date(item.date) >= now);
+                const isUpcomingEvent = checkIsUpcoming(item);
 
                 const upcomingHeader = isUpcomingEvent
                   ? formatUpcomingDateHeader(item.date, item.time_text)
@@ -580,7 +606,7 @@ export function InterviewsSection({
                   ? `/proximasfechas/${item.slug || item.id}`
                   : (item.link || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : '#'));
 
-                const thumbUrl = item.cover_url || (ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : '/placeholder-video.jpg');
+                const thumbUrl = item.coverUrl || item.cover_url || '/placeholder-video.jpg';
 
                 return (
                   <div
@@ -604,7 +630,7 @@ export function InterviewsSection({
                       />
                     </Link>
 
-                    <div className="w-full flex-1 p-4 flex flex-col justify-between items-start gap-3 w-full">
+                    <div className="w-full flex-1 p-4 flex flex-col justify-between items-start gap-3">
                       <div className="w-full flex flex-col gap-2">
                         {/* 1. Date / PROXIMAMENTE at the top */}
                         {isUpcomingEvent ? (

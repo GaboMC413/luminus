@@ -1,7 +1,14 @@
+export interface FaqArea {
+  title: string;
+  color: string;
+  icon?: string;
+}
+
 export interface FaqItem {
   id: string;
   question: string;
   paragraphs: string[];
+  areas?: FaqArea[];
 }
 
 export interface FaqCategory {
@@ -10,6 +17,49 @@ export interface FaqCategory {
   description: string;
   faqs: FaqItem[];
 }
+
+export const WELLNESS_AREAS: FaqArea[] = [
+  {
+    title: "Crecimiento Personal",
+    color: "#F0A500",
+    icon: "/Icons/sunny_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
+  },
+  {
+    title: "Bienestar Emocional",
+    color: "#E855C8",
+    icon: "/Icons/mood_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
+  },
+  {
+    title: "Salud Integral",
+    color: "#0450FB",
+    icon: "/Icons/ecg_heart_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
+  },
+  {
+    title: "Movimiento Físico",
+    color: "#E63946",
+    icon: "/Icons/exercise_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
+  },
+  {
+    title: "Nutrición",
+    color: "#A8C800",
+    icon: "/Icons/nutrition_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
+  },
+  {
+    title: "Espiritualidad",
+    color: "#6D28D9",
+    icon: "/Icons/self_improvement_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
+  },
+  {
+    title: "Vínculos y Relaciones",
+    color: "#FF7700",
+    icon: "/Icons/join_inner_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
+  },
+  {
+    title: "Terapias Complementarias",
+    color: "#0FA87A",
+    icon: "/Icons/spa_24dp_000000_FILL1_wght400_GRAD0_opsz24.svg",
+  },
+];
 
 export const FAQ_CATEGORIES: FaqCategory[] = [
   {
@@ -76,8 +126,8 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "mem-1",
         question: "¿Cómo funciona la membresía de LUMINUS?",
         paragraphs: [
-          "La membresía permite acceder a la experiencia, servicios y herramientas disponibles dentro de la plataforma según el plan elegido.",
-          "Las nuevas cuentas comienzan con un período inicial de 3 meses sin costo y sin ingresar tarjeta. Antes de finalizar, LUMINUS informará al usuario para decidir si desea continuar.",
+          "Puedes unirte gratis a LUMINUS sin ingresar datos de pago para explorar la comunidad, conectar con especialistas y descubrir actividades.",
+          "Si deseas apoyar el crecimiento de la red, puedes sumarte como Mecenas (USD 5/mes o USD 45/año), impulsando nuevas herramientas y accediendo a beneficios exclusivos a medida que estén disponibles. Puedes cancelar cuando quieras.",
         ],
       },
       {
@@ -107,9 +157,10 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "esp-1",
         question: "¿Quién puede postularse como Especialista LUMINUS?",
         paragraphs: [
-          "Pueden postularse profesionales con formación y trayectoria en salud, bienestar emocional, nutrición, movimiento, crecimiento personal, vínculos y terapias complementarias.",
+          "Pueden postularse profesionales con formación y trayectoria en las distintas áreas del bienestar que integran la red:",
           "Cada postulación se revisa de forma individual evaluando la información profesional, la experiencia y la coherencia con los criterios de la Red de Especialistas.",
         ],
+        areas: WELLNESS_AREAS,
       },
       {
         id: "esp-2",
@@ -131,8 +182,8 @@ export const FAQ_CATEGORIES: FaqCategory[] = [
         id: "esp-4",
         question: "¿Necesito pagar una membresía adicional?",
         paragraphs: [
-          "Para iniciar una aplicación como Especialista necesitas contar con una membresía activa dentro de la plataforma LUMINUS.",
-          "La membresía permite formar parte de la plataforma y acceder a sus herramientas, mientras que la aprobación del perfil profesional es un proceso independiente sujeto a revisión.",
+          "No. Sumarte y postularte como Especialista en LUMINUS es gratuito; solo necesitas tener una cuenta en la plataforma.",
+          "La aprobación del perfil profesional es un proceso independiente sujeto a revisión por parte de nuestro equipo.",
         ],
       },
       {

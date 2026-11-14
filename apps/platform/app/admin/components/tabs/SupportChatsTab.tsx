@@ -17,6 +17,7 @@ export function SupportChatsTab({ supportChats, setSupportChats }: SupportChatsT
   const [selectedSupportChatId, setSelectedSupportChatId] = useState<string>(supportChats[0]?.id ?? "");
   const [replyText, setReplyText] = useState("");
   const [isSendingReply, setIsSendingReply] = useState(false);
+  const [showMobileDetail, setShowMobileDetail] = useState(false);
 
   const filteredSupportChats = useMemo(() => {
     const query = supportSearch.trim().toLowerCase();
@@ -109,7 +110,7 @@ export function SupportChatsTab({ supportChats, setSupportChats }: SupportChatsT
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_460px]">
         {/* Left Column: list of support chats */}
-        <div className="flex flex-col gap-4">
+        <div className={`${showMobileDetail ? "hidden xl:flex" : "flex"} flex-col gap-4`}>
           <AdminCard className="p-4">
             <InputField
               value={supportSearch}
@@ -142,9 +143,14 @@ export function SupportChatsTab({ supportChats, setSupportChats }: SupportChatsT
                     <button
                       key={chat.id}
                       type="button"
-                      onClick={() => setSelectedSupportChatId(chat.id)}
-                      className={`grid w-full grid-cols-[1.5fr_120px] items-center px-4 py-3.5 text-left text-[14px] transition hover:bg-slate-50 outline-none border-none cursor-pointer ${
-                        active ? "bg-slate-100/80" : "bg-white"
+                      onClick={() => {
+                        setSelectedSupportChatId(chat.id);
+                        setShowMobileDetail(true);
+                      }}
+                      className={`grid w-full grid-cols-[1.5fr_120px] items-center px-4 py-3.5 text-left text-xs transition outline-none cursor-pointer border-y-0 border-r-0 ${
+                        active
+                          ? "bg-slate-100/90 font-semibold border-l-4 border-slate-900"
+                          : "bg-white border-l-4 border-transparent hover:bg-slate-50"
                       }`}
                     >
                       <span className="flex min-w-0 items-center gap-3 pr-2">
@@ -182,7 +188,18 @@ export function SupportChatsTab({ supportChats, setSupportChats }: SupportChatsT
 
         {/* Right Column: Chat view & Reply form */}
         {selectedSupportChat ? (
-          <AdminCard className="flex flex-col h-[700px]">
+          <AdminCard className={`${showMobileDetail ? "flex" : "hidden xl:flex"} flex-col h-[700px] relative`}>
+            {/* Mobile Sticky Back Button Header */}
+            <div className="xl:hidden p-3.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowMobileDetail(false)}
+                className="flex items-center gap-2 text-xs font-bold text-white hover:text-slate-200 cursor-pointer bg-transparent border-none"
+              >
+                <span className="material-symbols-rounded text-[18px]">arrow_back</span>
+                <span>Volver a la lista de chats</span>
+              </button>
+            </div>
             {/* Header */}
             <div className="border-b border-slate-200/80 p-5 shrink-0 bg-slate-50/50 flex items-center justify-between">
               <div>

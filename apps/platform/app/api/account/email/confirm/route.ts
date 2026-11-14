@@ -5,7 +5,7 @@ import { hashRecoveryCode, PASSWORD_RESET_MAX_ATTEMPTS } from "@/lib/auth/recove
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       }),
     ]);
 
-    setSessionCookie(createSessionToken({ userId: session.userId, email, role: session.role }));
+    await setSessionCookie(createSessionToken({ userId: session.userId, email, role: session.role }));
 
     return NextResponse.json({ success: true, email, message: "Email actualizado con exito." });
   } catch (error) {

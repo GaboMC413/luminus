@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from './Button';
+import { X } from "lucide-react";
 
 interface SuccessModalProps {
   isOpen: boolean;
@@ -12,6 +13,7 @@ interface SuccessModalProps {
   buttonText?: string;
   eyebrow?: string;
   celebrate?: boolean;
+  autoCloseMs?: number;
 }
 
 
@@ -83,13 +85,22 @@ export function SuccessModal({
   message,
   buttonText = "Cerrar",
   eyebrow,
-  celebrate = false
+  celebrate = false,
+  autoCloseMs,
 }: SuccessModalProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!isOpen || !autoCloseMs) return;
+    const timer = setTimeout(() => {
+      onClose();
+    }, autoCloseMs);
+    return () => clearTimeout(timer);
+  }, [isOpen, autoCloseMs, onClose]);
 
   if (!isOpen || !mounted) return null;
 
@@ -137,7 +148,7 @@ export function SuccessModal({
       )}
 
       {/* Main Modal Card */}
-      <div className="relative z-10 w-full bg-white rounded-2xl border border-slate-200 shadow-none flex flex-col overflow-hidden animate-in fade-in duration-300">
+      <div className="relative z-10 w-full bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-900/10 flex flex-col overflow-hidden animate-in fade-in duration-300">
         {/* Confetti Celebration Burst */}
         {celebrate && <ConfettiExplosion />}
 
@@ -146,6 +157,15 @@ export function SuccessModal({
 
         {/* Content */}
         <div className="p-6 flex flex-col items-start text-left relative">
+          {/* Close X Button */}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="absolute top-4 right-4 w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors border-none bg-transparent cursor-pointer select-none"
+          >
+            <X className="w-4 h-4" />
+          </button>
           
           {/* Eyebrow */}
           {eyebrow && (

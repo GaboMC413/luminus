@@ -58,22 +58,22 @@ export default function FAQClient() {
         {
           id: "cuenta-costo",
           question: "¿Crear una cuenta tiene costo?",
-          answer: "Actualmente puedes comenzar con 3 meses de acceso sin costo. No se solicitan datos de pago al crear tu cuenta.\n\nAntes de que termine ese período, te informaremos para que puedas decidir si quieres continuar con una suscripción activa."
+          answer: "No. Puedes unirte gratis a LUMINUS sin ingresar datos de pago.\n\nSi además quieres apoyar el crecimiento de la red, puedes sumarte como Mecenas (USD 5/mes o USD 45/año)."
         },
         {
           id: "porque-no-gratis",
-          question: "¿Por qué LUMINUS no es gratis?",
-          answer: "Porque una plataforma de bienestar debe estar diseñada para cuidar a las personas, no para depender de publicidad ni de la comercialización de datos personales.\n\nLa suscripción nos permite sostener LUMINUS de forma ética, independiente y profesional: desarrollar nuevas funcionalidades, cuidar la experiencia, mejorar la plataforma, acompañar a la comunidad y mantener un entorno más confiable para todos."
+          question: "¿Por qué existe el plan Mecenas?",
+          answer: "Porque una plataforma de bienestar debe estar diseñada para cuidar a las personas, no para depender de publicidad ni de la comercialización de datos personales.\n\nEl aporte de quienes eligen ser Mecenas nos permite sostener LUMINUS de forma ética, independiente y profesional: desarrollar nuevas herramientas, cuidar la experiencia, acompañar a la comunidad y acercar el bienestar a cada vez más personas en Latinoamérica."
         },
         {
           id: "que-pasa-3-meses",
-          question: "¿Qué pasa cuando terminan los 3 meses sin costo?",
-          answer: "Cuando finalice el período inicial, podrás decidir si quieres continuar con un plan mensual o anual.\n\nNo se realizará ningún cobro automático si no ingresaste datos de pago ni activaste una suscripción."
+          question: "¿Qué diferencia hay entre unirme gratis y ser Mecenas?",
+          answer: "Puedes unirte gratis para formar parte de LUMINUS y comenzar a explorar la red.\n\nAl elegir ser Mecenas, impulsas el desarrollo de nuevas herramientas y experiencias y accedes a beneficios exclusivos a medida que estén disponibles."
         },
         {
           id: "que-incluye-membresia",
-          question: "¿Qué incluye la membresía base?",
-          answer: "La membresía base incluye acceso a la comunidad LUMINUS y a las funcionalidades disponibles dentro de la plataforma.\n\nTambién permite explorar contenidos, conocer personas de la red y acceder progresivamente a nuevas herramientas a medida que sean incorporadas."
+          question: "¿Qué incluye ser Mecenas?",
+          answer: "Además de las funcionalidades principales de LUMINUS —conectar con especialistas, encontrar actividades y experiencias, y compartir iniciativas—, ser Mecenas te brinda acceso a beneficios exclusivos a medida que se incorporen a la plataforma."
         },
         {
           id: "puedo-cancelar",
@@ -369,10 +369,10 @@ export default function FAQClient() {
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
             <a
-              href="https://app.luminuslatam.com/auth/registrarse"
+              href="https://app.luminuslatam.com/unirme"
               className="w-full sm:w-auto inline-flex items-center justify-center rounded-full bg-white border border-slate-250 py-3.5 px-8 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all duration-200 shadow-soft"
             >
-              Comenzar prueba 3 meses
+              Unirme a LUMINUS
             </a>
           </div>
         </div>

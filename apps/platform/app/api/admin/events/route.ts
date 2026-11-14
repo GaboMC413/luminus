@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
+import { deleteS3FileByUrl } from "@/lib/storage/s3FileCleanup";
+
+function extractYoutubeId(url?: string | null): string | null {
+  if (!url) return null;
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  return match ? match[1] : null;
+}
 
 export async function POST(request: Request) {
   try {
-    const session = getCurrentSession();
+    const session = await getCurrentSession();
     if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ error: "Acceso no autorizado." }, { status: 403 });
     }
@@ -41,9 +48,41 @@ export async function POST(request: Request) {
         .replace(/\s+/g, "-")
         .substring(0, 80) + "-" + Math.random().toString(36).substring(2, 6);
 
-    const dateVal = date ? new Date(date) : null;
+    let dateVal: Date | null = null;
+    let finalTimeText = timeText || null;
+
+    if (date) {
+      let hh = "18";
+      let mm = "00";
+      if (timeText) {
+        const match = String(timeText).match(/(\d{1,2}):(\d{2})/);
+        if (match) {
+          hh = match[1].padStart(2, "0");
+          mm = match[2];
+          finalTimeText = `${hh}:${mm} hs (GMT-3)`;
+        }
+      }
+
+      if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
+        const isoStringWithOffset = `${date.trim()}T${hh}:${mm}:00-03:00`;
+        const parsed = new Date(isoStringWithOffset);
+        if (!isNaN(parsed.getTime())) dateVal = parsed;
+      } else {
+        const parsed = new Date(date);
+        if (!isNaN(parsed.getTime())) dateVal = parsed;
+      }
+    }
+
+    const finalLocation = (location && String(location).trim()) ? String(location).trim() : "Estreno en YouTube";
+    const finalYoutubeId = youtubeId || extractYoutubeId(link) || null;
 
     if (id) {
+      // Find existing event to track previous cover
+      const existingEvent = await prisma.event.findUnique({
+        where: { id },
+        select: { coverUrl: true },
+      });
+
       // Update existing
       const updated = await prisma.event.update({
         where: { id },
@@ -54,14 +93,25 @@ export async function POST(request: Request) {
           speakerBio: speakerBio || null,
           category: category || null,
           date: dateVal && !isNaN(dateVal.getTime()) ? dateVal : null,
-          timeText: timeText || null,
-          location: location || null,
+          timeText: finalTimeText,
+          location: finalLocation,
           coverUrl: coverUrl || null,
-          youtubeId: youtubeId || null,
+          youtubeId: finalYoutubeId,
           link: link || null,
           isUpcoming: Boolean(isUpcoming),
         },
       });
+
+      // If coverUrl changed, check if previous cover can be safely deleted from S3
+      if (existingEvent?.coverUrl && existingEvent.coverUrl !== (coverUrl || null)) {
+        const inUseCount = await prisma.event.count({
+          where: { coverUrl: existingEvent.coverUrl, NOT: { id } },
+        });
+        if (inUseCount === 0) {
+          await deleteS3FileByUrl(existingEvent.coverUrl, { expectedFolder: "events/covers" });
+        }
+      }
+
       return NextResponse.json({ success: true, event: updated });
     } else {
       // Create new
@@ -75,10 +125,10 @@ export async function POST(request: Request) {
           speakerBio: speakerBio || null,
           category: category || null,
           date: dateVal && !isNaN(dateVal.getTime()) ? dateVal : null,
-          timeText: timeText || null,
-          location: location || null,
+          timeText: finalTimeText,
+          location: finalLocation,
           coverUrl: coverUrl || null,
-          youtubeId: youtubeId || null,
+          youtubeId: finalYoutubeId,
           link: link || null,
           isUpcoming: isUpcoming !== undefined ? Boolean(isUpcoming) : true,
         },
@@ -93,7 +143,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const session = getCurrentSession();
+    const session = await getCurrentSession();
     if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ error: "Acceso no autorizado." }, { status: 403 });
     }
@@ -103,6 +153,20 @@ export async function DELETE(request: Request) {
 
     if (!id) {
       return NextResponse.json({ error: "ID de evento no proporcionado." }, { status: 400 });
+    }
+
+    const existingEvent = await prisma.event.findUnique({
+      where: { id },
+      select: { coverUrl: true },
+    });
+
+    if (existingEvent?.coverUrl) {
+      const inUseCount = await prisma.event.count({
+        where: { coverUrl: existingEvent.coverUrl, NOT: { id } },
+      });
+      if (inUseCount === 0) {
+        await deleteS3FileByUrl(existingEvent.coverUrl, { expectedFolder: "events/covers" });
+      }
     }
 
     await prisma.event.delete({

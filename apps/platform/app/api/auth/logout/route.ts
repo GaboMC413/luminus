@@ -10,8 +10,21 @@ function getCognitoDomain() {
   return domain.startsWith("http://") || domain.startsWith("https://") ? domain : `https://${domain}`;
 }
 
+export async function GET(request: Request) {
+  await clearSessionCookie();
+
+  const url = new URL(request.url);
+  const redirectParam = url.searchParams.get("redirect") || "/iniciar-sesion";
+  const safeRedirect =
+    redirectParam.startsWith("/") && !redirectParam.startsWith("//")
+      ? redirectParam
+      : "/iniciar-sesion";
+
+  return NextResponse.redirect(new URL(safeRedirect, url.origin));
+}
+
 export async function POST(request: Request) {
-  clearSessionCookie();
+  await clearSessionCookie();
 
   const url = new URL(request.url);
   const origin = (process.env.AUTH_BASE_URL?.trim() || url.origin).replace(/\/$/, "");

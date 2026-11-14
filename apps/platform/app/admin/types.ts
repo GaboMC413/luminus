@@ -3,6 +3,11 @@ export type AdminUser = {
   email: string;
   role: "USER" | "ADMIN";
   status: "active" | "disabled" | "deleted";
+  tier?: "FREE" | "MECENAS" | string;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  memberSince?: string | null;
+  isGhost?: boolean;
   emailVerified: boolean;
   authProvider: string;
   createdAt: string | null;
@@ -16,7 +21,7 @@ export type AdminUser = {
     city: string;
     country: string;
     phoneNumber: string;
-    gender: string;
+    gender?: string;
     birthdate: string;
     bio: string;
     intention: string;
@@ -87,6 +92,10 @@ export type AdminEmailLog = {
   recipient: string;
   subject: string;
   htmlBody: string;
+  status?: string | null;
+  messageId?: string | null;
+  errorDetails?: string | null;
+  metadata?: string | null;
   createdAt: string;
 };
 
@@ -222,6 +231,8 @@ export type AdminEvent = {
   coverUrl: string | null;
   link: string | null;
   isUpcoming: boolean;
+  liveNotificationSent?: boolean;
+  liveNotificationSentAt?: string | null;
   createdAt: string;
   inscriptionsCount?: number;
 };
@@ -234,6 +245,11 @@ export type AdminEventInscription = {
   guestLastName?: string | null;
   guestEmail?: string | null;
   guestCity?: string | null;
+  guestState?: string | null;
+  guestCountry?: string | null;
+  marketingConsent?: boolean;
+  notifiedLiveAt?: string | null;
+  notifiedLiveStatus?: string | null;
   createdAt: string;
   user?: {
     email: string;
@@ -265,6 +281,7 @@ export type AdminTab =
   | "logs"
   | "busquedas"
   | "especialistas"
+  | "publicaciones"
   | "emails"
   | "categorias"
   | "eventos"

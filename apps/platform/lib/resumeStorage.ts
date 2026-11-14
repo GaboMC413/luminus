@@ -1,5 +1,6 @@
 import { GetObjectCommand, HeadObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { getStorageConfig, getS3Client } from "./storage/s3Client";
 
 export const ALLOWED_RESUME_CONTENT_TYPES = new Set([
   "application/pdf",
@@ -9,22 +10,21 @@ export const ALLOWED_RESUME_CONTENT_TYPES = new Set([
 
 export const MAX_RESUME_SIZE_BYTES = 10 * 1024 * 1024;
 
+export function getS3Config() {
+  return getStorageConfig();
+}
+
+/** Backwards-compatible alias used by resume routes */
 export function getResumeStorageConfig() {
-  const bucket = process.env.S3_RESUME_BUCKET?.trim();
-  const region = process.env.S3_RESUME_REGION?.trim() || process.env.AWS_REGION || "us-east-1";
-  const accessKeyId = process.env.S3_RESUME_ACCESS_KEY_ID?.trim();
-  const secretAccessKey = process.env.S3_RESUME_SECRET_ACCESS_KEY?.trim();
-
-  if (!bucket) throw new Error("S3_RESUME_BUCKET is not configured.");
-  if (!accessKeyId || !secretAccessKey) throw new Error("S3 resume credentials are not configured.");
-
-  return { bucket, region, accessKeyId, secretAccessKey };
+  return getStorageConfig();
 }
 
-export function createResumeS3Client() {
-  const { region, accessKeyId, secretAccessKey } = getResumeStorageConfig();
-  return new S3Client({ region, credentials: { accessKeyId, secretAccessKey } });
+export function createS3Client() {
+  return getS3Client();
 }
+
+/** @deprecated use createS3Client */
+export const createResumeS3Client = createS3Client;
 
 export function extensionForResumeContentType(contentType: string) {
   if (contentType === "application/pdf") return "pdf";
@@ -35,7 +35,7 @@ export function extensionForResumeContentType(contentType: string) {
 
 export function normalizeResumeFileName(fileName: unknown, extension: string) {
   const rawName = typeof fileName === "string" ? fileName.trim() : "";
-  const withoutPath = rawName.split(/[\\/]/).pop() || "";
+  const withoutPath = rawName.split(/[\\\/]/).pop() || "";
   const safeName = withoutPath
     .normalize("NFKD")
     .replace(/[^a-zA-Z0-9._ -]/g, "")
@@ -55,12 +55,12 @@ export async function verifyUploadedResume(options: {
   expectedContentType?: string;
   expectedSize?: number;
 }) {
-  const { bucket } = getResumeStorageConfig();
+  const { bucket } = getS3Config();
   if (!isResumeKeyForUser(options.key, options.userId)) {
     throw new Error("El archivo no pertenece al usuario autenticado.");
   }
 
-  const response = await createResumeS3Client().send(new HeadObjectCommand({ Bucket: bucket, Key: options.key }));
+  const response = await createS3Client().send(new HeadObjectCommand({ Bucket: bucket, Key: options.key }));
   const contentType = response.ContentType || "";
   const contentLength = response.ContentLength || 0;
 
@@ -74,8 +74,8 @@ export async function verifyUploadedResume(options: {
 }
 
 export async function createResumeDownloadUrl(key: string) {
-  const { bucket } = getResumeStorageConfig();
-  const client = createResumeS3Client();
+  const { bucket } = getS3Config();
+  const client = createS3Client();
   const metadata = await client.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
   const extension = extensionForResumeContentType(metadata.ContentType || "") || "pdf";
   const fileName = metadata.Metadata?.originalfilename
@@ -100,11 +100,9 @@ export function isAllowedLegacyResumeUrl(value: string) {
     const url = new URL(value);
     if (url.protocol !== "https:") return false;
 
-    const avatarBaseUrl = process.env.S3_AVATAR_PUBLIC_BASE_URL?.trim();
-    if (avatarBaseUrl && url.origin === new URL(avatarBaseUrl).origin) return url.pathname.includes("/resumes/");
+    const { bucket, region, publicBaseUrl } = getStorageConfig();
+    if (publicBaseUrl && url.origin === new URL(publicBaseUrl).origin) return url.pathname.includes("/resumes/");
 
-    const bucket = process.env.S3_AVATAR_BUCKET?.trim();
-    const region = process.env.S3_AVATAR_REGION?.trim() || process.env.AWS_REGION || "us-east-1";
     return !!bucket && url.hostname === `${bucket}.s3.${region}.amazonaws.com` && url.pathname.startsWith("/resumes/");
   } catch {
     return false;

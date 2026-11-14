@@ -7,7 +7,7 @@ export default async function EspecialistasLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await assertOnboarded();
+  await assertOnboarded("/especialistas/unirme");
 
   return <EspecialistasLayoutClient>{children}</EspecialistasLayoutClient>;
 }

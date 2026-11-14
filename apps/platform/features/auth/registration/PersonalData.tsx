@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from 'react';
-import { PhotoEditor } from './PhotoEditor';
+import { PhotoEditor } from '@/components/ui/PhotoEditor';
 import { InputField } from '@/components/ui/InputField';
 import { LocationInput } from '@/components/ui/LocationInput';
 import { SelectInput } from '@/components/ui/SelectInput';
@@ -20,6 +20,7 @@ const capitalizeName = (value: string) => {
     .join(' ');
 };
 import { uploadAvatar } from '@/lib/uploadAvatar';
+import { trackRegistrationError } from '@/lib/registrationAuditTracker';
 
 const NEUTRAL_COUNTRY = { code: 'XX', dial: '+00', name: 'Seleccionar país', priority: false };
 
@@ -60,22 +61,30 @@ const YEARS = Array.from({ length: currentYearNum - 1900 + 1 }, (_, i) => {
   return { label: y, value: y };
 });
 
-const isValidBirthdate = (val: string): boolean => {
+const validateBirthdate = (val: string): 'valid' | 'invalid' | 'underage' => {
   const clean = val.replace(/\s+/g, '');
   const parts = clean.split('/').map(p => parseInt(p.trim())).filter(p => !isNaN(p));
-  if (parts.length !== 3) return false;
+  if (parts.length !== 3) return 'invalid';
 
   const [day, month, year] = parts;
-  if (month < 1 || month > 12) return false;
-  if (day < 1 || day > 31) return false;
+  if (month < 1 || month > 12) return 'invalid';
+  if (day < 1 || day > 31) return 'invalid';
 
   const daysInMonth = new Date(year, month, 0).getDate();
-  if (day > daysInMonth) return false;
+  if (day > daysInMonth) return 'invalid';
 
   const currentYear = new Date().getFullYear();
-  if (year < 1900 || year > currentYear) return false;
+  if (year < 1900 || year > currentYear) return 'invalid';
 
-  return true;
+  const today = new Date();
+  let age = today.getFullYear() - year;
+  const monthDiff = (today.getMonth() + 1) - month;
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < day)) {
+    age--;
+  }
+  if (age < 18) return 'underage';
+
+  return 'valid';
 };
 
 export function PersonalData({
@@ -192,8 +201,14 @@ export function PersonalData({
       setAvatarUrl(publicUrl);
       if (errorField === 'photo') setErrorField(null);
       setTempImage(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error processing image:', error);
+      trackRegistrationError({
+        step: "Paso 2 - Datos Personales (Foto de Perfil)",
+        action: "AVATAR_UPLOAD_FAIL",
+        userName: `${firstName} ${lastName}`.trim(),
+        errorMessage: error?.message || "No pudimos subir tu foto de perfil.",
+      });
       alert('No pudimos subir tu foto. Intenta nuevamente.');
     } finally {
       setUploading(false);
@@ -214,13 +229,17 @@ export function PersonalData({
 
     const finalBirthdate = (birthDay || birthMonth || birthYear) ? `${paddedDay} / ${paddedMonth} / ${fullYear}` : "";
 
-    if (!avatarUrl) { setErrorField('photo'); return; }
     if (!firstName) { setErrorField('firstName'); return; }
     if (!lastName) { setErrorField('lastName'); return; }
     if (!gender) { setErrorField('gender'); return; }
-    if (!finalBirthdate || !isValidBirthdate(finalBirthdate)) { setErrorField('birthdate'); return; }
-    if (!city || !country) { setErrorField('city'); return; }
+    if (!finalBirthdate) { setErrorField('birthdate'); return; }
+    const birthStatus = validateBirthdate(finalBirthdate);
+    if (birthStatus === 'invalid') { setErrorField('birthdate'); return; }
+    if (birthStatus === 'underage') { setErrorField('underage'); return; }
+    if (!city || !city.trim()) { setErrorField('city'); return; }
     if (!phone) { setErrorField('phone'); return; }
+
+    const finalCountry = country || phoneCountry?.name || "Argentina";
 
     setIsSaving(true);
 
@@ -231,8 +250,8 @@ export function PersonalData({
       // Save data locally
       localStorage.setItem("luminus_profile_firstName", firstName);
       localStorage.setItem("luminus_profile_lastName", lastName);
-      localStorage.setItem("luminus_profile_city", city);
-      localStorage.setItem("luminus_profile_country", country);
+      localStorage.setItem("luminus_profile_city", city.trim());
+      localStorage.setItem("luminus_profile_country", finalCountry);
       let finalPhoneToSave = `${phoneCountry.dial} ${phone}`;
       try {
         const parsed = parsePhoneNumberFromString(phone, phoneCountry.code as CountryCode);
@@ -269,7 +288,7 @@ export function PersonalData({
       {/* Profile Photo Section */}
       <div className="w-full flex flex-col justify-start items-start gap-2.5">
         <div className="w-full inline-flex justify-start items-end gap-5">
-          <div className="w-32 h-32 bg-white rounded-2xl flex justify-center items-center overflow-hidden shrink-0 relative border border-zinc-200">
+          <div className="w-32 h-32 bg-white rounded-2xl flex justify-center items-center overflow-hidden shrink-0 relative border border-slate-200">
             {avatarUrl ? (
               <img
                 src={avatarUrl}
@@ -277,7 +296,7 @@ export function PersonalData({
                 className="w-full h-full object-cover"
               />
             ) : (
-              <span className="material-symbols-outlined text-zinc-200 select-none flex items-center justify-center" style={{ fontSize: '104px', width: '104px', height: '104px' }}>
+              <span className="material-symbols-outlined text-slate-200 select-none flex items-center justify-center" style={{ fontSize: '104px', width: '104px', height: '104px' }}>
                 person
               </span>
             )}
@@ -288,7 +307,7 @@ export function PersonalData({
 
           <Button
             type="button"
-            variant="slate"
+            variant="secondary"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             className="mb-2"
@@ -296,7 +315,6 @@ export function PersonalData({
             {uploading ? 'Cargando...' : 'Subir Foto'}
           </Button>
         </div>
-        {errorField === 'photo' && <p className="text-[#FF3D3D] text-[12px] font-bold">Sube una foto de perfil</p>}
       </div>
 
       {/* Fields Container */}
@@ -371,10 +389,10 @@ export function PersonalData({
                   onSelect={(val) => {
                     setBirthDay(val);
                     updateParentBirthdate(val, birthMonth, birthYear);
-                    if (errorField === 'birthdate') setErrorField(null);
+                    if (errorField === 'birthdate' || errorField === 'underage') setErrorField(null);
                   }}
                   placeholder="Día"
-                  error={errorField === 'birthdate'}
+                  error={errorField === 'birthdate' || errorField === 'underage'}
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -384,10 +402,10 @@ export function PersonalData({
                   onSelect={(val) => {
                     setBirthMonth(val);
                     updateParentBirthdate(birthDay, val, birthYear);
-                    if (errorField === 'birthdate') setErrorField(null);
+                    if (errorField === 'birthdate' || errorField === 'underage') setErrorField(null);
                   }}
                   placeholder="Mes"
-                  error={errorField === 'birthdate'}
+                  error={errorField === 'birthdate' || errorField === 'underage'}
                 />
               </div>
               <div className="flex-1 min-w-0">
@@ -397,14 +415,15 @@ export function PersonalData({
                   onSelect={(val) => {
                     setBirthYear(val);
                     updateParentBirthdate(birthDay, birthMonth, val);
-                    if (errorField === 'birthdate') setErrorField(null);
+                    if (errorField === 'birthdate' || errorField === 'underage') setErrorField(null);
                   }}
                   placeholder="Año"
-                  error={errorField === 'birthdate'}
+                  error={errorField === 'birthdate' || errorField === 'underage'}
                 />
               </div>
             </div>
             {errorField === 'birthdate' && <p className="text-[#FF3D3D] text-[12px] font-bold">Fecha inválida o incompleta</p>}
+            {errorField === 'underage' && <p className="text-[#FF3D3D] text-[12px] font-bold">Debes ser mayor de 18 años para registrarte</p>}
           </div>
         </div>
 
@@ -416,28 +435,33 @@ export function PersonalData({
               defaultValue={city}
               onSelect={({ city, country, countryCode }) => {
                 setCity(city);
-                setCountry(country);
+                if (country) {
+                  setCountry(country);
+                }
+                if (errorField === 'city') setErrorField(null);
 
-                // Auto-detect phone country from city selection
-                const normalizedCountry = country.toLowerCase().trim();
-                const mappedName = COUNTRY_SYNONYMS[normalizedCountry] || normalizedCountry;
+                // Auto-detect phone country from city selection if country provided
+                if (country) {
+                  const normalizedCountry = country.toLowerCase().trim();
+                  const mappedName = COUNTRY_SYNONYMS[normalizedCountry] || normalizedCountry;
 
-                const detected = ALL_COUNTRIES.find(c =>
-                  (countryCode && c.code.toLowerCase() === countryCode.toLowerCase()) ||
-                  c.name.toLowerCase() === mappedName ||
-                  c.name.toLowerCase() === normalizedCountry
-                );
-                if (detected) {
-                  setPhoneCountry(detected);
-                  if (phone) {
-                    const formatter = new AsYouType(detected.code as CountryCode);
-                    setPhone(formatter.input(phone));
+                  const detected = ALL_COUNTRIES.find(c =>
+                    (countryCode && c.code.toLowerCase() === countryCode.toLowerCase()) ||
+                    c.name.toLowerCase() === mappedName ||
+                    c.name.toLowerCase() === normalizedCountry
+                  );
+                  if (detected) {
+                    setPhoneCountry(detected);
+                    if (phone) {
+                      const formatter = new AsYouType(detected.code as CountryCode);
+                      setPhone(formatter.input(phone));
+                    }
                   }
                 }
               }}
               className={errorField === 'city' ? '[&_input]:!border-[#FF3D3D] [&_input]:!ring-1 [&_input]:!ring-[#FF3D3D]' : ''}
             />
-            {errorField === 'city' && <p className="text-[#FF3D3D] text-[12px] font-bold">Selecciona una ciudad de la lista de sugerencias</p>}
+            {errorField === 'city' && <p className="text-[#FF3D3D] text-[12px] font-bold">Ingresa tu ciudad</p>}
           </div>
         </div>
 

@@ -79,6 +79,8 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
   const [birthYear, setBirthYear] = useState("");
   const [dateError, setDateError] = useState("");
   const [locationError, setLocationError] = useState("");
+  const [firstNameError, setFirstNameError] = useState("");
+  const [lastNameError, setLastNameError] = useState("");
 
   // Refs for auto-focusing & auto-tabbing
   const professionRef = useRef<HTMLInputElement>(null);
@@ -87,6 +89,16 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
   const dayRef = useRef<HTMLDivElement>(null);
   
   const genderRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(initialData);
+      setFirstNameError("");
+      setLastNameError("");
+      setLocationError("");
+      setDateError("");
+    }
+  }, [isOpen, initialData]);
 
   useEffect(() => {
     if (isOpen && initialFocusField) {
@@ -105,6 +117,8 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
     if (!isOpen) {
       setDateError("");
       setLocationError("");
+      setFirstNameError("");
+      setLastNameError("");
     }
   }, [isOpen]);
 
@@ -123,10 +137,27 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === "first_name") setFirstNameError("");
+    if (name === "last_name") setLastNameError("");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.first_name || !formData.first_name.trim()) {
+      setFirstNameError("Ingresa tu nombre");
+      return;
+    }
+
+    if (!formData.last_name || !formData.last_name.trim()) {
+      setLastNameError("Ingresa tu apellido");
+      return;
+    }
+
+    if (!formData.city || !formData.city.trim()) {
+      setLocationError("Ingresa tu ciudad");
+      return;
+    }
 
     // Pad single digits
     const paddedDay = birthDay.length === 1 ? '0' + birthDay : birthDay;
@@ -146,11 +177,6 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
       }
     }
 
-    if (!formData.city || !formData.country) {
-      setLocationError("Selecciona una ciudad de la lista de sugerencias");
-      return;
-    }
-
     // Convert birthdate splits back to YYYY-MM-DD for saving
     let finalBirthdate = "";
     if (paddedDay && paddedMonth && fullYear && isValidBirthdate(normalized)) {
@@ -168,73 +194,100 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Editar Información Personal"
-      maxWidth="720px"
+      title="Editar información personal"
+      maxWidth="540px"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !rounded-[10px] md:!rounded-[12px]">
+          <Button variant="secondary" onClick={onClose} className="w-full sm:flex-1">
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !bg-black !text-white hover:!bg-slate-800 !rounded-[10px] md:!rounded-[12px]">
+          <Button variant="primary" onClick={handleSubmit} className="w-full sm:flex-1">
             Guardar cambios
           </Button>
         </>
       }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 md:gap-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-3.5 md:gap-y-5">
-          <div className="flex flex-col gap-1.5 md:gap-2">
-            <label className="text-label text-[11px] md:text-xs ml-1">Nombre</label>
-            <InputField
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleChange}
-              placeholder="Nombre"
-              variant="bordered"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5 md:gap-2">
-            <label className="text-label text-[11px] md:text-xs ml-1">Apellido</label>
-            <InputField
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleChange}
-              placeholder="Apellido"
-              variant="bordered"
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1.5 md:gap-2">
-          <label className="text-label text-[11px] md:text-xs ml-1">Profesión</label>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <InputField
-            ref={professionRef}
-            name="profession"
-            value={formData.profession}
+            label="Nombre"
+            name="first_name"
+            value={formData.first_name}
             onChange={handleChange}
-            placeholder="Tu profesión"
+            placeholder="Ingresa tu nombre"
+            error={firstNameError}
             variant="bordered"
-            autoFocus={initialFocusField === 'profession'}
+          />
+          <InputField
+            label="Apellido"
+            name="last_name"
+            value={formData.last_name}
+            onChange={handleChange}
+            placeholder="Ingresa tu apellido"
+            error={lastNameError}
+            variant="bordered"
           />
         </div>
 
-        <div>
+        <InputField
+          ref={professionRef}
+          label="Profesión"
+          name="profession"
+          value={formData.profession}
+          onChange={handleChange}
+          placeholder="Ingresa tu profesión"
+          variant="bordered"
+          autoFocus={initialFocusField === 'profession'}
+        />
+
+        <div className="flex flex-col gap-1">
           <LocationInput
             ref={cityRef}
             label="Ciudad"
+            placeholder="Ingresa tu ciudad"
             defaultValue={formData.city}
             onSelect={({ city, country }) => {
-              setFormData(prev => ({ ...prev, city, country }));
+              setFormData(prev => ({ ...prev, city, country: country || prev.country }));
               setLocationError("");
             }}
             autoFocus={initialFocusField === 'city'}
-            className={locationError ? '[&_input]:!border-[#FF3D3D] [&_input]:!ring-1 [&_input]:!ring-[#FF3D3D]' : ''}
+            className={locationError ? '[&_input]:!border-rose-500 [&_input]:!ring-1 [&_input]:!ring-rose-500' : ''}
           />
-          {locationError && <p className="text-[#FF3D3D] text-[12px] font-bold mt-1 ml-1">{locationError}</p>}
+          {locationError && <p className="text-xs font-medium text-rose-600 mt-0.5 px-0.5">{locationError}</p>}
         </div>
 
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-          <span>La fecha de nacimiento y género se gestionan desde los Ajustes de Cuenta.</span>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-label">Fecha de nacimiento</label>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3" ref={dayRef}>
+            <SelectInput
+              value={birthDay}
+              options={DAYS}
+              placeholder="Día"
+              onSelect={(val) => {
+                setBirthDay(val);
+                setDateError("");
+              }}
+            />
+            <SelectInput
+              value={birthMonth}
+              options={MONTHS}
+              placeholder="Mes"
+              onSelect={(val) => {
+                setBirthMonth(val);
+                setDateError("");
+              }}
+            />
+            <SelectInput
+              value={birthYear}
+              options={YEARS}
+              placeholder="Año"
+              onSelect={(val) => {
+                setBirthYear(val);
+                setDateError("");
+              }}
+            />
+          </div>
+          {dateError && <p className="text-xs font-medium text-rose-600 mt-0.5 px-0.5">{dateError}</p>}
         </div>
       </form>
     </Modal>

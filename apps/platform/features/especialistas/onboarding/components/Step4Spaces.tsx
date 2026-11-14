@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/InputField";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { SelectInput } from "@/components/ui/SelectInput";
+import { TextAreaField } from "@/components/ui/TextAreaField";
+import { StepHeader, SelectionCard, StepperNav } from "./molecules";
+import { MapPin, Loader2, Check, Upload, Trash2, X } from "lucide-react";
 import {
   INTEREST_CATEGORIES,
   SPACE_TYPE_OPTIONS_CONFIG,
@@ -152,7 +155,7 @@ export function PlacesSearchAutocomplete({
         }}
         disabled={!ready}
         placeholder={placeholder}
-        className={`w-full ${error ? "!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]" : ""}`}
+        className={`w-full ${error ? "border-rose-500 focus:border-rose-500 ring-1 ring-rose-500" : ""}`}
       />
 
       {status === "OK" &&
@@ -244,7 +247,7 @@ function AreaServicesPills({
 
   return (
     <div className="flex flex-col gap-3 mt-1 animate-in fade-in duration-200">
-      <label className="text-label ml-1">Servicios *</label>
+      <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">Servicios *</label>
 
       {/* Pill Tags List (Standardized with Step 2) */}
       <div className="flex flex-wrap gap-2 pt-1">
@@ -263,7 +266,7 @@ function AreaServicesPills({
               >
                 Otro
                 {isOtroSelected && (
-                  <span className="material-symbols-rounded text-[14px] shrink-0">check</span>
+                  <Check className="w-3.5 h-3.5 shrink-0 text-white" />
                 )}
               </button>
             );
@@ -286,7 +289,7 @@ function AreaServicesPills({
             >
               {tag}
               {isSelected && (
-                <span className="material-symbols-rounded text-[14px] shrink-0">check</span>
+                <Check className="w-3.5 h-3.5 shrink-0 text-white" />
               )}
             </button>
           );
@@ -328,7 +331,7 @@ function AreaServicesPills({
                   className="flex items-center gap-1.5 h-8 px-3.5 rounded-full text-[12px] font-medium bg-emerald-600 text-white shrink-0"
                 >
                   {cService.name}
-                  <span className="material-symbols-rounded text-[14px] shrink-0">check</span>
+                  <Check className="w-3.5 h-3.5 shrink-0 text-white" />
                   <button
                     type="button"
                     onClick={() => handleRemoveCustom(cService.name)}
@@ -848,11 +851,11 @@ export function Step4Spaces({
 
       {/* Main Choice */}
       <div ref={clinicContainerRef} className="flex flex-col gap-3 mt-1">
-        <label className="text-label ml-1 font-jakarta font-bold text-slate-900">
+        <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">
           ¿Deseas agregar un espacio?
         </label>
         {errorField === "clinicChoice" && (
-          <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">Selecciona una opción para continuar</p>
+          <p className="text-xs font-medium text-rose-600 ml-1">Selecciona una opción para continuar</p>
         )}
 
         <div className="grid grid-cols-1 gap-3">
@@ -910,7 +913,7 @@ export function Step4Spaces({
                   {/* Form fields */}
                   <div className="flex flex-col gap-4">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-label ml-1">Nombre del espacio *</label>
+
                       <InputField
                         ref={clinicNameInputRef}
                         type="text"
@@ -920,15 +923,16 @@ export function Step4Spaces({
                           if (errorField === "clinicName") setErrorField(null);
                         }}
                         placeholder="Escribe el nombre del espacio"
-                        className={errorField === "clinicName" ? "!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]" : ""}
+                        label="Nombre del espacio *"
+                        error={errorField === "clinicName" ? "Ingresa el nombre del espacio" : undefined}
                       />
                       {errorField === "clinicName" && (
-                        <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">Ingresa el nombre del espacio</p>
+                        <p className="text-xs font-medium text-rose-600 ml-1">Ingresa el nombre del espacio</p>
                       )}
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-label ml-1">Descripción del espacio *</label>
+                      <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">Descripción del espacio *</label>
                       <textarea
                         ref={clinicDescriptionInputRef}
                         value={clinicDescription}
@@ -939,16 +943,16 @@ export function Step4Spaces({
                         placeholder="Describe brevemente el espacio."
                         rows={3}
                         className={`w-full px-3.5 py-2.5 bg-white border rounded-xl text-[14px] text-slate-800 focus:outline-none focus:border-black font-sans resize-none transition-all duration-200 ${
-                          errorField === "clinicDescription" ? "!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]" : "border-slate-200"
+                          errorField === "clinicDescription" ? "border-rose-500 focus:border-rose-500 ring-1 ring-rose-500" : "border-slate-200"
                         }`}
                       />
                       {errorField === "clinicDescription" && (
-                        <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">Ingresa la descripción del espacio</p>
+                        <p className="text-xs font-medium text-rose-600 ml-1">Ingresa la descripción del espacio</p>
                       )}
                     </div>
 
                     <div ref={clinicAddressInputRef} className="flex flex-col gap-1.5">
-                      <label className="text-label ml-1">Dirección completa *</label>
+                      <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">Dirección completa *</label>
                       <PlacesSearchAutocomplete
                         value={clinicAddress}
                         onChange={(val) => {
@@ -962,7 +966,7 @@ export function Step4Spaces({
                         error={errorField === "clinicAddress"}
                       />
                       {errorField === "clinicAddress" && (
-                        <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">Ingresa la dirección completa</p>
+                        <p className="text-xs font-medium text-rose-600 ml-1">Ingresa la dirección completa</p>
                       )}
 
                       {/* Map Pin Preview */}
@@ -972,7 +976,7 @@ export function Step4Spaces({
                             title="Mapa de ubicación"
                             width="100%"
                             height="100%"
-                            style={{ border: 0 }}
+                            className="border-0"
                             loading="lazy"
                             allowFullScreen
                             src={`https://www.google.com/maps/embed/v1/place?key=${
@@ -980,7 +984,7 @@ export function Step4Spaces({
                             }&q=${lat},${lng}&zoom=15`}
                           />
                           <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-xs px-3 py-1 rounded-lg text-[12px] font-medium text-slate-800 border border-slate-200 flex items-center gap-1.5">
-                            <span className="material-symbols-rounded text-slate-900 text-[16px]">location_on</span>
+                            <MapPin className="w-4 h-4 text-slate-900" />
                             <span className="truncate max-w-[240px]">{clinicName || clinicAddress}</span>
                           </div>
                         </div>
@@ -989,7 +993,7 @@ export function Step4Spaces({
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-label ml-1">Ciudad *</label>
+                        <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">Ciudad *</label>
                         <InputField
                           ref={cityInputRef}
                           type="text"
@@ -999,14 +1003,14 @@ export function Step4Spaces({
                             if (errorField === "city") setErrorField(null);
                           }}
                           placeholder="Ej. Buenos Aires"
-                          className={errorField === "city" ? "!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]" : ""}
+                          className={errorField === "city" ? "border-rose-500 focus:border-rose-500 ring-1 ring-rose-500" : ""}
                         />
                         {errorField === "city" && (
-                          <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">Ingresa la ciudad</p>
+                          <p className="text-xs font-medium text-rose-600 ml-1">Ingresa la ciudad</p>
                         )}
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-label ml-1">País *</label>
+                        <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">País *</label>
                         <InputField
                           ref={countryInputRef}
                           type="text"
@@ -1019,17 +1023,17 @@ export function Step4Spaces({
                             if (matched) setPhoneCountry(matched);
                           }}
                           placeholder="Ej. Argentina"
-                          className={errorField === "country" ? "!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]" : ""}
+                          className={errorField === "country" ? "border-rose-500 focus:border-rose-500 ring-1 ring-rose-500" : ""}
                         />
                         {errorField === "country" && (
-                          <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">Ingresa el país</p>
+                          <p className="text-xs font-medium text-rose-600 ml-1">Ingresa el país</p>
                         )}
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-label ml-1">Teléfono</label>
+                        <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">Teléfono</label>
                         <PhoneInput
                           value={clinicPhone}
                           phoneCountry={phoneCountry}
@@ -1038,7 +1042,7 @@ export function Step4Spaces({
                         />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <label className="text-label ml-1">Sitio web o red social</label>
+                        <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">Sitio web o red social</label>
                         <InputField
                           type="text"
                           value={clinicWebsite}
@@ -1050,11 +1054,11 @@ export function Step4Spaces({
 
                     {/* Image Upload Section */}
                     <div className="flex flex-col gap-2 mt-1">
-                      <label className="text-label ml-1">Imagen del espacio</label>
+                      <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">Imagen del espacio</label>
 
                       {isOptimizingImage ? (
                         <div className="flex flex-col items-center justify-center p-8 bg-slate-50 border border-slate-200 rounded-lg gap-2 text-center animate-in fade-in duration-200">
-                          <span className="animate-spin material-symbols-rounded text-emerald-600 text-[24px]">progress_activity</span>
+                          <Loader2 className="w-6 h-6 animate-spin text-emerald-600" />
                           <span className="text-[13px] font-semibold text-slate-800">Optimizando imagen automáticamente...</span>
                           <span className="text-[11px] text-slate-400">Reduciendo tamaño y convirtiendo a formato WebP ligero</span>
                         </div>
@@ -1067,7 +1071,7 @@ export function Step4Spaces({
                               className="w-full h-full object-cover"
                             />
                             <div className="absolute top-2 right-2 bg-emerald-600 text-white text-[11px] font-bold w-6 h-6 rounded-full flex items-center justify-center">
-                              <span className="material-symbols-rounded text-[14px]">check</span>
+                              <Check className="w-3.5 h-3.5" />
                             </div>
                           </div>
                           <div className="flex flex-col gap-2">
@@ -1076,7 +1080,7 @@ export function Step4Spaces({
                               onClick={() => photoFileInputRef.current?.click()}
                               className="px-3.5 py-2 rounded-xl text-[12px] font-bold bg-white text-slate-800 border border-slate-200 hover:bg-slate-50 transition cursor-pointer flex items-center gap-2 shrink-0"
                             >
-                              <span className="material-symbols-rounded text-[18px]">upload_file</span>
+                              <Upload className="w-4 h-4" />
                               Cambiar imagen
                             </button>
                             <button
@@ -1084,7 +1088,7 @@ export function Step4Spaces({
                               onClick={() => setSelectedPhotoUrl("")}
                               className="px-3.5 py-2 rounded-xl text-[12px] font-bold bg-white text-red-600 border border-slate-200 hover:bg-red-50 transition cursor-pointer flex items-center gap-2 shrink-0"
                             >
-                              <span className="material-symbols-rounded text-[18px]">delete</span>
+                              <Trash2 className="w-4 h-4" />
                               Eliminar
                             </button>
                           </div>
@@ -1124,7 +1128,7 @@ export function Step4Spaces({
                           onClick={() => photoFileInputRef.current?.click()}
                           className="!w-auto self-start mt-1"
                         >
-                          <span className="material-symbols-rounded text-[18px] mr-2">upload_file</span>
+                          <Upload className="w-4 h-4 mr-2" />
                           Subir imagen del espacio
                         </Button>
                       )}
@@ -1160,7 +1164,7 @@ export function Step4Spaces({
                     error={errorField === "spaceType"}
                   />
                   {errorField === "spaceType" && (
-                    <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">
+                    <p className="text-xs font-medium text-rose-600 ml-1">
                       Selecciona un tipo de espacio para continuar
                     </p>
                   )}
@@ -1168,7 +1172,7 @@ export function Step4Spaces({
                   {/* Required custom text input if spaceType === "Otro" */}
                   {spaceType === "Otro" && (
                     <div className="flex flex-col gap-1.5 mt-1 animate-in fade-in duration-200">
-                      <label className="text-label ml-1 text-slate-800">
+                      <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">
                         Especifica el tipo de espacio *
                       </label>
                       <InputField
@@ -1182,12 +1186,12 @@ export function Step4Spaces({
                         placeholder="Escribe la denominación de tu espacio"
                         className={
                           errorField === "customSpaceType"
-                            ? "!border-[#FF3D3D] !ring-1 !ring-[#FF3D3D]"
+                            ? "border-rose-500 focus:border-rose-500 ring-1 ring-rose-500"
                             : ""
                         }
                       />
                       {errorField === "customSpaceType" && (
-                        <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">
+                        <p className="text-xs font-medium text-rose-600 ml-1">
                           Escribe el tipo de espacio
                         </p>
                       )}
@@ -1209,13 +1213,13 @@ export function Step4Spaces({
                   </div>
 
                   {errorField === "spaceCategories" && (
-                    <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">
+                    <p className="text-xs font-medium text-rose-600 ml-1">
                       Selecciona al menos un área de bienestar
                     </p>
                   )}
 
                   {errorField === "spaceServices" && (
-                    <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">
+                    <p className="text-xs font-medium text-rose-600 ml-1">
                       Selecciona al menos un servicio o actividad para cada área de bienestar ingresada
                     </p>
                   )}
@@ -1279,7 +1283,7 @@ export function Step4Spaces({
                             />
                           ) : (
                             <div className="flex flex-col gap-1">
-                              <label className="text-label ml-1">Servicios</label>
+                              <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">Servicios</label>
                               <div className="w-full h-11 px-3.5 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center text-[13.5px] text-slate-400 font-sans select-none">
                                 Selecciona un área de bienestar primero...
                               </div>
@@ -1338,7 +1342,7 @@ export function Step4Spaces({
         </Button>
         <Button onClick={handleNextStep4} variant="primary" className="!w-auto px-6 gap-2">
           Continuar
-          <span className="material-symbols-rounded text-[18px]">arrow_forward</span>
+          
         </Button>
       </div>
     </div>

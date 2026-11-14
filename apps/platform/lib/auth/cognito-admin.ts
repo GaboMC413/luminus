@@ -4,6 +4,7 @@ import {
   AdminEnableUserCommand,
   AdminSetUserPasswordCommand,
   AdminConfirmSignUpCommand,
+  AdminCreateUserCommand,
   CognitoIdentityProviderClient,
   UserNotFoundException,
 } from "@aws-sdk/client-cognito-identity-provider";
@@ -52,6 +53,12 @@ function getCognitoUsername(user: CognitoManagedUser) {
 }
 
 function isSystemUser(user: CognitoManagedUser) {
+  const hasCognitoIdentity = user.identities?.some(
+    (identity) => identity.provider === "cognito" && !identity.providerSubject.startsWith("system:")
+  );
+  if (hasCognitoIdentity) {
+    return false;
+  }
   return user.cognitoSub.startsWith("system:");
 }
 
@@ -144,3 +151,53 @@ export async function adminConfirmUser(email: string) {
     console.error("Failed to auto-confirm user in Cognito:", error);
   }
 }
+
+export async function adminCreateAndConfirmUser(email: string, password: string): Promise<string> {
+  const client = getCognitoAdminClient();
+  const UserPoolId = getUserPoolId();
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const createRes = await client.send(
+    new AdminCreateUserCommand({
+      UserPoolId,
+      Username: normalizedEmail,
+      MessageAction: "SUPPRESS", // Suppress AWS verification email/SMS
+      UserAttributes: [
+        { Name: "email", Value: normalizedEmail },
+        { Name: "email_verified", Value: "true" },
+      ],
+    })
+  );
+
+  await client.send(
+    new AdminSetUserPasswordCommand({
+      UserPoolId,
+      Username: normalizedEmail,
+      Password: password,
+      Permanent: true,
+    })
+  );
+
+  const subAttr = createRes.User?.Attributes?.find((attr) => attr.Name === "sub");
+  return subAttr?.Value || createRes.User?.Username || normalizedEmail;
+}
+
+export async function adminDeleteCognitoUser(email: string) {
+  const client = getCognitoAdminClient();
+  const UserPoolId = getUserPoolId();
+
+  try {
+    await client.send(
+      new AdminDeleteUserCommand({
+        UserPoolId,
+        Username: email,
+      })
+    );
+  } catch (error: any) {
+    if (error?.name === "UserNotFoundException" || error instanceof UserNotFoundException) {
+      return;
+    }
+    console.error("Failed to delete Cognito user:", error);
+  }
+}
+

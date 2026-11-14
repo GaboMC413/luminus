@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { EmptyProfileButton } from "@/components/ui/Button";
+import { ProfileSectionCard } from "@/components/ui/ProfileSectionCard";
 
 export interface Prompt {
   question: string;
@@ -121,51 +121,44 @@ export const ALL_PROMPTS = [
   }
 ];
 
-export function PromptsDisplay({ prompts, onEdit, isPublic = false, firstName, highlight = false }: { prompts: Prompt[]; onEdit?: (step?: 'list' | 'select') => void; isPublic?: boolean; firstName?: string; highlight?: boolean }) {
-  const hasPrompts = prompts && prompts.length > 0;
-  const nameToUse = firstName ? firstName.trim() : "Este usuario";
+export function PromptsDisplay({
+  prompts,
+  onEdit,
+  isPublic = false,
+  highlight = false,
+}: {
+  prompts: Prompt[];
+  onEdit?: (step?: 'list' | 'select') => void;
+  isPublic?: boolean;
+  firstName?: string;
+  highlight?: boolean;
+}) {
+  const hasPrompts = Boolean(prompts && prompts.length > 0);
 
   return (
-    <div className={`bg-white rounded-2xl p-4 lg:p-6 flex flex-col gap-4 lg:gap-5 border border-slate-200 shadow-none transition-all ${!hasPrompts ? 'bg-slate-50/50 border-slate-100' : ''}`}>
-      <div className="flex items-center gap-2.5">
-        <h3 className="text-label text-[0.75rem] lg:text-[0.8125rem] uppercase font-semibold ml-1">Reflexiones</h3>
-      </div>
-
-      {hasPrompts ? (
-        <div className="flex flex-col gap-2">
-          {prompts.map((prompt, index) => (
-            <div key={index} className="flex flex-col">
-              <p className="text-sm lg:text-base text-slate-600 italic leading-relaxed">
-                "<span className="text-slate-600">
-                  {prompt.question.replace(/[…\. ]+$/, '')}
-                </span>{" "}
-                {prompt.answer.replace(/[…\. ]+$/, '').charAt(0).toLowerCase() + prompt.answer.replace(/[…\. ]+$/, '').slice(1)}"
-              </p>
-              {index < prompts.length - 1 && <div className="h-px w-full bg-slate-50 mt-2.5" />}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-start gap-4">
-          {isPublic ? (
-            <p className="text-sm lg:text-base text-slate-400 font-medium italic tracking-tight leading-relaxed">
-              {nameToUse} aún no ha agregado reflexiones.
+    <ProfileSectionCard
+      title="Reflexiones"
+      isPublic={isPublic}
+      isEmpty={!hasPrompts}
+      emptyActionLabel="Comparte tus reflexiones"
+      onEdit={onEdit ? () => onEdit(hasPrompts ? 'list' : 'select') : undefined}
+      editTitle="Editar reflexiones"
+      highlight={highlight}
+    >
+      <div className="flex flex-col gap-2.5">
+        {prompts?.map((prompt, index) => (
+          <div key={index} className="flex flex-col">
+            <p className="text-body text-slate-600 italic">
+              &ldquo;<span>{prompt.question.replace(/[…\. ]+$/, '')}</span>{' '}
+              {prompt.answer.replace(/[…\. ]+$/, '').charAt(0).toLowerCase() +
+                prompt.answer.replace(/[…\. ]+$/, '').slice(1)}&rdquo;
             </p>
-          ) : (
-            onEdit && (
-              <EmptyProfileButton
-                onClick={() => {
-                  window.history.replaceState(null, "", window.location.pathname);
-                  onEdit?.('select');
-                }}
-                label="Comparte tus reflexiones"
-                icon="add"
-                className={highlight ? "glow-highlight" : ""}
-              />
-            )
-          )}
-        </div>
-      )}
-    </div>
+            {index < prompts.length - 1 && (
+              <div className="h-px w-full bg-slate-100 mt-2.5" />
+            )}
+          </div>
+        ))}
+      </div>
+    </ProfileSectionCard>
   );
 }

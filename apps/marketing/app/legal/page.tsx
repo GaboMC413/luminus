@@ -4,8 +4,35 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
-  title: "Centro Legal | LUMINUS Latam",
+  title: "Centro Legal | LUMINUS LATAM",
   description: "Políticas de privacidad, términos y condiciones de la plataforma LUMINUS.",
+  alternates: {
+    canonical: "https://luminuslatam.com/legal",
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_LA",
+    url: "https://luminuslatam.com/legal",
+    siteName: "LUMINUS LATAM",
+    title: "Centro Legal | LUMINUS LATAM",
+    description: "Políticas de privacidad, términos y condiciones de la plataforma LUMINUS.",
+    images: [
+      {
+        url: "https://luminuslatam.com/luminus_platform.jpg",
+        secureUrl: "https://luminuslatam.com/luminus_platform.jpg",
+        width: 1200,
+        height: 630,
+        type: "image/jpeg",
+        alt: "LUMINUS LATAM - Centro Legal",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Centro Legal | LUMINUS LATAM",
+    description: "Políticas de privacidad, términos y condiciones de la plataforma LUMINUS.",
+    images: ["https://luminuslatam.com/luminus_platform.jpg"],
+  },
 };
 
 export default function LegalPage() {
@@ -19,6 +46,11 @@ export default function LegalPage() {
       title: "Condiciones para Especialistas",
       description: "Regula la postulación, admisión, participación y permanencia de los especialistas dentro de la red LUMINUS.",
       href: "/legal/condiciones-especialistas",
+    },
+    {
+      title: "Sesiones Introductorias",
+      description: "Define el alcance, la independencia profesional y las condiciones aplicables a las sesiones introductorias.",
+      href: "/legal/sesiones-introductorias",
     },
     {
       title: "Política de Privacidad",

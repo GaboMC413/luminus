@@ -37,11 +37,24 @@ export function isRateLimited(
   timestamps = timestamps.filter((t) => now - t < windowMs);
 
   if (timestamps.length >= limit) {
+    store.set(key, timestamps);
     return { success: true, remaining: 0 };
   }
 
   timestamps.push(now);
   store.set(key, timestamps);
+
+  // Periodic eviction of expired keys to prevent memory leak
+  if (store.size > 2000 && Math.random() < 0.05) {
+    store.forEach((ts: number[], k: string) => {
+      const active = ts.filter((t: number) => now - t < 60 * 1000);
+      if (active.length === 0) {
+        store.delete(k);
+      } else {
+        store.set(k, active);
+      }
+    });
+  }
 
   return { success: false, remaining: limit - timestamps.length };
 }

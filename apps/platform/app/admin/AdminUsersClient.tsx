@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   AdminUser,
   AdminChat,
@@ -27,6 +28,8 @@ import { EmailLogsTab } from "./components/tabs/EmailLogsTab";
 import { CategoriesTab } from "./components/tabs/CategoriesTab";
 import { EventsTab } from "./components/tabs/EventsTab";
 import { ContactTab } from "./components/tabs/ContactTab";
+import { PostsTab } from "./components/tabs/PostsTab";
+import { PostItem } from "@/components/community/mockPostsData";
 
 export function AdminUsersClient({
   initialUsers,
@@ -72,19 +75,125 @@ export function AdminUsersClient({
   const [suggestions, setSuggestions] = useState<AdminSuggestion[]>(initialSuggestions);
   const [events] = useState<AdminEvent[]>(initialEvents);
   const [inscriptions] = useState<AdminEventInscription[]>(initialInscriptions);
-  const [activeTab, setActiveTab] = useState<AdminTab>("usuarios");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const tabFromUrl = (searchParams.get("tab") as AdminTab) || "usuarios";
+  const [activeTab, setActiveTabState] = useState<AdminTab>(tabFromUrl);
+
+  useEffect(() => {
+    if (tabFromUrl && tabFromUrl !== activeTab) {
+      setActiveTabState(tabFromUrl);
+    }
+  }, [tabFromUrl]);
+
+  const handleTabChange = (newTab: AdminTab) => {
+    setActiveTabState(newTab);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", newTab);
+    router.replace(`/admin?${params.toString()}`, { scroll: false });
+  };
 
   // Shared Specialist subtab state
   const [specialistSubTab, setSpecialistSubTab] = useState<"lista" | "postulaciones">("lista");
   const [selectedSpecialistUserId, setSelectedSpecialistUserId] = useState<string | null>(null);
 
   // Shared User selection state
-  const [, setSelectedId] = useState<string>(initialUsers[0]?.id ?? "");
-  const [, setUserSubTab] = useState<"activos" | "cerradas" | "deshabilitados">("activos");
+  const [selectedId, setSelectedId] = useState<string>(initialUsers[0]?.id ?? "");
+  const [userSubTab, setUserSubTab] = useState<"activos" | "mecenas" | "cerradas" | "deshabilitados">("activos");
 
   const pendingSuggestionsCount = useMemo(() => {
     return suggestions.filter((s) => s.status === "pending").length;
   }, [suggestions]);
+
+  // Community Posts state for validation
+  const [communityPosts, setCommunityPosts] = useState<PostItem[]>([]);
+
+  const fetchCommunityPosts = async () => {
+    try {
+      const res = await fetch(`/api/admin/posts?_t=${Date.now()}`, { cache: "no-store" });
+      if (res.ok) {
+        const data = await res.json();
+        setCommunityPosts(data.posts || []);
+      }
+    } catch (err) {
+      console.error("Error loading admin community posts:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCommunityPosts();
+  }, []);
+
+  const pendingPostsCount = useMemo(() => {
+    return communityPosts.filter((p) => p.status === "pending").length;
+  }, [communityPosts]);
+
+  const handleValidatePost = async (postId: string) => {
+    setCommunityPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId ? { ...p, status: "approved" as const } : p
+      )
+    );
+    try {
+      await fetch("/api/admin/posts", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: postId, status: "approved" }),
+      });
+    } catch (err) {
+      console.error("Error validating post:", err);
+      fetchCommunityPosts();
+    }
+  };
+
+  const handleRejectPost = async (postId: string) => {
+    setCommunityPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId ? { ...p, status: "rejected" as const } : p
+      )
+    );
+    try {
+      await fetch("/api/admin/posts", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: postId, status: "rejected" }),
+      });
+    } catch (err) {
+      console.error("Error rejecting post:", err);
+      fetchCommunityPosts();
+    }
+  };
+
+  const handlePausePost = async (postId: string) => {
+    setCommunityPosts((prev) =>
+      prev.map((p) =>
+        p.id === postId ? { ...p, status: "pending" as const } : p
+      )
+    );
+    try {
+      await fetch("/api/admin/posts", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: postId, status: "pending" }),
+      });
+    } catch (err) {
+      console.error("Error pausing post:", err);
+      fetchCommunityPosts();
+    }
+  };
+
+  const handleDeletePost = async (postId: string) => {
+    setCommunityPosts((prev) => prev.filter((p) => p.id !== postId));
+    try {
+      await fetch(`/api/comunidad/posts/${postId}`, {
+        method: "DELETE",
+      });
+    } catch (err) {
+      console.error("Error deleting post:", err);
+      fetchCommunityPosts();
+    }
+  };
 
   async function fetchCategoriesData() {
     try {
@@ -116,8 +225,9 @@ export function AdminUsersClient({
         {/* Navigation Sidebar */}
         <AdminSidebar
           activeTab={activeTab}
-          setActiveTab={setActiveTab}
+          setActiveTab={handleTabChange}
           pendingSuggestionsCount={pendingSuggestionsCount}
+          pendingPostsCount={pendingPostsCount}
           onSelectCategories={fetchCategoriesData}
         />
 
@@ -128,9 +238,13 @@ export function AdminUsersClient({
               users={users}
               specialists={specialists}
               setUsers={setUsers}
-              setActiveTab={setActiveTab}
+              setActiveTab={handleTabChange}
               setSelectedSpecialistUserId={setSelectedSpecialistUserId}
               setSpecialistSubTab={setSpecialistSubTab}
+              selectedId={selectedId}
+              setSelectedId={setSelectedId}
+              userSubTab={userSubTab}
+              setUserSubTab={setUserSubTab}
             />
           )}
 
@@ -157,7 +271,18 @@ export function AdminUsersClient({
               setSelectedSpecialistUserId={setSelectedSpecialistUserId}
               setSelectedId={setSelectedId}
               setUserSubTab={setUserSubTab}
-              setActiveTab={setActiveTab}
+              setActiveTab={handleTabChange}
+            />
+          )}
+
+          {activeTab === "publicaciones" && (
+            <PostsTab
+              posts={communityPosts}
+              setPosts={setCommunityPosts}
+              onValidatePost={handleValidatePost}
+              onRejectPost={handleRejectPost}
+              onPausePost={handlePausePost}
+              onDeletePost={handleDeletePost}
             />
           )}
 

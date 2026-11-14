@@ -4,8 +4,35 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
-  title: "Condiciones para Especialistas | LUMINUS Latam",
+  title: "Condiciones para Especialistas | LUMINUS LATAM",
   description: "Regula la postulación, admisión, participación y permanencia de los especialistas dentro de la red LUMINUS.",
+  alternates: {
+    canonical: "https://luminuslatam.com/legal/condiciones-especialistas",
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_LA",
+    url: "https://luminuslatam.com/legal/condiciones-especialistas",
+    siteName: "LUMINUS LATAM",
+    title: "Condiciones para Especialistas | LUMINUS LATAM",
+    description: "Regula la postulación, admisión, participación y permanencia de los especialistas dentro de la red LUMINUS.",
+    images: [
+      {
+        url: "https://luminuslatam.com/og-especialistas.png",
+        secureUrl: "https://luminuslatam.com/og-especialistas.png",
+        width: 1200,
+        height: 630,
+        type: "image/png",
+        alt: "LUMINUS LATAM - Condiciones para Especialistas",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Condiciones para Especialistas | LUMINUS LATAM",
+    description: "Regula la postulación, admisión, participación y permanencia de los especialistas dentro de la red LUMINUS.",
+    images: ["https://luminuslatam.com/og-especialistas.png"],
+  },
 };
 
 export default function CondicionesEspecialistasPage() {
@@ -217,7 +244,11 @@ export default function CondicionesEspecialistasPage() {
               LUMINUS no será responsable por incumplimientos, cancelaciones, falta de respuesta, demoras, mala calidad del servicio, disconformidad con una sesión, resultados no alcanzados, información incorrecta, daños, perjuicios, conflictos, reclamos, fraudes, estafas o cualquier otra situación derivada directa o indirectamente de la relación entre usuarios y especialistas.
             </p>
             <p>
-              Los usuarios deberán evaluar bajo su propio criterio la trayectoria, formación, experiencia, condiciones, precios, modalidad de trabajo, habilitaciones, certificaciones y pertinencia de cada especialista antes de contratar, reservar, participar o continuar cualquier servicio, sesión, tratamiento, programa, curso o actividad.
+              Los usuarios deberán evaluar bajo su propio criterio la trayectoria, formación, experiencia, condiciones, precios, modalidad de trabajo, habilitaciones, certificaciones y pertinencia de cada especialista antes de contratar, reservar, participar o continuar cualquier servicio, sesión, tratamiento, programa, curso o actividad. Las sesiones introductorias también se rigen por las{" "}
+              <Link href="/legal/sesiones-introductorias" className="text-slate-900 underline hover:text-black transition-colors">
+                Condiciones de Sesiones Introductorias
+              </Link>
+              .
             </p>
           </div>
 

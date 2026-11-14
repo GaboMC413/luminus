@@ -3,6 +3,7 @@ import { getCognitoErrorMessage, getCognitoErrorStatus, signInWithCognito } from
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { serializeUser, validateAuthInput } from "@/lib/auth/validation";
 import { prisma } from "@/lib/db";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export const runtime = "nodejs";
 
@@ -12,6 +13,11 @@ export async function POST(request: Request) {
 
   if (!validation.ok) {
     return NextResponse.json({ message: validation.message }, { status: 400 });
+  }
+
+  const turnstileResult = await verifyTurnstileToken(body?.turnstileToken);
+  if (!turnstileResult.success) {
+    return NextResponse.json({ message: turnstileResult.error }, { status: 400 });
   }
 
   try {
@@ -85,10 +91,23 @@ export async function POST(request: Request) {
     }
 
     if (user.status === "deleted") {
+      if (user.purgeAt && new Date() > user.purgeAt) {
+        return NextResponse.json(
+          { message: "Esta cuenta ha superado el periodo de gracia y ha sido eliminada permanentemente." },
+          { status: 403 },
+        );
+      }
+
       if (body?.reactivate) {
         await prisma.user.update({
           where: { id: user.id },
-          data: { status: "active" },
+          data: {
+            status: "active",
+            tier: user.paidUntil && new Date() < user.paidUntil ? user.tier : "FREE",
+            closedAt: null,
+            purgeAt: null,
+            paidUntil: user.paidUntil && new Date() < user.paidUntil ? user.paidUntil : null,
+          },
         });
         user.status = "active";
         try {
@@ -99,7 +118,7 @@ export async function POST(request: Request) {
         }
       } else {
         return NextResponse.json(
-          { code: "REQUIRES_REACTIVATION", message: "Tu cuenta fue eliminada. ¿Deseas reactivarla?" },
+          { code: "REQUIRES_REACTIVATION", message: "Tu cuenta se encuentra cerrada. ¿Deseas reactivarla?", paidUntil: user.paidUntil, purgeAt: user.purgeAt },
           { status: 403 },
         );
       }
@@ -162,7 +181,7 @@ export async function POST(request: Request) {
       role: updatedUser.role,
     });
 
-    setSessionCookie(token);
+    await setSessionCookie(token);
 
     try {
       await prisma.activityLog.create({

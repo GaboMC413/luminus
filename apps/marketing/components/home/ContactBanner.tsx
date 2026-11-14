@@ -16,7 +16,7 @@ export function ContactBanner() {
               Nacimos con el propósito de hacer el bienestar más cercano, simple y accesible. Creamos una red abierta para descubrir profesionales, herramientas y nuevas perspectivas que te ayuden a vivir mejor. Si quieres conocernos, compartir tu propuesta o hacernos alguna pregunta, escríbenos.
             </p>
           </div>
-          <div className="pt-2">
+          <div className="pt-2 w-full sm:w-auto">
             <Link
               href="/contacto"
               className="flex sm:inline-flex items-center justify-center w-full sm:w-auto py-3.5 px-8 text-base font-normal text-slate-950 bg-white hover:bg-slate-100 rounded-2xl text-center sm:min-w-[240px] transition-colors"

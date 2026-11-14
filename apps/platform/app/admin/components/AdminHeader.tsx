@@ -26,7 +26,7 @@ export function AdminHeader() {
     <header className="sticky top-0 z-40 w-full h-[64px] bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between shrink-0">
       {/* Left: Logo & Admin badge */}
       <div className="flex items-center gap-3">
-        <Link href="/comunidad" className="flex items-center gap-2.5">
+        <Link href="/inicio" className="flex items-center gap-2.5">
           <img src="/logo-luminus-black.svg" alt="Luminus" className="hidden sm:block h-[20px] cursor-pointer" />
           <img src="/iso-logo-black.svg" alt="Luminus" className="sm:hidden h-[24px] cursor-pointer" />
         </Link>
@@ -38,7 +38,7 @@ export function AdminHeader() {
       {/* Right: Go to Platform button & Static user profile display */}
       <div className="flex items-center gap-3">
         <Link
-          href="/comunidad"
+          href="/inicio"
           className="hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:text-black hover:bg-slate-50 transition-all text-xs font-semibold shadow-xs"
         >
           <span className="material-symbols-rounded text-[20px]">arrow_circle_left</span>

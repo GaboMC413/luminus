@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { InputField } from "@/components/ui/InputField";
+import { Button } from "@/components/ui/Button";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { LocationInput } from "@/components/ui/LocationInput";
 import { PhoneInput } from "@/components/ui/PhoneInput";
 import { DAYS, MONTHS, YEARS, isValidBirthdate } from "@/utils/profileDateUtils";
+import { Pencil } from "lucide-react";
 
 export interface EditableFieldProps {
   id: string;
@@ -24,6 +26,7 @@ export interface EditableFieldProps {
   setEditingFieldId: (id: string | null) => void;
   attentionCounter: number;
   setAttentionCounter: (val: number | ((prev: number) => number)) => void;
+  required?: boolean;
 }
 
 export function EditableField({
@@ -44,7 +47,8 @@ export function EditableField({
   editingFieldId,
   setEditingFieldId,
   attentionCounter,
-  setAttentionCounter
+  setAttentionCounter,
+  required = false
 }: EditableFieldProps) {
   const isEditing = editingFieldId === id;
   const isAnotherEditing = editingFieldId !== null && editingFieldId !== id;
@@ -107,9 +111,13 @@ export function EditableField({
 
   const handleSave = async () => {
     if (isDate) {
-      // Pad single digits
-      const paddedDay = birthDay.length === 1 ? '0' + birthDay : birthDay;
-      const paddedMonth = birthMonth.length === 1 ? '0' + birthMonth : birthMonth;
+      if (required && (!birthDay || !birthMonth || !birthYear)) {
+        setValidationError("Ingresa tu fecha de nacimiento");
+        return;
+      }
+
+      const paddedDay = birthDay ? birthDay.padStart(2, '0') : '';
+      const paddedMonth = birthMonth ? birthMonth.padStart(2, '0') : '';
       let fullYear = birthYear;
       if (birthYear.length === 2) {
         const yr = parseInt(birthYear);
@@ -127,8 +135,11 @@ export function EditableField({
 
       await onSave?.(normalized, extraValue);
     } else {
-      if (isLocation && (!currentValue || !extraValue)) {
-        setValidationError("Selecciona una ciudad de la lista de sugerencias");
+      if ((required || isLocation) && !currentValue?.trim()) {
+        const msg = isLocation
+          ? "Ingresa tu ciudad"
+          : `Ingresa tu ${label.toLowerCase()}`;
+        setValidationError(msg);
         return;
       }
       await onSave?.(currentValue, extraValue);
@@ -157,8 +168,10 @@ export function EditableField({
   };
 
   return (
-    <div className={`flex flex-col gap-2 w-full max-w-lg relative ${className}`}>
-      <label className="text-label ml-1">{label}</label>
+    <div className={`flex flex-col gap-1.5 w-full max-w-lg relative ${className}`}>
+      <label htmlFor={id} className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">
+        {label}
+      </label>
       <div className="flex items-center gap-2">
         <div className="relative flex-1 min-w-0">
           {isSelect ? (
@@ -168,23 +181,28 @@ export function EditableField({
               onSelect={(val) => isEditing && setCurrentValue(val)}
               disabled={!isEditing}
               disabledOpacity={false}
-              className={`${!isEditing ? "[&_.reg-input-bordered]:bg-slate-50 [&_.reg-input-bordered]:!border-none [&_.reg-input-bordered_span]:!text-slate-500 pointer-events-none" : "[&_.reg-input-bordered]:bg-white [&_.reg-input-bordered]:border-black [&_.reg-input-bordered_span]:!text-black"}`}
+              className={`${!isEditing ? "pointer-events-none" : ""}`}
             />
           ) : isLocation ? (
-            <div className="flex flex-col gap-2 w-full">
+            <div className="flex flex-col gap-1 w-full">
               <LocationInput
+                placeholder="Ingresa tu ciudad"
                 defaultValue={currentValue}
                 onSelect={({ city: selCity, country: selCountry }) => {
                   if (isEditing) {
                     setCurrentValue(selCity);
-                    setExtraValue(selCountry);
+                    if (selCountry) {
+                      setExtraValue(selCountry);
+                    }
                     setValidationError("");
                   }
                 }}
                 disabled={!isEditing}
-                className={`${!isEditing ? "[&_.reg-input-bordered]:bg-slate-50 [&_.reg-input-bordered]:!border-none [&_input]:!text-slate-500 pointer-events-none" : `[&_.reg-input-bordered]:bg-white [&_.reg-input-bordered]:border-black [&_input]:!text-black ${validationError ? '[&_input]:!border-[#FF3D3D] [&_input]:!ring-1 [&_input]:!ring-[#FF3D3D]' : ''}`}`}
+                className={`${!isEditing ? "pointer-events-none" : ""} ${
+                  validationError ? "[&_input]:!border-rose-500 [&_input]:!ring-rose-500" : ""
+                }`}
               />
-              {validationError && <p className="text-[#FF3D3D] text-label font-semibold mt-1 ml-1">{validationError}</p>}
+              {validationError && <p className="text-rose-600 text-xs font-medium mt-1">{validationError}</p>}
             </div>
           ) : isPhone ? (
             <PhoneInput
@@ -195,10 +213,10 @@ export function EditableField({
               }}
               onChange={(val) => isEditing && setCurrentValue(val)}
               disabled={!isEditing}
-              className={`${!isEditing ? "!bg-slate-50 !border-none [&_span]:!text-slate-500 [&_input]:!text-slate-500 pointer-events-none" : "bg-white border-black text-black [&_span]:!text-zinc-900 [&_input]:!text-zinc-900"}`}
+              className={`${!isEditing ? "pointer-events-none" : ""}`}
             />
           ) : isDate && isEditing ? (
-            <div className="flex flex-col gap-2 w-full">
+            <div className="flex flex-col gap-1 w-full">
               <div className="flex gap-3 items-center w-full">
                 <div className="flex-1">
                   <SelectInput
@@ -237,19 +255,21 @@ export function EditableField({
                   />
                 </div>
               </div>
-              {validationError && <p className="text-[#FF3D3D] text-label font-semibold mt-1">{validationError}</p>}
+              {validationError && <p className="text-rose-600 text-xs font-medium mt-1">{validationError}</p>}
             </div>
           ) : (
             <InputField
+              id={id}
               type={isDate ? "text" : type}
               placeholder={placeholder}
               value={isDate ? birthdateString : currentValue}
               disabled={!isEditing}
               onChange={(e) => {
                 setCurrentValue(e.target.value);
+                if (validationError) setValidationError("");
               }}
+              error={isEditing ? validationError : undefined}
               variant="bordered"
-              className={`${!isEditing ? "!bg-slate-50 !border-none !text-slate-500" : "bg-white border-black text-black"}`}
             />
           )}
         </div>
@@ -257,28 +277,43 @@ export function EditableField({
         {!isEditing && (
           <button
             onClick={handleEditClick}
-            className={`shrink-0 w-9 h-9 flex items-center justify-center rounded-full transition-all ${isAnotherEditing ? "text-slate-300 cursor-not-allowed" : "text-slate-400 hover:text-black hover:bg-slate-100"}`}
-            title="Editar"
+            className={`shrink-0 w-9 h-9 flex items-center justify-center rounded-full transition-all ${
+              isAnotherEditing
+                ? "text-slate-300 cursor-not-allowed"
+                : "text-slate-400 hover:text-slate-800 hover:bg-slate-100"
+            }`}
+            title={`Editar ${label}`}
+            aria-label={`Editar ${label}`}
           >
-            <span className="material-symbols-rounded text-[18px]">edit</span>
+            <Pencil className="w-4 h-4" />
           </button>
         )}
       </div>
 
       {isEditing && (
-        <div className="flex gap-2 justify-end mt-1">
-          <button
+        <div className="flex gap-2 justify-end mt-1.5">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
             onClick={handleCancel}
-            className={`px-3 h-8 text-button text-slate-500 hover:text-slate-900 transition-all duration-300 origin-center ${shouldAnimate ? "scale-110 text-slate-900" : "scale-100"}`}
+            className={`!w-auto !h-8 !px-3 !text-xs font-medium text-slate-600 hover:text-slate-900 !rounded-lg transition-all duration-200 ${
+              shouldAnimate ? "scale-105" : "scale-100"
+            }`}
           >
             Cancelar
-          </button>
-          <button
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
             onClick={handleSave}
-            className={`px-4 h-8 text-button font-semibold bg-black text-white rounded-lg hover:bg-slate-800 transition-all duration-300 origin-center ${shouldAnimate ? "scale-110" : "scale-100"}`}
+            className={`!w-auto !h-8 !px-3.5 !text-xs font-semibold !rounded-lg transition-all duration-200 ${
+              shouldAnimate ? "scale-105" : "scale-100"
+            }`}
           >
             Guardar
-          </button>
+          </Button>
         </div>
       )}
     </div>

@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }
@@ -101,6 +101,18 @@ export async function POST(request: Request) {
         clinicData: clinicData ? clinicData : undefined,
         sessionsData: sessionsData ? sessionsData : undefined,
         resumeUrl: storedResumeKey,
+      },
+    });
+
+    // Mark user profile as onboarded so assertOnboarded allows access to /comunidad
+    await prisma.userProfile.upsert({
+      where: { userId: session.userId },
+      create: {
+        userId: session.userId,
+        isOnboarded: true,
+      },
+      update: {
+        isOnboarded: true,
       },
     });
 

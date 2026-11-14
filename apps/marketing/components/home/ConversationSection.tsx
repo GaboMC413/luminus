@@ -27,7 +27,7 @@ export function ConversationSection() {
             </p>
             <div className="pt-2">
               <a
-                href="https://app.luminuslatam.com/auth/registrarse"
+                href="https://app.luminuslatam.com/unirme"
                 className="flex sm:inline-flex items-center justify-center w-full sm:w-auto py-3.5 px-8 text-body-medium font-normal text-white bg-black hover:bg-slate-800 rounded-2xl text-center sm:min-w-[260px] transition-colors"
               >
                 Solicitar una sesión

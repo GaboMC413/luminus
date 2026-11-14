@@ -20,6 +20,7 @@ export * from "./home/ContactBanner";
 // Specialists Page Components
 export * from "./specialists/SpecialistsHero";
 export * from "./specialists/SpecialistsOverviewCard";
+export * from "./specialists/SpecialistsInterviewsSection";
 export * from "./specialists/SpecialistsDisciplines";
 export * from "./specialists/SpecialistsPlatformFeatures";
 export * from "./specialists/SpecialistsControlBanner";
