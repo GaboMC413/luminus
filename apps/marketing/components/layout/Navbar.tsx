@@ -126,10 +126,10 @@ export function Navbar() {
           Iniciar Sesión
         </a>
         <a
-          href="https://app.luminuslatam.com/auth/registrarse"
+          href="https://app.luminuslatam.com/unirme"
           className="px-6 py-2 text-sm font-normal text-white bg-black hover:bg-slate-800 rounded-xl transition-colors text-center"
         >
-          Registrarme
+          Unirme
         </a>
       </div>
 
@@ -239,10 +239,10 @@ export function Navbar() {
               Iniciar Sesión
             </a>
             <a
-              href="https://app.luminuslatam.com/auth/registrarse"
+              href="https://app.luminuslatam.com/unirme"
               className="w-full h-12 text-center text-base font-normal text-white bg-black hover:bg-slate-800 rounded-2xl transition-colors flex items-center justify-center shadow-sm cursor-pointer"
             >
-              Registrarme
+              Unirme
             </a>
           </div>
         </div>

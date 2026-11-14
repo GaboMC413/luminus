@@ -15,7 +15,7 @@ export function EventsClosingCta() {
           </p>
           <div className="pt-2 w-full sm:w-auto">
             <a
-              href="https://app.luminuslatam.com/auth/registrarse"
+              href="https://app.luminuslatam.com/unirme"
               className="flex sm:inline-flex items-center justify-center py-3.5 px-8 text-base font-normal text-slate-950 bg-white hover:bg-slate-100 rounded-2xl text-center w-full sm:w-auto sm:min-w-[240px] transition-colors"
             >
               Registrarme en LUMINUS

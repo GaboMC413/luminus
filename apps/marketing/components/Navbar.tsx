@@ -69,7 +69,7 @@ export default function Navbar() {
             Ingresar
           </a>
           <a
-            href="https://app.luminuslatam.com/auth/registrarse"
+            href="https://app.luminuslatam.com/unirme"
             className="inline-flex items-center justify-center rounded-full bg-black px-5 py-2 text-sm font-semibold text-white hover:bg-neutral-900 transition-all duration-200 shadow-soft hover:shadow-medium"
           >
             Crear cuenta
@@ -148,7 +148,7 @@ export default function Navbar() {
                 Ingresar a mi cuenta
               </a>
               <a
-                href="https://app.luminuslatam.com/auth/registrarse"
+                href="https://app.luminuslatam.com/unirme"
                 onClick={() => setIsOpen(false)}
                 className="inline-flex items-center justify-center rounded-full bg-black py-3.5 px-6 text-base font-semibold text-white hover:bg-neutral-900 transition-all duration-200"
               >
