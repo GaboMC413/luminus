@@ -67,7 +67,8 @@ const templatesData = {
       eventDate: "2026-09-19T18:00:00.000Z",
       timeText: "18:00 hs (GMT-3)",
       speakerName: "Dra. Sofía Martínez",
-      youtubeUrl: "https://www.youtube.com/@luminus_latam",
+      youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      source: "web",
     }),
   },
   specialistApproved: {

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Toast, ToastProps } from "@/components/ui/Toast";
 import { ActivityCard, ActivityEventItem } from "@/components/events/ActivityCard";
+import { InscriptionCard, InscriptionCardSkeleton } from "@/components/events/InscriptionCard";
 import { ActivitiesTimelineSkeleton } from "@/components/ui/Skeleton";
 
 function parseCalendarDate(dateStr?: string | Date | null): Date | null {
@@ -152,9 +153,17 @@ export default function ActividadesPage() {
         onChange={(tab) => setActiveTab(tab as "upcoming" | "inscriptions")}
       />
 
-      {/* 3. Main Content: Timeline */}
+      {/* 3. Main Content: Timeline for upcoming, compact grid for inscriptions */}
       {loading ? (
-        <ActivitiesTimelineSkeleton />
+        activeTab === "inscriptions" ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 py-1">
+            {[...Array(4)].map((_, i) => (
+              <InscriptionCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <ActivitiesTimelineSkeleton />
+        )
       ) : error ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-700">
           {error}
@@ -179,6 +188,12 @@ export default function ActividadesPage() {
             />
           </div>
         )
+      ) : activeTab === "inscriptions" ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 py-1">
+          {inscribedEvents.map((item) => (
+            <InscriptionCard key={item.id} event={item} />
+          ))}
+        </div>
       ) : (
         <div className="w-full flex flex-col">
           {displayedEvents.map((item, index) => {

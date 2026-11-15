@@ -304,7 +304,7 @@ function NetworkContent() {
                       user={conn.user}
                       specialty={null}
                       title={null}
-                      profileHref={`/inicio/public-profile?id=${conn.user.id}&from=red`}
+                      profileHref={`/perfil/${(conn.user as any).slug || conn.user.id}?from=red`}
                       actionMenu={
                         activeTab === "following" ? (
                           <div className="relative network-menu-container">

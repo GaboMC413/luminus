@@ -707,15 +707,23 @@ export async function sendEventRegistrationEmail(
   const startTime = new Date().toISOString();
   const rawFrom = process.env.EVENT_FROM_EMAIL || "eventos@luminuslatam.com";
   const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM Eventos");
-  const { renderEventRegistrationEmailHtml } = await import("./inscription");
+  const {
+    renderEventRegistrationEmailHtml,
+    resolveDirectEventLink,
+    formatEventDateAndTime,
+  } = await import("./inscription");
   const htmlBody = renderEventRegistrationEmailHtml(options);
-  let youtubeLink = "https://www.youtube.com/@luminus_latam";
-  if (options.youtubeUrl && options.youtubeUrl.trim()) {
-    const rawYt = options.youtubeUrl.trim();
-    youtubeLink = (rawYt.startsWith("http://") || rawYt.startsWith("https://")) ? rawYt : `https://www.youtube.com/watch?v=${rawYt}`;
-  }
+  const directLink = resolveDirectEventLink(options.youtubeUrl);
+  const { formattedDate, formattedTime } = formatEventDateAndTime(
+    options.eventDate,
+    options.timeText,
+    options.userTimezone
+  );
   const subject = `Confirmación de inscripción: ${options.eventTitle || "Evento de Bienestar"}`;
-  const textBody = `Hola ${options.firstName || "Usuario"},\n\nTe has inscripto a la entrevista online "${options.eventTitle || "Evento LUMINUS"}".\n\nPodrás ver el estreno el ${options.eventDate || "Próximamente"}.\n\nVer en YouTube: ${youtubeLink}\n\nEquipo de LUMINUS Eventos.`;
+  const linkLine = directLink
+    ? `\n\nUnirse al evento: ${directLink}`
+    : `\n\nEl enlace de acceso se habilitará antes del comienzo y te lo enviaremos por email.`;
+  const textBody = `Hola ${options.firstName || "Usuario"},\n\nTu inscripción a "${options.eventTitle || "Evento LUMINUS"}" está confirmada.\n\nTe esperamos el ${formattedDate} a las ${formattedTime}.${linkLine}\n\nEquipo de LUMINUS Eventos.`;
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
   const configurationSet = process.env.SES_CONFIGURATION_EVENTOS || "luminus-eventos";
 
@@ -852,17 +860,13 @@ export async function sendEventLiveNotificationEmail(
   const startTime = new Date().toISOString();
   const rawFrom = process.env.EVENT_FROM_EMAIL || "eventos@luminuslatam.com";
   const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM Eventos");
-  const { renderEventLiveEmailHtml } = await import("./inscription");
+  const { renderEventLiveEmailHtml, resolveDirectEventLink } = await import("./inscription");
   const htmlBody = renderEventLiveEmailHtml(options);
-  let youtubeLink = "https://www.youtube.com/@luminus_latam";
-  if (options.youtubeUrl && options.youtubeUrl.trim()) {
-    const rawYt = options.youtubeUrl.trim();
-    youtubeLink = (rawYt.startsWith("http://") || rawYt.startsWith("https://")) ? rawYt : `https://www.youtube.com/watch?v=${rawYt}`;
-  }
-  const subject = options.speakerName
-    ? `Ya puedes ver la entrevista con ${options.speakerName}`
-    : `Ya puedes ver la entrevista`;
-  const textBody = `Hola ${options.firstName || "Usuario"},\n\nEl evento "${options.eventTitle || "Evento LUMINUS"}" ya está online y disponible para ver.\n\nVer Evento Ahora: ${youtubeLink}\n\nEquipo de LUMINUS Eventos.`;
+  const directLink = resolveDirectEventLink(options.youtubeUrl);
+  const subject = `Ya puedes unirte: ${options.eventTitle || "Evento LUMINUS"}`;
+  const textBody = `Hola ${options.firstName || "Usuario"},\n\n"${options.eventTitle || "Evento LUMINUS"}" ya está disponible para que te unas.${
+    directLink ? `\n\nUnirse al evento: ${directLink}` : ""
+  }\n\nEquipo de LUMINUS Eventos.`;
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
   const configurationSet = process.env.SES_CONFIGURATION_EVENTOS || "luminus-eventos";
 
@@ -1063,6 +1067,7 @@ export async function sendBatchEventLiveNotifications(
             youtubeUrl: finalYoutubeUrl,
             eventSlug: event.slug,
             location: event.location || "Estreno en YouTube",
+            source: inscription.guest?.isGuest === false ? "platform" : "web",
           });
 
           await prisma.eventInscription.update({

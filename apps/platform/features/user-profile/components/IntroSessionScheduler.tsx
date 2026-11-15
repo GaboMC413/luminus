@@ -2,11 +2,12 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarCheck, Clock, Check, HelpCircle } from "lucide-react";
+import { Clock, Check, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { TextAreaField } from "@/components/ui/TextAreaField";
 import { IntroSessionGuideModal } from "./IntroSessionGuideModal";
+import { IntroSessionSummaryCard } from "./IntroSessionSummaryCard";
 import {
   type AvailableDateOption,
   formatSessionDate,
@@ -139,7 +140,7 @@ export function IntroSessionScheduler({
       subtitle={
         step === "select" ? "Sesión introductoria · 15 minutos · Sin costo" : undefined
       }
-      maxWidth={step === "select" ? "560px" : "440px"}
+      maxWidth="520px"
       footer={
         step === "select" ? (
           <Button
@@ -289,26 +290,12 @@ export function IntroSessionScheduler({
 
       {step === "confirm" && (
         <div className="flex flex-col gap-5 py-1">
-          <div className="flex flex-col items-center text-center bg-slate-50 border border-slate-200/80 rounded-2xl p-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 mb-3">
-              <CalendarCheck className="w-5 h-5" />
-            </div>
-            <p className="text-xs font-semibold text-emerald-700">
-              15 minutos con {specialistName}
-            </p>
-            <p className="mt-1.5 text-label text-slate-700">
-              {formattedSelectedDate
-                ? formattedSelectedDate.charAt(0).toUpperCase() +
-                  formattedSelectedDate.slice(1)
-                : ""}
-            </p>
-            <p className="mt-1 text-title-page text-slate-900">
-              {selectedTime} hs
-            </p>
-            <p className="mt-1.5 text-meta text-slate-500">
-              {timezone || "Hora local"}
-            </p>
-          </div>
+          <IntroSessionSummaryCard
+            counterpartyName={specialistName}
+            formattedDate={formattedSelectedDate}
+            timeLabel={`${selectedTime} hs`}
+            timezone={timezone}
+          />
 
           <TextAreaField
             ref={noteInputRef}

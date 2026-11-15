@@ -464,7 +464,7 @@ function MiembrosContent() {
                 key={user.id}
                 user={user}
                 actionLabel="Ver perfil"
-                profileHref={`/inicio/public-profile?id=${encodeURIComponent(user.id)}&from=miembros`}
+                profileHref={`/perfil/${encodeURIComponent((user as any).slug || user.id)}?from=miembros`}
               />
             ))}
           </div>

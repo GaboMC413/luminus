@@ -575,7 +575,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
             </h4>
             {userId && name?.toLowerCase() !== "luminus" && userId !== "50d13047-bab8-44f1-9541-a821113845cc" && userId !== "mock-luminus" && (
               <Link
-                href={`/inicio/public-profile?id=${userId}`}
+                href={`/perfil/${userId}`}
                 className="h-6 px-2 bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-900 rounded-md text-[11px] font-medium font-jakarta transition-colors cursor-pointer flex items-center justify-center shrink-0 no-underline"
               >
                 Ver perfil

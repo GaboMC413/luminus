@@ -444,9 +444,9 @@ function PlatformContent() {
             <CardHeader title="Mi red" />
 
             {connectionsLoading ? (
-              <div className="grid grid-cols-4 gap-2">
-                {[...Array(8)].map((_, i) => (
-                  <Skeleton key={i} className="w-10 h-10 rounded-xl" />
+              <div className="grid grid-cols-5 gap-2">
+                {[...Array(10)].map((_, i) => (
+                  <Skeleton key={i} className="w-full aspect-square rounded-xl" />
                 ))}
               </div>
             ) : activeConnections.length === 0 ? (
@@ -454,14 +454,14 @@ function PlatformContent() {
                 Aún no tienes conexiones.
               </p>
             ) : (
-              <div className="grid grid-cols-4 gap-2">
-                {activeConnections.slice(0, 12).map((conn: any) => (
+              <div className="grid grid-cols-5 gap-2">
+                {activeConnections.slice(0, 25).map((conn: any) => (
                   <div
                     key={conn.id}
-                    onClick={() => router.push(`/inicio/public-profile?id=${conn.user.id}&from=inicio`)}
+                    onClick={() => router.push(`/perfil/${(conn.user as any).slug || conn.user.id}?from=inicio`)}
                     className="relative group cursor-pointer"
                   >
-                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 group-hover:border-slate-200 transition-colors duration-200 flex items-center justify-center shrink-0">
+                    <div className="w-full aspect-square rounded-xl overflow-hidden bg-slate-50 border border-slate-100 group-hover:border-slate-200 transition-colors duration-200 flex items-center justify-center">
                       {conn.user.avatar ? (
                         <img
                           src={conn.user.avatar}

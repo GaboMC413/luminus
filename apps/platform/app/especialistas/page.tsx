@@ -520,7 +520,7 @@ export default function EspecialistasPage() {
               }}
               title={specialist.title}
               specialty={specialist.specialty}
-              profileHref={`/inicio/public-profile?id=${encodeURIComponent(specialist.id)}&from=especialistas`}
+              profileHref={`/perfil/${encodeURIComponent((specialist as any).slug || specialist.id)}?from=especialistas`}
               actionLabel="Ver perfil"
             />
           ))}

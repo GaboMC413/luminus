@@ -2,6 +2,7 @@ import { NextResponse, after } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
 import { deleteS3FileByUrl } from "@/lib/storage/s3FileCleanup";
+import { generateUniqueUserSlug } from "@/lib/profile/slug";
 import {
   normalizeInstagramInput,
   normalizeLinkedinInput,
@@ -75,6 +76,8 @@ function serializeProfile(user: any) {
     role: user.role ?? "USER",
     profile: {
       role: user.role ?? "USER",
+      id: user.id,
+      slug: user.slug ?? null,
       first_name: profile.firstName ?? "",
       last_name: profile.lastName ?? "",
       city: profile.city ?? "",
@@ -149,6 +152,24 @@ export async function GET() {
 
     if (!user) {
       return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+    }
+
+    if (!user.slug && (user.profile?.firstName || user.profile?.lastName)) {
+      try {
+        const generatedSlug = await generateUniqueUserSlug(
+          prisma,
+          user.profile?.firstName,
+          user.profile?.lastName,
+          user.id
+        );
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { slug: generatedSlug },
+        });
+        user.slug = generatedSlug;
+      } catch {
+        // Non-blocking fallback to user.id
+      }
     }
 
     return NextResponse.json(serializeProfile(user));

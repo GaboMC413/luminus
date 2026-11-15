@@ -14,6 +14,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { IntroSessionGuideModal } from "@/features/user-profile/components/IntroSessionGuideModal";
+import { IntroSessionSummaryCard } from "@/features/user-profile/components/IntroSessionSummaryCard";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { UnderlineTabs } from "@/components/ui/UnderlineTabs";
 import { Button } from "@/components/ui/Button";
@@ -28,6 +29,7 @@ import { formatSessionDate } from "@/lib/sessions/sessionAvailability";
 
 type SessionUser = {
   id: string;
+  slug?: string | null;
   name: string;
   avatarUrl: string;
   specialty?: string;
@@ -80,6 +82,12 @@ function isExternalUrl(value: string) {
   return /^https?:\/\//i.test(value.trim());
 }
 
+function capitalizeFirst(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
 function SesionesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -102,6 +110,7 @@ function SesionesContent() {
   // Modal states
   const [acceptTarget, setAcceptTarget] = useState<IntroSessionItem | null>(null);
   const [meetingLink, setMeetingLink] = useState("");
+  const [useCustomLink, setUseCustomLink] = useState(false);
   const [specialistNote, setSpecialistNote] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showGuide, setShowGuide] = useState(false);
@@ -201,7 +210,8 @@ function SesionesContent() {
 
   const handleAcceptSubmit = async () => {
     if (!acceptTarget) return;
-    if (!wherebyEnabled && !meetingLink.trim()) {
+    const manualLinkRequired = !wherebyEnabled || useCustomLink;
+    if (manualLinkRequired && !meetingLink.trim()) {
       setModalError("Ingresa el enlace de reunión o cómo se conectarán.");
       return;
     }
@@ -219,7 +229,7 @@ function SesionesContent() {
         credentials: "include",
         body: JSON.stringify({
           action: "accept",
-          meetingLink: meetingLink.trim(),
+          meetingLink: manualLinkRequired ? meetingLink.trim() : "",
           specialistNote: specialistNote.trim() || undefined,
           acceptedTerms: true,
         }),
@@ -454,7 +464,9 @@ function SesionesContent() {
                 ? person?.profession || "Miembro de LUMINUS"
                 : person?.specialty || "Especialista";
               const badge = getStatusBadge(item.status);
-              const formattedDate = formatSessionDate(item.scheduledDate);
+              const formattedDate = capitalizeFirst(
+                formatSessionDate(item.scheduledDate)
+              );
 
               return (
                 <div
@@ -465,7 +477,7 @@ function SesionesContent() {
                     {/* Person + Status */}
                     <div className="flex items-start justify-between gap-3">
                       <Link
-                        href={`/inicio/public-profile?id=${person?.id || ""}`}
+                        href={`/perfil/${person?.slug || person?.id || ""}`}
                         className="flex items-center gap-3 min-w-0 group no-underline"
                       >
                         <UserAvatar
@@ -490,35 +502,58 @@ function SesionesContent() {
                     </div>
 
                     {/* Date & Time */}
-                    <div className="rounded-xl bg-slate-50 border border-slate-100 px-3.5 py-2.5 flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 text-body font-semibold text-slate-900 capitalize">
-                        <CalendarCheck className="w-4 h-4 text-slate-500 shrink-0" />
-                        <span>{formattedDate}</span>
+                    <div className="rounded-xl bg-slate-50 border border-slate-200/70 px-3.5 py-3 flex flex-col gap-1.5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 text-body font-semibold text-slate-900">
+                          <CalendarCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>{formattedDate}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-meta font-semibold text-slate-700">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <span>
+                            {item.startTime} – {item.endTime} hs
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5 text-meta font-semibold text-slate-600">
-                        <Clock className="w-3.5 h-3.5 text-slate-400" />
-                        <span>
-                          {item.startTime} – {item.endTime} hs
-                        </span>
+                      <div className="flex items-center justify-between gap-2 text-meta text-slate-500 pl-6">
+                        <span>15 minutos · {item.timezone || "Hora local"}</span>
                       </div>
                     </div>
 
-                    {/* Notes */}
+                    {/* Messages */}
                     {item.requesterNote && (
-                      <div className="text-body text-slate-600 bg-slate-50/70 border border-slate-100 rounded-xl px-3.5 py-2.5">
+                      <div className="text-body text-slate-700 bg-slate-50/70 border border-slate-200/60 rounded-xl px-3.5 py-2.5">
                         <span className="text-label text-slate-500 block mb-0.5">
-                          {isViewingReceived ? "Motivo de la consulta" : "Tu nota"}
+                          {isViewingReceived
+                            ? `Mensaje de ${person?.name || "la persona"}`
+                            : "Tu mensaje"}
                         </span>
                         <p className="m-0 whitespace-pre-wrap">{item.requesterNote}</p>
                       </div>
                     )}
 
                     {item.specialistNote && (
-                      <div className="text-body text-slate-600 bg-slate-50/70 border border-slate-100 rounded-xl px-3.5 py-2.5">
+                      <div className="text-body text-slate-700 bg-slate-50/70 border border-slate-200/60 rounded-xl px-3.5 py-2.5">
                         <span className="text-label text-slate-500 block mb-0.5">
-                          Nota del especialista
+                          {isViewingReceived
+                            ? "Tu mensaje"
+                            : `Mensaje de ${person?.name || "el especialista"}`}
                         </span>
                         <p className="m-0 whitespace-pre-wrap">{item.specialistNote}</p>
+                      </div>
+                    )}
+
+                    {/* Pending Link Placeholder */}
+                    {item.status === "pending" && (
+                      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-3.5 py-2.5 flex items-center gap-2.5">
+                        <Video className="w-4 h-4 text-slate-400 shrink-0" />
+                        <span className="text-meta text-slate-500">
+                          {isViewingReceived
+                            ? "El enlace de videollamada se generará al confirmar la sesión."
+                            : `Verás el enlace de acceso cuando ${
+                                person?.name || "el especialista"
+                              } acepte la sesión.`}
+                        </span>
                       </div>
                     )}
 
@@ -572,6 +607,7 @@ function SesionesContent() {
                           onClick={() => {
                             setModalError("");
                             setMeetingLink("");
+                            setUseCustomLink(false);
                             setSpecialistNote("");
                             setAcceptedTerms(false);
                             setAcceptTarget(item);
@@ -595,7 +631,7 @@ function SesionesContent() {
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-between gap-2 w-full">
                         <Button
                           variant="soft"
                           size="sm"
@@ -634,18 +670,12 @@ function SesionesContent() {
         isOpen={Boolean(acceptTarget)}
         onClose={() => !submitting && setAcceptTarget(null)}
         title="Confirmar sesión introductoria"
-        subtitle={
-          acceptTarget
-            ? `${acceptTarget.requester?.name || "Usuario"} · ${formatSessionDate(
-                acceptTarget.scheduledDate
-              )} · ${acceptTarget.startTime} hs`
-            : undefined
-        }
-        maxWidth="460px"
+        maxWidth="520px"
         footer={
           <>
             <Button
               variant="secondary"
+              fullWidth
               disabled={submitting}
               onClick={() => setAcceptTarget(null)}
             >
@@ -653,6 +683,7 @@ function SesionesContent() {
             </Button>
             <Button
               variant="primary"
+              fullWidth
               disabled={submitting || !acceptedTerms}
               onClick={handleAcceptSubmit}
             >
@@ -662,6 +693,17 @@ function SesionesContent() {
         }
       >
         <div className="flex flex-col gap-4 py-1">
+          {acceptTarget && (
+            <IntroSessionSummaryCard
+              counterpartyName={acceptTarget.requester?.name || "Usuario"}
+              formattedDate={formatSessionDate(acceptTarget.scheduledDate)}
+              timeLabel={`${acceptTarget.startTime} – ${acceptTarget.endTime} hs`}
+              timezone={acceptTarget.timezone}
+              note={acceptTarget.requesterNote || undefined}
+              noteLabel={`Mensaje de ${acceptTarget.requester?.name || "la persona"}`}
+            />
+          )}
+
           <div className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 border border-slate-200/80 px-3.5 py-2.5">
             <span className="text-xs text-slate-600">
               ¿Primera vez aceptando una solicitud?
@@ -678,29 +720,69 @@ function SesionesContent() {
               <span>¿Cómo funciona?</span>
             </button>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <InputField
-              id="accept-meeting-link"
-              label={
-                wherebyEnabled
-                  ? "Enlace de reunión (Opcional)"
-                  : "Enlace de reunión o cómo conectarse"
-              }
-              required={!wherebyEnabled}
-              placeholder="https://meet.google.com/xxx-xxxx-xxx"
-              value={meetingLink}
-              onChange={(e) => {
-                setMeetingLink(e.target.value);
-                if (modalError) setModalError("");
-              }}
-              error={modalError || undefined}
-            />
-            <p className="text-xs text-slate-500 m-0">
-              {wherebyEnabled
-                ? "Si lo dejas vacío, generaremos y enviaremos el enlace de acceso al confirmar."
-                : "Pega tu link de videollamada o indica cómo se conectarán."}
-            </p>
-          </div>
+
+          {wherebyEnabled && !useCustomLink ? (
+            <div className="rounded-xl bg-emerald-50/70 border border-emerald-200/80 px-3.5 py-3 flex flex-col gap-2">
+              <div className="flex items-start gap-2.5">
+                <Video className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs font-semibold text-emerald-950">
+                    Sala de Whereby automática
+                  </span>
+                  <p className="text-xs leading-relaxed text-emerald-900/90 m-0">
+                    Al confirmar, crearemos una sala privada y enviaremos el enlace
+                    de acceso a ambos participantes.
+                  </p>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseCustomLink(true);
+                    if (modalError) setModalError("");
+                  }}
+                  className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 underline bg-transparent border-none p-0 cursor-pointer font-jakarta"
+                >
+                  Usar otro enlace
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <InputField
+                id="accept-meeting-link"
+                label="Enlace de reunión o cómo conectarse"
+                required
+                placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                value={meetingLink}
+                onChange={(e) => {
+                  setMeetingLink(e.target.value);
+                  if (modalError) setModalError("");
+                }}
+                error={modalError || undefined}
+              />
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-slate-500 m-0">
+                  Pega tu link de videollamada o indica cómo se conectarán.
+                </p>
+                {wherebyEnabled && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUseCustomLink(false);
+                      setMeetingLink("");
+                      if (modalError) setModalError("");
+                    }}
+                    className="text-xs font-semibold text-slate-700 hover:text-slate-900 underline bg-transparent border-none p-0 cursor-pointer font-jakarta shrink-0"
+                  >
+                    Usar Whereby automático
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           <TextAreaField
             id="accept-specialist-note"
             label="Mensaje adicional (Opcional)"
@@ -710,6 +792,7 @@ function SesionesContent() {
             maxLength={500}
             rows={3}
           />
+
           <label className="flex items-start gap-2.5 rounded-xl bg-slate-50 border border-slate-200/80 p-3 cursor-pointer select-none">
             <input
               type="checkbox"
@@ -744,6 +827,9 @@ function SesionesContent() {
               .
             </span>
           </label>
+          {wherebyEnabled && !useCustomLink && modalError && (
+            <p className="text-xs font-medium text-rose-600 m-0">{modalError}</p>
+          )}
         </div>
       </Modal>
 
@@ -753,11 +839,12 @@ function SesionesContent() {
         onClose={() => !submitting && setDeclineTarget(null)}
         title="Rechazar solicitud"
         subtitle="El horario volverá a quedar disponible."
-        maxWidth="420px"
+        maxWidth="520px"
         footer={
           <>
             <Button
               variant="secondary"
+              fullWidth
               disabled={submitting}
               onClick={() => setDeclineTarget(null)}
             >
@@ -765,6 +852,7 @@ function SesionesContent() {
             </Button>
             <Button
               variant="destructive"
+              fullWidth
               disabled={submitting}
               onClick={handleDeclineSubmit}
             >
@@ -773,7 +861,15 @@ function SesionesContent() {
           </>
         }
       >
-        <div className="flex flex-col gap-3 py-1">
+        <div className="flex flex-col gap-4 py-1">
+          {declineTarget && (
+            <IntroSessionSummaryCard
+              counterpartyName={declineTarget.requester?.name || "Usuario"}
+              formattedDate={formatSessionDate(declineTarget.scheduledDate)}
+              timeLabel={`${declineTarget.startTime} – ${declineTarget.endTime} hs`}
+              timezone={declineTarget.timezone}
+            />
+          )}
           <TextAreaField
             id="decline-specialist-note"
             label="Motivo o sugerencia (Opcional)"
@@ -784,7 +880,7 @@ function SesionesContent() {
             rows={3}
           />
           {modalError && (
-            <p className="text-xs font-medium text-rose-600">{modalError}</p>
+            <p className="text-xs font-medium text-rose-600 m-0">{modalError}</p>
           )}
         </div>
       </Modal>
@@ -794,11 +890,12 @@ function SesionesContent() {
         isOpen={Boolean(cancelTarget)}
         onClose={() => !submitting && setCancelTarget(null)}
         title="Cancelar sesión"
-        maxWidth="400px"
+        maxWidth="520px"
         footer={
           <>
             <Button
               variant="secondary"
+              fullWidth
               disabled={submitting}
               onClick={() => setCancelTarget(null)}
             >
@@ -806,6 +903,7 @@ function SesionesContent() {
             </Button>
             <Button
               variant="destructive"
+              fullWidth
               disabled={submitting}
               onClick={handleCancelSubmit}
             >
@@ -814,13 +912,25 @@ function SesionesContent() {
           </>
         }
       >
-        <div className="flex flex-col gap-2 py-1">
-          <p className="text-body text-slate-600 m-0">
+        <div className="flex flex-col gap-4 py-1">
+          {cancelTarget && (
+            <IntroSessionSummaryCard
+              counterpartyName={
+                (isViewingReceived
+                  ? cancelTarget.requester?.name
+                  : cancelTarget.specialist?.name) || "la otra persona"
+              }
+              formattedDate={formatSessionDate(cancelTarget.scheduledDate)}
+              timeLabel={`${cancelTarget.startTime} – ${cancelTarget.endTime} hs`}
+              timezone={cancelTarget.timezone}
+            />
+          )}
+          <p className="text-body text-slate-600 m-0 text-center">
             ¿Estás seguro de que quieres cancelar esta sesión introductoria?
             Avisaremos a la otra persona por notificación y chat.
           </p>
           {modalError && (
-            <p className="text-xs font-medium text-rose-600">{modalError}</p>
+            <p className="text-xs font-medium text-rose-600 m-0">{modalError}</p>
           )}
         </div>
       </Modal>

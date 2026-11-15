@@ -42,6 +42,7 @@ interface ProfileHeroHeaderProps {
   onShareProfile?: () => void;
   // Owner mode actions
   isOwnProfile?: boolean;
+  isPublic?: boolean;
   onEditProfile?: () => void;
   onEditPhoto?: () => void;
   onEditCover?: () => void;
@@ -78,6 +79,7 @@ export function ProfileHeroHeader({
   onSchedule,
   onShareProfile,
   isOwnProfile = false,
+  isPublic = false,
   onEditProfile,
   onEditPhoto,
   onEditCover,
@@ -232,7 +234,7 @@ export function ProfileHeroHeader({
               <div className="hidden md:flex items-center gap-2 shrink-0 z-10">
                 {isOwn ? (
                   <>
-                    {onEditProfile && (
+                    {!isPublic && onEditProfile && (
                       <Button
                         onClick={onEditProfile}
                         variant="secondary"
@@ -332,7 +334,7 @@ export function ProfileHeroHeader({
         <div className="flex md:hidden flex-col gap-2 mt-3 relative z-30">
               {isOwn ? (
                 <div className="flex items-center gap-2 w-full">
-                  {onEditProfile && (
+                  {!isPublic && onEditProfile && (
                     <Button
                       onClick={onEditProfile}
                       variant="secondary"

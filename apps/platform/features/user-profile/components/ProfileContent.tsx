@@ -13,6 +13,7 @@ import { EditInterestsModal } from "../modals/EditInterestsModal";
 import { EditPromptsModal } from "../modals/EditPromptsModal";
 import { CoverSelectorModal } from "../modals/CoverSelectorModal";
 import { ShareProfileModal } from "../modals/ShareProfileModal";
+import { EditSpecialistSpecialtyModal, type SpecialistSpecialtyFormData } from "../modals/EditSpecialistSpecialtyModal";
 import { EditSpecialistPracticeModal, type SpecialistPracticeFormData } from "../modals/EditSpecialistPracticeModal";
 import { EditSpecialistSpacesModal, type SpecialistSpaceItem } from "../modals/EditSpecialistSpacesModal";
 import { EditSpecialistCoursesModal, type SpecialistCourseItem } from "../modals/EditSpecialistCoursesModal";
@@ -30,6 +31,7 @@ import { uploadAvatar } from "@/lib/uploadAvatar";
 
 export interface Profile {
   id?: string;
+  slug?: string | null;
   first_name: string;
   last_name: string;
   city: string;
@@ -86,6 +88,7 @@ export function ProfileContent() {
   const [showEditPrompts, setShowEditPrompts] = useState(false);
   const [promptsStep, setPromptsStep] = useState<'list' | 'select'>('list');
 
+  const [showEditSpecialistSpecialty, setShowEditSpecialistSpecialty] = useState(false);
   const [showEditSpecialistPractice, setShowEditSpecialistPractice] = useState(false);
   const [showEditSpecialistSpaces, setShowEditSpecialistSpaces] = useState(false);
   const [showEditSpecialistCourses, setShowEditSpecialistCourses] = useState(false);
@@ -401,6 +404,7 @@ export function ProfileContent() {
           onEditBio={() => setShowEditAbout(true)}
           onEditInterests={() => setShowEditInterests(true)}
           onEditPrompts={handleOpenPrompts}
+          onEditSpecialistSpecialty={() => setShowEditSpecialistSpecialty(true)}
           onEditSpecialistPractice={() => setShowEditSpecialistPractice(true)}
           onEditSpecialistSpaces={() => setShowEditSpecialistSpaces(true)}
           onEditSpecialistCourses={() => setShowEditSpecialistCourses(true)}
@@ -584,15 +588,25 @@ export function ProfileContent() {
 
       {profile.specialistProfile && (
         <>
-          <EditSpecialistPracticeModal
-            isOpen={showEditSpecialistPractice}
-            onClose={() => setShowEditSpecialistPractice(false)}
+          <EditSpecialistSpecialtyModal
+            isOpen={showEditSpecialistSpecialty}
+            onClose={() => setShowEditSpecialistSpecialty(false)}
             initialData={{
               specialty: profile.specialistProfile.specialty ?? "",
               title: profile.specialistProfile.title ?? "",
               selectedAreas: Array.isArray(profile.specialistProfile.selectedAreas)
                 ? profile.specialistProfile.selectedAreas
                 : [],
+            }}
+            onSave={(data: SpecialistSpecialtyFormData) =>
+              handleSaveSpecialist(data as unknown as Record<string, unknown>, "Especialidad y áreas actualizadas.")
+            }
+          />
+
+          <EditSpecialistPracticeModal
+            isOpen={showEditSpecialistPractice}
+            onClose={() => setShowEditSpecialistPractice(false)}
+            initialData={{
               bio: profile.specialistProfile.bio ?? "",
               institution: profile.specialistProfile.institution ?? "",
               instagramUrl: profile.specialistProfile.instagramUrl ?? "",
@@ -600,7 +614,7 @@ export function ProfileContent() {
               websiteUrl: profile.specialistProfile.websiteUrl ?? "",
             }}
             onSave={(data: SpecialistPracticeFormData) =>
-              handleSaveSpecialist(data as unknown as Record<string, unknown>, "Especialidad y práctica actualizadas.")
+              handleSaveSpecialist(data as unknown as Record<string, unknown>, "Sobre mi práctica actualizado.")
             }
           />
 
@@ -640,7 +654,7 @@ export function ProfileContent() {
         onClose={() => setIsShareOpen(false)}
         shareUrl={
           typeof window !== "undefined"
-            ? `${window.location.origin}/inicio/public-profile?id=${profile?.id || ""}`
+            ? `${window.location.origin}/perfil/${profile?.slug || profile?.id || ""}`
             : ""
         }
         includeWhatsApp={false}

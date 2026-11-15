@@ -37,6 +37,12 @@ function isHttpUrl(value?: string): boolean {
   return Boolean(value && /^https?:\/\//i.test(value.trim()));
 }
 
+function capitalizeFirst(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
 export function getIntroSessionEmailSubject(
   options: IntroSessionEmailOptions
 ): string {
@@ -74,22 +80,26 @@ export function renderIntroSessionEmailHtml(
 
   const safeRecipient = escapeHtml(recipientName || "Hola");
   const safeCounterparty = escapeHtml(counterpartyName || "Especialista");
-  const safeDate = escapeHtml(friendlyDate);
+  const safeDate = escapeHtml(capitalizeFirst(friendlyDate));
   const safeTime = escapeHtml(startTime);
-  const safeTz = escapeHtml(timezone);
+  const safeTz = escapeHtml(timezone || "Hora local");
   const safeNote = note ? escapeHtml(note) : "";
-  const safeLink = meetingLink ? escapeHtml(meetingLink) : "";
+
+  const isAcceptedVariant =
+    variant === "accepted_requester" || variant === "accepted_specialist";
+  const effectiveMeetingLink = isAcceptedVariant ? meetingLink : undefined;
+  const safeLink = effectiveMeetingLink ? escapeHtml(effectiveMeetingLink) : "";
 
   const ctaUrl =
-    (variant === "accepted_requester" || variant === "accepted_specialist") &&
-    isHttpUrl(meetingLink)
-      ? meetingLink!.trim()
+    isAcceptedVariant && isHttpUrl(effectiveMeetingLink)
+      ? effectiveMeetingLink!.trim()
       : `${PLATFORM_APP_URL}${actionPath || "/sesiones"}`;
 
   let heading = "";
   let intro = "";
   let ctaLabel = "Ver mis sesiones";
   let showGuide = false;
+  let noteLabel = `Mensaje de ${safeCounterparty}`;
 
   switch (variant) {
     case "requested_specialist":
@@ -97,72 +107,100 @@ export function renderIntroSessionEmailHtml(
       intro = `<strong>${safeCounterparty}</strong> solicitó una sesión introductoria gratuita de 15 minutos contigo.`;
       ctaLabel = "Revisar solicitud";
       showGuide = true;
+      noteLabel = `Mensaje de ${safeCounterparty}`;
       break;
     case "requested_requester":
       heading = "Recibimos tu solicitud de sesión";
-      intro = `Enviamos tu solicitud a <strong>${safeCounterparty}</strong>. Te avisaremos apenas la confirme para enviarte el enlace de acceso.`;
+      intro = `enviamos tu solicitud a <strong>${safeCounterparty}</strong>. Te avisaremos apenas la confirme para enviarte el enlace de acceso.`;
       ctaLabel = "Ver mis sesiones";
       showGuide = true;
+      noteLabel = "Tu mensaje";
       break;
     case "accepted_requester":
       heading = "¡Tu sesión introductoria está confirmada!";
       intro = `<strong>${safeCounterparty}</strong> confirmó tu sesión introductoria de 15 minutos. Ya tienes todo listo para conectarte.`;
-      ctaLabel = isHttpUrl(meetingLink) ? "Unirse a la sesión" : "Ver detalle de la sesión";
+      ctaLabel = isHttpUrl(effectiveMeetingLink)
+        ? "Unirse a la sesión"
+        : "Ver detalle de la sesión";
       showGuide = true;
+      noteLabel = `Mensaje de ${safeCounterparty}`;
       break;
     case "accepted_specialist":
       heading = "Confirmaste una sesión introductoria";
-      intro = `Confirmaste la sesión de 15 minutos con <strong>${safeCounterparty}</strong>. Aquí tienes el resumen y tu enlace de acceso como anfitrión.`;
-      ctaLabel = isHttpUrl(meetingLink) ? "Entrar como anfitrión" : "Ver mis sesiones";
+      intro = `confirmaste la sesión de 15 minutos con <strong>${safeCounterparty}</strong>. Aquí tienes el resumen y tu enlace de acceso como anfitrión.`;
+      ctaLabel = isHttpUrl(effectiveMeetingLink)
+        ? "Entrar como anfitrión"
+        : "Ver mis sesiones";
+      noteLabel = "Tu mensaje";
       break;
     case "declined_requester":
       heading = "Horario no disponible";
       intro = `<strong>${safeCounterparty}</strong> no pudo confirmar la sesión solicitada para este horario.`;
       ctaLabel = "Explorar especialistas";
+      noteLabel = `Motivo o sugerencia de ${safeCounterparty}`;
       break;
     case "cancelled":
       heading = "Sesión cancelada";
       intro = `<strong>${safeCounterparty}</strong> canceló la sesión introductoria programada. El horario quedó liberado.`;
       ctaLabel = "Ver mis sesiones";
+      noteLabel = `Mensaje de ${safeCounterparty}`;
       break;
   }
 
   const summaryBox = `
-    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px; margin: 22px 0; text-align: left;">
-      <p style="margin: 0 0 6px 0; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600;">
-        Detalle del encuentro
+    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; margin: 22px 0; text-align: center;">
+      <p style="margin: 0; font-size: 13px; color: #047857; font-weight: 600;">
+        15 minutos con ${safeCounterparty}
       </p>
-      <p style="margin: 0 0 4px 0; font-size: 15px; color: #0f172a; font-weight: 600;">
-        ${safeDate} · ${safeTime}
+      <p style="margin: 6px 0 0 0; font-size: 14px; color: #334155; font-weight: 600;">
+        ${safeDate}
       </p>
-      <p style="margin: 0; font-size: 13px; color: #475569;">
-        Duración estimada: 15 minutos · Zona horaria: ${safeTz}
+      <p style="margin: 4px 0 0 0; font-size: 20px; color: #0f172a; font-weight: 700;">
+        ${safeTime} hs
+      </p>
+      <p style="margin: 6px 0 0 0; font-size: 12px; color: #64748b;">
+        ${safeTz}
       </p>
       ${
         safeNote
-          ? `<p style="margin: 12px 0 0 0; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 14px; color: #334155;"><strong>Nota:</strong> "${safeNote}"</p>`
+          ? `<div style="margin: 14px 0 0 0; padding-top: 14px; border-top: 1px solid #e2e8f0; text-align: left;">
+              <p style="margin: 0 0 4px 0; font-size: 12px; font-weight: 600; color: #64748b;">${noteLabel}</p>
+              <p style="margin: 0; font-size: 14px; color: #334155; white-space: pre-wrap;">${safeNote}</p>
+            </div>`
           : ""
       }
       ${
-        safeLink && !isHttpUrl(meetingLink)
-          ? `<p style="margin: 12px 0 0 0; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 14px; color: #0f172a;"><strong>Cómo conectarse:</strong> ${safeLink}</p>`
+        isAcceptedVariant && safeLink && !isHttpUrl(effectiveMeetingLink)
+          ? `<div style="margin: 14px 0 0 0; padding-top: 14px; border-top: 1px solid #e2e8f0; text-align: left;">
+              <p style="margin: 0 0 4px 0; font-size: 12px; font-weight: 600; color: #64748b;">Cómo conectarse</p>
+              <p style="margin: 0; font-size: 14px; color: #0f172a;">${safeLink}</p>
+            </div>`
           : ""
       }
     </div>
   `;
 
+  const isSpecialistRecipient = variant === "requested_specialist";
+  const whatItIsText = isSpecialistRecipient
+    ? "Un primer contacto breve (15 min) y gratuito para conocer a un miembro interesado y contarle cómo trabajas."
+    : "Una charla introductoria de 15 minutos sin costo para conocerse, contar qué buscas y ver si el enfoque del especialista encaja contigo.";
+  const whatItIsNotText = isSpecialistRecipient
+    ? "No es una consulta paga ni un servicio supervisado por LUMINUS. Los acuerdos u honorarios posteriores son independientes entre tú y el miembro."
+    : "No es una consulta completa, diagnóstico ni tratamiento. Cualquier servicio posterior se acuerda por fuera de LUMINUS.";
+
   const guideBox = showGuide
     ? `
-    <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; margin: 20px 0; text-align: left;">
-      <p style="margin: 0 0 8px 0; font-size: 14px; font-weight: 700; color: #0f172a;">
-        Qué es y qué no es esta sesión
-      </p>
-      <p style="margin: 0 0 8px 0; font-size: 13.5px; line-height: 1.55; color: #334155;">
-        <strong>Qué es:</strong> Una charla inicial gratuita de 15 minutos para conocerse, contar qué buscas y ver si hay afinidad para trabajar juntos.
-      </p>
-      <p style="margin: 0; font-size: 13.5px; line-height: 1.55; color: #334155;">
-        <strong>Qué no es:</strong> No es una consulta médica, psicológica ni terapéutica, ni un servicio prestado por LUMINUS.
-      </p>
+    <div style="margin: 22px 0;">
+      <div style="background-color: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 13px 16px; margin: 0 0 10px 0; text-align: left;">
+        <p style="margin: 0; font-size: 13px; line-height: 1.55; color: #064e3b;">
+          <strong style="color: #059669;">&#10003;</strong>&nbsp;&nbsp;${whatItIsText}
+        </p>
+      </div>
+      <div style="background-color: #fff1f2; border: 1px solid #fecdd3; border-radius: 12px; padding: 13px 16px; margin: 0; text-align: left;">
+        <p style="margin: 0; font-size: 13px; line-height: 1.55; color: #881337;">
+          <strong style="color: #e11d48;">&#10005;</strong>&nbsp;&nbsp;${whatItIsNotText}
+        </p>
+      </div>
     </div>
   `
     : "";
@@ -175,12 +213,11 @@ export function renderIntroSessionEmailHtml(
 
   const contentHtml = `
     <div style="text-align: left;">
-      <p style="margin: 0 0 12px 0; font-size: 15px; color: #334155;">Hola ${safeRecipient},</p>
       <h1 style="margin: 0 0 12px 0; font-size: 22px; line-height: 1.3; font-weight: 700; color: #0f172a;">
         ${heading}
       </h1>
       <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #334155;">
-        ${intro}
+        Hola ${safeRecipient}, ${intro}
       </p>
       ${summaryBox}
       <div style="text-align: center; margin: 26px 0 8px 0;">

@@ -19,6 +19,7 @@ export interface EventRegistrationEmailPayload {
   eventSlug?: string | null;
   location?: string | null;
   userTimezone?: string | null;
+  source?: "platform" | "web";
 }
 
 export async function sendEventRegistrationEmail(data: EventRegistrationEmailPayload) {
@@ -33,6 +34,7 @@ export async function sendEventRegistrationEmail(data: EventRegistrationEmailPay
     eventSlug: data.eventSlug,
     location: data.location,
     userTimezone: data.userTimezone,
+    source: data.source ?? "web",
   });
 }
 

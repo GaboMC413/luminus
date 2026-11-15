@@ -297,6 +297,7 @@ export async function POST(request: Request) {
       youtubeUrl: event.link || (event.youtubeId ? `https://www.youtube.com/watch?v=${event.youtubeId}` : null),
       eventSlug: event.slug,
       location: event.location || "Estreno en YouTube",
+      source: "platform",
     }).catch((err) => {
       console.warn("[Async sendEventRegistrationEmail error]:", err);
     });

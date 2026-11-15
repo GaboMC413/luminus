@@ -179,6 +179,7 @@ export async function POST(req: Request) {
         eventSlug: eventSlug || dbEvent?.slug || null,
         location: dbEvent?.location || "Estreno en YouTube",
         userTimezone: userTimezone || null,
+        source: "web",
       });
       console.log(`[Event Registration Email Sent]: ${cleanEmail} (resend=${!!isResend}) MessageId:`, (emailRes as any)?.messageId || "local-preview");
     } catch (emailErr: any) {

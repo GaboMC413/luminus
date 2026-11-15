@@ -361,8 +361,12 @@ export function PlatformNavbar() {
 
   const [profileFromContext, setProfileFromContext] = useState<string | null>(null);
 
+  const isPublicProfileRoute =
+    pathname.startsWith("/inicio/public-profile") ||
+    (pathname.startsWith("/perfil/") && !pathname.startsWith("/perfil/completar"));
+
   useEffect(() => {
-    if (pathname.startsWith("/inicio/public-profile")) {
+    if (isPublicProfileRoute) {
       const params = new URLSearchParams(window.location.search);
       const fromParam = params.get("from");
       if (fromParam && ["especialistas", "espacios", "grupos", "faro", "inicio"].includes(fromParam)) {
@@ -373,11 +377,11 @@ export function PlatformNavbar() {
     } else {
       setProfileFromContext(null);
     }
-  }, [pathname]);
+  }, [isPublicProfileRoute]);
 
   // Determine active tab based on pathname
   const getActiveTab = () => {
-    if (pathname.startsWith("/inicio/public-profile")) {
+    if (isPublicProfileRoute) {
       return profileFromContext ?? "";
     }
     if (pathname === "/" || pathname.startsWith("/inicio") || pathname.startsWith("/comunidad")) return "inicio";

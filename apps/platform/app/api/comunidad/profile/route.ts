@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { generateUniqueUserSlug } from "@/lib/profile/slug";
 import { isUuid } from "@/utils/validation";
 
 export const runtime = "nodejs";
@@ -12,11 +13,16 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id")?.trim() || "";
+  const identifier =
+    searchParams.get("slug")?.trim() ||
+    searchParams.get("id")?.trim() ||
+    "";
 
-  if (!id || !isUuid(id)) {
+  if (!identifier) {
     return NextResponse.json({ message: "ID de usuario inválido." }, { status: 400 });
   }
+
+  const isIdLookup = isUuid(identifier);
 
   if (!process.env.DATABASE_URL) {
     return NextResponse.json({ 
@@ -26,48 +32,55 @@ export async function GET(request: Request) {
 
   try {
     const { prisma } = await import("@/lib/db");
-    const [user, outgoingConnection, incomingConnection] = await Promise.all([
-      prisma.user.findUnique({
-        where: { id },
-        include: {
-          profile: true,
-          interests: {
-            include: {
-              interest: true,
+    const user = await prisma.user.findUnique({
+      where: isIdLookup ? { id: identifier } : { slug: identifier },
+      include: {
+        profile: true,
+        interests: {
+          include: {
+            interest: true,
+          },
+        },
+        profilePrompts: {
+          orderBy: { sortOrder: "asc" },
+        },
+        specialistProfile: {
+          include: {
+            courses: {
+              where: { isActive: true },
             },
-          },
-          profilePrompts: {
-            orderBy: { sortOrder: "asc" },
-          },
-          specialistProfile: {
-            include: {
-              courses: {
-                where: { isActive: true },
-              },
-              spaces: {
-                where: { isActive: true },
-                include: {
-                  category: true,
-                  spaceCategories: {
-                    include: { category: true },
-                  },
-                  services: {
-                    include: { category: true },
-                  },
-                  availability: {
-                    where: { isActive: true },
-                    orderBy: { dayOfWeek: "asc" },
-                  },
+            spaces: {
+              where: { isActive: true },
+              include: {
+                category: true,
+                spaceCategories: {
+                  include: { category: true },
+                },
+                services: {
+                  include: { category: true },
+                },
+                availability: {
+                  where: { isActive: true },
+                  orderBy: { dayOfWeek: "asc" },
                 },
               },
             },
           },
         },
-      }),
+      },
+    });
+
+    if (!user || user.status !== "active" || user.email === "info@luminuslatam.com") {
+      return NextResponse.json({ message: "Este perfil no está disponible." }, { status: 404 });
+    }
+
+    const targetUserId = user.id;
+
+    const [outgoingConnection, incomingConnection] = await Promise.all([
       prisma.userConnection.findFirst({
         where: {
           requesterId: session.userId,
-          recipientId: id,
+          recipientId: targetUserId,
         },
         select: {
           id: true,
@@ -77,7 +90,7 @@ export async function GET(request: Request) {
       }),
       prisma.userConnection.findFirst({
         where: {
-          requesterId: id,
+          requesterId: targetUserId,
           recipientId: session.userId,
         },
         select: {
@@ -87,10 +100,6 @@ export async function GET(request: Request) {
         },
       }),
     ]);
-
-    if (!user || user.status !== "active" || user.email === "info@luminuslatam.com") {
-      return NextResponse.json({ message: "Este perfil no está disponible." }, { status: 404 });
-    }
 
     if (incomingConnection && incomingConnection.status === "blocked") {
       return NextResponse.json({ message: "Este perfil no está disponible." }, { status: 403 });
@@ -116,6 +125,24 @@ export async function GET(request: Request) {
     const isFollower = incomingConnection?.status === "accepted";
     const isBlocked = outgoingConnection?.status === "blocked";
 
+    if (!user.slug && (user.profile?.firstName || user.profile?.lastName)) {
+      try {
+        const generatedSlug = await generateUniqueUserSlug(
+          prisma,
+          user.profile?.firstName,
+          user.profile?.lastName,
+          user.id
+        );
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { slug: generatedSlug },
+        });
+        user.slug = generatedSlug;
+      } catch {
+        // Non-blocking fallback to user.id
+      }
+    }
+
     const profile = (user.profile ?? {}) as any;
     const prompts = (user.profilePrompts ?? [])
       .sort((a: any, b: any) => a.sortOrder - b.sortOrder)
@@ -127,6 +154,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       profile: {
         id: user.id,
+        slug: user.slug ?? null,
         first_name: profile.firstName ?? "",
         last_name: profile.lastName ?? "",
         city: profile.city ?? "",
@@ -150,7 +178,7 @@ export async function GET(request: Request) {
         is_in_network: isFollowing,
         has_in_network: isFollower,
         is_mutual: Boolean(isFollowing && isFollower),
-        is_own_profile: id === session.userId,
+        is_own_profile: targetUserId === session.userId,
         specialistProfile: user.specialistProfile ? {
           specialty: user.specialistProfile.specialty,
           title: user.specialistProfile.title,

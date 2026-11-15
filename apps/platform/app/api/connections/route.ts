@@ -245,7 +245,7 @@ export async function POST(request: Request) {
           where: {
             userId: recipientId,
             type: { in: ["network_add", "connection_request", "connection_accepted"] },
-            actionUrl: `/inicio/public-profile?id=${session.userId}`,
+            actionUrl: `/perfil/${session.userId}`,
           },
         });
 
@@ -257,7 +257,7 @@ export async function POST(request: Request) {
             actorName: requesterName,
             actorAvatarUrl: requesterAvatar,
             body: "te sumó a su red.",
-            actionUrl: `/inicio/public-profile?id=${session.userId}`,
+            actionUrl: `/perfil/${session.userId}`,
           },
         });
       } catch (notifErr) {
@@ -429,7 +429,7 @@ export async function DELETE(request: Request) {
         where: {
           userId: targetId,
           type: { in: ["network_add", "connection_request", "connection_accepted"] },
-          actionUrl: `/inicio/public-profile?id=${session.userId}`,
+          actionUrl: `/perfil/${session.userId}`,
         },
       }).catch((notifDeleteError) => console.error("Failed to clean up notification on removal:", notifDeleteError)),
     ]);
@@ -562,11 +562,11 @@ export async function PATCH(request: Request) {
         OR: [
           {
             userId: targetId,
-            actionUrl: `/inicio/public-profile?id=${session.userId}`,
+            actionUrl: `/perfil/${session.userId}`,
           },
           {
             userId: session.userId,
-            actionUrl: `/inicio/public-profile?id=${targetId}`,
+            actionUrl: `/perfil/${targetId}`,
           },
         ],
       },

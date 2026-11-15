@@ -20,6 +20,7 @@ import { IntroSessionGuideModal } from "./IntroSessionGuideModal";
 import { CourseDetailModal, type CourseDetailItem } from "../modals/CourseDetailModal";
 import { SpaceDetailModal, type SpaceDetailItem } from "../modals/SpaceDetailModal";
 import { ProfileHeroHeader } from "./ProfileHeroHeader";
+import { OwnPublicProfileBanner } from "./OwnPublicProfileBanner";
 import { ProfileAboutSection } from "./ProfileAboutSection";
 import { ProfileInterestsSection } from "./ProfileInterestsSection";
 import { ProfileCompletionCard } from "./ProfileCompletionCard";
@@ -118,6 +119,7 @@ interface SpecialistProfileViewProps {
   onEditBio?: () => void;
   onEditInterests?: () => void;
   onEditPrompts?: (step?: "list" | "select") => void;
+  onEditSpecialistSpecialty?: () => void;
   onEditSpecialistPractice?: () => void;
   onEditSpecialistSpaces?: () => void;
   onEditSpecialistCourses?: () => void;
@@ -147,6 +149,7 @@ export function SpecialistProfileView({
   onEditBio,
   onEditInterests,
   onEditPrompts,
+  onEditSpecialistSpecialty,
   onEditSpecialistPractice,
   onEditSpecialistSpaces,
   onEditSpecialistCourses,
@@ -298,6 +301,7 @@ export function SpecialistProfileView({
         onSendMessage={onSendMessage}
         onShareProfile={onShareProfile}
         isOwnProfile={!isPublic || Boolean(profile?.is_own_profile)}
+        isPublic={isPublic}
         onEditProfile={onEditProfile}
         onEditPhoto={onEditPhoto}
         onEditCover={onEditCover}
@@ -307,6 +311,10 @@ export function SpecialistProfileView({
 
       {/* 2. Balanced 8:4 Grid Content Container */}
       <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        {isPublic && Boolean(profile?.is_own_profile) && (
+          <OwnPublicProfileBanner className="mt-4 sm:mt-5" />
+        )}
+
         <UnderlineTabs
           tabs={[
             { id: "profesional", label: "Perfil Profesional" },
@@ -326,7 +334,7 @@ export function SpecialistProfileView({
                 <ProfileSectionCard
                   isPublic={isPublic}
                   isEmpty={!hasPracticeHeader}
-                  onEdit={onEditSpecialistPractice}
+                  onEdit={onEditSpecialistSpecialty}
                   editTitle="Editar especialidad y áreas"
                   emptyActionLabel="Agregar especialidad y áreas"
                 >

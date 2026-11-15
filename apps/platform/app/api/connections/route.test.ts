@@ -215,7 +215,7 @@ describe("/api/connections Route", () => {
           actorName: "Sender User",
           actorAvatarUrl: "https://example.com/avatar.jpg",
           body: "te sumó a su red.",
-          actionUrl: `/inicio/public-profile?id=${mockUserId}`,
+          actionUrl: `/perfil/${mockUserId}`,
         },
       });
     });
