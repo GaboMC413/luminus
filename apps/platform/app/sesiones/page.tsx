@@ -570,9 +570,7 @@ function SesionesContent() {
                               <Video className="w-4 h-4 text-emerald-600 shrink-0" />
                               <span className="text-meta font-medium text-emerald-900 truncate">
                                 {isExternalUrl(effectiveLink)
-                                  ? isViewingReceived && item.hostMeetingLink
-                                    ? "Enlace de anfitrión listo"
-                                    : "Enlace de videollamada listo"
+                                  ? "Enlace de videollamada listo"
                                   : effectiveLink}
                               </span>
                             </div>
@@ -583,11 +581,7 @@ function SesionesContent() {
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold font-jakarta shrink-0 no-underline transition-colors"
                               >
-                                <span>
-                                  {isViewingReceived && item.hostMeetingLink
-                                    ? "Entrar como anfitrión"
-                                    : "Unirse"}
-                                </span>
+                                <span>Unirse</span>
                                 <ExternalLink className="w-3 h-3" />
                               </a>
                             )}
@@ -704,7 +698,7 @@ function SesionesContent() {
             />
           )}
 
-          <div className="flex items-center justify-between gap-2 rounded-xl bg-slate-50 border border-slate-200/80 px-3.5 py-2.5">
+          <div className="flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2 rounded-xl bg-slate-50 border border-slate-200/80 px-3.5 py-2.5">
             <span className="text-xs text-slate-600">
               ¿Primera vez aceptando una solicitud?
             </span>
@@ -727,11 +721,10 @@ function SesionesContent() {
                 <Video className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                 <div className="flex flex-col gap-0.5">
                   <span className="text-xs font-semibold text-emerald-950">
-                    Sala de Whereby automática
+                    Videollamada automática
                   </span>
                   <p className="text-xs leading-relaxed text-emerald-900/90 m-0">
-                    Al confirmar, crearemos una sala privada y enviaremos el enlace
-                    de acceso a ambos participantes.
+                    Crearemos la sala y enviaremos el enlace a ambos al confirmar.
                   </p>
                 </div>
               </div>
@@ -752,9 +745,9 @@ function SesionesContent() {
             <div className="flex flex-col gap-1.5">
               <InputField
                 id="accept-meeting-link"
-                label="Enlace de reunión o cómo conectarse"
+                label="Enlace de videollamada"
                 required
-                placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                placeholder="Pega el enlace aquí"
                 value={meetingLink}
                 onChange={(e) => {
                   setMeetingLink(e.target.value);
@@ -762,9 +755,9 @@ function SesionesContent() {
                 }}
                 error={modalError || undefined}
               />
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex flex-col items-start gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
                 <p className="text-xs text-slate-500 m-0">
-                  Pega tu link de videollamada o indica cómo se conectarán.
+                  Pega tu enlace de reunión.
                 </p>
                 {wherebyEnabled && (
                   <button
@@ -776,7 +769,7 @@ function SesionesContent() {
                     }}
                     className="text-xs font-semibold text-slate-700 hover:text-slate-900 underline bg-transparent border-none p-0 cursor-pointer font-jakarta shrink-0"
                   >
-                    Usar Whereby automático
+                    Usar videollamada automática
                   </button>
                 )}
               </div>
@@ -785,8 +778,8 @@ function SesionesContent() {
 
           <TextAreaField
             id="accept-specialist-note"
-            label="Mensaje adicional (Opcional)"
-            placeholder="Ej: Te espero puntual en el enlace. Si necesitas reprogramar avísame por aquí."
+            label="Mensaje adicional"
+            placeholder="Agrega indicaciones o comentarios para la sesión..."
             value={specialistNote}
             onChange={(e) => setSpecialistNote(e.target.value)}
             maxLength={500}
@@ -873,7 +866,7 @@ function SesionesContent() {
           <TextAreaField
             id="decline-specialist-note"
             label="Motivo o sugerencia (Opcional)"
-            placeholder="Ej: En ese horario tengo otro compromiso, ¿te sirve el jueves por la tarde?"
+            placeholder="Explica el motivo o sugiere otro horario disponible..."
             value={declineNote}
             onChange={(e) => setDeclineNote(e.target.value)}
             maxLength={500}

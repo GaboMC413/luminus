@@ -99,7 +99,9 @@ export function InscriptionCard({ event }: InscriptionCardProps) {
     <img
       src={thumbUrl}
       alt={event.title}
-      className="w-full h-full object-cover object-center transition-transform duration-300 group-hover:scale-[1.02]"
+      className={`w-full h-full object-cover object-center transition-all duration-300 group-hover:scale-[1.02] ${
+        isPast ? "opacity-80 group-hover:opacity-100" : ""
+      }`}
       loading="lazy"
     />
   );
@@ -128,10 +130,17 @@ export function InscriptionCard({ event }: InscriptionCardProps) {
       {/* 2. Card Body */}
       <div className="w-full flex-1 p-3.5 sm:p-4 flex flex-col justify-between items-start min-h-0">
         <div className="w-full flex flex-col gap-2">
-          {/* Date & Time */}
-          <p className="text-xs font-medium text-slate-500 font-sans truncate w-full">
-            {dateTimeLabel}
-          </p>
+          {/* Date & Time + Past Status Pill */}
+          <div className="flex items-center justify-between gap-2 w-full">
+            <p className="text-xs font-medium text-slate-500 font-sans truncate">
+              {dateTimeLabel}
+            </p>
+            {isPast && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-600 shrink-0 font-sans">
+                Finalizado
+              </span>
+            )}
+          </div>
 
           {/* Title & Speaker */}
           <div className="flex flex-col gap-1">

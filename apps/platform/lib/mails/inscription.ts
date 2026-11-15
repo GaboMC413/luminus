@@ -116,6 +116,77 @@ function renderPlatformPromoBanner(): string {
   `;
 }
 
+function renderEventCardHtml(params: {
+  eventTitle: string;
+  speakerName?: string | null;
+  formattedDate: string;
+  formattedTime: string;
+  eventLocation: string;
+  coverImageUrl: string;
+  directLink: string | null;
+  isPlatformUser: boolean;
+  showPendingNotice: boolean;
+}): string {
+  const {
+    eventTitle,
+    speakerName,
+    formattedDate,
+    formattedTime,
+    eventLocation,
+    coverImageUrl,
+    directLink,
+    isPlatformUser,
+    showPendingNotice,
+  } = params;
+
+  const coverHtml = coverImageUrl
+    ? directLink
+      ? `<a href="${directLink}" target="_blank" style="display: block; border: 0; outline: none; text-decoration: none;"><img src="${coverImageUrl}" alt="${eventTitle}" style="width: 100%; max-height: 320px; object-fit: cover; display: block; border: 0; outline: none;" /></a>`
+      : `<img src="${coverImageUrl}" alt="${eventTitle}" style="width: 100%; max-height: 320px; object-fit: cover; display: block; border: 0; outline: none;" />`
+    : "";
+
+  const actionHtml = directLink
+    ? `<a href="${directLink}" target="_blank" style="display: inline-block; background-color: #000000 !important; color: #ffffff !important; text-decoration: none; padding: 13px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center; border: 0;">
+        Unirse al evento
+      </a>`
+    : showPendingNotice
+      ? `<p style="font-size: 14px; line-height: 1.5; color: #475569 !important; margin: 0; text-align: center;">
+          El enlace de acceso se habilitará antes del comienzo y te lo enviaremos por email.${
+            isPlatformUser ? " También podrás verlo en Mis inscripciones." : ""
+          }
+        </p>`
+      : "";
+
+  return `
+    <!-- Official Event Card: #f8fafc, border-radius 20px, aligned with modal summary card -->
+    <div style="background-color: #f8fafc; border-radius: 20px; overflow: hidden; text-align: center; margin-bottom: ${isPlatformUser ? "0" : "36px"}; border: 0;">
+      ${coverHtml}
+      
+      <div style="padding: 24px; text-align: center;">
+        <h3 style="font-size: 20px; font-weight: 700; line-height: 1.3; color: #0f172a !important; margin: 0 0 6px 0; text-align: center;">
+          ${eventTitle}
+        </h3>
+        
+        ${speakerName ? `<p style="font-size: 15px; font-weight: 600; color: #334155 !important; margin: 0; text-align: center;">Con ${speakerName}</p>` : ""}
+        
+        <div style="margin: 16px 0 ${actionHtml ? "22px" : "0"} 0; text-align: center;">
+          <p style="margin: 0; font-size: 14px; font-weight: 600; color: #334155 !important; text-align: center;">
+            ${formattedDate}
+          </p>
+          <p style="margin: 4px 0 0 0; font-size: 18px; font-weight: 700; color: #0f172a !important; text-align: center;">
+            ${formattedTime}
+          </p>
+          <p style="margin: 4px 0 0 0; font-size: 13px; font-weight: 500; color: #64748b !important; text-align: center;">
+            ${eventLocation}
+          </p>
+        </div>
+        
+        ${actionHtml}
+      </div>
+    </div>
+  `;
+}
+
 export function renderEventRegistrationEmailHtml(data: EventInscriptionEmailOptions): string {
   const firstName = data.firstName || "Usuario";
   const eventTitle = data.eventTitle || "Evento de Bienestar LUMINUS";
@@ -129,62 +200,26 @@ export function renderEventRegistrationEmailHtml(data: EventInscriptionEmailOpti
   const coverImageUrl = data.eventCoverUrl || LOGO_IMAGE_URL;
   const isPlatformUser = data.source === "platform";
 
-  const coverHtml = coverImageUrl
-    ? directLink
-      ? `<a href="${directLink}" target="_blank" style="display: block; border: 0; outline: none; text-decoration: none;"><img src="${coverImageUrl}" alt="${eventTitle}" style="width: 100%; max-height: 320px; object-fit: cover; display: block; border: 0; outline: none;" /></a>`
-      : `<img src="${coverImageUrl}" alt="${eventTitle}" style="width: 100%; max-height: 320px; object-fit: cover; display: block; border: 0; outline: none;" />`
-    : "";
-
-  const actionHtml = directLink
-    ? `
-        <a href="${directLink}" target="_blank" style="display: inline-block; background-color: #000000 !important; color: #ffffff !important; text-decoration: none; padding: 13px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center; border: 0;">
-          Unirse al evento
-        </a>
-        <p style="font-size: 13px; line-height: 1.5; color: #475569 !important; margin: 14px 0 0 0; text-align: center;">
-          El enlace estará activo en la fecha y horario del evento.
-        </p>
-      `
-    : `
-        <div style="background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; text-align: center;">
-          <p style="font-size: 14px; line-height: 1.5; color: #334155 !important; margin: 0; font-weight: 500;">
-            El enlace de acceso se habilitará antes del comienzo y te lo enviaremos por email.${
-              isPlatformUser ? " También podrás verlo en Mis inscripciones dentro de la plataforma." : ""
-            }
-          </p>
-        </div>
-      `;
-
   const contentHtml = `
     <h1 style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 16px 0; color: #000000 !important; text-align: center;">
       ¡Hola ${firstName}!
     </h1>
 
-    <p style="font-size: 16px; line-height: 1.6; color: #000000 !important; font-weight: 500; margin: 0 0 6px 0; text-align: center;">
+    <p style="font-size: 16px; line-height: 1.6; color: #000000 !important; font-weight: 500; margin: 0 0 24px 0; text-align: center;">
       Tu inscripción a <strong style="color: #000000 !important;">${eventTitle}</strong> está confirmada.
     </p>
 
-    <p style="font-size: 15px; line-height: 1.6; color: #000000 !important; margin: 0 0 28px 0; text-align: center;">
-      Te esperamos el ${formattedDate} a las ${formattedTime}.
-    </p>
-
-    <!-- Official Newsletter Card: #f8fafc, border-radius 20px, border 0 -->
-    <div style="background-color: #f8fafc; border-radius: 20px; overflow: hidden; text-align: center; margin-bottom: ${isPlatformUser ? "0" : "36px"}; border: 0;">
-      ${coverHtml}
-      
-      <div style="padding: 24px; text-align: center;">
-        <h3 style="font-size: 20px; font-weight: 700; line-height: 1.3; color: #000000 !important; margin: 0 0 8px 0; text-align: center;">
-          ${eventTitle}
-        </h3>
-        
-        ${data.speakerName ? `<p style="font-size: 16px; font-weight: 600; color: #000000 !important; margin: 0 0 6px 0; text-align: center;">Con ${data.speakerName}</p>` : ""}
-        
-        <p style="font-size: 15px; font-weight: 500; color: #000000 !important; margin: 0 0 20px 0; text-align: center;">
-          ${formattedDate} • ${formattedTime} • ${eventLocation}
-        </p>
-        
-        ${actionHtml}
-      </div>
-    </div>
+    ${renderEventCardHtml({
+      eventTitle,
+      speakerName: data.speakerName,
+      formattedDate,
+      formattedTime,
+      eventLocation,
+      coverImageUrl,
+      directLink,
+      isPlatformUser,
+      showPendingNotice: true,
+    })}
 
     ${isPlatformUser ? "" : renderPlatformPromoBanner()}
   `;
@@ -210,45 +245,26 @@ export function renderEventLiveEmailHtml(data: EventInscriptionEmailOptions): st
   const coverImageUrl = data.eventCoverUrl || LOGO_IMAGE_URL;
   const isPlatformUser = data.source === "platform";
 
-  const coverHtml = coverImageUrl
-    ? directLink
-      ? `<a href="${directLink}" target="_blank" style="display: block; border: 0; outline: none; text-decoration: none;"><img src="${coverImageUrl}" alt="${eventTitle}" style="width: 100%; max-height: 320px; object-fit: cover; display: block; border: 0; outline: none;" /></a>`
-      : `<img src="${coverImageUrl}" alt="${eventTitle}" style="width: 100%; max-height: 320px; object-fit: cover; display: block; border: 0; outline: none;" />`
-    : "";
-
   const contentHtml = `
     <h1 style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 16px 0; color: #000000 !important; text-align: center;">
       ¡Hola ${firstName}!
     </h1>
 
-    <p style="font-size: 16px; line-height: 1.6; color: #000000 !important; font-weight: 500; margin: 0 0 28px 0; text-align: center;">
+    <p style="font-size: 16px; line-height: 1.6; color: #000000 !important; font-weight: 500; margin: 0 0 24px 0; text-align: center;">
       <strong style="color: #000000 !important;">${eventTitle}</strong>${data.speakerName ? `, con ${data.speakerName},` : ""} ya está disponible para que te unas.
     </p>
 
-    <!-- Official Newsletter Card: #f8fafc, border-radius 20px, border 0 -->
-    <div style="background-color: #f8fafc; border-radius: 20px; overflow: hidden; text-align: center; margin-bottom: ${isPlatformUser ? "0" : "36px"}; border: 0;">
-      ${coverHtml}
-      
-      <div style="padding: 24px; text-align: center;">
-        <h3 style="font-size: 20px; font-weight: 700; line-height: 1.3; color: #000000 !important; margin: 0 0 8px 0; text-align: center;">
-          ${eventTitle}
-        </h3>
-        
-        ${data.speakerName ? `<p style="font-size: 16px; font-weight: 600; color: #000000 !important; margin: 0 0 6px 0; text-align: center;">Con ${data.speakerName}</p>` : ""}
-        
-        <p style="font-size: 15px; font-weight: 500; color: #000000 !important; margin: 0 0 20px 0; text-align: center;">
-          ${formattedDate} • ${formattedTime} • ${eventLocation}
-        </p>
-        
-        ${
-          directLink
-            ? `<a href="${directLink}" target="_blank" style="display: inline-block; background-color: #000000 !important; color: #ffffff !important; text-decoration: none; padding: 13px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center; border: 0;">
-                Unirse al evento
-              </a>`
-            : ""
-        }
-      </div>
-    </div>
+    ${renderEventCardHtml({
+      eventTitle,
+      speakerName: data.speakerName,
+      formattedDate,
+      formattedTime,
+      eventLocation,
+      coverImageUrl,
+      directLink,
+      isPlatformUser,
+      showPendingNotice: false,
+    })}
 
     ${isPlatformUser ? "" : renderPlatformPromoBanner()}
   `;

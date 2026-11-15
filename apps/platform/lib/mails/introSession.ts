@@ -127,9 +127,9 @@ export function renderIntroSessionEmailHtml(
       break;
     case "accepted_specialist":
       heading = "Confirmaste una sesión introductoria";
-      intro = `confirmaste la sesión de 15 minutos con <strong>${safeCounterparty}</strong>. Aquí tienes el resumen y tu enlace de acceso como anfitrión.`;
+      intro = `confirmaste la sesión de 15 minutos con <strong>${safeCounterparty}</strong>. Aquí tienes el resumen y tu enlace de acceso.`;
       ctaLabel = isHttpUrl(effectiveMeetingLink)
-        ? "Entrar como anfitrión"
+        ? "Unirse a la sesión"
         : "Ver mis sesiones";
       noteLabel = "Tu mensaje";
       break;
