@@ -690,18 +690,34 @@ export function UsersTab({
                     </span>
                   </button>
 
-                  {!isEditingUser && (
-                    <button
-                      type="button"
-                      onClick={() => setShowDeleteConfirm(true)}
-                      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none cursor-pointer transition-colors bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700"
-                      title="Eliminar usuario"
-                    >
-                      <span className="material-symbols-rounded text-[18px] block">
-                        delete
-                      </span>
-                    </button>
-                  )}
+                  {!isEditingUser && (() => {
+                    const hasActiveSub =
+                      billingMap[selectedUser.id]?.hasActiveSubscription ??
+                      selectedUser.tier === "MECENAS";
+                    return (
+                      <button
+                        type="button"
+                        disabled={hasActiveSub}
+                        onClick={() => {
+                          if (!hasActiveSub) setShowDeleteConfirm(true);
+                        }}
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none transition-colors ${
+                          hasActiveSub
+                            ? "bg-slate-100 text-slate-300 cursor-not-allowed"
+                            : "cursor-pointer bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700"
+                        }`}
+                        title={
+                          hasActiveSub
+                            ? "No se puede eliminar un usuario con suscripción activa"
+                            : "Eliminar usuario"
+                        }
+                      >
+                        <span className="material-symbols-rounded text-[18px] block">
+                          delete
+                        </span>
+                      </button>
+                    );
+                  })()}
                 </div>
               </div>
 

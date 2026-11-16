@@ -33,8 +33,8 @@ import {
   setCachedData,
   fetchWithCache,
   invalidateClientCache,
-  clearAllClientCache,
 } from "@/lib/clientCache";
+import { clearClientUserSessionState } from "@/lib/auth/clientSessionCleanup";
 
 export interface Profile {
   id?: string;
@@ -61,6 +61,7 @@ export interface Profile {
 }
 
 function syncProfileToLocalStorage(profile: Profile, email?: string) {
+  if (profile.id) localStorage.setItem("luminus_cached_user_id", profile.id);
   localStorage.setItem("luminus_profile_firstName", profile.first_name || "");
   localStorage.setItem("luminus_profile_lastName", profile.last_name || "");
   localStorage.setItem("luminus_profile_city", profile.city || "");
@@ -129,24 +130,34 @@ export function ProfileContent() {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const data = await fetchWithCache(
-          "/api/profile",
-          async () => {
-            const response = await fetch("/api/profile", {
-              credentials: "include",
-            });
+        const fetchProfileFresh = async () => {
+          const response = await fetch("/api/profile", {
+            credentials: "include",
+          });
 
-            if (!response.ok) {
-              router.push("/auth/iniciar-sesion");
-              return null;
-            }
+          if (!response.ok) {
+            router.push("/auth/iniciar-sesion");
+            return null;
+          }
 
-            return response.json();
-          },
-          { ttlMs: 120_000 }
-        );
+          return response.json();
+        };
+
+        let data = await fetchWithCache("/api/profile", fetchProfileFresh, {
+          ttlMs: 120_000,
+        });
 
         if (!data?.profile) return;
+
+        const cachedUserId = localStorage.getItem("luminus_cached_user_id");
+        if (cachedUserId && data.profile.id && cachedUserId !== data.profile.id) {
+          clearClientUserSessionState();
+          data = await fetchWithCache("/api/profile", fetchProfileFresh, {
+            force: true,
+            ttlMs: 120_000,
+          });
+          if (!data?.profile) return;
+        }
 
         const loadedProfile = data.profile as Profile;
         setProfile(loadedProfile);
@@ -203,12 +214,12 @@ export function ProfileContent() {
       credentials: "include",
     });
     const data = await res.json().catch(() => ({}));
-    clearAllClientCache();
+    clearClientUserSessionState();
 
     if (data?.cognitoLogoutUrl) {
       window.location.href = data.cognitoLogoutUrl;
     } else {
-      router.push("/auth/iniciar-sesion");
+      window.location.assign("/iniciar-sesion");
     }
   };
 

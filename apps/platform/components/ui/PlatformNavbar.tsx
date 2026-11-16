@@ -28,8 +28,8 @@ import {
   getCachedData,
   setCachedData,
   fetchWithCache,
-  clearAllClientCache,
 } from "@/lib/clientCache";
+import { clearClientUserSessionState } from "@/lib/auth/clientSessionCleanup";
 
 export function formatRelativeTime(timestamp: any): string {
   if (!timestamp) return "Ahora";
@@ -190,36 +190,14 @@ export function PlatformNavbar() {
             (cachedUserId && cachedUserId !== u.id) || (!cachedUserId && cachedEmail && cachedEmail !== u.email);
 
           if (isUserChanged) {
-            const keysToRemove = [
-              "luminus_profile_firstName",
-              "luminus_profile_lastName",
-              "luminus_profile_city",
-              "luminus_profile_country",
-              "luminus_profile_gender",
-              "luminus_profile_birthdate",
-              "luminus_profile_phone",
-              "luminus_profile_profession",
-              "luminus_profile_avatar",
-              "luminus_profile_interests",
-              "luminus_profile_otherInterests",
-              "luminus_profile_bio",
-              "luminus_profile_prompts",
-              "luminus_profile_cover",
-              "luminus_user_email",
-              "luminus_user_role",
-              "luminus_profile_plan",
-              "luminus_onboarding_completed",
-              "luminus_chats",
-              "luminus_cached_user_id",
-            ];
-            keysToRemove.forEach((k) => localStorage.removeItem(k));
-            clearAllClientCache();
+            clearClientUserSessionState();
             setCachedData("/api/auth/me", u);
 
             setProfileName("");
             setProfileAvatar("");
             setUserEmail("");
             setUserRole("USER");
+            router.refresh();
           }
 
           localStorage.setItem("luminus_cached_user_id", u.id);
@@ -532,37 +510,12 @@ export function PlatformNavbar() {
     });
     const data = await res.json().catch(() => ({}));
 
-    clearAllClientCache();
-
-    // Clear local storage profile details to prevent data bleed when switching users
-    const keysToRemove = [
-      "luminus_profile_firstName",
-      "luminus_profile_lastName",
-      "luminus_profile_city",
-      "luminus_profile_country",
-      "luminus_profile_gender",
-      "luminus_profile_birthdate",
-      "luminus_profile_phone",
-      "luminus_profile_profession",
-      "luminus_profile_avatar",
-      "luminus_profile_interests",
-      "luminus_profile_otherInterests",
-      "luminus_profile_bio",
-      "luminus_profile_prompts",
-      "luminus_profile_cover",
-      "luminus_user_email",
-      "luminus_user_role",
-      "luminus_profile_plan",
-      "luminus_onboarding_completed",
-      "luminus_chats",
-      "luminus_cached_user_id",
-    ];
-    keysToRemove.forEach((k) => localStorage.removeItem(k));
+    clearClientUserSessionState();
 
     if (data?.cognitoLogoutUrl) {
       window.location.href = data.cognitoLogoutUrl;
     } else {
-      router.push("/auth/iniciar-sesion");
+      window.location.assign("/iniciar-sesion");
     }
   };
 

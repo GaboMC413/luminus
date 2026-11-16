@@ -32,6 +32,7 @@ import { TextAreaField } from "@/components/ui/TextAreaField";
 import { Toast } from "@/components/ui/Toast";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatSessionDate } from "@/lib/sessions/sessionAvailability";
+import { getSessionTimeState } from "@/lib/sessions/whereby";
 import { getCachedData, fetchWithCache } from "@/lib/clientCache";
 
 type SessionUser = {
@@ -168,6 +169,55 @@ function capitalizeFirst(value: string) {
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
 }
 
+function renderJoinAction(
+  item: IntroSessionItem,
+  effectiveLink: string,
+  hasStarted: boolean,
+  iconClassName: string
+) {
+  const Icon = item.isEmbeddedRoom ? Video : ExternalLink;
+
+  if (!hasStarted) {
+    return (
+      <button
+        type="button"
+        disabled
+        title={`Disponible desde las ${item.startTime} hs`}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 text-slate-400 text-xs font-semibold font-jakarta shrink-0 cursor-not-allowed"
+      >
+        <span>Unirse</span>
+        <Icon className={iconClassName} />
+      </button>
+    );
+  }
+
+  if (item.isEmbeddedRoom) {
+    return (
+      <Link
+        href={`/sesiones/${item.id}/sala`}
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold font-jakarta shrink-0 no-underline transition-colors"
+      >
+        <span>Unirse</span>
+        <Video className={iconClassName} />
+      </Link>
+    );
+  }
+
+  if (!isExternalUrl(effectiveLink)) return null;
+
+  return (
+    <a
+      href={effectiveLink}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold font-jakarta shrink-0 no-underline transition-colors"
+    >
+      <span>Unirse</span>
+      <ExternalLink className={iconClassName} />
+    </a>
+  );
+}
+
 function SesionesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -209,7 +259,13 @@ function SesionesContent() {
   const [declineNote, setDeclineNote] = useState("");
   const [cancelTarget, setCancelTarget] = useState<IntroSessionItem | null>(null);
   const [detailTarget, setDetailTarget] = useState<IntroSessionItem | null>(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowMs(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [modalError, setModalError] = useState("");
   const [linkError, setLinkError] = useState("");
   const [termsError, setTermsError] = useState("");
@@ -587,9 +643,12 @@ function SesionesContent() {
                 isViewingReceived && item.hostMeetingLink
                   ? item.hostMeetingLink
                   : item.meetingLink;
+              const timeState = getSessionTimeState(item, nowMs);
+              const hasStarted = timeState.hasStarted;
+              const isRoomClosed = Boolean(item.isRoomClosed) || timeState.isRoomClosed;
               const canJoinRoom =
                 item.status === "accepted" &&
-                !item.isRoomClosed &&
+                !isRoomClosed &&
                 Boolean(effectiveLink);
               const needsFeedback =
                 item.status === "accepted" &&
@@ -684,27 +743,7 @@ function SesionesContent() {
                       )}
 
                       {canJoinRoom &&
-                        (item.isEmbeddedRoom ? (
-                          <Link
-                            href={`/sesiones/${item.id}/sala`}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold font-jakarta shrink-0 no-underline transition-colors"
-                          >
-                            <span>Unirse</span>
-                            <Video className="w-3.5 h-3.5" />
-                          </Link>
-                        ) : (
-                          isExternalUrl(effectiveLink) && (
-                            <a
-                              href={effectiveLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold font-jakarta shrink-0 no-underline transition-colors"
-                            >
-                              <span>Unirse</span>
-                              <ExternalLink className="w-3.5 h-3.5" />
-                            </a>
-                          )
-                        ))}
+                        renderJoinAction(item, effectiveLink, hasStarted, "w-3.5 h-3.5")}
 
                       {needsFeedback && (
                         <Link
@@ -754,9 +793,13 @@ function SesionesContent() {
           isViewingReceived && detailTarget.hostMeetingLink
             ? detailTarget.hostMeetingLink
             : detailTarget.meetingLink;
+        const detailTimeState = getSessionTimeState(detailTarget, nowMs);
+        const detailHasStarted = detailTimeState.hasStarted;
+        const detailRoomClosed =
+          Boolean(detailTarget.isRoomClosed) || detailTimeState.isRoomClosed;
         const canJoinRoom =
           detailTarget.status === "accepted" &&
-          !detailTarget.isRoomClosed &&
+          !detailRoomClosed &&
           Boolean(effectiveLink);
         const isUpcoming =
           detailTarget.status === "pending" ||
@@ -932,36 +975,32 @@ function SesionesContent() {
               )}
 
               {canJoinRoom && (
-                <div className="rounded-xl bg-emerald-50/70 border border-emerald-200/80 px-3.5 py-2.5 flex items-center justify-between gap-3">
+                <div
+                  className={`rounded-xl px-3.5 py-2.5 flex items-center justify-between gap-3 border ${
+                    detailHasStarted
+                      ? "bg-emerald-50/70 border-emerald-200/80"
+                      : "bg-slate-50 border-slate-200/80"
+                  }`}
+                >
                   <div className="flex items-center gap-2 min-w-0">
-                    <Video className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span className="text-meta font-medium text-emerald-900 truncate">
-                      {isExternalUrl(effectiveLink)
-                        ? "Enlace de videollamada listo"
-                        : effectiveLink}
+                    <Video
+                      className={`w-4 h-4 shrink-0 ${
+                        detailHasStarted ? "text-emerald-600" : "text-slate-400"
+                      }`}
+                    />
+                    <span
+                      className={`text-meta font-medium truncate ${
+                        detailHasStarted ? "text-emerald-900" : "text-slate-600"
+                      }`}
+                    >
+                      {!detailHasStarted
+                        ? `Disponible desde las ${detailTarget.startTime} hs`
+                        : isExternalUrl(effectiveLink)
+                          ? "Enlace de videollamada listo"
+                          : effectiveLink}
                     </span>
                   </div>
-                  {detailTarget.isEmbeddedRoom ? (
-                    <Link
-                      href={`/sesiones/${detailTarget.id}/sala`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold font-jakarta shrink-0 no-underline transition-colors"
-                    >
-                      <span>Unirse</span>
-                      <Video className="w-3 h-3" />
-                    </Link>
-                  ) : (
-                    isExternalUrl(effectiveLink) && (
-                      <a
-                        href={effectiveLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold font-jakarta shrink-0 no-underline transition-colors"
-                      >
-                        <span>Unirse</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )
-                  )}
+                  {renderJoinAction(detailTarget, effectiveLink, detailHasStarted, "w-3 h-3")}
                 </div>
               )}
 
