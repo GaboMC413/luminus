@@ -193,17 +193,19 @@ export async function GET() {
       }
 
       if (invoicesRes.status === "fulfilled") {
-        invoices = invoicesRes.value.data.map((inv: any) => ({
-          id: inv.id,
-          number: inv.number || inv.id,
-          date: inv.created,
-          amount: (inv.amount_paid ?? inv.total ?? 0) / 100,
-          currency: inv.currency || "usd",
-          status: inv.status || "paid",
-          description: inv.lines?.data?.[0]?.description || "Mecenas LUMINUS",
-          pdfUrl: inv.invoice_pdf || null,
-          hostedUrl: inv.hosted_invoice_url || null,
-        }));
+        invoices = invoicesRes.value.data
+          .filter((inv: any) => inv.status === "paid" && (inv.amount_paid ?? inv.total ?? 0) > 0)
+          .map((inv: any) => ({
+            id: inv.id,
+            number: inv.number || inv.id,
+            date: inv.created,
+            amount: (inv.amount_paid ?? inv.total ?? 0) / 100,
+            currency: inv.currency || "usd",
+            status: inv.status || "paid",
+            description: inv.lines?.data?.[0]?.description || "Mecenas LUMINUS",
+            pdfUrl: inv.invoice_pdf || null,
+            hostedUrl: inv.hosted_invoice_url || null,
+          }));
       }
     }
 

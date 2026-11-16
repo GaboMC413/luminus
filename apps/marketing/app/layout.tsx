@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import Script from "next/script";
 import { MetaPixel } from "@/components/analytics/MetaPixel";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { CookieConsentBanner } from "@/components/legal/CookieConsentBanner";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -62,23 +64,8 @@ export default function RootLayout({
       </head>
       <body className="bg-white text-slate-900 antialiased selection:bg-slate-900 selection:text-white min-h-screen flex flex-col">
 
-        {/* Google Analytics (gtag.js) */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-1H9DDE1V0C"
-          strategy="afterInteractive"
-        />
-        <Script
-          id="google-analytics"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-1H9DDE1V0C');
-            `,
-          }}
-        />
+        {/* Google Analytics (gtag.js) — gated by cookie consent */}
+        <GoogleAnalytics measurementId="G-1H9DDE1V0C" scriptId="google-analytics" />
         {googleMapsApiKey ? (
           <Script
             src={`https://maps.googleapis.com/maps/api/js?key=${googleMapsApiKey}&libraries=places&language=es&loading=async`}
@@ -86,6 +73,7 @@ export default function RootLayout({
           />
         ) : null}
         {children}
+        <CookieConsentBanner />
       </body>
     </html>
   );

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
-import { createMembershipSubscription } from "@/lib/stripe";
+import { createMembershipSetupIntent } from "@/lib/stripe";
 import { handleApiError } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
@@ -33,29 +33,26 @@ export async function POST(request: Request) {
 
     const body = await request.json().catch(() => null);
     const interval: "month" | "year" = body?.interval === "year" ? "year" : "month";
-    const existingSubscriptionId: string | undefined = body?.existingSubscriptionId;
 
-    const subscriptionData = await createMembershipSubscription({
+    const setupData = await createMembershipSetupIntent({
       email: user.email,
       name: user.profile?.fullName || `${user.profile?.firstName || ""} ${user.profile?.lastName || ""}`.trim() || user.email,
       phone: user.profile?.phoneNumber || undefined,
-      interval,
-      existingSubscriptionId,
       customerId: user.stripeCustomerId,
       userId: user.id,
     });
 
     // Immediately persist customer ID to database if not present yet
-    if (!user.stripeCustomerId && subscriptionData.customerId && !subscriptionData.isMock) {
+    if (!user.stripeCustomerId && setupData.customerId && !setupData.isMock) {
       await prisma.user.update({
         where: { id: user.id },
-        data: { stripeCustomerId: subscriptionData.customerId },
+        data: { stripeCustomerId: setupData.customerId },
       }).catch((updateErr) => {
         console.warn("[create-intent] Could not persist stripeCustomerId:", updateErr);
       });
     }
 
-    return NextResponse.json({ ...subscriptionData, interval });
+    return NextResponse.json({ ...setupData, interval });
   } catch (error: unknown) {
     return handleApiError(error, {
       context: "[membership/create-intent] POST",

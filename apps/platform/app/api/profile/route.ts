@@ -5,6 +5,7 @@ import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
 import { deleteS3FileByUrl } from "@/lib/storage/s3FileCleanup";
 import { generateUniqueUserSlug } from "@/lib/profile/slug";
 import { handleApiError } from "@/lib/errors/server-error";
+import { MAX_USER_INTERESTS } from "@/utils/constants";
 import {
   normalizeInstagramInput,
   normalizeLinkedinInput,
@@ -174,7 +175,12 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json(serializeProfile(user));
+    return NextResponse.json(serializeProfile(user), {
+      headers: {
+        "Cache-Control": "no-store, private",
+        Vary: "Cookie",
+      },
+    });
   } catch (error) {
     return handleApiError(error, {
       context: "[profile] GET",
@@ -215,6 +221,18 @@ export async function PATCH(request: Request) {
   }
 
   const shouldUpdateInterests = Array.isArray(data.interests);
+  if (shouldUpdateInterests) {
+    const rawInterests = (data.interests as unknown[]).filter(
+      (interest): interest is string => typeof interest === "string"
+    );
+    const interestSlugs = Array.from(new Set(rawInterests.map(slugify).filter(Boolean)));
+    if (interestSlugs.length > MAX_USER_INTERESTS) {
+      return NextResponse.json(
+        { message: `Puedes seleccionar hasta ${MAX_USER_INTERESTS} intereses.` },
+        { status: 400 }
+      );
+    }
+  }
   const shouldUpdatePrompts = Array.isArray(data.prompts);
 
   const profileData: Record<string, unknown> = {};

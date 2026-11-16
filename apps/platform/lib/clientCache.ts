@@ -8,6 +8,7 @@ type CacheSubscriber<T = any> = (data: T) => void;
 const memoryCache = new Map<string, CacheEntry>();
 const inFlightRequests = new Map<string, Promise<any>>();
 const subscribers = new Map<string, Set<CacheSubscriber>>();
+let cacheGeneration = 0;
 
 export const DEFAULT_CLIENT_TTL_MS = 60_000; // 60 seconds fresh window
 
@@ -85,9 +86,12 @@ export async function fetchWithCache<T>(
 
     if (revalidateInBackground) {
       if (!inFlightRequests.has(key)) {
+        const requestGen = cacheGeneration;
         const bgPromise = fetcher()
           .then((freshData) => {
-            setCachedData(key, freshData);
+            if (requestGen === cacheGeneration) {
+              setCachedData(key, freshData);
+            }
             return freshData;
           })
           .catch((err) => {
@@ -95,7 +99,9 @@ export async function fetchWithCache<T>(
             return existing.data as T;
           })
           .finally(() => {
-            inFlightRequests.delete(key);
+            if (inFlightRequests.get(key) === bgPromise) {
+              inFlightRequests.delete(key);
+            }
           });
         inFlightRequests.set(key, bgPromise);
       }
@@ -107,13 +113,18 @@ export async function fetchWithCache<T>(
     return inFlightRequests.get(key) as Promise<T>;
   }
 
+  const requestGen = cacheGeneration;
   const requestPromise = fetcher()
     .then((data) => {
-      setCachedData(key, data);
+      if (requestGen === cacheGeneration) {
+        setCachedData(key, data);
+      }
       return data;
     })
     .finally(() => {
-      inFlightRequests.delete(key);
+      if (inFlightRequests.get(key) === requestPromise) {
+        inFlightRequests.delete(key);
+      }
     });
 
   inFlightRequests.set(key, requestPromise);
@@ -122,8 +133,7 @@ export async function fetchWithCache<T>(
 
 export function invalidateClientCache(keyOrPrefixes?: string | string[]): void {
   if (!keyOrPrefixes) {
-    memoryCache.clear();
-    inFlightRequests.clear();
+    clearAllClientCache();
     return;
   }
 
@@ -148,6 +158,7 @@ export function invalidateClientCache(keyOrPrefixes?: string | string[]): void {
 }
 
 export function clearAllClientCache(): void {
+  cacheGeneration += 1;
   memoryCache.clear();
   inFlightRequests.clear();
 }

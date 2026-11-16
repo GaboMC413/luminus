@@ -11,7 +11,7 @@ import { InputField } from "@/components/ui/InputField";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { Button } from "@/components/ui/Button";
 import { COUNTRIES, Country } from "@/utils/countries";
-import { INTEREST_CATEGORIES } from "@/utils/constants";
+import { INTEREST_CATEGORIES, MAX_USER_INTERESTS } from "@/utils/constants";
 import { renderCategoryIconByKey } from "@/components/ui/InterestPill";
 import { PhotoEditor } from "@/components/ui/PhotoEditor";
 import { uploadAvatar } from "@/lib/uploadAvatar";
@@ -38,11 +38,7 @@ const DEFAULT_COUNTRY: Country = {
   priority: false,
 };
 
-const MAX_INTERESTS = 10;
-
-const CURATED_INTERESTS_SET = new Set(
-  INTEREST_CATEGORIES.flatMap((cat) => cat.items.map((item) => item.toLowerCase().trim()))
-);
+const MAX_INTERESTS = MAX_USER_INTERESTS;
 
 const COUNTRY_SYNONYMS: Record<string, string> = {
   "spain": "espana",
@@ -298,9 +294,6 @@ export default function CompleteProfileView() {
             const normalizedCategories: CategoryGroup[] = catData.categories
               .map((cat: any) => {
                 const rawItems: string[] = Array.isArray(cat.items) ? cat.items : [];
-                const filteredItems = rawItems.filter((item) =>
-                  CURATED_INTERESTS_SET.has(item.toLowerCase().trim())
-                );
                 const fallbackCat = INTEREST_CATEGORIES.find(
                   (c) =>
                     normalizeText(c.title) === normalizeText(String(cat.title || cat.name || ""))
@@ -311,7 +304,7 @@ export default function CompleteProfileView() {
                   iconFilled: cat.iconFilled ?? fallbackCat?.iconFilled ?? true,
                   color: cat.color || fallbackCat?.color || "#0F172A",
                   bgColor: cat.bgColor || fallbackCat?.bgColor,
-                  items: filteredItems.length > 0 ? filteredItems : fallbackCat?.items || rawItems,
+                  items: rawItems.length > 0 ? rawItems : fallbackCat?.items || [],
                 };
               })
               .filter((c: CategoryGroup) => c.title && c.items.length > 0);
@@ -919,13 +912,7 @@ export default function CompleteProfileView() {
               )}
 
               {/* BOTTOM ACTIONS BAR - Pinned above footer */}
-              <div className="w-full shrink-0 pt-2 pb-1 flex flex-col items-center gap-0 pointer-events-none">
-                <div className="w-full max-w-[380px] mx-auto pointer-events-auto rounded-xl">
-                  <Button type="submit" variant="primary" disabled={saving}>
-                    {saving ? "Creando perfil..." : "Crear mi perfil"}
-                  </Button>
-                </div>
-
+              <div className="w-full shrink-0 pt-3 pb-1 flex items-center justify-center gap-3 pointer-events-none">
                 <Button
                   type="button"
                   variant="back"
@@ -935,9 +922,13 @@ export default function CompleteProfileView() {
                     window.scrollTo(0, 0);
                   }}
                   disabled={saving}
-                  className="pointer-events-auto mt-3 mb-1"
+                  className="pointer-events-auto"
                 >
                   Volver
+                </Button>
+
+                <Button type="submit" variant="primary" disabled={saving} className="pointer-events-auto">
+                  {saving ? "Creando perfil..." : "Crear mi perfil"}
                 </Button>
               </div>
             </form>

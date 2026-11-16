@@ -4,11 +4,16 @@ import { serializeUser } from "@/lib/auth/validation";
 
 export const runtime = "nodejs";
 
+const NO_STORE_HEADERS = {
+  "Cache-Control": "no-store, private",
+  Vary: "Cookie",
+};
+
 export async function GET() {
   const session = await getCurrentSession();
 
   if (!session) {
-    return NextResponse.json({ user: null }, { status: 401 });
+    return NextResponse.json({ user: null }, { status: 401, headers: NO_STORE_HEADERS });
   }
 
   try {
@@ -19,15 +24,15 @@ export async function GET() {
     });
 
     if (!user) {
-      return NextResponse.json({ user: null }, { status: 401 });
+      return NextResponse.json({ user: null }, { status: 401, headers: NO_STORE_HEADERS });
     }
 
     if (user.status !== "active") {
       await clearSessionCookie();
-      return NextResponse.json({ user: null }, { status: 401 });
+      return NextResponse.json({ user: null }, { status: 401, headers: NO_STORE_HEADERS });
     }
 
-    return NextResponse.json({ user: serializeUser(user) });
+    return NextResponse.json({ user: serializeUser(user) }, { headers: NO_STORE_HEADERS });
   } catch (error) {
     console.error("Session database flow failed.", error);
     return NextResponse.json(

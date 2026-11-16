@@ -46,9 +46,10 @@ interface PaymentFormProps {
   billingCycle: "annual" | "monthly";
   subscriptionData: {
     clientSecret: string | null;
-    subscriptionId: string;
+    subscriptionId?: string;
     customerId: string;
     interval?: "month" | "year";
+    mode?: "setup";
     isMock?: boolean;
   } | null;
   loadingIntent: boolean;
@@ -148,8 +149,7 @@ function PaymentForm({
       return;
     }
 
-    const expectedInterval = isAnnual ? "year" : "month";
-    if (!subscriptionData || (subscriptionData.interval && subscriptionData.interval !== expectedInterval)) {
+    if (!subscriptionData) {
       setErrorMessage("Inicializando la pasarela de pago. Intenta de nuevo en unos segundos.");
       return;
     }
@@ -157,14 +157,16 @@ function PaymentForm({
     setProcessing(true);
 
     try {
-      // 1. Confirm Payment on Stripe Client if live Stripe is active
+      let paymentMethodId: string | undefined;
+
+      // 1. Validate & save card via SetupIntent on Stripe Client if live Stripe is active
       if (stripe && elements && subscriptionData.clientSecret && !subscriptionData.isMock) {
         const cardNumberElement = elements.getElement(CardNumberElement);
         if (!cardNumberElement) {
           throw new Error("No se pudo cargar el campo de tarjeta de crédito.");
         }
 
-        const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
+        const { error: setupError, setupIntent } = await stripe.confirmCardSetup(
           subscriptionData.clientSecret,
           {
             payment_method: {
@@ -183,36 +185,78 @@ function PaymentForm({
           }
         );
 
-        if (stripeError) {
-          throw new Error(stripeError.message || "Tu tarjeta fue rechazada. Verifica los datos o intenta con otro método.");
+        if (setupError) {
+          throw new Error(setupError.message || "Tu tarjeta fue rechazada. Verifica los datos o intenta con otro método.");
+        }
+
+        if (setupIntent && setupIntent.status !== "succeeded") {
+          throw new Error("No se pudo verificar tu tarjeta. Por favor intenta con otro método.");
+        }
+
+        paymentMethodId =
+          typeof setupIntent?.payment_method === "string"
+            ? setupIntent.payment_method
+            : setupIntent?.payment_method?.id;
+
+        if (!paymentMethodId) {
+          throw new Error("No se pudo obtener el método de pago confirmado.");
+        }
+      }
+
+      const confirmPayload = {
+        paymentMethodId,
+        customerId: subscriptionData.customerId,
+        billingInterval: billingCycle,
+        cardName: cardHolderName.trim(),
+        email: trimmedEmail,
+        postalCode: cardPostalCode.trim(),
+        address: billingAddress.trim(),
+        city: billingCity.trim(),
+        country: billingCountry.trim(),
+      };
+
+      // 2. Create & charge Stripe Subscription on Backend and activate tier
+      let confirmRes = await fetch("/api/membership/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(confirmPayload),
+      });
+
+      let confirmData = await confirmRes.json();
+
+      if (!confirmRes.ok) {
+        throw new Error(confirmData.message || "Tu tarjeta fue rechazada. Verifica los datos o intenta con otro método.");
+      }
+
+      // 3. Handle 3DS / SCA if the first invoice requires additional authentication
+      if (confirmData.requiresAction && confirmData.clientSecret && stripe) {
+        const { error: actionError, paymentIntent } = await stripe.confirmCardPayment(
+          confirmData.clientSecret
+        );
+
+        if (actionError) {
+          throw new Error(actionError.message || "No se pudo completar la autenticación de tu tarjeta.");
         }
 
         if (paymentIntent && paymentIntent.status !== "succeeded") {
           throw new Error("El pago no pudo completarse. Por favor intenta con otra tarjeta.");
         }
-      }
 
-      // 2. Notify Backend to verify Stripe subscription & activate tier
-      const confirmRes = await fetch("/api/membership/confirm", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subscriptionId: subscriptionData.subscriptionId,
-          customerId: subscriptionData.customerId,
-          billingInterval: billingCycle,
-          cardName: cardHolderName.trim(),
-          email: trimmedEmail,
-          postalCode: cardPostalCode.trim(),
-          address: billingAddress.trim(),
-          city: billingCity.trim(),
-          country: billingCountry.trim(),
-        }),
-      });
+        confirmRes = await fetch("/api/membership/confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...confirmPayload,
+            subscriptionId: confirmData.subscriptionId,
+            customerId: confirmData.customerId || subscriptionData.customerId,
+          }),
+        });
 
-      const confirmData = await confirmRes.json();
+        confirmData = await confirmRes.json();
 
-      if (!confirmRes.ok) {
-        throw new Error(confirmData.message || "Tu tarjeta fue rechazada. Verifica los datos o intenta con otro método.");
+        if (!confirmRes.ok) {
+          throw new Error(confirmData.message || "Tu tarjeta fue rechazada. Verifica los datos o intenta con otro método.");
+        }
       }
 
       // Persist in localStorage for pre-fill in Step 4
@@ -563,9 +607,10 @@ export default function MembershipPaymentView() {
   const [isOnboarded, setIsOnboarded] = useState(false);
   const [subscriptionData, setSubscriptionData] = useState<{
     clientSecret: string | null;
-    subscriptionId: string;
+    subscriptionId?: string;
     customerId: string;
     interval?: "month" | "year";
+    mode?: "setup";
     isMock?: boolean;
   } | null>(null);
 
@@ -589,20 +634,17 @@ export default function MembershipPaymentView() {
   const [defaultCountry, setDefaultCountry] = useState("");
 
   const requestIdRef = useRef(0);
-  const subscriptionDataRef = useRef(subscriptionData);
-  subscriptionDataRef.current = subscriptionData;
 
-  // Initialize Payment Intent with chosen interval (or update existing)
-  const initIntent = useCallback(async (interval: "month" | "year", existingSubId?: string) => {
+  // Initialize SetupIntent once on mount (does not create any Subscription or Invoice)
+  const initIntent = useCallback(async (interval: "month" | "year") => {
     const requestId = ++requestIdRef.current;
     setLoadingIntent(true);
     setIntentError(null);
     try {
-      const activeSubId = existingSubId || subscriptionDataRef.current?.subscriptionId;
       const res = await fetch("/api/membership/create-intent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ interval, existingSubscriptionId: activeSubId }),
+        body: JSON.stringify({ interval }),
       });
 
       if (requestId !== requestIdRef.current) return;
@@ -641,9 +683,10 @@ export default function MembershipPaymentView() {
     }
   }, [router, isFromSettings]);
 
+  const initialIntervalRef = useRef<"month" | "year">(isAnnual ? "year" : "month");
   useEffect(() => {
-    initIntent(isAnnual ? "year" : "month");
-  }, [initIntent, isAnnual]);
+    initIntent(initialIntervalRef.current);
+  }, [initIntent]);
 
   // Prefill initial user profile details if available
   useEffect(() => {

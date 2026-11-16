@@ -9,6 +9,7 @@ import { Modal } from "@/components/ui/Modal";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { getSafeRedirectUrl } from "@/lib/utils/url";
 import { loginWithFacebook } from "@/lib/auth/facebookSdk";
+import { clearClientUserSessionState } from "@/lib/auth/clientSessionCleanup";
 
 export default function SignInView() {
   const router = useRouter();
@@ -80,6 +81,7 @@ export default function SignInView() {
   }, [isVerifying]);
 
   const handleGoogleSignIn = () => {
+    clearClientUserSessionState();
     const target = getRedirectTarget();
     const googleUrl =
       target !== "/inicio"
@@ -107,6 +109,8 @@ export default function SignInView() {
         }
         throw new Error(data.message || "Error al iniciar sesión con Facebook.");
       }
+      clearClientUserSessionState();
+      router.refresh();
       if (!data.isOnboarded) {
         router.push("/unirme/perfil");
         return;
@@ -153,6 +157,8 @@ export default function SignInView() {
         return;
       }
 
+      clearClientUserSessionState();
+      router.refresh();
       if (data.user?.onboardingStatus === "PENDING") {
         router.push("/unirme/perfil");
         return;
@@ -175,6 +181,8 @@ export default function SignInView() {
       try {
         const response = await fetch("/api/auth/reactivate-oauth", { method: "POST" });
         if (response.ok) {
+          clearClientUserSessionState();
+          router.refresh();
           router.push(getRedirectTarget());
         } else {
           setErrorMessage("No pudimos reactivar tu cuenta. Intenta nuevamente.");

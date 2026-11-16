@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check } from "lucide-react";
+import { Check, CheckCircle2, ExternalLink, ShieldCheck } from "lucide-react";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { DirectoryToolbar, DirectoryTagPopover } from "@/components/ui/DirectoryToolbar";
 import { SearchSuggestion } from "@/components/ui/SearchBar";
@@ -561,16 +561,17 @@ export default function EspecialistasPage() {
         isOpen={showProgramModal}
         onClose={() => setShowProgramModal(false)}
         title="Programa de especialistas"
-        subtitle="Forma parte del directorio de profesionales verificados de LUMINUS."
+        maxWidth="520px"
         footer={
-          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2 w-full">
+          <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2.5 w-full">
             <a
               href="https://luminuslatam.com/especialistas"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-jakarta text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors text-center sm:text-left py-2"
+              className="inline-flex items-center justify-center sm:justify-start gap-1.5 font-jakarta text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors py-2"
             >
-              Conocer más sobre el programa
+              <span>Conocer más sobre el programa</span>
+              <ExternalLink className="w-3.5 h-3.5" />
             </a>
             <Button
               variant="primary"
@@ -580,20 +581,47 @@ export default function EspecialistasPage() {
                 router.push("/especialistas/unirme");
               }}
             >
-              Aplicar como especialista
+              Postularme como especialista
             </Button>
           </div>
         }
       >
-        <div className="flex flex-col gap-3 text-sm text-slate-600 leading-relaxed">
-          <p className="m-0">
-            Si acompañas procesos de bienestar, salud integral o desarrollo personal, puedes postularte para integrar la red.
-          </p>
-          <ul className="m-0 pl-4 flex flex-col gap-1.5 text-slate-700">
-            <li>Perfil profesional público en el directorio.</li>
-            <li>Sesiones introductorias de 15 minutos para primer contacto.</li>
-            <li>Publicación de espacios, grupos y propuestas formativas.</li>
-          </ul>
+        <div className="flex flex-col gap-3.5 py-1">
+          {/* How it works — 3 steps */}
+          <div className="rounded-2xl bg-slate-50 border border-slate-200/80 p-4 flex flex-col gap-3">
+            {[
+              "Envías tu postulación con tu formación, experiencia y áreas de acompañamiento.",
+              "El Consejo de Expertos evalúa tus credenciales y coherencia profesional.",
+              "Una vez aprobado, activas tu perfil público, sesiones introductorias y propuestas.",
+            ].map((stepText, index) => (
+              <div
+                key={index}
+                className="flex items-start gap-3 text-sm text-slate-800 leading-snug"
+              >
+                <span className="w-6 h-6 rounded-full bg-slate-900 text-white text-xs font-bold flex items-center justify-center shrink-0 font-jakarta">
+                  {index + 1}
+                </span>
+                <span className="pt-0.5">{stepText}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* What it includes & Selection criteria */}
+          <div className="flex flex-col gap-2.5">
+            <div className="rounded-xl bg-emerald-50/70 border border-emerald-200/80 px-3.5 py-3 flex items-start gap-2.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <p className="text-xs leading-relaxed text-emerald-950 m-0">
+                Pensado para profesionales de bienestar, salud integral y desarrollo personal. Incluye perfil en el directorio, sesiones introductorias de 15 minutos y difusión de espacios, grupos o talleres.
+              </p>
+            </div>
+
+            <div className="rounded-xl bg-blue-50/70 border border-blue-200/80 px-3.5 py-3 flex items-start gap-2.5">
+              <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+              <p className="text-xs leading-relaxed text-blue-950 m-0">
+                El ingreso está sujeto a revisión: priorizamos formación verificable y una práctica responsable para cuidar la calidad del directorio.
+              </p>
+            </div>
+          </div>
         </div>
       </Modal>
     </div>

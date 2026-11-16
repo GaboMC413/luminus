@@ -47,6 +47,23 @@ describe("clientCache", () => {
     expect(getCachedData("/api/comunidad?limit=24")).toBeUndefined();
     expect(getCachedData("/api/profile")).toEqual({ id: "u1" });
   });
+
+  it("ignores late in-flight responses after clearAllClientCache is called", async () => {
+    let resolveFetch!: (val: { id: string }) => void;
+    const pendingPromise = fetchWithCache(
+      "/api/profile",
+      () =>
+        new Promise<{ id: string }>((resolve) => {
+          resolveFetch = resolve;
+        })
+    );
+
+    clearAllClientCache();
+    resolveFetch({ id: "stale-user" });
+    await pendingPromise;
+
+    expect(getCachedData("/api/profile")).toBeUndefined();
+  });
 });
 
 describe("serverCache", () => {

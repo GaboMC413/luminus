@@ -15,6 +15,7 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => null);
     const {
       subscriptionId,
+      paymentMethodId,
       customerId,
       billingInterval,
       cardName,
@@ -44,72 +45,112 @@ export async function POST(request: Request) {
     }
 
     let verifiedCustomerId: string | undefined = customerId ? String(customerId) : undefined;
+    let verifiedSubscriptionId: string | undefined = subscriptionId ? String(subscriptionId) : undefined;
     let verifiedInterval: "annual" | "monthly" = billingInterval === "annual" ? "annual" : "monthly";
 
-    const { stripe } = await import("@/lib/stripe");
+    const { stripe, createSubscriptionWithPaymentMethod } = await import("@/lib/stripe");
     if (stripe) {
-      if (!subscriptionId || String(subscriptionId).startsWith("sub_mock_")) {
-        return NextResponse.json(
-          { message: "ID de suscripción inválido o faltante." },
-          { status: 400 }
-        );
-      }
-
-      try {
-        const subscription = await stripe.subscriptions.retrieve(String(subscriptionId), {
-          expand: ["latest_invoice.payment_intent"],
-        });
-
-        const subCustomerId =
-          typeof subscription.customer === "string"
-            ? subscription.customer
-            : subscription.customer?.id;
-
-        const metadataUserId = subscription.metadata?.userId;
-        const metadataEmail = subscription.metadata?.user_email?.trim().toLowerCase();
-
-        const isOwner =
-          (existingUser.stripeCustomerId && subCustomerId === existingUser.stripeCustomerId) ||
-          (metadataUserId && metadataUserId === existingUser.id) ||
-          (metadataEmail && metadataEmail === existingUser.email.trim().toLowerCase());
-
-        if (!isOwner) {
+      if (paymentMethodId && !subscriptionId) {
+        const targetCustomerId = existingUser.stripeCustomerId || verifiedCustomerId;
+        if (!targetCustomerId || String(targetCustomerId).startsWith("cus_mock_")) {
           return NextResponse.json(
-            { message: "Esta suscripción no pertenece a la cuenta autenticada." },
-            { status: 403 }
-          );
-        }
-
-        const invoice = subscription.latest_invoice as any;
-        const paymentIntent = invoice?.payment_intent;
-        const isPaid =
-          subscription.status === "active" ||
-          subscription.status === "trialing" ||
-          paymentIntent?.status === "succeeded";
-
-        if (!isPaid) {
-          return NextResponse.json(
-            { message: "El pago de la suscripción aún no ha sido confirmado por Stripe." },
+            { message: "ID de cliente de Stripe inválido o faltante." },
             { status: 400 }
           );
         }
 
-        if (subCustomerId) {
-          verifiedCustomerId = subCustomerId;
+        try {
+          const subResult = await createSubscriptionWithPaymentMethod({
+            customerId: String(targetCustomerId),
+            paymentMethodId: String(paymentMethodId),
+            interval: verifiedInterval === "annual" ? "year" : "month",
+            userId: existingUser.id,
+            email: existingUser.email,
+          });
+
+          if (subResult.requiresAction && subResult.clientSecret) {
+            return NextResponse.json({
+              requiresAction: true,
+              clientSecret: subResult.clientSecret,
+              subscriptionId: subResult.subscriptionId,
+              customerId: subResult.customerId,
+            });
+          }
+
+          verifiedSubscriptionId = subResult.subscriptionId;
+          verifiedCustomerId = subResult.customerId;
+        } catch (stripeErr: any) {
+          console.error("Stripe subscription creation error:", stripeErr);
+          return NextResponse.json(
+            { message: stripeErr.message || "Tu tarjeta fue rechazada. Verifica los datos o intenta con otro método." },
+            { status: 400 }
+          );
+        }
+      } else {
+        if (!subscriptionId || String(subscriptionId).startsWith("sub_mock_")) {
+          return NextResponse.json(
+            { message: "ID de suscripción inválido o faltante." },
+            { status: 400 }
+          );
         }
 
-        const stripePriceInterval = subscription.items?.data?.[0]?.price?.recurring?.interval;
-        if (stripePriceInterval === "year") {
-          verifiedInterval = "annual";
-        } else if (stripePriceInterval === "month") {
-          verifiedInterval = "monthly";
+        try {
+          const subscription = await stripe.subscriptions.retrieve(String(subscriptionId), {
+            expand: ["latest_invoice.payment_intent"],
+          });
+
+          const subCustomerId =
+            typeof subscription.customer === "string"
+              ? subscription.customer
+              : subscription.customer?.id;
+
+          const metadataUserId = subscription.metadata?.userId;
+          const metadataEmail = subscription.metadata?.user_email?.trim().toLowerCase();
+
+          const isOwner =
+            (existingUser.stripeCustomerId && subCustomerId === existingUser.stripeCustomerId) ||
+            (metadataUserId && metadataUserId === existingUser.id) ||
+            (metadataEmail && metadataEmail === existingUser.email.trim().toLowerCase());
+
+          if (!isOwner) {
+            return NextResponse.json(
+              { message: "Esta suscripción no pertenece a la cuenta autenticada." },
+              { status: 403 }
+            );
+          }
+
+          const invoice = subscription.latest_invoice as any;
+          const paymentIntent = invoice?.payment_intent;
+          const isPaid =
+            subscription.status === "active" ||
+            subscription.status === "trialing" ||
+            paymentIntent?.status === "succeeded";
+
+          if (!isPaid) {
+            return NextResponse.json(
+              { message: "El pago de la suscripción aún no ha sido confirmado por Stripe." },
+              { status: 400 }
+            );
+          }
+
+          if (subCustomerId) {
+            verifiedCustomerId = subCustomerId;
+          }
+          verifiedSubscriptionId = subscription.id;
+
+          const stripePriceInterval = subscription.items?.data?.[0]?.price?.recurring?.interval;
+          if (stripePriceInterval === "year") {
+            verifiedInterval = "annual";
+          } else if (stripePriceInterval === "month") {
+            verifiedInterval = "monthly";
+          }
+        } catch (stripeErr: any) {
+          console.error("Stripe subscription verification error:", stripeErr);
+          return NextResponse.json(
+            { message: stripeErr.message || "Error al verificar la suscripción con Stripe." },
+            { status: 400 }
+          );
         }
-      } catch (stripeErr: any) {
-        console.error("Stripe subscription verification error:", stripeErr);
-        return NextResponse.json(
-          { message: stripeErr.message || "Error al verificar la suscripción con Stripe." },
-          { status: 400 }
-        );
       }
     }
 
@@ -161,7 +202,7 @@ export async function POST(request: Request) {
         tier: "MECENAS",
         memberSince: now,
         stripeCustomerId: verifiedCustomerId,
-        stripeSubscriptionId: subscriptionId ? String(subscriptionId) : undefined,
+        stripeSubscriptionId: verifiedSubscriptionId,
         profile: {
           upsert: {
             create: {

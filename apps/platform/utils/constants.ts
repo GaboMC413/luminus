@@ -24,6 +24,8 @@ export const SEARCH_DATA = {
   ]
 };
 
+export const MAX_USER_INTERESTS = 10;
+
 export const INTEREST_CATEGORIES = [
   { icon: 'sun', iconFilled: true, title: 'Crecimiento Personal', color: '#D97706', bgColor: '#FFFBEB', items: ['Autoconocimiento', 'Propósito', 'Hábitos', 'Creatividad', 'Emprendimiento', 'Desarrollo profesional'] },
   { icon: 'smile', iconFilled: true, title: 'Bienestar Emocional', color: '#DB2777', bgColor: '#FDF2F8', items: ['Autocuidado', 'Autoestima', 'Inteligencia emocional', 'Gestión del estrés', 'Resiliencia', 'Salud mental'] },

@@ -16,7 +16,7 @@ import { FeedAnnouncementCard } from "@/components/community/FeedAnnouncementCar
 import { RecordingItem } from "@/components/events/RecordingCard";
 import { Button } from "@/components/ui/Button";
 import { CardHeader } from "@/components/ui/CardHeader";
-import { User, GraphStar, UserRoundGroup, Sparkles, HouseHeart, MessageSquare } from "lucide-react";
+import { User, GraphStar, UserRoundGroup, HeartHandshake, HouseHeart, MessageSquare } from "lucide-react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Toast } from "@/components/ui/Toast";
@@ -759,7 +759,7 @@ function PlatformContent() {
                       description="Comparte tu práctica, acompaña a personas de toda LATAM y forma parte de nuestra red de bienestar."
                       ctaLabel="Postularme"
                       ctaHref="/especialistas/unirme"
-                      icon={Sparkles}
+                      icon={HeartHandshake}
                     />
                   ),
                   5: (

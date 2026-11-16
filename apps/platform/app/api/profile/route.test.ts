@@ -180,5 +180,30 @@ describe("/api/profile", () => {
       expect(data.message).toBe("No fue posible actualizar el perfil.");
       expect(data.profile).toBeUndefined();
     });
+
+    it("debería rechazar con 400 si se envían más de 10 intereses", async () => {
+      vi.mocked(getCurrentSession).mockResolvedValue({ userId: "user-123", email: "user@test.com", role: "USER" } as any);
+
+      const elevenInterests = [
+        "Autoconocimiento",
+        "Propósito",
+        "Hábitos",
+        "Creatividad",
+        "Emprendimiento",
+        "Autocuidado",
+        "Autoestima",
+        "Sueño",
+        "Yoga",
+        "Meditación",
+        "Mindfulness",
+      ];
+      const req = createRequest({ interests: elevenInterests });
+      const res = await PATCH(req);
+      const data = await res.json();
+
+      expect(res.status).toBe(400);
+      expect(data.message).toBe("Puedes seleccionar hasta 10 intereses.");
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
   });
 });

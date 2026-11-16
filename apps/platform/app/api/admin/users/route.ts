@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentSession, invalidateUserSessionCache } from "@/lib/auth/session";
 import { invalidateServerCacheTag } from "@/lib/serverCache";
 import { listAdminUsers, normalizeAdminUserPatch, serializeAdminUser } from "@/lib/admin/users";
+import { getUserBillingSnapshot } from "@/lib/admin/billing";
 import { syncCognitoUserStatus } from "@/lib/auth/cognito-admin";
 import { deleteUserS3Data } from "@/lib/storage/userStorageCleanup";
 import { handleApiError } from "@/lib/errors/server-error";
@@ -168,6 +169,17 @@ export async function DELETE(request: Request) {
 
     if (!existingUser) {
       return NextResponse.json({ message: "Usuario no encontrado." }, { status: 404 });
+    }
+
+    const billingSnapshot = await getUserBillingSnapshot(prisma, id);
+    if (billingSnapshot?.hasActiveSubscription) {
+      return NextResponse.json(
+        {
+          message:
+            "No se puede eliminar un usuario con una suscripción activa. Cancela o finaliza su suscripción primero.",
+        },
+        { status: 409 }
+      );
     }
 
     // First delete from Cognito

@@ -1,10 +1,21 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Script from "next/script";
 import { META_PIXEL_ID } from "@/lib/meta-pixel";
+import { CONSENT_UPDATED_EVENT, hasConsented } from "@/lib/cookie-consent";
 
 export function MetaPixel() {
-  if (!META_PIXEL_ID) return null;
+  const [enabled, setEnabled] = useState(false);
+
+  useEffect(() => {
+    const sync = () => setEnabled(hasConsented("marketing"));
+    sync();
+    window.addEventListener(CONSENT_UPDATED_EVENT, sync);
+    return () => window.removeEventListener(CONSENT_UPDATED_EVENT, sync);
+  }, []);
+
+  if (!META_PIXEL_ID || !enabled) return null;
 
   return (
     <>

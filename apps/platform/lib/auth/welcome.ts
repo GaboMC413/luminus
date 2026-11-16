@@ -65,28 +65,14 @@ export async function sendWelcomeMessage(prisma: PrismaClient, newUserId: string
   // 3. Draft the welcome message content
   const welcomeText = `¡Te damos la bienvenida a *LUMINUS*! 🌱
 
-Nos alegra acompañarte en este camino hacia una vida con mayor bienestar y propósito. ✨
+Nos alegra tenerte aquí. En la plataforma ya puedes:
 
-Luminus es tu red para explorar, aprender y conectar. Te compartimos lo que puedes comenzar a explorar hoy y lo que sumaremos muy pronto:
+🏠 *Inicio*: Compartir y conectar con la comunidad → [Ir a Inicio](/inicio)
+🩺 *Especialistas*: Descubrir profesionales del bienestar → [Ver Especialistas](/especialistas)
+📅 *Actividades*: Sumarte a charlas y talleres en vivo → [Ver Actividades](/actividades)
+🎥 *Grabaciones*: Ver entrevistas y encuentros anteriores → [Ver Grabaciones](/grabaciones)
 
-👥 *Comunidad*: Conecta con personas que comparten inquietudes e intereses similares.
-[Ver Comunidad](/comunidad)
-
-🩺 *Especialistas*: Descubre una red de profesionales calificados de distintas áreas del bienestar.
-[Ver Especialistas](/especialistas)
-
-✨ *Próximamente en LUMINUS:*
-
-🧭 *Espacios* *(Próximamente)*: Encuentra consultorios, clínicas y otros espacios de bienestar cerca de ti.
-[Conocer Espacios](/espacios)
-
-💬 *Grupos* *(Próximamente)*: Forma parte de conversaciones alrededor de temas que te interesan.
-[Conocer Grupos](/grupos)
-
-💡 *Faro AI* *(Próximamente)*: Orientación personalizada para descubrir el acompañamiento adecuado.
-[Conocer Faro](/faro)
-
-Si necesitas ayuda o tienes alguna pregunta sobre la plataforma, no dudes en responder directamente en este chat. ¡Tu viaje comienza ahora! 🚀`;
+Si tienes alguna duda, responde directamente por este chat. ✨`;
 
   // 3. Create the conversation and welcome message in a transaction
   await prisma.$transaction(async (tx) => {
