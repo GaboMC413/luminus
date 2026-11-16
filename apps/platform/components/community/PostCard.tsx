@@ -433,7 +433,6 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
           authorSubtitle={authorSubtitle}
           displayDate={displayDate}
           isPinned={post.isPinned}
-          isOfficial={isOfficialAccount}
           onAuthorClick={isOfficialAccount ? undefined : handlePostAuthorClick}
           menuActions={menuActions}
         />

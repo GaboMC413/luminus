@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import Link from "next/link";
 import { UserCard, UserCardData } from "@/components/ui/UserCard";
 import { CarouselNavControls } from "./molecules/CarouselNavControls";
 
@@ -79,17 +78,9 @@ export function LatestSpecialistsCarousel({
   return (
     <section className="w-full flex flex-col gap-3 py-1 relative">
       <div className="flex items-center justify-between px-0.5">
-        <div className="flex items-center gap-3">
-          <h3 className="text-sm font-semibold text-slate-900 font-jakarta">
-            Últimos especialistas
-          </h3>
-          <Link
-            href="/especialistas"
-            className="text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors"
-          >
-            Ver todos
-          </Link>
-        </div>
+        <h3 className="text-sm font-semibold text-slate-900 font-jakarta">
+          Últimos especialistas
+        </h3>
 
         <CarouselNavControls
           onPrev={() => scroll("left")}

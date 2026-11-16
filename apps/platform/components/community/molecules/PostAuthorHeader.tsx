@@ -17,7 +17,6 @@ export interface PostAuthorHeaderProps {
   authorSubtitle?: string;
   displayDate?: string;
   isPinned?: boolean;
-  isOfficial?: boolean;
   onAuthorClick?: () => void;
   menuActions?: MenuActionItem[];
 }
@@ -28,7 +27,6 @@ export function PostAuthorHeader({
   authorSubtitle,
   displayDate,
   isPinned = false,
-  isOfficial = false,
   onAuthorClick,
   menuActions,
 }: PostAuthorHeaderProps) {
@@ -70,12 +68,6 @@ export function PostAuthorHeader({
             >
               {authorName}
             </span>
-
-            {isOfficial && (
-              <span className="font-jakarta text-[10px] font-bold uppercase tracking-tight px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200/80 shrink-0">
-                Oficial
-              </span>
-            )}
           </div>
 
           <div className="flex items-center gap-1.5 font-sans text-xs text-slate-400 font-medium truncate">
