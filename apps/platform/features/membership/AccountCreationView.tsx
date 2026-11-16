@@ -7,6 +7,7 @@ import { InputField } from "@/components/ui/InputField";
 import { Button } from "@/components/ui/Button";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { loginWithFacebook } from "@/lib/auth/facebookSdk";
+import { clearClientUserSessionState } from "@/lib/auth/clientSessionCleanup";
 import { Check } from "lucide-react";
 
 export default function AccountCreationView() {
@@ -31,6 +32,7 @@ export default function AccountCreationView() {
   const isPasswordValid = hasMinLength && hasLetter && hasNumber;
 
   const handleGoogleSignUp = () => {
+    clearClientUserSessionState();
     window.location.href = `/api/auth/cognito/start?provider=google&intent=signup&plan=${plan}&billing=${billing}`;
   };
 
@@ -48,6 +50,9 @@ export default function AccountCreationView() {
       if (!res.ok) {
         throw new Error(data.message || "Error al registrarse con Facebook.");
       }
+
+      clearClientUserSessionState();
+      router.refresh();
 
       if (plan === "membership" && data.user?.tier !== "MECENAS") {
         router.push(`/unirme/pago?plan=${plan}&billing=${billing}`);

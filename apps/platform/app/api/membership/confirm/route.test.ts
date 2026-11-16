@@ -25,6 +25,7 @@ vi.mock("@/lib/auth/session", () => ({
 
 const retrieveSubMock = vi.fn();
 const updateCustomerMock = vi.fn(() => Promise.resolve({}));
+const createSubscriptionWithPaymentMethodMock = vi.fn();
 
 vi.mock("@/lib/stripe", () => ({
   get stripe() {
@@ -37,6 +38,7 @@ vi.mock("@/lib/stripe", () => ({
       },
     };
   },
+  createSubscriptionWithPaymentMethod: createSubscriptionWithPaymentMethodMock,
 }));
 
 describe("POST /api/membership/confirm", () => {
@@ -124,5 +126,98 @@ describe("POST /api/membership/confirm", () => {
     expect(updateCustomerMock).toHaveBeenCalledWith("cus_real_123", {
       email: "billing-receipts@company.com",
     });
+  });
+
+  it("creates subscription from paymentMethodId on confirm and activates MECENAS", async () => {
+    createSubscriptionWithPaymentMethodMock.mockResolvedValueOnce({
+      subscriptionId: "sub_new_456",
+      customerId: "cus_real_123",
+      status: "active",
+      requiresAction: false,
+      clientSecret: null,
+      isMock: false,
+    });
+
+    vi.mocked(prisma.user.update).mockResolvedValueOnce({
+      id: "user-123",
+      email: "member@luminus.lat",
+      tier: "MECENAS",
+      memberSince: new Date(),
+      profile: { isOnboarded: false, selectedPlan: "Monthly" },
+    } as any);
+
+    const res = await POST(
+      makeReq({
+        paymentMethodId: "pm_card_visa",
+        customerId: "cus_real_123",
+        billingInterval: "monthly",
+        cardName: "Gabriel Medina",
+        email: "member@luminus.lat",
+      })
+    );
+
+    expect(res.status).toBe(200);
+    expect(createSubscriptionWithPaymentMethodMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        customerId: "cus_real_123",
+        paymentMethodId: "pm_card_visa",
+        interval: "month",
+      })
+    );
+    expect(prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "user-123" },
+        data: expect.objectContaining({
+          tier: "MECENAS",
+          stripeSubscriptionId: "sub_new_456",
+        }),
+      })
+    );
+  });
+
+  it("returns requiresAction without activating MECENAS when 3DS is required", async () => {
+    createSubscriptionWithPaymentMethodMock.mockResolvedValueOnce({
+      subscriptionId: "sub_3ds_789",
+      customerId: "cus_real_123",
+      status: "incomplete",
+      requiresAction: true,
+      clientSecret: "pi_secret_3ds",
+      isMock: false,
+    });
+
+    const res = await POST(
+      makeReq({
+        paymentMethodId: "pm_card_3ds",
+        customerId: "cus_real_123",
+        billingInterval: "monthly",
+      })
+    );
+
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body).toEqual({
+      requiresAction: true,
+      clientSecret: "pi_secret_3ds",
+      subscriptionId: "sub_3ds_789",
+      customerId: "cus_real_123",
+    });
+    expect(prisma.user.update).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when subscription charge fails with paymentMethodId", async () => {
+    createSubscriptionWithPaymentMethodMock.mockRejectedValueOnce(
+      new Error("Your card was declined.")
+    );
+
+    const res = await POST(
+      makeReq({
+        paymentMethodId: "pm_card_declined",
+        customerId: "cus_real_123",
+        billingInterval: "monthly",
+      })
+    );
+
+    expect(res.status).toBe(400);
+    expect(prisma.user.update).not.toHaveBeenCalled();
   });
 });

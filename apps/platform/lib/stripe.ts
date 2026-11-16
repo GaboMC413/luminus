@@ -19,6 +19,22 @@ export interface CreateSubscriptionResult {
   isMock?: boolean;
 }
 
+export interface CreateSetupIntentResult {
+  clientSecret: string | null;
+  customerId: string;
+  isMock?: boolean;
+  mode: "setup";
+}
+
+export interface CreateSubscriptionWithPmResult {
+  subscriptionId: string;
+  customerId: string;
+  status: string;
+  requiresAction: boolean;
+  clientSecret: string | null;
+  isMock?: boolean;
+}
+
 export async function getOrCreateMembershipPrice(interval: "month" | "year"): Promise<string> {
   if (!stripe) return interval === "year" ? "price_mock_annual" : "price_mock_monthly";
 
@@ -54,6 +70,220 @@ export async function getOrCreateMembershipPrice(interval: "month" | "year"): Pr
     recurring: { interval },
   });
   return newPrice.id;
+}
+
+/**
+ * Retrieves an existing Stripe Customer by ID or email, or creates a new one idempotently.
+ */
+export async function getOrCreateStripeCustomer({
+  email,
+  name,
+  phone,
+  customerId,
+  userId,
+}: {
+  email: string;
+  name: string;
+  phone?: string;
+  customerId?: string | null;
+  userId?: string;
+}): Promise<Stripe.Customer> {
+  if (!stripe) {
+    throw new Error("Stripe is not configured.");
+  }
+
+  const normalizedEmail = email.trim().toLowerCase();
+  let customer: Stripe.Customer | null = null;
+
+  if (customerId && !customerId.startsWith("cus_mock_")) {
+    try {
+      const retrieved = await stripe.customers.retrieve(customerId);
+      if (!retrieved.deleted) {
+        customer = retrieved as Stripe.Customer;
+      }
+    } catch (err) {
+      console.warn("[Stripe] Failed to retrieve customer by id, falling back to lookup:", err);
+    }
+  }
+
+  if (!customer) {
+    const existingCustomers = await stripe.customers.list({
+      email: normalizedEmail,
+      limit: 5,
+    });
+    customer = (existingCustomers.data.find((c) => !c.deleted) as Stripe.Customer) || null;
+  }
+
+  if (!customer) {
+    const idempotencyKey = `create-customer-${userId || normalizedEmail.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+    customer = await stripe.customers.create(
+      {
+        email: normalizedEmail,
+        name,
+        phone,
+        metadata: {
+          source: "mecenas_subscription",
+          userId: userId || "",
+        },
+      },
+      { idempotencyKey }
+    );
+  }
+
+  return customer;
+}
+
+/**
+ * Ensures a Stripe Customer exists and creates a SetupIntent so the user can enter card details
+ * without generating a premature Subscription or open USD 0.00 Invoice.
+ */
+export async function createMembershipSetupIntent({
+  email,
+  name,
+  phone,
+  customerId,
+  userId,
+}: {
+  email: string;
+  name: string;
+  phone?: string;
+  customerId?: string | null;
+  userId?: string;
+}): Promise<CreateSetupIntentResult> {
+  if (!stripe) {
+    console.warn("[Stripe] STRIPE_SECRET_KEY is not defined. Using mock SetupIntent for development.");
+    return {
+      clientSecret: "mock_seti_secret_" + Math.random().toString(36).substring(2, 10),
+      customerId: "cus_mock_" + Math.random().toString(36).substring(2, 10),
+      isMock: true,
+      mode: "setup",
+    };
+  }
+
+  const customer = await getOrCreateStripeCustomer({
+    email,
+    name,
+    phone,
+    customerId,
+    userId,
+  });
+
+  const setupIntent = await stripe.setupIntents.create({
+    customer: customer.id,
+    automatic_payment_methods: { enabled: true },
+    usage: "off_session",
+    metadata: {
+      userId: userId || "",
+      user_email: email.trim().toLowerCase(),
+      source: "mecenas_checkout",
+    },
+  });
+
+  return {
+    clientSecret: setupIntent.client_secret,
+    customerId: customer.id,
+    isMock: false,
+    mode: "setup",
+  };
+}
+
+/**
+ * Creates and immediately charges a Mecenas subscription using a confirmed PaymentMethod.
+ * Only called when the user actually submits payment, preventing abandoned open invoices.
+ */
+export async function createSubscriptionWithPaymentMethod({
+  customerId,
+  paymentMethodId,
+  interval = "month",
+  userId,
+  email,
+}: {
+  customerId: string;
+  paymentMethodId: string;
+  interval?: "month" | "year";
+  userId?: string;
+  email: string;
+}): Promise<CreateSubscriptionWithPmResult> {
+  if (!stripe) {
+    return {
+      subscriptionId: "sub_mock_" + Math.random().toString(36).substring(2, 10),
+      customerId: customerId || "cus_mock_" + Math.random().toString(36).substring(2, 10),
+      status: "active",
+      requiresAction: false,
+      clientSecret: null,
+      isMock: true,
+    };
+  }
+
+  const pm = await stripe.paymentMethods.retrieve(paymentMethodId);
+  const pmCustomerId = typeof pm.customer === "string" ? pm.customer : pm.customer?.id;
+  if (pmCustomerId && pmCustomerId !== customerId) {
+    throw new Error("El método de pago no pertenece a esta cuenta.");
+  }
+  if (!pmCustomerId) {
+    await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
+  }
+
+  await stripe.customers.update(customerId, {
+    invoice_settings: { default_payment_method: paymentMethodId },
+  });
+
+  const isAnnual = interval === "year";
+  const finalPriceId = await getOrCreateMembershipPrice(interval);
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const subscription = await stripe.subscriptions.create({
+    customer: customerId,
+    items: [{ price: finalPriceId }],
+    default_payment_method: paymentMethodId,
+    payment_behavior: "allow_incomplete",
+    payment_settings: { save_default_payment_method: "on_subscription" },
+    expand: ["latest_invoice.payment_intent"],
+    metadata: {
+      userId: userId || "",
+      user_email: normalizedEmail,
+      type: isAnnual ? "mecenas_annual" : "mecenas_monthly",
+    },
+  });
+
+  if (subscription.status === "active" || subscription.status === "trialing") {
+    return {
+      subscriptionId: subscription.id,
+      customerId,
+      status: subscription.status,
+      requiresAction: false,
+      clientSecret: null,
+      isMock: false,
+    };
+  }
+
+  const invoice = subscription.latest_invoice as any;
+  const paymentIntent = invoice?.payment_intent;
+  if (
+    paymentIntent &&
+    typeof paymentIntent === "object" &&
+    paymentIntent.status === "requires_action" &&
+    paymentIntent.client_secret
+  ) {
+    return {
+      subscriptionId: subscription.id,
+      customerId,
+      status: subscription.status,
+      requiresAction: true,
+      clientSecret: paymentIntent.client_secret as string,
+      isMock: false,
+    };
+  }
+
+  // Payment did not succeed and does not require 3DS: cancel the incomplete subscription so no open invoice lingers
+  await stripe.subscriptions.cancel(subscription.id).catch((cancelErr) => {
+    console.warn("[Stripe] Failed to cancel incomplete subscription after payment failure:", cancelErr);
+  });
+
+  const declineMessage =
+    paymentIntent?.last_payment_error?.message ||
+    "Tu tarjeta fue rechazada. Verifica los datos o intenta con otro método.";
+  throw new Error(declineMessage);
 }
 
 /**

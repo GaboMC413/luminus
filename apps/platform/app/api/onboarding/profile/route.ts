@@ -3,6 +3,7 @@ import { getCurrentSession } from "@/lib/auth/session";
 import { parsePhoneNumberFromString, CountryCode } from "libphonenumber-js";
 import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
 import { handleApiError } from "@/lib/errors/server-error";
+import { MAX_USER_INTERESTS } from "@/utils/constants";
 
 export const runtime = "nodejs";
 
@@ -73,6 +74,12 @@ export async function POST(request: Request) {
     ? (data.interests as unknown[]).filter((interest): interest is string => typeof interest === "string")
     : [];
   const interestSlugs = Array.from(new Set(interests.map(slugify).filter(Boolean)));
+  if (interestSlugs.length > MAX_USER_INTERESTS) {
+    return NextResponse.json(
+      { message: `Puedes seleccionar hasta ${MAX_USER_INTERESTS} intereses.` },
+      { status: 400 }
+    );
+  }
   const otherInterests =
     typeof data.otherInterests === "string" && data.otherInterests.trim()
       ? data.otherInterests.trim()
