@@ -1,8 +1,65 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { invalidateServerCacheTag } from "@/lib/serverCache";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+async function removeSpecialist(adminUserId: string, userId: string) {
+  const { prisma } = await import("@/lib/db");
+
+  const deleted = await prisma.specialistProfile.deleteMany({
+    where: { userId },
+  });
+
+  if (deleted.count === 0) {
+    return false;
+  }
+
+  // Update their postulations to declined (or delete them)
+  await prisma.specialistPostulation.updateMany({
+    where: { userId, status: "accepted" },
+    data: { status: "declined" },
+  });
+
+  // Log action
+  await prisma.activityLog.create({
+    data: {
+      userId: adminUserId,
+      action: "REMOVE_SPECIALIST",
+      details: JSON.stringify({ targetUserId: userId }),
+    },
+  });
+
+  invalidateServerCacheTag(["specialists", "community-filters"]);
+  return true;
+}
+
+export async function DELETE(request: Request) {
+  const session = await getCurrentSession();
+  if (!session || session.role !== "ADMIN") {
+    return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+  }
+
+  try {
+    const body = await request.json();
+    const { userId } = body ?? {};
+
+    if (!userId || typeof userId !== "string") {
+      return NextResponse.json({ message: "ID de usuario es requerido." }, { status: 400 });
+    }
+
+    const removed = await removeSpecialist(session.userId, userId);
+    if (!removed) {
+      return NextResponse.json({ message: "Especialista no encontrado." }, { status: 404 });
+    }
+
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    console.error("Failed to remove specialist:", error);
+    return NextResponse.json({ message: "Error al remover especialista." }, { status: 500 });
+  }
+}
 
 export async function PATCH(request: Request) {
   const session = await getCurrentSession();
@@ -343,25 +400,10 @@ export async function PATCH(request: Request) {
         },
       });
     } else if (action === "remove") {
-      // Delete SpecialistProfile
-      await prisma.specialistProfile.delete({
-        where: { userId },
-      });
-
-      // Update their postulations to declined (or delete them)
-      await prisma.specialistPostulation.updateMany({
-        where: { userId, status: "accepted" },
-        data: { status: "declined" },
-      });
-
-      // Log action
-      await prisma.activityLog.create({
-        data: {
-          userId: session.userId,
-          action: "REMOVE_SPECIALIST",
-          details: JSON.stringify({ targetUserId: userId }),
-        },
-      });
+      const removed = await removeSpecialist(session.userId, userId);
+      if (!removed) {
+        return NextResponse.json({ message: "Especialista no encontrado." }, { status: 404 });
+      }
     } else if (action === "update") {
       if (!userId) {
         return NextResponse.json({ message: "ID de usuario es requerido." }, { status: 400 });
