@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { CookieSettingsButton } from "@/components/legal/CookieConsentBanner";
 
 export function Footer() {
   return (
@@ -42,6 +43,7 @@ export function Footer() {
               <Link href="/legal/cookies" className="hover:text-slate-900 transition-colors">
                 Política de cookies
               </Link>
+              <CookieSettingsButton />
             </nav>
           </div>
 

@@ -1,3 +1,5 @@
+import { hasConsented } from "@/lib/cookie-consent";
+
 export const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || "1278715326752313";
 
 declare global {
@@ -11,6 +13,7 @@ declare global {
  * Rastrear un evento estándar o personalizado de Meta Pixel de forma segura.
  */
 export const trackMetaEvent = (eventName: string, options?: Record<string, any>) => {
+  if (!hasConsented("marketing")) return;
   if (typeof window !== "undefined" && typeof window.fbq === "function") {
     if (options) {
       window.fbq("track", eventName, options);

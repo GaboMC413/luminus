@@ -3,6 +3,8 @@ import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./app.css";
 import Script from "next/script";
 import { MetaPixel } from "@/components/analytics/MetaPixel";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { CookieConsentBanner } from "@/components/legal/CookieConsentBanner";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -84,23 +86,8 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${jakarta.variable} font-sans antialiased bg-slate-50 text-slate-900`}>
 
-        {/* Google Analytics (gtag.js) */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-DJ98F91FPZ"
-          strategy="afterInteractive"
-        />
-        <Script
-          id="google-analytics-platform"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
-              gtag('js', new Date());
-              gtag('config', 'G-DJ98F91FPZ');
-            `,
-          }}
-        />
+        {/* Google Analytics (gtag.js) — gated by cookie consent */}
+        <GoogleAnalytics measurementId="G-DJ98F91FPZ" scriptId="google-analytics-platform" />
         {process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY && (
           <Script
             src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&language=es&loading=async`}
@@ -108,6 +95,7 @@ export default function RootLayout({
           />
         )}
         {children}
+        <CookieConsentBanner />
       </body>
     </html>
   );
