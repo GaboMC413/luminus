@@ -33,51 +33,29 @@ const EVENT_CATEGORIES = [
   { label: "Otro", value: "Otro" },
 ];
 
-const TIME_OPTIONS = [
-  { label: "18:00 hs (GMT-3)", value: "18:00 hs (GMT-3)" },
-  { label: "18:30 hs (GMT-3)", value: "18:30 hs (GMT-3)" },
-  { label: "19:00 hs (GMT-3)", value: "19:00 hs (GMT-3)" },
-  { label: "19:30 hs (GMT-3)", value: "19:30 hs (GMT-3)" },
-  { label: "20:00 hs (GMT-3)", value: "20:00 hs (GMT-3)" },
-  { label: "20:30 hs (GMT-3)", value: "20:30 hs (GMT-3)" },
-  { label: "21:00 hs (GMT-3)", value: "21:00 hs (GMT-3)" },
-  { label: "10:00 hs (GMT-3)", value: "10:00 hs (GMT-3)" },
-  { label: "11:00 hs (GMT-3)", value: "11:00 hs (GMT-3)" },
-  { label: "12:00 hs (GMT-3)", value: "12:00 hs (GMT-3)" },
-  { label: "14:00 hs (GMT-3)", value: "14:00 hs (GMT-3)" },
-  { label: "15:00 hs (GMT-3)", value: "15:00 hs (GMT-3)" },
-  { label: "16:00 hs (GMT-3)", value: "16:00 hs (GMT-3)" },
-  { label: "17:00 hs (GMT-3)", value: "17:00 hs (GMT-3)" },
-];
+function extractTimeHHMM(timeText?: string | null): string {
+  if (!timeText) return "18:00";
+  const match = String(timeText).match(/(\d{1,2}):(\d{2})/);
+  if (match) {
+    const hh = match[1].padStart(2, "0");
+    const mm = match[2];
+    return `${hh}:${mm}`;
+  }
+  return "18:00";
+}
 
 function getCategoryBadgeStyle(category?: string | null): string {
-  if (!category) return "bg-slate-100 text-slate-700 border-slate-200";
+  if (!category) return "category-pill-slate";
   const norm = category.toLowerCase();
-  if (norm.includes("crecimiento")) {
-    return "bg-amber-50 text-amber-800 border-amber-200/80";
-  }
-  if (norm.includes("emocional")) {
-    return "bg-pink-50 text-pink-700 border-pink-200/80";
-  }
-  if (norm.includes("salud") || norm.includes("integral")) {
-    return "bg-sky-50 text-sky-700 border-sky-200/80";
-  }
-  if (norm.includes("movimiento") || norm.includes("físico") || norm.includes("fisico")) {
-    return "bg-rose-50 text-rose-700 border-rose-200/80";
-  }
-  if (norm.includes("nutrición") || norm.includes("nutricion")) {
-    return "bg-lime-50 text-lime-800 border-lime-200/80";
-  }
-  if (norm.includes("espiritualidad")) {
-    return "bg-purple-50 text-purple-700 border-purple-200/80";
-  }
-  if (norm.includes("vínculos") || norm.includes("vinculos")) {
-    return "bg-orange-50 text-orange-700 border-orange-200/80";
-  }
-  if (norm.includes("terapias") || norm.includes("complementarias")) {
-    return "bg-teal-50 text-teal-700 border-teal-200/80";
-  }
-  return "bg-slate-100 text-slate-700 border-slate-200";
+  if (norm.includes("crecimiento")) return "category-pill-crecimiento";
+  if (norm.includes("emocional")) return "category-pill-emocional";
+  if (norm.includes("salud") || norm.includes("integral")) return "category-pill-salud";
+  if (norm.includes("movimiento") || norm.includes("físico") || norm.includes("fisico")) return "category-pill-movimiento";
+  if (norm.includes("nutrición") || norm.includes("nutricion")) return "category-pill-nutricion";
+  if (norm.includes("espiritualidad")) return "category-pill-espiritualidad";
+  if (norm.includes("vínculos") || norm.includes("vinculos")) return "category-pill-vinculos";
+  if (norm.includes("terapias") || norm.includes("complementarias")) return "category-pill-terapias";
+  return "category-pill-slate";
 }
 
 function parseCalendarDate(dateStr?: string | Date | null): Date | null {
@@ -123,11 +101,18 @@ function isUpcomingEvent(ev: Partial<AdminEvent>): boolean {
 
 function renderSimpleMarkdown(text?: string) {
   if (!text) return "";
-  return text
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">$1</a>')
-    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-    .replace(/\n/g, '<br />');
+  const escaped = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+  return escaped
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-600 underline">$1</a>')
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*([^*]+)\*/g, "<em>$1</em>")
+    .replace(/\n/g, "<br />");
 }
 
 export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProps) {
@@ -253,10 +238,26 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
     return inscriptionsList.filter((ins) => ins.eventId === selectedEvent.id);
   }, [inscriptionsList, selectedEvent]);
 
+  // Distinct tag options for Event Type (starting with "Estreno en YouTube", plus any custom tags)
+  const availableTags = useMemo(() => {
+    const tagsSet = new Set<string>(["Estreno en YouTube"]);
+    eventsList.forEach((ev) => {
+      const loc = (ev.location || "").trim();
+      if (loc && loc !== "En vivo por Zoom / LUMINUS" && loc !== "En vivo / YouTube") {
+        tagsSet.add(loc);
+      }
+    });
+    return Array.from(tagsSet);
+  }, [eventsList]);
+
   // Start editing existing event
   const handleStartEdit = () => {
     if (!selectedEvent) return;
-    setEditingEventData({ ...selectedEvent });
+    setEditingEventData({
+      ...selectedEvent,
+      timeText: extractTimeHHMM(selectedEvent.timeText),
+      location: selectedEvent.location || "Estreno en YouTube",
+    });
     setIsEditingEvent(true);
   };
 
@@ -268,8 +269,8 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
       speakerName: "",
       category: "Bienestar Emocional",
       date: new Date().toISOString().substring(0, 10),
-      timeText: "18:00 hs (GMT-3)",
-      location: "En vivo por Zoom / LUMINUS",
+      timeText: "18:00",
+      location: "Estreno en YouTube",
       coverUrl: "",
       isUpcoming: true,
     });
@@ -374,6 +375,10 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
 
     setIsSubmitting(true);
     const calculatedUpcoming = isUpcomingEvent(editingEventData);
+    const timeHHMM = extractTimeHHMM(editingEventData.timeText);
+    const locationVal = (editingEventData.location && editingEventData.location.trim())
+      ? editingEventData.location.trim()
+      : "Estreno en YouTube";
 
     try {
       const res = await fetch("/api/admin/events", {
@@ -381,6 +386,8 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...editingEventData,
+          timeText: timeHHMM,
+          location: locationVal,
           isUpcoming: calculatedUpcoming,
         }),
       });
@@ -576,83 +583,121 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
             
             {/* Header Profile Summary (matching UsersTab padding & structure) */}
             <div className="border-b border-slate-200/80 p-6 bg-white shrink-0">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-4 min-w-0 flex-1">
-                  {/* Small 16:9 Cover Thumbnail on Left */}
-                  <div className="relative shrink-0">
-                    {selectedEvent.coverUrl ? (
-                      <img
-                        src={selectedEvent.coverUrl}
-                        alt={selectedEvent.title}
-                        className="w-24 h-15 rounded-xl object-cover border border-slate-200 bg-slate-100 shadow-2xs"
-                      />
-                    ) : (
-                      <div className="w-24 h-15 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
-                        <span className="material-symbols-rounded text-[22px]">event</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Title & Badges on Right of Cover */}
-                  <div className="min-w-0 flex-1 pt-0.5">
-                    <h2 className="line-clamp-2 text-lg font-bold text-slate-900 leading-tight font-jakarta">
-                      {selectedEvent.title}
-                    </h2>
-
-                    {/* Badges Bar matching UsersTab */}
-                    <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-                      <AdminBadge variant={isUpcomingEvent(selectedEvent) ? "active" : "disabled"}>
-                        {isUpcomingEvent(selectedEvent) ? "Próximo" : "Pasado / Grabación"}
-                      </AdminBadge>
-
-                      {selectedEvent.category && (
-                        <span
-                          className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider border ${getCategoryBadgeStyle(selectedEvent.category)}`}
-                        >
-                          {selectedEvent.category}
+              {isEditingEvent && !editingEventData.id ? (
+                /* NEW EVENT CREATION HEADER */
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4 min-w-0 flex-1">
+                    <div className="w-24 h-15 rounded-xl bg-slate-900 border border-slate-900 flex items-center justify-center text-white shrink-0 shadow-2xs">
+                      <span className="material-symbols-rounded text-[24px]">add</span>
+                    </div>
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      <h2 className="text-lg font-bold text-slate-900 leading-tight font-jakarta">
+                        {editingEventData.title || "Crear Nuevo Evento"}
+                      </h2>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <AdminBadge variant="active">Nuevo Evento</AdminBadge>
+                        <span className="text-xs text-slate-500 font-sans">
+                          Completa el formulario para publicar la actividad
                         </span>
-                      )}
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Edit & Delete Buttons matching UsersTab */}
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (isEditingEvent) {
-                        handleCancelEdit();
-                      } else {
-                        handleStartEdit();
-                      }
-                    }}
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none cursor-pointer transition-colors ${
-                      isEditingEvent
-                        ? "bg-black text-white hover:bg-slate-800"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
-                    }`}
-                    title={isEditingEvent ? "Cancelar edición" : "Editar evento"}
-                  >
-                    <span className="material-symbols-rounded text-[18px] block">
-                      {isEditingEvent ? "close" : "edit"}
-                    </span>
-                  </button>
-
-                  {!isEditingEvent && (
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
                       type="button"
-                      onClick={() => handleDeleteEvent(selectedEvent.id)}
-                      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none cursor-pointer transition-colors bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700"
-                      title="Eliminar evento"
+                      onClick={handleCancelEdit}
+                      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none cursor-pointer transition-colors bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+                      title="Cancelar creación"
+                    >
+                      <span className="material-symbols-rounded text-[18px] block">close</span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* EXISTING EVENT / EDITING HEADER */
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4 min-w-0 flex-1">
+                    {/* Small 16:9 Cover Thumbnail on Left */}
+                    <div className="relative shrink-0">
+                      {(isEditingEvent ? (editingEventData.coverUrl || selectedEvent.coverUrl) : selectedEvent.coverUrl) ? (
+                        <img
+                          src={(isEditingEvent ? (editingEventData.coverUrl || selectedEvent.coverUrl) : selectedEvent.coverUrl) || ""}
+                          alt={selectedEvent.title}
+                          className="w-24 h-15 rounded-xl object-cover border border-slate-200 bg-slate-100 shadow-2xs"
+                        />
+                      ) : (
+                        <div className="w-24 h-15 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+                          <span className="material-symbols-rounded text-[22px]">event</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Title & Badges on Right of Cover */}
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      {isEditingEvent && (
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">
+                          Editando evento
+                        </div>
+                      )}
+                      <h2 className="line-clamp-2 text-lg font-bold text-slate-900 leading-tight font-jakarta">
+                        {isEditingEvent ? (editingEventData.title || selectedEvent.title) : selectedEvent.title}
+                      </h2>
+
+                      {/* Badges Bar matching UsersTab */}
+                      <div className="flex items-center gap-2 mt-2.5 flex-wrap">
+                        <AdminBadge variant={isUpcomingEvent(isEditingEvent ? editingEventData : selectedEvent) ? "active" : "disabled"}>
+                          {isUpcomingEvent(isEditingEvent ? editingEventData : selectedEvent) ? "Próximo" : "Pasado / Grabación"}
+                        </AdminBadge>
+
+                        {(isEditingEvent ? editingEventData.category : selectedEvent.category) && (
+                          <span
+                            className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider border ${getCategoryBadgeStyle(isEditingEvent ? editingEventData.category : selectedEvent.category)}`}
+                          >
+                            {isEditingEvent ? editingEventData.category : selectedEvent.category}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Edit & Delete Buttons matching UsersTab */}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isEditingEvent) {
+                          handleCancelEdit();
+                        } else {
+                          handleStartEdit();
+                        }
+                      }}
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none cursor-pointer transition-colors ${
+                        isEditingEvent
+                          ? "bg-black text-white hover:bg-slate-800"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+                      }`}
+                      title={isEditingEvent ? "Cancelar edición" : "Editar evento"}
                     >
                       <span className="material-symbols-rounded text-[18px] block">
-                        delete
+                        {isEditingEvent ? "close" : "edit"}
                       </span>
                     </button>
-                  )}
+
+                    {!isEditingEvent && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteEvent(selectedEvent.id)}
+                        className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border-none cursor-pointer transition-colors bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700"
+                        title="Eliminar evento"
+                      >
+                        <span className="material-symbols-rounded text-[18px] block">
+                          delete
+                        </span>
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* View Switcher Sub-Tabs Bar */}
               {!isEditingEvent && (
@@ -709,7 +754,7 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                               : selectedEvent.timeText || "—"
                           }
                         />
-                        <AdminDetailRow label="Ubicación" value={selectedEvent.location || "En vivo / YouTube"} />
+                        <AdminDetailRow label="Tipo de Evento" value={selectedEvent.location || "Estreno en YouTube"} />
                         {selectedEvent.link && (
                           <AdminDetailRow
                             label="Enlace"
@@ -985,58 +1030,82 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                      Fecha
+                      Fecha *
                     </label>
                     <InputField
                       type="date"
+                      required
                       value={formatDateForInput(editingEventData.date)}
                       onChange={(e) => setEditingEventData({ ...editingEventData, date: e.target.value })}
-                      className="w-full! h-10! text-xs"
+                      className="w-full! h-10! text-xs font-sans"
                     />
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                      Hora
+                      Hora (GMT-3) *
                     </label>
-                    <select
-                      value={editingEventData.timeText || "18:00 hs (GMT-3)"}
+                    <InputField
+                      type="time"
+                      required
+                      value={extractTimeHHMM(editingEventData.timeText)}
                       onChange={(e) => setEditingEventData({ ...editingEventData, timeText: e.target.value })}
-                      className="w-full h-10 px-3 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:outline-none focus:border-slate-400 cursor-pointer"
-                    >
-                      {TIME_OPTIONS.map((time) => (
-                        <option key={time.value} value={time.value}>
-                          {time.label}
-                        </option>
-                      ))}
-                    </select>
+                      className="w-full! h-10! text-xs font-mono"
+                    />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                      Ubicación
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500">
+                      Tipo de Evento
                     </label>
-                    <InputField
-                      type="text"
-                      placeholder="Ej: En vivo por Zoom / LUMINUS"
-                      value={editingEventData.location || ""}
-                      onChange={(e) => setEditingEventData({ ...editingEventData, location: e.target.value })}
-                      className="w-full! h-10! text-xs"
-                    />
+                    <span className="text-[11px] text-slate-400">
+                      Elige una etiqueta o escribe una nueva
+                    </span>
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                      Enlace
-                    </label>
-                    <InputField
-                      type="url"
-                      placeholder="https://www.youtube.com/watch?v=..."
-                      value={editingEventData.link || ""}
-                      onChange={(e) => setEditingEventData({ ...editingEventData, link: e.target.value })}
-                      className="w-full! h-10! text-xs"
-                    />
+
+                  {/* Creatable Tag Chips */}
+                  <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                    {availableTags.map((tag) => {
+                      const currentLoc = (editingEventData.location || "Estreno en YouTube").trim().toLowerCase();
+                      const isSelected = currentLoc === tag.trim().toLowerCase();
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => setEditingEventData((prev) => ({ ...prev, location: tag }))}
+                          className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                            isSelected
+                              ? "bg-slate-900 text-white border-slate-900 shadow-2xs"
+                              : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      );
+                    })}
                   </div>
+
+                  <InputField
+                    type="text"
+                    placeholder="Estreno en YouTube"
+                    value={editingEventData.location || ""}
+                    onChange={(e) => setEditingEventData({ ...editingEventData, location: e.target.value })}
+                    className="w-full! h-10! text-xs font-sans"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+                    Enlace de YouTube / Transmisión
+                  </label>
+                  <InputField
+                    type="url"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    value={editingEventData.link || ""}
+                    onChange={(e) => setEditingEventData({ ...editingEventData, link: e.target.value })}
+                    className="w-full! h-10! text-xs font-sans"
+                  />
                 </div>
 
                 {/* Cover Upload & URL Section */}

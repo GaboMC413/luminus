@@ -1,0 +1,607 @@
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Lock,
+  UserX,
+  ArrowLeft,
+  Info,
+  Ban
+} from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { ProfileHeroHeader } from "@/features/user-profile/components/ProfileHeroHeader";
+import { OwnPublicProfileBanner } from "@/features/user-profile/components/OwnPublicProfileBanner";
+import { ProfileAboutSection } from "@/features/user-profile/components/ProfileAboutSection";
+import { ProfileInterestsSection } from "@/features/user-profile/components/ProfileInterestsSection";
+import { ProfileCompletionCard } from "@/features/user-profile/components/ProfileCompletionCard";
+import { SpecialistProfileView } from "@/features/user-profile/components/SpecialistProfileView";
+import { ShareProfileModal } from "@/features/user-profile/modals/ShareProfileModal";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Modal } from "@/components/ui/Modal";
+import { ProfileSkeleton } from "@/components/ui/Skeleton";
+import {
+  getCachedData,
+  setCachedData,
+  fetchWithCache,
+  invalidateClientCache,
+} from "@/lib/clientCache";
+
+interface PublicProfileViewProps {
+  identifier: string;
+}
+
+export function PublicProfileView({ identifier }: PublicProfileViewProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const profileCacheKey = identifier
+    ? `/api/comunidad/profile?slug=${encodeURIComponent(identifier)}`
+    : "";
+  const [profile, setProfile] = useState<any>(
+    () => (profileCacheKey ? getCachedData<any>(profileCacheKey) ?? null : null)
+  );
+  const [loading, setLoading] = useState<boolean>(
+    () => !(profileCacheKey && getCachedData<any>(profileCacheKey))
+  );
+  const [connectionLoading, setConnectionLoading] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const connectionDropdownRefDesktop = useRef<HTMLDivElement>(null);
+  const connectionDropdownRefMobile = useRef<HTMLDivElement>(null);
+  const [isConnectionDropdownOpen, setIsConnectionDropdownOpen] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [isConfirmBlockOpen, setIsConfirmBlockOpen] = useState(false);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const clickedDesktop = connectionDropdownRefDesktop.current && connectionDropdownRefDesktop.current.contains(event.target as Node);
+      const clickedMobile = connectionDropdownRefMobile.current && connectionDropdownRefMobile.current.contains(event.target as Node);
+      if (!clickedDesktop && !clickedMobile) {
+        setIsConnectionDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!identifier) {
+      setError("Falta el identificador del usuario.");
+      setLoading(false);
+      return;
+    }
+
+    async function fetchProfile() {
+      try {
+        const cached = getCachedData<any>(profileCacheKey);
+        if (cached) {
+          setProfile(cached);
+          setLoading(false);
+        } else {
+          setLoading(true);
+        }
+        setError(null);
+
+        const fetchedProfile = await fetchWithCache(
+          profileCacheKey,
+          async () => {
+            const res = await fetch(profileCacheKey);
+            if (!res.ok) {
+              if (res.status === 403) {
+                const restrictedErr: any = new Error("restricted");
+                restrictedErr.code = 403;
+                throw restrictedErr;
+              }
+              const errData = await res.json().catch(() => ({}));
+              throw new Error(errData.message || `Error del servidor: ${res.status}`);
+            }
+            const data = await res.json();
+            return data.profile;
+          },
+          { ttlMs: 60_000 }
+        );
+        setProfile(fetchedProfile);
+      } catch (err: any) {
+        if (err?.code === 403 || err?.message === "restricted") {
+          setError("restricted");
+          return;
+        }
+        console.error("Error al cargar el perfil público:", err);
+        setError(err.message || "Error al conectar con el servidor.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProfile();
+  }, [identifier, profileCacheKey]);
+
+  const userId = profile?.id || "";
+
+  const handleSendMessage = () => {
+    if (!profile || !userId) return;
+    const event = new CustomEvent("luminus_open_chat", {
+      detail: {
+        userId,
+        name: `${profile.first_name || ""} ${profile.last_name || ""}`.trim(),
+        avatar: profile.profile_picture_url
+      }
+    });
+    window.dispatchEvent(event);
+  };
+
+  const handleConnect = async () => {
+    setIsConnectionDropdownOpen(false);
+    if (!userId || connectionLoading) return;
+
+    const previousProfile = profile ? { ...profile } : null;
+
+    try {
+      setConnectionLoading(true);
+
+      // Scenario 0: Blocked connection -> unblock
+      if (profile?.connection_status === "blocked") {
+        setProfile((current: any) => ({
+          ...current,
+          connection_status: null,
+          connection_direction: null,
+        }));
+
+        const response = await fetch("/api/connections", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ recipientId: userId, action: "unblock" }),
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          if (previousProfile) setProfile(previousProfile);
+          throw new Error(data.message || "No pudimos desbloquear al usuario.");
+        }
+        return;
+      }
+
+      // Scenario 1: Already connected OR pending_sent -> remove/cancel (Optimistic UI)
+      if (profile?.connection_status === "accepted" || profile?.connection_status === "pending_sent") {
+        setProfile((current: any) => ({
+          ...current,
+          connection_status: null,
+          connection_direction: null,
+          is_in_network: false,
+          is_mutual: false,
+        }));
+
+        const response = await fetch(`/api/connections?recipientId=${userId}`, {
+          method: "DELETE",
+          credentials: "include",
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          if (previousProfile) setProfile(previousProfile);
+          throw new Error(data.message || "No pudimos actualizar la conexión.");
+        }
+        return;
+      }
+
+      // Scenario 2: Incoming pending request -> accept (Optimistic UI)
+      if (profile?.connection_status === "pending_received") {
+        setProfile((current: any) => ({
+          ...current,
+          connection_status: "accepted",
+          connection_direction: "incoming",
+          is_in_network: true,
+          is_mutual: true,
+        }));
+
+        const response = await fetch("/api/connections", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ recipientId: userId }),
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          if (previousProfile) setProfile(previousProfile);
+          throw new Error(data.message || "No pudimos aceptar la solicitud.");
+        }
+        return;
+      }
+
+      // Scenario 3: Send connection request (Optimistic UI)
+      setProfile((current: any) => ({
+        ...current,
+        connection_status: "pending_sent",
+        connection_direction: "outgoing",
+        is_in_network: false,
+        is_mutual: false,
+      }));
+
+      const response = await fetch("/api/connections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ recipientId: userId }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        if (previousProfile) setProfile(previousProfile);
+        throw new Error(data.message || "No pudimos enviar la solicitud.");
+      }
+
+      if (data?.connection?.status === "accepted") {
+        setProfile((current: any) => ({
+          ...current,
+          connection_status: "accepted",
+          is_in_network: true,
+          is_mutual: true,
+        }));
+      }
+    } catch (err: any) {
+      console.error("Error managing connection:", err);
+      setConnectionError(err.message || "No pudimos procesar la acción.");
+    } finally {
+      invalidateClientCache(["/api/connections", profileCacheKey]);
+      setConnectionLoading(false);
+    }
+  };
+
+  const handleFollowToggle = async () => {
+    const userId = profile?.id || identifier;
+    if (!userId || followLoading) return;
+
+    const wasFollowing = Boolean(profile?.is_following);
+    const previousFollowersCount = Number(profile?.followers_count || 0);
+
+    try {
+      setFollowLoading(true);
+      setProfile((current: any) => ({
+        ...current,
+        is_following: !wasFollowing,
+        followers_count: Math.max(0, previousFollowersCount + (wasFollowing ? -1 : 1)),
+      }));
+
+      const response = wasFollowing
+        ? await fetch(`/api/follows?followingId=${userId}`, {
+            method: "DELETE",
+            credentials: "include",
+          })
+        : await fetch("/api/follows", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ followingId: userId }),
+          });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setProfile((current: any) => ({
+          ...current,
+          is_following: wasFollowing,
+          followers_count: previousFollowersCount,
+        }));
+        throw new Error(data.message || "No pudimos actualizar el seguimiento.");
+      }
+    } catch (err: any) {
+      console.error("Error toggling follow:", err);
+      setConnectionError(err.message || "No pudimos actualizar el seguimiento.");
+    } finally {
+      invalidateClientCache(["/api/follows", profileCacheKey]);
+      setFollowLoading(false);
+    }
+  };
+
+  const handleRemoveConnection = async (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setIsConnectionDropdownOpen(false);
+    if (!userId || connectionLoading) return;
+
+    const previousProfile = profile ? { ...profile } : null;
+
+    try {
+      setConnectionLoading(true);
+
+      setProfile((current: any) => ({
+        ...current,
+        connection_status: null,
+        connection_direction: null,
+        is_in_network: false,
+        is_mutual: false,
+      }));
+
+      const response = await fetch(`/api/connections?recipientId=${userId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        if (previousProfile) setProfile(previousProfile);
+        throw new Error(data.message || "No pudimos eliminar de tu red.");
+      }
+    } catch (err: any) {
+      console.error("Error removing connection:", err);
+      setConnectionError(err.message || "No pudimos eliminar de tu red.");
+    } finally {
+      setConnectionLoading(false);
+    }
+  };
+
+  const handleBlockConnection = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setIsConnectionDropdownOpen(false);
+    setIsConfirmBlockOpen(true);
+  };
+
+  const executeBlockConnection = async () => {
+    setIsConfirmBlockOpen(false);
+    if (!userId || connectionLoading) return;
+
+    try {
+      setConnectionLoading(true);
+      const response = await fetch("/api/connections", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ recipientId: userId, action: "block" }),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.message || "No pudimos bloquear al usuario.");
+      }
+
+      setProfile((current: any) => ({
+        ...current,
+        connection_status: "blocked",
+        connection_direction: null,
+      }));
+    } catch (err: any) {
+      console.error("Error blocking connection:", err);
+      setConnectionError(err.message || "No pudimos bloquear al usuario.");
+    } finally {
+      setConnectionLoading(false);
+    }
+  };
+
+  const handleShareProfile = () => {
+    setIsShareOpen(true);
+  };
+
+  const fromParam = searchParams.get("from");
+  const isOwn = Boolean(profile?.is_own_profile);
+
+  const getBackInfo = () => {
+    switch (fromParam) {
+      case "especialistas":
+        return { label: "Volver a Especialistas", fallback: "/especialistas" };
+      case "miembros":
+        return { label: "Volver a Miembros", fallback: "/inicio/miembros" };
+      case "red":
+        return { label: "Volver a Mi red", fallback: "/red" };
+      case "inicio":
+        return { label: "Volver a Inicio", fallback: "/inicio" };
+      default:
+        return { label: "Volver", fallback: "/inicio" };
+    }
+  };
+
+  const backInfo = getBackInfo();
+
+  const handleGoBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 2) {
+      router.back();
+    } else {
+      router.push(backInfo.fallback);
+    }
+  };
+
+  if (loading) {
+    return <ProfileSkeleton />;
+  }
+
+  if (error || !profile) {
+    const isRestricted = error === "restricted";
+
+    return (
+      <div className="w-full flex flex-col relative bg-slate-50 min-h-screen font-sans">
+        <div className="w-full flex-1 min-h-[calc(100vh-140px)] flex flex-col items-center justify-center p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-slate-200/90 shadow-none flex flex-col items-center text-center gap-5">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500">
+              {isRestricted ? <Lock className="w-6 h-6" /> : <UserX className="w-6 h-6" />}
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <h2 className="text-title-page font-bold tracking-tight text-slate-900 font-jakarta">
+                Perfil no disponible
+              </h2>
+              <p className="text-body text-slate-500 font-sans leading-relaxed">
+                {isRestricted
+                  ? "Este perfil no está disponible."
+                  : "Este perfil ya no está disponible o la cuenta ha sido eliminada."}
+              </p>
+            </div>
+            <Button
+              onClick={handleGoBack}
+              variant="primary"
+              className="gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{backInfo.label}</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const canonicalShareUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/perfil/${profile.slug || profile.id || identifier}`
+      : "";
+
+  return (
+    <div className="w-full flex flex-col relative bg-slate-50 min-h-screen font-sans">
+      {profile.specialistProfile ? (
+        <SpecialistProfileView
+          profile={profile}
+          isPublic={true}
+          onConnect={handleConnect}
+          onFollow={handleFollowToggle}
+          followLoading={followLoading}
+          onRemoveConnection={handleRemoveConnection}
+          onBlockConnection={handleBlockConnection}
+          connectionLoading={connectionLoading}
+          isConnectionDropdownOpen={isConnectionDropdownOpen}
+          setIsConnectionDropdownOpen={setIsConnectionDropdownOpen}
+          connectionDropdownRefDesktop={connectionDropdownRefDesktop}
+          connectionDropdownRefMobile={connectionDropdownRefMobile}
+          onSendMessage={handleSendMessage}
+          onShareProfile={handleShareProfile}
+          onBack={handleGoBack}
+          backLabel={backInfo.label}
+        />
+      ) : (
+        <div className="w-full flex flex-col font-sans">
+          {/* 1. Master Profile Hero Header (100% Wide Flush Cover) */}
+          <ProfileHeroHeader
+            profile={profile}
+            isSpecialist={false}
+            isOwnProfile={isOwn}
+            isPublic={true}
+            onConnect={handleConnect}
+            onRemoveConnection={handleRemoveConnection}
+            onBlockConnection={handleBlockConnection}
+            connectionLoading={connectionLoading}
+            isConnectionDropdownOpen={isConnectionDropdownOpen}
+            setIsConnectionDropdownOpen={setIsConnectionDropdownOpen}
+            connectionDropdownRefDesktop={connectionDropdownRefDesktop}
+            connectionDropdownRefMobile={connectionDropdownRefMobile}
+            onSendMessage={handleSendMessage}
+            onShareProfile={handleShareProfile}
+            onBack={handleGoBack}
+            backLabel={backInfo.label}
+          />
+
+          {/* 2. Balanced 8:4 Grid Content for Member */}
+          <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+            {isOwn && <OwnPublicProfileBanner className="mt-4 sm:mt-5" />}
+
+            {!profile.bio &&
+            (!profile.prompts || profile.prompts.length === 0) &&
+            (!profile.interests || profile.interests.length === 0) &&
+            !profile.other_interests ? (
+              <div className="mt-6 bg-white border border-slate-200/90 rounded-2xl">
+                <EmptyState
+                  title="Perfil en construcción"
+                  description={`${profile.first_name || "Este miembro"} aún no ha completado las secciones públicas de su perfil.`}
+                />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 sm:gap-5 lg:gap-6 mt-3.5 sm:mt-5 lg:mt-6 items-start">
+                {/* MAIN COLUMN (lg:col-span-8) */}
+                {(Boolean(profile.bio) || (Array.isArray(profile.prompts) && profile.prompts.length > 0)) && (
+                  <div className="lg:col-span-8 flex flex-col gap-3.5 sm:gap-5">
+                    <ProfileAboutSection
+                      bio={profile.bio}
+                      isPublic={true}
+                      firstName={profile.first_name}
+                    />
+
+                    <ProfileCompletionCard
+                      prompts={profile.prompts}
+                      isPublic={true}
+                      firstName={profile.first_name}
+                    />
+                  </div>
+                )}
+
+                {/* SIDEBAR COLUMN (lg:col-span-4) */}
+                {((Array.isArray(profile.interests) && profile.interests.length > 0) || Boolean(profile.other_interests)) && (
+                  <div className="lg:col-span-4 flex flex-col gap-3.5 sm:gap-5">
+                    <ProfileInterestsSection
+                      interests={profile.interests}
+                      otherInterests={profile.other_interests}
+                      isPublic={true}
+                      firstName={profile.first_name}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      <ShareProfileModal
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        shareUrl={canonicalShareUrl}
+        firstName={profile?.first_name}
+        includeWhatsApp
+      />
+
+      {/* Connection notification modal */}
+      <Modal
+        isOpen={!!connectionError}
+        onClose={() => setConnectionError(null)}
+        title="Acción de conexión"
+        maxWidth="400px"
+      >
+        <div className="flex flex-col gap-4 text-center p-2 font-sans">
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500 mx-auto">
+            <Info className="w-6 h-6" />
+          </div>
+          <p className="text-body text-slate-600 font-sans leading-relaxed">
+            {connectionError}
+          </p>
+          <Button
+            onClick={() => setConnectionError(null)}
+            variant="primary"
+            fullWidth
+          >
+            Entendido
+          </Button>
+        </div>
+      </Modal>
+
+      {/* Block confirmation modal */}
+      <Modal
+        isOpen={isConfirmBlockOpen}
+        onClose={() => setIsConfirmBlockOpen(false)}
+        title="Bloquear usuario"
+        maxWidth="400px"
+      >
+        <div className="flex flex-col gap-4 text-center p-2 font-sans">
+          <div className="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600 mx-auto">
+            <Ban className="w-6 h-6" />
+          </div>
+          <p className="text-body text-slate-600 leading-relaxed font-sans">
+            ¿Estás seguro de que quieres bloquear a este usuario? No podrán interactuar ni enviarse solicitudes.
+          </p>
+          <div className="flex gap-2.5 mt-2">
+            <Button
+              onClick={() => setIsConfirmBlockOpen(false)}
+              variant="secondary"
+              fullWidth
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={executeBlockConnection}
+              variant="destructive"
+              fullWidth
+            >
+              Bloquear
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}

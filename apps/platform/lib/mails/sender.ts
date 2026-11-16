@@ -5,6 +5,21 @@ import { getSesV2Client } from "./sesClient";
 import { renderPasswordResetEmailHtml } from "./passwordReset";
 import { renderWelcomeEmailHtml } from "./welcome";
 import { renderEmailChangeVerificationHtml } from "./emailChange";
+import { renderMecenasWelcomeEmailHtml, MecenasWelcomeEmailOptions } from "./mecenasWelcome";
+import { renderMecenasUpgradeEmailHtml, MecenasUpgradeEmailOptions } from "./mecenasUpgrade";
+import { renderMembershipCanceledEmailHtml, MembershipCanceledEmailOptions } from "./membershipCanceled";
+import { renderMembershipSwitchAnnualEmailHtml, MembershipSwitchAnnualEmailOptions } from "./membershipSwitchAnnual";
+import { renderMembershipSwitchMonthlyEmailHtml, MembershipSwitchMonthlyEmailOptions } from "./membershipSwitchMonthly";
+import {
+  getIntroSessionEmailSubject,
+  renderIntroSessionEmailHtml,
+  type IntroSessionEmailOptions,
+} from "./introSession";
+import {
+  renderSpecialistApprovedEmailHtml,
+  SPECIALIST_APPROVED_EMAIL_SUBJECT,
+  type SpecialistApprovedEmailOptions,
+} from "./specialistApproved";
 
 function isSesConfigured() {
   if (process.env.NODE_ENV === "production") {
@@ -14,6 +29,9 @@ function isSesConfigured() {
 }
 
 function writeLocalEmailPreview(email: string, subject: string, htmlBody: string) {
+  if (process.env.NODE_ENV === "production") {
+    return;
+  }
   try {
     const publicDir = path.join(process.cwd(), "public");
     if (!fs.existsSync(publicDir)) {
@@ -50,7 +68,7 @@ async function logSentEmail(
   options?: EmailLogOptions
 ) {
   try {
-    const { prisma } = await import("@/lib/db");
+    const { prisma } = await import("../db");
     await prisma.sentEmailLog.create({
       data: {
         recipient,
@@ -63,19 +81,18 @@ async function logSentEmail(
       },
     });
 
-    // Mantener un límite estricto de máximo 100 correos guardados (Auto-prune FIFO)
-    const count = await prisma.sentEmailLog.count();
-    if (count > 100) {
-      const excess = count - 100;
-      const oldestRecords = await prisma.sentEmailLog.findMany({
-        orderBy: { createdAt: "asc" },
-        take: excess,
+    // Auto-prune FIFO probabilistically so we don't query 3 times on every single email
+    if (Math.random() < 0.1) {
+      const excess = await prisma.sentEmailLog.findMany({
+        orderBy: { createdAt: "desc" },
+        skip: 100,
+        take: 50,
         select: { id: true },
       });
-      if (oldestRecords.length > 0) {
+      if (excess.length > 0) {
         await prisma.sentEmailLog.deleteMany({
           where: {
-            id: { in: oldestRecords.map((r) => r.id) },
+            id: { in: excess.map((r: { id: string }) => r.id) },
           },
         });
       }
@@ -264,31 +281,43 @@ export async function sendPasswordResetEmail(email: string, code: string) {
   }
 }
 
-export async function sendWelcomeEmail(email: string, name: string = "Usuario") {
-  try {
-    const { prisma } = await import("@/lib/db");
-    const existingLog = await prisma.sentEmailLog.findFirst({
-      where: {
-        recipient: email,
-        subject: { contains: "bienvenida" },
-        status: { in: ["SUCCESS", "LOCAL_PREVIEW"] },
-      },
-    });
-    if (existingLog) {
-      console.log(`[SES] Welcome email already sent to ${email}. Skipping duplicate.`);
-      return { success: true, mode: "already-sent" };
+async function sendStandardTransactionalEmail({
+  email,
+  subject,
+  htmlBody,
+  textBody,
+  actionName,
+  checkDuplicateSubject,
+}: {
+  email: string;
+  subject: string;
+  htmlBody: string;
+  textBody: string;
+  actionName: string;
+  checkDuplicateSubject?: string;
+}) {
+  if (checkDuplicateSubject) {
+    try {
+      const { prisma } = await import("../db");
+      const existingLog = await prisma.sentEmailLog.findFirst({
+        where: {
+          recipient: email,
+          subject: { contains: checkDuplicateSubject },
+          status: { in: ["SUCCESS", "LOCAL_PREVIEW"] },
+        },
+      });
+      if (existingLog) {
+        console.log(`[SES] ${actionName} already sent to ${email}. Skipping duplicate.`);
+        return { success: true, mode: "already-sent" };
+      }
+    } catch (err) {
+      // Proceed if check fails
     }
-  } catch (err) {
-    // Proceed if check fails
   }
 
   const startTime = new Date().toISOString();
-
   const rawFrom = process.env.NOTIFICATION_FROM_EMAIL || process.env.SES_FROM_EMAIL || "notificaciones@luminuslatam.com";
   const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM");
-  const subject = "¡Te damos la bienvenida a LUMINUS!";
-  const htmlBody = renderWelcomeEmailHtml(name);
-  const textBody = `¡Te damos la bienvenida a LUMINUS, ${name}! Nos alegra acompañarte en este espacio de bienestar integral.`;
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
   const configurationSet = process.env.SES_CONFIGURATION_NOTIFICACIONES || "luminus-notificaciones";
 
@@ -300,14 +329,14 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
     configurationSet,
     recipients: [email],
     timeline: [
-      { step: "Solicitud de bienvenida recibida", timestamp: startTime, success: true },
-      { step: "Plantilla de Bienvenida renderizada", timestamp: new Date().toISOString(), details: `${Math.round(htmlBody.length / 1024)} KB`, success: true },
+      { step: `Solicitud de ${actionName} recibida`, timestamp: startTime, success: true },
+      { step: `Plantilla de ${actionName} renderizada`, timestamp: new Date().toISOString(), details: `${Math.round(htmlBody.length / 1024)} KB`, success: true },
     ],
   };
 
   if (!isSesConfigured()) {
     const endTime = new Date().toISOString();
-    console.log(`[SES DISABLED] Welcome email for ${email} generated locally.`);
+    console.log(`[SES DISABLED] ${actionName} for ${email} generated locally.`);
     baseMetadata.timeline.push({
       step: "Entorno Local (SES Desactivado)",
       timestamp: endTime,
@@ -315,7 +344,7 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
       success: true,
     });
     baseMetadata.rawLog = buildRawLog({
-      action: "Email de Bienvenida",
+      action: actionName,
       recipient: email,
       sender: fromEmail,
       subject,
@@ -333,7 +362,6 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
   }
 
   const sesClient = getSesV2Client();
-
   const command = new SendEmailCommand({
     FromEmailAddress: fromEmail,
     Destination: { ToAddresses: [email] },
@@ -358,7 +386,7 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
     });
     const response = await sesClient.send(command);
     const endTime = new Date().toISOString();
-    console.log(`[SES SUCCESS] Welcome email sent to ${email}. MessageId: ${response.MessageId}`);
+    console.log(`[SES SUCCESS] ${actionName} sent to ${email}. MessageId: ${response.MessageId}`);
 
     baseMetadata.timeline.push({
       step: "Respuesta de AWS SES recibida exitosamente",
@@ -367,7 +395,7 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
       success: true,
     });
     baseMetadata.rawLog = buildRawLog({
-      action: "Email de Bienvenida",
+      action: actionName,
       recipient: email,
       sender: fromEmail,
       subject,
@@ -388,7 +416,7 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
   } catch (error: any) {
     const endTime = new Date().toISOString();
     const errorMsg = error?.message || String(error);
-    console.error(`[SES ERROR] Failed to send welcome email to ${email}:`, error);
+    console.error(`[SES ERROR] Failed to send ${actionName} to ${email}:`, error);
 
     baseMetadata.timeline.push({
       step: "Fallo al despachar en AWS SES",
@@ -397,7 +425,7 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
       success: false,
     });
     baseMetadata.rawLog = buildRawLog({
-      action: "Email de Bienvenida",
+      action: actionName,
       recipient: email,
       sender: fromEmail,
       subject,
@@ -416,6 +444,124 @@ export async function sendWelcomeEmail(email: string, name: string = "Usuario") 
     });
     throw error;
   }
+}
+
+export async function sendWelcomeEmail(email: string, name: string = "Usuario") {
+  const subject = "Te damos la bienvenida a LUMINUS";
+  const htmlBody = renderWelcomeEmailHtml(name);
+  const textBody = `Te damos la bienvenida a LUMINUS, ${name}. Una red creada para conectar, aprender y cuidar tu bienestar.`;
+  return sendStandardTransactionalEmail({
+    email,
+    subject,
+    htmlBody,
+    textBody,
+    actionName: "Email de Bienvenida Gratuito",
+    checkDuplicateSubject: "bienvenida a LUMINUS",
+  });
+}
+
+export async function sendSpecialistApprovedEmail(
+  email: string,
+  options: SpecialistApprovedEmailOptions = {}
+) {
+  const name = options.name?.trim() || "Especialista";
+  const subject = SPECIALIST_APPROVED_EMAIL_SUBJECT;
+  const htmlBody = renderSpecialistApprovedEmailHtml(options);
+  const textBody = `Hola ${name}, tu postulación fue aprobada y nos alegra darte la bienvenida a la Red de Especialistas LUMINUS. Ya puedes revisar tu perfil en https://app.luminuslatam.com/perfil-usuario`;
+  return sendStandardTransactionalEmail({
+    email,
+    subject,
+    htmlBody,
+    textBody,
+    actionName: "Aprobación de Especialista",
+    checkDuplicateSubject: SPECIALIST_APPROVED_EMAIL_SUBJECT,
+  });
+}
+
+export async function sendMecenasWelcomeEmail(
+  email: string,
+  options: MecenasWelcomeEmailOptions = {}
+) {
+  const name = options.name || "Usuario";
+  const subject = "Te damos la bienvenida a LUMINUS como Mecenas";
+  const htmlBody = renderMecenasWelcomeEmailHtml(options);
+  const textBody = `Hola ${name}, gracias por ser Mecenas de LUMINUS. Al convertirte en Mecenas, formas parte de quienes impulsan nuestra visión y hacen posible que llegue a más personas en Latinoamérica.`;
+  return sendStandardTransactionalEmail({
+    email,
+    subject,
+    htmlBody,
+    textBody,
+    actionName: "Email de Bienvenida Mecenas",
+    checkDuplicateSubject: "como Mecenas",
+  });
+}
+
+export async function sendMecenasUpgradeEmail(
+  email: string,
+  options: MecenasUpgradeEmailOptions = {}
+) {
+  const name = options.name || "Usuario";
+  const subject = "Gracias por dar el paso: ya eres Mecenas de LUMINUS";
+  const htmlBody = renderMecenasUpgradeEmailHtml(options);
+  const textBody = `Hola ${name}, gracias por convertirte en Mecenas de LUMINUS. Sabemos que ya formas parte de nuestra comunidad. Que hoy elijas dar este paso y apoyar activamente este espacio tiene un significado y un valor inmenso para todos nosotros.`;
+  return sendStandardTransactionalEmail({
+    email,
+    subject,
+    htmlBody,
+    textBody,
+    actionName: "Email de Upgrade Mecenas",
+  });
+}
+
+export async function sendMembershipCanceledEmail(
+  email: string,
+  options: MembershipCanceledEmailOptions = {}
+) {
+  const name = options.name || "Usuario";
+  const subject = "Confirmación de cancelación de membresía";
+  const htmlBody = renderMembershipCanceledEmailHtml(options);
+  const textBody = `Hola ${name}, te confirmamos que tu membresía Mecenas ha sido cancelada y no se renovará de forma automática.`;
+  return sendStandardTransactionalEmail({
+    email,
+    subject,
+    htmlBody,
+    textBody,
+    actionName: "Email de Cancelación de Membresía",
+  });
+}
+
+export async function sendMembershipSwitchAnnualEmail(
+  email: string,
+  options: MembershipSwitchAnnualEmailOptions = {}
+) {
+  const name = options.name || "Usuario";
+  const subject = "Tu suscripción se ha actualizado a Mecenas Anual";
+  const htmlBody = renderMembershipSwitchAnnualEmailHtml(options);
+  const textBody = `Hola ${name}, tu suscripción ha sido actualizada con éxito al plan anual. Ahorras USD 15 al año con tu nuevo plan anual en LUMINUS.`;
+  return sendStandardTransactionalEmail({
+    email,
+    subject,
+    htmlBody,
+    textBody,
+    actionName: "Email de Switch a Mecenas Anual",
+  });
+}
+
+export async function sendMembershipSwitchMonthlyEmail(
+  email: string,
+  options: MembershipSwitchMonthlyEmailOptions = {}
+) {
+  const name = options.name || "Usuario";
+  const subject = "Cambio de plan programado: Mecenas Mensual";
+  const htmlBody = renderMembershipSwitchMonthlyEmailHtml(options);
+  const textBody = `Hola ${name}, hemos programado el cambio de tu suscripción a la modalidad mensual.`;
+  return sendStandardTransactionalEmail({
+    email,
+    subject,
+    htmlBody,
+    textBody,
+    actionName: "Email de Switch a Mecenas Mensual",
+  });
 }
 
 export async function sendEmailChangeVerificationEmail(email: string, code: string) {
@@ -561,15 +707,62 @@ export async function sendEventRegistrationEmail(
   const startTime = new Date().toISOString();
   const rawFrom = process.env.EVENT_FROM_EMAIL || "eventos@luminuslatam.com";
   const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM Eventos");
-  const { renderEventRegistrationEmailHtml } = await import("./inscription");
-  const htmlBody = renderEventRegistrationEmailHtml(options);
-  let youtubeLink = "https://www.youtube.com/@luminus_latam";
-  if (options.youtubeUrl && options.youtubeUrl.trim()) {
-    const rawYt = options.youtubeUrl.trim();
-    youtubeLink = (rawYt.startsWith("http://") || rawYt.startsWith("https://")) ? rawYt : `https://www.youtube.com/watch?v=${rawYt}`;
+  const {
+    renderEventRegistrationEmailHtml,
+    resolveDirectEventLink,
+    formatEventDateAndTime,
+  } = await import("./inscription");
+  const { resolveEventUtcDate } = await import("../eventDateUtils");
+  const { buildGoogleCalendarUrl, buildIcsContent } = await import("../calendar/ics");
+
+  const startUtc = resolveEventUtcDate(options.eventDate, options.timeText);
+  let calendarUrl: string | null = options.calendarUrl ?? null;
+  let icsAttachment: {
+    RawContent: Uint8Array;
+    FileName: string;
+    ContentType: string;
+    ContentDisposition: "ATTACHMENT";
+  } | null = null;
+
+  if (startUtc) {
+    const endUtc = new Date(startUtc.getTime() + 60 * 60 * 1000);
+    const calendarInput = {
+      uid: `event-${options.eventSlug || startUtc.getTime()}@luminuslatam.com`,
+      title: options.eventTitle || "Evento LUMINUS",
+      description: options.speakerName
+        ? `Con ${options.speakerName} - LUMINUS LATAM`
+        : "Evento de Bienestar LUMINUS",
+      location: options.location || "Evento online",
+      url:
+        resolveDirectEventLink(options.youtubeUrl) ||
+        (options.eventSlug
+          ? `https://app.luminuslatam.com/actividades/${options.eventSlug}`
+          : "https://app.luminuslatam.com/actividades"),
+      startUtc,
+      endUtc,
+    };
+    calendarUrl = calendarUrl || buildGoogleCalendarUrl(calendarInput);
+    const icsContent = buildIcsContent(calendarInput);
+    icsAttachment = {
+      RawContent: Buffer.from(icsContent, "utf-8"),
+      FileName: "evento-luminus.ics",
+      ContentType: "text/calendar; charset=utf-8; method=PUBLISH",
+      ContentDisposition: "ATTACHMENT",
+    };
   }
+
+  const htmlBody = renderEventRegistrationEmailHtml({ ...options, calendarUrl });
+  const directLink = resolveDirectEventLink(options.youtubeUrl);
+  const { formattedDate, formattedTime } = formatEventDateAndTime(
+    options.eventDate,
+    options.timeText,
+    options.userTimezone
+  );
   const subject = `Confirmación de inscripción: ${options.eventTitle || "Evento de Bienestar"}`;
-  const textBody = `Hola ${options.firstName || "Usuario"},\n\nTe has inscripto a la entrevista online "${options.eventTitle || "Evento LUMINUS"}".\n\nPodrás ver el estreno el ${options.eventDate || "Próximamente"}.\n\nVer en YouTube: ${youtubeLink}\n\nEquipo de LUMINUS Eventos.`;
+  const linkLine = directLink
+    ? `\n\nUnirse al evento: ${directLink}`
+    : `\n\nEl enlace de acceso se habilitará antes del comienzo y te lo enviaremos por email.`;
+  const textBody = `Hola ${options.firstName || "Usuario"},\n\nTu inscripción a "${options.eventTitle || "Evento LUMINUS"}" está confirmada.\n\nTe esperamos el ${formattedDate} a las ${formattedTime}.${linkLine}\n\nEquipo de LUMINUS Eventos.`;
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
   const configurationSet = process.env.SES_CONFIGURATION_EVENTOS || "luminus-eventos";
 
@@ -625,6 +818,7 @@ export async function sendEventRegistrationEmail(
           Html: { Data: htmlBody, Charset: "UTF-8" },
           Text: { Data: textBody, Charset: "UTF-8" },
         },
+        ...(icsAttachment ? { Attachments: [icsAttachment] } : {}),
       },
     },
     ...(configurationSet && { ConfigurationSetName: configurationSet }),
@@ -706,17 +900,13 @@ export async function sendEventLiveNotificationEmail(
   const startTime = new Date().toISOString();
   const rawFrom = process.env.EVENT_FROM_EMAIL || "eventos@luminuslatam.com";
   const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM Eventos");
-  const { renderEventLiveEmailHtml } = await import("./inscription");
+  const { renderEventLiveEmailHtml, resolveDirectEventLink } = await import("./inscription");
   const htmlBody = renderEventLiveEmailHtml(options);
-  let youtubeLink = "https://www.youtube.com/@luminus_latam";
-  if (options.youtubeUrl && options.youtubeUrl.trim()) {
-    const rawYt = options.youtubeUrl.trim();
-    youtubeLink = (rawYt.startsWith("http://") || rawYt.startsWith("https://")) ? rawYt : `https://www.youtube.com/watch?v=${rawYt}`;
-  }
-  const subject = options.speakerName
-    ? `Ya puedes ver la entrevista con ${options.speakerName}`
-    : `Ya puedes ver la entrevista`;
-  const textBody = `Hola ${options.firstName || "Usuario"},\n\nEl evento "${options.eventTitle || "Evento LUMINUS"}" ya está online y disponible para ver.\n\nVer Evento Ahora: ${youtubeLink}\n\nEquipo de LUMINUS Eventos.`;
+  const directLink = resolveDirectEventLink(options.youtubeUrl);
+  const subject = `Ya puedes unirte: ${options.eventTitle || "Evento LUMINUS"}`;
+  const textBody = `Hola ${options.firstName || "Usuario"},\n\n"${options.eventTitle || "Evento LUMINUS"}" ya está disponible para que te unas.${
+    directLink ? `\n\nUnirse al evento: ${directLink}` : ""
+  }\n\nEquipo de LUMINUS Eventos.`;
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
   const configurationSet = process.env.SES_CONFIGURATION_EVENTOS || "luminus-eventos";
 
@@ -846,11 +1036,108 @@ export async function sendEventLiveNotificationEmail(
   }
 }
 
+export async function sendEventReminderEmail(
+  email: string,
+  options: import("./inscription").EventInscriptionEmailOptions
+) {
+  const startTime = new Date().toISOString();
+  const rawFrom = process.env.EVENT_FROM_EMAIL || "eventos@luminuslatam.com";
+  const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM Eventos");
+  const { renderEventReminderEmailHtml, resolveDirectEventLink } = await import("./inscription");
+  const htmlBody = renderEventReminderEmailHtml(options);
+  const directLink = resolveDirectEventLink(options.youtubeUrl);
+  const subject = `Comienza en 10 minutos: ${options.eventTitle || "Evento LUMINUS"}`;
+  const textBody = `Hola ${options.firstName || "Usuario"},\n\n"${options.eventTitle || "Evento LUMINUS"}" comienza en 10 minutos.${
+    directLink ? `\n\nUnirse al evento: ${directLink}` : ""
+  }\n\nEquipo de LUMINUS Eventos.`;
+  const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
+  const configurationSet = process.env.SES_CONFIGURATION_EVENTOS || "luminus-eventos";
+
+  writeLocalEmailPreview(email, subject, htmlBody);
+
+  const baseMetadata: any = {
+    sender: fromEmail,
+    region,
+    configurationSet,
+    recipients: [email],
+    timeline: [
+      { step: "Recordatorio de evento (10 min) generado", timestamp: startTime, success: true },
+    ],
+  };
+
+  if (!isSesConfigured()) {
+    const endTime = new Date().toISOString();
+    baseMetadata.rawLog = buildRawLog({
+      action: "Recordatorio de Evento (10 min)",
+      recipient: email,
+      sender: fromEmail,
+      subject,
+      region,
+      configurationSet,
+      status: "LOCAL_PREVIEW",
+      startTime,
+      endTime,
+    });
+    await logSentEmail(email, subject, htmlBody, {
+      status: "LOCAL_PREVIEW",
+      metadata: baseMetadata,
+    });
+    return { success: true, mode: "local-preview" };
+  }
+
+  const sesClient = getSesV2Client();
+  const command = new SendEmailCommand({
+    FromEmailAddress: fromEmail,
+    Destination: { ToAddresses: [email] },
+    Content: {
+      Simple: {
+        Subject: { Data: subject, Charset: "UTF-8" },
+        Body: {
+          Html: { Data: htmlBody, Charset: "UTF-8" },
+          Text: { Data: textBody, Charset: "UTF-8" },
+        },
+      },
+    },
+    ...(configurationSet && { ConfigurationSetName: configurationSet }),
+  });
+
+  try {
+    const response = await sesClient.send(command);
+    const endTime = new Date().toISOString();
+    baseMetadata.rawLog = buildRawLog({
+      action: "Recordatorio de Evento (10 min)",
+      recipient: email,
+      sender: fromEmail,
+      subject,
+      region,
+      configurationSet,
+      status: "SUCCESS",
+      messageId: response.MessageId || null,
+      startTime,
+      endTime,
+    });
+    await logSentEmail(email, subject, htmlBody, {
+      status: "SUCCESS",
+      messageId: response.MessageId || null,
+      metadata: baseMetadata,
+    });
+    return { success: true, messageId: response.MessageId };
+  } catch (error: any) {
+    console.error(`[SES ERROR] Failed to send event reminder email to ${email}:`, error);
+    await logSentEmail(email, subject, htmlBody, {
+      status: "FAILED",
+      errorDetails: error?.message || String(error),
+      metadata: baseMetadata,
+    });
+    throw error;
+  }
+}
+
 export async function sendBatchEventLiveNotifications(
   eventId: string,
   batchSize: number = 10
 ) {
-  const { prisma } = await import("@/lib/db");
+  const { prisma } = await import("../db");
 
   const event = await prisma.event.findUnique({
     where: { id: eventId },
@@ -902,7 +1189,7 @@ export async function sendBatchEventLiveNotifications(
     const batch = pendingInscriptions.slice(i, i + batchSize);
 
     await Promise.all(
-      batch.map(async (inscription) => {
+      batch.map(async (inscription: any) => {
         const guestEmail = inscription.guest?.email;
         if (!guestEmail) return;
 
@@ -916,6 +1203,8 @@ export async function sendBatchEventLiveNotifications(
             speakerName: event.speakerName,
             youtubeUrl: finalYoutubeUrl,
             eventSlug: event.slug,
+            location: event.location || "Estreno en YouTube",
+            source: inscription.guest?.isGuest === false ? "platform" : "web",
           });
 
           await prisma.eventInscription.update({
@@ -969,6 +1258,7 @@ export interface ContactNotificationPayload {
   pais?: string;
   motivo: string;
   mensaje: string;
+  responderA?: string;
 }
 
 const DEFAULT_CONTACT_RECIPIENTS = [
@@ -985,7 +1275,20 @@ export async function sendContactNotificationEmail(data: ContactNotificationPayl
     ? process.env.CONTACT_NOTIFICATION_EMAILS.split(",").map((e) => e.trim()).filter(Boolean)
     : null;
 
-  const toAddresses = envRecipients && envRecipients.length > 0 ? envRecipients : DEFAULT_CONTACT_RECIPIENTS;
+  let dynamicRecipients: string[] | null = null;
+  try {
+    const { getContactRecipients } = await import("../contactRecipients");
+    dynamicRecipients = await getContactRecipients();
+  } catch (err) {
+    console.warn("[sendContactNotificationEmail] Could not load dynamic recipients:", err);
+  }
+
+  const toAddresses =
+    dynamicRecipients && dynamicRecipients.length > 0
+      ? dynamicRecipients
+      : envRecipients && envRecipients.length > 0
+      ? envRecipients
+      : DEFAULT_CONTACT_RECIPIENTS;
 
   const subject = `[LUMINUS Contacto] ${data.motivo} - ${data.nombre} ${data.apellido}`;
 
@@ -1177,3 +1480,165 @@ export async function sendRegistrationErrorAlertEmail(data: {
   }
 }
 
+
+export async function sendIntroSessionEmail(
+  toEmail: string,
+  options: IntroSessionEmailOptions
+) {
+  if (!toEmail?.trim()) {
+    return { success: false, error: "Missing recipient email" };
+  }
+
+  const startTime = new Date().toISOString();
+  const rawFrom =
+    process.env.NOTIFICATION_FROM_EMAIL ||
+    process.env.SES_FROM_EMAIL ||
+    "notificaciones@luminuslatam.com";
+  const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM");
+  const isAcceptedVariant =
+    options.variant === "accepted_requester" ||
+    options.variant === "accepted_specialist";
+  let calendarUrl: string | null = options.calendarUrl ?? null;
+  let icsAttachment: {
+    RawContent: Uint8Array;
+    FileName: string;
+    ContentType: string;
+    ContentDisposition: "ATTACHMENT";
+  } | null = null;
+
+  if (isAcceptedVariant && options.scheduledDate) {
+    const {
+      buildGoogleCalendarUrl,
+      buildIcsContent,
+      resolveZonedDateTimeToUtc,
+    } = await import("../calendar/ics");
+    const startUtc = resolveZonedDateTimeToUtc(
+      options.scheduledDate,
+      options.startTime,
+      options.timezone
+    );
+    if (startUtc) {
+      const endUtc =
+        (options.endTime
+          ? resolveZonedDateTimeToUtc(
+              options.scheduledDate,
+              options.endTime,
+              options.timezone
+            )
+          : null) || new Date(startUtc.getTime() + 15 * 60 * 1000);
+      const sessionUrl =
+        options.meetingLink && /^https?:\/\//i.test(options.meetingLink.trim())
+          ? options.meetingLink.trim()
+          : "https://app.luminuslatam.com/sesiones";
+      const calendarInput = {
+        uid: `intro-session-${options.scheduledDate}-${options.startTime.replace(":", "")}@luminuslatam.com`,
+        title: `Sesión introductoria LUMINUS con ${options.counterpartyName}`,
+        description: `Sesión introductoria de 15 minutos con ${options.counterpartyName}.`,
+        location: sessionUrl,
+        url: sessionUrl,
+        startUtc,
+        endUtc,
+      };
+      calendarUrl = calendarUrl || buildGoogleCalendarUrl(calendarInput);
+      const icsContent = buildIcsContent(calendarInput);
+      icsAttachment = {
+        RawContent: Buffer.from(icsContent, "utf-8"),
+        FileName: "sesion-luminus.ics",
+        ContentType: "text/calendar; charset=utf-8; method=PUBLISH",
+        ContentDisposition: "ATTACHMENT",
+      };
+    }
+  }
+
+  const subject = getIntroSessionEmailSubject(options);
+  const htmlBody = renderIntroSessionEmailHtml({ ...options, calendarUrl });
+  const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
+  const configurationSet =
+    process.env.SES_CONFIGURATION_NOTIFICACIONES || "luminus-notificaciones";
+
+  writeLocalEmailPreview(toEmail, subject, htmlBody);
+
+  const baseMetadata: any = {
+    sender: fromEmail,
+    region,
+    configurationSet,
+    recipients: [toEmail],
+    variant: options.variant,
+    timeline: [
+      { step: "Solicitud de envío recibida", timestamp: startTime, success: true },
+      {
+        step: "Plantilla HTML renderizada",
+        timestamp: new Date().toISOString(),
+        details: `${Math.round(htmlBody.length / 1024)} KB`,
+        success: true,
+      },
+    ],
+  };
+
+  if (!isSesConfigured()) {
+    const endTime = new Date().toISOString();
+    baseMetadata.rawLog = buildRawLog({
+      action: `Sesión Introductoria (${options.variant})`,
+      recipient: toEmail,
+      sender: fromEmail,
+      subject,
+      region,
+      configurationSet,
+      status: "LOCAL_PREVIEW",
+      startTime,
+      endTime,
+    });
+    await logSentEmail(toEmail, subject, htmlBody, {
+      status: "LOCAL_PREVIEW",
+      metadata: baseMetadata,
+    });
+    return { success: true, mode: "local-preview" };
+  }
+
+  const sesClient = getSesV2Client();
+  const command = new SendEmailCommand({
+    FromEmailAddress: fromEmail,
+    Destination: { ToAddresses: [toEmail] },
+    Content: {
+      Simple: {
+        Subject: { Data: subject, Charset: "UTF-8" },
+        Body: {
+          Html: { Data: htmlBody, Charset: "UTF-8" },
+        },
+        ...(icsAttachment ? { Attachments: [icsAttachment] } : {}),
+      },
+    },
+    ...(configurationSet && { ConfigurationSetName: configurationSet }),
+  });
+
+  try {
+    const response = await sesClient.send(command);
+    const endTime = new Date().toISOString();
+    baseMetadata.rawLog = buildRawLog({
+      action: `Sesión Introductoria (${options.variant})`,
+      recipient: toEmail,
+      sender: fromEmail,
+      subject,
+      region,
+      configurationSet,
+      status: "SUCCESS",
+      messageId: response.MessageId || null,
+      startTime,
+      endTime,
+    });
+    await logSentEmail(toEmail, subject, htmlBody, {
+      status: "SUCCESS",
+      messageId: response.MessageId || null,
+      metadata: baseMetadata,
+    });
+    return { success: true, messageId: response.MessageId };
+  } catch (error: any) {
+    console.error("[SES ERROR] Failed to send intro session email:", error);
+    await logSentEmail(toEmail, subject, htmlBody, {
+      status: "FAILED",
+      errorDetails: error?.message || String(error),
+      metadata: baseMetadata,
+    });
+    return { success: false, error: error?.message };
+  }
+}

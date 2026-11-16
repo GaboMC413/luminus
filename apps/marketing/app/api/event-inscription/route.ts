@@ -21,6 +21,7 @@ export async function POST(req: Request) {
       eventSlug,
       isResend,
       turnstileToken,
+      userTimezone,
     } = body || {};
 
     const turnstileResult = await verifyTurnstileToken(turnstileToken);
@@ -64,8 +65,8 @@ export async function POST(req: Request) {
         dbEvent = await prisma.event.findFirst({
           where: {
             OR: [
-              ...(eventSlug ? [{ slug: eventSlug }] : []),
-              ...(eventTitle ? [{ title: eventTitle }] : []),
+              ...(eventSlug ? [{ slug: String(eventSlug).trim() }] : []),
+              ...(eventTitle ? [{ title: String(eventTitle).trim() }] : []),
             ],
           },
         });
@@ -75,6 +76,13 @@ export async function POST(req: Request) {
       }
     } catch (findErr: any) {
       console.warn("[Event Lookup Error]:", findErr.message || findErr);
+    }
+
+    if (!dbEvent || !resolvedEventId) {
+      return NextResponse.json(
+        { success: false, error: "El evento solicitado no fue encontrado." },
+        { status: 404 }
+      );
     }
 
     // 2. Upsert EventGuest in Database
@@ -148,52 +156,48 @@ export async function POST(req: Request) {
     }
 
     // 4. Send confirmation email via AWS SES from eventos@luminuslatam.com
-    // Always trigger email for every event registration or confirmation request
+    // Always use trusted database event fields to prevent email content/link spoofing
     let emailStatus = "sent";
-    let emailError: string | undefined = undefined;
 
-    const rawYt = youtubeUrl || body?.youtubeId || null;
     let finalYoutubeUrl: string | undefined = undefined;
-    if (rawYt && rawYt.trim()) {
-      const trimmed = rawYt.trim();
-      finalYoutubeUrl = (trimmed.startsWith("http://") || trimmed.startsWith("https://")) ? trimmed : `https://www.youtube.com/watch?v=${trimmed}`;
-    } else if (dbEvent?.youtubeId) {
+    if (dbEvent.youtubeId) {
       finalYoutubeUrl = `https://www.youtube.com/watch?v=${dbEvent.youtubeId}`;
-    } else if (dbEvent?.link && (dbEvent.link.includes("youtube") || dbEvent.link.includes("youtu.be"))) {
+    } else if (dbEvent.link && (dbEvent.link.includes("youtube") || dbEvent.link.includes("youtu.be"))) {
       finalYoutubeUrl = dbEvent.link;
     }
 
     try {
-      console.log(`[SES START] Procesando envío de email para ${cleanEmail} (evento: ${eventTitle || dbEvent?.title || "Evento LUMINUS"})...`);
+      console.log(`[SES START] Procesando envío de email para ${cleanEmail} (evento: ${dbEvent.title})...`);
       const emailRes = await sendEventRegistrationEmail({
         firstName: guest.firstName || cleanFirstName || "Invitado",
         lastName: guest.lastName || cleanLastName,
         email: cleanEmail,
-        eventTitle: eventTitle || dbEvent?.title || "Evento de Bienestar LUMINUS",
-        eventCoverUrl: eventCoverUrl || dbEvent?.coverUrl || null,
-        eventDate: eventDate || (dbEvent?.date ? dbEvent.date.toISOString() : null),
-        timeText: timeText || dbEvent?.timeText || null,
-        speakerName: speakerName || dbEvent?.speakerName || null,
+        eventTitle: dbEvent.title,
+        eventCoverUrl: dbEvent.coverUrl || null,
+        eventDate: dbEvent.date ? dbEvent.date.toISOString() : null,
+        timeText: dbEvent.timeText || null,
+        speakerName: dbEvent.speakerName || null,
         youtubeUrl: finalYoutubeUrl,
-        eventSlug: eventSlug || dbEvent?.slug || null,
+        eventSlug: dbEvent.slug || null,
+        location: dbEvent.location || "Estreno en YouTube",
+        userTimezone: typeof userTimezone === "string" ? userTimezone.slice(0, 80) : null,
+        source: "web",
       });
       console.log(`[Event Registration Email Sent]: ${cleanEmail} (resend=${!!isResend}) MessageId:`, (emailRes as any)?.messageId || "local-preview");
     } catch (emailErr: any) {
       console.error("❌ Error enviando email de confirmación:", JSON.stringify(emailErr, null, 2));
       emailStatus = "failed";
-      emailError = emailErr?.message || String(emailErr);
     }
 
     return NextResponse.json({
       success: true,
       alreadyRegistered,
       emailStatus,
-      ...(emailError ? { emailError } : {}),
     });
   } catch (err: any) {
     console.error("[Event Inscription Route Error]:", err.message || err);
     return NextResponse.json(
-      { success: false, error: err.message || "Error al procesar la inscripción." },
+      { success: false, error: "Error al procesar la inscripción." },
       { status: 500 }
     );
   }

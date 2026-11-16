@@ -1,77 +1,106 @@
 "use client";
 
 import Link from "next/link";
-import { ProfileButton } from "@/components/ui/Button";
+import { Sparkles, Award, RefreshCw, Settings, Lock } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { ProfileSectionCard } from "@/components/ui/ProfileSectionCard";
+import { isMecenas } from "@/lib/membership/access";
 
 interface ProfileMembershipCardProps {
   plan: string;
   createdAt: string;
+  memberSince?: string | null;
+  tier?: string;
   showSettingsButtons?: boolean;
   isPublic?: boolean;
 }
 
-export function ProfileMembershipCard({ plan, createdAt, showSettingsButtons = false, isPublic = false }: ProfileMembershipCardProps) {
-  const getTrialEndDate = (dateStr: string) => {
-    const date = dateStr ? new Date(dateStr) : new Date();
-    date.setMonth(date.getMonth() + 3);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day} / ${month} / ${year}`;
+const MONTHS = [
+  "enero", "febrero", "marzo", "abril", "mayo", "junio",
+  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+];
+
+export function ProfileMembershipCard({
+  createdAt,
+  memberSince,
+  tier,
+  showSettingsButtons = false,
+  isPublic = false,
+}: ProfileMembershipCardProps) {
+  const isMember = isMecenas({ tier });
+
+  const getMemberSinceText = () => {
+    const rawDate = memberSince || createdAt;
+    if (!rawDate) return "";
+    const date = new Date(rawDate);
+    if (isNaN(date.getTime())) return "";
+    return `${MONTHS[date.getMonth()]} de ${date.getFullYear()}`;
   };
 
-  const trialEndDate = getTrialEndDate(createdAt);
+  const memberSinceText = getMemberSinceText();
 
   return (
-    <div className="bg-white rounded-2xl p-4 md:p-5 border border-slate-200 flex flex-col gap-4 md:gap-5 shadow-none relative group">
-      <div className="w-full flex items-start gap-4">
-        <div className="mt-1">
-          <span className="material-symbols-rounded text-slate-400 text-[20px]">award_star</span>
+    <ProfileSectionCard isPublic={isPublic} isEmpty={false}>
+      <div className="w-full flex items-center gap-3.5">
+        <div
+          className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+            isMember ? "bg-amber-50 text-amber-600 border border-amber-200/80" : "bg-slate-100 text-slate-500"
+          }`}
+        >
+          {isMember ? <Sparkles className="w-4 h-4" /> : <Award className="w-4 h-4" />}
         </div>
-        <div className="flex flex-col min-w-0 self-center">
-          <span className="text-sm md:text-base text-slate-900 font-semibold truncate leading-relaxed">Membresía {plan || 'Free'}</span>
-          <p className="text-green-600 text-[11px] font-medium leading-snug tracking-[-0.01em] font-sans mt-0.5 select-none">
-            {isPublic ? "Miembro activo de la comunidad" : `Acceso total hasta el ${trialEndDate}`}
-          </p>
+
+        <div className="flex flex-col min-w-0 gap-0.5">
+          <h3 className="text-title-section text-slate-900 font-bold truncate">
+            {isMember ? "Mecenas LUMINUS" : "Cuenta Gratis"}
+          </h3>
+
+          {isMember ? (
+            <p className="text-meta text-amber-700 font-semibold">
+              Mecenas desde {memberSinceText}
+            </p>
+          ) : (
+            <p className="text-meta text-slate-500">
+              {isPublic ? "Usuario de la comunidad" : "Acceso estándar gratuito"}
+            </p>
+          )}
         </div>
       </div>
 
       {!isPublic && (
         <>
-          <div className="w-full h-px bg-slate-50" />
+          <div className="w-full h-px bg-slate-100" />
 
-          <Link href="/perfil-usuario/configuracion?tab=membership" className="w-full">
-            <ProfileButton
-              onClick={() => { }}
-              icon="autorenew"
-              label="Gestionar membresía"
-              className="w-full"
-            />
-          </Link>
+          <div className="flex flex-col gap-2 w-full">
+            <Link href="/perfil-usuario/configuracion/membresia" className="w-full no-underline">
+              <Button variant="soft" size="sm" fullWidth className="justify-start gap-2">
+                <RefreshCw className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">
+                  {isMember ? "Gestionar membresía" : "Convertirme en Mecenas (USD 5/mes)"}
+                </span>
+              </Button>
+            </Link>
 
-          {showSettingsButtons && (
-            <div className="flex flex-col gap-2 w-full">
-              <Link href="/perfil-usuario/configuracion" className="w-full">
-                <ProfileButton
-                  onClick={() => { }}
-                  icon="settings"
-                  label="Ajustes de la cuenta"
-                  className="w-full"
-                />
-              </Link>
+            {showSettingsButtons && (
+              <>
+                <Link href="/perfil-usuario/configuracion" className="w-full no-underline">
+                  <Button variant="soft" size="sm" fullWidth className="justify-start gap-2">
+                    <Settings className="w-3.5 h-3.5 shrink-0" />
+                    <span>Ajustes de la cuenta</span>
+                  </Button>
+                </Link>
 
-              <Link href="/perfil-usuario/configuracion?tab=password" className="w-full">
-                <ProfileButton
-                  onClick={() => { }}
-                  icon="lock"
-                  label="Cambiar contraseña"
-                  className="w-full"
-                />
-              </Link>
-            </div>
-          )}
+                <Link href="/perfil-usuario/configuracion/contrasena" className="w-full no-underline">
+                  <Button variant="soft" size="sm" fullWidth className="justify-start gap-2">
+                    <Lock className="w-3.5 h-3.5 shrink-0" />
+                    <span>Cambiar contraseña</span>
+                  </Button>
+                </Link>
+              </>
+            )}
+          </div>
         </>
       )}
-    </div>
+    </ProfileSectionCard>
   );
 }

@@ -5,11 +5,9 @@ import { serializePost } from "@/lib/community/posts";
 
 export const runtime = "nodejs";
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  const session = getCurrentSession();
+export async function PATCH(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
+  const session = await getCurrentSession();
 
   if (!session || session.role !== "ADMIN") {
     return NextResponse.json(

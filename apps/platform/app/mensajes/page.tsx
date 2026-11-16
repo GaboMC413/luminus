@@ -5,10 +5,12 @@ import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Modal from "@/components/ui/Modal";
+import { BackButton } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { SelectInput } from "@/components/ui/SelectInput";
 import { formatRelativeTime } from "@/components/ui/PlatformNavbar";
 import { isUuid } from "@/utils/validation";
-import { PageLoader } from "@/components/ui/PageLoader";
+import { MessagesSkeleton, Skeleton } from "@/components/ui/Skeleton";
 import { DotSpinner } from "@/components/ui/DotSpinner";
 import { formatMessageBody, formatShortTime, formatChatDateDivider } from "@/utils/messages";
 
@@ -674,22 +676,18 @@ function MessagesContent() {
           : "px-4 md:px-6 py-4 md:py-4"
       }`}>
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden">
-          <div className={`items-center gap-3 mb-3 md:mb-4 shrink-0 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}>
-            <button
-              onClick={() => router.back()}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900 cursor-pointer"
-              title="Volver"
-            >
-              <span className="material-symbols-rounded text-[20px]">arrow_back</span>
-            </button>
-            <h1 className="text-xl md:text-2xl text-slate-900 font-semibold font-jakarta">Mensajes</h1>
-          </div>
+          <PageHeader
+            title="Mensajes"
+            showBack
+            backFallbackHref="/inicio"
+            className={`mb-3 md:mb-4 ${mobileView === 'list' ? 'flex' : 'hidden md:flex'}`}
+          />
 
           {error && (
             <div className="mb-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 flex items-center justify-between shadow-none">
               <span>{error}</span>
               <button
-                onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/comunidad")}
+                onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/inicio")}
                 className="text-xs font-semibold text-slate-900 underline hover:no-underline cursor-pointer bg-transparent border-none font-jakarta"
               >
                 Volver
@@ -714,7 +712,20 @@ function MessagesContent() {
 
               <div className="flex-1 min-h-0 overflow-y-auto thin-scrollbar p-2 flex flex-col gap-2">
                 {isLoading && (
-                  <div className="p-8 flex justify-center items-center"><DotSpinner size={24} color="black" /></div>
+                  <div className="flex flex-col gap-2 p-1">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="flex items-center gap-3 p-2">
+                        <Skeleton className="w-12 h-12 rounded-xl shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="flex justify-between">
+                            <Skeleton className="h-3.5 w-24 rounded-md" />
+                            <Skeleton className="h-2.5 w-10 rounded-md" />
+                          </div>
+                          <Skeleton className="h-3 w-36 rounded-md" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
 
                 {!isLoading && filteredConversations.length === 0 && (
@@ -729,7 +740,7 @@ function MessagesContent() {
                       </p>
                     </div>
                     <button
-                      onClick={() => router.push("/comunidad")}
+                      onClick={() => router.push("/inicio")}
                       className="h-10 px-6 bg-black hover:bg-zinc-800 text-white rounded-xl text-sm font-semibold transition duration-200 cursor-pointer border-none shadow-sm flex items-center justify-center"
                     >
                       Ir a la comunidad
@@ -787,7 +798,7 @@ function MessagesContent() {
                 <div className={`border-b border-slate-100 flex items-center gap-3 bg-white shrink-0 touch-none ${
                   mobileView === "chat" ? "py-2 px-3 md:p-3" : "p-3"
                 }`}>
-                  <button
+                  <BackButton
                     onClick={() => {
                       if (document.activeElement === textareaRef.current) {
                         textareaRef.current?.blur();
@@ -796,16 +807,14 @@ function MessagesContent() {
                       window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
                       const from = searchParams.get("from");
                       if (from === "profile" && recipientId) {
-                        router.push(`/comunidad/public-profile?id=${recipientId}`);
+                        router.push(`/perfil/${recipientId}`);
                       } else {
                         setMobileView('list');
                       }
                     }}
-                    className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer mr-1"
                     title="Volver"
-                  >
-                    <span className="material-symbols-rounded text-[22px]">arrow_back</span>
-                  </button>
+                    className="md:hidden mr-1"
+                  />
                   <div className={`bg-slate-100 animate-pulse shrink-0 ${
                     mobileView === "chat"
                       ? "w-8 h-8 rounded-lg md:w-11 md:h-11 md:rounded-[10px]"
@@ -842,7 +851,7 @@ function MessagesContent() {
                   Conecta con personas en la comunidad para iniciar una conversacion y enviarles mensajes privados.
                 </p>
                 <button
-                  onClick={() => router.push("/comunidad")}
+                  onClick={() => router.push("/inicio")}
                   className="h-11 px-6 bg-black text-white rounded-xl text-sm font-semibold hover:bg-zinc-800 transition duration-200"
                 >
                   Explorar la Comunidad
@@ -859,7 +868,7 @@ function MessagesContent() {
                 }`}>
                   <div className="flex items-center gap-3 min-w-0">
                     {/* Mobile Back Button */}
-                    <button
+                    <BackButton
                       onClick={() => {
                         if (document.activeElement === textareaRef.current) {
                           textareaRef.current?.blur();
@@ -868,16 +877,14 @@ function MessagesContent() {
                         window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
                         const from = searchParams.get("from");
                         if (from === "profile") {
-                          router.push(`/comunidad/public-profile?id=${selectedConv.participant.id}`);
+                          router.push(`/perfil/${selectedConv.participant.id}`);
                         } else {
                           setMobileView('list');
                         }
                       }}
-                      className="md:hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 transition-colors text-slate-500 hover:text-black border-none bg-transparent cursor-pointer mr-1 shrink-0"
                       title="Volver"
-                    >
-                      <span className="material-symbols-rounded text-[22px]">arrow_back</span>
-                    </button>
+                      className="md:hidden mr-1"
+                    />
 
                     <img
                       src={selectedConv.participant.avatar_url || fallbackAvatar(selectedConv.participant.name)}
@@ -894,7 +901,7 @@ function MessagesContent() {
                       </h2>
                       {selectedConv.participant.name?.toLowerCase() !== "luminus" && selectedConv.participant.id !== "50d13047-bab8-44f1-9541-a821113845cc" && selectedConv.participant.id !== "mock-luminus" && (
                         <Link
-                          href={`/comunidad/public-profile?id=${selectedConv.participant.id}`}
+                          href={`/perfil/${selectedConv.participant.id}`}
                           className="h-8 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer font-jakarta flex items-center justify-center shrink-0 text-decoration-none border-none outline-none"
                         >
                           Ver perfil
@@ -1213,7 +1220,7 @@ function MessagesContent() {
 
 export default function MessagesPage() {
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={<MessagesSkeleton />}>
       <MessagesContent />
     </Suspense>
   );

@@ -1,8 +1,13 @@
 "use client";
 
 import React, { useRef } from "react";
-import { Button } from "@/components/ui/Button";
 import { SelectInput } from "@/components/ui/SelectInput";
+import {
+  StepHeader,
+  SelectionCard,
+  TagSelector,
+  StepperNav,
+} from "./molecules";
 
 const daysOfWeek = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 const hoursOptions = [
@@ -25,7 +30,7 @@ const hoursOptions = [
 ];
 
 export const TIMEZONE_OPTIONS = [
-  // América Latina (Capitales y principales zonas)
+  // América Latina
   "America/Argentina/Buenos_Aires (GMT-3)",
   "America/Argentina/Cordoba (GMT-3)",
   "America/Argentina/Mendoza (GMT-3)",
@@ -53,7 +58,7 @@ export const TIMEZONE_OPTIONS = [
   "America/Tegucigalpa (GMT-6)",
   "America/Tijuana (GMT-8/GMT-7)",
 
-  // Estados Unidos y Canadá (Ciudades más comunes)
+  // Estados Unidos y Canadá
   "America/New_York (GMT-5/GMT-4 - Este: Nueva York, Miami)",
   "America/Chicago (GMT-6/GMT-5 - Central: Chicago, Houston)",
   "America/Denver (GMT-7/GMT-6 - Montaña: Denver, Phoenix)",
@@ -167,186 +172,126 @@ export function Step3Sessions({
 
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-300">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-[24px] md:text-[28px] font-bold text-slate-900 font-jakarta leading-tight">
-          Sesiones introductorias
-        </h1>
-        <p className="text-[13px] md:text-[14px] text-slate-500 font-sans">
-          Ofrece encuentros de 15 minutos para que nuevos usuarios conozcan tu trabajo.
-        </p>
-      </div>
+      <StepHeader
+        title="Sesiones introductorias"
+        subtitle="Ofrece encuentros de 15 minutos para que nuevos usuarios conozcan tu trabajo."
+      />
 
-
-
-      {/* Question & 2 Options */}
+      {/* Decision Section */}
       <div ref={sessionsContainerRef} className="flex flex-col gap-3 mt-1">
-        <label className="text-label ml-1 font-jakarta font-bold text-slate-900">
-          ¿Deseas ofrecer sesiones introductorias?
+        <label className="text-xs font-semibold text-slate-700 font-jakarta leading-none select-none">
+          ¿Deseas ofrecer sesiones introductorias? *
         </label>
         {errorField === "sessionsChoice" && (
-          <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">Selecciona una opción para continuar</p>
+          <p className="text-xs font-medium text-rose-600 px-0.5">
+            Selecciona una opción para continuar
+          </p>
         )}
 
-        <div className="grid grid-cols-1 gap-3">
-          {/* Option 1 */}
-          <div
-            onClick={() => {
+        <div className="flex flex-col gap-3">
+          {/* Option 1: Yes */}
+          <SelectionCard
+            title="Sí, ofrecer sesiones"
+            description="Los usuarios podrán solicitarte encuentros de 15 minutos."
+            selected={sessionsChoice === "yes"}
+            onSelect={() => {
               setSessionsChoice("yes");
               setSessionsEnabled(true);
               if (errorField === "sessionsChoice") setErrorField(null);
             }}
-            className={`flex flex-col p-4 rounded-xl border transition-all duration-300 cursor-pointer select-none ${
-              sessionsChoice === "yes"
-                ? "border-slate-900 bg-white"
-                : "border-slate-200 bg-white hover:border-slate-300"
-            }`}
           >
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[14px] font-bold text-slate-900 font-jakarta">
-                Sí, ofrecer sesiones
-              </span>
-              <span className="text-[13px] text-slate-500 font-sans leading-normal">
-                Los usuarios podrán solicitarte encuentros de 15 minutos.
-              </span>
-            </div>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-0.5">
+                <h3 className="text-sm font-bold text-slate-900 font-jakarta">
+                  Disponibilidad
+                </h3>
+                <p className="text-xs text-slate-500 font-sans">
+                  Selecciona los días y horarios en los que puedes recibir solicitudes.
+                </p>
+              </div>
 
-            {/* Expanded Availability inside Option 1 */}
-            {sessionsChoice === "yes" && (
-              <div
-                className="flex flex-col gap-4 mt-4 pt-4 border-t border-slate-200/80 animate-in fade-in duration-300"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="flex flex-col gap-0.5">
-                  <h3 className="text-[14px] font-bold text-slate-900 font-jakarta">
-                    Disponibilidad
-                  </h3>
-                  <p className="text-slate-500 text-[13px]">
-                    Selecciona los días y horarios en los que puedes recibir solicitudes.
-                  </p>
-                </div>
+              {/* Days availability */}
+              <div ref={daysContainerRef} className="mt-1">
+                <TagSelector
+                  label="Días disponibles *"
+                  tags={daysOfWeek}
+                  selectedTags={selectedDays}
+                  onToggle={toggleDay}
+                  error={errorField === "days" ? "Selecciona al menos un día de disponibilidad" : undefined}
+                />
+              </div>
 
-                {/* Days availability */}
-                <div ref={daysContainerRef} className="flex flex-col gap-2 mt-1">
-                  <label className="text-label ml-1 font-jakarta font-bold text-slate-800">
-                    Días disponibles
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {daysOfWeek.map((day) => {
-                      const isChecked = selectedDays.includes(day);
-                      return (
-                        <button
-                          key={day}
-                          type="button"
-                          onClick={() => toggleDay(day)}
-                          className={`h-8 md:h-9 px-3.5 md:px-4 rounded-full text-[12px] md:text-[13px] font-medium transition-all duration-200 border cursor-pointer select-none flex items-center gap-1.5 ${
-                            isChecked
-                              ? "bg-emerald-600 border-emerald-600 text-white"
-                              : "bg-white border-slate-200 text-slate-900 hover:border-slate-300"
-                          }`}
-                        >
-                          {day}
-                          {isChecked && (
-                            <span className="material-symbols-rounded text-[14px] shrink-0">check</span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {errorField === "days" && (
-                    <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">
-                      Selecciona al menos un día de disponibilidad
-                    </p>
-                  )}
-                </div>
-
-                {/* Time dropdowns */}
-                <div ref={timeContainerRef} className="flex flex-col gap-1.5 mt-1">
-                  <div className="grid grid-cols-2 gap-4">
-                    <SelectInput
-                      label="Desde"
-                      value={startTime}
-                      options={hoursOptions.slice(0, -1)}
-                      error={errorField === "time" && !startTime}
-                      placeholder="Seleccionar"
-                      onSelect={(val) => {
-                        setStartTime(val);
-                        if (errorField === "time") setErrorField(null);
-                        if (endTime && endTime <= val) {
-                          setEndTime("");
-                        }
-                      }}
-                    />
-                    <SelectInput
-                      label="Hasta"
-                      value={endTime}
-                      options={startTime ? hoursOptions.filter((h) => h > startTime) : hoursOptions}
-                      error={errorField === "time" && !endTime}
-                      placeholder="Seleccionar"
-                      onSelect={(val) => {
-                        setEndTime(val);
-                        if (errorField === "time") setErrorField(null);
-                      }}
-                    />
-                  </div>
-                  {errorField === "time" && (
-                    <p className="text-[#FF3D3D] text-[12px] font-bold ml-1">
-                      Selecciona el horario desde y hasta
-                    </p>
-                  )}
-                </div>
-
-                {/* Timezone dropdown */}
-                <div className="flex flex-col gap-1.5 mt-2">
-                  <label className="text-label ml-1 font-jakarta font-bold text-slate-800">
-                    Zona horaria
-                  </label>
+              {/* Time dropdowns */}
+              <div ref={timeContainerRef} className="flex flex-col gap-1.5 mt-1">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <SelectInput
-                    value={timeZone}
-                    options={TIMEZONE_OPTIONS}
-                    placeholder="Seleccionar zona horaria"
-                    onSelect={(val) => setTimeZone(val)}
+                    label="Desde *"
+                    value={startTime}
+                    options={hoursOptions.slice(0, -1)}
+                    error={Boolean(errorField === "time" && !startTime)}
+                    placeholder="Selecciona hora"
+                    onSelect={(val) => {
+                      setStartTime(val);
+                      if (errorField === "time") setErrorField(null);
+                      if (endTime && endTime <= val) {
+                        setEndTime("");
+                      }
+                    }}
+                  />
+                  <SelectInput
+                    label="Hasta *"
+                    value={endTime}
+                    options={startTime ? hoursOptions.filter((h) => h > startTime) : hoursOptions}
+                    error={Boolean(errorField === "time" && !endTime)}
+                    placeholder="Selecciona hora"
+                    onSelect={(val) => {
+                      setEndTime(val);
+                      if (errorField === "time") setErrorField(null);
+                    }}
                   />
                 </div>
+                {errorField === "time" && (
+                  <p className="text-xs font-medium text-rose-600 px-0.5">
+                    Selecciona el horario desde y hasta
+                  </p>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Option 2 */}
-          <div
-            onClick={() => {
+              {/* Timezone dropdown */}
+              <div className="mt-1">
+                <SelectInput
+                  label="Zona horaria *"
+                  value={timeZone}
+                  options={TIMEZONE_OPTIONS}
+                  placeholder="Seleccionar zona horaria"
+                  onSelect={(val) => setTimeZone(val)}
+                />
+              </div>
+            </div>
+          </SelectionCard>
+
+          {/* Option 2: Later */}
+          <SelectionCard
+            title="Configurar más adelante"
+            description="Podrás habilitar y configurar tus sesiones introductorias en cualquier momento desde tu perfil."
+            selected={sessionsChoice === "no"}
+            onSelect={() => {
               setSessionsChoice("no");
               setSessionsEnabled(false);
               if (errorField === "days") setErrorField(null);
               if (errorField === "sessionsChoice") setErrorField(null);
             }}
-            className={`flex flex-col p-4 rounded-xl border transition-all duration-300 cursor-pointer select-none ${
-              sessionsChoice === "no"
-                ? "border-slate-900 bg-white"
-                : "border-slate-200 bg-white hover:border-slate-300"
-            }`}
-          >
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[14px] font-bold text-slate-900 font-jakarta">
-                Configurar más adelante
-              </span>
-              <span className="text-[13px] text-slate-500 font-sans leading-normal">
-                Podrás habilitar las sesiones desde tu perfil.
-              </span>
-            </div>
-          </div>
+          />
         </div>
       </div>
 
-      {/* Footer Actions */}
-      <div className="flex justify-between items-center gap-3 mt-8 pt-2">
-        <Button onClick={onBack} variant="back">
-          Atrás
-        </Button>
-        <Button onClick={handleNextStep3} variant="primary" className="!w-auto px-6 gap-2">
-          Continuar
-          <span className="material-symbols-rounded text-[18px]">arrow_forward</span>
-        </Button>
-      </div>
+      <StepperNav
+        onBack={onBack}
+        onNext={handleNextStep3}
+        nextLabel="Siguiente"
+      />
     </div>
   );
 }
+
+export default Step3Sessions;

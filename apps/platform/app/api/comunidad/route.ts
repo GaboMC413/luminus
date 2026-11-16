@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
@@ -82,17 +82,15 @@ export async function GET(request: Request) {
     }
 
     if (query) {
-      try {
-        await prisma.activityLog.create({
-          data: {
-            userId: session.userId,
-            action: "COMMUNITY_SEARCH",
-            details: JSON.stringify({ query }),
-          },
-        });
-      } catch (logError) {
+      void prisma.activityLog.create({
+        data: {
+          userId: session.userId,
+          action: "COMMUNITY_SEARCH",
+          details: JSON.stringify({ query }),
+        },
+      }).catch((logError) => {
         console.error("Failed to log community search:", logError);
-      }
+      });
 
       andConditions.push({
         OR: [

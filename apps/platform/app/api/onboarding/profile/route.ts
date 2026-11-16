@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { parsePhoneNumberFromString, CountryCode } from "libphonenumber-js";
 import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
@@ -32,7 +32,7 @@ function slugify(value: string) {
 }
 
 export async function POST(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
@@ -169,13 +169,40 @@ export async function POST(request: Request) {
     });
 
     if (data.isOnboarded === true && !wasAlreadyOnboarded) {
+      const runWelcomeTasks = async () => {
+        try {
+          const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
+          await sendWelcomeMessage(prisma, session.userId);
+
+          const fullUser = await prisma.user.findUnique({
+            where: { id: session.userId },
+            select: { tier: true, stripeSubscriptionId: true, profile: { select: { selectedPlan: true } } },
+          });
+
+          const isUserMecenas = fullUser?.tier === "MECENAS";
+          const userName = firstName || profile?.firstName || undefined;
+
+          if (isUserMecenas) {
+            const { sendMecenasWelcomeEmail } = await import("@/lib/mails/sender");
+            const plan = fullUser?.profile?.selectedPlan?.toLowerCase() || "";
+            const isAnnual = plan.includes("annual") || plan.includes("year") || plan.includes("anual");
+            await sendMecenasWelcomeEmail(session.email, {
+              name: userName,
+              interval: isAnnual ? "year" : "month",
+            });
+          } else {
+            const { sendWelcomeEmail } = await import("@/lib/mails/sender");
+            await sendWelcomeEmail(session.email, userName);
+          }
+        } catch (welcomeError) {
+          console.error("Welcome message/email trigger during onboarding completion failed:", welcomeError);
+        }
+      };
+
       try {
-        const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
-        await sendWelcomeMessage(prisma, session.userId);
-        const { sendWelcomeEmail } = await import("@/lib/mails/sender");
-        await sendWelcomeEmail(session.email, firstName || profile?.firstName || undefined);
-      } catch (welcomeError) {
-        console.error("Welcome message/email trigger during onboarding completion failed:", welcomeError);
+        after(runWelcomeTasks);
+      } catch {
+        void runWelcomeTasks();
       }
     }
 

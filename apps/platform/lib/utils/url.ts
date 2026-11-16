@@ -1,6 +1,6 @@
 export function getSafeRedirectUrl(
   urlParam?: string | null,
-  fallback: string = "/comunidad"
+  fallback: string = "/inicio"
 ): string {
   if (!urlParam) return fallback;
 

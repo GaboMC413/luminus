@@ -1,357 +1,53 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
-import { SuccessModal } from "@/components/ui/SuccessModal";
-import { Modal } from "@/components/ui/Modal";
-import { Button } from "@/components/ui/Button";
-import { COUNTRIES, Country } from "@/utils/countries";
-import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { SettingsGhostLoader } from "@/features/user-profile/components/settings/SettingsGhostLoader";
 
-// Modular settings components
-import { PersonalInfoSection } from "@/features/user-profile/components/settings/PersonalInfoSection";
-import { EmailSection } from "@/features/user-profile/components/settings/EmailSection";
-import { PhoneSection } from "@/features/user-profile/components/settings/PhoneSection";
-import { PasswordSection } from "@/features/user-profile/components/settings/PasswordSection";
-import { MembershipSection } from "@/features/user-profile/components/settings/MembershipSection";
-
-import { PageLoader } from "@/components/ui/PageLoader";
-
-export default function SettingsPage() {
+export default function SettingsIndexPage() {
   return (
-    <Suspense fallback={<PageLoader />}>
-      <SettingsContent />
+    <Suspense fallback={<SettingsGhostLoader />}>
+      <SettingsRedirectHandler />
     </Suspense>
   );
 }
 
-function SettingsContent() {
+function SettingsRedirectHandler() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeTab, setActiveTab] = useState("personal");
-  const [mobileView, setMobileView] = useState<'menu' | 'content'>('menu');
-  const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
-  const [attentionCounter, setAttentionCounter] = useState(0);
-
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleDeleteAccount = () => {
-    setDeleteModalOpen(true);
-  };
-
-  const confirmDeleteAccount = async () => {
-    setIsDeleting(true);
-    try {
-      const response = await fetch("/api/account", { method: "DELETE" });
-      if (response.ok) {
-        router.push("/auth/iniciar-sesion");
-      } else {
-        const data = await response.json();
-        alert(data.message || "No se pudo eliminar la cuenta.");
-      }
-    } catch (error) {
-      alert("Error de conexión al eliminar la cuenta.");
-    } finally {
-      setIsDeleting(false);
-      setDeleteModalOpen(false);
-    }
-  };
-
-  // Profile data states reactively synchronized to localStorage
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [profession, setProfession] = useState("");
-  const [city, setCity] = useState("");
-  const [country, setCountry] = useState("");
-  const [gender, setGender] = useState("");
-  const [birthdate, setBirthdate] = useState("");
-
-  const [phone, setPhone] = useState("");
-  const [phoneCountry, setPhoneCountry] = useState<Country>({ code: 'XX', dial: '+00', name: 'Seleccionar país', priority: false });
-  const [email, setEmail] = useState("");
-  const [createdAt, setCreatedAt] = useState("");
-
-  // Custom SuccessModal state for LUMINUS
-  const [successModalOpen, setSuccessModalOpen] = useState(false);
-  const [successModalConfig, setSuccessModalConfig] = useState({ title: "", message: "" });
-
-  const showSuccess = (title: string, message: string) => {
-    setSuccessModalConfig({ title, message });
-    setSuccessModalOpen(true);
-  };
-
-  // Load profile data from the active session and temporary local profile state.
-  useEffect(() => {
-    async function loadProfile() {
-      const response = await fetch("/api/profile", {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        router.push("/auth/iniciar-sesion");
-        return;
-      }
-
-      const data = await response.json();
-      const profile = data.profile ?? {};
-      setEmail(data.email ?? "");
-      setFirstName(profile.first_name ?? "");
-      setLastName(profile.last_name ?? "");
-      setProfession(profile.profession ?? "");
-      setCity(profile.city ?? "");
-      setCountry(profile.country ?? "");
-      setGender(profile.gender ?? "");
-
-      if (profile.birthdate) {
-        const parts = String(profile.birthdate).split("-");
-        setBirthdate(parts.length === 3 ? `${parts[2]} / ${parts[1]} / ${parts[0]}` : profile.birthdate);
-      }
-
-      const savedPhone = profile.phone_number ?? "";
-      const matched = COUNTRIES.find(c => savedPhone.startsWith(c.dial));
-      if (matched) {
-        setPhoneCountry(matched);
-        setPhone(savedPhone.slice(matched.dial.length).trim());
-      } else {
-        setPhone(savedPhone);
-      }
-      setCreatedAt(profile.created_at || new Date().toISOString());
-    }
-
-    loadProfile();
-
-  }, [router]);
-
-  const saveProfile = async (payload: Record<string, unknown>) => {
-    const response = await fetch("/api/profile", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      throw new Error("Could not save profile.");
-    }
-
-    return response.json();
-  };
 
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab && ["personal", "email", "phone", "password", "membership"].includes(tab)) {
-      setActiveTab(tab);
-      setMobileView('content');
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("tab");
+    const queryString = params.toString() ? `?${params.toString()}` : "";
+
+    if (tab === "membership") {
+      router.replace(`/perfil-usuario/configuracion/membresia${queryString}`);
+      return;
     }
-  }, [searchParams]);
+    if (tab === "password") {
+      router.replace(`/perfil-usuario/configuracion/contrasena${queryString}`);
+      return;
+    }
+    if (tab === "phone") {
+      router.replace(`/perfil-usuario/configuracion/celular${queryString}`);
+      return;
+    }
+    if (tab === "personal") {
+      router.replace(`/perfil-usuario?edit=personal`);
+      return;
+    }
+    if (tab === "email") {
+      router.replace(`/perfil-usuario/configuracion/email${queryString}`);
+      return;
+    }
 
-  // Clear editing state when switching tabs
-  useEffect(() => {
-    setEditingFieldId(null);
-  }, [activeTab]);
+    // Default desktop users to /email subpage
+    if (window.innerWidth >= 768) {
+      router.replace(`/perfil-usuario/configuracion/email${queryString}`);
+    }
+  }, [router, searchParams]);
 
-  const tabs = [
-    { id: "personal", label: "Información personal", icon: "person" },
-    { id: "email", label: "Email", icon: "mail" },
-    { id: "phone", label: "Teléfono", icon: "call" },
-    { id: "password", label: "Contraseña", icon: "lock" },
-    { id: "membership", label: "Membresía", icon: "award_star" },
-  ];
-
-  const genderSuffix = gender === "Mujer" ? "segura" : gender === "Hombre" ? "seguro" : "segure";
-
-  return (
-    <div className="flex-1 w-full flex flex-col bg-slate-50">
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 lg:px-8 pt-4 pb-6 md:py-8">
-        <div className="w-full max-w-6xl mx-auto">
-
-          {/* Header */}
-          <div className="flex items-center gap-3 mb-4 md:mb-6">
-            {/* On mobile, if we are in content view, clicking back goes to the menu view */}
-            <div className="md:hidden">
-              {mobileView === 'content' ? (
-                <button
-                  onClick={() => setMobileView('menu')}
-                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900 cursor-pointer"
-                  title="Volver a ajustes"
-                >
-                  <span className="material-symbols-rounded text-[20px]">arrow_back</span>
-                </button>
-              ) : (
-                <Link
-                  href="/perfil-usuario"
-                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900"
-                  title="Volver al perfil"
-                >
-                  <span className="material-symbols-rounded text-[20px]">arrow_back</span>
-                </Link>
-              )}
-            </div>
-
-            {/* On tablet/desktop, always show the link back to perfil-usuario */}
-            <div className="hidden md:block">
-              <Link
-                href="/perfil-usuario"
-                className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900"
-                title="Volver al perfil"
-              >
-                <span className="material-symbols-rounded text-[20px]">arrow_back</span>
-              </Link>
-            </div>
-
-            <h1 className="text-xl text-slate-900 font-semibold font-jakarta">
-              <span className="md:inline hidden">Configuración de la cuenta</span>
-              <span className="md:hidden">
-                {mobileView === 'menu' ? 'Configuración de la cuenta' : tabs.find(t => t.id === activeTab)?.label}
-              </span>
-            </h1>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4 lg:gap-8 items-start">
-
-            {/* Sidebar Navigation */}
-            <div className={`md:col-span-4 lg:col-span-3 flex flex-col gap-3 ${mobileView === 'menu' ? 'flex' : 'hidden md:flex'}`}>
-              <div className="flex flex-col gap-1 bg-white rounded-2xl border border-slate-200 p-2">
-                {tabs.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => {
-                      setActiveTab(tab.id);
-                      setMobileView('content');
-                    }}
-                    className={`flex items-center text-left gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 text-[14px] font-semibold group ${activeTab === tab.id
-                      ? "bg-black text-white"
-                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                      }`}
-                  >
-                    <span className={`material-symbols-rounded text-[20px] transition-colors ${activeTab === tab.id ? "text-white" : "text-slate-400 group-hover:text-slate-900"}`}>
-                      {tab.icon}
-                    </span>
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={handleDeleteAccount}
-                className="w-full flex items-center text-left gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 text-[14px] font-semibold group bg-slate-100 text-slate-400 hover:bg-red-50 hover:text-red-500 border border-transparent hover:border-red-200 cursor-pointer active:scale-95 select-none"
-              >
-                <span className="material-symbols-rounded text-[20px] text-slate-400 group-hover:text-red-500 transition-colors">
-                  delete
-                </span>
-                Eliminar cuenta
-              </button>
-            </div>
-
-            {/* Content Area */}
-            <div className={`md:col-span-8 lg:col-span-9 gap-6 ${mobileView === 'content' ? 'flex flex-col' : 'hidden md:flex md:flex-col'}`}>
-              <div className="bg-white rounded-2xl border border-slate-200 p-5 md:p-10 shadow-none min-h-[400px]">
-                {activeTab === "personal" && (
-                  <PersonalInfoSection
-                    firstName={firstName}
-                    setFirstName={setFirstName}
-                    lastName={lastName}
-                    setLastName={setLastName}
-                    profession={profession}
-                    setProfession={setProfession}
-                    city={city}
-                    setCity={setCity}
-                    country={country}
-                    setCountry={setCountry}
-                    gender={gender}
-                    setGender={setGender}
-                    birthdate={birthdate}
-                    setBirthdate={setBirthdate}
-                    editingFieldId={editingFieldId}
-                    setEditingFieldId={setEditingFieldId}
-                    attentionCounter={attentionCounter}
-                    setAttentionCounter={setAttentionCounter}
-                    onProfileSave={saveProfile}
-                  />
-                )}
-                {activeTab === "email" && (
-                  <EmailSection
-                    email={email}
-                    setEmail={setEmail}
-                    editingFieldId={editingFieldId}
-                    setEditingFieldId={setEditingFieldId}
-                    attentionCounter={attentionCounter}
-                    setAttentionCounter={setAttentionCounter}
-                    showSuccess={showSuccess}
-                  />
-                )}
-                {activeTab === "phone" && (
-                  <PhoneSection
-                    phone={phone}
-                    setPhone={setPhone}
-                    phoneCountry={phoneCountry}
-                    setPhoneCountry={setPhoneCountry}
-                    editingFieldId={editingFieldId}
-                    setEditingFieldId={setEditingFieldId}
-                    attentionCounter={attentionCounter}
-                    setAttentionCounter={setAttentionCounter}
-                    onProfileSave={saveProfile}
-                  />
-                )}
-                {activeTab === "password" && (
-                  <PasswordSection
-                    editingFieldId={editingFieldId}
-                    setEditingFieldId={setEditingFieldId}
-                    attentionCounter={attentionCounter}
-                    setAttentionCounter={setAttentionCounter}
-                    showSuccess={showSuccess}
-                  />
-                )}
-                {activeTab === "membership" && (
-                  <MembershipSection
-                    createdAt={createdAt}
-                    showSuccess={showSuccess}
-                  />
-                )}
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-
-      <SuccessModal
-        isOpen={successModalOpen}
-        onClose={() => setSuccessModalOpen(false)}
-        title={successModalConfig.title}
-        message={successModalConfig.message}
-      />
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        title="Eliminar cuenta"
-        footer={
-          <>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteModalOpen(false)}
-              className="flex-1"
-              disabled={isDeleting}
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="primary"
-              onClick={confirmDeleteAccount}
-              className="flex-1 !bg-red-500 hover:!bg-red-600 border-red-500"
-              disabled={isDeleting}
-            >
-              {isDeleting ? "Eliminando..." : "Eliminar"}
-            </Button>
-          </>
-        }
-      >
-        <p className="text-slate-600 text-[15px] font-sans">
-          ¿Estás {genderSuffix} de querer eliminar esta cuenta? Tu perfil dejará de ser visible para los demás usuarios.
-        </p>
-      </Modal>
-    </div>
-  );
+  return null;
 }

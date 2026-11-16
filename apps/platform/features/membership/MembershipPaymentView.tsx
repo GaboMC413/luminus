@@ -1,0 +1,749 @@
+"use client";
+
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { BillingAddressInput, BillingAddressData } from "@/components/ui/BillingAddressInput";
+import { InputField } from "@/components/ui/InputField";
+import { Button } from "@/components/ui/Button";
+import { CreditCard } from "lucide-react";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+
+const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
+  : null;
+
+const ELEMENT_STYLE = {
+  base: {
+    fontSize: "14px",
+    fontFamily: "Plus Jakarta Sans, system-ui, -apple-system, sans-serif",
+    color: "#0f172a",
+    letterSpacing: "0.025em",
+    "::placeholder": {
+      color: "#94a3b8",
+    },
+  },
+  invalid: {
+    color: "#dc2626",
+  },
+};
+
+function isPlaceholderEmail(value?: string | null): boolean {
+  if (!value) return true;
+  const clean = value.trim().toLowerCase();
+  return clean.startsWith("facebook_") && clean.endsWith("@luminus.lat");
+}
+
+interface PaymentFormProps {
+  billingCycle: "annual" | "monthly";
+  subscriptionData: {
+    clientSecret: string | null;
+    subscriptionId: string;
+    customerId: string;
+    interval?: "month" | "year";
+    isMock?: boolean;
+  } | null;
+  loadingIntent: boolean;
+  intentError: string | null;
+  isFromSettings: boolean;
+  isOnboarded: boolean;
+  onSwitchBilling: (newCycle: "annual" | "monthly") => void;
+  selectedAnnualInStep1: boolean;
+  defaultEmail: string;
+  defaultCardHolderName: string;
+  defaultCity: string;
+  defaultCountry: string;
+  isSuccess: boolean;
+  setIsSuccess: (val: boolean) => void;
+}
+
+function PaymentForm({
+  billingCycle,
+  subscriptionData,
+  loadingIntent,
+  intentError,
+  isFromSettings,
+  isOnboarded,
+  onSwitchBilling,
+  selectedAnnualInStep1,
+  defaultEmail,
+  defaultCardHolderName,
+  defaultCity,
+  defaultCountry,
+  isSuccess,
+  setIsSuccess,
+}: PaymentFormProps) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const router = useRouter();
+
+  const isAnnual = billingCycle === "annual";
+
+  // Form states
+  const [cardHolderName, setCardHolderName] = useState(defaultCardHolderName);
+  const [email, setEmail] = useState(() => (isPlaceholderEmail(defaultEmail) ? "" : defaultEmail));
+  const [billingAddress, setBillingAddress] = useState("");
+  const [billingCity, setBillingCity] = useState(defaultCity);
+  const [billingCountry, setBillingCountry] = useState(defaultCountry);
+  const [billingCountryCode, setBillingCountryCode] = useState("");
+  const [cardPostalCode, setCardPostalCode] = useState("");
+
+  const [processing, setProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Sync defaults when profile finishes loading in parent
+  useEffect(() => {
+    if (defaultCardHolderName && !cardHolderName) setCardHolderName(defaultCardHolderName);
+  }, [defaultCardHolderName, cardHolderName]);
+
+  useEffect(() => {
+    if (defaultEmail && !isPlaceholderEmail(defaultEmail)) {
+      setEmail((prev) => (prev ? prev : defaultEmail));
+    }
+  }, [defaultEmail]);
+
+  useEffect(() => {
+    if (defaultCity && !billingCity) setBillingCity(defaultCity);
+  }, [defaultCity, billingCity]);
+
+  useEffect(() => {
+    if (defaultCountry && !billingCountry) setBillingCountry(defaultCountry);
+  }, [defaultCountry, billingCountry]);
+
+  const handleAddressSelected = (data: BillingAddressData) => {
+    setBillingAddress(data.address);
+    if (data.city) setBillingCity(data.city);
+    if (data.country) setBillingCountry(data.country);
+    if (data.countryCode) setBillingCountryCode(data.countryCode);
+    if (data.postalCode) setCardPostalCode(data.postalCode);
+    setErrorMessage(null);
+  };
+
+  const handlePay = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+
+    if (!cardHolderName.trim()) {
+      setErrorMessage("Por favor ingresa el nombre que figura en la tarjeta.");
+      return;
+    }
+
+    const trimmedEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!trimmedEmail || !emailRegex.test(trimmedEmail) || isPlaceholderEmail(trimmedEmail)) {
+      setErrorMessage("Por favor ingresa un correo electrónico válido para tu cuenta y recibos.");
+      return;
+    }
+
+    if (!cardPostalCode.trim()) {
+      setErrorMessage("Por favor ingresa tu código postal o selecciona tu dirección.");
+      return;
+    }
+
+    const expectedInterval = isAnnual ? "year" : "month";
+    if (!subscriptionData || (subscriptionData.interval && subscriptionData.interval !== expectedInterval)) {
+      setErrorMessage("Inicializando la pasarela de pago. Intenta de nuevo en unos segundos.");
+      return;
+    }
+
+    setProcessing(true);
+
+    try {
+      // 1. Confirm Payment on Stripe Client if live Stripe is active
+      if (stripe && elements && subscriptionData.clientSecret && !subscriptionData.isMock) {
+        const cardNumberElement = elements.getElement(CardNumberElement);
+        if (!cardNumberElement) {
+          throw new Error("No se pudo cargar el campo de tarjeta de crédito.");
+        }
+
+        const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
+          subscriptionData.clientSecret,
+          {
+            payment_method: {
+              card: cardNumberElement,
+              billing_details: {
+                name: cardHolderName.trim(),
+                email: trimmedEmail,
+                address: {
+                  line1: billingAddress.trim() || undefined,
+                  city: billingCity.trim() || undefined,
+                  country: billingCountryCode || undefined,
+                  postal_code: cardPostalCode.trim() || undefined,
+                },
+              },
+            },
+          }
+        );
+
+        if (stripeError) {
+          throw new Error(stripeError.message || "Tu tarjeta fue rechazada. Verifica los datos o intenta con otro método.");
+        }
+
+        if (paymentIntent && paymentIntent.status !== "succeeded") {
+          throw new Error("El pago no pudo completarse. Por favor intenta con otra tarjeta.");
+        }
+      }
+
+      // 2. Notify Backend to verify Stripe subscription & activate tier
+      const confirmRes = await fetch("/api/membership/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subscriptionId: subscriptionData.subscriptionId,
+          customerId: subscriptionData.customerId,
+          billingInterval: billingCycle,
+          cardName: cardHolderName.trim(),
+          email: trimmedEmail,
+          postalCode: cardPostalCode.trim(),
+          address: billingAddress.trim(),
+          city: billingCity.trim(),
+          country: billingCountry.trim(),
+        }),
+      });
+
+      const confirmData = await confirmRes.json();
+
+      if (!confirmRes.ok) {
+        throw new Error(confirmData.message || "Tu tarjeta fue rechazada. Verifica los datos o intenta con otro método.");
+      }
+
+      // Persist in localStorage for pre-fill in Step 4
+      if (typeof window !== "undefined") {
+        localStorage.setItem("luminus_card_name", cardHolderName.trim());
+        localStorage.setItem("luminus_user_email", trimmedEmail);
+        if (billingCity) localStorage.setItem("luminus_billing_city", billingCity.trim());
+        if (billingCountry) localStorage.setItem("luminus_billing_country", billingCountry.trim());
+        if (billingCountryCode) localStorage.setItem("luminus_billing_country_code", billingCountryCode.trim());
+      }
+
+      // Success -> Show animation, then advance to appropriate view
+      setIsSuccess(true);
+      setTimeout(() => {
+        if (isFromSettings || isOnboarded) {
+          router.push("/perfil-usuario/configuracion/membresia?success=1");
+        } else {
+          router.push("/unirme/perfil");
+        }
+      }, 1800);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Tu tarjeta fue rechazada. Verifica los datos o intenta con otro método.");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (isFromSettings) {
+      router.push("/perfil-usuario/configuracion/membresia");
+    }
+  };
+
+  const handleResetSession = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("luminus_card_name");
+        localStorage.removeItem("luminus_profile_firstName");
+        localStorage.removeItem("luminus_profile_lastName");
+        localStorage.removeItem("luminus_user_email");
+        localStorage.removeItem("luminus_billing_city");
+        localStorage.removeItem("luminus_billing_country");
+        localStorage.removeItem("luminus_billing_country_code");
+      }
+    } finally {
+      window.location.href = "/unirme";
+    }
+  };
+
+  return (
+    <div className="w-full flex flex-col gap-4">
+      {/* Price & Plan Summary (Hidden on Success) */}
+      {!isSuccess && (
+        <div className="w-full bg-slate-50/70 rounded-2xl border border-slate-200 p-5 flex flex-col gap-3 animate-in fade-in duration-200">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-bold text-slate-900 font-jakarta">
+                {isAnnual ? "Mecenas Anual" : "Mecenas Mensual"}
+              </span>
+              {isAnnual && (
+                <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/70 font-jakarta">
+                  Ahorras USD 15
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[30px] sm:text-[34px] font-extrabold text-slate-900 font-jakarta leading-none tracking-tight">
+                {isAnnual ? "USD 45" : "USD 5"}
+              </span>
+              <span className="text-sm text-slate-500 font-medium">
+                {isAnnual ? "/ año" : "/ mes"}
+              </span>
+              {isAnnual && (
+                <span className="text-xs text-slate-400 font-normal ml-1">
+                  (USD 3.75/mes)
+                </span>
+              )}
+            </div>
+
+            <p className="text-xs text-slate-500 leading-normal m-0">
+              Renovación automática. Cancela cuando quieras.
+            </p>
+          </div>
+
+          {/* Patreon-style Annual Toggle Switch (hidden if Step 1 selected annual) */}
+          {!selectedAnnualInStep1 && (
+            <button
+              type="button"
+              role="switch"
+              aria-checked={isAnnual}
+              onClick={() => onSwitchBilling(isAnnual ? "monthly" : "annual")}
+              className="w-fit inline-flex items-center gap-2.5 cursor-pointer bg-transparent border-none p-0 select-none group"
+            >
+              <span
+                className={`w-[42px] h-[24px] rounded-full border p-[3px] flex items-center transition-colors duration-200 box-border ${
+                  isAnnual
+                    ? "bg-black border-black"
+                    : "bg-white border-slate-300 group-hover:border-slate-400"
+                }`}
+              >
+                <span
+                  className={`w-[16px] h-[16px] rounded-full transition-transform duration-200 ${
+                    isAnnual
+                      ? "translate-x-[18px] bg-white"
+                      : "translate-x-0 bg-slate-400 group-hover:bg-slate-500"
+                  }`}
+                />
+              </span>
+              <span className="text-xs sm:text-sm font-medium text-slate-600 font-jakarta">
+                Plan anual con 25% de descuento
+              </span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {isSuccess ? (
+        <div className="py-8 px-4 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in-95 duration-300 w-full">
+          {/* Animated Checkmark Badge */}
+          <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200/80 flex items-center justify-center mb-5 relative">
+            <svg
+              className="w-8 h-8 text-emerald-600"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path
+                className="animate-draw-check"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+            <span className="absolute inset-0 rounded-full border border-emerald-400/30 animate-ping opacity-25 pointer-events-none" />
+          </div>
+
+          {/* Title */}
+          <h3 className="text-xl font-bold font-jakarta text-slate-900 tracking-tight mb-2">
+            Pago confirmado
+          </h3>
+
+          {/* Subtitle */}
+          <p className="text-sm text-slate-500 max-w-[290px] leading-relaxed mb-6 font-sans">
+            Tu membresía ya está activa.
+          </p>
+
+          {/* Minimalist Progress Indicator */}
+          <div className="w-40 h-1 bg-zinc-100 rounded-full overflow-hidden">
+            <div className="h-full bg-slate-900 rounded-full animate-progress-fill" />
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Payment Form with Stripe Split Elements */}
+          <form onSubmit={handlePay} className="flex flex-col gap-3">
+            {/* Cardholder Name */}
+            <InputField
+              type="text"
+              required
+              value={cardHolderName}
+              onChange={(e) => {
+                setCardHolderName(e.target.value);
+                setErrorMessage(null);
+              }}
+              placeholder="Nombre en la tarjeta"
+            />
+
+            {/* Email for Receipts / Account */}
+            <InputField
+              type="email"
+              required
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setErrorMessage(null);
+              }}
+              placeholder="Correo electrónico para tus recibos"
+            />
+
+            {/* Card Number - Stripe Element */}
+            <div className="relative w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900 transition-colors flex items-center">
+              <div className="w-full pr-8">
+                <CardNumberElement
+                  options={{
+                    style: ELEMENT_STYLE,
+                    placeholder: "Número de tarjeta",
+                  }}
+                  onChange={(e) => {
+                    if (e.error) setErrorMessage(e.error.message);
+                    else setErrorMessage(null);
+                  }}
+                />
+              </div>
+              <CreditCard className="w-4 h-4 absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            </div>
+
+            {/* Expiry & CVC - Stripe Elements */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900 transition-colors flex items-center">
+                <div className="w-full">
+                  <CardExpiryElement
+                    options={{
+                      style: ELEMENT_STYLE,
+                      placeholder: "Vencimiento (MM/AA)",
+                    }}
+                    onChange={(e) => {
+                      if (e.error) setErrorMessage(e.error.message);
+                      else setErrorMessage(null);
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div className="w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl focus-within:border-slate-900 focus-within:ring-1 focus-within:ring-slate-900 transition-colors flex items-center">
+                <div className="w-full">
+                  <CardCvcElement
+                    options={{
+                      style: ELEMENT_STYLE,
+                      placeholder: "CVC / CVV",
+                    }}
+                    onChange={(e) => {
+                      if (e.error) setErrorMessage(e.error.message);
+                      else setErrorMessage(null);
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Billing Address with Google Places Autocomplete */}
+            <BillingAddressInput
+              defaultValue={billingAddress}
+              placeholder="Dirección de facturación"
+              onAddressSelect={handleAddressSelected}
+            />
+
+            {/* City, Country & Postal Code */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <InputField
+                type="text"
+                value={
+                  billingCity && billingCountry
+                    ? `${billingCity}, ${billingCountry}`
+                    : billingCity || billingCountry || ""
+                }
+                onChange={(e) => {
+                  const parts = e.target.value.split(",").map((s) => s.trim());
+                  setBillingCity(parts[0] || "");
+                  setBillingCountry(parts[1] || "");
+                }}
+                placeholder="Ciudad y País"
+              />
+
+              <InputField
+                type="text"
+                required
+                value={cardPostalCode}
+                onChange={(e) => {
+                  setCardPostalCode(e.target.value);
+                  setErrorMessage(null);
+                }}
+                placeholder="Código postal"
+              />
+            </div>
+
+            {/* Error Message */}
+            {(errorMessage || intentError) && (
+              <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
+                {errorMessage || intentError}
+              </div>
+            )}
+
+            {/* Primary Action Button */}
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={
+                processing ||
+                loadingIntent ||
+                !subscriptionData ||
+                Boolean(subscriptionData.interval && subscriptionData.interval !== (isAnnual ? "year" : "month"))
+              }
+            >
+              {processing
+                ? "Procesando pago..."
+                : isAnnual
+                ? "Ser Mecenas por USD 45/año"
+                : "Ser Mecenas por USD 5/mes"}
+            </Button>
+          </form>
+
+          {/* Clean Security Branding with Stripe Wordmark */}
+          <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400">
+            <span>Pagos procesados de forma segura con</span>
+            <img
+              src="/Stripe_Logo,_revised_2016.svg"
+              alt="Stripe"
+              className="h-[15px] w-auto inline-block"
+            />
+          </div>
+
+          {/* Secondary Actions */}
+          <div className="flex flex-col items-center gap-2 pt-1 w-full">
+            {isFromSettings && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleCancel}
+              >
+                Volver a membresía
+              </Button>
+            )}
+            {!isFromSettings && (
+              <button
+                type="button"
+                onClick={handleResetSession}
+                className="py-1 text-[11px] sm:text-xs text-slate-400 hover:text-red-500 transition-colors text-center cursor-pointer bg-transparent border-none font-sans"
+              >
+                Cerrar sesión y empezar de nuevo
+              </button>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+export default function MembershipPaymentView() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Read params
+  const initialBillingParam = searchParams.get("billing") === "annual" ? "annual" : "monthly";
+  const selectedAnnualInStep1 = initialBillingParam === "annual";
+  const isFromSettings = searchParams.get("from") === "settings";
+
+  // Reactive billing interval state
+  const [billingCycle, setBillingCycle] = useState<"annual" | "monthly">(initialBillingParam);
+  const isAnnual = billingCycle === "annual";
+
+  const [loadingIntent, setLoadingIntent] = useState(true);
+  const [intentError, setIntentError] = useState<string | null>(null);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [isOnboarded, setIsOnboarded] = useState(false);
+  const [subscriptionData, setSubscriptionData] = useState<{
+    clientSecret: string | null;
+    subscriptionId: string;
+    customerId: string;
+    interval?: "month" | "year";
+    isMock?: boolean;
+  } | null>(null);
+
+  // User Profile Prefills
+  const [defaultCardHolderName, setDefaultCardHolderName] = useState(() => {
+    if (typeof window !== "undefined") {
+      const first = localStorage.getItem("luminus_profile_firstName") || "";
+      const last = localStorage.getItem("luminus_profile_lastName") || "";
+      return [first, last].filter(Boolean).join(" ");
+    }
+    return "";
+  });
+  const [defaultEmail, setDefaultEmail] = useState(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("luminus_user_email") || "";
+      return isPlaceholderEmail(stored) ? "" : stored;
+    }
+    return "";
+  });
+  const [defaultCity, setDefaultCity] = useState("");
+  const [defaultCountry, setDefaultCountry] = useState("");
+
+  const requestIdRef = useRef(0);
+  const subscriptionDataRef = useRef(subscriptionData);
+  subscriptionDataRef.current = subscriptionData;
+
+  // Initialize Payment Intent with chosen interval (or update existing)
+  const initIntent = useCallback(async (interval: "month" | "year", existingSubId?: string) => {
+    const requestId = ++requestIdRef.current;
+    setLoadingIntent(true);
+    setIntentError(null);
+    try {
+      const activeSubId = existingSubId || subscriptionDataRef.current?.subscriptionId;
+      const res = await fetch("/api/membership/create-intent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ interval, existingSubscriptionId: activeSubId }),
+      });
+
+      if (requestId !== requestIdRef.current) return;
+
+      if (res.status === 401) {
+        router.push(`/unirme/crear-cuenta?plan=membership&billing=${interval === "year" ? "annual" : "monthly"}`);
+        return;
+      }
+
+      const data = await res.json().catch(() => ({}));
+      if (requestId !== requestIdRef.current) return;
+
+      if (!res.ok) {
+        setIntentError(data.message || "No se pudo inicializar la pasarela de pagos. Recarga la página e intenta de nuevo.");
+        return;
+      }
+
+      if (data.alreadySubscribed) {
+        if (isFromSettings) {
+          router.push("/perfil-usuario/configuracion/membresia");
+        } else {
+          router.push("/inicio?welcome=1");
+        }
+        return;
+      }
+
+      setSubscriptionData(data);
+    } catch {
+      if (requestId === requestIdRef.current) {
+        setIntentError("Error de conexión al inicializar la pasarela de pagos.");
+      }
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setLoadingIntent(false);
+      }
+    }
+  }, [router, isFromSettings]);
+
+  useEffect(() => {
+    initIntent(isAnnual ? "year" : "month");
+  }, [initIntent, isAnnual]);
+
+  // Prefill initial user profile details if available
+  useEffect(() => {
+    async function fetchProfileData() {
+      try {
+        const res = await fetch("/api/profile");
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.email) {
+            const clean = data.email.trim().toLowerCase();
+            if (!isPlaceholderEmail(clean)) {
+              setDefaultEmail(clean);
+              localStorage.setItem("luminus_user_email", clean);
+            } else {
+              setDefaultEmail("");
+              localStorage.removeItem("luminus_user_email");
+            }
+          }
+          const p = data?.profile;
+          if (p) {
+            const userFullName = [p.first_name, p.last_name].filter(Boolean).join(" ");
+            if (userFullName) setDefaultCardHolderName(userFullName);
+            if (p.city) setDefaultCity(p.city);
+            if (p.country) setDefaultCountry(p.country);
+            if (p.isOnboarded) setIsOnboarded(true);
+          }
+        }
+      } catch {
+        // Non-critical background prefill failure
+      }
+    }
+    fetchProfileData();
+  }, []);
+
+  const handleSwitchBilling = (newCycle: "annual" | "monthly") => {
+    setBillingCycle(newCycle);
+  };
+
+  return (
+    <div className="min-h-[100dvh] bg-white flex flex-col justify-between font-sans selection:bg-slate-200">
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pt-10 pb-8 sm:py-12">
+        <main className="w-full max-w-[380px] mx-auto flex flex-col items-center my-auto animate-fade-in-up">
+          {/* Header unit - hidden upon payment confirmation */}
+          {!isSuccess && (
+            <header className="flex flex-col items-center text-center gap-2 mb-6 sm:mb-8">
+              <Link href="/" className="inline-flex items-center mb-1">
+                <img src="/iso-logo-black.svg" alt="LUMINUS" className="h-[36px] w-[36px]" />
+              </Link>
+              <h1 className="text-2xl sm:text-[26px] font-bold font-jakarta text-slate-900 tracking-tight m-0 transition-all">
+                Conviértete en Mecenas
+              </h1>
+            </header>
+          )}
+
+          <Elements stripe={stripePromise}>
+            <PaymentForm
+              billingCycle={billingCycle}
+              subscriptionData={subscriptionData}
+              loadingIntent={loadingIntent}
+              intentError={intentError}
+              isFromSettings={isFromSettings}
+              isOnboarded={isOnboarded}
+              onSwitchBilling={handleSwitchBilling}
+              selectedAnnualInStep1={selectedAnnualInStep1}
+              defaultEmail={defaultEmail}
+              defaultCardHolderName={defaultCardHolderName}
+              defaultCity={defaultCity}
+              defaultCountry={defaultCountry}
+              isSuccess={isSuccess}
+              setIsSuccess={setIsSuccess}
+            />
+          </Elements>
+        </main>
+      </div>
+
+      {/* Footer */}
+      <footer className="w-full max-w-[380px] mx-auto px-4 py-4 sm:py-6 flex flex-col items-center gap-2 text-center">
+        <p className="text-[11px] text-slate-400 leading-relaxed m-0">
+          Al unirte, estás creando una cuenta en LUMINUS y aceptando estar de acuerdo con nuestros{" "}
+          <Link
+            href="https://luminuslatam.com/legal/terminos"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-600"
+          >
+            Términos y Condiciones
+          </Link>{" "}
+          así como con nuestra{" "}
+          <Link
+            href="https://luminuslatam.com/legal/privacidad"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-slate-600"
+          >
+            Política de Privacidad
+          </Link>
+          .
+        </p>
+        <p className="text-xs text-slate-400 m-0">© 2026 LUMINUS Latam.</p>
+      </footer>
+    </div>
+  );
+}

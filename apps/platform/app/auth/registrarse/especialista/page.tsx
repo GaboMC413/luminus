@@ -1,10 +1,5 @@
-import SpecialistSignUpWizard from "@/features/auth/SpecialistSignUpWizard";
+import { redirect } from "next/navigation";
 
-export const metadata = {
-  title: "Registro de Especialistas | LUMINUS",
-  description: "Únete a la red de especialistas y profesionales del bienestar en LUMINUS.",
-};
-
-export default function SpecialistSignUpPage() {
-  return <SpecialistSignUpWizard />;
+export default function LegacySpecialistSignUpRedirect() {
+  redirect("/unirme/especialista");
 }

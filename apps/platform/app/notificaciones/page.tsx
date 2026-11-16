@@ -2,9 +2,10 @@
 
 import React, { Suspense, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { formatRelativeTime } from "@/components/ui/PlatformNavbar";
 import { OnboardingProgressCard } from "@/components/ui/NotificationPopup";
-import { PageLoader } from "@/components/ui/PageLoader";
+import { NotificationsSkeleton, Skeleton } from "@/components/ui/Skeleton";
 import { DotSpinner } from "@/components/ui/DotSpinner";
 import { formatMessageBody } from "@/utils/messages";
 
@@ -155,55 +156,7 @@ function NotificationsContent() {
     });
   };
 
-  const getRequesterIdFromUrl = (url?: string) => {
-    if (!url) return null;
-    const match = url.match(/[?&]id=([^&]+)/);
-    return match ? match[1] : null;
-  };
 
-  const handleAcceptPage = async (e: React.MouseEvent, actionUrl: string, notificationId: string) => {
-    e.stopPropagation();
-    const requesterId = getRequesterIdFromUrl(actionUrl);
-    if (!requesterId) return;
-
-    try {
-      const res = await fetch("/api/connections", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipientId: requesterId }),
-      });
-      if (res.ok) {
-        await fetch("/api/notifications", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: notificationId }),
-        });
-        window.dispatchEvent(new Event("luminus_notifications_update"));
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleDeclinePage = async (e: React.MouseEvent, actionUrl: string, notificationId: string) => {
-    e.stopPropagation();
-    const requesterId = getRequesterIdFromUrl(actionUrl);
-    if (!requesterId) return;
-
-    try {
-      const res = await fetch(`/api/connections?recipientId=${requesterId}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        await fetch(`/api/notifications?id=${notificationId}`, {
-          method: "DELETE",
-        });
-        window.dispatchEvent(new Event("luminus_notifications_update"));
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const filteredNotifications = notifications.filter((n) => {
     // 1. Search filter
@@ -218,11 +171,12 @@ function NotificationsContent() {
     if (activeFilter === "leidas") return !n.isUnread;
     if (activeFilter === "no_leidas") return n.isUnread;
     if (activeFilter === "especialistas") {
-      return String(n.type).includes("follow");
+      return String(n.type).includes("follow") || String(n.type).startsWith("session_");
     }
     if (activeFilter === "comunidad") {
       return (
         String(n.type).includes("connect") ||
+        String(n.type).includes("network") ||
         n.type === "quest_completed_connect" ||
         String(n.type).includes("connection")
       );
@@ -230,6 +184,7 @@ function NotificationsContent() {
     if (activeFilter === "generales") {
       const isSpecOrComm =
         String(n.type).includes("follow") ||
+        String(n.type).startsWith("session_") ||
         String(n.type).includes("connect") ||
         String(n.type).includes("connection") ||
         n.type === "onboarding-progress";
@@ -244,22 +199,18 @@ function NotificationsContent() {
         <div className="w-full max-w-6xl mx-auto flex flex-col flex-1 min-h-0 overflow-hidden lg:overflow-visible">
           
           {/* Header */}
-          <div className="flex items-center gap-3 mb-4 md:mb-6 shrink-0">
-            <button
-              onClick={() => router.back()}
-              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white border border-transparent hover:border-slate-200 transition-all text-slate-400 hover:text-slate-900 cursor-pointer"
-              title="Volver"
-            >
-              <span className="material-symbols-rounded text-[20px]">arrow_back</span>
-            </button>
-            <h1 className="text-xl md:text-2xl text-slate-900 font-semibold font-jakarta">Notificaciones</h1>
-          </div>
+          <PageHeader
+            title="Notificaciones"
+            showBack
+            backFallbackHref="/inicio"
+            className="mb-4 md:mb-6"
+          />
 
           {error && (
             <div className="mb-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 flex items-center justify-between shadow-none shrink-0">
               <span>{error}</span>
               <button
-                onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/comunidad")}
+                onClick={() => typeof window !== "undefined" && window.history.length > 1 ? router.back() : router.push("/inicio")}
                 className="text-xs font-semibold text-slate-900 underline hover:no-underline cursor-pointer bg-transparent border-none font-jakarta"
               >
                 Volver
@@ -373,7 +324,18 @@ function NotificationsContent() {
               {/* Scrollable Notifications List */}
               <div className="flex-1 overflow-y-auto thin-scrollbar bg-white divide-y divide-slate-100">
                 {isLoading ? (
-                  <div className="p-8 flex justify-center items-center"><DotSpinner size={32} color="black" /></div>
+                  <div className="divide-y divide-slate-100">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="p-4 sm:p-5 flex items-start gap-4">
+                        <Skeleton className="w-10 h-10 rounded-xl shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-3/4 rounded-md" />
+                          <Skeleton className="h-3 w-1/3 rounded-md" />
+                        </div>
+                        <Skeleton className="h-3 w-12 rounded-md shrink-0" />
+                      </div>
+                    ))}
+                  </div>
                 ) : filteredNotifications.length === 0 ? (
                   <div className="p-12 text-center text-slate-400 text-sm flex flex-col items-center gap-4">
                     <span className="material-symbols-rounded text-slate-300 text-[48px]">notifications_off</span>
@@ -467,25 +429,79 @@ function NotificationsContent() {
                             )}
                             {formatMessageBody(n.action)}
                           </p>
-                          {n.type === "connection_request" && n.isUnread && (
+                          {n.type === "connection_request" && (
                             <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
-                              <button
-                                onClick={(e) => handleAcceptPage(e, n.action_url, n.id)}
-                                className="h-8 px-4 bg-black hover:bg-zinc-800 text-white text-xs font-semibold rounded-xl transition duration-200 cursor-pointer border-none outline-none"
-                              >
-                                Aceptar
-                              </button>
+                              {(() => {
+                                const urlStr = n.action_url || "";
+                                const qMatch = urlStr.match(/[?&]id=([^&]+)/);
+                                const pMatch = urlStr.match(/\/perfil\/([^/?]+)/);
+                                const requesterId = (n as { actorId?: string }).actorId || (qMatch ? qMatch[1] : pMatch ? pMatch[1] : null);
+                                if (!requesterId) return null;
+                                return (
+                                  <>
+                                    <button
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        const res = await fetch("/api/connections", {
+                                          method: "PUT",
+                                          headers: { "Content-Type": "application/json" },
+                                          body: JSON.stringify({ recipientId: requesterId }),
+                                        });
+                                        if (res.ok) {
+                                          deleteNotification(n.id);
+                                        }
+                                      }}
+                                      className="h-8 px-4 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-xl transition duration-200 cursor-pointer border-none outline-none font-jakarta"
+                                    >
+                                      Aceptar
+                                    </button>
+                                    <button
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        const res = await fetch(`/api/connections?recipientId=${requesterId}`, {
+                                          method: "DELETE",
+                                        });
+                                        if (res.ok) {
+                                          deleteNotification(n.id);
+                                        }
+                                      }}
+                                      className="h-8 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition duration-200 cursor-pointer border-none outline-none font-jakarta"
+                                    >
+                                      Rechazar
+                                    </button>
+                                  </>
+                                );
+                              })()}
+                            </div>
+                          )}
+
+                          {(n.type === "network_add" || n.type === "specialist_follow") && (
+                            <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
                               {n.action_url && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     router.push(n.action_url);
                                   }}
-                                  className="h-8 px-4 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-xl transition duration-200 cursor-pointer outline-none"
+                                  className="h-8 px-4 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-xl transition duration-200 cursor-pointer border-none outline-none font-jakarta"
                                 >
                                   Ver perfil
                                 </button>
                               )}
+                            </div>
+                          )}
+
+                          {String(n.type).startsWith("session_") && n.action_url && (
+                            <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  router.push(n.action_url);
+                                }}
+                                className="h-8 px-4 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-xl transition duration-200 cursor-pointer border-none outline-none font-jakarta"
+                              >
+                                Ver sesión
+                              </button>
                             </div>
                           )}
                         </div>
@@ -505,7 +521,7 @@ function NotificationsContent() {
 
 export default function NotificationsPage() {
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={<NotificationsSkeleton />}>
       <NotificationsContent />
     </Suspense>
   );

@@ -9,7 +9,11 @@ export async function verifyTurnstileToken(
   const secretKey = process.env.TURNSTILE_SECRET_KEY;
 
   if (!secretKey) {
-    console.warn("⚠️ TURNSTILE_SECRET_KEY no está configurado. Omitiendo verificación.");
+    if (process.env.NODE_ENV === "production") {
+      console.error("[Turnstile] CRITICAL: TURNSTILE_SECRET_KEY is not configured in production.");
+      return { success: false, error: "Servicio de verificación anti-bot no disponible temporalmente." };
+    }
+    console.warn("⚠️ TURNSTILE_SECRET_KEY no está configurado en desarrollo local. Omitiendo verificación.");
     return { success: true };
   }
 

@@ -2,12 +2,10 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { sendBatchEventLiveNotifications } from "@/lib/mails/sender";
 
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
-    const session = getCurrentSession();
+    const session = await getCurrentSession();
     if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ error: "Acceso no autorizado." }, { status: 403 });
     }

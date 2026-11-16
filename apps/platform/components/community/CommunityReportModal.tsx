@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { SelectInput } from "@/components/ui/SelectInput";
+import { Flag, CheckCircle2, Loader2 } from "lucide-react";
 
 interface CommunityReportModalProps {
   isOpen: boolean;
@@ -47,7 +48,6 @@ export function CommunityReportModal({
 
     setIsSubmitting(true);
     try {
-      // Simulate backend report registration (or POST to moderation queue)
       await new Promise((resolve) => setTimeout(resolve, 600));
       setIsSuccess(true);
       setTimeout(() => {
@@ -64,35 +64,37 @@ export function CommunityReportModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Reportar"
+      title="Reportar contenido"
       maxWidth="440px"
-      containerClassName="shadow-none"
-      footerClassName="px-5 py-3.5 border-t border-zinc-100 flex items-center gap-3 w-full"
+      footerClassName="px-5 py-3.5 border-t border-slate-100 flex items-center gap-3 w-full"
       footer={
         isSuccess ? null : (
           <>
             <Button
               variant="secondary"
+              size="md"
               type="button"
               onClick={handleClose}
               disabled={isSubmitting}
-              className="flex-1 !h-11 !text-[13px] !font-medium !rounded-[12px]"
+              className="flex-1"
             >
               Cancelar
             </Button>
             <Button
+              variant="destructive"
+              size="md"
               type="button"
               onClick={handleSubmit}
               disabled={isSubmitting || !reportReason}
-              className="flex-1 !h-11 !text-[13px] !font-medium !rounded-[12px] !bg-[#FF4B4B] hover:!bg-[#E03A3A] !text-white flex items-center justify-center gap-1.5"
+              className="flex-1"
             >
               {isSubmitting ? (
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin text-white" />
               ) : (
-                <>
-                  <span className="material-symbols-rounded text-[18px]">flag</span>
+                <div className="flex items-center justify-center gap-1.5">
+                  <Flag className="w-3.5 h-3.5" />
                   <span>Reportar</span>
-                </>
+                </div>
               )}
             </Button>
           </>
@@ -102,7 +104,7 @@ export function CommunityReportModal({
       {isSuccess ? (
         <div className="py-6 flex flex-col items-center justify-center gap-2.5 text-center animate-in fade-in duration-200">
           <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
-            <span className="material-symbols-rounded text-[26px]">check_circle</span>
+            <CheckCircle2 className="w-6 h-6 text-emerald-600" />
           </div>
           <h4 className="text-sm font-bold font-jakarta text-slate-900 mt-1">
             Reporte enviado
@@ -124,14 +126,14 @@ export function CommunityReportModal({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-600">
+            <label className="text-xs font-semibold text-slate-700 font-jakarta">
               Detalles adicionales (opcional)
             </label>
             <textarea
               value={reportDescription}
               onChange={(e) => setReportDescription(e.target.value)}
               placeholder="Proporciona más detalles si lo deseas..."
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:ring-1 focus:ring-slate-300 outline-none resize-none h-24 text-slate-800 font-medium"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none resize-none h-24 text-slate-800 font-sans"
             />
           </div>
         </form>

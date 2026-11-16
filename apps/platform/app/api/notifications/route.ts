@@ -8,11 +8,11 @@ export const runtime = "nodejs";
 function serializeNotification(notification: any) {
   let title = notification.title || "";
   // Strip common emojis at the start of titles
-  title = title.replace(/^[^\w\s¡!]+/, "").trim();
+  title = title.replace(/^[^ws¡!]+/, "").trim();
 
   let body = notification.body || "";
   // Strip trailing emojis in the body
-  body = body.replace(/[^\w\s.¡!¿?,:;()\-+/*%$=#@_'"\\]+$/, "").trim();
+  body = body.replace(/[^ws.¡!¿?,:;()\-+/*%$=#@_'"\\]+$/, "").trim();
 
   const isQuestCompleted = String(notification.type).startsWith("quest_completed_");
   let icon: string | undefined = undefined;
@@ -28,28 +28,54 @@ function serializeNotification(notification: any) {
     };
     icon = questIcons[questId] || "auto_awesome";
 
-    // Standardize title for older notifications to have the new quest-specific titles
-    if (title === "¡Destello completado!" || !title) {
-      const fallbackTitles: Record<string, string> = {
-        profession: "Has indicado tu profesión",
-        bio: "Has escrito tu biografía",
-        interests: "Has compartido tus reflexiones",
-        user_interests: "Has seleccionado tus temas de interés",
-        cover: "Has personalizado tu foto de portada",
-        connect: "Has enviado tu primera solicitud",
-      };
-      title = fallbackTitles[questId] || "Has completado un destello";
+    title = "¡Destello completado!";
+    const questShortDescriptions: Record<string, string> = {
+      profession: "Indicaste tu profesión en tu perfil.",
+      bio: "Completaste tu biografía de presentación.",
+      interests: "Compartiste tus reflexiones personales.",
+      user_interests: "Seleccionaste tus temas de interés.",
+      cover: "Personalizaste tu foto de portada.",
+      connect: "Enviaste tu primera solicitud de conexión.",
+    };
+    body = questShortDescriptions[questId] || "Completaste un nuevo destello en tu camino.";
+  } else if (notification.type === "connection_accepted") {
+    title = "Solicitud aceptada";
+    body = "aceptó tu solicitud de conexión.";
+  } else if (notification.type === "connection_request") {
+    title = "Solicitud de conexión";
+    body = "te envió una solicitud de conexión.";
+  } else if (notification.type === "specialist_follow") {
+    title = "Nuevo seguidor";
+    body = "empezó a seguirte.";
+  } else if (notification.type === "network_add") {
+    title = "Nueva conexión";
+    body = "te sumó a su red.";
+  } else if (String(notification.type).startsWith("session_")) {
+    title = notification.title || title;
+    body = notification.body || body;
+  } else {
+    // If long paragraph, take the first sentence
+    const firstSentence = body.split(/[.!?]\s+/)[0];
+    if (firstSentence && firstSentence.length < body.length) {
+      body = firstSentence.endsWith(".") ? firstSentence : `${firstSentence}.`;
     }
   }
+
+  // Extract actorId from actionUrl if available (?id=... or /perfil/<uuid>)
+  const urlStr = notification.actionUrl || "";
+  const queryIdMatch = urlStr.match(/[?&]id=([^&]+)/);
+  const pathIdMatch = urlStr.match(/\/perfil\/([^/?]+)/);
+  const actorId = queryIdMatch ? queryIdMatch[1] : (pathIdMatch ? pathIdMatch[1] : undefined);
 
   return {
     id: notification.id,
     type: notification.type,
-    title: isQuestCompleted ? "¡Destello completado!" : title,
+    title,
     user: notification.actorName || "LUMINUS",
     avatar: isQuestCompleted ? "" : (notification.actorAvatarUrl || ""),
+    actorId,
     icon,
-    action: isQuestCompleted ? `${title}. ${body}` : body,
+    action: body,
     action_url: notification.actionUrl || "",
     date: notification.createdAt.toISOString(),
     isUnread: !notification.readAt,
@@ -57,7 +83,7 @@ function serializeNotification(notification: any) {
 }
 
 export async function GET() {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
@@ -65,25 +91,26 @@ export async function GET() {
 
   try {
     const { prisma } = await import("@/lib/db");
-    const notifications = await prisma.notification.findMany({
-      where: {
-        userId: session.userId,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: 30,
-    });
+    const [notifications, isDismissed] = await Promise.all([
+      prisma.notification.findMany({
+        where: {
+          userId: session.userId,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 30,
+      }),
+      prisma.notification.findFirst({
+        where: {
+          userId: session.userId,
+          type: "onboarding_progress_dismissed",
+        },
+        select: { id: true },
+      }),
+    ]);
 
     const serialized: any[] = notifications.map(serializeNotification);
-
-    // Calculate onboarding quests progress
-    const isDismissed = await prisma.notification.findFirst({
-      where: {
-        userId: session.userId,
-        type: "onboarding_progress_dismissed",
-      },
-    });
 
     if (!isDismissed) {
       const onboardingData = await getOnboardingQuests(session.userId);
@@ -124,7 +151,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
@@ -172,7 +199,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });

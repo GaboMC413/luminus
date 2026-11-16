@@ -1,12 +1,17 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { verifyUploadedResume } from "@/lib/resumeStorage";
+import {
+  normalizeInstagramInput,
+  normalizeLinkedinInput,
+  normalizeWebsiteUrl,
+} from "@/utils/socialLinks";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }
@@ -83,6 +88,45 @@ export async function POST(request: Request) {
       }
     }
 
+    const safeLinkedinUrl =
+      typeof linkedinUrl === "string" && linkedinUrl.trim()
+        ? normalizeLinkedinInput(linkedinUrl.trim())
+        : null;
+    const safeInstagramUrl =
+      typeof instagramUrl === "string" && instagramUrl.trim()
+        ? normalizeInstagramInput(instagramUrl.trim())
+        : null;
+    const safeWebsiteUrl =
+      typeof websiteUrl === "string" && websiteUrl.trim()
+        ? normalizeWebsiteUrl(websiteUrl.trim())
+        : null;
+
+    const sanitizedCourses = Array.isArray(courses)
+      ? courses.map((c: any) => ({
+          ...c,
+          url: typeof c?.url === "string" && c.url.trim() ? normalizeWebsiteUrl(c.url.trim()) : null,
+          coverUrl:
+            typeof c?.coverUrl === "string" && c.coverUrl.trim()
+              ? normalizeWebsiteUrl(c.coverUrl.trim())
+              : null,
+        }))
+      : undefined;
+
+    const sanitizedClinicData =
+      clinicData && typeof clinicData === "object"
+        ? {
+            ...clinicData,
+            clinicWebsite:
+              typeof clinicData.clinicWebsite === "string" && clinicData.clinicWebsite.trim()
+                ? normalizeWebsiteUrl(clinicData.clinicWebsite.trim())
+                : null,
+            googleMapsUrl:
+              typeof clinicData.googleMapsUrl === "string" && clinicData.googleMapsUrl.trim()
+                ? normalizeWebsiteUrl(clinicData.googleMapsUrl.trim())
+                : null,
+          }
+        : undefined;
+
     // Create a new application
     const postulation = await prisma.specialistPostulation.create({
       data: {
@@ -91,14 +135,14 @@ export async function POST(request: Request) {
         title,
         clinicName: clinicData?.clinicName || null,
         bio,
-        linkedinUrl: linkedinUrl || null,
-        instagramUrl: instagramUrl || null,
-        websiteUrl: websiteUrl || null,
-        courses: courses ? courses : undefined,
+        linkedinUrl: safeLinkedinUrl,
+        instagramUrl: safeInstagramUrl,
+        websiteUrl: safeWebsiteUrl,
+        courses: sanitizedCourses,
         status: "pending",
         institution: institution || null,
         selectedAreas: selectedAreas ? selectedAreas : undefined,
-        clinicData: clinicData ? clinicData : undefined,
+        clinicData: sanitizedClinicData,
         sessionsData: sessionsData ? sessionsData : undefined,
         resumeUrl: storedResumeKey,
       },

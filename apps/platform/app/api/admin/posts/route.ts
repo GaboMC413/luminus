@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session || session.role !== "ADMIN") {
     return NextResponse.json({ message: "No autorizado." }, { status: 403 });
@@ -15,6 +15,7 @@ export async function GET() {
 
   try {
     const rawPosts = await prisma.communityPost.findMany({
+      take: 100,
       include: {
         user: {
           select: {
@@ -34,6 +35,7 @@ export async function GET() {
           },
         },
         comments: {
+          take: 20,
           include: {
             user: {
               select: {
@@ -76,7 +78,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session || session.role !== "ADMIN") {
     return NextResponse.json({ message: "No autorizado." }, { status: 403 });

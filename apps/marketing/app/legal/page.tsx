@@ -48,6 +48,11 @@ export default function LegalPage() {
       href: "/legal/condiciones-especialistas",
     },
     {
+      title: "Sesiones Introductorias",
+      description: "Define el alcance, la independencia profesional y las condiciones aplicables a las sesiones introductorias.",
+      href: "/legal/sesiones-introductorias",
+    },
+    {
       title: "Política de Privacidad",
       description: "Explica detalladamente cómo recopilamos, utilizamos, protegemos y gestionamos tus datos personales dentro de LUMINUS.",
       href: "/legal/privacidad",

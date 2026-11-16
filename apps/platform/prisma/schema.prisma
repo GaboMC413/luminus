@@ -51,7 +51,8 @@ enum ConnectionStatus {
 
 enum UserTier {
   FREE  @map("FREE")
-  BASIC @map("BASIC")
+  MECENAS @map("MECENAS")
+  BASIC   @map("BASIC")
 
   @@map("user_tier")
 }
@@ -60,6 +61,7 @@ model User {
   id                       String                    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   cognitoSub               String                    @unique @map("cognito_sub")
   email                    String                    @unique @db.VarChar
+  slug                     String?                   @unique @db.VarChar
   passwordHash             String?                   @map("password_hash")
   emailVerified            Boolean                   @default(false) @map("email_verified")
   authProvider             AuthProvider              @default(unknown) @map("auth_provider")
@@ -68,7 +70,15 @@ model User {
   tier                     UserTier                  @default(FREE)
   isGhost                  Boolean                   @default(false) @map("is_ghost")
   trialExpiresAt           DateTime?                 @map("trial_expires_at") @db.Timestamptz
+  stripeCustomerId         String?                   @unique @map("stripe_customer_id") @db.VarChar
+  stripeSubscriptionId     String?                   @unique @map("stripe_subscription_id") @db.VarChar
+  memberSince              DateTime?                 @map("member_since") @db.Timestamptz
   lastLoginAt              DateTime?                 @map("last_login_at") @db.Timestamptz
+  closedAt                 DateTime?                 @map("closed_at") @db.Timestamptz
+  purgeAt                  DateTime?                 @map("purge_at") @db.Timestamptz
+  paidUntil                DateTime?                 @map("paid_until") @db.Timestamptz
+  closureReason            String?                   @map("closure_reason") @db.VarChar
+  closureFeedback          String?                   @map("closure_feedback") @db.Text
   createdAt                DateTime                  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt                DateTime                  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   profile                  UserProfile?
@@ -79,6 +89,8 @@ model User {
   emailChangeTokens        EmailChangeToken[]
   sentConnections          UserConnection[]          @relation("SentConnections")
   receivedConnections      UserConnection[]          @relation("ReceivedConnections")
+  following                UserFollow[]              @relation("UserFollowing")
+  followers                UserFollow[]              @relation("UserFollowers")
   conversationParticipants ConversationParticipant[]
   sentMessages             Message[]
   notifications            Notification[]
@@ -91,7 +103,11 @@ model User {
   communityPosts           CommunityPost[]
   communityPostComments    CommunityPostComment[]
   communityPostLikes       CommunityPostLike[]
+  requestedIntroSessions   IntroSession[]            @relation("RequestedIntroSessions")
+  specialistIntroSessions  IntroSession[]            @relation("SpecialistIntroSessions")
+  introSessionFeedbacks    IntroSessionFeedback[]
 
+  @@index([status, purgeAt])
   @@map("users")
 }
 
@@ -310,6 +326,21 @@ model UserConnection {
   @@index([requesterId, updatedAt])
   @@index([recipientId, updatedAt])
   @@map("user_connections")
+}
+
+model UserFollow {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  followerId  String   @map("follower_id") @db.Uuid
+  followingId String   @map("following_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("user_follows")
 }
 
 model Conversation {
@@ -585,6 +616,7 @@ model Event {
   isUpcoming             Boolean            @default(true) @map("is_upcoming")
   liveNotificationSent   Boolean            @default(false) @map("live_notification_sent")
   liveNotificationSentAt DateTime?          @map("live_notification_sent_at") @db.Timestamptz
+  reminderSentAt         DateTime?          @map("reminder_sent_at") @db.Timestamptz
   createdAt              DateTime           @default(now()) @map("created_at") @db.Timestamptz
   updatedAt              DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   inscriptions           EventInscription[]
@@ -717,5 +749,80 @@ model CommunityPostLike {
   @@unique([postId, userId])
   @@index([postId])
   @@map("community_post_likes")
+}
+
+enum IntroSessionStatus {
+  pending
+  accepted
+  declined
+  cancelled
+
+  @@map("intro_session_status")
+}
+
+model IntroSession {
+  id             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  requesterId    String             @map("requester_id") @db.Uuid
+  specialistId   String             @map("specialist_id") @db.Uuid
+  scheduledDate  String             @map("scheduled_date") @db.VarChar
+  startTime      String             @map("start_time") @db.VarChar
+  endTime        String             @map("end_time") @db.VarChar
+  timezone       String             @default("America/Montevideo") @db.VarChar
+  status         IntroSessionStatus @default(pending)
+  requesterNote    String?            @map("requester_note") @db.Text
+  meetingLink      String?            @map("meeting_link") @db.VarChar
+  hostMeetingLink  String?            @map("host_meeting_link") @db.VarChar
+  wherebyMeetingId          String?            @map("whereby_meeting_id") @db.VarChar
+  specialistNote            String?            @map("specialist_note") @db.Text
+  requesterTermsAcceptedAt  DateTime?              @map("requester_terms_accepted_at") @db.Timestamptz
+  specialistTermsAcceptedAt DateTime?              @map("specialist_terms_accepted_at") @db.Timestamptz
+  reminderSentAt            DateTime?              @map("reminder_sent_at") @db.Timestamptz
+  feedbackEmailSentAt       DateTime?              @map("feedback_email_sent_at") @db.Timestamptz
+  createdAt                 DateTime               @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                 DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  requester                 User                   @relation("RequestedIntroSessions", fields: [requesterId], references: [id], onDelete: Cascade)
+  specialist                User                   @relation("SpecialistIntroSessions", fields: [specialistId], references: [id], onDelete: Cascade)
+  feedbacks                 IntroSessionFeedback[]
+
+  @@index([specialistId, scheduledDate, status])
+  @@index([requesterId, status])
+  @@map("intro_sessions")
+}
+
+enum SessionFeedbackRole {
+  requester
+  specialist
+
+  @@map("session_feedback_role")
+}
+
+enum SessionResonance {
+  no_match
+  dim
+  warm
+  luminous
+
+  @@map("session_resonance")
+}
+
+model IntroSessionFeedback {
+  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  introSessionId  String              @map("intro_session_id") @db.Uuid
+  authorId        String              @map("author_id") @db.Uuid
+  role            SessionFeedbackRole
+  attended        Boolean             @default(true)
+  resonance       SessionResonance?
+  publicNote      String?             @map("public_note") @db.Text
+  privateNote     String?             @map("private_note") @db.Text
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  introSession    IntroSession        @relation(fields: [introSessionId], references: [id], onDelete: Cascade)
+  author          User                @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@unique([introSessionId, role])
+  @@index([authorId, createdAt])
+  @@map("intro_session_feedbacks")
 }
 

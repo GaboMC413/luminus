@@ -109,6 +109,7 @@ export function LogsTab({ logs }: LogsTabProps) {
                 { label: "Canceló Solicitud", value: "CANCEL_CONNECTION_REQUEST" },
                 { label: "Eliminó Red", value: "NETWORK_DELETION" },
                 { label: "Actualizó Perfil", value: "UPDATE_PROFILE" },
+                { label: "Mecenas Activado", value: "MEMBERSHIP_ACTIVATED" },
               ]}
               onSelect={(val) => setLogAction(val)}
               className="!h-10 text-xs"

@@ -25,12 +25,12 @@ export function validateAuthInput(input: unknown): AuthValidationResult {
     return { ok: false, message: "La contrasena debe tener al menos 8 caracteres." };
   }
 
-  if (!/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
-    return { ok: false, message: "La contrasena debe incluir letras mayusculas y minusculas." };
+  if (!/[a-zA-Z]/.test(password)) {
+    return { ok: false, message: "La contrasena debe incluir al menos una letra." };
   }
 
-  if (!/\d/.test(password) || !/[^A-Za-z0-9áéíóúÁÉÍÓÚñÑüÜ\s]/.test(password)) {
-    return { ok: false, message: "La contrasena debe incluir al menos un numero y un simbolo." };
+  if (!/\d/.test(password)) {
+    return { ok: false, message: "La contrasena debe incluir al menos un numero." };
   }
 
   return { ok: true, email: normalizedEmail, password };

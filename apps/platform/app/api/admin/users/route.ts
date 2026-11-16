@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
-import { getCurrentSession } from "@/lib/auth/session";
+import { getCurrentSession, invalidateUserSessionCache } from "@/lib/auth/session";
+import { invalidateServerCacheTag } from "@/lib/serverCache";
 import { listAdminUsers, normalizeAdminUserPatch, serializeAdminUser } from "@/lib/admin/users";
 import { syncCognitoUserStatus } from "@/lib/auth/cognito-admin";
 import { deleteUserS3Data } from "@/lib/storage/userStorageCleanup";
 
 export const runtime = "nodejs";
 
-function requireAdmin() {
-  const session = getCurrentSession();
+async function requireAdmin() {
+  const session = await getCurrentSession();
 
   if (!session) {
     return {
@@ -49,7 +50,7 @@ function describeAdminUpdateError(error: unknown) {
 }
 
 export async function GET(request: Request) {
-  const admin = requireAdmin();
+  const admin = await requireAdmin();
 
   if (!admin.ok) {
     return admin.response;
@@ -70,7 +71,7 @@ export async function GET(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const admin = requireAdmin();
+  const admin = await requireAdmin();
 
   if (!admin.ok) {
     return admin.response;
@@ -88,6 +89,18 @@ export async function PATCH(request: Request) {
 
   try {
     const { prisma } = await import("@/lib/db");
+
+    if (parsed.userData.email) {
+      const emailConflict = await prisma.user.findFirst({
+        where: {
+          email: parsed.userData.email,
+          id: { not: parsed.id },
+        },
+      });
+      if (emailConflict) {
+        return NextResponse.json({ message: "Ese correo electrónico ya pertenece a otro usuario." }, { status: 400 });
+      }
+    }
 
     if (parsed.userData.status) {
       const existingUser = await prisma.user.findUnique({
@@ -134,6 +147,9 @@ export async function PATCH(request: Request) {
       },
     });
 
+    invalidateUserSessionCache(parsed.id);
+    invalidateServerCacheTag(["specialists", "community-filters"]);
+
     return NextResponse.json({ user: serializeAdminUser(user) });
   } catch (error) {
     console.error("Failed to update admin user.", error);
@@ -142,7 +158,7 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const admin = requireAdmin();
+  const admin = await requireAdmin();
 
   if (!admin.ok) {
     return admin.response;
@@ -183,6 +199,9 @@ export async function DELETE(request: Request) {
     await prisma.user.delete({
       where: { id },
     });
+
+    invalidateUserSessionCache(id);
+    invalidateServerCacheTag(["specialists", "community-filters"]);
 
     return NextResponse.json({ message: "Usuario eliminado permanentemente." });
   } catch (error) {

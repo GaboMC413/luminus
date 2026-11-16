@@ -18,8 +18,8 @@ export const aboutContent = {
     ),
     subtitle: "LUMINUS nace para reunir personas, especialistas, contenidos, espacios y herramientas que ayuden a explorar el bienestar de forma más humana, accesible y conectada.\n\nEstamos construyendo una red para acompañar procesos personales, abrir nuevas posibilidades y acercar el bienestar a la vida cotidiana.",
     primaryCta: {
-      text: "Crear mi cuenta",
-      link: "https://app.luminuslatam.com/auth/registrarse",
+      text: "Unirme a LUMINUS",
+      link: "https://app.luminuslatam.com/unirme",
     },
     secondaryCta: {
       text: "Conocer qué estamos construyendo",
@@ -197,9 +197,9 @@ export const aboutContent = {
     icon: <Sparkles />,
     title: "Sé parte de una nueva forma de acercarte al bienestar",
     subtitle: "Crea tu cuenta y comienza a explorar una red que reúne personas, especialistas, contenidos y herramientas para vivir con más claridad, equilibrio y conexión.",
-    ctaText: "Crear mi cuenta",
-    ctaLink: "https://app.luminuslatam.com/auth/registrarse",
-    microcopy: "3 meses de acceso sin costo. Sin pago inicial.",
+    ctaText: "Unirme a LUMINUS",
+    ctaLink: "https://app.luminuslatam.com/unirme",
+    microcopy: "Únete gratis sin datos de pago, o impulsa la red como Mecenas.",
     bgGlow: "from-luminus-pink/5 via-luminus-lime/5",
     cardBg: "bg-luminus-lime/15",
     iconColor: "text-luminus-lime",

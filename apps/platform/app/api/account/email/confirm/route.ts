@@ -1,14 +1,23 @@
 import { NextResponse } from "next/server";
 import { createSessionToken, getCurrentSession, setSessionCookie } from "@/lib/auth/session";
-import { hashRecoveryCode, PASSWORD_RESET_MAX_ATTEMPTS } from "@/lib/auth/recoveryTokens";
+import { verifyRecoveryCodeHash, PASSWORD_RESET_MAX_ATTEMPTS } from "@/lib/auth/recoveryTokens";
+import { isRateLimited } from "@/utils/rateLimit";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+  }
+
+  const rateCheck = isRateLimited(session.userId, "EMAIL_CHANGE_CONFIRM", 10, 15 * 60 * 1000);
+  if (rateCheck.success) {
+    return NextResponse.json(
+      { message: "Demasiados intentos. Por favor espera unos minutos." },
+      { status: 429 }
+    );
   }
 
   const body = await request.json().catch(() => null);
@@ -37,7 +46,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "El codigo es incorrecto o ha expirado." }, { status: 400 });
     }
 
-    const isValid = token.codeHash === hashRecoveryCode(email, code);
+    const isValid = verifyRecoveryCodeHash(token.codeHash, email, code);
 
     if (!isValid) {
       await prisma.emailChangeToken.update({
@@ -71,7 +80,7 @@ export async function POST(request: Request) {
       }),
     ]);
 
-    setSessionCookie(createSessionToken({ userId: session.userId, email, role: session.role }));
+    await setSessionCookie(createSessionToken({ userId: session.userId, email, role: session.role }));
 
     return NextResponse.json({ success: true, email, message: "Email actualizado con exito." });
   } catch (error) {

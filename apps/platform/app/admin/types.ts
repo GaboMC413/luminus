@@ -3,6 +3,15 @@ export type AdminUser = {
   email: string;
   role: "USER" | "ADMIN";
   status: "active" | "disabled" | "deleted";
+  tier?: "FREE" | "MECENAS" | string;
+  stripeCustomerId?: string | null;
+  stripeSubscriptionId?: string | null;
+  memberSince?: string | null;
+  paidUntil?: string | null;
+  closedAt?: string | null;
+  purgeAt?: string | null;
+  closureReason?: string | null;
+  closureFeedback?: string | null;
   isGhost?: boolean;
   emailVerified: boolean;
   authProvider: string;
@@ -17,7 +26,7 @@ export type AdminUser = {
     city: string;
     country: string;
     phoneNumber: string;
-    gender: string;
+    gender?: string;
     birthdate: string;
     bio: string;
     intention: string;
@@ -270,13 +279,119 @@ export type AdminContactMessage = {
   createdAt: string;
 };
 
+export type AdminSubscriptionInvoice = {
+  id: string;
+  number: string;
+  date: number;
+  amount: number;
+  currency: string;
+  status: string;
+  description: string;
+  pdfUrl: string | null;
+  hostedUrl: string | null;
+};
+
+export type AdminUserBilling = {
+  userId: string;
+  stripeConfigured: boolean;
+  isMock: boolean;
+  hasActiveSubscription: boolean;
+  missingPaymentMethod: boolean;
+  subscription: {
+    id: string;
+    planName: string;
+    amount: number;
+    currency: string;
+    interval: string;
+    currentPeriodEnd: number | null;
+    cancelAtPeriodEnd: boolean;
+    scheduledPlanChange?: {
+      targetInterval: string;
+      targetPlanName: string;
+      targetAmount: number;
+      effectiveDate: number | null;
+    } | null;
+    status: string;
+  } | null;
+  defaultPaymentMethod: {
+    id: string;
+    brand: string;
+    last4: string;
+    expMonth: number;
+    expYear: number;
+    isDefault: boolean;
+  } | null;
+  invoices: AdminSubscriptionInvoice[];
+};
+
+export type AdminGlobalInvoice = {
+  id: string;
+  number: string;
+  date: number;
+  amount: number;
+  currency: string;
+  status: string;
+  description: string;
+  customerId: string | null;
+  customerEmail: string | null;
+  customerName: string | null;
+  userId: string | null;
+  pdfUrl: string | null;
+  hostedUrl: string | null;
+};
+
+export type AdminIntroSessionFeedback = {
+  role: "requester" | "specialist";
+  attended: boolean;
+  resonance: "no_match" | "dim" | "warm" | "luminous" | null;
+  publicNote: string;
+  privateNote: string;
+  createdAt: string;
+};
+
+export type AdminIntroSession = {
+  id: string;
+  requesterId: string;
+  specialistId: string;
+  scheduledDate: string;
+  startTime: string;
+  endTime: string;
+  timezone: string;
+  status: "pending" | "accepted" | "declined" | "cancelled";
+  requesterNote: string;
+  specialistNote: string;
+  meetingLink: string;
+  hostMeetingLink: string;
+  wherebyMeetingId: string | null;
+  requesterTermsAcceptedAt: string | null;
+  specialistTermsAcceptedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  requester: {
+    id: string;
+    email: string;
+    name: string;
+    avatarUrl: string;
+  };
+  specialist: {
+    id: string;
+    email: string;
+    name: string;
+    avatarUrl: string;
+    specialty: string;
+  };
+  feedbacks?: AdminIntroSessionFeedback[];
+};
+
 export type AdminTab =
   | "usuarios"
+  | "suscripciones"
+  | "especialistas"
+  | "sesiones"
   | "chats"
   | "soporte"
   | "logs"
   | "busquedas"
-  | "especialistas"
   | "publicaciones"
   | "emails"
   | "categorias"

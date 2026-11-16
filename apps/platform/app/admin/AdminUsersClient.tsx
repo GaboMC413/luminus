@@ -14,11 +14,15 @@ import {
   AdminSuggestion,
   AdminEvent,
   AdminEventInscription,
+  AdminGlobalInvoice,
+  AdminIntroSession,
   AdminTab,
 } from "./types";
 import { AdminHeader } from "./components/AdminHeader";
 import { AdminSidebar } from "./components/AdminSidebar";
 import { UsersTab } from "./components/tabs/UsersTab";
+import { SubscriptionsTab } from "./components/tabs/SubscriptionsTab";
+import { SessionsTab } from "./components/tabs/SessionsTab";
 import { ChatsTab } from "./components/tabs/ChatsTab";
 import { SupportChatsTab } from "./components/tabs/SupportChatsTab";
 import { LogsTab } from "./components/tabs/LogsTab";
@@ -45,6 +49,9 @@ export function AdminUsersClient({
   initialEvents = [],
   initialInscriptions = [],
   initialContactMessages = [],
+  initialIntroSessions = [],
+  initialGlobalInvoices = [],
+  stripeConfigured = false,
   initialLoadWarnings = [],
 }: {
   initialUsers: AdminUser[];
@@ -60,6 +67,9 @@ export function AdminUsersClient({
   initialEvents?: AdminEvent[];
   initialInscriptions?: AdminEventInscription[];
   initialContactMessages?: import("./types").AdminContactMessage[];
+  initialIntroSessions?: AdminIntroSession[];
+  initialGlobalInvoices?: AdminGlobalInvoice[];
+  stripeConfigured?: boolean;
   initialLoadWarnings?: string[];
 }) {
   const [users, setUsers] = useState<AdminUser[]>(initialUsers);
@@ -75,6 +85,10 @@ export function AdminUsersClient({
   const [suggestions, setSuggestions] = useState<AdminSuggestion[]>(initialSuggestions);
   const [events] = useState<AdminEvent[]>(initialEvents);
   const [inscriptions] = useState<AdminEventInscription[]>(initialInscriptions);
+  const [introSessions, setIntroSessions] = useState<AdminIntroSession[]>(initialIntroSessions);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
+    initialIntroSessions[0]?.id ?? null
+  );
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -99,8 +113,8 @@ export function AdminUsersClient({
   const [selectedSpecialistUserId, setSelectedSpecialistUserId] = useState<string | null>(null);
 
   // Shared User selection state
-  const [, setSelectedId] = useState<string>(initialUsers[0]?.id ?? "");
-  const [, setUserSubTab] = useState<"activos" | "cerradas" | "deshabilitados">("activos");
+  const [selectedId, setSelectedId] = useState<string>(initialUsers[0]?.id ?? "");
+  const [userSubTab, setUserSubTab] = useState<"activos" | "mecenas" | "cerradas" | "deshabilitados">("activos");
 
   const pendingSuggestionsCount = useMemo(() => {
     return suggestions.filter((s) => s.status === "pending").length;
@@ -128,6 +142,15 @@ export function AdminUsersClient({
   const pendingPostsCount = useMemo(() => {
     return communityPosts.filter((p) => p.status === "pending").length;
   }, [communityPosts]);
+
+  const pendingSessionsCount = useMemo(() => {
+    return introSessions.filter((s) => s.status === "pending").length;
+  }, [introSessions]);
+
+  const handleOpenSession = (sessionId: string) => {
+    setSelectedSessionId(sessionId);
+    handleTabChange("sesiones");
+  };
 
   const handleValidatePost = async (postId: string) => {
     setCommunityPosts((prev) =>
@@ -228,6 +251,7 @@ export function AdminUsersClient({
           setActiveTab={handleTabChange}
           pendingSuggestionsCount={pendingSuggestionsCount}
           pendingPostsCount={pendingPostsCount}
+          pendingSessionsCount={pendingSessionsCount}
           onSelectCategories={fetchCategoriesData}
         />
 
@@ -237,8 +261,41 @@ export function AdminUsersClient({
             <UsersTab
               users={users}
               specialists={specialists}
+              introSessions={introSessions}
               setUsers={setUsers}
               setActiveTab={handleTabChange}
+              setSelectedSpecialistUserId={setSelectedSpecialistUserId}
+              setSpecialistSubTab={setSpecialistSubTab}
+              onOpenSession={handleOpenSession}
+              selectedId={selectedId}
+              setSelectedId={setSelectedId}
+              userSubTab={userSubTab}
+              setUserSubTab={setUserSubTab}
+            />
+          )}
+
+          {activeTab === "suscripciones" && (
+            <SubscriptionsTab
+              users={users}
+              setUsers={setUsers}
+              initialGlobalInvoices={initialGlobalInvoices}
+              stripeConfigured={stripeConfigured}
+              setActiveTab={handleTabChange}
+              setSelectedUserId={setSelectedId}
+              setUserSubTab={setUserSubTab}
+            />
+          )}
+
+          {activeTab === "sesiones" && (
+            <SessionsTab
+              sessions={introSessions}
+              setSessions={setIntroSessions}
+              users={users}
+              selectedSessionId={selectedSessionId}
+              setSelectedSessionId={setSelectedSessionId}
+              setActiveTab={handleTabChange}
+              setSelectedUserId={setSelectedId}
+              setUserSubTab={setUserSubTab}
               setSelectedSpecialistUserId={setSelectedSpecialistUserId}
               setSpecialistSubTab={setSpecialistSubTab}
             />
@@ -259,6 +316,7 @@ export function AdminUsersClient({
               specialists={specialists}
               postulations={postulations}
               users={users}
+              introSessions={introSessions}
               setSpecialists={setSpecialists}
               setPostulations={setPostulations}
               specialistSubTab={specialistSubTab}
@@ -268,6 +326,7 @@ export function AdminUsersClient({
               setSelectedId={setSelectedId}
               setUserSubTab={setUserSubTab}
               setActiveTab={handleTabChange}
+              onOpenSession={handleOpenSession}
             />
           )}
 

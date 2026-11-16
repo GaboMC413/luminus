@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getCurrentSession } from "@/lib/auth/session";
 import { listAdminUsers } from "@/lib/admin/users";
 import { listAdminChats, listAdminSupportChats } from "@/lib/admin/chats";
+import { listAdminIntroSessions } from "@/lib/admin/sessions";
+import { listGlobalStripeInvoices } from "@/lib/admin/billing";
 import { AdminUsersClient } from "./AdminUsersClient";
 
 export const runtime = "nodejs";
@@ -23,7 +25,7 @@ async function loadAdminSection<T>(
 }
 
 export default async function AdminPage() {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     redirect("/auth/iniciar-sesion");
@@ -57,6 +59,8 @@ export default async function AdminPage() {
     eventsRaw,
     inscriptionsRaw,
     contactMessagesRaw,
+    introSessions,
+    globalBilling,
   ] = await Promise.all([
     loadAdminSection("usuarios", loadWarnings, () => listAdminUsers(prisma), []),
     loadAdminSection("chats", loadWarnings, () => listAdminChats(prisma), []),
@@ -218,6 +222,13 @@ export default async function AdminPage() {
       orderBy: { createdAt: "desc" },
       take: 100,
     }), []),
+    loadAdminSection("sesiones", loadWarnings, () => listAdminIntroSessions(prisma), []),
+    loadAdminSection(
+      "suscripciones",
+      loadWarnings,
+      () => listGlobalStripeInvoices(prisma, 50),
+      { invoices: [], stripeConfigured: false }
+    ),
   ]);
 
   const logs = logsRaw.map((log: any) => ({
@@ -445,6 +456,9 @@ export default async function AdminPage() {
       initialEvents={events}
       initialInscriptions={inscriptions}
       initialContactMessages={contactMessages}
+      initialIntroSessions={introSessions}
+      initialGlobalInvoices={globalBilling.invoices}
+      stripeConfigured={globalBilling.stripeConfigured}
       initialLoadWarnings={loadWarnings}
     />
   );

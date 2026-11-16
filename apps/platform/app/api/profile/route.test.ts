@@ -30,6 +30,7 @@ vi.mock("@/lib/db", () => {
 // 3. Mock de Onboarding (para que no falle si intentan importar la función)
 vi.mock("@/lib/onboarding", () => ({
   checkAndTriggerQuestCompletion: vi.fn(),
+  checkAndTriggerQuestsCompletion: vi.fn().mockResolvedValue([]),
 }));
 
 describe("/api/profile", () => {
@@ -48,20 +49,20 @@ describe("/api/profile", () => {
   describe("Test 1: Rutas Protegidas (Autenticación)", () => {
     it("debería rechazar la petición GET con 401 si no hay sesión iniciada", async () => {
       // 1. Simulamos que el usuario NO está logueado
-      vi.mocked(getCurrentSession).mockReturnValue(null);
+      vi.mocked(getCurrentSession).mockResolvedValue(null);
 
       const res = await GET();
       const data = await res.json();
 
       expect(res.status).toBe(401);
       expect(data.message).toBe("No autorizado.");
-      
+
       // Aseguramos que los datos sensibles no fueron consultados
       expect(prisma.user.findUnique).not.toHaveBeenCalled();
     });
 
     it("debería rechazar la petición PATCH con 401 si no hay sesión iniciada", async () => {
-      vi.mocked(getCurrentSession).mockReturnValue(null);
+      vi.mocked(getCurrentSession).mockResolvedValue(null);
       const req = createRequest({ first_name: "Hacker" });
 
       const res = await PATCH(req);
@@ -76,13 +77,13 @@ describe("/api/profile", () => {
     it("solo debe usar el ID de la sesión segura para actualizar datos, ignorando cualquier ID enviado en la petición", async () => {
       // 1. Simulamos que quien inició sesión fue "usuario-legitimo-123"
       const sessionData = { userId: "usuario-legitimo-123", email: "legitimo@test.com", role: "USER" };
-      vi.mocked(getCurrentSession).mockReturnValue(sessionData as any);
+      vi.mocked(getCurrentSession).mockResolvedValue(sessionData as any);
 
       // 2. El atacante intenta enviar un "userId" diferente (ej: "admin-456") en el cuerpo
-      const req = createRequest({ 
+      const req = createRequest({
         first_name: "Hacked",
-        userId: "admin-456", 
-        id: "admin-456" 
+        userId: "admin-456",
+        id: "admin-456"
       });
 
       // 3. Simulamos la transacción de Prisma para que devuelva un perfil básico
@@ -93,10 +94,10 @@ describe("/api/profile", () => {
 
       // 4. Verificamos la regla de oro: Prisma SIEMPRE debió usar "usuario-legitimo-123"
       expect(prisma.$transaction).toHaveBeenCalledTimes(1);
-      
+
       // Obtenemos la función de callback enviada a prisma.$transaction
       const transactionCallback = vi.mocked(prisma.$transaction).mock.calls[0][0];
-      
+
       // Creamos un falso "tx" para ver qué hubiera intentado hacer
       const txMock = {
         userProfile: { upsert: vi.fn() },
@@ -122,18 +123,18 @@ describe("/api/profile", () => {
   describe("Test 3: Flujo Principal (Actualizar Perfil)", () => {
     it("debería actualizar los datos correctamente si la sesión es válida", async () => {
       const sessionData = { userId: "user-123", email: "test@test.com", role: "USER" };
-      vi.mocked(getCurrentSession).mockReturnValue(sessionData as any);
+      vi.mocked(getCurrentSession).mockResolvedValue(sessionData as any);
 
-      const req = createRequest({ 
+      const req = createRequest({
         first_name: "Juan",
         last_name: "Pérez",
         profession: "Ingeniero"
       });
 
       // Mock de la transacción exitosa
-      const mockUpdatedUser = { 
-        email: "test@test.com", 
-        profile: { firstName: "Juan", lastName: "Pérez", profession: "Ingeniero" } 
+      const mockUpdatedUser = {
+        email: "test@test.com",
+        profile: { firstName: "Juan", lastName: "Pérez", profession: "Ingeniero" }
       };
       vi.mocked(prisma.$transaction).mockResolvedValue(mockUpdatedUser);
 
@@ -153,6 +154,31 @@ describe("/api/profile", () => {
           })
         })
       );
+    });
+
+    it("debería responder con 500 si la base de datos falla al leer el perfil sin mock fallback", async () => {
+      vi.mocked(getCurrentSession).mockResolvedValue({ userId: "user-123", email: "user@test.com", role: "USER" } as any);
+      vi.mocked(prisma.user.findUnique).mockRejectedValue(new Error("DB connection error"));
+
+      const res = await GET();
+      const data = await res.json();
+
+      expect(res.status).toBe(500);
+      expect(data.message).toBe("No fue posible cargar el perfil.");
+      expect(data.profile).toBeUndefined();
+    });
+
+    it("debería responder con 500 si la base de datos falla al actualizar el perfil sin mock fallback", async () => {
+      vi.mocked(getCurrentSession).mockResolvedValue({ userId: "user-123", email: "user@test.com", role: "USER" } as any);
+      vi.mocked(prisma.$transaction).mockRejectedValue(new Error("DB connection error"));
+
+      const req = createRequest({ first_name: "Juan" });
+      const res = await PATCH(req);
+      const data = await res.json();
+
+      expect(res.status).toBe(500);
+      expect(data.message).toBe("No fue posible actualizar el perfil.");
+      expect(data.profile).toBeUndefined();
     });
   });
 });

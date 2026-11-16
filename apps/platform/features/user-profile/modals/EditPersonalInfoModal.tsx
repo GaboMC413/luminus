@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import { Camera, User } from 'lucide-react';
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { InputField } from "@/components/ui/InputField";
@@ -24,6 +25,10 @@ interface EditPersonalInfoModalProps {
   onSave: (data: Partial<ProfileData>) => void;
   initialData: ProfileData;
   initialFocusField?: string | null;
+  photoUrl?: string | null;
+  coverUrl?: string | null;
+  onEditPhoto?: () => void;
+  onEditCover?: () => void;
 }
 
 const MONTHS = [
@@ -70,7 +75,17 @@ const isValidBirthdate = (val: string): boolean => {
   return true;
 };
 
-export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, initialFocusField }: EditPersonalInfoModalProps) {
+export function EditPersonalInfoModal({
+  isOpen,
+  onClose,
+  onSave,
+  initialData,
+  initialFocusField,
+  photoUrl,
+  coverUrl,
+  onEditPhoto,
+  onEditCover,
+}: EditPersonalInfoModalProps) {
   const [formData, setFormData] = useState<ProfileData>(initialData);
   
   // Split birthdate states
@@ -79,6 +94,8 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
   const [birthYear, setBirthYear] = useState("");
   const [dateError, setDateError] = useState("");
   const [locationError, setLocationError] = useState("");
+  const [firstNameError, setFirstNameError] = useState("");
+  const [lastNameError, setLastNameError] = useState("");
 
   // Refs for auto-focusing & auto-tabbing
   const professionRef = useRef<HTMLInputElement>(null);
@@ -87,6 +104,16 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
   const dayRef = useRef<HTMLDivElement>(null);
   
   const genderRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData(initialData);
+      setFirstNameError("");
+      setLastNameError("");
+      setLocationError("");
+      setDateError("");
+    }
+  }, [isOpen, initialData]);
 
   useEffect(() => {
     if (isOpen && initialFocusField) {
@@ -105,6 +132,8 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
     if (!isOpen) {
       setDateError("");
       setLocationError("");
+      setFirstNameError("");
+      setLastNameError("");
     }
   }, [isOpen]);
 
@@ -123,10 +152,27 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === "first_name") setFirstNameError("");
+    if (name === "last_name") setLastNameError("");
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.first_name || !formData.first_name.trim()) {
+      setFirstNameError("Ingresa tu nombre");
+      return;
+    }
+
+    if (!formData.last_name || !formData.last_name.trim()) {
+      setLastNameError("Ingresa tu apellido");
+      return;
+    }
+
+    if (!formData.city || !formData.city.trim()) {
+      setLocationError("Ingresa tu ciudad");
+      return;
+    }
 
     // Pad single digits
     const paddedDay = birthDay.length === 1 ? '0' + birthDay : birthDay;
@@ -146,11 +192,6 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
       }
     }
 
-    if (!formData.city || !formData.city.trim()) {
-      setLocationError("Ingresa tu ciudad");
-      return;
-    }
-
     // Convert birthdate splits back to YYYY-MM-DD for saving
     let finalBirthdate = "";
     if (paddedDay && paddedMonth && fullYear && isValidBirthdate(normalized)) {
@@ -164,61 +205,117 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
     onClose();
   };
 
+  const hasCover = Boolean(coverUrl && coverUrl !== "" && !coverUrl.includes("empty"));
+  const iconButtonClass =
+    "rounded-full bg-white/85 hover:bg-white text-slate-600 hover:text-slate-900 border border-white/70 shadow-xs backdrop-blur-md flex items-center justify-center transition-all cursor-pointer active:scale-[0.97]";
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Editar Información Personal"
-      maxWidth="720px"
+      title="Editar perfil"
+      subtitle="Actualiza tu foto, portada y datos personales."
+      maxWidth="540px"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !rounded-[10px] md:!rounded-[12px]">
+          <Button variant="secondary" onClick={onClose} className="w-full sm:flex-1">
             Cancelar
           </Button>
-          <Button onClick={handleSubmit} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !bg-black !text-white hover:!bg-slate-800 !rounded-[10px] md:!rounded-[12px]">
+          <Button variant="primary" onClick={handleSubmit} className="w-full sm:flex-1">
             Guardar cambios
           </Button>
         </>
       }
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4 md:gap-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 md:gap-x-8 gap-y-3.5 md:gap-y-5">
-          <div className="flex flex-col gap-1.5 md:gap-2">
-            <label className="text-label text-[11px] md:text-xs ml-1">Nombre</label>
-            <InputField
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleChange}
-              placeholder="Nombre"
-              variant="bordered"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5 md:gap-2">
-            <label className="text-label text-[11px] md:text-xs ml-1">Apellido</label>
-            <InputField
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleChange}
-              placeholder="Apellido"
-              variant="bordered"
-            />
-          </div>
-        </div>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        {(onEditPhoto || onEditCover) && (
+          <div
+            className={`relative w-full h-28 sm:h-32 rounded-2xl overflow-hidden border border-slate-200/80 flex items-center justify-start pl-4 ${
+              !hasCover ? "luminus-light-gradient" : "bg-slate-100"
+            }`}
+          >
+            {hasCover && (
+              <img
+                src={coverUrl!}
+                alt="Portada actual"
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            )}
 
-        <div className="flex flex-col gap-1.5 md:gap-2">
-          <label className="text-label text-[11px] md:text-xs ml-1">Profesión</label>
+            {onEditCover && (
+              <button
+                type="button"
+                onClick={onEditCover}
+                aria-label="Cambiar portada"
+                title="Cambiar portada"
+                className={`absolute top-2.5 right-2.5 z-10 w-8 h-8 ${iconButtonClass}`}
+              >
+                <Camera className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            {onEditPhoto && (
+              <div className="relative z-10 w-20 h-20 sm:w-24 sm:h-24 shrink-0">
+                <div
+                  onClick={onEditPhoto}
+                  className="w-full h-full rounded-2xl overflow-hidden border-4 border-white bg-slate-50 shadow-sm flex items-center justify-center cursor-pointer group"
+                >
+                  {photoUrl ? (
+                    <img
+                      src={photoUrl}
+                      alt="Foto de perfil"
+                      className="w-full h-full object-cover transition-opacity group-hover:opacity-90"
+                    />
+                  ) : (
+                    <User className="w-8 h-8 text-slate-300 stroke-[1.5]" />
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={onEditPhoto}
+                  aria-label="Cambiar foto"
+                  title="Cambiar foto"
+                  className={`absolute bottom-2 right-2 w-7 h-7 ${iconButtonClass}`}
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <InputField
-            ref={professionRef}
-            name="profession"
-            value={formData.profession}
+            label="Nombre"
+            name="first_name"
+            value={formData.first_name}
             onChange={handleChange}
-            placeholder="Tu profesión"
+            placeholder="Ingresa tu nombre"
+            error={firstNameError}
             variant="bordered"
-            autoFocus={initialFocusField === 'profession'}
+          />
+          <InputField
+            label="Apellido"
+            name="last_name"
+            value={formData.last_name}
+            onChange={handleChange}
+            placeholder="Ingresa tu apellido"
+            error={lastNameError}
+            variant="bordered"
           />
         </div>
 
-        <div>
+        <InputField
+          ref={professionRef}
+          label="Profesión"
+          name="profession"
+          value={formData.profession}
+          onChange={handleChange}
+          placeholder="Ingresa tu profesión"
+          variant="bordered"
+          autoFocus={initialFocusField === 'profession'}
+        />
+
+        <div className="flex flex-col gap-1">
           <LocationInput
             ref={cityRef}
             label="Ciudad"
@@ -229,13 +326,43 @@ export function EditPersonalInfoModal({ isOpen, onClose, onSave, initialData, in
               setLocationError("");
             }}
             autoFocus={initialFocusField === 'city'}
-            className={locationError ? '[&_input]:!border-[#FF3D3D] [&_input]:!ring-1 [&_input]:!ring-[#FF3D3D]' : ''}
+            className={locationError ? '[&_input]:!border-rose-500 [&_input]:!ring-1 [&_input]:!ring-rose-500' : ''}
           />
-          {locationError && <p className="text-[#FF3D3D] text-[12px] font-bold mt-1 ml-1">{locationError}</p>}
+          {locationError && <p className="text-xs font-medium text-rose-600 mt-0.5 px-0.5">{locationError}</p>}
         </div>
 
-        <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
-          <span>La fecha de nacimiento y género se gestionan desde los Ajustes de Cuenta.</span>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-label">Fecha de nacimiento</label>
+          <div className="grid grid-cols-3 gap-2 sm:gap-3" ref={dayRef}>
+            <SelectInput
+              value={birthDay}
+              options={DAYS}
+              placeholder="Día"
+              onSelect={(val) => {
+                setBirthDay(val);
+                setDateError("");
+              }}
+            />
+            <SelectInput
+              value={birthMonth}
+              options={MONTHS}
+              placeholder="Mes"
+              onSelect={(val) => {
+                setBirthMonth(val);
+                setDateError("");
+              }}
+            />
+            <SelectInput
+              value={birthYear}
+              options={YEARS}
+              placeholder="Año"
+              onSelect={(val) => {
+                setBirthYear(val);
+                setDateError("");
+              }}
+            />
+          </div>
+          {dateError && <p className="text-xs font-medium text-rose-600 mt-0.5 px-0.5">{dateError}</p>}
         </div>
       </form>
     </Modal>

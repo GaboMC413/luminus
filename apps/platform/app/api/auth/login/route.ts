@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       cognitoSession = await signInWithCognito(validation.email, validation.password, cognitoUsername);
     } catch (cognitoError: any) {
       if (cognitoError.code === "UserNotConfirmedException") {
-        if (process.env.SKIP_EMAIL_VERIFICATION === "true") {
+        if (process.env.NODE_ENV !== "production" && process.env.SKIP_EMAIL_VERIFICATION === "true") {
           const { adminConfirmUser } = await import("@/lib/auth/cognito-admin");
           await adminConfirmUser(validation.email);
           cognitoSession = await signInWithCognito(validation.email, validation.password, cognitoUsername);
@@ -91,10 +91,23 @@ export async function POST(request: Request) {
     }
 
     if (user.status === "deleted") {
+      if (user.purgeAt && new Date() > user.purgeAt) {
+        return NextResponse.json(
+          { message: "Esta cuenta ha superado el periodo de gracia y ha sido eliminada permanentemente." },
+          { status: 403 },
+        );
+      }
+
       if (body?.reactivate) {
         await prisma.user.update({
           where: { id: user.id },
-          data: { status: "active" },
+          data: {
+            status: "active",
+            tier: user.paidUntil && new Date() < user.paidUntil ? user.tier : "FREE",
+            closedAt: null,
+            purgeAt: null,
+            paidUntil: user.paidUntil && new Date() < user.paidUntil ? user.paidUntil : null,
+          },
         });
         user.status = "active";
         try {
@@ -105,7 +118,7 @@ export async function POST(request: Request) {
         }
       } else {
         return NextResponse.json(
-          { code: "REQUIRES_REACTIVATION", message: "Tu cuenta fue eliminada. ¿Deseas reactivarla?" },
+          { code: "REQUIRES_REACTIVATION", message: "Tu cuenta se encuentra cerrada. ¿Deseas reactivarla?", paidUntil: user.paidUntil, purgeAt: user.purgeAt },
           { status: 403 },
         );
       }
@@ -168,7 +181,7 @@ export async function POST(request: Request) {
       role: updatedUser.role,
     });
 
-    setSessionCookie(token);
+    await setSessionCookie(token);
 
     try {
       await prisma.activityLog.create({

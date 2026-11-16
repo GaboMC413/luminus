@@ -113,6 +113,10 @@ export default function TermsPage() {
               <Link href="/legal/condiciones-especialistas" className="text-slate-900 underline hover:text-black transition-colors">
                 Condiciones para Especialistas LUMINUS
               </Link>
+              , y las sesiones iniciales se rigen por las{" "}
+              <Link href="/legal/sesiones-introductorias" className="text-slate-900 underline hover:text-black transition-colors">
+                Condiciones de Sesiones Introductorias
+              </Link>
               .
             </p>
           </div>

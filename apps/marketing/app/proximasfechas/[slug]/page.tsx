@@ -7,9 +7,9 @@ export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 async function getEventBySlug(slug: string): Promise<any | null> {
@@ -32,7 +32,8 @@ function getImageMimeType(url: string): string {
   return "image/jpeg";
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata(props: PageProps): Promise<Metadata> {
+  const params = await props.params;
   const event = await getEventBySlug(params.slug);
   if (!event) {
     return { title: "Inscripción a Evento | LUMINUS LATAM" };
@@ -117,7 +118,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function DynamicEventRegistrationPage({ params }: PageProps) {
+export default async function DynamicEventRegistrationPage(props: PageProps) {
+  const params = await props.params;
   const event = await getEventBySlug(params.slug);
 
   if (!event) {

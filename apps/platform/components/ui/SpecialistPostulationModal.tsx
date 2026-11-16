@@ -5,6 +5,11 @@ import Modal from './Modal';
 import Button from './Button';
 import InputField from './InputField';
 import SelectInput from './SelectInput';
+import {
+  normalizeInstagramInput,
+  normalizeLinkedinInput,
+  normalizeWebsiteUrl,
+} from '@/utils/socialLinks';
 
 interface Course {
   title: string;
@@ -64,6 +69,22 @@ export function SpecialistPostulationModal({
       return;
     }
 
+    const normalizedLinkedin = linkedinUrl.trim() ? normalizeLinkedinInput(linkedinUrl) : null;
+    if (linkedinUrl.trim() && !normalizedLinkedin) {
+      alert("Ingresa un enlace o usuario válido de LinkedIn.");
+      return;
+    }
+    const normalizedInstagram = instagramUrl.trim() ? normalizeInstagramInput(instagramUrl) : null;
+    if (instagramUrl.trim() && !normalizedInstagram) {
+      alert("Ingresa un usuario válido (ej. @tuusuario) o enlace de Instagram.");
+      return;
+    }
+    const normalizedWebsite = websiteUrl.trim() ? normalizeWebsiteUrl(websiteUrl) : null;
+    if (websiteUrl.trim() && !normalizedWebsite) {
+      alert("Ingresa una URL válida para tu sitio web.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const payload = {
@@ -71,9 +92,9 @@ export function SpecialistPostulationModal({
         title,
         clinicName: clinicName || null,
         bio,
-        linkedinUrl: linkedinUrl || null,
-        instagramUrl: instagramUrl || null,
-        websiteUrl: websiteUrl || null,
+        linkedinUrl: normalizedLinkedin,
+        instagramUrl: normalizedInstagram,
+        websiteUrl: normalizedWebsite,
         courses: courses.map(c => ({ name: c.title, url: c.url })),
       };
 
@@ -223,20 +244,20 @@ export function SpecialistPostulationModal({
             <div className="relative flex items-center">
               <span className="material-symbols-outlined text-slate-400 absolute left-4 text-[20px]">link</span>
               <InputField
-                type="url"
+                type="text"
                 value={linkedinUrl}
                 onChange={(e) => setLinkedinUrl(e.target.value)}
-                placeholder="Enlace a LinkedIn (https://linkedin.com/in/...)"
+                placeholder="tuperfil o https://linkedin.com/in/..."
                 className="pl-11"
               />
             </div>
             <div className="relative flex items-center">
               <span className="material-symbols-outlined text-slate-400 absolute left-4 text-[20px]">photo_camera</span>
               <InputField
-                type="url"
+                type="text"
                 value={instagramUrl}
                 onChange={(e) => setInstagramUrl(e.target.value)}
-                placeholder="Enlace a Instagram (https://instagram.com/...)"
+                placeholder="@tuusuario o https://instagram.com/..."
                 className="pl-11"
               />
             </div>

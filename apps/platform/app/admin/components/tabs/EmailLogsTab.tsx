@@ -14,6 +14,15 @@ import {
   renderEmailChangeVerificationHtml,
   renderContactNotificationEmailHtml,
   renderEventRegistrationEmailHtml,
+  renderSpecialistApprovedEmailHtml,
+  SPECIALIST_APPROVED_EMAIL_SUBJECT,
+  renderMecenasWelcomeEmailHtml,
+  renderMecenasUpgradeEmailHtml,
+  renderMembershipCanceledEmailHtml,
+  renderMembershipSwitchAnnualEmailHtml,
+  renderMembershipSwitchMonthlyEmailHtml,
+  renderIntroSessionEmailHtml,
+  getIntroSessionEmailSubject,
 } from "@/lib/mails";
 
 interface EmailLogsTabProps {
@@ -58,10 +67,99 @@ const templatesData = {
       eventDate: "2026-09-19T18:00:00.000Z",
       timeText: "18:00 hs (GMT-3)",
       speakerName: "Dra. Sofía Martínez",
-      youtubeUrl: "https://www.youtube.com/@luminus_latam",
+      youtubeUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      source: "web",
+    }),
+  },
+  specialistApproved: {
+    name: "Aprobación de Especialista (Specialist Approved)",
+    subject: SPECIALIST_APPROVED_EMAIL_SUBJECT,
+    htmlBody: renderSpecialistApprovedEmailHtml({
+      name: "Sofía Martínez",
+      title: "Lic. en Psicología",
+      specialty: "Psicología Clínica",
+      selectedAreas: ["Bienestar Emocional", "Mindfulness"],
+      clinicName: "Espacio Calma",
+      coursesCount: 2,
+    }),
+  },
+  mecenasWelcome: {
+    name: "Bienvenida Mecenas",
+    subject: "¡Ya eres Mecenas de LUMINUS!",
+    htmlBody: renderMecenasWelcomeEmailHtml({ name: "Gabriel", interval: "month" }),
+  },
+  mecenasUpgrade: {
+    name: "Upgrade a Mecenas",
+    subject: "Gracias por convertirte en Mecenas de LUMINUS",
+    htmlBody: renderMecenasUpgradeEmailHtml({ name: "Gabriel", interval: "year" }),
+  },
+  membershipCanceled: {
+    name: "Cancelación de Membresía",
+    subject: "Confirmación de cancelación de membresía Mecenas",
+    htmlBody: renderMembershipCanceledEmailHtml({
+      name: "Gabriel",
+      accessUntilDate: "15 de diciembre de 2026",
+    }),
+  },
+  membershipSwitchAnnual: {
+    name: "Cambio a Plan Anual",
+    subject: "Cambio programado a Mecenas Anual",
+    htmlBody: renderMembershipSwitchAnnualEmailHtml({
+      name: "Gabriel",
+      effectiveDate: "15 de diciembre de 2026",
+    }),
+  },
+  membershipSwitchMonthly: {
+    name: "Cambio a Plan Mensual",
+    subject: "Cambio programado a Mecenas Mensual",
+    htmlBody: renderMembershipSwitchMonthlyEmailHtml({
+      name: "Gabriel",
+      periodEndDate: "15 de diciembre de 2026",
+    }),
+  },
+  introSessionRequested: {
+    name: "Sesión Intro: Solicitud (Especialista)",
+    subject: getIntroSessionEmailSubject({
+      variant: "requested_specialist",
+      recipientName: "Dra. Sofía Martínez",
+      counterpartyName: "Gabriel",
+      friendlyDate: "martes 18 de noviembre",
+      startTime: "10:00",
+      timezone: "America/Montevideo",
+    }),
+    htmlBody: renderIntroSessionEmailHtml({
+      variant: "requested_specialist",
+      recipientName: "Dra. Sofía Martínez",
+      counterpartyName: "Gabriel",
+      friendlyDate: "martes 18 de noviembre",
+      startTime: "10:00",
+      timezone: "America/Montevideo",
+      note: "Me gustaría conversar sobre manejo del estrés.",
+    }),
+  },
+  introSessionAccepted: {
+    name: "Sesión Intro: Confirmada (Miembro)",
+    subject: getIntroSessionEmailSubject({
+      variant: "accepted_requester",
+      recipientName: "Gabriel",
+      counterpartyName: "Dra. Sofía Martínez",
+      friendlyDate: "martes 18 de noviembre",
+      startTime: "10:00",
+      timezone: "America/Montevideo",
+    }),
+    htmlBody: renderIntroSessionEmailHtml({
+      variant: "accepted_requester",
+      recipientName: "Gabriel",
+      counterpartyName: "Dra. Sofía Martínez",
+      friendlyDate: "martes 18 de noviembre",
+      startTime: "10:00",
+      timezone: "America/Montevideo",
+      meetingLink: "https://luminus.whereby.com/ejemplo-sala",
     }),
   },
 };
+
+type TemplateKey = keyof typeof templatesData;
 
 export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
   const [emailSubTab, setEmailSubTab] = useState<"historial" | "plantillas">("historial");
@@ -70,7 +168,7 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
   const [emailStartDate, setEmailStartDate] = useState("");
   const [emailEndDate, setEmailEndDate] = useState("");
   const [selectedEmailLogId, setSelectedEmailLogId] = useState<string>(emailLogs[0]?.id ?? "");
-  const [selectedTemplate, setSelectedTemplate] = useState<"welcome" | "recovery" | "emailChange" | "contact" | "eventRegistration">("welcome");
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateKey>("welcome");
   const [showTraceModal, setShowTraceModal] = useState<boolean>(false);
   const [copiedLog, setCopiedLog] = useState<boolean>(false);
 
@@ -546,62 +644,23 @@ export function EmailLogsTab({ emailLogs }: EmailLogsTabProps) {
             <div className="border-b border-slate-200/80 bg-slate-50/80 px-4 py-3 text-[11.5px] font-bold uppercase tracking-wider text-slate-500">
               Plantillas Disponibles
             </div>
-            <div className="flex flex-col p-2 gap-1 bg-white">
-              <button
-                type="button"
-                onClick={() => setSelectedTemplate("welcome")}
-                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-semibold transition-all cursor-pointer border-none outline-none ${
-                  selectedTemplate === "welcome"
-                    ? "bg-black text-white font-bold"
-                    : "bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                }`}
-              >
-                Bienvenida a LUMINUS
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedTemplate("recovery")}
-                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-semibold transition-all cursor-pointer border-none outline-none ${
-                  selectedTemplate === "recovery"
-                    ? "bg-black text-white font-bold"
-                    : "bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                }`}
-              >
-                Restablecer contraseña
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedTemplate("emailChange")}
-                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-semibold transition-all cursor-pointer border-none outline-none ${
-                  selectedTemplate === "emailChange"
-                    ? "bg-black text-white font-bold"
-                    : "bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                }`}
-              >
-                Confirmar Email
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedTemplate("contact")}
-                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-semibold transition-all cursor-pointer border-none outline-none ${
-                  selectedTemplate === "contact"
-                    ? "bg-black text-white font-bold"
-                    : "bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                }`}
-              >
-                Notificación de Contacto
-              </button>
-              <button
-                type="button"
-                onClick={() => setSelectedTemplate("eventRegistration")}
-                className={`w-full text-left px-4 py-3 rounded-xl text-xs font-semibold transition-all cursor-pointer border-none outline-none ${
-                  selectedTemplate === "eventRegistration"
-                    ? "bg-black text-white font-bold"
-                    : "bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                }`}
-              >
-                Inscripción a Eventos
-              </button>
+            <div className="flex flex-col p-2 gap-1 bg-white max-h-[680px] overflow-y-auto">
+              {(Object.entries(templatesData) as [TemplateKey, (typeof templatesData)[TemplateKey]][]).map(
+                ([key, tpl]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setSelectedTemplate(key)}
+                    className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer border-none outline-none ${
+                      selectedTemplate === key
+                        ? "bg-black text-white font-bold"
+                        : "bg-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    }`}
+                  >
+                    {tpl.name}
+                  </button>
+                )
+              )}
             </div>
           </AdminCard>
 

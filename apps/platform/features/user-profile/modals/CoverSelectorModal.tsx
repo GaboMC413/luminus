@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Check } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 
@@ -12,14 +13,17 @@ interface CoverSelectorModalProps {
 }
 
 export function CoverSelectorModal({ isOpen, onClose, onSelect, currentCover }: CoverSelectorModalProps) {
-  const [selectedCover, setSelectedCover] = useState(currentCover);
   const covers = Array.from({ length: 9 }, (_, i) => `/covers/cover-${i + 1}.png`);
+  const [selectedCover, setSelectedCover] = useState(currentCover || covers[0]);
 
   useEffect(() => {
-    if (isOpen) setSelectedCover(currentCover);
+    if (isOpen) {
+      setSelectedCover(currentCover || covers[0]);
+    }
   }, [isOpen, currentCover]);
 
   const handleSave = () => {
+    if (!selectedCover) return;
     onSelect(selectedCover);
     onClose();
   };
@@ -29,35 +33,48 @@ export function CoverSelectorModal({ isOpen, onClose, onSelect, currentCover }: 
       isOpen={isOpen}
       onClose={onClose}
       title="Selecciona una portada"
+      subtitle="Elige una imagen para el encabezado de tu perfil."
       maxWidth="720px"
       footer={
         <>
-          <Button variant="secondary" onClick={onClose} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !normal-case !tracking-normal !rounded-[10px] md:!rounded-[12px]">
+          <Button variant="secondary" size="md" onClick={onClose}>
             Cancelar
           </Button>
-          <Button onClick={handleSave} className="w-full md:flex-1 !h-11 !text-[13px] !font-normal !bg-black !text-white hover:!bg-slate-800 !rounded-[10px] md:!rounded-[12px]">
+          <Button variant="primary" size="md" onClick={handleSave} disabled={!selectedCover}>
             Guardar cambios
           </Button>
         </>
       }
     >
-      <div className="grid grid-cols-3 gap-3 md:gap-4">
-        {covers.map((url) => (
-          <div
-            key={url}
-            onClick={() => setSelectedCover(url)}
-            className={`relative aspect-[4/3] md:aspect-[16/7] rounded-xl overflow-hidden cursor-pointer transition-all hover:ring-2 hover:ring-black group ${selectedCover === url ? 'ring-2 ring-black shadow-none' : 'border border-slate-100'}`}
-          >
-            <img src={url} alt="Cover option" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-            {selectedCover === url && (
-              <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
-                <div className="bg-black text-white rounded-full w-8 h-8 flex items-center justify-center shadow-none">
-                  <span className="material-symbols-rounded text-[20px]">check</span>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 p-0.5">
+        {covers.map((url, idx) => {
+          const isSelected = selectedCover === url;
+          return (
+            <button
+              key={url}
+              type="button"
+              onClick={() => setSelectedCover(url)}
+              aria-pressed={isSelected}
+              aria-label={`Seleccionar portada ${idx + 1}`}
+              className={`relative aspect-[16/7] rounded-xl overflow-hidden cursor-pointer transition-all group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 focus-visible:ring-offset-2 ${
+                isSelected
+                  ? "ring-2 ring-slate-900 ring-offset-2"
+                  : "border border-slate-200/80 hover:border-slate-400"
+              }`}
+            >
+              <img
+                src={url}
+                alt={`Portada ${idx + 1}`}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+              {isSelected && (
+                <span className="absolute top-2 right-2 bg-slate-900 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-xs">
+                  <Check className="w-3.5 h-3.5 text-white stroke-[2.5]" />
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
     </Modal>
   );

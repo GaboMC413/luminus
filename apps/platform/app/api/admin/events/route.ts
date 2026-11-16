@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { deleteS3FileByUrl } from "@/lib/storage/s3FileCleanup";
+import { invalidateServerCacheTag } from "@/lib/serverCache";
 
 function extractYoutubeId(url?: string | null): string | null {
   if (!url) return null;
@@ -11,7 +12,7 @@ function extractYoutubeId(url?: string | null): string | null {
 
 export async function POST(request: Request) {
   try {
-    const session = getCurrentSession();
+    const session = await getCurrentSession();
     if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ error: "Acceso no autorizado." }, { status: 403 });
     }
@@ -49,15 +50,31 @@ export async function POST(request: Request) {
         .substring(0, 80) + "-" + Math.random().toString(36).substring(2, 6);
 
     let dateVal: Date | null = null;
+    let finalTimeText = timeText || null;
+
     if (date) {
+      let hh = "18";
+      let mm = "00";
+      if (timeText) {
+        const match = String(timeText).match(/(\d{1,2}):(\d{2})/);
+        if (match) {
+          hh = match[1].padStart(2, "0");
+          mm = match[2];
+          finalTimeText = `${hh}:${mm} hs (GMT-3)`;
+        }
+      }
+
       if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date.trim())) {
-        dateVal = new Date(`${date.trim()}T12:00:00.000Z`);
+        const isoStringWithOffset = `${date.trim()}T${hh}:${mm}:00-03:00`;
+        const parsed = new Date(isoStringWithOffset);
+        if (!isNaN(parsed.getTime())) dateVal = parsed;
       } else {
         const parsed = new Date(date);
         if (!isNaN(parsed.getTime())) dateVal = parsed;
       }
     }
 
+    const finalLocation = (location && String(location).trim()) ? String(location).trim() : "Estreno en YouTube";
     const finalYoutubeId = youtubeId || extractYoutubeId(link) || null;
 
     if (id) {
@@ -77,8 +94,8 @@ export async function POST(request: Request) {
           speakerBio: speakerBio || null,
           category: category || null,
           date: dateVal && !isNaN(dateVal.getTime()) ? dateVal : null,
-          timeText: timeText || null,
-          location: location || null,
+          timeText: finalTimeText,
+          location: finalLocation,
           coverUrl: coverUrl || null,
           youtubeId: finalYoutubeId,
           link: link || null,
@@ -96,6 +113,7 @@ export async function POST(request: Request) {
         }
       }
 
+      invalidateServerCacheTag("events");
       return NextResponse.json({ success: true, event: updated });
     } else {
       // Create new
@@ -109,14 +127,15 @@ export async function POST(request: Request) {
           speakerBio: speakerBio || null,
           category: category || null,
           date: dateVal && !isNaN(dateVal.getTime()) ? dateVal : null,
-          timeText: timeText || null,
-          location: location || null,
+          timeText: finalTimeText,
+          location: finalLocation,
           coverUrl: coverUrl || null,
           youtubeId: finalYoutubeId,
           link: link || null,
           isUpcoming: isUpcoming !== undefined ? Boolean(isUpcoming) : true,
         },
       });
+      invalidateServerCacheTag("events");
       return NextResponse.json({ success: true, event: created });
     }
   } catch (error: any) {
@@ -127,7 +146,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const session = getCurrentSession();
+    const session = await getCurrentSession();
     if (!session || session.role !== "ADMIN") {
       return NextResponse.json({ error: "Acceso no autorizado." }, { status: 403 });
     }
@@ -157,6 +176,7 @@ export async function DELETE(request: Request) {
       where: { id },
     });
 
+    invalidateServerCacheTag("events");
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("[API Admin Events Delete Error]:", error);

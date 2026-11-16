@@ -79,7 +79,6 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error: "No pudimos procesar tu mensaje en este momento. Por favor intenta de nuevo más tarde o escríbenos directamente a info@luminuslatam.com.",
-          details: { dbError, emailError },
         },
         { status: 500 }
       );
@@ -89,10 +88,6 @@ export async function POST(request: Request) {
       success: true,
       dbSaved: dbSuccess,
       emailSent: emailSuccess,
-      warnings: {
-        ...(dbError ? { dbError } : {}),
-        ...(emailError ? { emailError } : {}),
-      },
     });
   } catch (error: any) {
     console.error("[API Contact Error]:", error);

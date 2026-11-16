@@ -1,19 +1,30 @@
 import { NextResponse } from "next/server";
-import { getCurrentSession } from "@/lib/auth/session";
+import { getCurrentSession, getCurrentActiveUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { serializePost } from "@/lib/community/posts";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const session = getCurrentSession();
+export async function GET(request: Request) {
+  const session = await getCurrentActiveUser();
+
+  if (!session) {
+    return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+  }
 
   try {
+    const { searchParams } = new URL(request.url);
+    const limitParam = searchParams.get("limit");
+    const cursor = searchParams.get("cursor");
+    const limit = Math.min(Math.max(parseInt(limitParam || "25", 10) || 25, 1), 50);
+
     const rawPosts = await prisma.communityPost.findMany({
       where: {
         status: "approved",
       },
+      take: limit + 1,
+      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
       include: {
         user: {
           select: {
@@ -68,8 +79,12 @@ export async function GET() {
       ],
     });
 
-    const posts = rawPosts.map((p) => serializePost(p, session?.userId));
-    return NextResponse.json({ posts });
+    const hasMore = rawPosts.length > limit;
+    const items = hasMore ? rawPosts.slice(0, limit) : rawPosts;
+    const nextCursor = hasMore ? items[items.length - 1].id : null;
+
+    const posts = items.map((p) => serializePost(p, session?.userId));
+    return NextResponse.json({ posts, nextCursor, hasMore });
   } catch (error) {
     console.error("Failed to fetch community posts:", error);
     return NextResponse.json(
@@ -80,7 +95,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentActiveUser();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
@@ -97,6 +112,7 @@ export async function POST(request: Request) {
       youtubeId,
       category,
       tags,
+      createdAt,
     } = body;
 
     if (!content || typeof content !== "string" || !content.trim()) {
@@ -107,6 +123,18 @@ export async function POST(request: Request) {
     }
 
     const initialStatus = session.role === "ADMIN" ? "approved" : "pending";
+
+    let customCreatedAt: Date | undefined;
+    if (session.role === "ADMIN" && createdAt) {
+      const parsed = new Date(createdAt);
+      if (isNaN(parsed.getTime()) || parsed.getTime() > Date.now()) {
+        return NextResponse.json(
+          { message: "La fecha de publicación debe ser hoy o una fecha pasada." },
+          { status: 400 }
+        );
+      }
+      customCreatedAt = parsed;
+    }
 
     const newPost = await prisma.communityPost.create({
       data: {
@@ -120,6 +148,7 @@ export async function POST(request: Request) {
         category: category || null,
         tags: Array.isArray(tags) ? tags : [],
         status: initialStatus,
+        ...(customCreatedAt ? { createdAt: customCreatedAt } : {}),
       },
       include: {
         user: {

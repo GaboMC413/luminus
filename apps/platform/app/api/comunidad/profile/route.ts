@@ -1,203 +1,28 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { generateUniqueUserSlug } from "@/lib/profile/slug";
 import { isUuid } from "@/utils/validation";
 
 export const runtime = "nodejs";
 
-const MOCK_PROFILES: Record<string, any> = {
-  "mock-lucia": {
-    first_name: "Lucía",
-    last_name: "Fernández",
-    city: "Colonia",
-    country: "Uruguay",
-    profession: "Instructora de Yoga & Pilates",
-    interests: ["Movimiento Físico", "Yoga", "Entrenamiento", "Pilates"],
-    prompts: [
-      { question: "¿Qué te inspira en tu práctica diaria?", answer: "Conectar con el cuerpo y el momento presente a través del movimiento consciente." },
-      { question: "Un hábito que transformó tu vida", answer: "Comenzar las mañanas con 15 minutos de respiración y estiramiento." }
-    ],
-    profile_picture_url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80",
-    cover_url: "https://images.unsplash.com/photo-1545205597-3d9d02c29597?auto=format&fit=crop&w=1200&q=80",
-    gender: "female",
-    birthdate: "1994-05-18",
-    phone_number: "+598 99 123 456",
-    selected_plan: "Mensual",
-    created_at: "2026-01-15T10:00:00.000Z",
-    bio: "Instructora apasionada por el movimiento consciente, el yoga dinámico y el bienestar postural. Guiando clases grupales y personalizadas.",
-    other_interests: "Amante de la naturaleza, la meditación al aire libre y la alimentación basada en plantas.",
-    connection_status: null,
-    connection_direction: null,
-    is_own_profile: false,
-  },
-  "mock-valeria": {
-    first_name: "Dra. Valeria",
-    last_name: "Gómez",
-    city: "Montevideo",
-    country: "Uruguay",
-    profession: "Especialista en Salud Integral",
-    interests: ["Salud Integral", "Bienestar Emocional", "Sueño", "Longevidad"],
-    prompts: [
-      { question: "¿Cuál es tu enfoque de bienestar?", answer: "La salud es un equilibrio entre cuerpo, mente y entorno; pequeñas elecciones diarias generan grandes cambios." }
-    ],
-    profile_picture_url: "https://images.unsplash.com/photo-1594824813501-48995a9477e5?auto=format&fit=crop&w=600&q=80",
-    cover_url: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80",
-    gender: "female",
-    birthdate: "1988-11-20",
-    phone_number: "+598 98 765 432",
-    selected_plan: "Anual",
-    created_at: "2026-02-01T10:00:00.000Z",
-    bio: "Médica dedicada a la medicina integrativa, ritmos circadianos y optimización de hábitos saludables.",
-    other_interests: "Investigación en neurociencias y medicina del estilo de vida.",
-    connection_status: null,
-    connection_direction: null,
-    is_own_profile: false,
-  },
-  "mock-santiago": {
-    first_name: "Santiago",
-    last_name: "Morales",
-    city: "Montevideo",
-    country: "Uruguay",
-    profession: "Miembro de la Comunidad",
-    interests: ["Bienestar Emocional", "Comunidad", "Mindfulness"],
-    prompts: [],
-    profile_picture_url: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=600&q=80",
-    cover_url: "",
-    gender: "male",
-    birthdate: "1992-03-12",
-    phone_number: "+598 94 332 110",
-    selected_plan: "Mensual",
-    created_at: "2026-03-10T10:00:00.000Z",
-    bio: "Explorando hábitos de meditación y compartiendo experiencias en la comunidad.",
-    other_interests: "Lectura, música acústica y deportes al aire libre.",
-    connection_status: null,
-    connection_direction: null,
-    is_own_profile: false,
-  },
-  "mock-martin": {
-    first_name: "Lic. Martín",
-    last_name: "Navarro",
-    city: "Buenos Aires",
-    country: "Argentina",
-    profession: "Psicólogo & Coach Emocional",
-    interests: ["Crecimiento Personal", "Autoconocimiento", "Hábitos", "Resiliencia"],
-    prompts: [
-      { question: "Un consejo para los momentos difíciles", answer: "Acepta la emoción sin juzgarla, respira y recuerda que ninguna tormenta es permanente." }
-    ],
-    profile_picture_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80",
-    cover_url: "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=1200&q=80",
-    gender: "male",
-    birthdate: "1985-09-08",
-    phone_number: "+54 11 4455 6677",
-    selected_plan: "Anual",
-    created_at: "2026-01-20T10:00:00.000Z",
-    bio: "Psicólogo clínico y facilitador de talleres de inteligencia emocional y mindfulness laboral.",
-    other_interests: "Escritura, senderismo y filosofía estoica.",
-    connection_status: null,
-    connection_direction: null,
-    is_own_profile: false,
-  },
-  "mock-camila": {
-    first_name: "Camila",
-    last_name: "Rivas",
-    city: "Buenos Aires",
-    country: "Argentina",
-    profession: "Miembro de la Comunidad",
-    interests: ["Crecimiento Personal", "Autocuidado", "Cocina"],
-    prompts: [],
-    profile_picture_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=600&q=80",
-    cover_url: "",
-    gender: "female",
-    birthdate: "1996-07-25",
-    phone_number: "+54 11 9876 5432",
-    selected_plan: "Mensual",
-    created_at: "2026-04-05T10:00:00.000Z",
-    bio: "Interesada en el desarrollo personal y las prácticas de bienestar diario.",
-    other_interests: "Arte y alimentación natural.",
-    connection_status: null,
-    connection_direction: null,
-    is_own_profile: false,
-  },
-  "mock-elena": {
-    first_name: "Elena",
-    last_name: "Benítez",
-    city: "Punta del Este",
-    country: "Uruguay",
-    profession: "Nutricionista Holística",
-    interests: ["Nutrición", "Alimentación consciente", "Cocina", "Salud digestiva"],
-    prompts: [
-      { question: "Tu filosofía en la cocina", answer: "Comer con los sentidos, honrar los ingredientes reales y disfrutar de cada bocado sin culpas." }
-    ],
-    profile_picture_url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80",
-    cover_url: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1200&q=80",
-    gender: "female",
-    birthdate: "1990-12-14",
-    phone_number: "+598 91 223 344",
-    selected_plan: "Anual",
-    created_at: "2026-02-12T10:00:00.000Z",
-    bio: "Nutricionista especializada en alimentación antiinflamatoria, salud hormonal y cocina saludable.",
-    other_interests: "Huerta orgánica y fermentación.",
-    connection_status: null,
-    connection_direction: null,
-    is_own_profile: false,
-  },
-  "mock-gonzalo": {
-    first_name: "Dr. Gonzalo",
-    last_name: "Varela",
-    city: "Montevideo",
-    country: "Uruguay",
-    profession: "Médico & Terapeuta",
-    interests: ["Salud Integral", "Prevención", "Bienestar corporal", "Respiración"],
-    prompts: [
-      { question: "¿Por qué la respiración?", answer: "Es el puente directo hacia nuestro sistema nervioso autónomo; cambiar cómo respiras cambia cómo sientes." }
-    ],
-    profile_picture_url: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=600&q=80",
-    cover_url: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80",
-    gender: "male",
-    birthdate: "1982-04-19",
-    phone_number: "+598 99 887 766",
-    selected_plan: "Anual",
-    created_at: "2026-01-10T10:00:00.000Z",
-    bio: "Médico enfocado en terapias complementarias, manejo de ansiedad y técnicas somáticas.",
-    other_interests: "Meditación Zen, natación y biofeedback.",
-    connection_status: null,
-    connection_direction: null,
-    is_own_profile: false,
-  },
-};
-
 export async function GET(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
-  const id = searchParams.get("id");
+  const identifier =
+    searchParams.get("slug")?.trim() ||
+    searchParams.get("id")?.trim() ||
+    "";
 
-  // Official account profile is disabled
-  if (id === "mock-luminus" || id === "50d13047-bab8-44f1-9541-a821113845cc") {
-    return NextResponse.json({ message: "Este perfil no está disponible." }, { status: 404 });
-  }
-
-  // Check mock profiles first
-  if (id && MOCK_PROFILES[id]) {
-    return NextResponse.json({ profile: MOCK_PROFILES[id] });
-  }
-
-  if (id) {
-    const foundMock = Object.values(MOCK_PROFILES).find((m) =>
-      `${m.first_name} ${m.last_name}`.toLowerCase() === id.toLowerCase() ||
-      m.first_name.toLowerCase() === id.toLowerCase()
-    );
-    if (foundMock) {
-      return NextResponse.json({ profile: foundMock });
-    }
-  }
-
-  if (!id || !isUuid(id)) {
+  if (!identifier) {
     return NextResponse.json({ message: "ID de usuario inválido." }, { status: 400 });
   }
+
+  const isIdLookup = isUuid(identifier);
 
   if (!process.env.DATABASE_URL) {
     return NextResponse.json({ 
@@ -208,7 +33,7 @@ export async function GET(request: Request) {
   try {
     const { prisma } = await import("@/lib/db");
     const user = await prisma.user.findUnique({
-      where: { id },
+      where: isIdLookup ? { id: identifier } : { slug: identifier },
       include: {
         profile: true,
         interests: {
@@ -219,6 +44,29 @@ export async function GET(request: Request) {
         profilePrompts: {
           orderBy: { sortOrder: "asc" },
         },
+        specialistProfile: {
+          include: {
+            courses: {
+              where: { isActive: true },
+            },
+            spaces: {
+              where: { isActive: true },
+              include: {
+                category: true,
+                spaceCategories: {
+                  include: { category: true },
+                },
+                services: {
+                  include: { category: true },
+                },
+                availability: {
+                  where: { isActive: true },
+                  orderBy: { dayOfWeek: "asc" },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -226,22 +74,88 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: "Este perfil no está disponible." }, { status: 404 });
     }
 
-    const connection = await prisma.userConnection.findFirst({
-      where: {
-        OR: [
-          { requesterId: session.userId, recipientId: id },
-          { requesterId: id, recipientId: session.userId },
-        ],
-      },
-      select: {
-        id: true,
-        requesterId: true,
-        status: true,
-      },
-    });
+    const targetUserId = user.id;
 
-    if (connection && connection.status === "blocked" && connection.requesterId === id) {
+    const [outgoingConnection, incomingConnection, followRow, followersCount] = await Promise.all([
+      prisma.userConnection.findFirst({
+        where: {
+          requesterId: session.userId,
+          recipientId: targetUserId,
+        },
+        select: {
+          id: true,
+          requesterId: true,
+          status: true,
+        },
+      }),
+      prisma.userConnection.findFirst({
+        where: {
+          requesterId: targetUserId,
+          recipientId: session.userId,
+        },
+        select: {
+          id: true,
+          requesterId: true,
+          status: true,
+        },
+      }),
+      prisma.userFollow.findUnique({
+        where: {
+          followerId_followingId: {
+            followerId: session.userId,
+            followingId: targetUserId,
+          },
+        },
+        select: { id: true },
+      }),
+      prisma.userFollow.count({
+        where: { followingId: targetUserId },
+      }),
+    ]);
+
+    if (incomingConnection && incomingConnection.status === "blocked") {
       return NextResponse.json({ message: "Este perfil no está disponible." }, { status: 403 });
+    }
+
+    const isBlocked = outgoingConnection?.status === "blocked";
+    const isAccepted = outgoingConnection?.status === "accepted" || incomingConnection?.status === "accepted";
+    const isPendingSent = outgoingConnection?.status === "pending";
+    const isPendingReceived = incomingConnection?.status === "pending";
+    const connectionStatus = isBlocked
+      ? "blocked"
+      : isAccepted
+        ? "accepted"
+        : isPendingSent
+          ? "pending_sent"
+          : isPendingReceived
+            ? "pending_received"
+            : null;
+    const connectionDirection = isAccepted
+      ? outgoingConnection?.status === "accepted"
+        ? "outgoing"
+        : "incoming"
+      : isPendingSent
+        ? "outgoing"
+        : isPendingReceived
+          ? "incoming"
+          : null;
+
+    if (!user.slug && (user.profile?.firstName || user.profile?.lastName)) {
+      try {
+        const generatedSlug = await generateUniqueUserSlug(
+          prisma,
+          user.profile?.firstName,
+          user.profile?.lastName,
+          user.id
+        );
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { slug: generatedSlug },
+        });
+        user.slug = generatedSlug;
+      } catch {
+        // Non-blocking fallback to user.id
+      }
     }
 
     const profile = (user.profile ?? {}) as any;
@@ -254,6 +168,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       profile: {
+        id: user.id,
+        slug: user.slug ?? null,
         first_name: profile.firstName ?? "",
         last_name: profile.lastName ?? "",
         city: profile.city ?? "",
@@ -265,14 +181,75 @@ export async function GET(request: Request) {
         cover_url: profile.coverUrl ?? "",
         gender: profile.gender ?? "",
         birthdate: profile.birthdate ? new Date(profile.birthdate).toISOString().slice(0, 10) : "",
-        phone_number: profile.phoneNumber ?? "",
-        selected_plan: profile.selectedPlan ?? "Mensual",
+
+
         created_at: profile.createdAt?.toISOString?.() ?? user.createdAt?.toISOString?.() ?? "",
         bio: profile.bio ?? "",
         other_interests: profile.intention ?? "",
-        connection_status: connection?.status ?? null,
-        connection_direction: connection ? (connection.requesterId === session.userId ? "outgoing" : "incoming") : null,
-        is_own_profile: id === session.userId,
+        tier: user.tier ?? "FREE",
+        member_since: user.memberSince?.toISOString?.() ?? null,
+        connection_status: connectionStatus,
+        connection_direction: connectionDirection,
+        is_in_network: isAccepted,
+        has_in_network: incomingConnection?.status === "accepted",
+        is_mutual: isAccepted,
+        is_following: Boolean(followRow),
+        followers_count: followersCount,
+        is_own_profile: targetUserId === session.userId,
+        specialistProfile: user.specialistProfile ? {
+          specialty: user.specialistProfile.specialty,
+          title: user.specialistProfile.title,
+          selectedAreas: user.specialistProfile.selectedAreas || [],
+          clinicName: user.specialistProfile.clinicName,
+          bio: user.specialistProfile.bio,
+          institution: user.specialistProfile.institution,
+          linkedinUrl: user.specialistProfile.linkedinUrl,
+          instagramUrl: user.specialistProfile.instagramUrl,
+          websiteUrl: user.specialistProfile.websiteUrl,
+          courses: (user.specialistProfile.courses || []).map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            type: c.type,
+            description: c.description,
+            modality: c.modality,
+            url: c.url,
+            coverUrl: c.coverUrl,
+            institution: c.institution,
+          })),
+          spaces: (user.specialistProfile.spaces || []).map((s: any) => ({
+            id: s.id,
+            name: s.name,
+            description: s.description,
+            address: s.address,
+            city: s.city,
+            country: s.country,
+            lat: s.lat != null ? Number(s.lat) : null,
+            lng: s.lng != null ? Number(s.lng) : null,
+            googleMapsUrl: s.googleMapsUrl,
+            phone: s.phone,
+            website: s.website,
+            coverUrl: s.coverUrl,
+            spaceType: s.spaceType,
+            customSpaceType: s.customSpaceType,
+            categoryArea: s.categoryArea,
+            spaceCategories: (s.spaceCategories || []).map((sc: any) => ({
+              categoryId: sc.categoryId,
+              category: sc.category ? { id: sc.category.id, name: sc.category.name } : null,
+            })),
+            services: (s.services || []).map((srv: any) => ({
+              id: srv.id,
+              name: srv.name,
+              isCustom: srv.isCustom,
+              category: srv.category ? { id: srv.category.id, name: srv.category.name } : null,
+            })),
+            availability: (s.availability || []).map((av: any) => ({
+              dayOfWeek: av.dayOfWeek,
+              startTime: av.startTime,
+              endTime: av.endTime,
+              isActive: av.isActive,
+            })),
+          })),
+        } : null,
       }
     });
   } catch (error) {

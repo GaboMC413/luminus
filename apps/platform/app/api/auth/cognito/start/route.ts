@@ -12,6 +12,8 @@ type CognitoStartState = {
   state: string;
   provider?: "Google";
   intent?: "signup" | "signin";
+  plan?: "membership" | "free";
+  billing?: "annual" | "monthly";
   redirect?: string;
 };
 
@@ -41,12 +43,16 @@ export async function GET(request: Request) {
   const provider = providerParam === "google" ? "Google" : undefined;
   const intentParam = url.searchParams.get("intent")?.trim().toLowerCase();
   const intent: "signup" | "signin" = intentParam === "signup" ? "signup" : "signin";
+  const planParam = url.searchParams.get("plan")?.trim().toLowerCase();
+  const plan: "membership" | "free" | undefined = planParam === "membership" || planParam === "free" ? planParam : undefined;
+  const billingParam = url.searchParams.get("billing")?.trim().toLowerCase();
+  const billing: "annual" | "monthly" | undefined = billingParam === "annual" || billingParam === "monthly" ? billingParam : undefined;
   const redirectParam = url.searchParams.get("redirect");
   const targetRedirect = getSafeRedirectUrl(redirectParam, "");
 
   if (!clientId || !cognitoDomain) {
     console.error("Cognito OAuth start failed: Cognito domain or client id is not configured.");
-    const targetPath = intent === "signup" ? "/auth/registrarse" : "/auth/iniciar-sesion";
+    const targetPath = intent === "signup" ? "/unirme" : "/iniciar-sesion";
     return NextResponse.redirect(new URL(`${targetPath}?error=cognito_config`, origin));
   }
 
@@ -55,11 +61,13 @@ export async function GET(request: Request) {
     state,
     provider,
     intent,
+    ...(plan ? { plan } : {}),
+    ...(billing ? { billing } : {}),
     ...(targetRedirect ? { redirect: targetRedirect } : {}),
   };
   const redirectUri = `${origin}/api/auth/cognito/callback`;
 
-  cookies().set(COGNITO_STATE_COOKIE, JSON.stringify(statePayload), {
+  (await cookies()).set(COGNITO_STATE_COOKIE, JSON.stringify(statePayload), {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

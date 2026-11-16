@@ -1,6 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 
-if (!process.env.DATABASE_URL) {
+const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+
+if (!process.env.DATABASE_URL && !isBuildPhase) {
   console.error("❌ DATABASE_URL no está definida en runtime");
 }
 

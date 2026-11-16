@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
+import { createReactivationToken, createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { decodeCognitoIdToken } from "@/lib/auth/cognito-password";
 import { getSafeRedirectUrl } from "@/lib/utils/url";
 
@@ -19,6 +19,8 @@ type CognitoStartState = {
   state: string;
   provider?: "Google";
   intent?: "signup" | "signin";
+  plan?: "membership" | "free";
+  billing?: "annual" | "monthly";
   redirect?: string;
 };
 
@@ -205,9 +207,9 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get("code");
   const state = requestUrl.searchParams.get("state");
   const error = requestUrl.searchParams.get("error");
-  const storedState = readStoredState(cookies().get(COGNITO_STATE_COOKIE)?.value);
+  const storedState = readStoredState((await cookies()).get(COGNITO_STATE_COOKIE)?.value);
 
-  cookies().set(COGNITO_STATE_COOKIE, "", {
+  (await cookies()).set(COGNITO_STATE_COOKIE, "", {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -215,7 +217,7 @@ export async function GET(request: Request) {
     maxAge: 0,
   });
 
-  const fallbackPath = storedState?.intent === "signup" ? "/auth/registrarse" : "/auth/iniciar-sesion";
+  const fallbackPath = storedState?.intent === "signup" ? "/unirme" : "/iniciar-sesion";
 
   if (error) {
     const errorDescription = requestUrl.searchParams.get("error_description") || "unknown";
@@ -288,17 +290,20 @@ export async function GET(request: Request) {
       where: { cognitoSub: cognitoSubject },
       include: { profile: true },
     });
-    const existingByEmail = await prisma.user.findUnique({
-      where: { email },
-      include: { profile: true },
-    });
+    const emailVerifiedClaim = isEmailVerified(cognitoUser.email_verified) || isEmailVerified(tokenClaims.email_verified);
+    const existingByEmail = emailVerifiedClaim
+      ? await prisma.user.findUnique({
+          where: { email },
+          include: { profile: true },
+        })
+      : null;
 
     const matchingUsers = [existingByIdentity?.user, existingByExternalIdentity?.user, existingByLegacySub, existingByEmail].filter(Boolean);
     const matchingUserIds = new Set(matchingUsers.map((user) => user!.id));
 
     if (matchingUserIds.size > 1) {
       console.error("Cognito OAuth account collision.", { email });
-      return redirectTo(requestUrl, "/auth/iniciar-sesion?error=cognito");
+      return redirectTo(requestUrl, "/iniciar-sesion?error=cognito");
     }
 
     const existingUser = existingByIdentity?.user || existingByExternalIdentity?.user || existingByLegacySub || existingByEmail;
@@ -306,22 +311,22 @@ export async function GET(request: Request) {
 
     if (existingUser) {
       if (existingUser.status === "disabled") {
-        return redirectTo(requestUrl, "/auth/iniciar-sesion?error=account_disabled");
+        return redirectTo(requestUrl, "/iniciar-sesion?error=account_disabled");
       }
       if (existingUser.status === "deleted") {
-        const token = createSessionToken({
+        const token = createReactivationToken({
           userId: existingUser.id,
           email: existingUser.email,
           role: existingUser.role,
         });
-        cookies().set("luminus_reactivation_token", token, {
+        (await cookies()).set("luminus_reactivation_token", token, {
           path: "/",
           httpOnly: true,
           secure: process.env.NODE_ENV === "production",
           sameSite: "lax",
           maxAge: 5 * 60,
         });
-        return redirectTo(requestUrl, "/auth/iniciar-sesion?reactivate_oauth=1");
+        return redirectTo(requestUrl, "/iniciar-sesion?reactivate_oauth=1");
       }
     }
 
@@ -379,7 +384,7 @@ export async function GET(request: Request) {
             authProvider: federatedProvider.authProvider,
             emailVerified: isEmailVerified(cognitoUser.email_verified),
             lastLoginAt: new Date(),
-            trialExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 3 months trial
+            trialExpiresAt: null,
             identities: {
               create: {
                 provider: "cognito",
@@ -428,7 +433,7 @@ export async function GET(request: Request) {
       role: user.role,
     });
 
-    setSessionCookie(token);
+    await setSessionCookie(token);
 
     try {
       if (isNewUser) {
@@ -451,24 +456,28 @@ export async function GET(request: Request) {
       console.error("Failed to log activity in Cognito callback:", logError);
     }
 
-    const defaultTarget = user.profile?.isOnboarded ? "/comunidad" : "/auth/registrarse?onboarding=1";
-    let redirectTarget = getSafeRedirectUrl(storedState?.redirect, defaultTarget);
-    if (!user.profile?.isOnboarded && storedState?.redirect) {
-      if (
-        storedState.redirect.includes("/auth/registrarse/especialista") ||
-        storedState.redirect.includes("/especialistas")
-      ) {
-        redirectTarget = storedState.redirect;
-      } else {
-        redirectTarget = `/auth/registrarse?onboarding=1&redirect=${encodeURIComponent(storedState.redirect)}`;
-      }
+    if (storedState?.plan === "membership" && user.tier !== "MECENAS") {
+      const billingQuery = storedState.billing === "annual" ? "?billing=annual" : "?billing=monthly";
+      return redirectTo(requestUrl, `/unirme/pago${billingQuery}`);
     }
 
+    if (!user.profile?.isOnboarded) {
+      if (
+        storedState?.redirect &&
+        (storedState.redirect.includes("/auth/registrarse/especialista") ||
+          storedState.redirect.includes("/especialistas"))
+      ) {
+        return redirectTo(requestUrl, storedState.redirect);
+      }
+      return redirectTo(requestUrl, "/unirme/perfil");
+    }
+
+    const redirectTarget = getSafeRedirectUrl(storedState?.redirect, "/inicio");
     return redirectTo(requestUrl, redirectTarget);
   } catch (callbackError) {
     console.error("Cognito OAuth callback failed.", callbackError);
     const reason = callbackError instanceof Error ? encodeURIComponent(callbackError.message) : "unknown";
-    const fallbackPath = storedState?.intent === "signup" ? "/auth/registrarse" : "/auth/iniciar-sesion";
+    const fallbackPath = storedState?.intent === "signup" ? "/unirme" : "/iniciar-sesion";
     return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=${reason}`);
   }
 }

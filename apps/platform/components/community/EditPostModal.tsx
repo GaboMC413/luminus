@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import { ChevronDown, Check, Hash, X } from "lucide-react";
 import { PostItem } from "./mockPostsData";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { INTEREST_CATEGORIES, ADMIN_COMMUNITY_CATEGORIES } from "@/utils/constants";
 import { uploadPostImage, validatePostImageFile } from "@/lib/uploadPostImage";
+import { ComposerToolbar } from "./molecules/ComposerToolbar";
+import { MediaAttachmentStrip } from "./molecules/MediaAttachmentStrip";
 
 interface EditPostModalProps {
   isOpen: boolean;
@@ -24,14 +27,11 @@ function extractYouTubeId(url: string): string | null {
 function markdownToHtml(md: string): string {
   if (!md) return "";
   let html = md;
-  // Replace links [text](url)
   html = html.replace(
     /\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
   );
-  // Bold **text**
   html = html.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
-  // Italic *text*
   html = html.replace(/\*([^*]+)\*/g, "<i>$1</i>");
 
   const lines = html.split("\n");
@@ -148,7 +148,6 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
   const [imagePreview, setImagePreview] = useState<string | null>(post.imageUrl || null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(post.imageUrl || null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
-  const [uploadProgressText, setUploadProgressText] = useState<string>("");
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [imageError, setImageError] = useState<string | null>(null);
 
@@ -181,12 +180,10 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
   const [linkText, setLinkText] = useState("");
   const [savedRange, setSavedRange] = useState<Range | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const categoryDropdownRef = useRef<HTMLDivElement>(null);
   const adminCategoryDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Sync state with post props when modal opens or post changes
   useEffect(() => {
     if (isOpen) {
       setPostTitle(post.title || "");
@@ -214,7 +211,6 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
       setShowTagPills(Boolean(post.areas && post.areas.length > 0));
       setImageError(null);
 
-      // Populate rich text editor with converted HTML
       setTimeout(() => {
         if (editorRef.current) {
           editorRef.current.innerHTML = markdownToHtml(post.content || "");
@@ -280,8 +276,7 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
         el.removeAttribute("color");
         el.removeAttribute("bgcolor");
       });
-      const cleanHtml = doc.body.innerHTML;
-      document.execCommand("insertHTML", false, cleanHtml);
+      document.execCommand("insertHTML", false, doc.body.innerHTML);
       handleEditorInput();
       return;
     }
@@ -362,21 +357,15 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
     setImagePreview(null);
     setUploadedImageUrl(null);
     setIsUploadingImage(false);
-    setUploadProgressText("");
     setImageError(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleImageFileChange = async (file: File) => {
     setImageError(null);
 
     const validation = validatePostImageFile(file);
     if (!validation.valid) {
       setImageError(validation.error || "Archivo no permitido.");
-      if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
 
@@ -394,7 +383,7 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
     try {
       const result = await uploadPostImage(
         file,
-        (status: string) => setUploadProgressText(status),
+        undefined,
         (percent: number) => setUploadProgress(percent)
       );
       setUploadedImageUrl(result.publicUrl);
@@ -403,7 +392,6 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
       setImageError(err?.message || "Error al procesar o subir la imagen.");
     } finally {
       setIsUploadingImage(false);
-      setUploadProgressText("");
       setUploadProgress(0);
     }
   };
@@ -420,7 +408,6 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
       setYoutubeId(id);
       setYoutubeUrl(tempYoutubeUrl.trim());
       setImagePreview(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
     setIsYoutubeModalOpen(false);
   };
@@ -463,12 +450,12 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
     const updatedPost: PostItem = {
       ...post,
       title: trimmedTitle || undefined,
-      content: trimmed,
-      area: mainCategory,
-      areas: allAreas,
       imageUrl: finalImageUrl,
       youtubeId: youtubeId || undefined,
       youtubeUrl: youtubeUrl || undefined,
+      area: mainCategory,
+      areas: allAreas,
+      content: trimmed,
     };
 
     onSavePost(updatedPost);
@@ -481,20 +468,15 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
         isOpen={isOpen}
         onClose={onClose}
         title="Editar publicación"
-        subtitle="Modifica los detalles de tu publicación."
-        hideDividers
-        disableInnerScroll
-        maxWidth="620px"
-        headerClassName="px-5 sm:px-6 pt-5 sm:pt-6 pb-2"
-        contentClassName="px-5 sm:px-6 py-2"
-        footerClassName="px-5 sm:px-6 pt-3 pb-5 sm:pb-6 flex flex-col-reverse sm:flex-row items-stretch gap-2.5 sm:gap-3 w-full"
+        subtitle="Modifica el contenido o categoría de tu publicación"
+        maxWidth="580px"
         footer={
           <>
             <Button
               variant="secondary"
               type="button"
               onClick={onClose}
-              className="w-full sm:flex-1 !h-11 !text-[13px] !font-medium !rounded-[12px]"
+              className="w-full sm:w-auto sm:min-w-[100px]"
             >
               Cancelar
             </Button>
@@ -508,28 +490,27 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                 (!isAdmin && !selectedCategory) ||
                 (!postText.trim() && !postTitle.trim() && !imagePreview && !youtubeId)
               }
-              title={!isAdmin && !selectedCategory ? "Selecciona una categoría para publicar" : undefined}
-              className="w-full sm:flex-1 !h-11 !text-[13px] !font-medium !rounded-[12px]"
+              className="w-full sm:w-auto sm:min-w-[140px]"
             >
-              Guardar
+              Guardar cambios
             </Button>
           </>
         }
       >
         <div className="flex flex-col gap-3">
-          {/* 1. Título de la publicación */}
+          {/* Post Title Field */}
           <input
             type="text"
             value={postTitle}
             onChange={(e) => setPostTitle(e.target.value)}
             placeholder="Título de la publicación"
-            className="w-full h-12 px-4 rounded-2xl border border-slate-200 focus:border-slate-400 focus:outline-none text-base font-normal font-sans text-slate-700 placeholder:text-slate-400 transition-colors bg-white"
+            className="w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-sm font-sans text-slate-900 placeholder:text-slate-400 transition-colors bg-white"
           />
 
-          {/* 2. Selectores de Categoría */}
+          {/* Category Selectors */}
           {isAdmin ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {/* Selector Institucional */}
+              {/* Institutional Category */}
               <div ref={adminCategoryDropdownRef} className="relative w-full">
                 <button
                   type="button"
@@ -537,47 +518,31 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                     setIsAdminCategoryOpen(!isAdminCategoryOpen);
                     setIsCategoryOpen(false);
                   }}
-                  className="w-full h-12 px-4 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 focus:border-slate-400 flex items-center justify-between text-base font-normal font-sans text-left transition-colors cursor-pointer outline-none"
+                  className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 focus:border-slate-900 flex items-center justify-between text-sm font-sans text-left transition-colors cursor-pointer outline-none"
                 >
-                  <span className={`text-sm sm:text-base font-normal font-sans truncate ${selectedAdminCategory ? "text-slate-800 font-medium" : "text-slate-400"}`}>
+                  <span className={`truncate ${selectedAdminCategory ? "text-slate-900 font-medium" : "text-slate-400"}`}>
                     {selectedAdminCategory || "Categoría institucional"}
                   </span>
-                  <svg
-                    width="12"
-                    height="8"
-                    viewBox="0 0 12 8"
-                    fill="none"
-                    className={`transition-transform duration-200 shrink-0 ${selectedAdminCategory ? "text-slate-600" : "text-slate-400"} ${isAdminCategoryOpen ? "rotate-180" : ""}`}
-                  >
-                    <path
-                      d="M1.5 2L6 6.5L10.5 2"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-150 ${isAdminCategoryOpen ? "rotate-180" : ""}`} />
                 </button>
 
                 {isAdminCategoryOpen && (
-                  <div className="absolute top-[calc(100%+5px)] left-0 w-full bg-white rounded-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in duration-150 max-h-[260px] overflow-y-auto custom-scrollbar shadow-none">
+                  <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-white rounded-xl border border-slate-200 py-1 z-50 animate-in fade-in zoom-in-95 duration-100 max-h-[240px] overflow-y-auto shadow-lg">
                     <button
                       type="button"
                       onClick={() => {
                         setSelectedAdminCategory(null);
                         setIsAdminCategoryOpen(false);
                       }}
-                      className={`w-full px-4 py-2.5 text-left text-sm font-sans flex items-center justify-between hover:bg-slate-50 transition-colors border-none bg-transparent cursor-pointer ${
-                        selectedAdminCategory === null ? "font-medium text-slate-900 bg-slate-100/70" : "text-slate-500"
+                      className={`w-full px-3.5 py-2 text-left text-xs font-sans flex items-center justify-between hover:bg-slate-50 transition-colors border-none bg-transparent cursor-pointer ${
+                        selectedAdminCategory === null ? "font-semibold text-slate-900 bg-slate-50" : "text-slate-500"
                       }`}
                     >
                       <span>Sin categoría institucional</span>
-                      {selectedAdminCategory === null && (
-                        <span className="material-symbols-outlined text-[18px] text-slate-700">check</span>
-                      )}
+                      {selectedAdminCategory === null && <Check className="w-3.5 h-3.5 text-slate-700" />}
                     </button>
 
-                    <div className="border-t border-slate-100" />
+                    <div className="border-t border-slate-100 my-1" />
 
                     {ADMIN_COMMUNITY_CATEGORIES.map((cat) => {
                       const isSelected = selectedAdminCategory === cat.title;
@@ -589,14 +554,12 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                             setSelectedAdminCategory(cat.title);
                             setIsAdminCategoryOpen(false);
                           }}
-                          className={`w-full px-4 py-2.5 text-left text-base font-normal font-sans flex items-center justify-between hover:bg-slate-50 hover:text-slate-800 transition-colors border-none bg-transparent cursor-pointer ${
-                            isSelected ? "font-medium text-slate-900 bg-slate-100" : "text-slate-600"
+                          className={`w-full px-3.5 py-2 text-left text-xs font-sans flex items-center justify-between hover:bg-slate-50 transition-colors border-none bg-transparent cursor-pointer ${
+                            isSelected ? "font-semibold text-slate-900 bg-slate-50" : "text-slate-600"
                           }`}
                         >
                           <span>{cat.title}</span>
-                          {isSelected && (
-                            <span className="material-symbols-outlined text-[18px] text-slate-800">check</span>
-                          )}
+                          {isSelected && <Check className="w-3.5 h-3.5 text-slate-900" />}
                         </button>
                       );
                     })}
@@ -604,7 +567,7 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                 )}
               </div>
 
-              {/* Selector de Temática */}
+              {/* Topic Category */}
               <div ref={categoryDropdownRef} className="relative w-full">
                 <button
                   type="button"
@@ -612,30 +575,16 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                     setIsCategoryOpen(!isCategoryOpen);
                     setIsAdminCategoryOpen(false);
                   }}
-                  className="w-full h-12 px-4 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 focus:border-slate-400 flex items-center justify-between text-base font-normal font-sans text-left transition-colors cursor-pointer outline-none"
+                  className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 focus:border-slate-900 flex items-center justify-between text-sm font-sans text-left transition-colors cursor-pointer outline-none"
                 >
-                  <span className={`text-sm sm:text-base font-normal font-sans truncate ${selectedCategory ? "text-slate-800 font-medium" : "text-slate-400"}`}>
+                  <span className={`truncate ${selectedCategory ? "text-slate-900 font-medium" : "text-slate-400"}`}>
                     {selectedCategory || "Temática"}
                   </span>
-                  <svg
-                    width="12"
-                    height="8"
-                    viewBox="0 0 12 8"
-                    fill="none"
-                    className={`transition-transform duration-200 shrink-0 ${selectedCategory ? "text-slate-600" : "text-slate-400"} ${isCategoryOpen ? "rotate-180" : ""}`}
-                  >
-                    <path
-                      d="M1.5 2L6 6.5L10.5 2"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                  <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-150 ${isCategoryOpen ? "rotate-180" : ""}`} />
                 </button>
 
                 {isCategoryOpen && (
-                  <div className="absolute top-[calc(100%+5px)] left-0 w-full bg-white rounded-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in duration-150 max-h-[260px] overflow-y-auto custom-scrollbar shadow-none">
+                  <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-white rounded-xl border border-slate-200 py-1 z-50 animate-in fade-in zoom-in-95 duration-100 max-h-[240px] overflow-y-auto shadow-lg">
                     <button
                       type="button"
                       onClick={() => {
@@ -644,17 +593,15 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                         setShowTagPills(false);
                         setIsCategoryOpen(false);
                       }}
-                      className={`w-full px-4 py-2.5 text-left text-sm font-sans flex items-center justify-between hover:bg-slate-50 transition-colors border-none bg-transparent cursor-pointer ${
-                        selectedCategory === null ? "font-medium text-slate-900 bg-slate-100/70" : "text-slate-500"
+                      className={`w-full px-3.5 py-2 text-left text-xs font-sans flex items-center justify-between hover:bg-slate-50 transition-colors border-none bg-transparent cursor-pointer ${
+                        selectedCategory === null ? "font-semibold text-slate-900 bg-slate-50" : "text-slate-500"
                       }`}
                     >
                       <span>Sin temática</span>
-                      {selectedCategory === null && (
-                        <span className="material-symbols-outlined text-[18px] text-slate-700">check</span>
-                      )}
+                      {selectedCategory === null && <Check className="w-3.5 h-3.5 text-slate-700" />}
                     </button>
 
-                    <div className="border-t border-slate-100" />
+                    <div className="border-t border-slate-100 my-1" />
 
                     {INTEREST_CATEGORIES.map((cat) => {
                       const isSelected = selectedCategory === cat.title;
@@ -668,14 +615,12 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                             setShowTagPills(true);
                             setIsCategoryOpen(false);
                           }}
-                          className={`w-full px-4 py-2.5 text-left text-base font-normal font-sans flex items-center justify-between hover:bg-slate-50 hover:text-slate-800 transition-colors border-none bg-transparent cursor-pointer ${
-                            isSelected ? "font-medium text-emerald-700 bg-emerald-50/50" : "text-slate-500"
+                          className={`w-full px-3.5 py-2 text-left text-xs font-sans flex items-center justify-between hover:bg-slate-50 transition-colors border-none bg-transparent cursor-pointer ${
+                            isSelected ? "font-semibold text-emerald-700 bg-emerald-50/50" : "text-slate-600"
                           }`}
                         >
                           <span>{cat.title}</span>
-                          {isSelected && (
-                            <span className="material-symbols-outlined text-[18px] text-emerald-600">check</span>
-                          )}
+                          {isSelected && <Check className="w-3.5 h-3.5 text-emerald-600" />}
                         </button>
                       );
                     })}
@@ -684,36 +629,22 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
               </div>
             </div>
           ) : (
-            /* Selector único para miembros no admin */
+            /* Single Category Selector */
             <div ref={categoryDropdownRef} className="relative w-full">
               <button
                 type="button"
                 onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-                className="w-full h-12 px-4 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 focus:border-slate-400 flex items-center justify-between text-base font-normal font-sans text-left transition-colors cursor-pointer outline-none"
+                className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 focus:border-slate-900 flex items-center justify-between text-sm font-sans text-left transition-colors cursor-pointer outline-none"
               >
-                <span className={`text-base font-normal font-sans ${selectedCategory ? "text-slate-700" : "text-slate-400"}`}>
+                <span className={`truncate ${selectedCategory ? "text-slate-900 font-medium" : "text-slate-400"}`}>
                   {selectedCategory || "Seleccionar temática"}
                 </span>
-                <svg
-                  width="12"
-                  height="8"
-                  viewBox="0 0 12 8"
-                  fill="none"
-                  className={`transition-transform duration-200 shrink-0 ${selectedCategory ? "text-slate-600" : "text-slate-400"} ${isCategoryOpen ? "rotate-180" : ""}`}
-                >
-                  <path
-                    d="M1.5 2L6 6.5L10.5 2"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <ChevronDown className={`w-4 h-4 text-slate-400 shrink-0 transition-transform duration-150 ${isCategoryOpen ? "rotate-180" : ""}`} />
               </button>
 
               {isCategoryOpen && (
-                <div className="absolute top-[calc(100%+5px)] left-0 w-full bg-white rounded-2xl border border-slate-200 overflow-hidden z-50 animate-in fade-in duration-150 max-h-[280px] overflow-y-auto custom-scrollbar shadow-none">
-                  {INTEREST_CATEGORIES.map((cat, idx) => {
+                <div className="absolute top-[calc(100%+4px)] left-0 w-full bg-white rounded-xl border border-slate-200 py-1 z-50 animate-in fade-in zoom-in-95 duration-100 max-h-[240px] overflow-y-auto shadow-lg">
+                  {INTEREST_CATEGORIES.map((cat) => {
                     const isSelected = selectedCategory === cat.title;
                     return (
                       <button
@@ -725,14 +656,12 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                           setShowTagPills(true);
                           setIsCategoryOpen(false);
                         }}
-                        className={`w-full px-4 py-2.5 text-left text-base font-normal font-sans flex items-center justify-between hover:bg-slate-50 hover:text-slate-800 transition-colors border-none bg-transparent cursor-pointer ${
-                          idx === 0 ? "first:rounded-t-2xl" : ""
-                        } ${isSelected ? "font-medium text-emerald-700 bg-emerald-50/50" : "text-slate-500"}`}
+                        className={`w-full px-3.5 py-2 text-left text-xs font-sans flex items-center justify-between hover:bg-slate-50 transition-colors border-none bg-transparent cursor-pointer ${
+                          isSelected ? "font-semibold text-emerald-700 bg-emerald-50/50" : "text-slate-600"
+                        }`}
                       >
                         <span>{cat.title}</span>
-                        {isSelected && (
-                          <span className="material-symbols-outlined text-[18px] text-emerald-600">check</span>
-                        )}
+                        {isSelected && <Check className="w-3.5 h-3.5 text-emerald-600" />}
                       </button>
                     );
                   })}
@@ -741,128 +670,17 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
             </div>
           )}
 
-          {/* 3. Main Writing Card Container */}
-          <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden flex flex-col focus-within:border-slate-400 transition-colors">
-            {/* Top Bar: Formatting Tools */}
-            <div className="px-3.5 py-2.5 border-b border-slate-100 flex items-center gap-1.5 bg-white">
-              <button
-                type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  formatDoc("bold");
-                }}
-                title="Negrita (Ctrl+B)"
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-800 hover:text-black hover:bg-slate-100 transition-colors border-none bg-transparent cursor-pointer font-bold text-base font-sans leading-none"
-              >
-                B
-              </button>
-              <button
-                type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  formatDoc("italic");
-                }}
-                title="Cursiva (Ctrl+I)"
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-800 hover:text-black hover:bg-slate-100 transition-colors border-none bg-transparent cursor-pointer italic font-serif font-bold text-base leading-none"
-              >
-                I
-              </button>
-              <button
-                type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  formatDoc("underline");
-                }}
-                title="Subrayado (Ctrl+U)"
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-800 hover:text-black hover:bg-slate-100 transition-colors border-none bg-transparent cursor-pointer underline font-medium text-base font-sans leading-none"
-              >
-                U
-              </button>
-              <button
-                type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  formatDoc("insertUnorderedList");
-                }}
-                title="Lista con viñetas"
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-800 hover:text-black hover:bg-slate-100 transition-colors border-none bg-transparent cursor-pointer"
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="9" x2="21" y1="6" y2="6" />
-                  <line x1="9" x2="21" y1="12" y2="12" />
-                  <line x1="9" x2="21" y1="18" y2="18" />
-                  <circle cx="4" cy="6" r="1.5" fill="currentColor" />
-                  <circle cx="4" cy="12" r="1.5" fill="currentColor" />
-                  <circle cx="4" cy="18" r="1.5" fill="currentColor" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  formatDoc("insertOrderedList");
-                }}
-                title="Lista numerada"
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-800 hover:text-black hover:bg-slate-100 transition-colors border-none bg-transparent cursor-pointer"
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <line x1="10" x2="21" y1="6" y2="6" />
-                  <line x1="10" x2="21" y1="12" y2="12" />
-                  <line x1="10" x2="21" y1="18" y2="18" />
-                  <path d="M4 6h1v4" strokeWidth="1.8" />
-                  <path d="M4 10h2" strokeWidth="1.8" />
-                  <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" strokeWidth="1.8" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleOpenLinkModal();
-                }}
-                title="Insertar enlace"
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-800 hover:text-black hover:bg-slate-100 transition-colors border-none bg-transparent cursor-pointer"
-              >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                </svg>
-              </button>
-            </div>
+          {/* Main Writing Container */}
+          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden flex flex-col focus-within:border-slate-400 transition-colors">
+            {/* Molecule: Toolbar */}
+            <ComposerToolbar onFormat={formatDoc} onInsertLink={handleOpenLinkModal} />
 
-            {/* Middle: ContentEditable editor with reliable placeholder overlay */}
-            <div className="p-4 pr-2.5 relative min-h-[150px] max-h-[260px] sm:max-h-[300px] overflow-y-auto visible-scrollbar">
+            {/* ContentEditable Editor Area */}
+            <div className="p-3.5 relative min-h-[140px] max-h-[260px] overflow-y-auto">
               {(!postText || postText.trim() === "") && (
                 <div
                   onClick={() => editorRef.current?.focus()}
-                  className="absolute top-4 left-4 text-base font-normal font-sans text-slate-400 pointer-events-none select-none"
+                  className="absolute top-3.5 left-3.5 text-sm font-sans text-slate-400 pointer-events-none select-none"
                 >
                   Cuéntanos qué quieres compartir
                 </div>
@@ -878,12 +696,12 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                     e.preventDefault();
                   }
                 }}
-                className="w-full min-h-[120px] text-base font-normal font-sans text-slate-700 outline-none p-0 bg-transparent leading-relaxed cursor-text [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&_a]:text-slate-900 [&_a]:font-semibold [&_a]:underline [&_a]:underline-offset-2"
+                className="w-full min-h-[120px] text-sm font-sans text-slate-800 outline-none p-0 bg-transparent leading-relaxed cursor-text [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&_a]:text-slate-900 [&_a]:font-semibold [&_a]:underline [&_a]:underline-offset-2"
               />
             </div>
 
-            {/* Bottom Bar inside Card: # Agregar etiquetas */}
-            <div className="px-4 py-3 border-t border-slate-100 flex flex-col gap-2.5 bg-white">
+            {/* Bottom Tags Toggle Strip */}
+            <div className="px-3.5 py-2.5 border-t border-slate-100 flex flex-col gap-2 bg-white">
               <div className="flex items-center justify-between">
                 <button
                   type="button"
@@ -894,46 +712,16 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                       setShowTagPills((prev) => !prev);
                     }
                   }}
-                  className="flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors border-none bg-transparent cursor-pointer p-0 select-none font-jakarta"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 transition-colors border-none bg-transparent cursor-pointer p-0 select-none font-jakarta"
                 >
-                  <svg
-                    className="w-4 h-4 text-slate-700 shrink-0"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="4" x2="20" y1="9" y2="9" />
-                    <line x1="4" x2="20" y1="15" y2="15" />
-                    <line x1="10" x2="8" y1="3" y2="21" />
-                    <line x1="16" x2="14" y1="3" y2="21" />
-                  </svg>
+                  <Hash className="w-3.5 h-3.5 text-slate-500" />
                   <span>Agregar etiquetas</span>
                   {selectedCategory && (
-                    <svg
-                      width="10"
-                      height="6"
-                      viewBox="0 0 10 6"
-                      fill="none"
-                      className={`transition-transform duration-200 text-slate-400 ${
-                        showTagPills ? "rotate-180" : ""
-                      }`}
-                    >
-                      <path
-                        d="M1 1L5 5L9 1"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform ${showTagPills ? "rotate-180" : ""}`} />
                   )}
                 </button>
               </div>
 
-              {/* Inline Tag Pills if category is chosen */}
               {selectedCategory && activeCategoryObj && showTagPills && (
                 <div className="flex flex-wrap gap-1.5 pt-1 animate-in fade-in duration-150">
                   {activeCategoryObj.items.map((item) => {
@@ -943,28 +731,15 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
                         key={item}
                         type="button"
                         onClick={() => handleToggleArea(item)}
-                        className={`h-7 px-3 rounded-full text-xs font-medium transition-all cursor-pointer select-none font-sans flex items-center gap-1.5 shrink-0 border ${
+                        className={`h-6 px-2.5 rounded-full text-xs font-medium transition-all cursor-pointer select-none font-sans flex items-center gap-1 shrink-0 border ${
                           isSelected
-                            ? "bg-zinc-900 text-white border-zinc-900"
+                            ? "bg-slate-900 text-white border-slate-900"
                             : "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200"
                         }`}
                         title={isSelected ? `Quitar #${item}` : `Agregar #${item}`}
                       >
                         <span>#{item}</span>
-                        {isSelected && (
-                          <svg
-                            className="w-3.5 h-3.5 text-white/80 hover:text-white shrink-0"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                          </svg>
-                        )}
+                        {isSelected && <X className="w-3 h-3 text-white/80" />}
                       </button>
                     );
                   })}
@@ -973,218 +748,83 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
             </div>
           </div>
 
-          {/* Image Preview if uploaded */}
-          {imagePreview && (
-            <div className="relative rounded-2xl overflow-hidden bg-zinc-100 border border-zinc-200/80">
-              <img
-                src={imagePreview}
-                alt="Vista previa"
-                className="w-full max-h-[240px] object-cover"
-              />
-
-              {isUploadingImage && (
-                <div className="absolute inset-0 bg-zinc-900/65 backdrop-blur-xs flex flex-col items-center justify-center gap-2.5 text-white px-6 text-center select-none animate-in fade-in duration-200">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
-                    <span className="text-xs font-semibold font-jakarta tracking-wide">
-                      Subiendo imagen...
-                    </span>
-                    <span className="text-xs font-bold font-jakarta text-white/90">
-                      {uploadProgress}%
-                    </span>
-                  </div>
-
-                  <div className="w-40 max-w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-white rounded-full transition-all duration-200 ease-out"
-                      style={{ width: `${Math.min(100, Math.max(5, uploadProgress))}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {!isUploadingImage && (
-                <button
-                  type="button"
-                  onClick={handleRemoveImage}
-                  className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-zinc-900/70 hover:bg-zinc-900 text-white flex items-center justify-center cursor-pointer border-none transition-colors"
-                  title="Quitar imagen"
-                >
-                  <span className="material-symbols-outlined text-[15px]">close</span>
-                </button>
-              )}
-            </div>
-          )}
-
-          {/* Image error alert if any */}
-          {imageError && (
-            <div className="px-3.5 py-2.5 rounded-xl bg-rose-50 border border-rose-200/80 text-rose-800 text-xs font-sans flex items-start gap-2 animate-in fade-in duration-150">
-              <span className="material-symbols-outlined text-[16px] shrink-0 text-rose-500 mt-0.5">
-                error
-              </span>
-              <div className="flex-1 flex flex-col gap-0.5">
-                <span className="font-semibold font-jakarta text-rose-900">
-                  No se pudo cargar la imagen
-                </span>
-                <span>{imageError}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setImageError(null)}
-                className="w-4 h-4 text-rose-400 hover:text-rose-700 border-none bg-transparent cursor-pointer p-0"
-              >
-                <span className="material-symbols-outlined text-[14px]">close</span>
-              </button>
-            </div>
-          )}
-
-          {/* YouTube Video Preview if added */}
-          {youtubeId && (
-            <div className="relative rounded-2xl overflow-hidden bg-black border border-zinc-200 aspect-video max-h-[240px]">
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${youtubeId}`}
-                title="Vista previa de video"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                className="w-full h-full border-none"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setYoutubeId(null);
-                  setYoutubeUrl("");
-                }}
-                className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full bg-zinc-900/70 hover:bg-zinc-900 text-white flex items-center justify-center cursor-pointer border-none transition-colors"
-                title="Quitar video"
-              >
-                <span className="material-symbols-outlined text-[15px]">close</span>
-              </button>
-            </div>
-          )}
-
-          {/* 4. Action Strip: "Agregar a tu publicación" with Luminus palette icons */}
-          <div className="mt-1 w-full px-4 py-2.5 sm:py-3 rounded-2xl border border-slate-200 bg-white flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-800 font-jakarta select-none">
-              Agregar a tu publicación
-            </span>
-
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              {/* Hidden file input */}
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handleImageFileChange}
-                className="hidden"
-              />
-
-              {/* Imagen pill button */}
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="h-9 sm:h-10 px-3 sm:px-3.5 rounded-full flex items-center gap-1.5 sm:gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-all cursor-pointer border-none active:scale-95 select-none"
-                title="Agregar foto o imagen"
-              >
-                <svg
-                  className="w-5 h-5 shrink-0"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-                  <circle cx="9" cy="9" r="2" />
-                  <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-                </svg>
-                <span className="text-xs sm:text-[13px] font-semibold font-jakarta text-emerald-700">
-                  Imagen
-                </span>
-              </button>
-
-              {/* Video pill button */}
-              <button
-                type="button"
-                onClick={handleOpenYoutubeModal}
-                className="h-9 sm:h-10 px-3 sm:px-3.5 rounded-full flex items-center gap-1.5 sm:gap-2 bg-rose-50 hover:bg-rose-100 text-[#FF4B4B] transition-all cursor-pointer border-none active:scale-95 select-none"
-                title="Agregar video de YouTube"
-              >
-                <svg
-                  className="w-5 h-5 shrink-0"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect width="20" height="15" x="2" y="4.5" rx="3" ry="3" />
-                  <polygon points="10 9 15 12 10 15" fill="currentColor" />
-                </svg>
-                <span className="text-xs sm:text-[13px] font-semibold font-jakarta text-[#FF4B4B]">
-                  Video
-                </span>
-              </button>
-            </div>
-          </div>
+          {/* Molecule: Media Attachment & Previews */}
+          <MediaAttachmentStrip
+            onImageSelected={handleImageFileChange}
+            onOpenYoutubeModal={handleOpenYoutubeModal}
+            imagePreview={imagePreview}
+            uploadedImageUrl={uploadedImageUrl}
+            isUploadingImage={isUploadingImage}
+            uploadProgress={uploadProgress}
+            imageError={imageError}
+            onClearImageError={() => setImageError(null)}
+            onRemoveImage={handleRemoveImage}
+            youtubeId={youtubeId}
+            onRemoveYoutube={() => {
+              setYoutubeId(null);
+              setYoutubeUrl("");
+            }}
+          />
         </div>
       </Modal>
 
-      {/* Submodal: Agregar video de YouTube */}
+      {/* Submodal: YouTube Video */}
       <Modal
         isOpen={isYoutubeModalOpen}
         onClose={() => setIsYoutubeModalOpen(false)}
         title="Agregar video de YouTube"
         maxWidth="460px"
-        headerClassName="px-5 py-3.5 border-b border-zinc-100"
+        headerClassName="px-5 py-4 border-b border-slate-100"
         contentClassName="p-5 flex flex-col gap-4"
-        footerClassName="px-5 py-3.5 border-t border-zinc-100 flex items-center gap-3 w-full"
+        footerClassName="px-5 py-3.5 border-t border-slate-100 flex items-center gap-3 w-full"
         footer={
           <>
             <Button
               variant="secondary"
+              size="md"
               type="button"
               onClick={() => setIsYoutubeModalOpen(false)}
-              className="flex-1 !h-11 !text-[13px] !font-medium !rounded-[12px]"
+              className="flex-1"
             >
               Cancelar
             </Button>
             <Button
               variant="primary"
+              size="md"
               type="button"
               onClick={handleSaveYoutubeVideo}
               disabled={!extractYouTubeId(tempYoutubeUrl.trim())}
-              className="flex-1 !h-11 !text-[13px] !font-medium !rounded-[12px]"
+              className="flex-1"
             >
               Agregar video
             </Button>
           </>
         }
       >
-        <form onSubmit={handleSaveYoutubeVideo} className="flex flex-col gap-4">
+        <form onSubmit={handleSaveYoutubeVideo} className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-700 font-jakarta ml-1">
+            <label className="text-xs font-semibold text-slate-700 font-jakarta">
               Enlace del video
             </label>
             <input
               type="url"
               value={tempYoutubeUrl}
               onChange={(e) => setTempYoutubeUrl(e.target.value)}
-              placeholder="Pega el enlace de YouTube"
+              placeholder="https://www.youtube.com/watch?v=..."
               autoFocus
-              className="w-full h-12 px-4 rounded-2xl border border-slate-200 focus:border-slate-400 focus:outline-none text-base font-normal font-sans text-slate-700 placeholder:text-slate-400 transition-colors bg-white"
+              className="w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-sm font-sans text-slate-900 placeholder:text-slate-400 bg-white"
             />
           </div>
 
           {tempYoutubeUrl.trim() && !extractYouTubeId(tempYoutubeUrl.trim()) && (
-            <p className="text-xs text-rose-500 font-sans ml-1">
+            <p className="text-xs text-rose-600 font-sans">
               Por favor ingresa un enlace válido de YouTube.
             </p>
           )}
         </form>
       </Modal>
 
-      {/* Submodal: Agregar enlace */}
+      {/* Submodal: Link */}
       <Modal
         isOpen={isLinkModalOpen}
         onClose={() => {
@@ -1193,57 +833,61 @@ export function EditPostModal({ isOpen, onClose, post, onSavePost }: EditPostMod
         }}
         title="Agregar enlace"
         maxWidth="460px"
-        headerClassName="px-5 py-3.5 border-b border-zinc-100"
+        headerClassName="px-5 py-4 border-b border-slate-100"
         contentClassName="p-5 flex flex-col gap-4"
-        footerClassName="px-5 py-3.5 border-t border-zinc-100 flex items-center gap-3 w-full"
+        footerClassName="px-5 py-3.5 border-t border-slate-100 flex items-center gap-3 w-full"
         footer={
           <>
             <Button
               variant="secondary"
+              size="md"
               type="button"
               onClick={() => {
                 setIsLinkModalOpen(false);
                 setSavedRange(null);
               }}
-              className="flex-1 !h-11 !text-[13px] !font-medium !rounded-[12px]"
+              className="flex-1"
             >
               Cancelar
             </Button>
             <Button
               variant="primary"
+              size="md"
               type="button"
               onClick={handleSaveLink}
               disabled={!linkUrl.trim()}
-              className="flex-1 !h-11 !text-[13px] !font-medium !rounded-[12px]"
+              className="flex-1"
             >
               Agregar enlace
             </Button>
           </>
         }
       >
-        <form onSubmit={handleSaveLink} className="flex flex-col gap-4">
+        <form onSubmit={handleSaveLink} className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-700 font-jakarta ml-1">Enlace</label>
+            <label className="text-xs font-semibold text-slate-700 font-jakarta">
+              Enlace
+            </label>
             <input
               type="text"
               value={linkUrl}
               onChange={(e) => setLinkUrl(e.target.value)}
-              placeholder="Pega un enlace"
+              placeholder="https://ejemplo.com"
               autoFocus
-              className="w-full h-12 px-4 rounded-2xl border border-slate-200 focus:border-slate-400 focus:outline-none text-base font-normal font-sans text-slate-700 placeholder:text-slate-400 transition-colors bg-white"
+              className="w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-sm font-sans text-slate-900 placeholder:text-slate-400 bg-white"
             />
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-semibold text-slate-700 font-jakarta ml-1">
+            <label className="text-xs font-semibold text-slate-700 font-jakarta">
               Texto visible
             </label>
             <input
               type="text"
               value={linkText}
               onChange={(e) => setLinkText(e.target.value)}
-              placeholder="Escribe cómo quieres mostrarlo"
-              className="w-full h-12 px-4 rounded-2xl border border-slate-200 focus:border-slate-400 focus:outline-none text-base font-normal font-sans text-slate-700 placeholder:text-slate-400 transition-colors bg-white"
+              placeholder="Texto a mostrar (opcional)"
+              className="w-full h-11 px-3.5 rounded-xl border border-slate-200 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 outline-none text-sm font-sans text-slate-900 placeholder:text-slate-400 bg-white"
             />
           </div>
         </form>

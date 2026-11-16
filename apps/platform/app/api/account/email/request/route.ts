@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { generateRecoveryCode, getRecoveryCodeExpiry, hashRecoveryCode } from "@/lib/auth/recoveryTokens";
 import { sendEmailChangeVerificationEmail } from "@/lib/mails/sender";
+import { isRateLimited } from "@/utils/rateLimit";
 
 export const runtime = "nodejs";
 
@@ -10,10 +11,18 @@ function isValidEmail(value: string) {
 }
 
 export async function POST(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+  }
+
+  const rateCheck = isRateLimited(session.userId, "EMAIL_CHANGE_REQ", 5, 15 * 60 * 1000);
+  if (rateCheck.success) {
+    return NextResponse.json(
+      { message: "Demasiados intentos. Por favor espera unos minutos." },
+      { status: 429 }
+    );
   }
 
   const body = await request.json().catch(() => null);
@@ -38,6 +47,21 @@ export async function POST(request: Request) {
 
     if (existingUser) {
       return NextResponse.json({ message: "Ese correo ya esta registrado." }, { status: 409 });
+    }
+
+    const recentToken = await prisma.emailChangeToken.findFirst({
+      where: {
+        userId: session.userId,
+        createdAt: { gte: new Date(Date.now() - 60 * 1000) },
+      },
+      select: { id: true },
+    });
+
+    if (recentToken) {
+      return NextResponse.json(
+        { message: "Ya enviamos un código recientemente. Espera un minuto antes de volver a solicitarlo." },
+        { status: 429 }
+      );
     }
 
     await prisma.$transaction([

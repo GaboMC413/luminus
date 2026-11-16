@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { isMecenas } from "@/lib/membership/access";
 import { isUuid } from "@/utils/validation";
 import { isRateLimited, RATE_LIMITS } from "@/utils/rateLimit";
 
@@ -61,7 +62,7 @@ const conversationInclude = {
 };
 
 export async function GET() {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
@@ -117,7 +118,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
@@ -199,15 +200,19 @@ export async function POST(request: Request) {
 
     const user = await prisma.user.findUnique({
       where: { id: session.userId },
-      select: { tier: true, trialExpiresAt: true },
+      select: { tier: true, trialExpiresAt: true, paidUntil: true, stripeSubscriptionId: true },
     });
 
-    const isBasic = user && (user.tier === "BASIC" || (user.trialExpiresAt && user.trialExpiresAt > new Date()));
+    const isBasic = isMecenas(user);
 
     if (!isBasic) {
       // FREE Tier Daily Limit: 1 new conversation per day in local time zone
       const offsetHeader = request.headers.get("x-timezone-offset");
-      const offsetMinutes = offsetHeader ? parseInt(offsetHeader, 10) : 0;
+      const parsedOffset = offsetHeader ? parseInt(offsetHeader, 10) : 0;
+      const offsetMinutes =
+        Number.isFinite(parsedOffset) && parsedOffset >= -840 && parsedOffset <= 840
+          ? parsedOffset
+          : 0;
 
       const now = new Date();
       // Adjust server time to client's local time

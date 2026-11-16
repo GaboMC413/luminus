@@ -15,7 +15,7 @@ import {
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
-  const session = getCurrentSession();
+  const session = await getCurrentSession();
 
   if (!session) {
     return NextResponse.json({ message: "No autorizado." }, { status: 401 });
@@ -49,6 +49,7 @@ export async function POST(request: Request) {
       Bucket: bucket,
       Key: key,
       ContentType: contentType,
+      ContentLength: Math.floor(contentLength),
       CacheControl: "private, no-store",
       Metadata: {
         owner: userIdOrGuest,
@@ -67,6 +68,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ uploadUrl, key, fileName, contentType, contentLength, owner: session.userId });
   } catch (error: any) {
     console.error("Error generating presigned URL for resume:", error);
-    return NextResponse.json({ message: error.message || "Error al generar la URL de subida." }, { status: 500 });
+    return NextResponse.json({ message: "Error al generar la URL de subida." }, { status: 500 });
   }
 }

@@ -1,4 +1,4 @@
-import { prisma } from "./db";
+import { prisma } from "@/lib/db";
 
 export interface Quest {
   id: string;
@@ -8,10 +8,10 @@ export interface Quest {
   icon: string;
 }
 
-const QUEST_CONFIG: Record<string, { label: string; actionUrl: string; icon: string }> = {
+export const QUEST_CONFIG: Record<string, { label: string; actionUrl: string; icon: string }> = {
   profession: {
     label: "Indica tu profesión",
-    actionUrl: "/perfil-usuario?edit=personal",
+    actionUrl: "/perfil-usuario?edit=profession",
     icon: "work",
   },
   bio: {
@@ -26,7 +26,7 @@ const QUEST_CONFIG: Record<string, { label: string; actionUrl: string; icon: str
   },
   user_interests: {
     label: "Selecciona tus temas de interés",
-    actionUrl: "/perfil-usuario?edit=interests",
+    actionUrl: "/perfil-usuario?edit=user_interests",
     icon: "interests",
   },
   cover: {
@@ -35,8 +35,8 @@ const QUEST_CONFIG: Record<string, { label: string; actionUrl: string; icon: str
     icon: "photo_prints",
   },
   connect: {
-    label: "Envía una solicitud de conexión",
-    actionUrl: "/comunidad/miembros",
+    label: "Suma a alguien a tu red",
+    actionUrl: "/inicio/miembros",
     icon: "person_add",
   },
 };
@@ -44,33 +44,33 @@ const QUEST_CONFIG: Record<string, { label: string; actionUrl: string; icon: str
 const CELEBRATION_COPY: Record<string, { title: string; body: string; actionUrl: string }> = {
   profession: {
     title: "Has indicado tu profesión",
-    body: "Definir tu profesión ayuda a que otros miembros conozcan tu experiencia y campo de especialidad. Es el punto de partida ideal para compartir conocimientos y entablar colaboraciones en la comunidad.",
+    body: "Tu experiencia y campo de especialidad ahora son visibles para la red.",
     actionUrl: "/perfil-usuario",
   },
   bio: {
     title: "Has escrito tu biografía",
-    body: "Tu biografía es tu voz en LUMINUS. Al contar quién eres, qué te apasiona y qué buscas, creas puentes de afinidad genuina para que otras personas inicien conversaciones significativas contigo.",
+    body: "Tu voz y presentación ayudan a que otros miembros conecten contigo.",
     actionUrl: "/perfil-usuario",
   },
   interests: {
     title: "Has compartido tus reflexiones",
-    body: "Compartir tus reflexiones y valores ayuda a alinear tu energía con la de otros miembros. Permite que la comunidad conozca en qué crees y cómo pueden apoyarse mutuamente en su crecimiento.",
+    body: "Tus valores e intenciones fortalecen afinidades genuinas en la comunidad.",
     actionUrl: "/perfil-usuario",
   },
   user_interests: {
     title: "Has seleccionado tus temas de interés",
-    body: "Definir tus temas de interés te ayuda a conectar con contenidos, especialistas y personas afines a tus búsquedas de bienestar.",
+    body: "Tus áreas de interés te acercan a contenidos y personas afines a tu bienestar.",
     actionUrl: "/perfil-usuario",
   },
   cover: {
     title: "Has personalizado tu foto de portada",
-    body: "Personalizar tu portada define el ambiente y la energía de tu perfil. Un espacio visualmente acogedor y propio hace que tu presencia en LUMINUS se sienta verdaderamente tuya y acogedora.",
+    body: "Tu perfil ahora transmite tu energía y presencia visual única.",
     actionUrl: "/perfil-usuario",
   },
   connect: {
-    title: "Has enviado tu primera solicitud",
-    body: "¡Has dado el primer paso para construir tu red! En LUMINUS, cada conexión fortalece nuestra red de apoyo. Conectar te permite intercambiar perspectivas, compartir bienestar y no caminar solo.",
-    actionUrl: "/comunidad/miembros",
+    title: "Has sumado tu primera conexión",
+    body: "Has dado el primer paso para construir tu red en la comunidad.",
+    actionUrl: "/inicio/miembros",
   },
 };
 
@@ -82,8 +82,14 @@ export async function getOnboardingQuests(userId: string): Promise<{ quests: Que
       profile: true,
       profilePrompts: true,
       interests: { take: 1 },
-      sentConnections: { take: 1 },
-      receivedConnections: { take: 1 },
+      sentConnections: {
+        where: { status: "accepted" },
+        take: 1,
+      },
+      receivedConnections: {
+        where: { status: "accepted" },
+        take: 1,
+      },
     },
   });
 
@@ -123,81 +129,135 @@ export interface NewlyCompletedQuest {
   body: string;
 }
 
-export async function checkAndTriggerQuestCompletion(
+export async function checkAndTriggerQuestsCompletion(
   userId: string,
-  questId: string
-): Promise<NewlyCompletedQuest | null> {
-  if (!QUEST_CONFIG[questId]) return null;
+  questIds: string[],
+  preloadedUser?: any
+): Promise<NewlyCompletedQuest[]> {
+  const validQuestIds = questIds.filter((id) => QUEST_CONFIG[id]);
+  if (validQuestIds.length === 0) return [];
 
-  // 1. Check if quest condition is met currently
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    include: {
-      profile: true,
-      profilePrompts: true,
-      interests: { take: 1 },
-      sentConnections: { take: 1 },
-      receivedConnections: { take: 1 },
-    },
-  });
-
-  if (!user) return null;
-
-  const profile = user.profile;
-  let isCompleted = false;
-
-  switch (questId) {
-    case "profession":
-      isCompleted = !!(profile?.profession && profile.profession.trim() !== "");
-      break;
-    case "bio":
-      isCompleted = !!(profile?.bio && profile.bio.trim() !== "");
-      break;
-    case "interests":
-      isCompleted = user.profilePrompts.length > 0;
-      break;
-    case "user_interests":
-      isCompleted = user.interests.length > 0 || !!(profile?.intention && profile.intention.trim() !== "");
-      break;
-    case "cover":
-      isCompleted = !!(profile?.coverUrl && profile.coverUrl.trim() !== "");
-      break;
-    case "connect":
-      isCompleted = user.sentConnections.length > 0 || user.receivedConnections.length > 0;
-      break;
+  // 1. Fetch user if not preloaded or if needed relations are missing
+  let user = preloadedUser;
+  const needsConnect = validQuestIds.includes("connect");
+  if (!user || !user.profile || (needsConnect && (!user.sentConnections || !user.receivedConnections))) {
+    user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        profile: true,
+        profilePrompts: true,
+        interests: { take: 1 },
+        sentConnections: {
+          where: { status: "accepted" },
+          take: 1,
+        },
+        receivedConnections: {
+          where: { status: "accepted" },
+          take: 1,
+        },
+      },
+    });
   }
 
-  if (!isCompleted) return null;
+  if (!user) return [];
 
-  // 2. Check if a celebration notification already exists
-  const typeKey = `quest_completed_${questId}`;
-  const existingNotification = await prisma.notification.findFirst({
-    where: {
+  const profile = user.profile;
+
+  // 2. Determine which requested quests are completed
+  const candidateQuestIds: string[] = [];
+  for (const questId of validQuestIds) {
+    let isCompleted = false;
+    if (questId === "profession") {
+      isCompleted = !!(profile?.profession && profile.profession.trim() !== "");
+    } else if (questId === "bio") {
+      isCompleted = !!(profile?.bio && profile.bio.trim() !== "");
+    } else if (questId === "interests") {
+      isCompleted = (user.profilePrompts?.length ?? 0) > 0;
+    } else if (questId === "user_interests") {
+      isCompleted = (user.interests?.length ?? 0) > 0 || !!(profile?.intention && profile.intention.trim() !== "");
+    } else if (questId === "cover") {
+      isCompleted = !!(profile?.coverUrl && profile.coverUrl.trim() !== "");
+    } else if (questId === "connect") {
+      isCompleted = (user.sentConnections?.length ?? 0) > 0 || (user.receivedConnections?.length ?? 0) > 0;
+    }
+    if (isCompleted) {
+      candidateQuestIds.push(questId);
+    }
+  }
+
+  if (candidateQuestIds.length === 0) return [];
+
+  // 3. Batch check existing celebrations in notifications and permanent activity logs
+  const candidateTypeKeys = candidateQuestIds.map((id) => `quest_completed_${id}`);
+  const [existingNotifications, existingActivityLogs] = await Promise.all([
+    prisma.notification.findMany({
+      where: {
+        userId,
+        type: { in: candidateTypeKeys },
+      },
+      select: { type: true },
+    }),
+    prisma.activityLog.findMany({
+      where: {
+        userId,
+        action: "QUEST_COMPLETED",
+        details: { in: candidateQuestIds },
+      },
+      select: { details: true },
+    }),
+  ]);
+
+  const existingCompletedSet = new Set<string>([
+    ...existingNotifications.map((n) => n.type.replace("quest_completed_", "")),
+    ...existingActivityLogs.map((a) => a.details || "").filter(Boolean),
+  ]);
+
+  const newQuestIds = candidateQuestIds.filter((id) => !existingCompletedSet.has(id));
+
+  if (newQuestIds.length === 0) return [];
+
+  // 4. Batch create celebration notifications AND permanent activity logs
+  const now = new Date();
+  const notificationsToCreate = newQuestIds.map((id) => {
+    const copy = CELEBRATION_COPY[id];
+    return {
       userId,
-      type: typeKey,
-    },
-  });
-
-  if (existingNotification) return null;
-
-  // 3. Create celebration notification
-  const copy = CELEBRATION_COPY[questId];
-  await prisma.notification.create({
-    data: {
-      userId,
-      type: typeKey,
+      type: `quest_completed_${id}`,
       title: copy.title,
       body: copy.body,
       actionUrl: copy.actionUrl,
       actorName: "LUMINUS",
-      actorAvatarUrl: "/iso-logo-black.svg", // Using the official logo avatar
-      readAt: new Date(),
-    },
+      actorAvatarUrl: "/iso-logo-black.svg",
+      readAt: now,
+    };
   });
 
-  return {
-    id: questId,
-    title: copy.title,
-    body: copy.body,
-  };
+  const activityLogsToCreate = newQuestIds.map((id) => ({
+    userId,
+    action: "QUEST_COMPLETED",
+    details: id,
+  }));
+
+  await Promise.all([
+    prisma.notification.createMany({
+      data: notificationsToCreate,
+    }),
+    prisma.activityLog.createMany({
+      data: activityLogsToCreate,
+    }),
+  ]);
+
+  return newQuestIds.map((id) => ({
+    id,
+    title: CELEBRATION_COPY[id].title,
+    body: CELEBRATION_COPY[id].body,
+  }));
+}
+
+export async function checkAndTriggerQuestCompletion(
+  userId: string,
+  questId: string
+): Promise<NewlyCompletedQuest | null> {
+  const results = await checkAndTriggerQuestsCompletion(userId, [questId]);
+  return results[0] ?? null;
 }

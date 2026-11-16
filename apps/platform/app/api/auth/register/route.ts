@@ -53,7 +53,11 @@ export async function POST(request: Request) {
     }
     
     // Si el bypass local/dev está activo o ya está confirmado (ej. por SSO), autoconfirmar
-    if (!cognitoUser.userConfirmed && process.env.SKIP_EMAIL_VERIFICATION === "true") {
+    if (
+      !cognitoUser.userConfirmed &&
+      process.env.NODE_ENV !== "production" &&
+      process.env.SKIP_EMAIL_VERIFICATION === "true"
+    ) {
       const { adminConfirmUser } = await import("@/lib/auth/cognito-admin");
       await adminConfirmUser(validation.email);
       cognitoUser.userConfirmed = true;
@@ -65,7 +69,7 @@ export async function POST(request: Request) {
         cognitoSub: cognitoUser.userSub,
         authProvider: "email",
         emailVerified: cognitoUser.userConfirmed,
-        trialExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 3 months trial
+        trialExpiresAt: null,
         identities: {
           create: {
             provider: "cognito",
@@ -97,7 +101,7 @@ export async function POST(request: Request) {
       role: user.role,
     });
 
-    setSessionCookie(token);
+    await setSessionCookie(token);
 
     try {
       await prisma.activityLog.create({
@@ -114,9 +118,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ user: serializeUser(user) }, { status: 201 });
   } catch (error: any) {
     console.error("Cognito registration flow failed:", error);
-    const cognitoMsg = getCognitoErrorMessage(error, "");
-    const rawMsg = error?.message || error?.toString?.() || "";
-    const finalMessage = cognitoMsg || rawMsg || "No pudimos crear tu cuenta en este momento.";
+    const finalMessage = getCognitoErrorMessage(error, "No pudimos crear tu cuenta en este momento.");
     return NextResponse.json(
       { message: finalMessage },
       { status: getCognitoErrorStatus(error, 500) },
