@@ -1,21 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentSession } from "@/lib/auth/session";
+import { redactSensitiveText } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function sanitizeError(message: string): string {
-  let sanitized = message
-    .replace(/postgresql:\/\/[^\s"']+/gi, "postgresql://[REDACTED]")
-    .replace(/postgres:\/\/[^\s"']+/gi, "postgres://[REDACTED]")
-    .replace(/password=[^\s&"']+/gi, "password=[REDACTED]");
-
-  if (process.env.DATABASE_URL) {
-    sanitized = sanitized.split(process.env.DATABASE_URL).join("[REDACTED_DATABASE_URL]");
-  }
-
-  return sanitized;
+  return redactSensitiveText(message);
 }
 
 async function runTest(testFn: () => Promise<any>) {

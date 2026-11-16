@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/events";
+import { handleMarketingApiError, sanitizeErrorForLog } from "@/lib/server-error";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,11 +19,11 @@ export async function GET(request: Request) {
         eventCount: count,
         sampleEvent: sample,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       return NextResponse.json({
         ok: false,
         databaseUrlConfigured: Boolean(process.env.DATABASE_URL || process.env.secrets),
-        error: err?.message || String(err),
+        error: sanitizeErrorForLog(err).message,
       });
     }
   }

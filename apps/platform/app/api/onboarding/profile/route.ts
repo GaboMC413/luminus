@@ -2,6 +2,7 @@ import { NextResponse, after } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { parsePhoneNumberFromString, CountryCode } from "libphonenumber-js";
 import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
+import { handleApiError } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
 
@@ -209,10 +210,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ profile });
 
   } catch (error) {
-    console.error("Onboarding database flow failed.", error);
-    return NextResponse.json(
-      { message: "El servicio de base de datos no está disponible." },
-      { status: 500 }
-    );
+    return handleApiError(error, {
+      context: "[onboarding/profile] POST",
+      message: "No pudimos guardar tu perfil en este momento.",
+    });
   }
 }

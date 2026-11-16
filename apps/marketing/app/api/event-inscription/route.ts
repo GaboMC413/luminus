@@ -184,8 +184,9 @@ export async function POST(req: Request) {
         source: "web",
       });
       console.log(`[Event Registration Email Sent]: ${cleanEmail} (resend=${!!isResend}) MessageId:`, (emailRes as any)?.messageId || "local-preview");
-    } catch (emailErr: any) {
-      console.error("❌ Error enviando email de confirmación:", JSON.stringify(emailErr, null, 2));
+    } catch (emailErr: unknown) {
+      const { logServerError } = await import("@/lib/server-error");
+      logServerError("[marketing/event-inscription] SES error", emailErr);
       emailStatus = "failed";
     }
 
@@ -194,11 +195,11 @@ export async function POST(req: Request) {
       alreadyRegistered,
       emailStatus,
     });
-  } catch (err: any) {
-    console.error("[Event Inscription Route Error]:", err.message || err);
-    return NextResponse.json(
-      { success: false, error: "Error al procesar la inscripción." },
-      { status: 500 }
-    );
+  } catch (err: unknown) {
+    const { handleMarketingApiError } = await import("@/lib/server-error");
+    return handleMarketingApiError(err, {
+      context: "[marketing/event-inscription] POST",
+      error: "Error al procesar la inscripción.",
+    });
   }
 }

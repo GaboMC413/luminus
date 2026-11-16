@@ -88,8 +88,8 @@ export async function POST(request: Request) {
       }),
     ]);
 
-    if (isRecoveryDebugEnabled()) {
-      console.log(`[RECOVERY CODE FOR ${email}]: ${code}`);
+    if (isRecoveryDebugEnabled() && process.env.NODE_ENV !== "production") {
+      console.log("[RECOVERY CODE GENERATED] Debug mode active in non-production environment.");
     }
 
     await sendPasswordResetEmail(email, code);

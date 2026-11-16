@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { stripe, getOrCreateMembershipPrice } from "@/lib/stripe";
 import type Stripe from "stripe";
+import { handleApiError } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
 
@@ -111,11 +112,10 @@ export async function POST(req: Request) {
       message: "¡Bienvenido nuevamente a Mecenas LUMINUS!",
       subscriptionId: subscription.id,
     });
-  } catch (error: any) {
-    console.error("[resubscribe] Error:", error);
-    return NextResponse.json(
-      { message: error?.message || "Error al procesar la suscripción." },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error, {
+      context: "[membership/resubscribe] POST",
+      message: "Error al procesar la suscripción.",
+    });
   }
 }

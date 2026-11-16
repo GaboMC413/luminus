@@ -4,6 +4,7 @@ import { invalidateServerCacheTag } from "@/lib/serverCache";
 import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
 import { deleteS3FileByUrl } from "@/lib/storage/s3FileCleanup";
 import { generateUniqueUserSlug } from "@/lib/profile/slug";
+import { handleApiError } from "@/lib/errors/server-error";
 import {
   normalizeInstagramInput,
   normalizeLinkedinInput,
@@ -175,8 +176,10 @@ export async function GET() {
 
     return NextResponse.json(serializeProfile(user));
   } catch (error) {
-    console.error("Profile read failed.", error);
-    return NextResponse.json({ message: "No fue posible cargar el perfil." }, { status: 500 });
+    return handleApiError(error, {
+      context: "[profile] GET",
+      message: "No fue posible cargar el perfil.",
+    });
   }
 }
 
@@ -699,14 +702,9 @@ export async function PATCH(request: Request) {
       newlyCompletedQuests
     });
   } catch (error) {
-    console.error("Profile update failed.", error);
-    const detail =
-      process.env.NODE_ENV !== "production" && error instanceof Error
-        ? error.message
-        : undefined;
-    return NextResponse.json(
-      { message: "No fue posible actualizar el perfil.", ...(detail ? { detail } : {}) },
-      { status: 500 }
-    );
+    return handleApiError(error, {
+      context: "[profile] PATCH",
+      message: "No fue posible actualizar el perfil.",
+    });
   }
 }

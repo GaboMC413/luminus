@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { stripe } from "@/lib/stripe";
+import { handleApiError } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
 
@@ -235,9 +236,9 @@ export async function GET() {
       invoices,
     });
   } catch (error: any) {
-    console.error("[billing-details] Error:", error);
+    return handleApiError(error, { context: "[membership/billing-details] GET", message: "Error al obtener la información de facturación." });
     return NextResponse.json(
-      { message: error.message || "Error al obtener la información de facturación." },
+      { message: "Error al obtener la información de facturación." },
       { status: 500 }
     );
   }

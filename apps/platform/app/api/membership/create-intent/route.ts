@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { createMembershipSubscription } from "@/lib/stripe";
+import { handleApiError } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
 
@@ -55,11 +56,10 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ ...subscriptionData, interval });
-  } catch (error: any) {
-    console.error("Create membership subscription intent failed:", error);
-    return NextResponse.json(
-      { message: error.message || "Error al inicializar la suscripción de membresía." },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error, {
+      context: "[membership/create-intent] POST",
+      message: "Error al inicializar la suscripción de membresía.",
+    });
   }
 }

@@ -221,7 +221,9 @@ export async function GET(request: Request) {
 
   if (error) {
     const errorDescription = requestUrl.searchParams.get("error_description") || "unknown";
-    return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=${encodeURIComponent(error + ": " + errorDescription)}`);
+    const { logServerError } = await import("@/lib/errors/server-error");
+    const errorId = logServerError("[auth/cognito/callback] OAuth provider error", new Error(`${error}: ${errorDescription}`));
+    return redirectTo(requestUrl, `${fallbackPath}?error=cognito&ref=${errorId}`);
   }
 
   if (!code) return redirectTo(requestUrl, `${fallbackPath}?error=cognito&reason=no_code`);

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { sendContactNotificationEmail } from "@/lib/ses";
 import { verifyTurnstileToken } from "@/lib/turnstile";
+import { handleMarketingApiError, logServerError } from "@/lib/server-error";
 
 export async function POST(request: Request) {
   try {
@@ -34,7 +35,6 @@ export async function POST(request: Request) {
 
     // 1. Guardar mensaje de contacto en PostgreSQL via Prisma
     let dbSuccess = false;
-    let dbError = null;
 
     try {
       await prisma.contactMessage.create({
@@ -49,14 +49,12 @@ export async function POST(request: Request) {
         },
       });
       dbSuccess = true;
-    } catch (err: any) {
-      console.error("[Database Contact Error]:", err.message || err);
-      dbError = err.message || "Error al guardar mensaje en la base de datos.";
+    } catch (err: unknown) {
+      logServerError("[marketing/contact] DB error", err);
     }
 
     // 2. Enviar notificación por AWS SES
     let emailSuccess = false;
-    let emailError = null;
 
     try {
       await sendContactNotificationEmail({
@@ -69,10 +67,8 @@ export async function POST(request: Request) {
         mensaje: cleanMensaje,
       });
       emailSuccess = true;
-      console.log(`[API Contact] Notificación por email enviada exitosamente para ${cleanEmail}`);
-    } catch (err: any) {
-      console.error("[AWS SES Error] Error al enviar email de notificación:", err?.message || err);
-      emailError = `${err?.name || "SESError"}: ${err?.message || "Error al enviar correo electrónico"}`;
+    } catch (err: unknown) {
+      logServerError("[marketing/contact] SES error", err);
     }
 
     if (!dbSuccess && !emailSuccess) {
@@ -89,11 +85,10 @@ export async function POST(request: Request) {
       dbSaved: dbSuccess,
       emailSent: emailSuccess,
     });
-  } catch (error: any) {
-    console.error("[API Contact Error]:", error);
-    return NextResponse.json(
-      { error: "Ocurrió un error interno procesando tu solicitud." },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleMarketingApiError(error, {
+      context: "[marketing/contact] POST",
+      error: "Ocurrió un error interno procesando tu solicitud.",
+    });
   }
 }

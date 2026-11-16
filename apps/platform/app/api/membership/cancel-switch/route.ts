@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { stripe } from "@/lib/stripe";
+import { handleApiError } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
 
@@ -53,11 +54,10 @@ export async function POST() {
       success: true,
       message: "Se canceló el cambio de plan programado. Continuarás con tu plan actual.",
     });
-  } catch (error: any) {
-    console.error("[cancel-switch] Error:", error);
-    return NextResponse.json(
-      { message: error?.message || "Error al cancelar el cambio de plan." },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error, {
+      context: "[membership/cancel-switch] POST",
+      message: "Error al cancelar el cambio de plan.",
+    });
   }
 }
