@@ -115,19 +115,15 @@ export async function getOrCreateStripeCustomer({
   }
 
   if (!customer) {
-    const idempotencyKey = `create-customer-${userId || normalizedEmail.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
-    customer = await stripe.customers.create(
-      {
-        email: normalizedEmail,
-        name,
-        phone,
-        metadata: {
-          source: "mecenas_subscription",
-          userId: userId || "",
-        },
+    customer = await stripe.customers.create({
+      email: normalizedEmail,
+      name,
+      phone,
+      metadata: {
+        source: "mecenas_subscription",
+        userId: userId || "",
       },
-      { idempotencyKey }
-    );
+    });
   }
 
   return customer;
@@ -393,19 +389,15 @@ export async function createMembershipSubscription({
   }
 
   if (!customer) {
-    const idempotencyKey = `create-customer-${userId || normalizedEmail.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
-    customer = await stripe.customers.create(
-      {
-        email: normalizedEmail,
-        name,
-        phone,
-        metadata: {
-          source: "mecenas_subscription",
-          userId: userId || "",
-        },
+    customer = await stripe.customers.create({
+      email: normalizedEmail,
+      name,
+      phone,
+      metadata: {
+        source: "mecenas_subscription",
+        userId: userId || "",
       },
-      { idempotencyKey }
-    );
+    });
   }
 
   // 4. Create Subscription with default_incomplete payment behavior

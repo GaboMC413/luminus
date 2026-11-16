@@ -42,8 +42,8 @@ export async function POST(request: Request) {
       userId: user.id,
     });
 
-    // Immediately persist customer ID to database if not present yet
-    if (!user.stripeCustomerId && setupData.customerId && !setupData.isMock) {
+    // Persist resolved customer ID to database if missing or replaced (e.g. deleted in Stripe)
+    if (setupData.customerId && setupData.customerId !== user.stripeCustomerId && !setupData.isMock) {
       await prisma.user.update({
         where: { id: user.id },
         data: { stripeCustomerId: setupData.customerId },

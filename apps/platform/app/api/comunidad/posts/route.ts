@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession, getCurrentActiveUser } from "@/lib/auth/session";
+import { getOrCreateOfficialLuminusUser } from "@/lib/auth/welcome";
 import { prisma } from "@/lib/db";
 import { serializePost } from "@/lib/community/posts";
 
@@ -113,6 +114,7 @@ export async function POST(request: Request) {
       category,
       tags,
       createdAt,
+      postAsOfficial,
     } = body;
 
     if (!content || typeof content !== "string" || !content.trim()) {
@@ -136,9 +138,14 @@ export async function POST(request: Request) {
       customCreatedAt = parsed;
     }
 
+    const authorUserId =
+      session.role === "ADMIN" && postAsOfficial === true
+        ? (await getOrCreateOfficialLuminusUser(prisma)).id
+        : session.userId;
+
     const newPost = await prisma.communityPost.create({
       data: {
-        userId: session.userId,
+        userId: authorUserId,
         title: title?.trim() || null,
         content: content.trim(),
         imageUrl: imageUrl || null,

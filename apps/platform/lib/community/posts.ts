@@ -1,5 +1,6 @@
 import { PostItem, PostComment } from "@/components/community/mockPostsData";
 import { formatLocationDisplay } from "../../utils/locationUtils";
+import { OFFICIAL_LUMINUS_EMAIL } from "@/lib/auth/welcome";
 
 const MONTH_NAMES_ES = [
   "ene", "feb", "mar", "abr", "may", "jun",
@@ -93,6 +94,7 @@ export function serializePost(rawPost: any, currentUserId?: string): PostItem {
     authorAvatar: profile?.avatarUrl || undefined,
     authorRole: profile?.profession || "Miembro",
     authorLocation: authorLocation || undefined,
+    isOfficial: rawPost.user?.email === OFFICIAL_LUMINUS_EMAIL,
     date: formatPostDate(rawPost.createdAt),
     createdAt: rawPost.createdAt ? new Date(rawPost.createdAt).toISOString() : undefined,
     imageUrl: rawPost.imageUrl || undefined,

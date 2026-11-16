@@ -337,6 +337,7 @@ function PlatformContent() {
           category: newPost.area,
           tags: newPost.areas,
           createdAt: newPost.createdAt,
+          postAsOfficial: newPost.isOfficial,
         }),
       });
 

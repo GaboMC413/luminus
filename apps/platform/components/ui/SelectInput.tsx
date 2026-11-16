@@ -55,6 +55,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
     const triggerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const scrollToSelectedRef = useRef(false);
     const [mounted, setMounted] = useState(false);
     const instanceIdRef = useRef(Math.random().toString(36).substring(2, 9));
 
@@ -169,6 +170,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
 
     React.useLayoutEffect(() => {
       if (isOpen) {
+        scrollToSelectedRef.current = true;
         updateCoords();
         const openedAt = Date.now();
         const handleScroll = (event: Event) => {
@@ -187,9 +189,32 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
           window.removeEventListener("resize", updateCoords);
         };
       } else {
+        scrollToSelectedRef.current = false;
         setCoords(null);
       }
     }, [isOpen]);
+
+    React.useLayoutEffect(() => {
+      if (!isOpen || !coords || !dropdownRef.current || !scrollToSelectedRef.current) return;
+      scrollToSelectedRef.current = false;
+      if (!value || filteredOptions.length === 0) return;
+
+      const selectedIdx = filteredOptions.findIndex((opt) => {
+        const val = typeof opt === "string" ? opt : opt.value;
+        return val === value;
+      });
+      if (selectedIdx < 0) return;
+
+      const container = dropdownRef.current;
+      const targetEl = container.children[selectedIdx] as HTMLElement | undefined;
+      if (targetEl) {
+        const offset =
+          targetEl.getBoundingClientRect().top -
+          container.getBoundingClientRect().top +
+          container.scrollTop;
+        container.scrollTop = Math.max(0, offset);
+      }
+    }, [isOpen, coords, value, filteredOptions]);
 
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent | TouchEvent) => {
@@ -243,6 +268,7 @@ export const SelectInput = React.forwardRef<HTMLDivElement, SelectInputProps>(
 
       if (match) {
         const valToSet = typeof match === "string" ? match : match.value;
+        scrollToSelectedRef.current = true;
         onSelect(valToSet);
       }
     };

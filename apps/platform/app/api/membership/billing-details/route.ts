@@ -70,7 +70,7 @@ export async function GET() {
               customer: user.stripeCustomerId,
               status: "all",
               limit: 5,
-              expand: ["data.default_payment_method", "data.items.data.price.product"],
+              expand: ["data.default_payment_method"],
             }),
         stripe.paymentMethods.list({
           customer: user.stripeCustomerId,
@@ -104,7 +104,7 @@ export async function GET() {
             customer: user.stripeCustomerId,
             status: "all",
             limit: 5,
-            expand: ["data.default_payment_method", "data.items.data.price.product"],
+            expand: ["data.default_payment_method"],
           });
           const liveSub = customerSubs.data.find(
             (s) => s.status === "active" || s.status === "trialing" || s.status === "past_due"
@@ -126,8 +126,10 @@ export async function GET() {
       if (sub && (sub.status === "active" || sub.status === "trialing" || sub.status === "past_due")) {
         const price = sub.items?.data?.[0]?.price;
         const product = price?.product as any;
-        const planName = product?.name || "Mecenas LUMINUS";
         const interval = price?.recurring?.interval || "month";
+        const planName =
+          (typeof product === "object" && product?.name) ||
+          (interval === "year" ? "Mecenas LUMINUS Anual" : "Mecenas LUMINUS");
         const amount = (price?.unit_amount || (interval === "year" ? 4500 : 500)) / 100;
 
         if (sub.default_payment_method) {
