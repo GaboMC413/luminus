@@ -807,7 +807,7 @@ function MessagesContent() {
                       window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
                       const from = searchParams.get("from");
                       if (from === "profile" && recipientId) {
-                        router.push(`/inicio/public-profile?id=${recipientId}`);
+                        router.push(`/perfil/${recipientId}`);
                       } else {
                         setMobileView('list');
                       }
@@ -877,7 +877,7 @@ function MessagesContent() {
                         window.dispatchEvent(new CustomEvent("luminus_toggle_mobile_navbar", { detail: true }));
                         const from = searchParams.get("from");
                         if (from === "profile") {
-                          router.push(`/inicio/public-profile?id=${selectedConv.participant.id}`);
+                          router.push(`/perfil/${selectedConv.participant.id}`);
                         } else {
                           setMobileView('list');
                         }
@@ -901,7 +901,7 @@ function MessagesContent() {
                       </h2>
                       {selectedConv.participant.name?.toLowerCase() !== "luminus" && selectedConv.participant.id !== "50d13047-bab8-44f1-9541-a821113845cc" && selectedConv.participant.id !== "mock-luminus" && (
                         <Link
-                          href={`/inicio/public-profile?id=${selectedConv.participant.id}`}
+                          href={`/perfil/${selectedConv.participant.id}`}
                           className="h-8 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition cursor-pointer font-jakarta flex items-center justify-center shrink-0 text-decoration-none border-none outline-none"
                         >
                           Ver perfil

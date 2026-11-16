@@ -50,6 +50,16 @@ export function serializeAdminIntroSession(row: any): AdminIntroSession {
         row.specialist?.specialistProfile?.title ||
         "Especialista",
     },
+    feedbacks: Array.isArray(row.feedbacks)
+      ? row.feedbacks.map((f: any) => ({
+          role: f.role,
+          attended: Boolean(f.attended),
+          resonance: f.resonance ?? null,
+          publicNote: f.publicNote || "",
+          privateNote: f.privateNote || "",
+          createdAt: f.createdAt?.toISOString?.() ?? "",
+        }))
+      : [],
   };
 }
 
@@ -90,6 +100,16 @@ export async function listAdminIntroSessions(
               title: true,
             },
           },
+        },
+      },
+      feedbacks: {
+        select: {
+          role: true,
+          attended: true,
+          resonance: true,
+          publicNote: true,
+          privateNote: true,
+          createdAt: true,
         },
       },
     },

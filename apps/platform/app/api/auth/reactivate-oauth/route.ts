@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { setSessionCookie, readSessionToken } from "@/lib/auth/session";
+import {
+  createSessionToken,
+  invalidateUserSessionCache,
+  readReactivationToken,
+  setSessionCookie,
+} from "@/lib/auth/session";
 
 export const runtime = "nodejs";
 
@@ -12,7 +17,7 @@ export async function POST() {
     return NextResponse.json({ message: "No se encontró el token de reactivación." }, { status: 400 });
   }
 
-  const payload = readSessionToken(token);
+  const payload = readReactivationToken(token);
 
   if (!payload || !payload.userId) {
     return NextResponse.json({ message: "El token de reactivación es inválido o ha expirado." }, { status: 400 });
@@ -65,8 +70,15 @@ export async function POST() {
       console.error("Failed to sync status to active in cognito", err);
     }
 
-    // Set the actual session cookie
-    await setSessionCookie(token);
+    invalidateUserSessionCache(userToReactivate.id);
+
+    // Mint a fresh session cookie after reactivation
+    const sessionToken = createSessionToken({
+      userId: userToReactivate.id,
+      email: userToReactivate.email,
+      role: payload.role,
+    });
+    await setSessionCookie(sessionToken);
 
     // Clear the temporary reactivation cookie
     (await cookies()).delete("luminus_reactivation_token");

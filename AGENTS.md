@@ -3,13 +3,11 @@
 ## Active Agent Skills
 This repository has the following specialized skills installed under [`skills/`](./skills/) and [`.agents/skills/`](./.agents/skills/):
 
-### Vercel Labs Skills
-* **`react-best-practices`**: React and Next.js performance guidelines from Vercel Engineering.
+### React, Next.js & UX Guidelines
+* **`react-best-practices`**: React and Next.js performance guidelines.
 * **`composition-patterns`**: Scalable React composition patterns, avoiding boolean prop proliferation.
 * **`react-view-transitions`**: Smooth animations using React View Transitions API.
 * **`web-design-guidelines`**: UX, accessibility, and visual guidelines audit.
-* **`vercel-optimize`**: Cost and performance optimization for Vercel deployments.
-* **`deploy-to-vercel`**: Deployment routines.
 * **`writing-guidelines`**: Documentation and prose guidelines.
 
 ### Architecture & Knowledge

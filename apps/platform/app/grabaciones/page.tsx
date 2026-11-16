@@ -8,6 +8,7 @@ import {
 } from "@/components/events/RecordingCategorySelector";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { getCachedData, fetchWithCache } from "@/lib/clientCache";
 
 function normalizeCategoryString(cat?: string | null): string {
   if (!cat) return "";
@@ -38,8 +39,12 @@ function normalizeCategoryString(cat?: string | null): string {
 }
 
 export default function GrabacionesPage() {
-  const [recordings, setRecordings] = useState<RecordingItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [recordings, setRecordings] = useState<RecordingItem[]>(
+    () => getCachedData<RecordingItem[]>("/api/events?type=past") ?? []
+  );
+  const [loading, setLoading] = useState<boolean>(
+    () => !getCachedData<RecordingItem[]>("/api/events?type=past")
+  );
   const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>(
     RECORDING_CATEGORIES[0].id
@@ -48,16 +53,23 @@ export default function GrabacionesPage() {
   useEffect(() => {
     async function fetchRecordings() {
       try {
-        setLoading(true);
-        setError(null);
-        const res = await fetch(`/api/events?type=past&_t=${Date.now()}`, {
-          cache: "no-store",
-        });
-        if (!res.ok) {
-          throw new Error("No se pudieron cargar las grabaciones.");
+        if (!getCachedData<RecordingItem[]>("/api/events?type=past")) {
+          setLoading(true);
         }
-        const data = await res.json();
-        setRecordings(data.events || []);
+        setError(null);
+        const pastEvents = await fetchWithCache(
+          "/api/events?type=past",
+          async () => {
+            const res = await fetch("/api/events?type=past");
+            if (!res.ok) {
+              throw new Error("No se pudieron cargar las grabaciones.");
+            }
+            const data = await res.json();
+            return (data.events || []) as RecordingItem[];
+          },
+          { ttlMs: 120_000 }
+        );
+        setRecordings(pastEvents);
       } catch (err: any) {
         console.error("[GrabacionesPage] Error fetching past events:", err);
         setError(err.message || "Error al cargar las grabaciones.");

@@ -18,12 +18,15 @@ function extensionForContentType(contentType: string) {
 
 export async function POST(request: Request) {
   const session = await getCurrentSession();
+  if (!session || !session.userId) {
+    return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+  }
 
   const body = await request.json().catch(() => null);
   const contentType = typeof body?.contentType === "string" ? body.contentType : "image/webp";
   const contentLength =
     typeof body?.contentLength === "number" && Number.isFinite(body.contentLength)
-      ? body.contentLength
+      ? Math.floor(body.contentLength)
       : 0;
 
   if (!ALLOWED_CONTENT_TYPES.has(contentType)) {
@@ -37,13 +40,13 @@ export async function POST(request: Request) {
   const { bucket } = getStorageConfig();
   const s3 = getS3Client();
 
-  const userIdOrTemp = session?.userId || `temp-${randomUUID()}`;
-  const key = `avatars/${userIdOrTemp}/${randomUUID()}.${extensionForContentType(contentType)}`;
+  const key = `avatars/${session.userId}/${randomUUID()}.${extensionForContentType(contentType)}`;
 
   const command = new PutObjectCommand({
     Bucket: bucket,
     Key: key,
     ContentType: contentType,
+    ContentLength: contentLength,
     CacheControl: "public, max-age=31536000, immutable",
   });
 

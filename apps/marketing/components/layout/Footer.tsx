@@ -24,6 +24,9 @@ export function Footer() {
               <Link href="/preguntas-frecuentes" className="hover:text-slate-900 transition-colors">
                 Preguntas Frecuentes
               </Link>
+              <Link href="/contacto" className="hover:text-slate-900 transition-colors">
+                Contáctanos
+              </Link>
               <Link href="/legal" className="hover:text-slate-900 transition-colors">
                 Centro Legal
               </Link>

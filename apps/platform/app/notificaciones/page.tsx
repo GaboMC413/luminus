@@ -429,7 +429,53 @@ function NotificationsContent() {
                             )}
                             {formatMessageBody(n.action)}
                           </p>
-                          {(n.type === "network_add" || n.type === "connection_request") && (
+                          {n.type === "connection_request" && (
+                            <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                              {(() => {
+                                const urlStr = n.action_url || "";
+                                const qMatch = urlStr.match(/[?&]id=([^&]+)/);
+                                const pMatch = urlStr.match(/\/perfil\/([^/?]+)/);
+                                const requesterId = (n as { actorId?: string }).actorId || (qMatch ? qMatch[1] : pMatch ? pMatch[1] : null);
+                                if (!requesterId) return null;
+                                return (
+                                  <>
+                                    <button
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        const res = await fetch("/api/connections", {
+                                          method: "PUT",
+                                          headers: { "Content-Type": "application/json" },
+                                          body: JSON.stringify({ recipientId: requesterId }),
+                                        });
+                                        if (res.ok) {
+                                          deleteNotification(n.id);
+                                        }
+                                      }}
+                                      className="h-8 px-4 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-xl transition duration-200 cursor-pointer border-none outline-none font-jakarta"
+                                    >
+                                      Aceptar
+                                    </button>
+                                    <button
+                                      onClick={async (e) => {
+                                        e.stopPropagation();
+                                        const res = await fetch(`/api/connections?recipientId=${requesterId}`, {
+                                          method: "DELETE",
+                                        });
+                                        if (res.ok) {
+                                          deleteNotification(n.id);
+                                        }
+                                      }}
+                                      className="h-8 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition duration-200 cursor-pointer border-none outline-none font-jakarta"
+                                    >
+                                      Rechazar
+                                    </button>
+                                  </>
+                                );
+                              })()}
+                            </div>
+                          )}
+
+                          {(n.type === "network_add" || n.type === "specialist_follow") && (
                             <div className="flex items-center gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
                               {n.action_url && (
                                 <button

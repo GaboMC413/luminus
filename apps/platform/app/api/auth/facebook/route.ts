@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
+import { createReactivationToken, createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
 import { prisma } from "@/lib/db";
 
@@ -16,6 +16,25 @@ export async function POST(request: Request) {
         { message: "Token de acceso de Facebook requerido." },
         { status: 400 }
       );
+    }
+
+    const expectedFbAppId = (process.env.FACEBOOK_APP_ID || process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || "").trim();
+    const fbAppSecret = (process.env.FACEBOOK_APP_SECRET || "").trim();
+
+    if (expectedFbAppId && fbAppSecret) {
+      const debugRes = await fetch(
+        `https://graph.facebook.com/v20.0/debug_token?input_token=${encodeURIComponent(
+          accessToken
+        )}&access_token=${encodeURIComponent(`${expectedFbAppId}|${fbAppSecret}`)}`
+      );
+      const debugJson = await debugRes.json().catch(() => null);
+      const tokenData = debugJson?.data;
+      if (!debugRes.ok || !tokenData?.is_valid || String(tokenData.app_id) !== expectedFbAppId) {
+        return NextResponse.json(
+          { message: "No pudimos validar tu sesión de Facebook." },
+          { status: 401 }
+        );
+      }
     }
 
     // 1. Validate token with Meta Graph API
@@ -63,7 +82,7 @@ export async function POST(request: Request) {
           authProvider: "unknown",
           role: "USER",
           status: "active",
-          trialExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 3 months trial
+          trialExpiresAt: null,
           profile: {
             create: {
               firstName,
@@ -97,7 +116,7 @@ export async function POST(request: Request) {
           });
           user.status = "active";
         } else {
-          const token = createSessionToken({
+          const token = createReactivationToken({
             userId: user.id,
             email: user.email,
             role: user.role,

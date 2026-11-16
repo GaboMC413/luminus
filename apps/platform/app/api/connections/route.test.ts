@@ -1,14 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { GET, POST, DELETE } from "./route";
+import { GET, POST, PUT, DELETE } from "./route";
 import { prisma } from "@/lib/db";
 import { getCurrentSession } from "@/lib/auth/session";
 
-// 1. Mock Session
 vi.mock("@/lib/auth/session", () => ({
   getCurrentSession: vi.fn(),
 }));
 
-// 2. Mock Rate Limit (bypass rate limiting in tests)
 vi.mock("@/utils/rateLimit", () => ({
   isRateLimited: vi.fn().mockReturnValue({ success: false }),
   RATE_LIMITS: {
@@ -19,7 +17,6 @@ vi.mock("@/utils/rateLimit", () => ({
   },
 }));
 
-// 3. Mock Database
 vi.mock("@/lib/db", () => ({
   prisma: {
     user: {
@@ -35,6 +32,10 @@ vi.mock("@/lib/db", () => ({
       update: vi.fn(),
       updateMany: vi.fn(),
       delete: vi.fn(),
+      deleteMany: vi.fn(),
+    },
+    userFollow: {
+      deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
     },
     activityLog: {
       create: vi.fn().mockResolvedValue({ id: "log-1" }),
@@ -47,12 +48,11 @@ vi.mock("@/lib/db", () => ({
   },
 }));
 
-// 4. Mock Onboarding
 vi.mock("@/lib/onboarding", () => ({
   checkAndTriggerQuestCompletion: vi.fn().mockResolvedValue(null),
 }));
 
-describe("/api/connections Route", () => {
+describe("/api/connections Route (Mutual Contact Network)", () => {
   const mockUserId = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11";
   const mockTargetId = "b0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22";
 
@@ -78,6 +78,17 @@ describe("/api/connections Route", () => {
       expect(res.status).toBe(401);
     });
 
+    it("rejects PUT with 401 when unauthenticated", async () => {
+      vi.mocked(getCurrentSession).mockResolvedValue(null);
+      const req = new Request("http://localhost/api/connections", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipientId: mockTargetId }),
+      });
+      const res = await PUT(req);
+      expect(res.status).toBe(401);
+    });
+
     it("rejects DELETE with 401 when unauthenticated", async () => {
       vi.mocked(getCurrentSession).mockResolvedValue(null);
       const req = new Request(`http://localhost/api/connections?recipientId=${mockTargetId}`, {
@@ -88,17 +99,17 @@ describe("/api/connections Route", () => {
     });
   });
 
-  describe("GET /api/connections & Auto-Healing", () => {
-    it("auto-heals legacy pending connections to accepted in runtime", async () => {
+  describe("GET /api/connections", () => {
+    it("deduplicates mutual accepted contacts and separates pending requests", async () => {
       vi.mocked(getCurrentSession).mockResolvedValue({
         userId: mockUserId,
         email: "test@luminus.com",
       } as any);
 
-      // Return one accepted connection and one pending connection
+      const thirdUserId = "c0eebc99-9c0b-4ef8-bb6d-6bb9bd380a33";
       const mockConnections = [
         {
-          id: "conn-accepted",
+          id: "conn-1",
           requesterId: mockUserId,
           recipientId: mockTargetId,
           status: "accepted",
@@ -108,44 +119,43 @@ describe("/api/connections Route", () => {
           recipient: { id: mockTargetId, profile: { fullName: "User Two" } },
         },
         {
-          id: "conn-legacy-pending",
+          id: "conn-2-duplicate-direction",
           requesterId: mockTargetId,
           recipientId: mockUserId,
-          status: "pending",
+          status: "accepted",
           createdAt: new Date(),
           updatedAt: new Date(),
           requester: { id: mockTargetId, profile: { fullName: "User Two" } },
           recipient: { id: mockUserId, profile: { fullName: "User One" } },
         },
+        {
+          id: "conn-pending-in",
+          requesterId: thirdUserId,
+          recipientId: mockUserId,
+          status: "pending",
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          requester: { id: thirdUserId, profile: { fullName: "User Three" } },
+          recipient: { id: mockUserId, profile: { fullName: "User One" } },
+        },
       ];
 
       vi.mocked(prisma.userConnection.findMany).mockResolvedValue(mockConnections as any);
-      vi.mocked(prisma.userConnection.updateMany).mockResolvedValue({ count: 1 } as any);
 
       const res = await GET();
       const data = await res.json();
 
       expect(res.status).toBe(200);
-
-      // Verify that updateMany was triggered for the pending connection
-      expect(prisma.userConnection.updateMany).toHaveBeenCalledWith({
-        where: { id: { in: ["conn-legacy-pending"] } },
-        data: { status: "accepted" },
-      });
-
-      // Verify serialized output has healed status
-      const healedConn = data.connections.find((c: any) => c.id === "conn-legacy-pending");
-      expect(healedConn.status).toBe("accepted");
-      expect(healedConn.direction).toBe("incoming");
-
-      // Verify followers and following categories
-      expect(data.following).toHaveLength(1);
-      expect(data.followers).toHaveLength(1);
+      expect(data.contacts).toHaveLength(1);
+      expect(data.contacts[0].user.id).toBe(mockTargetId);
+      expect(data.pendingIncoming).toHaveLength(1);
+      expect(data.pendingIncoming[0].user.id).toBe(thirdUserId);
+      expect(data.pendingOutgoing).toHaveLength(0);
     });
   });
 
-  describe("POST /api/connections (Unilateral Follow)", () => {
-    it("creates an accepted directed connection and notifies recipient with network_add", async () => {
+  describe("POST /api/connections (Mutual Request)", () => {
+    it("creates a pending connection request and notifies recipient with connection_request", async () => {
       vi.mocked(getCurrentSession).mockResolvedValue({
         userId: mockUserId,
         email: "requester@luminus.com",
@@ -158,11 +168,11 @@ describe("/api/connections Route", () => {
         profile: { firstName: "Target", lastName: "User", fullName: "Target User" },
       } as any);
 
-      vi.mocked(prisma.userConnection.findFirst).mockResolvedValue(null);
+      vi.mocked(prisma.userConnection.findMany).mockResolvedValue([]);
       vi.mocked(prisma.userProfile.findUnique).mockResolvedValue({
-        firstName: "Sender",
+        firstName: "Requester",
         lastName: "User",
-        fullName: "Sender User",
+        fullName: "Requester User",
         avatarUrl: "https://example.com/avatar.jpg",
       } as any);
 
@@ -170,7 +180,7 @@ describe("/api/connections Route", () => {
         id: "new-conn-id",
         requesterId: mockUserId,
         recipientId: mockTargetId,
-        status: "accepted",
+        status: "pending",
       } as any);
 
       const req = new Request("http://localhost/api/connections", {
@@ -184,64 +194,134 @@ describe("/api/connections Route", () => {
 
       expect(res.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(data.connection.status).toBe("accepted");
+      expect(data.connection.status).toBe("pending");
       expect(data.connection.direction).toBe("outgoing");
 
-      // Check creation in DB
       expect(prisma.userConnection.create).toHaveBeenCalledWith({
         data: {
           requesterId: mockUserId,
           recipientId: mockTargetId,
-          status: "accepted",
-        },
-      });
-
-      // Check auto-healing of reverse connection if pending
-      expect(prisma.userConnection.updateMany).toHaveBeenCalledWith({
-        where: {
-          requesterId: mockTargetId,
-          recipientId: mockUserId,
           status: "pending",
         },
-        data: { status: "accepted" },
       });
 
-      // Check notification sent as network_add
       expect(prisma.notification.create).toHaveBeenCalledWith({
-        data: {
+        data: expect.objectContaining({
           userId: mockTargetId,
-          type: "network_add",
-          title: "Nueva conexión",
-          actorName: "Sender User",
-          actorAvatarUrl: "https://example.com/avatar.jpg",
-          body: "te sumó a su red.",
-          actionUrl: `/inicio/public-profile?id=${mockUserId}`,
-        },
+          type: "connection_request",
+        }),
       });
     });
-  });
 
-  describe("DELETE /api/connections", () => {
-    it("deletes the directed connection from current user to target", async () => {
+    it("auto-accepts when target already sent a pending request to current user", async () => {
       vi.mocked(getCurrentSession).mockResolvedValue({
         userId: mockUserId,
         email: "requester@luminus.com",
       } as any);
 
-      vi.mocked(prisma.userConnection.findFirst).mockResolvedValue({
-        id: "conn-to-delete",
-        requesterId: mockUserId,
-        recipientId: mockTargetId,
-        status: "accepted",
-      } as any);
-
       vi.mocked(prisma.user.findUnique).mockResolvedValue({
         id: mockTargetId,
+        status: "active",
         email: "target@luminus.com",
         profile: { fullName: "Target User" },
       } as any);
 
-      vi.mocked(prisma.userConnection.delete).mockResolvedValue({} as any);
+      vi.mocked(prisma.userConnection.findMany).mockResolvedValue([
+        {
+          id: "reverse-pending",
+          requesterId: mockTargetId,
+          recipientId: mockUserId,
+          status: "pending",
+        },
+      ] as any);
+
+      vi.mocked(prisma.userProfile.findUnique).mockResolvedValue({
+        fullName: "Requester User",
+      } as any);
+
+      vi.mocked(prisma.userConnection.update).mockResolvedValue({
+        id: "reverse-pending",
+        status: "accepted",
+      } as any);
+
+      const req = new Request("http://localhost/api/connections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipientId: mockTargetId }),
+      });
+
+      const res = await POST(req);
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.connection.status).toBe("accepted");
+      expect(prisma.notification.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          userId: mockTargetId,
+          type: "connection_accepted",
+        }),
+      });
+    });
+  });
+
+  describe("PUT /api/connections (Accept Request)", () => {
+    it("accepts an incoming pending request and notifies requester", async () => {
+      vi.mocked(getCurrentSession).mockResolvedValue({
+        userId: mockUserId,
+        email: "acceptor@luminus.com",
+      } as any);
+
+      vi.mocked(prisma.userConnection.findFirst).mockResolvedValue({
+        id: "pending-id",
+        requesterId: mockTargetId,
+        recipientId: mockUserId,
+        status: "pending",
+      } as any);
+
+      vi.mocked(prisma.userProfile.findUnique).mockResolvedValue({
+        fullName: "Acceptor User",
+      } as any);
+
+      vi.mocked(prisma.userConnection.update).mockResolvedValue({
+        id: "pending-id",
+        status: "accepted",
+      } as any);
+
+      const req = new Request("http://localhost/api/connections", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipientId: mockTargetId }),
+      });
+
+      const res = await PUT(req);
+      const data = await res.json();
+
+      expect(res.status).toBe(200);
+      expect(data.connection.status).toBe("accepted");
+      expect(prisma.notification.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          userId: mockTargetId,
+          type: "connection_accepted",
+        }),
+      });
+    });
+  });
+
+  describe("DELETE /api/connections", () => {
+    it("removes connection across either direction and cleans up notifications", async () => {
+      vi.mocked(getCurrentSession).mockResolvedValue({
+        userId: mockUserId,
+        email: "test@luminus.com",
+      } as any);
+
+      vi.mocked(prisma.userConnection.findMany).mockResolvedValue([
+        { id: "conn-123" },
+      ] as any);
+      vi.mocked(prisma.user.findUnique).mockResolvedValue({
+        email: "target@luminus.com",
+        profile: { fullName: "Target User" },
+      } as any);
+      vi.mocked(prisma.userConnection.deleteMany).mockResolvedValue({ count: 1 } as any);
 
       const req = new Request(`http://localhost/api/connections?recipientId=${mockTargetId}`, {
         method: "DELETE",
@@ -252,8 +332,8 @@ describe("/api/connections Route", () => {
 
       expect(res.status).toBe(200);
       expect(data.success).toBe(true);
-      expect(prisma.userConnection.delete).toHaveBeenCalledWith({
-        where: { id: "conn-to-delete" },
+      expect(prisma.userConnection.deleteMany).toHaveBeenCalledWith({
+        where: { id: { in: ["conn-123"] } },
       });
     });
   });

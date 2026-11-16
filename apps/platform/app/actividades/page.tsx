@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Toast, ToastProps } from "@/components/ui/Toast";
 import { ActivityCard, ActivityEventItem } from "@/components/events/ActivityCard";
+import { InscriptionCard, InscriptionCardSkeleton } from "@/components/events/InscriptionCard";
 import { ActivitiesTimelineSkeleton } from "@/components/ui/Skeleton";
+import { getCachedData, setCachedData, fetchWithCache } from "@/lib/clientCache";
 
 function parseCalendarDate(dateStr?: string | Date | null): Date | null {
   if (!dateStr) return null;
@@ -49,9 +51,15 @@ function formatTimelineDate(dateStr?: string | null) {
 
 export default function ActividadesPage() {
   const [activeTab, setActiveTab] = useState<"upcoming" | "inscriptions">("upcoming");
-  const [upcomingEvents, setUpcomingEvents] = useState<ActivityEventItem[]>([]);
-  const [inscribedEvents, setInscribedEvents] = useState<ActivityEventItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [upcomingEvents, setUpcomingEvents] = useState<ActivityEventItem[]>(
+    () => getCachedData<ActivityEventItem[]>("/api/events") ?? []
+  );
+  const [inscribedEvents, setInscribedEvents] = useState<ActivityEventItem[]>(
+    () => getCachedData<ActivityEventItem[]>("/api/events?type=inscriptions") ?? []
+  );
+  const [loading, setLoading] = useState<boolean>(
+    () => !getCachedData<ActivityEventItem[]>("/api/events")
+  );
   const [error, setError] = useState("");
   const [cancelTarget, setCancelTarget] = useState<ActivityEventItem | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
@@ -65,23 +73,38 @@ export default function ActividadesPage() {
   useEffect(() => {
     async function fetchEvents() {
       try {
-        setLoading(true);
-        const [upcomingRes, inscriptionsRes] = await Promise.all([
-          fetch("/api/events", { cache: "no-store" }),
-          fetch("/api/events?type=inscriptions", { cache: "no-store" }),
+        if (!getCachedData<ActivityEventItem[]>("/api/events")) {
+          setLoading(true);
+        }
+        const [upcomingList, inscriptionsList] = await Promise.all([
+          fetchWithCache(
+            "/api/events",
+            async () => {
+              const upcomingRes = await fetch("/api/events");
+              if (!upcomingRes.ok) {
+                throw new Error("No se pudieron cargar las actividades.");
+              }
+              const upcomingData = await upcomingRes.json();
+              return (upcomingData.events || []) as ActivityEventItem[];
+            },
+            { ttlMs: 60_000 }
+          ),
+          fetchWithCache(
+            "/api/events?type=inscriptions",
+            async () => {
+              const inscriptionsRes = await fetch("/api/events?type=inscriptions");
+              if (!inscriptionsRes.ok) {
+                return getCachedData<ActivityEventItem[]>("/api/events?type=inscriptions") ?? [];
+              }
+              const inscriptionsData = await inscriptionsRes.json();
+              return (inscriptionsData.events || []) as ActivityEventItem[];
+            },
+            { ttlMs: 60_000 }
+          ),
         ]);
 
-        if (!upcomingRes.ok) {
-          throw new Error("No se pudieron cargar las actividades.");
-        }
-
-        const upcomingData = await upcomingRes.json();
-        setUpcomingEvents(upcomingData.events || []);
-
-        if (inscriptionsRes.ok) {
-          const inscriptionsData = await inscriptionsRes.json();
-          setInscribedEvents(inscriptionsData.events || []);
-        }
+        setUpcomingEvents(upcomingList);
+        setInscribedEvents(inscriptionsList);
       } catch (err: any) {
         setError(err.message || "Error al cargar actividades.");
       } finally {
@@ -109,10 +132,16 @@ export default function ActividadesPage() {
       const targetId = cancelTarget.id;
       const targetTitle = cancelTarget.title;
 
-      setInscribedEvents((prev) => prev.filter((item) => item.id !== targetId));
-      setUpcomingEvents((prev) =>
-        prev.map((item) => (item.id === targetId ? { ...item, isRegistered: false } : item))
-      );
+      setInscribedEvents((prev) => {
+        const next = prev.filter((item) => item.id !== targetId);
+        setCachedData("/api/events?type=inscriptions", next);
+        return next;
+      });
+      setUpcomingEvents((prev) => {
+        const next = prev.map((item) => (item.id === targetId ? { ...item, isRegistered: false } : item));
+        setCachedData("/api/events", next);
+        return next;
+      });
       setCancelTarget(null);
       setToastConfig({
         isOpen: true,
@@ -152,9 +181,17 @@ export default function ActividadesPage() {
         onChange={(tab) => setActiveTab(tab as "upcoming" | "inscriptions")}
       />
 
-      {/* 3. Main Content: Timeline */}
+      {/* 3. Main Content: Timeline for upcoming, compact grid for inscriptions */}
       {loading ? (
-        <ActivitiesTimelineSkeleton />
+        activeTab === "inscriptions" ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 py-1">
+            {[...Array(4)].map((_, i) => (
+              <InscriptionCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          <ActivitiesTimelineSkeleton />
+        )
       ) : error ? (
         <div className="rounded-2xl border border-rose-200 bg-rose-50 p-6 text-center text-sm text-rose-700">
           {error}
@@ -179,6 +216,12 @@ export default function ActividadesPage() {
             />
           </div>
         )
+      ) : activeTab === "inscriptions" ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 py-1">
+          {inscribedEvents.map((item) => (
+            <InscriptionCard key={item.id} event={item} />
+          ))}
+        </div>
       ) : (
         <div className="w-full flex flex-col">
           {displayedEvents.map((item, index) => {

@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { CarouselNavControls } from "./molecules/CarouselNavControls";
-import { formatEventDateTime } from "@/lib/eventDateUtils";
+import { formatEventDateTime, resolveEventUtcDate } from "@/lib/eventDateUtils";
 
 export interface EventItem {
   id?: string;
@@ -20,6 +20,7 @@ export interface EventItem {
   coverUrl?: string | null;
   link?: string;
   isUpcoming?: boolean;
+  isRegistered?: boolean;
 }
 
 interface UpcomingEventsCarouselProps {
@@ -105,6 +106,15 @@ export function UpcomingEventsCarousel({ events, loading }: UpcomingEventsCarous
     setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 10);
   };
 
+  const upcomingEvents = React.useMemo(() => {
+    const nowMs = Date.now();
+    return (events || []).filter((event) => {
+      if (event.isUpcoming === false) return false;
+      const utcDate = resolveEventUtcDate(event.date, event.timeText);
+      return !utcDate || utcDate.getTime() >= nowMs;
+    });
+  }, [events]);
+
   useEffect(() => {
     updateScrollState();
     const el = carouselRef.current;
@@ -117,7 +127,7 @@ export function UpcomingEventsCarousel({ events, loading }: UpcomingEventsCarous
       el.removeEventListener("scroll", updateScrollState);
       window.removeEventListener("resize", updateScrollState);
     };
-  }, [events, loading]);
+  }, [upcomingEvents, loading]);
 
   const scroll = (direction: "left" | "right") => {
     if (!carouselRef.current) return;
@@ -138,7 +148,7 @@ export function UpcomingEventsCarousel({ events, loading }: UpcomingEventsCarous
     });
   };
 
-  if (!loading && (!events || events.length === 0)) {
+  if (!loading && upcomingEvents.length === 0) {
     return null;
   }
 
@@ -166,7 +176,7 @@ export function UpcomingEventsCarousel({ events, loading }: UpcomingEventsCarous
           ref={carouselRef}
           className="flex items-stretch gap-2.5 overflow-x-auto scroll-smooth snap-x snap-mandatory custom-scrollbar -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 scroll-px-4 sm:scroll-px-6 md:scroll-px-0 py-1"
         >
-          {loading && events.length === 0 ? (
+          {loading && upcomingEvents.length === 0 ? (
             [...Array(3)].map((_, i) => (
               <div
                 key={i}
@@ -185,7 +195,7 @@ export function UpcomingEventsCarousel({ events, loading }: UpcomingEventsCarous
               </div>
             ))
           ) : (
-            events.map((event) => {
+            upcomingEvents.map((event) => {
               const eventSlug = event.slug || event.id;
               const cardHref = `/actividades/${eventSlug}`;
               const formattedDate = mounted ? formatEventDateTime(event.date, event.timeText) : null;
@@ -243,7 +253,7 @@ export function UpcomingEventsCarousel({ events, loading }: UpcomingEventsCarous
                       </div>
                     </div>
 
-                    {/* 3. Button: Inscribirme */}
+                    {/* 3. Button: Inscribirme / Ver detalles */}
                     <div className="w-full mt-auto pt-2">
                       <Link href={cardHref} className="w-full block">
                         <Button
@@ -251,7 +261,7 @@ export function UpcomingEventsCarousel({ events, loading }: UpcomingEventsCarous
                           size="sm"
                           className="w-full"
                         >
-                          Inscribirme
+                          {event.isRegistered ? "Ver detalles" : "Inscribirme"}
                         </Button>
                       </Link>
                     </div>

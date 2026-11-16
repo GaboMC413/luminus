@@ -57,8 +57,39 @@ function NotificationItem({
 
   const getRequesterIdFromUrl = (url?: string) => {
     if (!url) return null;
-    const match = url.match(/[?&]id=([^&]+)/);
-    return match ? match[1] : null;
+    const queryMatch = url.match(/[?&]id=([^&]+)/);
+    if (queryMatch) return queryMatch[1];
+    const pathMatch = url.match(/\/perfil\/([^/?]+)/);
+    return pathMatch ? pathMatch[1] : null;
+  };
+
+  const [requestActionState, setRequestActionState] = useState<"idle" | "loading" | "accepted" | "declined">("idle");
+  const requesterId = actorId || getRequesterIdFromUrl(actionUrl);
+
+  const handleRequestAction = async (accept: boolean, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!requesterId || requestActionState !== "idle") return;
+    setRequestActionState("loading");
+    try {
+      const res = accept
+        ? await fetch("/api/connections", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ recipientId: requesterId }),
+          })
+        : await fetch(`/api/connections?recipientId=${requesterId}`, {
+            method: "DELETE",
+          });
+      if (res.ok) {
+        setRequestActionState(accept ? "accepted" : "declined");
+        if (isUnread) onMarkRead(id);
+        onDelete?.();
+      } else {
+        setRequestActionState("idle");
+      }
+    } catch {
+      setRequestActionState("idle");
+    }
   };
 
 
@@ -74,7 +105,9 @@ function NotificationItem({
   };
 
   const isQuest = String(type).startsWith("quest_completed_");
-  const isNetworkAdd = type === "network_add" || type === "connection_request";
+  const isConnectionRequest = type === "connection_request";
+  const isSpecialistFollow = type === "specialist_follow";
+  const isNetworkAdd = type === "network_add";
   const isConnectionAccepted = type === "connection_accepted";
   const isSessionNotification = String(type).startsWith("session_");
 
@@ -128,7 +161,11 @@ function NotificationItem({
 
         {/* Row 2: Message / Update description */}
         <p className="text-xs leading-relaxed text-slate-500 group-hover:text-slate-800 transition-colors truncate font-sans m-0">
-          {isNetworkAdd
+          {isConnectionRequest
+            ? "Te envió una solicitud de conexión."
+            : isSpecialistFollow
+            ? "Empezó a seguirte."
+            : isNetworkAdd
             ? "Te sumó a su red."
             : isConnectionAccepted
             ? "Aceptó tu solicitud de conexión."
@@ -136,7 +173,28 @@ function NotificationItem({
         </p>
 
         {/* Row 3: High-intent contextual actions */}
-        {isNetworkAdd && actionUrl && (
+        {isConnectionRequest && requesterId && (
+          <div className="mt-1.5 flex items-center gap-2">
+            <button
+              type="button"
+              disabled={requestActionState !== "idle"}
+              onClick={(e) => handleRequestAction(true, e)}
+              className="inline-flex items-center h-7 px-3 rounded-lg text-xs font-semibold font-jakarta text-white bg-slate-900 hover:bg-slate-800 transition-colors border-none cursor-pointer disabled:opacity-50"
+            >
+              <span>Aceptar</span>
+            </button>
+            <button
+              type="button"
+              disabled={requestActionState !== "idle"}
+              onClick={(e) => handleRequestAction(false, e)}
+              className="inline-flex items-center h-7 px-3 rounded-lg text-xs font-semibold font-jakarta text-slate-700 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 transition-colors border-none cursor-pointer disabled:opacity-50"
+            >
+              <span>Rechazar</span>
+            </button>
+          </div>
+        )}
+
+        {(isNetworkAdd || isSpecialistFollow) && actionUrl && (
           <div className="mt-1.5 flex items-center gap-2">
             <button
               type="button"

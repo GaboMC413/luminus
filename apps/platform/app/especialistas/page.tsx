@@ -11,6 +11,7 @@ import { SelectInput } from "@/components/ui/SelectInput";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
+import { getCachedData, fetchWithCache } from "@/lib/clientCache";
 
 type Specialist = {
   id: string;
@@ -30,8 +31,12 @@ type ApplicationStatus = {
 
 export default function EspecialistasPage() {
   const router = useRouter();
-  const [specialists, setSpecialists] = useState<Specialist[]>([]);
-  const [application, setApplication] = useState<ApplicationStatus | null>(null);
+  const [specialists, setSpecialists] = useState<Specialist[]>(
+    () => getCachedData<Specialist[]>("/api/especialistas") ?? []
+  );
+  const [application, setApplication] = useState<ApplicationStatus | null>(
+    () => getCachedData<ApplicationStatus>("/api/especialistas/application-status") ?? null
+  );
 
   const [searchInput, setSearchInput] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
@@ -52,19 +57,36 @@ export default function EspecialistasPage() {
 
   const [showFilters, setShowFilters] = useState(false);
   const [showProgramModal, setShowProgramModal] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(
+    () => !getCachedData<Specialist[]>("/api/especialistas")
+  );
   const [error, setError] = useState("");
 
   useEffect(() => {
     Promise.all([
-      fetch("/api/especialistas", { cache: "no-store" }),
-      fetch("/api/especialistas/application-status", { cache: "no-store" }),
+      fetchWithCache(
+        "/api/especialistas",
+        async () => {
+          const directoryResponse = await fetch("/api/especialistas");
+          if (!directoryResponse.ok) throw new Error("No pudimos cargar los especialistas.");
+          const directory = await directoryResponse.json();
+          return (directory.specialists || []) as Specialist[];
+        },
+        { ttlMs: 60_000 }
+      ),
+      fetchWithCache(
+        "/api/especialistas/application-status",
+        async () => {
+          const statusResponse = await fetch("/api/especialistas/application-status");
+          if (!statusResponse.ok) return null;
+          return (await statusResponse.json()) as ApplicationStatus;
+        },
+        { ttlMs: 60_000 }
+      ),
     ])
-      .then(async ([directoryResponse, statusResponse]) => {
-        if (!directoryResponse.ok) throw new Error("No pudimos cargar los especialistas.");
-        const directory = await directoryResponse.json();
-        setSpecialists(directory.specialists || []);
-        if (statusResponse.ok) setApplication(await statusResponse.json());
+      .then(([directoryList, statusData]) => {
+        setSpecialists(directoryList);
+        if (statusData) setApplication(statusData);
       })
       .catch((err) => setError(err.message || "No pudimos cargar los especialistas."))
       .finally(() => setLoading(false));
@@ -520,7 +542,7 @@ export default function EspecialistasPage() {
               }}
               title={specialist.title}
               specialty={specialist.specialty}
-              profileHref={`/inicio/public-profile?id=${encodeURIComponent(specialist.id)}&from=especialistas`}
+              profileHref={`/perfil/${encodeURIComponent((specialist as any).slug || specialist.id)}?from=especialistas`}
               actionLabel="Ver perfil"
             />
           ))}

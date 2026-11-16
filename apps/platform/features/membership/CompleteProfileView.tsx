@@ -183,11 +183,6 @@ export default function CompleteProfileView() {
   useEffect(() => {
     async function loadData() {
       if (typeof window !== "undefined") {
-        const localFirstName = localStorage.getItem("luminus_first_name");
-        const localLastName = localStorage.getItem("luminus_last_name");
-        if (localFirstName) setFirstName(localFirstName);
-        if (localLastName) setLastName(localLastName);
-
         // Do not guess names from card payments to prevent ghost name caching
         const rawLocalCity = localStorage.getItem("luminus_billing_city") || "";
         const cleanLocalCity = rawLocalCity.split(",")[0].trim();
@@ -228,23 +223,14 @@ export default function CompleteProfileView() {
           if (profile.last_name) setLastName(profile.last_name);
 
           if (!profile.first_name && !profile.last_name) {
-            const localFn =
-              typeof window !== "undefined" ? localStorage.getItem("luminus_first_name") : "";
-            const localLn =
-              typeof window !== "undefined" ? localStorage.getItem("luminus_last_name") : "";
-            if (localFn) setFirstName(localFn);
-            if (localLn) setLastName(localLn);
-
-            if (!localFn && !localLn) {
-              const rawName =
-                profile.fullName ||
-                (typeof window !== "undefined" ? localStorage.getItem("luminus_card_name") : "") ||
-                "";
-              if (rawName) {
-                const parts = rawName.trim().split(/\s+/);
-                setFirstName(parts[0] || "");
-                setLastName(parts.slice(1).join(" ") || "");
-              }
+            const rawName =
+              profile.fullName ||
+              (typeof window !== "undefined" ? localStorage.getItem("luminus_card_name") : "") ||
+              "";
+            if (rawName) {
+              const parts = rawName.trim().split(/\s+/);
+              setFirstName(parts[0] || "");
+              setLastName(parts.slice(1).join(" ") || "");
             }
           }
 

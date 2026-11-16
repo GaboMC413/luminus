@@ -25,9 +25,14 @@ export async function POST(request: Request) {
       });
     }
 
-    const host = request.headers.get("host") || "localhost:3000";
-    const protocol = request.headers.get("x-forwarded-proto") || "http";
-    const returnUrl = `${protocol}://${host}/perfil-usuario/configuracion/membresia`;
+    const baseOrigin = (
+      process.env.AUTH_BASE_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.NODE_ENV === "production" ? "https://app.luminuslatam.com" : "http://localhost:3000")
+    )
+      .trim()
+      .replace(/\/$/, "");
+    const returnUrl = `${baseOrigin}/perfil-usuario/configuracion/membresia`;
 
     const portal = await createCustomerPortalSession({
       customerId: user.stripeCustomerId,
@@ -38,7 +43,7 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error("Error creating customer portal session:", error);
     return NextResponse.json(
-      { message: error.message || "Error al conectar con la pasarela de Stripe." },
+      { message: "Error al conectar con la pasarela de Stripe." },
       { status: 500 }
     );
   }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { clearSessionCookie, getCurrentSession } from "@/lib/auth/session";
+import { clearSessionCookie, getCurrentSession, invalidateUserSessionCache } from "@/lib/auth/session";
 import { stripe } from "@/lib/stripe";
 
 export const runtime = "nodejs";
@@ -77,7 +77,8 @@ export async function POST(req: Request) {
       },
     });
 
-    // 4. Log out user immediately
+    // 4. Invalidate server session cache and log out user immediately
+    invalidateUserSessionCache(user.id);
     await clearSessionCookie();
 
     return NextResponse.json({

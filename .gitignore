@@ -43,9 +43,6 @@ yarn-error.log*
 .cursor/
 .gemini/
 
-# vercel
-.vercel
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts

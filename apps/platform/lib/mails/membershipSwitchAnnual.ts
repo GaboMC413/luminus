@@ -8,13 +8,19 @@ export interface MembershipSwitchAnnualEmailOptions {
 export function renderMembershipSwitchAnnualEmailHtml({
   name = "Usuario",
 }: MembershipSwitchAnnualEmailOptions = {}): string {
+  const safeName = String(name || "Usuario")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
   const contentHtml = `
     <h1 style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 16px 0; color: #0f172a; text-align: center;">
       Cambio a Mecenas Anual confirmado
     </h1>
 
     <p style="font-size: 15.5px; line-height: 1.65; margin: 0 0 16px 0; color: #334155; text-align: center;">
-      Hola <strong style="color: #0f172a;">${name}</strong>, tu suscripción ha sido actualizada con éxito al plan anual.
+      Hola <strong style="color: #0f172a;">${safeName}</strong>, tu suscripción ha sido actualizada con éxito al plan anual.
     </p>
 
     <!-- Ficha de resumen del cambio -->

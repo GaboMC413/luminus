@@ -8,6 +8,8 @@ const TARGET_FILES = [
   "components/ui/ProfileSectionCard.tsx",
   "components/ui/UnderlineTabs.tsx",
   "features/user-profile/components/ProfileHeroHeader.tsx",
+  "features/user-profile/components/OwnPublicProfileBanner.tsx",
+  "features/user-profile/components/PublicProfileView.tsx",
   "features/user-profile/components/ProfileAboutSection.tsx",
   "features/user-profile/components/ProfileInterestsSection.tsx",
   "features/user-profile/components/ProfileCompletionCard.tsx",
@@ -22,6 +24,7 @@ const TARGET_FILES = [
   "features/user-profile/modals/EditInterestsModal.tsx",
   "features/user-profile/modals/EditPromptsModal.tsx",
   "features/user-profile/modals/CoverSelectorModal.tsx",
+  "features/user-profile/modals/EditSpecialistSpecialtyModal.tsx",
   "features/user-profile/modals/EditSpecialistPracticeModal.tsx",
   "features/user-profile/modals/EditSpecialistSpacesModal.tsx",
   "features/user-profile/modals/EditSpecialistCoursesModal.tsx",
@@ -29,6 +32,7 @@ const TARGET_FILES = [
   "features/user-profile/modals/CourseDetailModal.tsx",
   "features/user-profile/modals/SpaceDetailModal.tsx",
   "app/inicio/public-profile/page.tsx",
+  "app/perfil/[slug]/page.tsx",
 ];
 
 describe("LUMINUS Profile Design System Guard", () => {

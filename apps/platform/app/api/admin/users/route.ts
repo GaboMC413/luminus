@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getCurrentSession } from "@/lib/auth/session";
+import { getCurrentSession, invalidateUserSessionCache } from "@/lib/auth/session";
+import { invalidateServerCacheTag } from "@/lib/serverCache";
 import { listAdminUsers, normalizeAdminUserPatch, serializeAdminUser } from "@/lib/admin/users";
 import { syncCognitoUserStatus } from "@/lib/auth/cognito-admin";
 import { deleteUserS3Data } from "@/lib/storage/userStorageCleanup";
@@ -146,6 +147,9 @@ export async function PATCH(request: Request) {
       },
     });
 
+    invalidateUserSessionCache(parsed.id);
+    invalidateServerCacheTag(["specialists", "community-filters"]);
+
     return NextResponse.json({ user: serializeAdminUser(user) });
   } catch (error) {
     console.error("Failed to update admin user.", error);
@@ -195,6 +199,9 @@ export async function DELETE(request: Request) {
     await prisma.user.delete({
       where: { id },
     });
+
+    invalidateUserSessionCache(id);
+    invalidateServerCacheTag(["specialists", "community-filters"]);
 
     return NextResponse.json({ message: "Usuario eliminado permanentemente." });
   } catch (error) {

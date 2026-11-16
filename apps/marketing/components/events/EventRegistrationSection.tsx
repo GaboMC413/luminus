@@ -3,12 +3,17 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Share2, Check } from "lucide-react";
+import { Share2, Check, CalendarPlus, Download } from "lucide-react";
 import { LocationInput } from "@/components/ui/LocationInput";
 import { Button } from "@/components/ui/Button";
 import { trackEventInscription } from "@/lib/meta-pixel";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
-import { formatEventDateTime } from "@/lib/eventDateUtils";
+import { formatEventDateTime, resolveEventUtcDate } from "@/lib/eventDateUtils";
+import {
+  buildGoogleCalendarUrl,
+  buildIcsContent,
+  downloadIcsFile,
+} from "@platform/lib/calendar/ics";
 
 interface EventItem {
   id?: string;
@@ -603,6 +608,51 @@ export function EventRegistrationSection({ event }: EventRegistrationSectionProp
                   <p className="text-slate-600 text-sm font-light leading-relaxed">
                     Te has inscripto a <strong className="font-medium text-slate-800">{event.title}</strong>. Te enviamos los detalles de acceso a <strong className="font-medium text-slate-800">{formData.email}</strong>.
                   </p>
+                  {(() => {
+                    const startUtc = resolveEventUtcDate(event.date, event.time_text);
+                    if (!startUtc) return null;
+                    const calendarInput = {
+                      uid: `event-${event.slug || event.id || startUtc.getTime()}@luminuslatam.com`,
+                      title: event.title,
+                      description: event.speaker_name
+                        ? `Con ${event.speaker_name} - LUMINUS LATAM`
+                        : "Evento de Bienestar LUMINUS",
+                      location: event.location || "Evento online",
+                      url:
+                        (event.youtube_id
+                          ? `https://www.youtube.com/watch?v=${event.youtube_id}`
+                          : null) ||
+                        (typeof window !== "undefined" ? window.location.href : "https://luminuslatam.com"),
+                      startUtc,
+                      endUtc: new Date(startUtc.getTime() + 60 * 60 * 1000),
+                    };
+                    return (
+                      <div className="flex flex-wrap items-center justify-center gap-2.5 w-full mt-1">
+                        <a
+                          href={buildGoogleCalendarUrl(calendarInput)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-sm font-medium transition-colors"
+                        >
+                          <CalendarPlus className="w-4 h-4" />
+                          <span>Google Calendar</span>
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            downloadIcsFile(
+                              `${event.slug || "evento-luminus"}.ics`,
+                              buildIcsContent(calendarInput)
+                            )
+                          }
+                          className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-sm font-medium transition-colors cursor-pointer"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span>Descargar .ics</span>
+                        </button>
+                      </div>
+                    );
+                  })()}
                   <button
                     onClick={handleCloseModal}
                     className="mt-1 w-full h-12 px-8 bg-black hover:bg-slate-800 text-white rounded-2xl text-base font-normal transition-colors text-center cursor-pointer flex items-center justify-center shadow-sm"

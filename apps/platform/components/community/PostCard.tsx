@@ -136,7 +136,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
       router.push("/perfil-usuario");
     } else {
       const targetId = post.authorId || post.authorName;
-      router.push(`/inicio/public-profile?id=${encodeURIComponent(targetId)}`);
+      router.push(`/perfil/${encodeURIComponent(targetId)}`);
     }
   };
 
@@ -158,7 +158,7 @@ export function PostCard({ post, currentUserProfile, onDeletePost, onEditPost, o
       router.push("/perfil-usuario");
     } else {
       const targetId = comment.authorId || comment.authorName;
-      router.push(`/inicio/public-profile?id=${encodeURIComponent(targetId)}`);
+      router.push(`/perfil/${encodeURIComponent(targetId)}`);
     }
   };
 

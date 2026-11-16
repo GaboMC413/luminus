@@ -92,44 +92,50 @@ export async function createMembershipSubscription({
   const isAnnual = interval === "year";
   const finalPriceId = await getOrCreateMembershipPrice(interval);
 
-  // 2. If an existing incomplete subscription exists, UPDATE IT instead of spamming new ones
+  // 2. If an existing incomplete subscription exists, reuse it if interval matches or cancel it before creating a fresh one for the new interval
   if (existingSubscriptionId && !existingSubscriptionId.startsWith("sub_mock_")) {
     try {
       const existingSub = await stripe.subscriptions.retrieve(existingSubscriptionId, {
         expand: ["latest_invoice.payment_intent"],
       });
 
-      if (existingSub.status === "incomplete" && existingSub.items?.data?.[0]?.id) {
-        const updatedSub = await stripe.subscriptions.update(existingSubscriptionId, {
-          items: [{
-            id: existingSub.items.data[0].id,
-            price: finalPriceId,
-          }],
-          proration_behavior: "none",
-          payment_behavior: "default_incomplete",
-          expand: ["latest_invoice.payment_intent"],
-          metadata: {
-            user_email: email,
-            type: isAnnual ? "mecenas_annual" : "mecenas_monthly",
-          },
-        });
+      const existingSubCustomerId =
+        typeof existingSub.customer === "string"
+          ? existingSub.customer
+          : existingSub.customer?.id;
+      const metaUserId = existingSub.metadata?.userId?.trim();
+      const metaEmail = existingSub.metadata?.user_email?.trim().toLowerCase();
+      const normalizedCallerEmail = email.trim().toLowerCase();
 
-        const invoice = updatedSub.latest_invoice as any;
-        const paymentIntent = invoice?.payment_intent;
-        const clientSecret =
-          typeof paymentIntent === "object" && paymentIntent !== null
-            ? (paymentIntent.client_secret as string)
-            : null;
+      const isOwnedByCaller =
+        Boolean(customerId && existingSubCustomerId === customerId) ||
+        Boolean(userId && metaUserId && metaUserId === userId) ||
+        Boolean(metaEmail && metaEmail === normalizedCallerEmail);
 
-        return {
-          clientSecret: clientSecret || null,
-          subscriptionId: updatedSub.id,
-          customerId: typeof updatedSub.customer === "string" ? updatedSub.customer : updatedSub.customer.id,
-          isMock: false,
-        };
+      if (isOwnedByCaller && existingSub.status === "incomplete") {
+        const currentPriceId = existingSub.items?.data?.[0]?.price?.id;
+        if (currentPriceId === finalPriceId) {
+          const invoice = existingSub.latest_invoice as any;
+          const paymentIntent = invoice?.payment_intent;
+          const clientSecret =
+            typeof paymentIntent === "object" && paymentIntent !== null
+              ? (paymentIntent.client_secret as string)
+              : null;
+
+          if (clientSecret && existingSubCustomerId) {
+            return {
+              clientSecret,
+              subscriptionId: existingSub.id,
+              customerId: existingSubCustomerId,
+              isMock: false,
+            };
+          }
+        }
+
+        await stripe.subscriptions.cancel(existingSubscriptionId);
       }
     } catch (updateErr) {
-      console.warn("[Stripe] Could not update existing subscription, falling back to create:", updateErr);
+      console.warn("[Stripe] Could not inspect/cancel existing subscription, falling back to create:", updateErr);
     }
   }
 
@@ -172,7 +178,7 @@ export async function createMembershipSubscription({
     );
   }
 
-  // 3. Create Subscription with default_incomplete payment behavior
+  // 4. Create Subscription with default_incomplete payment behavior
   const subscription = await stripe.subscriptions.create({
     customer: customer.id,
     items: [{ price: finalPriceId }],
@@ -180,7 +186,8 @@ export async function createMembershipSubscription({
     payment_settings: { save_default_payment_method: "on_subscription" },
     expand: ["latest_invoice.payment_intent"],
     metadata: {
-      user_email: email,
+      userId: userId || "",
+      user_email: normalizedEmail,
       type: isAnnual ? "mecenas_annual" : "mecenas_monthly",
     },
   });

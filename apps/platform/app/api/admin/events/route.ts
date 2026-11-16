@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { deleteS3FileByUrl } from "@/lib/storage/s3FileCleanup";
+import { invalidateServerCacheTag } from "@/lib/serverCache";
 
 function extractYoutubeId(url?: string | null): string | null {
   if (!url) return null;
@@ -112,6 +113,7 @@ export async function POST(request: Request) {
         }
       }
 
+      invalidateServerCacheTag("events");
       return NextResponse.json({ success: true, event: updated });
     } else {
       // Create new
@@ -133,6 +135,7 @@ export async function POST(request: Request) {
           isUpcoming: isUpcoming !== undefined ? Boolean(isUpcoming) : true,
         },
       });
+      invalidateServerCacheTag("events");
       return NextResponse.json({ success: true, event: created });
     }
   } catch (error: any) {
@@ -173,6 +176,7 @@ export async function DELETE(request: Request) {
       where: { id },
     });
 
+    invalidateServerCacheTag("events");
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("[API Admin Events Delete Error]:", error);

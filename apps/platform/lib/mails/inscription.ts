@@ -1,5 +1,5 @@
 import { renderEmailLayout, LOGO_IMAGE_URL } from "./EmailLayout";
-import { formatEventDateTime } from "../eventDateUtils";
+import { formatEventDateTime, resolveEventUtcDate } from "../eventDateUtils";
 
 export interface EventInscriptionEmailOptions {
   firstName?: string;
@@ -12,96 +12,89 @@ export interface EventInscriptionEmailOptions {
   eventSlug?: string | null;
   location?: string | null;
   userTimezone?: string | null;
+  source?: "platform" | "web";
+  calendarUrl?: string | null;
 }
 
-function parseCalendarDate(dateStr?: string | Date | null): Date | null {
-  if (!dateStr) return null;
-  if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? null : dateStr;
-  const str = String(dateStr).trim();
-  if (!str) return null;
+const DEFAULT_EVENT_TIMEZONE = "America/Argentina/Buenos_Aires";
 
-  const match = str.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (match) {
-    const year = parseInt(match[1], 10);
-    const month = parseInt(match[2], 10) - 1;
-    const day = parseInt(match[3], 10);
-    return new Date(year, month, day);
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * Resolves a direct event join/watch URL if provided.
+ * Returns null when no link is configured yet (never fabricates a generic channel link).
+ */
+export function resolveDirectEventLink(rawUrl?: string | null): string | null {
+  if (!rawUrl || !rawUrl.trim()) return null;
+  const trimmed = rawUrl.trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  return `https://www.youtube.com/watch?v=${encodeURIComponent(trimmed)}`;
+}
+
+/**
+ * Formats event date and time consistently in the target timezone (defaulting to GMT-3).
+ */
+export function formatEventDateAndTime(
+  dateString?: string | null,
+  timeText?: string | null,
+  userTimezone?: string | null
+): { formattedDate: string; formattedTime: string } {
+  const targetTz = userTimezone?.trim() || DEFAULT_EVENT_TIMEZONE;
+  const dtFormatted = formatEventDateTime(dateString, timeText, targetTz);
+
+  if (!dateString) {
+    return {
+      formattedDate: "Próximamente",
+      formattedTime: dtFormatted.timeString,
+    };
   }
 
-  const d = new Date(str);
-  return isNaN(d.getTime()) ? null : d;
-}
-
-export function formatDateSpanish(dateString?: string | null): string {
-  if (!dateString) return "Próximamente";
   try {
-    const d = parseCalendarDate(dateString);
-    if (d && !isNaN(d.getTime())) {
-      const weekday = d.toLocaleDateString("es-ES", { weekday: "long" });
-      const day = d.getDate();
-      const month = d.toLocaleDateString("es-ES", { month: "long" });
+    const utcDate = resolveEventUtcDate(dateString, timeText);
+    if (utcDate && !isNaN(utcDate.getTime())) {
+      const dtf = new Intl.DateTimeFormat("es-ES", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        timeZone: targetTz,
+      });
+      const parts = dtf.formatToParts(utcDate);
+      const partMap: Record<string, string> = {};
+      for (const p of parts) {
+        partMap[p.type] = p.value;
+      }
+      const weekday = partMap.weekday || "";
+      const day = partMap.day || String(utcDate.getDate());
+      const month = partMap.month || "";
       const capitalizedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
       const capitalizedMonth = month.charAt(0).toUpperCase() + month.slice(1);
-      return `${capitalizedWeekday} ${day} de ${capitalizedMonth}`;
-    }
-  } catch (e) {}
-  return dateString;
-}
 
-export function renderEventRegistrationEmailHtml(data: EventInscriptionEmailOptions): string {
-  const firstName = data.firstName || "Usuario";
-  const eventTitle = data.eventTitle || "Taller de Bienestar LUMINUS";
-  const dtFormatted = formatEventDateTime(data.eventDate, data.timeText, data.userTimezone);
-  const formattedDate = formatDateSpanish(data.eventDate);
-  const formattedTime = dtFormatted.timeString;
-  const eventLocation = data.location || "Estreno en YouTube";
-  
-  let youtubeLink = "https://www.youtube.com/@luminus_latam";
-  if (data.youtubeUrl && data.youtubeUrl.trim()) {
-    const rawYt = data.youtubeUrl.trim();
-    if (rawYt.startsWith("http://") || rawYt.startsWith("https://")) {
-      youtubeLink = rawYt;
-    } else {
-      youtubeLink = `https://www.youtube.com/watch?v=${rawYt}`;
+      return {
+        formattedDate: `${capitalizedWeekday} ${day} de ${capitalizedMonth}`,
+        formattedTime: dtFormatted.timeString,
+      };
     }
+  } catch {
+    // Fallback below
   }
 
-  const coverImageUrl = data.eventCoverUrl || LOGO_IMAGE_URL;
+  return {
+    formattedDate: dateString,
+    formattedTime: dtFormatted.timeString,
+  };
+}
 
-  const contentHtml = `
-    <h1 style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 16px 0; color: #000000 !important; text-align: center;">
-      ¡Hola ${firstName}!
-    </h1>
-
-    <p style="font-size: 16px; line-height: 1.6; color: #000000 !important; font-weight: 500; margin: 0 0 6px 0; text-align: center;">
-      Te has inscripto a la entrevista online <strong style="color: #000000 !important;">${eventTitle}</strong>.
-    </p>
-
-    <p style="font-size: 15px; line-height: 1.6; color: #000000 !important; margin: 0 0 28px 0; text-align: center;">
-      Podrás ver el estreno el ${formattedDate} a las ${formattedTime}.
-    </p>
-
-    <!-- Official Newsletter Card: #f8fafc, border-radius 20px, border 0 -->
-    <div style="background-color: #f8fafc; border-radius: 20px; overflow: hidden; text-align: center; margin-bottom: 36px; border: 0;">
-      ${coverImageUrl ? `<a href="${youtubeLink}" target="_blank" style="display: block; border: 0; outline: none; text-decoration: none;"><img src="${coverImageUrl}" alt="${eventTitle}" style="width: 100%; max-height: 320px; object-fit: cover; display: block; border: 0; outline: none;" /></a>` : ''}
-      
-      <div style="padding: 24px; text-align: center;">
-        <h3 style="font-size: 20px; font-weight: 700; line-height: 1.3; color: #000000 !important; margin: 0 0 8px 0; text-align: center;">
-          ${eventTitle}
-        </h3>
-        
-        ${data.speakerName ? `<p style="font-size: 16px; font-weight: 600; color: #000000 !important; margin: 0 0 6px 0; text-align: center;">Con ${data.speakerName}</p>` : ''}
-        
-        <p style="font-size: 15px; font-weight: 500; color: #000000 !important; margin: 0 0 20px 0; text-align: center;">
-          ${formattedDate} • ${formattedTime} • ${eventLocation}
-        </p>
-        
-        <a href="${youtubeLink}" target="_blank" style="display: inline-block; background-color: #000000 !important; color: #ffffff !important; text-decoration: none; padding: 13px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center; border: 0;">
-          Ver en YouTube
-        </a>
-      </div>
-    </div>
-
+function renderPlatformPromoBanner(): string {
+  return `
     <!-- BANNER PLATAFORMA LUMINUS: IMAGEN ARRIBA EN FONDO GRIS + BLOQUE NEGRO ABAJO CON TEXTO BLANCO Y BOTÓN BLANCO PURO -->
     <div style="border-radius: 20px; overflow: hidden; margin-top: 36px;">
       <!-- Parte 1: Imagen arriba con fondo gris -->
@@ -131,103 +124,236 @@ export function renderEventRegistrationEmailHtml(data: EventInscriptionEmailOpti
       </div>
     </div>
   `;
+}
+
+function renderEventCardHtml(params: {
+  eventTitle: string;
+  speakerName?: string | null;
+  formattedDate: string;
+  formattedTime: string;
+  eventLocation: string;
+  coverImageUrl: string;
+  directLink: string | null;
+  isPlatformUser: boolean;
+  showPendingNotice: boolean;
+  calendarUrl?: string | null;
+}): string {
+  const {
+    eventTitle,
+    speakerName,
+    formattedDate,
+    formattedTime,
+    eventLocation,
+    coverImageUrl,
+    directLink,
+    isPlatformUser,
+    showPendingNotice,
+    calendarUrl,
+  } = params;
+
+  const safeTitle = escapeHtml(eventTitle);
+  const safeSpeaker = speakerName ? escapeHtml(speakerName) : "";
+  const safeDate = escapeHtml(formattedDate);
+  const safeTime = escapeHtml(formattedTime);
+  const safeLocation = escapeHtml(eventLocation);
+  const safeCoverUrl = coverImageUrl ? escapeHtml(coverImageUrl) : "";
+  const safeDirectLink = directLink ? escapeHtml(directLink) : "";
+  const safeCalendarUrl = calendarUrl ? escapeHtml(calendarUrl) : "";
+
+  const coverHtml = safeCoverUrl
+    ? safeDirectLink
+      ? `<a href="${safeDirectLink}" target="_blank" style="display: block; border: 0; outline: none; text-decoration: none;"><img src="${safeCoverUrl}" alt="${safeTitle}" style="width: 100%; max-height: 320px; object-fit: cover; display: block; border: 0; outline: none;" /></a>`
+      : `<img src="${safeCoverUrl}" alt="${safeTitle}" style="width: 100%; max-height: 320px; object-fit: cover; display: block; border: 0; outline: none;" />`
+    : "";
+
+  const actionHtml = safeDirectLink
+    ? `<a href="${safeDirectLink}" target="_blank" style="display: inline-block; background-color: #000000 !important; color: #ffffff !important; text-decoration: none; padding: 13px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center; border: 0;">
+        Unirse al evento
+      </a>`
+    : showPendingNotice
+      ? `<p style="font-size: 14px; line-height: 1.5; color: #475569 !important; margin: 0; text-align: center;">
+          El enlace de acceso se habilitará antes del comienzo y te lo enviaremos por email.${
+            isPlatformUser ? " También podrás verlo en Mis inscripciones." : ""
+          }
+        </p>`
+      : "";
+
+  return `
+    <!-- Official Event Card: #f8fafc, border-radius 20px, aligned with modal summary card -->
+    <div style="background-color: #f8fafc; border-radius: 20px; overflow: hidden; text-align: center; margin-bottom: ${isPlatformUser ? "0" : "36px"}; border: 0;">
+      ${coverHtml}
+      
+      <div style="padding: 24px; text-align: center;">
+        <h3 style="font-size: 20px; font-weight: 700; line-height: 1.3; color: #0f172a !important; margin: 0 0 6px 0; text-align: center;">
+          ${safeTitle}
+        </h3>
+        
+        ${safeSpeaker ? `<p style="font-size: 15px; font-weight: 600; color: #334155 !important; margin: 0; text-align: center;">Con ${safeSpeaker}</p>` : ""}
+        
+        <div style="margin: 16px 0 ${actionHtml ? "22px" : "0"} 0; text-align: center;">
+          <p style="margin: 0; font-size: 14px; font-weight: 600; color: #334155 !important; text-align: center;">
+            ${safeDate}
+          </p>
+          <p style="margin: 4px 0 0 0; font-size: 18px; font-weight: 700; color: #0f172a !important; text-align: center;">
+            ${safeTime}
+          </p>
+          <p style="margin: 4px 0 0 0; font-size: 13px; font-weight: 500; color: #64748b !important; text-align: center;">
+            ${safeLocation}
+          </p>
+        </div>
+        
+        ${actionHtml}
+        ${
+          safeCalendarUrl
+            ? `<div style="margin-top: 14px; text-align: center;">
+                <a href="${safeCalendarUrl}" target="_blank" style="display: inline-block; background-color: #ffffff !important; color: #0f172a !important; text-decoration: none; padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; text-align: center; border: 1px solid #cbd5e1;">
+                  Agregar a Google Calendar
+                </a>
+              </div>`
+            : ""
+        }
+      </div>
+    </div>
+  `;
+}
+
+export function renderEventRegistrationEmailHtml(data: EventInscriptionEmailOptions): string {
+  const firstName = escapeHtml(data.firstName || "Usuario");
+  const eventTitle = data.eventTitle || "Evento de Bienestar LUMINUS";
+  const safeEventTitle = escapeHtml(eventTitle);
+  const { formattedDate, formattedTime } = formatEventDateAndTime(
+    data.eventDate,
+    data.timeText,
+    data.userTimezone
+  );
+  const eventLocation = data.location || "Evento online";
+  const directLink = resolveDirectEventLink(data.youtubeUrl);
+  const coverImageUrl = data.eventCoverUrl || LOGO_IMAGE_URL;
+  const isPlatformUser = data.source === "platform";
+
+  const contentHtml = `
+    <h1 style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 16px 0; color: #000000 !important; text-align: center;">
+      ¡Hola ${firstName}!
+    </h1>
+
+    <p style="font-size: 16px; line-height: 1.6; color: #000000 !important; font-weight: 500; margin: 0 0 24px 0; text-align: center;">
+      Tu inscripción a <strong style="color: #000000 !important;">${safeEventTitle}</strong> está confirmada.
+    </p>
+
+    ${renderEventCardHtml({
+      eventTitle,
+      speakerName: data.speakerName,
+      formattedDate,
+      formattedTime,
+      eventLocation,
+      coverImageUrl,
+      directLink,
+      isPlatformUser,
+      showPendingNotice: true,
+      calendarUrl: data.calendarUrl,
+    })}
+
+    ${isPlatformUser ? "" : renderPlatformPromoBanner()}
+  `;
 
   return renderEmailLayout({
-    title: `Confirmación de inscripción: ${eventTitle}`,
-    preheader: `Estreno el ${formattedDate}`,
+    title: `Confirmación de inscripción: ${safeEventTitle}`,
+    preheader: `${escapeHtml(formattedDate)} • ${escapeHtml(formattedTime)}`,
     contentHtml,
     alignCenter: true,
   });
 }
 
 export function renderEventLiveEmailHtml(data: EventInscriptionEmailOptions): string {
-  const firstName = data.firstName || "Usuario";
-  const eventTitle = data.eventTitle || "Taller de Bienestar LUMINUS";
-  const formattedDate = formatDateSpanish(data.eventDate);
-  const formattedTime = data.timeText || "18:00 hs (GMT-3)";
-  
-  let youtubeLink = "https://www.youtube.com/@luminus_latam";
-  if (data.youtubeUrl && data.youtubeUrl.trim()) {
-    const rawYt = data.youtubeUrl.trim();
-    if (rawYt.startsWith("http://") || rawYt.startsWith("https://")) {
-      youtubeLink = rawYt;
-    } else {
-      youtubeLink = `https://www.youtube.com/watch?v=${rawYt}`;
-    }
-  }
-
+  const firstName = escapeHtml(data.firstName || "Usuario");
+  const eventTitle = data.eventTitle || "Evento de Bienestar LUMINUS";
+  const safeEventTitle = escapeHtml(eventTitle);
+  const safeSpeakerName = data.speakerName ? escapeHtml(data.speakerName) : "";
+  const { formattedDate, formattedTime } = formatEventDateAndTime(
+    data.eventDate,
+    data.timeText,
+    data.userTimezone
+  );
+  const eventLocation = data.location || "Evento online";
+  const directLink = resolveDirectEventLink(data.youtubeUrl);
   const coverImageUrl = data.eventCoverUrl || LOGO_IMAGE_URL;
+  const isPlatformUser = data.source === "platform";
 
   const contentHtml = `
     <h1 style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 16px 0; color: #000000 !important; text-align: center;">
       ¡Hola ${firstName}!
     </h1>
 
-    <p style="font-size: 16px; line-height: 1.6; color: #000000 !important; font-weight: 500; margin: 0 0 28px 0; text-align: center;">
-      <strong style="color: #000000 !important;">${eventTitle}</strong>${data.speakerName ? `, con ${data.speakerName}` : ""}, ya está disponible en nuestro canal de YouTube.
+    <p style="font-size: 16px; line-height: 1.6; color: #000000 !important; font-weight: 500; margin: 0 0 24px 0; text-align: center;">
+      <strong style="color: #000000 !important;">${safeEventTitle}</strong>${safeSpeakerName ? `, con ${safeSpeakerName},` : ""} ya está disponible para que te unas.
     </p>
 
-    <!-- Official Newsletter Card: #f8fafc, border-radius 20px, border 0 -->
-    <div style="background-color: #f8fafc; border-radius: 20px; overflow: hidden; text-align: center; margin-bottom: 36px; border: 0;">
-      ${coverImageUrl ? `<a href="${youtubeLink}" target="_blank" style="display: block; border: 0; outline: none; text-decoration: none;"><img src="${coverImageUrl}" alt="${eventTitle}" style="width: 100%; max-height: 320px; object-fit: cover; display: block; border: 0; outline: none;" /></a>` : ''}
-      
-      <div style="padding: 24px; text-align: center;">
-        <h3 style="font-size: 20px; font-weight: 700; line-height: 1.3; color: #000000 !important; margin: 0 0 8px 0; text-align: center;">
-          ${eventTitle}
-        </h3>
-        
-        ${data.speakerName ? `<p style="font-size: 16px; font-weight: 600; color: #000000 !important; margin: 0 0 6px 0; text-align: center;">Con ${data.speakerName}</p>` : ''}
-        
-        <p style="font-size: 15px; font-weight: 500; color: #000000 !important; margin: 0 0 20px 0; text-align: center;">
-          ${formattedDate} • ${data.location || "Estreno en YouTube"}
-        </p>
-        
-        <a href="${youtubeLink}" target="_blank" style="display: inline-block; background-color: #000000 !important; color: #ffffff !important; text-decoration: none; padding: 13px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center; border: 0;">
-          Ver ahora en YouTube
-        </a>
-      </div>
-    </div>
+    ${renderEventCardHtml({
+      eventTitle,
+      speakerName: data.speakerName,
+      formattedDate,
+      formattedTime,
+      eventLocation,
+      coverImageUrl,
+      directLink,
+      isPlatformUser,
+      showPendingNotice: false,
+    })}
 
-    <!-- BANNER PLATAFORMA LUMINUS: IMAGEN ARRIBA EN FONDO GRIS + BLOQUE NEGRO ABAJO CON TEXTO BLANCO Y BOTÓN BLANCO PURO -->
-    <div style="border-radius: 20px; overflow: hidden; margin-top: 36px;">
-      <!-- Parte 1: Imagen arriba con fondo gris -->
-      <div style="background-color: #f8fafc; padding: 28px 24px 0 24px; text-align: center;">
-        <img 
-          src="https://luminuslatam.com/Photos/Luminus%20app%20-%20buscar%20especialistas%20y%20comunidad.png" 
-          alt="LUMINUS App" 
-          style="width: 100%; max-width: 320px; height: auto; display: block; margin: 0 auto; border: 0; outline: none;" 
-        />
-      </div>
-      
-      <!-- Parte 2: Bloque negro abajo con texto blanco puro grande y botón blanco puro -->
-      <div style="background-color: #000000; padding: 28px 24px 32px 24px; text-align: center; color: #ffffff !important;">
-        <h3 style="font-size: 22px; font-weight: 700; color: #ffffff !important; margin: 0 0 10px 0; line-height: 1.3; text-align: center;">
-          Conoce la plataforma de LUMINUS
-        </h3>
-        
-        <p style="font-size: 15px; line-height: 1.6; color: #ffffff !important; margin: 0 auto 24px auto; max-width: 440px; text-align: center;">
-          Un espacio para conectar con especialistas, acceder a contenidos y participar de nuevas experiencias pensadas para tu bienestar.
-        </p>
-
-        <div style="text-align: center;">
-          <a href="https://app.luminuslatam.com/" target="_blank" style="display: inline-block; background-color: #ffffff !important; color: #000000 !important; text-decoration: none; padding: 13px 28px; border-radius: 12px; font-size: 15px; font-weight: 700; text-align: center; border: 0;">
-            Ingresar a la plataforma
-          </a>
-        </div>
-      </div>
-    </div>
+    ${isPlatformUser ? "" : renderPlatformPromoBanner()}
   `;
 
-  const subjectTitle = data.speakerName
-    ? `Ya puedes ver la entrevista con ${data.speakerName}`
-    : `Ya puedes ver la entrevista`;
-
   return renderEmailLayout({
-    title: subjectTitle,
-    preheader: eventTitle,
+    title: `Ya puedes unirte: ${safeEventTitle}`,
+    preheader: `${escapeHtml(formattedDate)} • ${escapeHtml(formattedTime)}`,
     contentHtml,
     alignCenter: true,
   });
 }
 
+export function renderEventReminderEmailHtml(data: EventInscriptionEmailOptions): string {
+  const firstName = escapeHtml(data.firstName || "Usuario");
+  const eventTitle = data.eventTitle || "Evento de Bienestar LUMINUS";
+  const safeEventTitle = escapeHtml(eventTitle);
+  const safeSpeakerName = data.speakerName ? escapeHtml(data.speakerName) : "";
+  const { formattedDate, formattedTime } = formatEventDateAndTime(
+    data.eventDate,
+    data.timeText,
+    data.userTimezone
+  );
+  const eventLocation = data.location || "Evento online";
+  const directLink = resolveDirectEventLink(data.youtubeUrl);
+  const coverImageUrl = data.eventCoverUrl || LOGO_IMAGE_URL;
+  const isPlatformUser = data.source === "platform";
 
+  const contentHtml = `
+    <h1 style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 16px 0; color: #000000 !important; text-align: center;">
+      ¡Hola ${firstName}!
+    </h1>
+
+    <p style="font-size: 16px; line-height: 1.6; color: #000000 !important; font-weight: 500; margin: 0 0 24px 0; text-align: center;">
+      <strong style="color: #000000 !important;">${safeEventTitle}</strong>${safeSpeakerName ? `, con ${safeSpeakerName},` : ""} comienza en <strong style="color: #000000 !important;">10 minutos</strong>.
+    </p>
+
+    ${renderEventCardHtml({
+      eventTitle,
+      speakerName: data.speakerName,
+      formattedDate,
+      formattedTime,
+      eventLocation,
+      coverImageUrl,
+      directLink,
+      isPlatformUser,
+      showPendingNotice: !directLink,
+    })}
+
+    ${isPlatformUser ? "" : renderPlatformPromoBanner()}
+  `;
+
+  return renderEmailLayout({
+    title: `Comienza en 10 minutos: ${safeEventTitle}`,
+    preheader: `${escapeHtml(formattedDate)} • ${escapeHtml(formattedTime)}`,
+    contentHtml,
+    alignCenter: true,
+  });
+}

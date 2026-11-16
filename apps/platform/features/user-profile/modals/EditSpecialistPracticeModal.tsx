@@ -1,14 +1,10 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/InputField";
 import { TextAreaField } from "@/components/ui/TextAreaField";
-import { SelectInput } from "@/components/ui/SelectInput";
-import { useDynamicCategories } from "@/components/ui/InterestPill";
-import { TagSelector } from "@/features/especialistas/onboarding/components/molecules/TagSelector";
-import { TAG_GROUPS } from "@/features/especialistas/onboarding/components/Step2Profile";
 import {
   normalizeInstagramInput,
   normalizeLinkedinInput,
@@ -19,9 +15,6 @@ import {
 } from "@/utils/socialLinks";
 
 export interface SpecialistPracticeFormData {
-  specialty: string;
-  title: string;
-  selectedAreas: string[];
   bio: string;
   institution: string;
   instagramUrl: string;
@@ -42,11 +35,6 @@ export function EditSpecialistPracticeModal({
   initialData,
   onSave,
 }: EditSpecialistPracticeModalProps) {
-  const categories = useDynamicCategories();
-
-  const [specialty, setSpecialty] = useState("");
-  const [title, setTitle] = useState("");
-  const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [bio, setBio] = useState("");
   const [institution, setInstitution] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
@@ -57,9 +45,6 @@ export function EditSpecialistPracticeModal({
 
   useEffect(() => {
     if (!isOpen) return;
-    setSpecialty(initialData.specialty ?? "");
-    setTitle(initialData.title ?? "");
-    setSelectedAreas(Array.isArray(initialData.selectedAreas) ? initialData.selectedAreas : []);
     setBio(initialData.bio ?? "");
     setInstitution(initialData.institution ?? "");
     setInstagramUrl(stripInstagramPrefix(initialData.instagramUrl ?? ""));
@@ -67,31 +52,6 @@ export function EditSpecialistPracticeModal({
     setWebsiteUrl(stripHttpsPrefix(initialData.websiteUrl ?? ""));
     setErrors({});
   }, [isOpen, initialData]);
-
-  const specialtyOptions = useMemo(() => {
-    const names = categories.length > 0
-      ? categories.map((c: { name: string }) => c.name)
-      : Object.keys(TAG_GROUPS);
-    return names.map((name: string) => ({ label: name, value: name }));
-  }, [categories]);
-
-  const availableTags = useMemo(() => {
-    if (specialty && TAG_GROUPS[specialty]) {
-      return TAG_GROUPS[specialty];
-    }
-    return Array.from(new Set(Object.values(TAG_GROUPS).flat()));
-  }, [specialty]);
-
-  const customTags = useMemo(
-    () => selectedAreas.filter((area) => !availableTags.includes(area)),
-    [selectedAreas, availableTags]
-  );
-
-  const toggleArea = (tag: string) => {
-    setSelectedAreas((prev) =>
-      prev.includes(tag) ? prev.filter((item) => item !== tag) : [...prev, tag]
-    );
-  };
 
   const handleSave = async () => {
     const nextErrors: Record<string, string> = {};
@@ -117,9 +77,6 @@ export function EditSpecialistPracticeModal({
     setSaving(true);
     try {
       await onSave({
-        specialty: specialty.trim(),
-        title: title.trim(),
-        selectedAreas,
         bio: bio.trim(),
         institution: institution.trim(),
         instagramUrl: normalizedInstagram ?? "",
@@ -140,8 +97,8 @@ export function EditSpecialistPracticeModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Editar perfil profesional"
-      subtitle="Actualiza tu especialidad, áreas de acompañamiento y enfoque."
+      title="Editar sobre mi práctica"
+      subtitle="Actualiza tu enfoque, formación y redes sociales."
       maxWidth="540px"
       footer={
         <>
@@ -155,39 +112,6 @@ export function EditSpecialistPracticeModal({
       }
     >
       <div className="flex flex-col gap-5">
-        <SelectInput
-          label="Especialidad principal"
-          placeholder="Selecciona una categoría"
-          options={specialtyOptions}
-          value={specialty}
-          onSelect={setSpecialty}
-        />
-
-        <InputField
-          label="Título profesional o rol"
-          placeholder="Ej. Psicóloga clínica · Terapeuta sistémica"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
-
-        <TagSelector
-          label="Áreas de acompañamiento"
-          helperText="Selecciona o agrega tus enfoques principales."
-          tags={availableTags}
-          selectedTags={selectedAreas}
-          onToggle={toggleArea}
-          allowCustom
-          customTags={customTags}
-          onAddCustom={(tag) => {
-            if (!selectedAreas.includes(tag)) {
-              setSelectedAreas((prev) => [...prev, tag]);
-            }
-          }}
-          onRemoveCustom={(tag) =>
-            setSelectedAreas((prev) => prev.filter((item) => item !== tag))
-          }
-        />
-
         <TextAreaField
           label="Sobre mi práctica"
           placeholder="Cuéntale a la comunidad cómo acompañas y qué pueden esperar de tus sesiones..."

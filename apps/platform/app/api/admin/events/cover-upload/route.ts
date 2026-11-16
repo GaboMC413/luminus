@@ -48,6 +48,7 @@ export async function POST(request: Request) {
       Bucket: bucket,
       Key: key,
       ContentType: contentType,
+      ContentLength: Math.floor(contentLength),
       CacheControl: "public, max-age=31536000, immutable",
     });
 
@@ -55,10 +56,8 @@ export async function POST(request: Request) {
     const publicUrl = getS3PublicUrl(key);
 
     return NextResponse.json({ uploadUrl, key, publicUrl });
-
-    return NextResponse.json({ uploadUrl, key, publicUrl });
   } catch (err: any) {
     console.error("[S3 Event Cover Upload Route Error]:", err);
-    return NextResponse.json({ message: err?.message || "Error al obtener URL presignada de S3." }, { status: 500 });
+    return NextResponse.json({ message: "Error al obtener URL presignada de S3." }, { status: 500 });
   }
 }

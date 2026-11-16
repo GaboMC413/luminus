@@ -107,7 +107,7 @@ export function Modal({
           {/* Content */}
           <div
             className={`${
-              disableInnerScroll ? "" : "overflow-y-auto max-h-[75vh] custom-scrollbar"
+              disableInnerScroll ? "" : "overflow-y-auto max-h-[75vh] visible-scrollbar"
             } ${contentClassName || (footer ? "px-5 sm:px-6 py-4" : "px-5 sm:px-6 pb-6 pt-2")}`}
           >
             {children}

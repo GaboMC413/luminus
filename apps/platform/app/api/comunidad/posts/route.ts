@@ -9,6 +9,10 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   const session = await getCurrentActiveUser();
 
+  if (!session) {
+    return NextResponse.json({ message: "No autorizado." }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const limitParam = searchParams.get("limit");
@@ -108,6 +112,7 @@ export async function POST(request: Request) {
       youtubeId,
       category,
       tags,
+      createdAt,
     } = body;
 
     if (!content || typeof content !== "string" || !content.trim()) {
@@ -118,6 +123,18 @@ export async function POST(request: Request) {
     }
 
     const initialStatus = session.role === "ADMIN" ? "approved" : "pending";
+
+    let customCreatedAt: Date | undefined;
+    if (session.role === "ADMIN" && createdAt) {
+      const parsed = new Date(createdAt);
+      if (isNaN(parsed.getTime()) || parsed.getTime() > Date.now()) {
+        return NextResponse.json(
+          { message: "La fecha de publicación debe ser hoy o una fecha pasada." },
+          { status: 400 }
+        );
+      }
+      customCreatedAt = parsed;
+    }
 
     const newPost = await prisma.communityPost.create({
       data: {
@@ -131,6 +148,7 @@ export async function POST(request: Request) {
         category: category || null,
         tags: Array.isArray(tags) ? tags : [],
         status: initialStatus,
+        ...(customCreatedAt ? { createdAt: customCreatedAt } : {}),
       },
       include: {
         user: {

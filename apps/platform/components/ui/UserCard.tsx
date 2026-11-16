@@ -52,7 +52,7 @@ export function UserCard({
     user.id === "50d13047-bab8-44f1-9541-a821113845cc" ||
     user.id === "mock-luminus";
 
-  const defaultHref = `/inicio/public-profile?id=${encodeURIComponent(user.id)}`;
+  const defaultHref = `/perfil/${encodeURIComponent((user as any).slug || user.id)}`;
   const destination = profileHref || defaultHref;
 
   const handleCardClick = () => {

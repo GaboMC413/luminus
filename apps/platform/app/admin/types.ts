@@ -340,6 +340,15 @@ export type AdminGlobalInvoice = {
   hostedUrl: string | null;
 };
 
+export type AdminIntroSessionFeedback = {
+  role: "requester" | "specialist";
+  attended: boolean;
+  resonance: "no_match" | "dim" | "warm" | "luminous" | null;
+  publicNote: string;
+  privateNote: string;
+  createdAt: string;
+};
+
 export type AdminIntroSession = {
   id: string;
   requesterId: string;
@@ -371,6 +380,7 @@ export type AdminIntroSession = {
     avatarUrl: string;
     specialty: string;
   };
+  feedbacks?: AdminIntroSessionFeedback[];
 };
 
 export type AdminTab =

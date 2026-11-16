@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       cognitoSession = await signInWithCognito(validation.email, validation.password, cognitoUsername);
     } catch (cognitoError: any) {
       if (cognitoError.code === "UserNotConfirmedException") {
-        if (process.env.SKIP_EMAIL_VERIFICATION === "true") {
+        if (process.env.NODE_ENV !== "production" && process.env.SKIP_EMAIL_VERIFICATION === "true") {
           const { adminConfirmUser } = await import("@/lib/auth/cognito-admin");
           await adminConfirmUser(validation.email);
           cognitoSession = await signInWithCognito(validation.email, validation.password, cognitoUsername);

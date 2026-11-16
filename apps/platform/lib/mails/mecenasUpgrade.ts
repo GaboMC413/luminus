@@ -10,6 +10,12 @@ export function renderMecenasUpgradeEmailHtml({
   interval = "month",
 }: MecenasUpgradeEmailOptions = {}): string {
   const isAnnual = interval === "year" || interval === "annual";
+  const safeName = String(name || "Usuario")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
   const contentHtml = `
     <h1 style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 16px 0; color: #0f172a; text-align: center;">
@@ -17,7 +23,7 @@ export function renderMecenasUpgradeEmailHtml({
     </h1>
 
     <p style="font-size: 15.5px; line-height: 1.65; margin: 0 0 16px 0; color: #334155; text-align: center;">
-      Hola <strong style="color: #0f172a;">${name}</strong>, gracias por convertirte en Mecenas de LUMINUS.
+      Hola <strong style="color: #0f172a;">${safeName}</strong>, gracias por convertirte en Mecenas de LUMINUS.
     </p>
 
     <p style="font-size: 15px; line-height: 1.65; margin: 0 0 24px 0; color: #334155; text-align: center;">

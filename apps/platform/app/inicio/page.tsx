@@ -10,13 +10,22 @@ import { PostCard } from "@/components/community/PostCard";
 import { RecentMembersCard } from "@/components/community/RecentMembersCard";
 import { MobileMembersCarousel } from "@/components/community/MobileMembersCarousel";
 import { UpcomingEventsCarousel, EventItem as CommunityEventItem } from "@/components/community/UpcomingEventsCarousel";
+import { LatestSpecialistsCarousel, SpecialistCarouselItem } from "@/components/community/LatestSpecialistsCarousel";
+import { RecentRecordingsCarousel } from "@/components/community/RecentRecordingsCarousel";
+import { FeedAnnouncementCard } from "@/components/community/FeedAnnouncementCard";
+import { RecordingItem } from "@/components/events/RecordingCard";
 import { Button } from "@/components/ui/Button";
 import { CardHeader } from "@/components/ui/CardHeader";
-import { User, GraphStar, UserRoundGroup } from "lucide-react";
+import { User, GraphStar, UserRoundGroup, Sparkles, HouseHeart, MessageSquare } from "lucide-react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Toast } from "@/components/ui/Toast";
 import { formatLocationDisplay } from "@/utils/locationUtils";
+import {
+  getCachedData,
+  setCachedData,
+  fetchWithCache,
+} from "@/lib/clientCache";
 
 export default function PlatformPage() {
   return (
@@ -30,22 +39,34 @@ function PlatformContent() {
   const router = useRouter();
 
   // Feed Posts state (synced with database - only real approved posts)
-  const [posts, setPosts] = useState<PostItem[]>([]);
-  const [postsLoading, setPostsLoading] = useState(true);
+  const [posts, setPosts] = useState<PostItem[]>(
+    () => getCachedData<PostItem[]>("/api/comunidad/posts") ?? []
+  );
+  const [postsLoading, setPostsLoading] = useState<boolean>(
+    () => !getCachedData<PostItem[]>("/api/comunidad/posts")
+  );
   const [toastState, setToastState] = useState<{
     title: string;
     message: string;
     type?: "success" | "error";
   } | null>(null);
 
-  const fetchPosts = async () => {
+  const fetchPosts = async (force = false) => {
     try {
-      setPostsLoading(true);
-      const res = await fetch(`/api/comunidad/posts?_t=${Date.now()}`, { cache: "no-store" });
-      if (res.ok) {
-        const data = await res.json();
-        setPosts(data.posts || []);
+      if (!getCachedData<PostItem[]>("/api/comunidad/posts")) {
+        setPostsLoading(true);
       }
+      const fetchedPosts = await fetchWithCache(
+        "/api/comunidad/posts",
+        async () => {
+          const res = await fetch("/api/comunidad/posts");
+          if (!res.ok) return getCachedData<PostItem[]>("/api/comunidad/posts") ?? [];
+          const data = await res.json();
+          return (data.posts || []) as PostItem[];
+        },
+        { ttlMs: 60_000, force }
+      );
+      setPosts(fetchedPosts);
     } catch (err) {
       console.error("Error loading community posts:", err);
     } finally {
@@ -54,7 +75,7 @@ function PlatformContent() {
   };
 
   useEffect(() => {
-    fetchPosts();
+    fetchPosts(false);
   }, []);
 
   const publicPosts = useMemo(
@@ -72,30 +93,71 @@ function PlatformContent() {
   }, [publicPosts]);
 
   // Latest Community Members (for right sidebar and mobile carousel)
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<any[]>(
+    () => getCachedData<any[]>("/api/comunidad?limit=12") ?? []
+  );
+  const [loading, setLoading] = useState<boolean>(
+    () => !getCachedData<any[]>("/api/comunidad?limit=12")
+  );
 
   // Upcoming Events state (for feed carousel)
-  const [events, setEvents] = useState<CommunityEventItem[]>([]);
-  const [eventsLoading, setEventsLoading] = useState(true);
+  const [events, setEvents] = useState<CommunityEventItem[]>(
+    () => getCachedData<CommunityEventItem[]>("/api/events") ?? []
+  );
+  const [eventsLoading, setEventsLoading] = useState<boolean>(
+    () => !getCachedData<CommunityEventItem[]>("/api/events")
+  );
+
+  // Latest Specialists state (for feed carousel)
+  const [specialists, setSpecialists] = useState<SpecialistCarouselItem[]>(
+    () => getCachedData<SpecialistCarouselItem[]>("/api/especialistas") ?? []
+  );
+  const [specialistsLoading, setSpecialistsLoading] = useState<boolean>(
+    () => !getCachedData<SpecialistCarouselItem[]>("/api/especialistas")
+  );
+
+  // Recent Recordings state (for feed carousel)
+  const [recordings, setRecordings] = useState<RecordingItem[]>(
+    () => getCachedData<RecordingItem[]>("/api/events?type=past") ?? []
+  );
+  const [recordingsLoading, setRecordingsLoading] = useState<boolean>(
+    () => !getCachedData<RecordingItem[]>("/api/events?type=past")
+  );
 
   // User Profile & Connections state
-  const [currentUserProfile, setCurrentUserProfile] = useState<any>(null);
+  const [currentUserProfile, setCurrentUserProfile] = useState<any>(
+    () => getCachedData<any>("/api/profile")?.profile ?? null
+  );
   const [profileImgError, setProfileImgError] = useState(false);
-  const [userConnections, setUserConnections] = useState<any[]>([]);
-  const [connectionsLoading, setConnectionsLoading] = useState(true);
+  const [userConnections, setUserConnections] = useState<any[]>(() => {
+    const cached = getCachedData<any>("/api/connections");
+    return cached ? cached.contacts || cached.connections || [] : [];
+  });
+  const [followedSpecialists, setFollowedSpecialists] = useState<any[]>(
+    () => getCachedData<any[]>("/api/follows") ?? []
+  );
+  const [connectionsLoading, setConnectionsLoading] = useState<boolean>(
+    () => !getCachedData<any>("/api/connections") && !getCachedData<any[]>("/api/follows")
+  );
 
   // Load Current User Profile
   useEffect(() => {
     async function loadCurrentUser() {
       try {
-        const res = await fetch("/api/profile");
-        if (res.status === 401 || res.status === 403) {
-          router.replace("/auth/iniciar-sesion");
-          return;
-        }
-        if (res.ok) {
-          const data = await res.json();
+        const data = await fetchWithCache(
+          "/api/profile",
+          async () => {
+            const res = await fetch("/api/profile");
+            if (res.status === 401 || res.status === 403) {
+              router.replace("/auth/iniciar-sesion");
+              return null;
+            }
+            if (!res.ok) return getCachedData<any>("/api/profile") ?? null;
+            return res.json();
+          },
+          { ttlMs: 120_000 }
+        );
+        if (data?.profile) {
           setCurrentUserProfile(data.profile);
         }
       } catch (err) {
@@ -105,19 +167,47 @@ function PlatformContent() {
     loadCurrentUser();
   }, [router]);
 
-  // Load Connections
+  // Load Connections & Followed Specialists
   useEffect(() => {
     async function loadConnections() {
       try {
-        setConnectionsLoading(true);
-        const res = await fetch("/api/connections");
-        if (res.status === 401 || res.status === 403) {
-          router.replace("/auth/iniciar-sesion");
-          return;
+        if (!getCachedData<any>("/api/connections")) {
+          setConnectionsLoading(true);
         }
-        if (res.ok) {
-          const data = await res.json();
-          setUserConnections(data.connections || []);
+        const [connData, followData] = await Promise.all([
+          fetchWithCache(
+            "/api/connections",
+            async () => {
+              const connRes = await fetch("/api/connections");
+              if (connRes.status === 401 || connRes.status === 403) {
+                router.replace("/auth/iniciar-sesion");
+                return null;
+              }
+              if (!connRes.ok) return getCachedData<any>("/api/connections") ?? null;
+              return connRes.json();
+            },
+            { ttlMs: 60_000 }
+          ),
+          fetchWithCache(
+            "/api/follows",
+            async () => {
+              const followRes = await fetch("/api/follows");
+              if (followRes.status === 401 || followRes.status === 403) {
+                router.replace("/auth/iniciar-sesion");
+                return [];
+              }
+              if (!followRes.ok) return getCachedData<any[]>("/api/follows") ?? [];
+              const parsed = await followRes.json();
+              return parsed.following || [];
+            },
+            { ttlMs: 60_000 }
+          ),
+        ]);
+        if (connData) {
+          setUserConnections(connData.contacts || connData.connections || []);
+        }
+        if (followData) {
+          setFollowedSpecialists(followData);
         }
       } catch (err) {
         console.error("Error loading user connections:", err);
@@ -128,13 +218,20 @@ function PlatformContent() {
     loadConnections();
   }, [router]);
 
-  // Active Connections & Pending count
+  // Active Mutual Contacts (deduplicated by user.id)
   const activeConnections = useMemo(() => {
     const accepted = userConnections.filter((c: any) => c.status === "accepted");
-    return accepted.sort((a: any, b: any) => {
+    const sorted = accepted.sort((a: any, b: any) => {
       const dateA = new Date(a.updated_at || a.created_at || 0).getTime();
       const dateB = new Date(b.updated_at || b.created_at || 0).getTime();
       return dateB - dateA;
+    });
+    const seen = new Set<string>();
+    return sorted.filter((c: any) => {
+      const uid = c?.user?.id;
+      if (!uid || seen.has(uid)) return false;
+      seen.add(uid);
+      return true;
     });
   }, [userConnections]);
 
@@ -143,16 +240,24 @@ function PlatformContent() {
   useEffect(() => {
     async function fetchLatestMembers() {
       try {
-        setLoading(true);
-        const res = await fetch(`/api/comunidad?limit=12&_t=${Date.now()}`, { cache: "no-store" });
-        if (res.status === 401 || res.status === 403) {
-          router.replace("/auth/iniciar-sesion");
-          return;
+        if (!getCachedData<any[]>("/api/comunidad?limit=12")) {
+          setLoading(true);
         }
-        if (res.ok) {
-          const data = await res.json();
-          setUsers(data.users || []);
-        }
+        const members = await fetchWithCache(
+          "/api/comunidad?limit=12",
+          async () => {
+            const res = await fetch("/api/comunidad?limit=12");
+            if (res.status === 401 || res.status === 403) {
+              router.replace("/auth/iniciar-sesion");
+              return [];
+            }
+            if (!res.ok) return getCachedData<any[]>("/api/comunidad?limit=12") ?? [];
+            const data = await res.json();
+            return data.users || [];
+          },
+          { ttlMs: 60_000 }
+        );
+        setUsers(members);
       } catch (err: any) {
         console.error("Error al cargar miembros de la comunidad:", err);
       } finally {
@@ -162,23 +267,59 @@ function PlatformContent() {
     fetchLatestMembers();
   }, [router]);
 
-  // Fetch Upcoming Events for the feed carousel
+  // Fetch Upcoming Events, Latest Specialists, and Recent Recordings for feed carousels
   useEffect(() => {
-    async function fetchEvents() {
+    async function fetchFeedCarousels() {
       try {
-        setEventsLoading(true);
-        const res = await fetch(`/api/events?_t=${Date.now()}`, { cache: "no-store" });
-        if (res.ok) {
-          const data = await res.json();
-          setEvents(data.events || []);
-        }
+        if (!getCachedData<CommunityEventItem[]>("/api/events")) setEventsLoading(true);
+        if (!getCachedData<SpecialistCarouselItem[]>("/api/especialistas")) setSpecialistsLoading(true);
+        if (!getCachedData<RecordingItem[]>("/api/events?type=past")) setRecordingsLoading(true);
+
+        const [upcoming, fetchedSpecialists, pastRecordings] = await Promise.all([
+          fetchWithCache(
+            "/api/events",
+            async () => {
+              const res = await fetch("/api/events");
+              if (!res.ok) return getCachedData<CommunityEventItem[]>("/api/events") ?? [];
+              const data = await res.json();
+              return (data.events || []) as CommunityEventItem[];
+            },
+            { ttlMs: 60_000 }
+          ),
+          fetchWithCache(
+            "/api/especialistas",
+            async () => {
+              const res = await fetch("/api/especialistas");
+              if (!res.ok) return getCachedData<SpecialistCarouselItem[]>("/api/especialistas") ?? [];
+              const data = await res.json();
+              return (data.specialists || []) as SpecialistCarouselItem[];
+            },
+            { ttlMs: 60_000 }
+          ),
+          fetchWithCache(
+            "/api/events?type=past",
+            async () => {
+              const res = await fetch("/api/events?type=past");
+              if (!res.ok) return getCachedData<RecordingItem[]>("/api/events?type=past") ?? [];
+              const data = await res.json();
+              return (data.events || []) as RecordingItem[];
+            },
+            { ttlMs: 60_000 }
+          ),
+        ]);
+
+        setEvents(upcoming);
+        setSpecialists(fetchedSpecialists);
+        setRecordings(pastRecordings);
       } catch (err) {
-        console.error("Error al cargar eventos en la comunidad:", err);
+        console.error("Error al cargar carruseles de la comunidad:", err);
       } finally {
         setEventsLoading(false);
+        setSpecialistsLoading(false);
+        setRecordingsLoading(false);
       }
     }
-    fetchEvents();
+    fetchFeedCarousels();
   }, []);
 
   const handleAddPost = async (newPost: PostItem) => {
@@ -195,13 +336,23 @@ function PlatformContent() {
           youtubeId: newPost.youtubeId,
           category: newPost.area,
           tags: newPost.areas,
+          createdAt: newPost.createdAt,
         }),
       });
 
       if (res.ok) {
         const data = await res.json();
         if (data.post && (data.post.status === "approved" || !data.post.status)) {
-          setPosts((prev) => [data.post, ...prev]);
+          setPosts((prev) => {
+            const next = [data.post, ...prev].sort((a, b) => {
+              if ((b.isPinned ? 1 : 0) !== (a.isPinned ? 1 : 0)) {
+                return (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0);
+              }
+              return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+            });
+            setCachedData("/api/comunidad/posts", next);
+            return next;
+          });
           setToastState({
             title: "¡Publicación creada!",
             message: "Tu publicación ya está disponible para toda la comunidad.",
@@ -262,15 +413,17 @@ function PlatformContent() {
       if (res.ok) {
         const data = await res.json();
         if (data.post) {
-          setPosts((prev) =>
-            prev.map((p) => {
+          setPosts((prev) => {
+            const next = prev.map((p) => {
               if (p.id === postId) return data.post;
               if (data.post.isPinned && p.isPinned) {
                 return { ...p, isPinned: false, pinnedAt: undefined };
               }
               return p;
-            })
-          );
+            });
+            setCachedData("/api/comunidad/posts", next);
+            return next;
+          });
         }
       } else {
         const errData = await res.json().catch(() => null);
@@ -279,11 +432,11 @@ function PlatformContent() {
           message: errData?.message || "No se pudo actualizar el estado de fijado.",
           type: "error",
         });
-        fetchPosts();
+        fetchPosts(true);
       }
     } catch (err) {
       console.error("Error toggling pin status:", err);
-      fetchPosts();
+      fetchPosts(true);
     }
   };
 
@@ -293,7 +446,11 @@ function PlatformContent() {
         method: "DELETE",
       });
       if (res.ok) {
-        setPosts((prev) => prev.filter((p) => p.id !== postId));
+        setPosts((prev) => {
+          const next = prev.filter((p) => p.id !== postId);
+          setCachedData("/api/comunidad/posts", next);
+          return next;
+        });
       } else {
         const errData = await res.json().catch(() => null);
         setToastState({
@@ -309,9 +466,11 @@ function PlatformContent() {
 
   const handleEditPost = async (updatedPost: PostItem) => {
     // Optimistic update
-    setPosts((prev) =>
-      prev.map((p) => (p.id === updatedPost.id ? updatedPost : p))
-    );
+    setPosts((prev) => {
+      const next = prev.map((p) => (p.id === updatedPost.id ? updatedPost : p));
+      setCachedData("/api/comunidad/posts", next);
+      return next;
+    });
 
     try {
       const res = await fetch(`/api/comunidad/posts/${updatedPost.id}`, {
@@ -332,9 +491,11 @@ function PlatformContent() {
       if (res.ok) {
         const data = await res.json();
         if (data.post) {
-          setPosts((prev) =>
-            prev.map((p) => (p.id === updatedPost.id ? data.post : p))
-          );
+          setPosts((prev) => {
+            const next = prev.map((p) => (p.id === updatedPost.id ? data.post : p));
+            setCachedData("/api/comunidad/posts", next);
+            return next;
+          });
           setToastState({
             title: "¡Publicación actualizada!",
             message: "Los cambios en tu publicación se guardaron correctamente.",
@@ -444,24 +605,24 @@ function PlatformContent() {
             <CardHeader title="Mi red" />
 
             {connectionsLoading ? (
-              <div className="grid grid-cols-4 gap-2">
-                {[...Array(8)].map((_, i) => (
-                  <Skeleton key={i} className="w-10 h-10 rounded-xl" />
+              <div className="grid grid-cols-5 gap-2">
+                {[...Array(10)].map((_, i) => (
+                  <Skeleton key={i} className="w-full aspect-square rounded-xl" />
                 ))}
               </div>
             ) : activeConnections.length === 0 ? (
               <p className="text-xs text-slate-400 py-2 text-center font-sans">
-                Aún no tienes conexiones.
+                Aún no tienes contactos en tu red.
               </p>
             ) : (
-              <div className="grid grid-cols-4 gap-2">
-                {activeConnections.slice(0, 12).map((conn: any) => (
+              <div className="grid grid-cols-5 gap-2">
+                {activeConnections.slice(0, 15).map((conn: any) => (
                   <div
-                    key={conn.id}
-                    onClick={() => router.push(`/inicio/public-profile?id=${conn.user.id}&from=inicio`)}
+                    key={conn.user.id}
+                    onClick={() => router.push(`/perfil/${(conn.user as any).slug || conn.user.id}?from=inicio`)}
                     className="relative group cursor-pointer"
                   >
-                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-50 border border-slate-100 group-hover:border-slate-200 transition-colors duration-200 flex items-center justify-center shrink-0">
+                    <div className="w-full aspect-square rounded-xl overflow-hidden bg-slate-50 border border-slate-100 group-hover:border-slate-200 transition-colors duration-200 flex items-center justify-center">
                       {conn.user.avatar ? (
                         <img
                           src={conn.user.avatar}
@@ -474,6 +635,35 @@ function PlatformContent() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {!connectionsLoading && followedSpecialists.length > 0 && (
+              <div className="border-t border-slate-100 pt-3 flex flex-col gap-2">
+                <span className="text-xs font-semibold text-slate-500 font-jakarta">
+                  Especialistas que sigo
+                </span>
+                <div className="grid grid-cols-5 gap-2">
+                  {followedSpecialists.slice(0, 10).map((item: any) => (
+                    <div
+                      key={item.user.id}
+                      onClick={() => router.push(`/perfil/${(item.user as any).slug || item.user.id}?from=inicio`)}
+                      className="relative group cursor-pointer"
+                    >
+                      <div className="w-full aspect-square rounded-xl overflow-hidden bg-slate-50 border border-slate-100 group-hover:border-slate-200 transition-colors duration-200 flex items-center justify-center">
+                        {item.user.avatar ? (
+                          <img
+                            src={item.user.avatar}
+                            alt={item.user.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <User className="w-4 h-4 text-slate-400" strokeWidth={1.75} />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -531,7 +721,7 @@ function PlatformContent() {
             </div>
           </div>
 
-          {/* 2. Posts Stream & Embedded Carousels in Exact 5-Slot Order */}
+          {/* 2. Posts Stream & Embedded Carousels / Announcements */}
           <div className="flex flex-col gap-4">
             {postsLoading ? (
               <div className="flex flex-col gap-4">
@@ -544,57 +734,78 @@ function PlatformContent() {
                   <MobileMembersCarousel members={users} loading={loading} />
                 </div>
                 <UpcomingEventsCarousel events={events} loading={eventsLoading} />
+                <LatestSpecialistsCarousel specialists={specialists} loading={specialistsLoading} />
+                <RecentRecordingsCarousel recordings={recordings} loading={recordingsLoading} />
                 <EmptyState
                   title="No hay publicaciones visibles aún"
                   description="Sé la primera persona en compartir una reflexión, pregunta o experiencia con la comunidad."
                 />
               </div>
             ) : (
-              <>
-                {/* Slot 1: Highlighted / Pinned Post (or first post) */}
-                {publicPosts[0] && (
-                  <PostCard
-                    key={publicPosts[0].id}
-                    post={publicPosts[0]}
-                    currentUserProfile={currentUserProfile}
-                    onDeletePost={handleDeletePost}
-                    onEditPost={handleEditPost}
-                    onTogglePin={handleTogglePin}
-                  />
-                )}
+              (() => {
+                const feedSlots: Record<number, React.ReactNode> = {
+                  0: (
+                    <div className="md:hidden">
+                      <MobileMembersCarousel members={users} loading={loading} />
+                    </div>
+                  ),
+                  1: <UpcomingEventsCarousel events={events} loading={eventsLoading} />,
+                  2: <LatestSpecialistsCarousel specialists={specialists} loading={specialistsLoading} />,
+                  3: <RecentRecordingsCarousel recordings={recordings} loading={recordingsLoading} />,
+                  4: (
+                    <FeedAnnouncementCard
+                      eyebrow="Especialistas LUMINUS"
+                      title="Sé especialista en LUMINUS"
+                      description="Comparte tu práctica, acompaña a personas de toda LATAM y forma parte de nuestra red de bienestar."
+                      ctaLabel="Postularme"
+                      ctaHref="/especialistas/unirme"
+                      icon={Sparkles}
+                    />
+                  ),
+                  5: (
+                    <FeedAnnouncementCard
+                      eyebrow="Espacios LUMINUS"
+                      title="Suma tu espacio a LUMINUS"
+                      description="¿Tienes o conoces un centro, consultorio o espacio de bienestar? Cuéntanos para sumarlo a la plataforma."
+                      ctaLabel="Sumar espacio"
+                      ctaHref="/contacto?motivo=espacios"
+                      icon={HouseHeart}
+                    />
+                  ),
+                  6: (
+                    <FeedAnnouncementCard
+                      eyebrow="Tu opinión nos importa"
+                      title="¿Quieres sugerir algo?"
+                      description="Ponte en contacto con nosotros para compartir ideas, mejoras o propuestas para la comunidad."
+                      ctaLabel="Escríbenos"
+                      ctaHref="/contacto?motivo=comentarios"
+                      icon={MessageSquare}
+                    />
+                  ),
+                };
 
-                {/* Slot 2: New Members Carousel (Mobile only) */}
-                <div className="md:hidden">
-                  <MobileMembersCarousel members={users} loading={loading} />
-                </div>
+                const trailingSlots = Object.entries(feedSlots)
+                  .filter(([idx]) => Number(idx) >= publicPosts.length)
+                  .map(([idx, node]) => <Fragment key={`slot-trailing-${idx}`}>{node}</Fragment>);
 
-                {/* Slot 3: User Most Recent Post (Post #2) */}
-                {publicPosts[1] && (
-                  <PostCard
-                    key={publicPosts[1].id}
-                    post={publicPosts[1]}
-                    currentUserProfile={currentUserProfile}
-                    onDeletePost={handleDeletePost}
-                    onEditPost={handleEditPost}
-                    onTogglePin={handleTogglePin}
-                  />
-                )}
-
-                {/* Slot 4: Próximas Actividades Carousel */}
-                <UpcomingEventsCarousel events={events} loading={eventsLoading} />
-
-                {/* Slot 5: Remaining User Posts (Newest first) */}
-                {publicPosts.slice(2).map((post) => (
-                  <PostCard
-                    key={post.id}
-                    post={post}
-                    currentUserProfile={currentUserProfile}
-                    onDeletePost={handleDeletePost}
-                    onEditPost={handleEditPost}
-                    onTogglePin={handleTogglePin}
-                  />
-                ))}
-              </>
+                return (
+                  <>
+                    {publicPosts.map((post, idx) => (
+                      <Fragment key={post.id}>
+                        <PostCard
+                          post={post}
+                          currentUserProfile={currentUserProfile}
+                          onDeletePost={handleDeletePost}
+                          onEditPost={handleEditPost}
+                          onTogglePin={handleTogglePin}
+                        />
+                        {feedSlots[idx]}
+                      </Fragment>
+                    ))}
+                    {trailingSlots}
+                  </>
+                );
+              })()
             )}
           </div>
         </main>

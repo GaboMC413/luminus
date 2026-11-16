@@ -24,22 +24,84 @@ export async function POST(request: Request) {
       lastName: bodyLastName,
     } = body || {};
 
+    const { prisma } = await import("@/lib/db");
+    const now = new Date();
+
+    const existingUser = await prisma.user.findUnique({
+      where: { id: session.userId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        stripeCustomerId: true,
+        profile: { select: { firstName: true, lastName: true } },
+      },
+    });
+
+    if (!existingUser) {
+      return NextResponse.json({ message: "Usuario no encontrado." }, { status: 404 });
+    }
+
+    let verifiedCustomerId: string | undefined = customerId ? String(customerId) : undefined;
+    let verifiedInterval: "annual" | "monthly" = billingInterval === "annual" ? "annual" : "monthly";
+
     const { stripe } = await import("@/lib/stripe");
-    if (stripe && subscriptionId && !String(subscriptionId).startsWith("sub_mock_")) {
+    if (stripe) {
+      if (!subscriptionId || String(subscriptionId).startsWith("sub_mock_")) {
+        return NextResponse.json(
+          { message: "ID de suscripción inválido o faltante." },
+          { status: 400 }
+        );
+      }
+
       try {
         const subscription = await stripe.subscriptions.retrieve(String(subscriptionId), {
           expand: ["latest_invoice.payment_intent"],
         });
 
+        const subCustomerId =
+          typeof subscription.customer === "string"
+            ? subscription.customer
+            : subscription.customer?.id;
+
+        const metadataUserId = subscription.metadata?.userId;
+        const metadataEmail = subscription.metadata?.user_email?.trim().toLowerCase();
+
+        const isOwner =
+          (existingUser.stripeCustomerId && subCustomerId === existingUser.stripeCustomerId) ||
+          (metadataUserId && metadataUserId === existingUser.id) ||
+          (metadataEmail && metadataEmail === existingUser.email.trim().toLowerCase());
+
+        if (!isOwner) {
+          return NextResponse.json(
+            { message: "Esta suscripción no pertenece a la cuenta autenticada." },
+            { status: 403 }
+          );
+        }
+
         const invoice = subscription.latest_invoice as any;
         const paymentIntent = invoice?.payment_intent;
-        const isPaid = subscription.status === "active" || paymentIntent?.status === "succeeded";
+        const isPaid =
+          subscription.status === "active" ||
+          subscription.status === "trialing" ||
+          paymentIntent?.status === "succeeded";
 
         if (!isPaid) {
           return NextResponse.json(
             { message: "El pago de la suscripción aún no ha sido confirmado por Stripe." },
             { status: 400 }
           );
+        }
+
+        if (subCustomerId) {
+          verifiedCustomerId = subCustomerId;
+        }
+
+        const stripePriceInterval = subscription.items?.data?.[0]?.price?.recurring?.interval;
+        if (stripePriceInterval === "year") {
+          verifiedInterval = "annual";
+        } else if (stripePriceInterval === "month") {
+          verifiedInterval = "monthly";
         }
       } catch (stripeErr: any) {
         console.error("Stripe subscription verification error:", stripeErr);
@@ -55,23 +117,6 @@ export async function POST(request: Request) {
     const lastName = bodyLastName ? String(bodyLastName).trim() : (nameParts.length > 1 ? nameParts.slice(1).join(" ") : undefined);
     const fullName = (firstName && lastName) ? `${firstName} ${lastName}` : (cardName ? String(cardName).trim() : undefined);
 
-    const { prisma } = await import("@/lib/db");
-    const now = new Date();
-
-    const existingUser = await prisma.user.findUnique({
-      where: { id: session.userId },
-      select: {
-        id: true,
-        email: true,
-        role: true,
-        profile: { select: { firstName: true, lastName: true } },
-      },
-    });
-
-    if (!existingUser) {
-      return NextResponse.json({ message: "Usuario no encontrado." }, { status: 404 });
-    }
-
     const targetEmail = rawEmail ? String(rawEmail).trim().toLowerCase() : "";
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const isTargetEmailValid = Boolean(
@@ -85,8 +130,9 @@ export async function POST(request: Request) {
 
     let needsEmailUpdate = false;
     let resolvedEmail: string = existingUser.email;
+    const receiptEmail: string = isTargetEmailValid ? targetEmail : existingUser.email;
 
-    if (isTargetEmailValid && targetEmail && (isCurrentEmailPlaceholder || targetEmail !== existingUser.email)) {
+    if (isTargetEmailValid && targetEmail && isCurrentEmailPlaceholder) {
       const duplicateUser = await prisma.user.findFirst({
         where: {
           email: targetEmail,
@@ -113,12 +159,12 @@ export async function POST(request: Request) {
         ...(needsEmailUpdate ? { email: resolvedEmail } : {}),
         tier: "MECENAS",
         memberSince: now,
-        stripeCustomerId: customerId ? String(customerId) : undefined,
+        stripeCustomerId: verifiedCustomerId,
         stripeSubscriptionId: subscriptionId ? String(subscriptionId) : undefined,
         profile: {
           upsert: {
             create: {
-              selectedPlan: billingInterval === "annual" ? "Annual" : "Monthly",
+              selectedPlan: verifiedInterval === "annual" ? "Annual" : "Monthly",
               city: city ? String(city).trim() : undefined,
               country: country ? String(country).trim() : undefined,
               firstName,
@@ -126,7 +172,7 @@ export async function POST(request: Request) {
               fullName,
             },
             update: {
-              selectedPlan: billingInterval === "annual" ? "Annual" : "Monthly",
+              selectedPlan: verifiedInterval === "annual" ? "Annual" : "Monthly",
               ...(city ? { city: String(city).trim() } : {}),
               ...(country ? { country: String(country).trim() } : {}),
               ...(!hasProfileName && firstName ? { firstName } : {}),
@@ -139,8 +185,13 @@ export async function POST(request: Request) {
       include: { profile: true },
     });
 
-    if (stripe && customerId && needsEmailUpdate && !String(customerId).startsWith("cus_mock_")) {
-      await stripe.customers.update(String(customerId), { email: resolvedEmail }).catch((stripeCustErr: any) => {
+    if (
+      stripe &&
+      verifiedCustomerId &&
+      !String(verifiedCustomerId).startsWith("cus_mock_") &&
+      (needsEmailUpdate || receiptEmail !== existingUser.email)
+    ) {
+      await stripe.customers.update(String(verifiedCustomerId), { email: receiptEmail }).catch((stripeCustErr: any) => {
         console.warn("[confirm] Failed to update Stripe customer email:", stripeCustErr);
       });
     }
@@ -164,6 +215,7 @@ export async function POST(request: Request) {
             tier: "MECENAS",
             subscriptionId,
             email: resolvedEmail,
+            receiptEmail,
             emailUpdated: needsEmailUpdate,
             timestamp: now.toISOString(),
           }),
@@ -181,7 +233,7 @@ export async function POST(request: Request) {
         const upgradeName = updatedUser.profile?.firstName || updatedUser.profile?.fullName || undefined;
         await sendMecenasUpgradeEmail(resolvedEmail, {
           name: upgradeName,
-          interval: billingInterval === "annual" ? "year" : "month",
+          interval: verifiedInterval === "annual" ? "year" : "month",
         });
       } catch (emailErr) {
         console.error("Failed to send mecenas upgrade email:", emailErr);

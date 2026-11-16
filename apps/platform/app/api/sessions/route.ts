@@ -13,7 +13,10 @@ import {
   sendSessionChatMessage,
 } from "@/lib/sessions/sessionNotifications";
 import { sendIntroSessionEmail } from "@/lib/mails/sender";
-import { isWherebyConfigured } from "@/lib/sessions/whereby";
+import {
+  getSessionTimeState,
+  isWherebyConfigured,
+} from "@/lib/sessions/whereby";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,6 +32,15 @@ function formatUserDisplayName(user: any) {
 }
 
 function serializeSession(row: any, viewerUserId?: string) {
+  const viewerRole =
+    viewerUserId && row.specialistId === viewerUserId ? "specialist" : "requester";
+  const feedbacks = Array.isArray(row.feedbacks) ? row.feedbacks : [];
+  const ownFeedback = viewerUserId
+    ? feedbacks.find((f: any) => f.role === viewerRole)
+    : null;
+  const specialistFeedback = feedbacks.find((f: any) => f.role === "specialist");
+  const { hasStarted, hasEnded, isRoomClosed } = getSessionTimeState(row);
+
   return {
     id: row.id,
     requesterId: row.requesterId,
@@ -39,11 +51,25 @@ function serializeSession(row: any, viewerUserId?: string) {
     timezone: row.timezone,
     status: row.status,
     requesterNote: row.requesterNote || "",
-    meetingLink: row.meetingLink || "",
+    meetingLink: isRoomClosed ? "" : row.meetingLink || "",
     hostMeetingLink:
-      viewerUserId && row.specialistId === viewerUserId
+      !isRoomClosed && viewerUserId && row.specialistId === viewerUserId
         ? row.hostMeetingLink || ""
         : "",
+    isEmbeddedRoom: Boolean(row.wherebyMeetingId),
+    hasStarted,
+    hasEnded,
+    isRoomClosed,
+    hasSubmittedFeedback: Boolean(ownFeedback),
+    ownFeedback: ownFeedback
+      ? {
+          attended: ownFeedback.attended,
+          resonance: ownFeedback.resonance,
+          publicNote: ownFeedback.publicNote || "",
+          privateNote: ownFeedback.privateNote || "",
+        }
+      : null,
+    specialistGuidance: specialistFeedback?.publicNote || "",
     specialistNote: row.specialistNote || "",
     createdAt: row.createdAt?.toISOString?.() ?? "",
     updatedAt: row.updatedAt?.toISOString?.() ?? "",
@@ -103,6 +129,15 @@ const sessionUserInclude = {
           title: true,
         },
       },
+    },
+  },
+  feedbacks: {
+    select: {
+      role: true,
+      attended: true,
+      resonance: true,
+      publicNote: true,
+      privateNote: true,
     },
   },
 };

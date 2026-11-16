@@ -12,6 +12,15 @@ export interface RegistrationErrorAlertParams {
   timestamp: string;
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function renderRegistrationErrorAlertEmailHtml(params: RegistrationErrorAlertParams): string {
   const {
     userEmail = "No proporcionado / Anónimo",
@@ -24,6 +33,16 @@ export function renderRegistrationErrorAlertEmailHtml(params: RegistrationErrorA
     userAgent = "Desconocido",
     timestamp,
   } = params;
+
+  const safeUserEmail = escapeHtml(String(userEmail));
+  const safeUserName = userName ? escapeHtml(String(userName)) : "";
+  const safeStep = escapeHtml(String(step));
+  const safeAction = escapeHtml(String(action));
+  const safeStatusCode = escapeHtml(String(statusCode));
+  const safeErrorMessage = escapeHtml(String(errorMessage));
+  const safeErrorDetails = errorDetails ? escapeHtml(String(errorDetails)) : "";
+  const safeUserAgent = escapeHtml(String(userAgent));
+  const safeTimestamp = escapeHtml(String(timestamp));
 
   const contentHtml = `
     <!-- ALERTA DE AUDITORÍA HEADER -->
@@ -48,16 +67,16 @@ export function renderRegistrationErrorAlertEmailHtml(params: RegistrationErrorA
           Usuario Afectado
         </td>
         <td style="padding: 10px 14px; background-color: #ffffff; border-radius: 8px 8px 0 0; border: 1px solid #e2e8f0; font-size: 14px; font-weight: 600; color: #0f172a;">
-          ${userEmail}
+          ${safeUserEmail}
         </td>
       </tr>
-      ${userName ? `
+      ${safeUserName ? `
       <tr>
         <td style="padding: 10px 14px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-top: none; font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase;">
           Nombre / Apellido
         </td>
         <td style="padding: 10px 14px; background-color: #ffffff; border: 1px solid #e2e8f0; border-top: none; font-size: 13.5px; color: #334155;">
-          ${userName}
+          ${safeUserName}
         </td>
       </tr>
       ` : ""}
@@ -66,7 +85,7 @@ export function renderRegistrationErrorAlertEmailHtml(params: RegistrationErrorA
           Paso Afectado
         </td>
         <td style="padding: 10px 14px; background-color: #ffffff; border: 1px solid #e2e8f0; border-top: none; font-size: 13.5px; font-weight: 600; color: #2563eb;">
-          ${step}
+          ${safeStep}
         </td>
       </tr>
       <tr>
@@ -74,7 +93,7 @@ export function renderRegistrationErrorAlertEmailHtml(params: RegistrationErrorA
           Acción / Endpoint
         </td>
         <td style="padding: 10px 14px; background-color: #ffffff; border-radius: 0 0 8px 0; border: 1px solid #e2e8f0; border-top: none; font-size: 13px; font-family: monospace; color: #0f172a;">
-          ${action} (HTTP ${statusCode})
+          ${safeAction} (HTTP ${safeStatusCode})
         </td>
       </tr>
     </table>
@@ -85,17 +104,17 @@ export function renderRegistrationErrorAlertEmailHtml(params: RegistrationErrorA
         MENSAJE DE ERROR TÉCNICO:
       </div>
       <div style="background-color: #0f172a; color: #f8fafc; font-family: monospace; font-size: 12.5px; padding: 14px; border-radius: 8px; line-height: 1.5; white-space: pre-wrap; word-break: break-all;">
-        ${errorMessage}
+        ${safeErrorMessage}
       </div>
     </div>
 
-    ${errorDetails ? `
+    ${safeErrorDetails ? `
     <div style="text-align: left; margin-bottom: 20px;">
       <div style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 6px; color: #475569;">
         STACK TRACE / DETALLES ADICIONALES:
       </div>
       <div style="background-color: #f1f5f9; color: #334155; font-family: monospace; font-size: 11.5px; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; white-space: pre-wrap; word-break: break-all;">
-        ${errorDetails}
+        ${safeErrorDetails}
       </div>
     </div>
     ` : ""}
@@ -106,8 +125,8 @@ export function renderRegistrationErrorAlertEmailHtml(params: RegistrationErrorA
         DISPOSITIVO / TELEMETRÍA:
       </div>
       <div style="font-size: 12px; color: #334155; font-family: monospace;">
-        <strong>User-Agent:</strong> ${userAgent}<br />
-        <strong>Timestamp:</strong> ${timestamp}
+        <strong>User-Agent:</strong> ${safeUserAgent}<br />
+        <strong>Timestamp:</strong> ${safeTimestamp}
       </div>
     </div>
 
@@ -120,7 +139,7 @@ export function renderRegistrationErrorAlertEmailHtml(params: RegistrationErrorA
   `;
 
   return renderEmailLayout({
-    title: `⚠️ Alerta de Auditoría: Fallo de registro (${userEmail})`,
+    title: `⚠️ Alerta de Auditoría: Fallo de registro (${safeUserEmail})`,
     contentHtml,
     alignCenter: false,
   });
