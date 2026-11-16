@@ -185,18 +185,26 @@ function PaymentForm({
           }
         );
 
+        let resolvedSetupIntent = setupIntent;
         if (setupError) {
-          throw new Error(setupError.message || "Tu tarjeta fue rechazada. Verifica los datos o intenta con otro método.");
+          if (
+            setupError.code === "setup_intent_unexpected_state" &&
+            setupError.setup_intent?.status === "succeeded"
+          ) {
+            resolvedSetupIntent = setupError.setup_intent;
+          } else {
+            throw new Error(setupError.message || "Tu tarjeta fue rechazada. Verifica los datos o intenta con otro método.");
+          }
         }
 
-        if (setupIntent && setupIntent.status !== "succeeded") {
+        if (resolvedSetupIntent && resolvedSetupIntent.status !== "succeeded") {
           throw new Error("No se pudo verificar tu tarjeta. Por favor intenta con otro método.");
         }
 
         paymentMethodId =
-          typeof setupIntent?.payment_method === "string"
-            ? setupIntent.payment_method
-            : setupIntent?.payment_method?.id;
+          typeof resolvedSetupIntent?.payment_method === "string"
+            ? resolvedSetupIntent.payment_method
+            : resolvedSetupIntent?.payment_method?.id;
 
         if (!paymentMethodId) {
           throw new Error("No se pudo obtener el método de pago confirmado.");
