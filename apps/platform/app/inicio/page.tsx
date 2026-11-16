@@ -16,7 +16,7 @@ import { FeedAnnouncementCard } from "@/components/community/FeedAnnouncementCar
 import { RecordingItem } from "@/components/events/RecordingCard";
 import { Button } from "@/components/ui/Button";
 import { CardHeader } from "@/components/ui/CardHeader";
-import { User, GraphStar, UserRoundGroup, HeartHandshake, HouseHeart, MessageSquare } from "lucide-react";
+import { User, GraphStar, UserRoundGroup, HeartHandshake, HouseHeart } from "lucide-react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Toast } from "@/components/ui/Toast";
@@ -526,12 +526,12 @@ function PlatformContent() {
   return (
     <div className="flex-1 w-full flex flex-col h-full overflow-visible">
       {/* Main 3-Column Layout Container (shadow-none) */}
-      <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row gap-6 lg:gap-7 h-full overflow-visible pt-4 pb-12 md:py-6">
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row gap-6 lg:gap-7 h-full overflow-visible pt-4 pb-12 lg:py-6">
 
         {/* ========================================================================= */}
         {/* COLUMN 1 (LEFT): Current User Profile & Mi Red Card (Preserved)           */}
         {/* ========================================================================= */}
-        <div className="hidden md:flex w-[240px] lg:w-[270px] flex-col gap-4 shrink-0 h-fit">
+        <div className="hidden lg:flex w-[270px] flex-col gap-4 shrink-0 h-fit">
           {/* Card 1: Main Profile Card */}
           <div className="card-surface !p-0 overflow-hidden flex flex-col relative">
             {/* 1. Cover photo */}
@@ -682,7 +682,7 @@ function PlatformContent() {
         {/* ========================================================================= */}
         {/* COLUMN 2 (CENTER): Community Announcements & Posts Feed                   */}
         {/* ========================================================================= */}
-        <main className="flex-1 min-w-0 max-w-2xl flex flex-col gap-4">
+        <main className="flex-1 min-w-0 w-full max-w-2xl mx-auto lg:mx-0 flex flex-col gap-4">
           {/* Section Heading: Exact canonical in-app page title token */}
           <div className="shrink-0 pt-0.5">
             <h1 className="font-jakarta font-bold text-slate-900 tracking-tight text-xl sm:text-2xl m-0 leading-tight">
@@ -699,8 +699,8 @@ function PlatformContent() {
               />
             </div>
 
-            {/* Mobile quick actions: Mi red and Miembros */}
-            <div className="flex md:hidden items-center gap-2 shrink-0">
+            {/* Mobile & tablet quick actions: Mi red and Miembros */}
+            <div className="flex lg:hidden items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={() => router.push("/red")}
@@ -731,7 +731,7 @@ function PlatformContent() {
               </div>
             ) : publicPosts.length === 0 ? (
               <div className="flex flex-col gap-4">
-                <div className="md:hidden">
+                <div className="lg:hidden">
                   <MobileMembersCarousel members={users} loading={loading} />
                 </div>
                 <UpcomingEventsCarousel events={events} loading={eventsLoading} />
@@ -745,43 +745,48 @@ function PlatformContent() {
             ) : (
               (() => {
                 const feedSlots: Record<number, React.ReactNode> = {
-                  0: (
-                    <div className="md:hidden">
-                      <MobileMembersCarousel members={users} loading={loading} />
-                    </div>
+                  0: <UpcomingEventsCarousel events={events} loading={eventsLoading} />,
+                  1: (
+                    <>
+                      <LatestSpecialistsCarousel specialists={specialists} loading={specialistsLoading} />
+                      <FeedAnnouncementCard
+                        title="Sé especialista en LUMINUS"
+                        description="Comparte tu práctica, acompaña a personas de toda LATAM y forma parte de nuestra red de bienestar."
+                        ctaLabel="Postularme como especialista"
+                        ctaHref="/especialistas/unirme"
+                        icon={HeartHandshake}
+                        image="/Photos/Tres personas de pie sonriendo.png"
+                        variant="specialist"
+                      />
+                    </>
                   ),
-                  1: <UpcomingEventsCarousel events={events} loading={eventsLoading} />,
-                  2: <LatestSpecialistsCarousel specialists={specialists} loading={specialistsLoading} />,
-                  3: <RecentRecordingsCarousel recordings={recordings} loading={recordingsLoading} />,
-                  4: (
-                    <FeedAnnouncementCard
-                      eyebrow="Especialistas LUMINUS"
-                      title="Sé especialista en LUMINUS"
-                      description="Comparte tu práctica, acompaña a personas de toda LATAM y forma parte de nuestra red de bienestar."
-                      ctaLabel="Postularme"
-                      ctaHref="/especialistas/unirme"
-                      icon={HeartHandshake}
-                    />
+                  2: (
+                    <>
+                      <RecentRecordingsCarousel recordings={recordings} loading={recordingsLoading} />
+                      <div className="lg:hidden">
+                        <MobileMembersCarousel members={users} loading={loading} />
+                      </div>
+                    </>
                   ),
-                  5: (
-                    <FeedAnnouncementCard
-                      eyebrow="Espacios LUMINUS"
-                      title="Suma tu espacio a LUMINUS"
-                      description="¿Tienes o conoces un centro, consultorio o espacio de bienestar? Cuéntanos para sumarlo a la plataforma."
-                      ctaLabel="Sumar espacio"
-                      ctaHref="/contacto?motivo=espacios"
-                      icon={HouseHeart}
-                    />
-                  ),
-                  6: (
-                    <FeedAnnouncementCard
-                      eyebrow="Tu opinión nos importa"
-                      title="¿Quieres sugerir algo?"
-                      description="Ponte en contacto con nosotros para compartir ideas, mejoras o propuestas para la comunidad."
-                      ctaLabel="Escríbenos"
-                      ctaHref="/contacto?motivo=comentarios"
-                      icon={MessageSquare}
-                    />
+                  3: (
+                    <>
+                      <FeedAnnouncementCard
+                        title="Suma tu espacio a LUMINUS"
+                        description="¿Tienes un centro, consultorio o espacio? Cuéntanos de qué se trata para sumarlo a la red."
+                        ctaLabel="Sumar espacio"
+                        ctaHref="/contacto?motivo=espacios"
+                        icon={HouseHeart}
+                        image="/Photos/espacio.png"
+                        variant="space"
+                      />
+                      <FeedAnnouncementCard
+                        title="¿Quieres sugerir algo?"
+                        description="Ponte en contacto con nosotros para compartir ideas, mejoras o propuestas para la comunidad."
+                        ctaLabel="Escríbenos"
+                        ctaHref="/contacto?motivo=comentarios"
+                        variant="dark"
+                      />
+                    </>
                   ),
                 };
 

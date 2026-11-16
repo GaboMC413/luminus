@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import Link from "next/link";
 import { RecordingCard, RecordingItem } from "@/components/events/RecordingCard";
 import { CarouselNavControls } from "./molecules/CarouselNavControls";
 
@@ -74,17 +73,9 @@ export function RecentRecordingsCarousel({
   return (
     <section className="w-full flex flex-col gap-3 py-1 relative">
       <div className="flex items-center justify-between px-0.5">
-        <div className="flex items-center gap-3">
-          <h3 className="text-sm font-semibold text-slate-900 font-jakarta">
-            Grabaciones recientes
-          </h3>
-          <Link
-            href="/grabaciones"
-            className="text-xs font-medium text-slate-500 hover:text-slate-900 transition-colors"
-          >
-            Ver todas
-          </Link>
-        </div>
+        <h3 className="text-sm font-semibold text-slate-900 font-jakarta">
+          Grabaciones recientes
+        </h3>
 
         <CarouselNavControls
           onPrev={() => scroll("left")}
