@@ -15,6 +15,7 @@ import {
   User,
   Settings,
   Shield,
+  Mail,
   LogOut,
   ChevronDown
 } from "lucide-react";
@@ -23,6 +24,12 @@ import { MessagesPopup } from "./MessagesPopup";
 import { ChatPopup } from "./ChatPopup";
 import { SuccessModal } from "./SuccessModal";
 import { UserAvatar } from "./UserAvatar";
+import {
+  getCachedData,
+  setCachedData,
+  fetchWithCache,
+  clearAllClientCache,
+} from "@/lib/clientCache";
 
 export function formatRelativeTime(timestamp: any): string {
   if (!timestamp) return "Ahora";
@@ -90,8 +97,12 @@ export function PlatformNavbar() {
   const [userRole, setUserRole] = useState<"USER" | "ADMIN">("USER");
   const [userEmail, setUserEmail] = useState("");
 
-  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
-  const [messages, setMessages] = useState(INITIAL_MESSAGES);
+  const [notifications, setNotifications] = useState<any[]>(
+    () => getCachedData<any[]>("/api/notifications") ?? INITIAL_NOTIFICATIONS
+  );
+  const [messages, setMessages] = useState<any[]>(
+    () => getCachedData<any[]>("/api/messages/conversations") ?? INITIAL_MESSAGES
+  );
   const [activePopupChat, setActivePopupChat] = useState<{ userId: string; name: string; avatar: string } | null>(null);
 
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
@@ -158,159 +169,177 @@ export function PlatformNavbar() {
     setUserRole(storedRole);
 
     async function loadSessionUser() {
-      const response = await fetch("/api/auth/me", {
-        credentials: "include",
-      });
+      try {
+        const u = await fetchWithCache(
+          "/api/auth/me",
+          async () => {
+            const response = await fetch("/api/auth/me", {
+              credentials: "include",
+            });
+            if (!response.ok) return null;
+            const data = await response.json();
+            return data.user || null;
+          },
+          { ttlMs: 120_000 }
+        );
 
-      if (!response.ok) {
-        return;
-      }
+        if (u) {
+          const cachedUserId = localStorage.getItem("luminus_cached_user_id");
+          const cachedEmail = localStorage.getItem("luminus_user_email");
+          const isUserChanged =
+            (cachedUserId && cachedUserId !== u.id) || (!cachedUserId && cachedEmail && cachedEmail !== u.email);
 
-      const data = await response.json();
-      if (data.user) {
-        const u = data.user;
+          if (isUserChanged) {
+            const keysToRemove = [
+              "luminus_profile_firstName",
+              "luminus_profile_lastName",
+              "luminus_profile_city",
+              "luminus_profile_country",
+              "luminus_profile_gender",
+              "luminus_profile_birthdate",
+              "luminus_profile_phone",
+              "luminus_profile_profession",
+              "luminus_profile_avatar",
+              "luminus_profile_interests",
+              "luminus_profile_otherInterests",
+              "luminus_profile_bio",
+              "luminus_profile_prompts",
+              "luminus_profile_cover",
+              "luminus_user_email",
+              "luminus_user_role",
+              "luminus_profile_plan",
+              "luminus_onboarding_completed",
+              "luminus_chats",
+              "luminus_cached_user_id",
+            ];
+            keysToRemove.forEach((k) => localStorage.removeItem(k));
+            clearAllClientCache();
+            setCachedData("/api/auth/me", u);
 
-        const cachedUserId = localStorage.getItem("luminus_cached_user_id");
-        const cachedEmail = localStorage.getItem("luminus_user_email");
-        const isUserChanged =
-          (cachedUserId && cachedUserId !== u.id) || (!cachedUserId && cachedEmail && cachedEmail !== u.email);
+            setProfileName("");
+            setProfileAvatar("");
+            setUserEmail("");
+            setUserRole("USER");
+          }
 
-        if (isUserChanged) {
-          const keysToRemove = [
-            "luminus_profile_firstName",
-            "luminus_profile_lastName",
-            "luminus_profile_city",
-            "luminus_profile_country",
-            "luminus_profile_gender",
-            "luminus_profile_birthdate",
-            "luminus_profile_phone",
-            "luminus_profile_profession",
-            "luminus_profile_avatar",
-            "luminus_profile_interests",
-            "luminus_profile_otherInterests",
-            "luminus_profile_bio",
-            "luminus_profile_prompts",
-            "luminus_profile_cover",
-            "luminus_user_email",
-            "luminus_user_role",
-            "luminus_profile_plan",
-            "luminus_onboarding_completed",
-            "luminus_chats",
-            "luminus_cached_user_id",
-          ];
-          keysToRemove.forEach((k) => localStorage.removeItem(k));
+          localStorage.setItem("luminus_cached_user_id", u.id);
 
-          setProfileName("");
-          setProfileAvatar("");
-          setUserEmail("");
-          setUserRole("USER");
+          const firstName = u.firstName || "";
+          const lastName = u.lastName || "";
+          const syncedFullName = `${firstName} ${lastName}`.trim();
+
+          localStorage.setItem("luminus_profile_firstName", firstName);
+          localStorage.setItem("luminus_profile_lastName", lastName);
+
+          const avatar = u.avatarUrl || "";
+          localStorage.setItem("luminus_profile_avatar", avatar);
+
+          const role = u.role || "USER";
+          localStorage.setItem("luminus_user_role", role);
+
+          if (u.email) {
+            localStorage.setItem("luminus_user_email", u.email);
+            setUserEmail(u.email);
+          }
+
+          setUserRole(role);
+          setProfileAvatar(avatar);
+
+          if (syncedFullName) {
+            setProfileName(syncedFullName);
+          } else if (u.email) {
+            setProfileName(u.email.split("@")[0]);
+          }
         }
-
-        localStorage.setItem("luminus_cached_user_id", u.id);
-
-        const firstName = u.firstName || "";
-        const lastName = u.lastName || "";
-        const syncedFullName = `${firstName} ${lastName}`.trim();
-
-        localStorage.setItem("luminus_profile_firstName", firstName);
-        localStorage.setItem("luminus_profile_lastName", lastName);
-
-        const avatar = u.avatarUrl || "";
-        localStorage.setItem("luminus_profile_avatar", avatar);
-
-        const role = u.role || "USER";
-        localStorage.setItem("luminus_user_role", role);
-
-        if (u.email) {
-          localStorage.setItem("luminus_user_email", u.email);
-          setUserEmail(u.email);
-        }
-
-        setUserRole(role);
-        setProfileAvatar(avatar);
-
-        if (syncedFullName) {
-          setProfileName(syncedFullName);
-        } else if (u.email) {
-          setProfileName(u.email.split("@")[0]);
-        }
+      } catch (err) {
+        console.error("Error loading session user in navbar:", err);
       }
     }
 
     loadSessionUser();
   }, []);
 
-  async function loadNotifications() {
-    const response = await fetch("/api/notifications", {
-      credentials: "include",
-      cache: "no-store",
-    });
-
-    if (!response.ok) {
-      return;
+  const loadNotifications = useCallback(async (force = false) => {
+    try {
+      const formatted = await fetchWithCache(
+        "/api/notifications",
+        async () => {
+          const response = await fetch("/api/notifications", {
+            credentials: "include",
+          });
+          if (!response.ok) {
+            return getCachedData<any[]>("/api/notifications") ?? [];
+          }
+          const data = await response.json();
+          return (data.notifications || []).map((notification: any) => ({
+            ...notification,
+            date: formatNotificationDate(notification.date),
+          }));
+        },
+        { ttlMs: 45_000, force }
+      );
+      setNotifications(formatted);
+    } catch (err) {
+      console.error("Error fetching notifications in navbar:", err);
     }
-
-    const data = await response.json();
-    setNotifications(
-      (data.notifications || []).map((notification: any) => ({
-        ...notification,
-        date: formatNotificationDate(notification.date),
-      }))
-    );
-  }
+  }, []);
 
   // Fetch conversations from database on demand
-  const loadChats = useCallback(async () => {
-    let dbMessages: any[] = [];
+  const loadChats = useCallback(async (force = false) => {
     try {
-      const response = await fetch("/api/messages/conversations", {
-        cache: "no-store",
-      });
-      if (response.ok) {
-        const data = await response.json();
-        dbMessages = (data.conversations || []).map((conv: any) => {
-          const lastMsg = conv.last_message;
-          const timestamp = lastMsg ? new Date(lastMsg.created_at).getTime() : new Date(conv.updated_at).getTime();
-          return {
-            id: conv.id,
-            avatar: conv.participant.avatar_url,
-            title: conv.is_unread ? "Mensaje nuevo" : "Mensaje",
-            user: conv.participant.name,
-            action: lastMsg?.body || "Sin mensajes aún",
-            date: formatRelativeTime(timestamp),
-            isUnread: conv.is_unread,
-            isMuted: conv.is_muted,
-            isDb: true,
-            participantId: conv.participant.id,
-          };
-        });
-      }
+      const dbMessages = await fetchWithCache(
+        "/api/messages/conversations",
+        async () => {
+          const response = await fetch("/api/messages/conversations");
+          if (!response.ok) {
+            return getCachedData<any[]>("/api/messages/conversations") ?? [];
+          }
+          const data = await response.json();
+          return (data.conversations || []).map((conv: any) => {
+            const lastMsg = conv.last_message;
+            const timestamp = lastMsg ? new Date(lastMsg.created_at).getTime() : new Date(conv.updated_at).getTime();
+            return {
+              id: conv.id,
+              avatar: conv.participant.avatar_url,
+              title: conv.is_unread ? "Mensaje nuevo" : "Mensaje",
+              user: conv.participant.name,
+              action: lastMsg?.body || "Sin mensajes aún",
+              date: formatRelativeTime(timestamp),
+              isUnread: conv.is_unread,
+              isMuted: conv.is_muted,
+              isDb: true,
+              participantId: conv.participant.id,
+            };
+          });
+        },
+        { ttlMs: 45_000, force }
+      );
+      setMessages(dbMessages);
     } catch (err) {
       console.error("Error fetching database conversations in navbar:", err);
     }
-
-    setMessages(dbMessages);
   }, []);
 
   // Sync real chats on mount and on explicit events (pure event-driven, 0 idle polling)
   useEffect(() => {
-    loadChats();
-    window.addEventListener("luminus_messages_update", loadChats);
+    loadChats(false);
+    const handleMessagesUpdate = () => loadChats(true);
+    window.addEventListener("luminus_messages_update", handleMessagesUpdate);
     return () => {
-      window.removeEventListener("luminus_messages_update", loadChats);
+      window.removeEventListener("luminus_messages_update", handleMessagesUpdate);
     };
   }, [loadChats]);
 
   useEffect(() => {
-    loadNotifications();
+    loadNotifications(false);
     const handleUpdate = () => {
-      loadNotifications();
+      loadNotifications(true);
     };
     window.addEventListener("luminus_notifications_update", handleUpdate);
     return () => {
       window.removeEventListener("luminus_notifications_update", handleUpdate);
     };
-  }, []);
+  }, [loadNotifications]);
 
   // 1. Listen for custom quest completed event to display the success modal
   useEffect(() => {
@@ -318,14 +347,14 @@ export function PlatformNavbar() {
       const customEvent = event as CustomEvent;
       if (customEvent.detail) {
         setQuestQueue((prev) => [...prev, customEvent.detail]);
-        loadNotifications();
+        loadNotifications(true);
       }
     };
     window.addEventListener("luminus_quest_completed", handleQuestCompleted);
     return () => {
       window.removeEventListener("luminus_quest_completed", handleQuestCompleted);
     };
-  }, []);
+  }, [loadNotifications]);
 
   useEffect(() => {
     if (!showSuccessModal && questQueue.length > 0) {
@@ -426,7 +455,11 @@ export function PlatformNavbar() {
   }, []);
 
   const markNotificationRead = async (id: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isUnread: false } : n)));
+    setNotifications((prev) => {
+      const next = prev.map((n) => (n.id === id ? { ...n, isUnread: false } : n));
+      setCachedData("/api/notifications", next);
+      return next;
+    });
     await fetch("/api/notifications", {
       method: "PATCH",
       headers: {
@@ -438,7 +471,11 @@ export function PlatformNavbar() {
   };
 
   const markAllNotificationsRead = async () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isUnread: false })));
+    setNotifications((prev) => {
+      const next = prev.map((n) => ({ ...n, isUnread: false }));
+      setCachedData("/api/notifications", next);
+      return next;
+    });
     await fetch("/api/notifications", {
       method: "PATCH",
       headers: {
@@ -450,7 +487,11 @@ export function PlatformNavbar() {
   };
 
   const deleteNotification = async (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    setNotifications((prev) => {
+      const next = prev.filter((n) => n.id !== id);
+      setCachedData("/api/notifications", next);
+      return next;
+    });
     await fetch(`/api/notifications?id=${id}`, {
       method: "DELETE",
       credentials: "include",
@@ -458,9 +499,11 @@ export function PlatformNavbar() {
   };
 
   const markMessageRead = (id: string | number) => {
-    setMessages((prev) =>
-      prev.map((m) => (String(m.id) === String(id) ? { ...m, isUnread: false } : m))
-    );
+    setMessages((prev) => {
+      const next = prev.map((m) => (String(m.id) === String(id) ? { ...m, isUnread: false } : m));
+      setCachedData("/api/messages/conversations", next);
+      return next;
+    });
     const msgObj = messages.find((m) => String(m.id) === String(id));
     if (msgObj) {
       const participantId = msgObj.participantId ? String(msgObj.participantId) : String(msgObj.id);
@@ -488,6 +531,8 @@ export function PlatformNavbar() {
       credentials: "include",
     });
     const data = await res.json().catch(() => ({}));
+
+    clearAllClientCache();
 
     // Clear local storage profile details to prevent data bleed when switching users
     const keysToRemove = [
@@ -524,8 +569,8 @@ export function PlatformNavbar() {
   return (
     <>
       {/* Desktop Header */}
-      <header className="fixed top-0 left-0 w-full bg-white border-b border-slate-200/90 z-[100] h-[64px] px-6 lg:px-8 flex items-center justify-between">
-        <div className="flex items-stretch gap-8 h-full">
+      <header className="fixed top-0 left-0 w-full bg-white border-b border-slate-200/90 z-[100] h-[64px] px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="flex items-stretch gap-4 lg:gap-8 h-full">
           <Link href="/inicio" className="inline-flex items-center">
             <img src="/logo-luminus-black.svg" alt="Luminus" className="hidden sm:block h-[20px] cursor-pointer" />
             <img src="/iso-logo-black.svg" alt="Luminus" className="sm:hidden h-[24px] cursor-pointer" />
@@ -570,6 +615,8 @@ export function PlatformNavbar() {
                 const nextOpen = !isMessagesOpen;
                 setIsMessagesOpen(nextOpen);
                 if (nextOpen) {
+                  setIsNotificationOpen(false);
+                  setIsProfileDropdownOpen(false);
                   loadChats();
                 }
               }}
@@ -605,6 +652,8 @@ export function PlatformNavbar() {
                 const nextOpen = !isNotificationOpen;
                 setIsNotificationOpen(nextOpen);
                 if (nextOpen) {
+                  setIsMessagesOpen(false);
+                  setIsProfileDropdownOpen(false);
                   loadNotifications();
                 }
               }}
@@ -645,7 +694,14 @@ export function PlatformNavbar() {
           <div className="relative flex items-center h-full" ref={dropdownRef}>
             <button
               type="button"
-              onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+              onClick={() => {
+                const nextOpen = !isProfileDropdownOpen;
+                setIsProfileDropdownOpen(nextOpen);
+                if (nextOpen) {
+                  setIsMessagesOpen(false);
+                  setIsNotificationOpen(false);
+                }
+              }}
               aria-label="Menú de perfil"
               aria-expanded={isProfileDropdownOpen}
               className={`group flex items-center gap-1.5 lg:gap-2 p-1.5 pr-2 lg:pr-2.5 rounded-xl transition-colors duration-150 cursor-pointer ${
@@ -706,6 +762,14 @@ export function PlatformNavbar() {
                     <Settings className="w-4 h-4 text-slate-400 group-hover:text-slate-900 transition-colors shrink-0" strokeWidth={2} />
                     <span>Ajustes de cuenta</span>
                   </Link>
+                  <Link
+                    href="/contacto"
+                    onClick={() => setIsProfileDropdownOpen(false)}
+                    className="group w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-medium font-jakarta text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                  >
+                    <Mail className="w-4 h-4 text-slate-400 group-hover:text-slate-900 transition-colors shrink-0" strokeWidth={2} />
+                    <span>Contáctanos</span>
+                  </Link>
                   {userRole === "ADMIN" && (
                     <Link
                       href="/admin"
@@ -737,10 +801,10 @@ export function PlatformNavbar() {
         </div>
       </header>
 
-      {/* Mobile Nav - Fixed Bottom */}
+      {/* Mobile & Tablet Nav - Fixed Bottom */}
       {showMobileNavbar && (
         <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t border-slate-200/90 z-[100]">
-          <div className="max-w-md mx-auto h-[60px] px-4 flex justify-between items-center pb-[env(safe-area-inset-bottom)]">
+          <div className="max-w-md sm:max-w-lg md:max-w-xl mx-auto min-h-[60px] h-[calc(60px+env(safe-area-inset-bottom,0px))] px-4 flex justify-between items-center pb-[env(safe-area-inset-bottom,0px)]">
             {NAV_ITEMS.map((tab) => {
               const isActive = activeTab === tab.id;
               const Icon = tab.icon;
@@ -748,7 +812,7 @@ export function PlatformNavbar() {
                 <Link
                   key={tab.id}
                   href={tab.path}
-                  className={`flex flex-col items-center justify-center gap-1 flex-1 py-1 transition-colors duration-150 select-none ${
+                  className={`flex flex-col items-center justify-center gap-1 flex-1 h-full min-h-[44px] py-1.5 transition-colors duration-150 select-none ${
                     isActive ? "text-slate-900 font-bold" : "text-slate-400 hover:text-slate-600 font-medium"
                   }`}
                 >

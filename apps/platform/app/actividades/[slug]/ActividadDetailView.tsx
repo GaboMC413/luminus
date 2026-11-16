@@ -3,10 +3,12 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Clock, MapPin, Share2, Check, Loader2, TvMinimalPlay } from "lucide-react";
+import { Clock, MapPin, Share2, Check, Loader2, TvMinimalPlay, CalendarPlus, Download, ExternalLink } from "lucide-react";
 import { Button, BackButton } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Toast, ToastProps } from "@/components/ui/Toast";
+import { resolveEventUtcDate } from "@/lib/eventDateUtils";
+import { buildGoogleCalendarUrl, buildIcsContent, downloadIcsFile } from "@/lib/calendar/ics";
 
 export interface DetailEventItem {
   id: string;
@@ -141,6 +143,7 @@ export function ActividadDetailView({ event }: { event: DetailEventItem }) {
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isCalendarMenuOpen, setIsCalendarMenuOpen] = useState(false);
 
   const [toastConfig, setToastConfig] = useState<Omit<ToastProps, "onClose">>({
     isOpen: false,
@@ -151,9 +154,11 @@ export function ActividadDetailView({ event }: { event: DetailEventItem }) {
 
   const coverUrl = event.coverUrl || "/luminus_events.jpg";
   const formattedDateTime = formatFullDateTime(event.date, event.timeText);
+  const startUtc = resolveEventUtcDate(event.date, event.timeText);
 
   const isPast = (() => {
     if (event.isUpcoming === false) return true;
+    if (startUtc && startUtc.getTime() < Date.now()) return true;
     if (!event.date) return false;
     const d = parseCalendarDate(event.date);
     if (!d) return false;
@@ -163,6 +168,23 @@ export function ActividadDetailView({ event }: { event: DetailEventItem }) {
   })();
 
   const youtubeUrl = event.link || (event.youtubeId ? `https://www.youtube.com/watch?v=${event.youtubeId}` : null);
+  const calendarInput = startUtc
+    ? {
+        uid: `event-${event.slug || event.id}@luminuslatam.com`,
+        title: event.title,
+        description: event.speakerName
+          ? `Con ${event.speakerName} - LUMINUS LATAM`
+          : event.description?.slice(0, 240) || "Evento de Bienestar LUMINUS",
+        location: event.location || "Evento online",
+        url:
+          youtubeUrl ||
+          (typeof window !== "undefined"
+            ? window.location.href
+            : `https://app.luminuslatam.com/actividades/${event.slug || ""}`),
+        startUtc,
+        endUtc: new Date(startUtc.getTime() + 60 * 60 * 1000),
+      }
+    : null;
 
   const handleInscribe = async () => {
     if (isRegistered || isEnrolling || isPast) return;
@@ -319,7 +341,7 @@ export function ActividadDetailView({ event }: { event: DetailEventItem }) {
 
     if (isRegistered) {
       return (
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Button
             type="button"
             variant="secondary"
@@ -331,6 +353,55 @@ export function ActividadDetailView({ event }: { event: DetailEventItem }) {
             <Check className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
             <span>Inscripto</span>
           </Button>
+          {calendarInput && (
+            <div className="relative">
+              <Button
+                type="button"
+                variant="secondary"
+                size="lg"
+                onClick={() => setIsCalendarMenuOpen((prev) => !prev)}
+                className="flex items-center gap-2"
+                aria-expanded={isCalendarMenuOpen}
+                aria-haspopup="menu"
+              >
+                <CalendarPlus className="w-4 h-4" />
+                <span>Agregar al calendario</span>
+              </Button>
+              {isCalendarMenuOpen && (
+                <div
+                  role="menu"
+                  className="absolute left-0 top-full mt-2 z-30 w-56 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg"
+                >
+                  <a
+                    href={buildGoogleCalendarUrl(calendarInput)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    role="menuitem"
+                    onClick={() => setIsCalendarMenuOpen(false)}
+                    className="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+                  >
+                    <span>Google Calendar</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                  </a>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      downloadIcsFile(
+                        `${event.slug || "evento-luminus"}.ics`,
+                        buildIcsContent(calendarInput)
+                      );
+                      setIsCalendarMenuOpen(false);
+                    }}
+                    className="w-full flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors text-left"
+                  >
+                    <span>Descargar archivo .ics</span>
+                    <Download className="w-3.5 h-3.5 text-slate-400" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
           <Button
             variant="secondary"
             onClick={handleShare}

@@ -87,6 +87,7 @@ export async function POST(request: Request) {
       Bucket: bucket,
       Key: key,
       ContentType: contentType,
+      ContentLength: Math.floor(contentLength),
     });
 
     const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 120 });
@@ -96,7 +97,7 @@ export async function POST(request: Request) {
   } catch (err: any) {
     console.error("[S3 Post Image Upload Route Error]:", err);
     return NextResponse.json(
-      { message: err?.message || "Error al procesar la subida de imagen." },
+      { message: "Error al procesar la subida de imagen." },
       { status: 500 }
     );
   }

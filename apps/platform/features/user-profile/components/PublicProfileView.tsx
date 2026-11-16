@@ -20,6 +20,12 @@ import { ShareProfileModal } from "@/features/user-profile/modals/ShareProfileMo
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
 import { ProfileSkeleton } from "@/components/ui/Skeleton";
+import {
+  getCachedData,
+  setCachedData,
+  fetchWithCache,
+  invalidateClientCache,
+} from "@/lib/clientCache";
 
 interface PublicProfileViewProps {
   identifier: string;
@@ -28,9 +34,17 @@ interface PublicProfileViewProps {
 export function PublicProfileView({ identifier }: PublicProfileViewProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const profileCacheKey = identifier
+    ? `/api/comunidad/profile?slug=${encodeURIComponent(identifier)}`
+    : "";
+  const [profile, setProfile] = useState<any>(
+    () => (profileCacheKey ? getCachedData<any>(profileCacheKey) ?? null : null)
+  );
+  const [loading, setLoading] = useState<boolean>(
+    () => !(profileCacheKey && getCachedData<any>(profileCacheKey))
+  );
   const [connectionLoading, setConnectionLoading] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const connectionDropdownRefDesktop = useRef<HTMLDivElement>(null);
@@ -62,21 +76,39 @@ export function PublicProfileView({ identifier }: PublicProfileViewProps) {
 
     async function fetchProfile() {
       try {
-        setLoading(true);
-        setError(null);
-        const res = await fetch(`/api/comunidad/profile?slug=${encodeURIComponent(identifier)}`);
-        if (!res.ok) {
-          if (res.status === 403) {
-            setError("restricted");
-            setLoading(false);
-            return;
-          }
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.message || `Error del servidor: ${res.status}`);
+        const cached = getCachedData<any>(profileCacheKey);
+        if (cached) {
+          setProfile(cached);
+          setLoading(false);
+        } else {
+          setLoading(true);
         }
-        const data = await res.json();
-        setProfile(data.profile);
+        setError(null);
+
+        const fetchedProfile = await fetchWithCache(
+          profileCacheKey,
+          async () => {
+            const res = await fetch(profileCacheKey);
+            if (!res.ok) {
+              if (res.status === 403) {
+                const restrictedErr: any = new Error("restricted");
+                restrictedErr.code = 403;
+                throw restrictedErr;
+              }
+              const errData = await res.json().catch(() => ({}));
+              throw new Error(errData.message || `Error del servidor: ${res.status}`);
+            }
+            const data = await res.json();
+            return data.profile;
+          },
+          { ttlMs: 60_000 }
+        );
+        setProfile(fetchedProfile);
       } catch (err: any) {
+        if (err?.code === 403 || err?.message === "restricted") {
+          setError("restricted");
+          return;
+        }
         console.error("Error al cargar el perfil público:", err);
         setError(err.message || "Error al conectar con el servidor.");
       } finally {
@@ -85,7 +117,7 @@ export function PublicProfileView({ identifier }: PublicProfileViewProps) {
     }
 
     fetchProfile();
-  }, [identifier]);
+  }, [identifier, profileCacheKey]);
 
   const userId = profile?.id || "";
 
@@ -133,8 +165,8 @@ export function PublicProfileView({ identifier }: PublicProfileViewProps) {
         return;
       }
 
-      // Scenario 1: Already in network -> remove (Optimistic UI)
-      if (profile?.connection_status === "accepted") {
+      // Scenario 1: Already connected OR pending_sent -> remove/cancel (Optimistic UI)
+      if (profile?.connection_status === "accepted" || profile?.connection_status === "pending_sent") {
         setProfile((current: any) => ({
           ...current,
           connection_status: null,
@@ -151,18 +183,43 @@ export function PublicProfileView({ identifier }: PublicProfileViewProps) {
 
         if (!response.ok) {
           if (previousProfile) setProfile(previousProfile);
-          throw new Error(data.message || "No pudimos eliminar de tu red.");
+          throw new Error(data.message || "No pudimos actualizar la conexión.");
         }
         return;
       }
 
-      // Scenario 2: Add to network (instant 1-way) - Optimistic UI
+      // Scenario 2: Incoming pending request -> accept (Optimistic UI)
+      if (profile?.connection_status === "pending_received") {
+        setProfile((current: any) => ({
+          ...current,
+          connection_status: "accepted",
+          connection_direction: "incoming",
+          is_in_network: true,
+          is_mutual: true,
+        }));
+
+        const response = await fetch("/api/connections", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ recipientId: userId }),
+        });
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          if (previousProfile) setProfile(previousProfile);
+          throw new Error(data.message || "No pudimos aceptar la solicitud.");
+        }
+        return;
+      }
+
+      // Scenario 3: Send connection request (Optimistic UI)
       setProfile((current: any) => ({
         ...current,
-        connection_status: "accepted",
+        connection_status: "pending_sent",
         connection_direction: "outgoing",
-        is_in_network: true,
-        is_mutual: Boolean(current?.has_in_network),
+        is_in_network: false,
+        is_mutual: false,
       }));
 
       const response = await fetch("/api/connections", {
@@ -175,13 +232,68 @@ export function PublicProfileView({ identifier }: PublicProfileViewProps) {
 
       if (!response.ok) {
         if (previousProfile) setProfile(previousProfile);
-        throw new Error(data.message || "No pudimos sumar a tu red.");
+        throw new Error(data.message || "No pudimos enviar la solicitud.");
+      }
+
+      if (data?.connection?.status === "accepted") {
+        setProfile((current: any) => ({
+          ...current,
+          connection_status: "accepted",
+          is_in_network: true,
+          is_mutual: true,
+        }));
       }
     } catch (err: any) {
       console.error("Error managing connection:", err);
       setConnectionError(err.message || "No pudimos procesar la acción.");
     } finally {
+      invalidateClientCache(["/api/connections", profileCacheKey]);
       setConnectionLoading(false);
+    }
+  };
+
+  const handleFollowToggle = async () => {
+    const userId = profile?.id || identifier;
+    if (!userId || followLoading) return;
+
+    const wasFollowing = Boolean(profile?.is_following);
+    const previousFollowersCount = Number(profile?.followers_count || 0);
+
+    try {
+      setFollowLoading(true);
+      setProfile((current: any) => ({
+        ...current,
+        is_following: !wasFollowing,
+        followers_count: Math.max(0, previousFollowersCount + (wasFollowing ? -1 : 1)),
+      }));
+
+      const response = wasFollowing
+        ? await fetch(`/api/follows?followingId=${userId}`, {
+            method: "DELETE",
+            credentials: "include",
+          })
+        : await fetch("/api/follows", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ followingId: userId }),
+          });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setProfile((current: any) => ({
+          ...current,
+          is_following: wasFollowing,
+          followers_count: previousFollowersCount,
+        }));
+        throw new Error(data.message || "No pudimos actualizar el seguimiento.");
+      }
+    } catch (err: any) {
+      console.error("Error toggling follow:", err);
+      setConnectionError(err.message || "No pudimos actualizar el seguimiento.");
+    } finally {
+      invalidateClientCache(["/api/follows", profileCacheKey]);
+      setFollowLoading(false);
     }
   };
 
@@ -340,6 +452,8 @@ export function PublicProfileView({ identifier }: PublicProfileViewProps) {
           profile={profile}
           isPublic={true}
           onConnect={handleConnect}
+          onFollow={handleFollowToggle}
+          followLoading={followLoading}
           onRemoveConnection={handleRemoveConnection}
           onBlockConnection={handleBlockConnection}
           connectionLoading={connectionLoading}

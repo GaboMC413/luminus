@@ -21,8 +21,8 @@ export async function POST() {
       return NextResponse.json({ message: "Usuario no encontrado." }, { status: 404 });
     }
 
-    // Handle mock mode
-    if (!stripe || !user.stripeSubscriptionId || user.stripeSubscriptionId.startsWith("sub_mock_")) {
+    // Handle mock mode only when Stripe is not configured
+    if (!stripe) {
       await prisma.user.update({
         where: { id: user.id },
         data: { tier: "MECENAS" },
@@ -33,6 +33,13 @@ export async function POST() {
         message: "¡Tu membresía Mecenas ha sido reactivada exitosamente!",
         isMock: true,
       });
+    }
+
+    if (!user.stripeSubscriptionId || user.stripeSubscriptionId.startsWith("sub_mock_")) {
+      return NextResponse.json(
+        { message: "No tienes una suscripción activa para reactivar." },
+        { status: 400 }
+      );
     }
 
     // Stripe is the single source of truth: Verify customer has a valid payment method

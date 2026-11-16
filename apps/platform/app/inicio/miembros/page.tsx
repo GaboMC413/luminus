@@ -11,6 +11,7 @@ import { DirectoryToolbar, DirectoryTagPopover } from "@/components/ui/Directory
 import { SearchSuggestion } from "@/components/ui/SearchBar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { DirectoryGridSkeleton, UserCardSkeleton } from "@/components/ui/Skeleton";
+import { getCachedData, fetchWithCache } from "@/lib/clientCache";
 
 export default function MiembrosPage() {
   return (
@@ -36,20 +37,43 @@ function MiembrosContent() {
     selectedInterests: [] as string[],
   });
 
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<any[]>(
+    () => getCachedData<any>("/api/comunidad?limit=24")?.users ?? []
+  );
+  const [loading, setLoading] = useState<boolean>(
+    () => !getCachedData<any>("/api/comunidad?limit=24")
+  );
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [filterOptions, setFilterOptions] = useState({
-    countries: [] as string[],
-    cities: [] as string[],
-    interests: [] as string[],
-    names: [] as string[],
+  const [filterOptions, setFilterOptions] = useState<{
+    countries: string[];
+    cities: string[];
+    interests: string[];
+    names: string[];
+  }>(() => {
+    const cached = getCachedData<{
+      countries: string[];
+      cities: string[];
+      interests: string[];
+      names: string[];
+    }>("/api/comunidad/filters?country=");
+    return (
+      cached ?? {
+        countries: [],
+        cities: [],
+        interests: [],
+        names: [],
+      }
+    );
   });
 
   const [fetchingMore, setFetchingMore] = useState(false);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(
+    () => getCachedData<any>("/api/comunidad?limit=24")?.nextCursor ?? null
+  );
+  const [hasMore, setHasMore] = useState<boolean>(
+    () => Boolean(getCachedData<any>("/api/comunidad?limit=24")?.hasMore)
+  );
 
   const countriesWithResults = filterOptions.countries;
   const availableCities = filterOptions.cities;
@@ -95,11 +119,17 @@ function MiembrosContent() {
     async function loadFilters() {
       try {
         const countryParam = activeCountryForCities || "";
-        const res = await fetch(
-          `/api/comunidad/filters?country=${encodeURIComponent(countryParam)}`
+        const cacheKey = `/api/comunidad/filters?country=${encodeURIComponent(countryParam)}`;
+        const data = await fetchWithCache(
+          cacheKey,
+          async () => {
+            const res = await fetch(cacheKey);
+            if (!res.ok) return null;
+            return res.json();
+          },
+          { ttlMs: 120_000 }
         );
-        if (res.ok) {
-          const data = await res.json();
+        if (data) {
           setFilterOptions({
             countries: data.countries || [],
             cities: data.cities || [],
@@ -164,13 +194,6 @@ function MiembrosContent() {
   // Fetch users only when appliedSearchQuery or appliedFilters change (never mid-keystroke)
   async function fetchUsers(cursorVal?: string | null) {
     try {
-      if (!cursorVal) {
-        setLoading(true);
-      } else {
-        setFetchingMore(true);
-      }
-      setError(null);
-
       const params = new URLSearchParams();
       params.set("limit", "24");
       if (cursorVal) params.set("cursor", cursorVal);
@@ -180,18 +203,40 @@ function MiembrosContent() {
       if (appliedFilters.selectedInterests.length > 0) {
         params.set("interests", appliedFilters.selectedInterests.join(","));
       }
-      params.set("_t", Date.now().toString());
+      const cacheKey = `/api/comunidad?${params.toString()}`;
 
-      const res = await fetch(`/api/comunidad?${params.toString()}`, { cache: "no-store" });
-      if (res.status === 401 || res.status === 403) {
-        router.replace("/auth/iniciar-sesion");
-        return;
+      if (!cursorVal) {
+        const cachedPage = getCachedData<any>(cacheKey);
+        if (cachedPage) {
+          setUsers(cachedPage.users || []);
+          setNextCursor(cachedPage.nextCursor);
+          setHasMore(Boolean(cachedPage.hasMore));
+        } else {
+          setLoading(true);
+        }
+      } else {
+        setFetchingMore(true);
       }
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.message || `Error del servidor: ${res.status}`);
-      }
-      const data = await res.json();
+      setError(null);
+
+      const data = await fetchWithCache(
+        cacheKey,
+        async () => {
+          const res = await fetch(cacheKey);
+          if (res.status === 401 || res.status === 403) {
+            router.replace("/auth/iniciar-sesion");
+            return null;
+          }
+          if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.message || `Error del servidor: ${res.status}`);
+          }
+          return res.json();
+        },
+        { ttlMs: 60_000 }
+      );
+
+      if (!data) return;
 
       if (!cursorVal) {
         setUsers(data.users || []);
@@ -199,7 +244,7 @@ function MiembrosContent() {
         setUsers((current) => [...current, ...(data.users || [])]);
       }
       setNextCursor(data.nextCursor);
-      setHasMore(data.hasMore);
+      setHasMore(Boolean(data.hasMore));
     } catch (err: any) {
       console.error("[MiembrosPage] Error fetching members:", err);
       setError(err.message || "Error de conexión con el servidor");

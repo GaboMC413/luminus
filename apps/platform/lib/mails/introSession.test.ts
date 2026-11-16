@@ -67,4 +67,45 @@ describe("introSession email templates", () => {
     expect(subject).toContain("Recibimos tu solicitud");
     expect(subject).toContain("Dr. Pérez");
   });
+
+  it("renders Google Calendar button when calendarUrl is provided on accepted emails", () => {
+    const html = renderIntroSessionEmailHtml({
+      variant: "accepted_requester",
+      recipientName: "Ana",
+      counterpartyName: "Dr. Pérez",
+      friendlyDate: "viernes, 20 de noviembre de 2026",
+      startTime: "10:00",
+      timezone: "America/Montevideo",
+      meetingLink: "https://example.com/room-123",
+      calendarUrl: "https://calendar.google.com/calendar/render?action=TEMPLATE",
+    });
+
+    expect(html).toContain("Agregar a Google Calendar");
+    expect(html).toContain("https://calendar.google.com/calendar/render?action=TEMPLATE");
+  });
+
+  it("renders 10-minute reminder email with join link and subject", () => {
+    const subject = getIntroSessionEmailSubject({
+      variant: "reminder_requester",
+      recipientName: "Ana",
+      counterpartyName: "Dr. Pérez",
+      friendlyDate: "Viernes 20 nov",
+      startTime: "10:00",
+      timezone: "America/Montevideo",
+    });
+    const html = renderIntroSessionEmailHtml({
+      variant: "reminder_requester",
+      recipientName: "Ana",
+      counterpartyName: "Dr. Pérez",
+      friendlyDate: "viernes, 20 de noviembre de 2026",
+      startTime: "10:00",
+      timezone: "America/Montevideo",
+      meetingLink: "https://example.com/room-123",
+    });
+
+    expect(subject).toContain("comienza en 10 minutos");
+    expect(html).toContain("Tu sesión comienza en 10 minutos");
+    expect(html).toContain("Unirse a la sesión");
+    expect(html).toContain("https://example.com/room-123");
+  });
 });

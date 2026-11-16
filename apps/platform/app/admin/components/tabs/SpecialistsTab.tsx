@@ -840,7 +840,7 @@ export function SpecialistsTab({
                           {selectedSpecialist.courses.map((course: any, idx: number) => (
                             <a
                               key={idx}
-                              href={course.url || course.coverUrl}
+                              href={resolveSocialHref("website", course.url || course.coverUrl || "")}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="px-3.5 py-2 text-[12.5px] font-semibold bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-xl transition-colors border border-slate-200"
@@ -1360,7 +1360,7 @@ export function SpecialistsTab({
                           <span className="material-symbols-rounded text-slate-400 text-[16px]">link</span>
                           {selectedPostulation.clinicData.clinicWebsite ? (
                             <a
-                              href={selectedPostulation.clinicData.clinicWebsite}
+                              href={resolveSocialHref("website", selectedPostulation.clinicData.clinicWebsite)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="underline text-slate-800 hover:text-black font-semibold"
@@ -1445,7 +1445,7 @@ export function SpecialistsTab({
                               {course.url && (
                                 <div className="mt-2.5">
                                   <a
-                                    href={course.url}
+                                    href={resolveSocialHref("website", course.url)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center justify-center h-8 px-4 rounded-lg bg-black hover:bg-zinc-900 text-white text-xs font-bold transition cursor-pointer"

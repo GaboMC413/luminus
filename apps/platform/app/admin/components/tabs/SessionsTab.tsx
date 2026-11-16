@@ -22,6 +22,21 @@ interface SessionsTabProps {
   setSpecialistSubTab: (tab: "lista" | "postulaciones") => void;
 }
 
+function getResonanceLabel(resonance: string | null) {
+  switch (resonance) {
+    case "luminous":
+      return "Muy luminosa";
+    case "warm":
+      return "Buena sintonía";
+    case "dim":
+      return "Algo de claridad";
+    case "no_match":
+      return "No hubo sintonía";
+    default:
+      return "-";
+  }
+}
+
 function getSessionStatusBadge(status: AdminIntroSession["status"]) {
   switch (status) {
     case "pending":
@@ -55,12 +70,22 @@ export function SessionsTab({
   const [actionMessage, setActionMessage] = useState("");
 
   const counts = useMemo(() => {
+    const allFeedbacks = sessions.flatMap((s) => s.feedbacks || []);
+    const rated = allFeedbacks.filter((f) => f.resonance !== null);
+    const positive = rated.filter(
+      (f) => f.resonance === "luminous" || f.resonance === "warm"
+    ).length;
+    const noShows = allFeedbacks.filter((f) => !f.attended).length;
+
     return {
       all: sessions.length,
       pending: sessions.filter((s) => s.status === "pending").length,
       accepted: sessions.filter((s) => s.status === "accepted").length,
       declined: sessions.filter((s) => s.status === "declined").length,
       cancelled: sessions.filter((s) => s.status === "cancelled").length,
+      feedbackCount: allFeedbacks.length,
+      positivePct: rated.length ? Math.round((positive / rated.length) * 100) : null,
+      noShows,
     };
   }, [sessions]);
 
@@ -154,6 +179,12 @@ export function SessionsTab({
           <span className="text-slate-500">Rechazadas: {counts.declined}</span>
           <span className="text-slate-300">|</span>
           <span className="text-rose-700">Canceladas: {counts.cancelled}</span>
+          <span className="text-slate-300">|</span>
+          <span className="text-slate-700">
+            Sintonía+: {counts.positivePct !== null ? `${counts.positivePct}%` : "-"}
+          </span>
+          <span className="text-slate-300">|</span>
+          <span className="text-slate-500">No-show: {counts.noShows}</span>
         </div>
       </div>
 
@@ -421,6 +452,57 @@ export function SessionsTab({
                     }
                   />
                 </div>
+              </div>
+
+              {/* Feedbacks & Signals */}
+              <div>
+                <h3 className="text-[11.5px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                  Valoraciones y Señales
+                </h3>
+                {selectedSession.feedbacks && selectedSession.feedbacks.length > 0 ? (
+                  <div className="space-y-2.5">
+                    {selectedSession.feedbacks.map((fb) => (
+                      <div
+                        key={fb.role}
+                        className="bg-slate-50/70 border border-slate-200/70 rounded-xl p-3 space-y-1.5"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold text-slate-900">
+                            {fb.role === "requester" ? "Miembro" : "Especialista"}
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <AdminBadge variant={fb.attended ? "active" : "deleted"}>
+                              {fb.attended ? "Asistió" : "No asistió"}
+                            </AdminBadge>
+                            {fb.resonance && (
+                              <AdminBadge variant="pending">
+                                {getResonanceLabel(fb.resonance)}
+                              </AdminBadge>
+                            )}
+                          </div>
+                        </div>
+                        {fb.publicNote && (
+                          <p className="text-xs text-slate-700 m-0 whitespace-pre-wrap">
+                            <span className="font-semibold text-slate-500">
+                              {fb.role === "specialist" ? "Orientación: " : "Nota: "}
+                            </span>
+                            {fb.publicNote}
+                          </p>
+                        )}
+                        {fb.privateNote && (
+                          <p className="text-xs text-amber-900 bg-amber-50/80 border border-amber-200/70 rounded-lg px-2.5 py-1.5 m-0 whitespace-pre-wrap">
+                            <span className="font-semibold">Privada LUMINUS: </span>
+                            {fb.privateNote}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-slate-50/50 rounded-xl p-3 text-xs text-slate-500">
+                    Sin valoraciones registradas todavía.
+                  </div>
+                )}
               </div>
 
               {/* Legal Audit */}

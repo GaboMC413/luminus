@@ -89,6 +89,8 @@ model User {
   emailChangeTokens        EmailChangeToken[]
   sentConnections          UserConnection[]          @relation("SentConnections")
   receivedConnections      UserConnection[]          @relation("ReceivedConnections")
+  following                UserFollow[]              @relation("UserFollowing")
+  followers                UserFollow[]              @relation("UserFollowers")
   conversationParticipants ConversationParticipant[]
   sentMessages             Message[]
   notifications            Notification[]
@@ -103,6 +105,7 @@ model User {
   communityPostLikes       CommunityPostLike[]
   requestedIntroSessions   IntroSession[]            @relation("RequestedIntroSessions")
   specialistIntroSessions  IntroSession[]            @relation("SpecialistIntroSessions")
+  introSessionFeedbacks    IntroSessionFeedback[]
 
   @@index([status, purgeAt])
   @@map("users")
@@ -323,6 +326,21 @@ model UserConnection {
   @@index([requesterId, updatedAt])
   @@index([recipientId, updatedAt])
   @@map("user_connections")
+}
+
+model UserFollow {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  followerId  String   @map("follower_id") @db.Uuid
+  followingId String   @map("following_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("user_follows")
 }
 
 model Conversation {
@@ -598,6 +616,7 @@ model Event {
   isUpcoming             Boolean            @default(true) @map("is_upcoming")
   liveNotificationSent   Boolean            @default(false) @map("live_notification_sent")
   liveNotificationSentAt DateTime?          @map("live_notification_sent_at") @db.Timestamptz
+  reminderSentAt         DateTime?          @map("reminder_sent_at") @db.Timestamptz
   createdAt              DateTime           @default(now()) @map("created_at") @db.Timestamptz
   updatedAt              DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   inscriptions           EventInscription[]
@@ -755,16 +774,55 @@ model IntroSession {
   hostMeetingLink  String?            @map("host_meeting_link") @db.VarChar
   wherebyMeetingId          String?            @map("whereby_meeting_id") @db.VarChar
   specialistNote            String?            @map("specialist_note") @db.Text
-  requesterTermsAcceptedAt  DateTime?          @map("requester_terms_accepted_at") @db.Timestamptz
-  specialistTermsAcceptedAt DateTime?          @map("specialist_terms_accepted_at") @db.Timestamptz
-  createdAt                 DateTime           @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  requesterTermsAcceptedAt  DateTime?              @map("requester_terms_accepted_at") @db.Timestamptz
+  specialistTermsAcceptedAt DateTime?              @map("specialist_terms_accepted_at") @db.Timestamptz
+  reminderSentAt            DateTime?              @map("reminder_sent_at") @db.Timestamptz
+  feedbackEmailSentAt       DateTime?              @map("feedback_email_sent_at") @db.Timestamptz
+  createdAt                 DateTime               @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                 DateTime               @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  requester      User               @relation("RequestedIntroSessions", fields: [requesterId], references: [id], onDelete: Cascade)
-  specialist     User               @relation("SpecialistIntroSessions", fields: [specialistId], references: [id], onDelete: Cascade)
+  requester                 User                   @relation("RequestedIntroSessions", fields: [requesterId], references: [id], onDelete: Cascade)
+  specialist                User                   @relation("SpecialistIntroSessions", fields: [specialistId], references: [id], onDelete: Cascade)
+  feedbacks                 IntroSessionFeedback[]
 
   @@index([specialistId, scheduledDate, status])
   @@index([requesterId, status])
   @@map("intro_sessions")
+}
+
+enum SessionFeedbackRole {
+  requester
+  specialist
+
+  @@map("session_feedback_role")
+}
+
+enum SessionResonance {
+  no_match
+  dim
+  warm
+  luminous
+
+  @@map("session_resonance")
+}
+
+model IntroSessionFeedback {
+  id              String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  introSessionId  String              @map("intro_session_id") @db.Uuid
+  authorId        String              @map("author_id") @db.Uuid
+  role            SessionFeedbackRole
+  attended        Boolean             @default(true)
+  resonance       SessionResonance?
+  publicNote      String?             @map("public_note") @db.Text
+  privateNote     String?             @map("private_note") @db.Text
+  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  introSession    IntroSession        @relation(fields: [introSessionId], references: [id], onDelete: Cascade)
+  author          User                @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@unique([introSessionId, role])
+  @@index([authorId, createdAt])
+  @@map("intro_session_feedbacks")
 }
 

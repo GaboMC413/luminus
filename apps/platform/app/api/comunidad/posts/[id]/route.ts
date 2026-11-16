@@ -67,6 +67,7 @@ export async function PATCH(request: Request, props: { params: Promise<{ id: str
         ...(youtubeId !== undefined ? { youtubeId: youtubeId || null } : {}),
         ...(category !== undefined ? { category: category || null } : {}),
         ...(tags !== undefined ? { tags: Array.isArray(tags) ? tags : [] } : {}),
+        ...(session.role !== "ADMIN" ? { status: "pending" } : {}),
       },
       include: {
         user: {

@@ -1,5 +1,6 @@
 import { NextResponse, after } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { invalidateServerCacheTag } from "@/lib/serverCache";
 import { ensureS3AvatarUrl } from "@/lib/ensureS3AvatarUrl";
 import { deleteS3FileByUrl } from "@/lib/storage/s3FileCleanup";
 import { generateUniqueUserSlug } from "@/lib/profile/slug";
@@ -251,9 +252,10 @@ export async function PATCH(request: Request) {
     const existingProfile = prisma.userProfile?.findUnique
       ? await prisma.userProfile.findUnique({
           where: { userId: session.userId },
-          select: { avatarUrl: true },
+          select: { avatarUrl: true, isOnboarded: true },
         })
       : null;
+    const wasAlreadyOnboarded = Boolean(existingProfile?.isOnboarded);
 
     const user = await prisma.$transaction(async (tx: any) => {
       await tx.userProfile.upsert({
@@ -338,15 +340,15 @@ export async function PATCH(request: Request) {
         if (typeof sp.institution === "string") spUpdate.institution = sp.institution.trim() || null;
         if (typeof sp.instagramUrl === "string") {
           const val = sp.instagramUrl.trim();
-          spUpdate.instagramUrl = val ? (normalizeInstagramInput(val) ?? val) : null;
+          spUpdate.instagramUrl = val ? normalizeInstagramInput(val) : null;
         }
         if (typeof sp.linkedinUrl === "string") {
           const val = sp.linkedinUrl.trim();
-          spUpdate.linkedinUrl = val ? (normalizeLinkedinInput(val) ?? val) : null;
+          spUpdate.linkedinUrl = val ? normalizeLinkedinInput(val) : null;
         }
         if (typeof sp.websiteUrl === "string") {
           const val = sp.websiteUrl.trim();
-          spUpdate.websiteUrl = val ? (normalizeWebsiteUrl(val) ?? val) : null;
+          spUpdate.websiteUrl = val ? normalizeWebsiteUrl(val) : null;
         }
         if (Array.isArray(sp.selectedAreas)) {
           spUpdate.selectedAreas = sp.selectedAreas
@@ -405,8 +407,8 @@ export async function PATCH(request: Request) {
                 lng: item.lng !== null && item.lng !== undefined && !Number.isNaN(Number(item.lng)) ? Number(item.lng) : null,
                 googlePlaceId: typeof item.googlePlaceId === "string" ? item.googlePlaceId.trim() || null : null,
                 phone: typeof item.phone === "string" ? item.phone.trim() || null : null,
-                website: typeof item.website === "string" ? item.website.trim() || null : null,
-                googleMapsUrl: typeof item.googleMapsUrl === "string" ? item.googleMapsUrl.trim() || null : null,
+                website: typeof item.website === "string" && item.website.trim() ? normalizeWebsiteUrl(item.website.trim()) : null,
+                googleMapsUrl: typeof item.googleMapsUrl === "string" && item.googleMapsUrl.trim() ? normalizeWebsiteUrl(item.googleMapsUrl.trim()) : null,
                 coverUrl: typeof item.coverUrl === "string" ? item.coverUrl.trim() || null : null,
                 isActive: true,
               };
@@ -495,7 +497,7 @@ export async function PATCH(request: Request) {
                 type: typeof c.type === "string" ? c.type.trim() || "CURSO" : "CURSO",
                 description: typeof c.description === "string" ? c.description.trim() || null : null,
                 modality: typeof c.modality === "string" ? c.modality.trim() || null : null,
-                url: typeof c.url === "string" ? c.url.trim() || null : null,
+                url: typeof c.url === "string" && c.url.trim() ? normalizeWebsiteUrl(c.url.trim()) : null,
                 coverUrl: typeof c.coverUrl === "string" ? c.coverUrl.trim() || null : null,
                 institution: typeof c.institution === "string" ? c.institution.trim() || null : null,
                 isActive: true,
@@ -643,6 +645,31 @@ export async function PATCH(request: Request) {
         console.error("Failed to log UPDATE_PROFILE activity:", logErr);
       }
 
+      if (data.isOnboarded === true && !wasAlreadyOnboarded) {
+        try {
+          const { sendWelcomeMessage } = await import("@/lib/auth/welcome");
+          await sendWelcomeMessage(prisma, session.userId);
+
+          const isUserMecenas = user?.tier === "MECENAS";
+          const userName = firstName || user?.profile?.firstName || undefined;
+
+          if (isUserMecenas) {
+            const { sendMecenasWelcomeEmail } = await import("@/lib/mails/sender");
+            const plan = user?.profile?.selectedPlan?.toLowerCase() || "";
+            const isAnnual = plan.includes("annual") || plan.includes("year") || plan.includes("anual");
+            await sendMecenasWelcomeEmail(user?.email || session.email, {
+              name: userName,
+              interval: isAnnual ? "year" : "month",
+            });
+          } else {
+            const { sendWelcomeEmail } = await import("@/lib/mails/sender");
+            await sendWelcomeEmail(user?.email || session.email, userName);
+          }
+        } catch (welcomeError) {
+          console.error("Welcome message/email trigger during profile onboarding completion failed:", welcomeError);
+        }
+      }
+
       if (
         profileData.avatarUrl !== undefined &&
         existingProfile?.avatarUrl &&
@@ -659,6 +686,12 @@ export async function PATCH(request: Request) {
       }
     };
     try { after(runSideEffects); } catch { void runSideEffects(); }
+
+    invalidateServerCacheTag([
+      "specialists",
+      "community-filters",
+      `user-session:${session.userId}`,
+    ]);
 
     const serialized = serializeProfile(user);
     return NextResponse.json({

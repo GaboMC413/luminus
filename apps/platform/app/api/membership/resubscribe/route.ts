@@ -26,7 +26,7 @@ export async function POST(req: Request) {
 
     const newPlanName = interval === "year" ? "Annual" : "Monthly";
 
-    if (!stripe || !user.stripeCustomerId || user.stripeCustomerId.startsWith("cus_mock_")) {
+    if (!stripe) {
       await prisma.user.update({
         where: { id: user.id },
         data: {
@@ -42,6 +42,13 @@ export async function POST(req: Request) {
         message: "¡Bienvenido nuevamente a Mecenas LUMINUS!",
         isMock: true,
       });
+    }
+
+    if (!user.stripeCustomerId || user.stripeCustomerId.startsWith("cus_mock_")) {
+      return NextResponse.json(
+        { message: "No tienes una tarjeta guardada. Por favor suscríbete ingresando un método de pago." },
+        { status: 400 }
+      );
     }
 
     // 1. Get customer's default payment method or list their cards
@@ -68,18 +75,25 @@ export async function POST(req: Request) {
 
     const targetPriceId = await getOrCreateMembershipPrice(interval);
 
-    // 2. Create active subscription charging default card
+    // 2. Create active subscription charging default card immediately
     const subscription = await stripe.subscriptions.create({
       customer: user.stripeCustomerId,
       items: [{ price: targetPriceId }],
       default_payment_method: typeof defaultPm === "string" ? defaultPm : (defaultPm as any).id,
-      payment_behavior: "allow_incomplete",
+      payment_behavior: "error_if_incomplete",
       metadata: {
         userId: user.id,
         user_email: user.email,
         type: interval === "year" ? "mecenas_annual" : "mecenas_monthly",
       },
     });
+
+    if (subscription.status !== "active" && subscription.status !== "trialing") {
+      return NextResponse.json(
+        { message: "No pudimos procesar el cobro con tu tarjeta guardada. Por favor intenta con otro método de pago." },
+        { status: 400 }
+      );
+    }
 
     await prisma.user.update({
       where: { id: user.id },

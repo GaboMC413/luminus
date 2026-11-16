@@ -13,6 +13,7 @@ type CognitoStartState = {
   provider?: "Google";
   intent?: "signup" | "signin";
   plan?: "membership" | "free";
+  billing?: "annual" | "monthly";
   redirect?: string;
 };
 
@@ -44,6 +45,8 @@ export async function GET(request: Request) {
   const intent: "signup" | "signin" = intentParam === "signup" ? "signup" : "signin";
   const planParam = url.searchParams.get("plan")?.trim().toLowerCase();
   const plan: "membership" | "free" | undefined = planParam === "membership" || planParam === "free" ? planParam : undefined;
+  const billingParam = url.searchParams.get("billing")?.trim().toLowerCase();
+  const billing: "annual" | "monthly" | undefined = billingParam === "annual" || billingParam === "monthly" ? billingParam : undefined;
   const redirectParam = url.searchParams.get("redirect");
   const targetRedirect = getSafeRedirectUrl(redirectParam, "");
 
@@ -59,6 +62,7 @@ export async function GET(request: Request) {
     provider,
     intent,
     ...(plan ? { plan } : {}),
+    ...(billing ? { billing } : {}),
     ...(targetRedirect ? { redirect: targetRedirect } : {}),
   };
   const redirectUri = `${origin}/api/auth/cognito/callback`;

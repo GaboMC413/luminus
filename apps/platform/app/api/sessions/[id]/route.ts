@@ -7,6 +7,7 @@ import {
   sendSessionChatMessage,
 } from "@/lib/sessions/sessionNotifications";
 import { sendIntroSessionEmail } from "@/lib/mails/sender";
+import { PLATFORM_APP_URL } from "@/lib/mails/EmailLayout";
 import {
   createWherebyRoom,
   deleteWherebyRoom,
@@ -182,9 +183,12 @@ export async function PATCH(
     const specialistFirstName = specialistName.split(/\s+/)[0] || specialistName;
 
     if (action === "accept") {
+      const joinUrl = wherebyMeetingId
+        ? `${PLATFORM_APP_URL}/sesiones/${id}/sala`
+        : resolvedMeetingLink;
       const chatLines = [
         `Hola ${requesterFirstName}, confirmé nuestra sesión introductoria para el ${friendlyDate} a las ${introSession.startTime} hs.`,
-        `Enlace de acceso: ${resolvedMeetingLink}`,
+        `Enlace de acceso: ${joinUrl}`,
       ];
       if (specialistNote) {
         chatLines.push(specialistNote);
@@ -213,9 +217,11 @@ export async function PATCH(
               recipientName: requesterName,
               counterpartyName: specialistName,
               friendlyDate,
+              scheduledDate: introSession.scheduledDate,
               startTime: introSession.startTime,
+              endTime: introSession.endTime,
               timezone: introSession.timezone,
-              meetingLink: resolvedMeetingLink,
+              meetingLink: joinUrl,
               note: specialistNote || undefined,
               actionPath: "/sesiones",
             })
@@ -226,9 +232,11 @@ export async function PATCH(
               recipientName: specialistName,
               counterpartyName: requesterName,
               friendlyDate,
+              scheduledDate: introSession.scheduledDate,
               startTime: introSession.startTime,
+              endTime: introSession.endTime,
               timezone: introSession.timezone,
-              meetingLink: hostMeetingLink || resolvedMeetingLink,
+              meetingLink: joinUrl,
               note: specialistNote || undefined,
               actionPath: "/sesiones?tab=recibidas",
             })
@@ -313,7 +321,13 @@ export async function PATCH(
       ]);
     }
 
-    return NextResponse.json({ ok: true, session: updated });
+    const safeUpdated = {
+      ...updated,
+      hostMeetingLink: isSpecialist ? updated.hostMeetingLink : null,
+      wherebyMeetingId: undefined,
+    };
+
+    return NextResponse.json({ ok: true, session: safeUpdated });
   } catch (error) {
     console.error("Failed to update intro session:", error);
     return NextResponse.json(

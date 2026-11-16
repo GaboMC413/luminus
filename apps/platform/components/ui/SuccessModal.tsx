@@ -105,7 +105,7 @@ export function SuccessModal({
   if (!isOpen || !mounted) return null;
 
   return createPortal(
-    <div className="fixed bottom-28 left-1/2 -translate-x-1/2 sm:bottom-8 sm:right-8 sm:left-auto sm:translate-x-0 z-[9999] w-[calc(100%-32px)] sm:w-[380px] overflow-visible">
+    <div className="fixed bottom-28 left-1/2 -translate-x-1/2 sm:bottom-28 lg:bottom-8 sm:right-8 sm:left-auto sm:translate-x-0 z-[9999] w-[calc(100%-32px)] sm:w-[380px] overflow-visible">
       <style>{`
         @keyframes confetti-burst {
           0% {

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { InputField } from "@/components/ui/InputField";
 import { Button } from "@/components/ui/Button";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { loginWithFacebook } from "@/lib/auth/facebookSdk";
 import { Check } from "lucide-react";
 
@@ -21,6 +22,7 @@ export default function AccountCreationView() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [emailExists, setEmailExists] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   // Password validation rules
   const hasMinLength = password.length >= 8;
@@ -93,6 +95,8 @@ export default function AccountCreationView() {
           email: email.trim().toLowerCase(),
           password,
           plan,
+          billing,
+          turnstileToken,
         }),
       });
 
@@ -277,6 +281,11 @@ export default function AccountCreationView() {
                   >
                     {loading ? "Creando cuenta..." : "Crear mi cuenta"}
                   </Button>
+
+                  <TurnstileWidget
+                    onSuccess={(token) => setTurnstileToken(token)}
+                    onExpire={() => setTurnstileToken(null)}
+                  />
                 </form>
 
                 {/* Account Login Link directly below the button */}

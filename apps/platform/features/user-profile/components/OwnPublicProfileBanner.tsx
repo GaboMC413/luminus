@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useRouter } from "next/navigation";
-import { Eye, Pencil } from "lucide-react";
+import { ArrowRight, Eye } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 interface OwnPublicProfileBannerProps {
@@ -24,8 +24,8 @@ export function OwnPublicProfileBanner({ className = "" }: OwnPublicProfileBanne
           <p className="text-title-section font-semibold text-slate-900 font-jakarta leading-snug">
             Estás viendo tu perfil como lo ven otros miembros
           </p>
-          <p className="text-body text-slate-500 font-sans">
-            Esta es tu vista pública. Para modificar tus datos o secciones, ve a tu editor de perfil.
+          <p className="mt-0.5 text-meta text-slate-500 font-sans">
+            Para modificar tus datos o secciones, ve a tu perfil personal.
           </p>
         </div>
       </div>
@@ -36,8 +36,8 @@ export function OwnPublicProfileBanner({ className = "" }: OwnPublicProfileBanne
         size="sm"
         className="gap-1.5 shrink-0 self-start sm:self-auto"
       >
-        <Pencil className="w-3.5 h-3.5" />
-        <span>Editar mi perfil</span>
+        <span>Ir a mi perfil</span>
+        <ArrowRight className="w-3.5 h-3.5" />
       </Button>
     </div>
   );

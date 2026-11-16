@@ -99,6 +99,7 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedAdminCategory, setSelectedAdminCategory] = useState<string | null>(null);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
+  const [publishDate, setPublishDate] = useState("");
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isAdminCategoryOpen, setIsAdminCategoryOpen] = useState(false);
 
@@ -356,6 +357,10 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
     }
 
     const mainCategory = selectedAdminCategory || selectedCategory || undefined;
+    const customCreatedAt =
+      isAdmin && publishDate
+        ? new Date(`${publishDate}T12:00:00-03:00`).toISOString()
+        : undefined;
 
     const newPost: PostItem = {
       id: `post-${Date.now()}`,
@@ -366,6 +371,7 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
       authorRole: "Miembro",
       authorLocation: userLocation,
       date: "Hoy",
+      createdAt: customCreatedAt,
       imageUrl: finalImageUrl,
       youtubeId: youtubeId || undefined,
       youtubeUrl: youtubeUrl || undefined,
@@ -400,6 +406,7 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
     setIsAdminCategoryOpen(false);
     setSelectedCategory(null);
     setSelectedAreas([]);
+    setPublishDate("");
     setShowTagPills(false);
     setIsCategoryOpen(false);
     setIsModalOpen(false);
@@ -472,7 +479,8 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
 
           {/* Category Selectors */}
           {isAdmin ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="flex flex-col gap-2.5 w-full">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {/* Institutional Category */}
               <div ref={adminCategoryDropdownRef} className="relative w-full">
                 <button
@@ -591,6 +599,20 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
                 )}
               </div>
             </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="admin-post-date" className="text-xs font-medium text-slate-500 font-sans">
+                Fecha de publicación (opcional, solo fechas pasadas)
+              </label>
+              <input
+                id="admin-post-date"
+                type="date"
+                max={new Date().toISOString().split("T")[0]}
+                value={publishDate}
+                onChange={(e) => setPublishDate(e.target.value)}
+                className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 focus:border-slate-900 text-sm font-sans text-slate-700 outline-none transition-colors"
+              />
+            </div>
+          </div>
           ) : (
             /* Single Category Selector for Regular Members */
             <div ref={categoryDropdownRef} className="relative w-full">

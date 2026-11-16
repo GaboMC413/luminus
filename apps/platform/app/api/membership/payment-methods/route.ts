@@ -27,6 +27,15 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: true, isMock: true });
     }
 
+    const pm = await stripe.paymentMethods.retrieve(String(paymentMethodId));
+    const pmCustomerId = typeof pm.customer === "string" ? pm.customer : pm.customer?.id;
+    if (!pmCustomerId || pmCustomerId !== user.stripeCustomerId) {
+      return NextResponse.json(
+        { message: "Este método de pago no pertenece a tu cuenta." },
+        { status: 403 }
+      );
+    }
+
     // 1. Update customer default payment method
     await stripe.customers.update(user.stripeCustomerId, {
       invoice_settings: {
@@ -111,6 +120,22 @@ export async function DELETE(request: Request) {
 
     if (!stripe) {
       return NextResponse.json({ success: true, isMock: true });
+    }
+
+    if (!user.stripeCustomerId || user.stripeCustomerId.startsWith("cus_mock_")) {
+      return NextResponse.json(
+        { message: "No tienes un cliente de facturación activo." },
+        { status: 400 }
+      );
+    }
+
+    const pm = await stripe.paymentMethods.retrieve(String(paymentMethodId));
+    const pmCustomerId = typeof pm.customer === "string" ? pm.customer : pm.customer?.id;
+    if (!pmCustomerId || pmCustomerId !== user.stripeCustomerId) {
+      return NextResponse.json(
+        { message: "Este método de pago no pertenece a tu cuenta." },
+        { status: 403 }
+      );
     }
 
     // Detach payment method from customer

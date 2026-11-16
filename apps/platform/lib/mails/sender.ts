@@ -712,7 +712,46 @@ export async function sendEventRegistrationEmail(
     resolveDirectEventLink,
     formatEventDateAndTime,
   } = await import("./inscription");
-  const htmlBody = renderEventRegistrationEmailHtml(options);
+  const { resolveEventUtcDate } = await import("../eventDateUtils");
+  const { buildGoogleCalendarUrl, buildIcsContent } = await import("../calendar/ics");
+
+  const startUtc = resolveEventUtcDate(options.eventDate, options.timeText);
+  let calendarUrl: string | null = options.calendarUrl ?? null;
+  let icsAttachment: {
+    RawContent: Uint8Array;
+    FileName: string;
+    ContentType: string;
+    ContentDisposition: "ATTACHMENT";
+  } | null = null;
+
+  if (startUtc) {
+    const endUtc = new Date(startUtc.getTime() + 60 * 60 * 1000);
+    const calendarInput = {
+      uid: `event-${options.eventSlug || startUtc.getTime()}@luminuslatam.com`,
+      title: options.eventTitle || "Evento LUMINUS",
+      description: options.speakerName
+        ? `Con ${options.speakerName} - LUMINUS LATAM`
+        : "Evento de Bienestar LUMINUS",
+      location: options.location || "Evento online",
+      url:
+        resolveDirectEventLink(options.youtubeUrl) ||
+        (options.eventSlug
+          ? `https://app.luminuslatam.com/actividades/${options.eventSlug}`
+          : "https://app.luminuslatam.com/actividades"),
+      startUtc,
+      endUtc,
+    };
+    calendarUrl = calendarUrl || buildGoogleCalendarUrl(calendarInput);
+    const icsContent = buildIcsContent(calendarInput);
+    icsAttachment = {
+      RawContent: Buffer.from(icsContent, "utf-8"),
+      FileName: "evento-luminus.ics",
+      ContentType: "text/calendar; charset=utf-8; method=PUBLISH",
+      ContentDisposition: "ATTACHMENT",
+    };
+  }
+
+  const htmlBody = renderEventRegistrationEmailHtml({ ...options, calendarUrl });
   const directLink = resolveDirectEventLink(options.youtubeUrl);
   const { formattedDate, formattedTime } = formatEventDateAndTime(
     options.eventDate,
@@ -779,6 +818,7 @@ export async function sendEventRegistrationEmail(
           Html: { Data: htmlBody, Charset: "UTF-8" },
           Text: { Data: textBody, Charset: "UTF-8" },
         },
+        ...(icsAttachment ? { Attachments: [icsAttachment] } : {}),
       },
     },
     ...(configurationSet && { ConfigurationSetName: configurationSet }),
@@ -990,6 +1030,103 @@ export async function sendEventLiveNotificationEmail(
     await logSentEmail(email, subject, htmlBody, {
       status: "FAILED",
       errorDetails: `${error?.name || "SESError"}: ${errorMsg}`,
+      metadata: baseMetadata,
+    });
+    throw error;
+  }
+}
+
+export async function sendEventReminderEmail(
+  email: string,
+  options: import("./inscription").EventInscriptionEmailOptions
+) {
+  const startTime = new Date().toISOString();
+  const rawFrom = process.env.EVENT_FROM_EMAIL || "eventos@luminuslatam.com";
+  const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM Eventos");
+  const { renderEventReminderEmailHtml, resolveDirectEventLink } = await import("./inscription");
+  const htmlBody = renderEventReminderEmailHtml(options);
+  const directLink = resolveDirectEventLink(options.youtubeUrl);
+  const subject = `Comienza en 10 minutos: ${options.eventTitle || "Evento LUMINUS"}`;
+  const textBody = `Hola ${options.firstName || "Usuario"},\n\n"${options.eventTitle || "Evento LUMINUS"}" comienza en 10 minutos.${
+    directLink ? `\n\nUnirse al evento: ${directLink}` : ""
+  }\n\nEquipo de LUMINUS Eventos.`;
+  const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
+  const configurationSet = process.env.SES_CONFIGURATION_EVENTOS || "luminus-eventos";
+
+  writeLocalEmailPreview(email, subject, htmlBody);
+
+  const baseMetadata: any = {
+    sender: fromEmail,
+    region,
+    configurationSet,
+    recipients: [email],
+    timeline: [
+      { step: "Recordatorio de evento (10 min) generado", timestamp: startTime, success: true },
+    ],
+  };
+
+  if (!isSesConfigured()) {
+    const endTime = new Date().toISOString();
+    baseMetadata.rawLog = buildRawLog({
+      action: "Recordatorio de Evento (10 min)",
+      recipient: email,
+      sender: fromEmail,
+      subject,
+      region,
+      configurationSet,
+      status: "LOCAL_PREVIEW",
+      startTime,
+      endTime,
+    });
+    await logSentEmail(email, subject, htmlBody, {
+      status: "LOCAL_PREVIEW",
+      metadata: baseMetadata,
+    });
+    return { success: true, mode: "local-preview" };
+  }
+
+  const sesClient = getSesV2Client();
+  const command = new SendEmailCommand({
+    FromEmailAddress: fromEmail,
+    Destination: { ToAddresses: [email] },
+    Content: {
+      Simple: {
+        Subject: { Data: subject, Charset: "UTF-8" },
+        Body: {
+          Html: { Data: htmlBody, Charset: "UTF-8" },
+          Text: { Data: textBody, Charset: "UTF-8" },
+        },
+      },
+    },
+    ...(configurationSet && { ConfigurationSetName: configurationSet }),
+  });
+
+  try {
+    const response = await sesClient.send(command);
+    const endTime = new Date().toISOString();
+    baseMetadata.rawLog = buildRawLog({
+      action: "Recordatorio de Evento (10 min)",
+      recipient: email,
+      sender: fromEmail,
+      subject,
+      region,
+      configurationSet,
+      status: "SUCCESS",
+      messageId: response.MessageId || null,
+      startTime,
+      endTime,
+    });
+    await logSentEmail(email, subject, htmlBody, {
+      status: "SUCCESS",
+      messageId: response.MessageId || null,
+      metadata: baseMetadata,
+    });
+    return { success: true, messageId: response.MessageId };
+  } catch (error: any) {
+    console.error(`[SES ERROR] Failed to send event reminder email to ${email}:`, error);
+    await logSentEmail(email, subject, htmlBody, {
+      status: "FAILED",
+      errorDetails: error?.message || String(error),
       metadata: baseMetadata,
     });
     throw error;
@@ -1358,8 +1495,63 @@ export async function sendIntroSessionEmail(
     process.env.SES_FROM_EMAIL ||
     "notificaciones@luminuslatam.com";
   const fromEmail = formatSenderAddress(rawFrom, "LUMINUS LATAM");
+  const isAcceptedVariant =
+    options.variant === "accepted_requester" ||
+    options.variant === "accepted_specialist";
+  let calendarUrl: string | null = options.calendarUrl ?? null;
+  let icsAttachment: {
+    RawContent: Uint8Array;
+    FileName: string;
+    ContentType: string;
+    ContentDisposition: "ATTACHMENT";
+  } | null = null;
+
+  if (isAcceptedVariant && options.scheduledDate) {
+    const {
+      buildGoogleCalendarUrl,
+      buildIcsContent,
+      resolveZonedDateTimeToUtc,
+    } = await import("../calendar/ics");
+    const startUtc = resolveZonedDateTimeToUtc(
+      options.scheduledDate,
+      options.startTime,
+      options.timezone
+    );
+    if (startUtc) {
+      const endUtc =
+        (options.endTime
+          ? resolveZonedDateTimeToUtc(
+              options.scheduledDate,
+              options.endTime,
+              options.timezone
+            )
+          : null) || new Date(startUtc.getTime() + 15 * 60 * 1000);
+      const sessionUrl =
+        options.meetingLink && /^https?:\/\//i.test(options.meetingLink.trim())
+          ? options.meetingLink.trim()
+          : "https://app.luminuslatam.com/sesiones";
+      const calendarInput = {
+        uid: `intro-session-${options.scheduledDate}-${options.startTime.replace(":", "")}@luminuslatam.com`,
+        title: `Sesión introductoria LUMINUS con ${options.counterpartyName}`,
+        description: `Sesión introductoria de 15 minutos con ${options.counterpartyName}.`,
+        location: sessionUrl,
+        url: sessionUrl,
+        startUtc,
+        endUtc,
+      };
+      calendarUrl = calendarUrl || buildGoogleCalendarUrl(calendarInput);
+      const icsContent = buildIcsContent(calendarInput);
+      icsAttachment = {
+        RawContent: Buffer.from(icsContent, "utf-8"),
+        FileName: "sesion-luminus.ics",
+        ContentType: "text/calendar; charset=utf-8; method=PUBLISH",
+        ContentDisposition: "ATTACHMENT",
+      };
+    }
+  }
+
   const subject = getIntroSessionEmailSubject(options);
-  const htmlBody = renderIntroSessionEmailHtml(options);
+  const htmlBody = renderIntroSessionEmailHtml({ ...options, calendarUrl });
   const region = process.env.SES_REGION || process.env.AWS_REGION || "us-east-1";
   const configurationSet =
     process.env.SES_CONFIGURATION_NOTIFICACIONES || "luminus-notificaciones";
@@ -1413,6 +1605,7 @@ export async function sendIntroSessionEmail(
         Body: {
           Html: { Data: htmlBody, Charset: "UTF-8" },
         },
+        ...(icsAttachment ? { Attachments: [icsAttachment] } : {}),
       },
     },
     ...(configurationSet && { ConfigurationSetName: configurationSet }),

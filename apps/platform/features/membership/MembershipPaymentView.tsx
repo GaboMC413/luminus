@@ -52,6 +52,7 @@ interface PaymentFormProps {
     isMock?: boolean;
   } | null;
   loadingIntent: boolean;
+  intentError: string | null;
   isFromSettings: boolean;
   isOnboarded: boolean;
   onSwitchBilling: (newCycle: "annual" | "monthly") => void;
@@ -68,6 +69,7 @@ function PaymentForm({
   billingCycle,
   subscriptionData,
   loadingIntent,
+  intentError,
   isFromSettings,
   isOnboarded,
   onSwitchBilling,
@@ -146,7 +148,8 @@ function PaymentForm({
       return;
     }
 
-    if (!subscriptionData) {
+    const expectedInterval = isAnnual ? "year" : "month";
+    if (!subscriptionData || (subscriptionData.interval && subscriptionData.interval !== expectedInterval)) {
       setErrorMessage("Inicializando la pasarela de pago. Intenta de nuevo en unos segundos.");
       return;
     }
@@ -479,9 +482,9 @@ function PaymentForm({
             </div>
 
             {/* Error Message */}
-            {errorMessage && (
+            {(errorMessage || intentError) && (
               <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
-                {errorMessage}
+                {errorMessage || intentError}
               </div>
             )}
 
@@ -489,7 +492,12 @@ function PaymentForm({
             <Button
               type="submit"
               variant="primary"
-              disabled={processing || loadingIntent}
+              disabled={
+                processing ||
+                loadingIntent ||
+                !subscriptionData ||
+                Boolean(subscriptionData.interval && subscriptionData.interval !== (isAnnual ? "year" : "month"))
+              }
             >
               {processing
                 ? "Procesando pago..."
@@ -550,6 +558,7 @@ export default function MembershipPaymentView() {
   const isAnnual = billingCycle === "annual";
 
   const [loadingIntent, setLoadingIntent] = useState(true);
+  const [intentError, setIntentError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isOnboarded, setIsOnboarded] = useState(false);
   const [subscriptionData, setSubscriptionData] = useState<{
@@ -579,15 +588,15 @@ export default function MembershipPaymentView() {
   const [defaultCity, setDefaultCity] = useState("");
   const [defaultCountry, setDefaultCountry] = useState("");
 
-  const inFlightRef = useRef(false);
+  const requestIdRef = useRef(0);
   const subscriptionDataRef = useRef(subscriptionData);
   subscriptionDataRef.current = subscriptionData;
 
   // Initialize Payment Intent with chosen interval (or update existing)
   const initIntent = useCallback(async (interval: "month" | "year", existingSubId?: string) => {
-    if (inFlightRef.current) return;
-    inFlightRef.current = true;
+    const requestId = ++requestIdRef.current;
     setLoadingIntent(true);
+    setIntentError(null);
     try {
       const activeSubId = existingSubId || subscriptionDataRef.current?.subscriptionId;
       const res = await fetch("/api/membership/create-intent", {
@@ -596,12 +605,21 @@ export default function MembershipPaymentView() {
         body: JSON.stringify({ interval, existingSubscriptionId: activeSubId }),
       });
 
+      if (requestId !== requestIdRef.current) return;
+
       if (res.status === 401) {
         router.push(`/unirme/crear-cuenta?plan=membership&billing=${interval === "year" ? "annual" : "monthly"}`);
         return;
       }
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (requestId !== requestIdRef.current) return;
+
+      if (!res.ok) {
+        setIntentError(data.message || "No se pudo inicializar la pasarela de pagos. Recarga la página e intenta de nuevo.");
+        return;
+      }
+
       if (data.alreadySubscribed) {
         if (isFromSettings) {
           router.push("/perfil-usuario/configuracion/membresia");
@@ -613,10 +631,13 @@ export default function MembershipPaymentView() {
 
       setSubscriptionData(data);
     } catch {
-      // Non-critical background failure
+      if (requestId === requestIdRef.current) {
+        setIntentError("Error de conexión al inicializar la pasarela de pagos.");
+      }
     } finally {
-      inFlightRef.current = false;
-      setLoadingIntent(false);
+      if (requestId === requestIdRef.current) {
+        setLoadingIntent(false);
+      }
     }
   }, [router, isFromSettings]);
 
@@ -682,6 +703,7 @@ export default function MembershipPaymentView() {
               billingCycle={billingCycle}
               subscriptionData={subscriptionData}
               loadingIntent={loadingIntent}
+              intentError={intentError}
               isFromSettings={isFromSettings}
               isOnboarded={isOnboarded}
               onSwitchBilling={handleSwitchBilling}

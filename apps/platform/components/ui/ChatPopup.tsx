@@ -537,7 +537,7 @@ export function ChatPopup({ userId, name, avatar, onClose }: ChatPopupProps) {
 
   return (
     <div
-      className="fixed left-4 right-4 top-20 bottom-[calc(80px+env(safe-area-inset-bottom,0px))] sm:inset-auto sm:bottom-4 sm:right-6 lg:right-10 z-50 sm:z-40 sm:w-[380px] sm:h-[480px] bg-white border border-slate-200/90 rounded-2xl shadow-[0_12px_40px_-12px_rgba(15,23,42,0.12)] flex flex-col transition-all duration-300 overflow-hidden"
+      className="fixed left-4 right-4 top-20 bottom-[calc(80px+env(safe-area-inset-bottom,0px))] sm:inset-auto sm:bottom-[calc(76px+env(safe-area-inset-bottom,0px))] lg:bottom-4 sm:right-6 lg:right-10 z-50 sm:z-[90] sm:w-[380px] sm:max-h-[calc(100dvh-160px)] lg:max-h-[calc(100dvh-96px)] bg-white border border-slate-200/90 rounded-2xl shadow-[0_12px_40px_-12px_rgba(15,23,42,0.12)] flex flex-col transition-all duration-300 overflow-hidden"
       style={dynamicStyle}
     >
       {/* Header */}

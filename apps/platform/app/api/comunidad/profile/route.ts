@@ -76,7 +76,7 @@ export async function GET(request: Request) {
 
     const targetUserId = user.id;
 
-    const [outgoingConnection, incomingConnection] = await Promise.all([
+    const [outgoingConnection, incomingConnection, followRow, followersCount] = await Promise.all([
       prisma.userConnection.findFirst({
         where: {
           requesterId: session.userId,
@@ -99,31 +99,46 @@ export async function GET(request: Request) {
           status: true,
         },
       }),
+      prisma.userFollow.findUnique({
+        where: {
+          followerId_followingId: {
+            followerId: session.userId,
+            followingId: targetUserId,
+          },
+        },
+        select: { id: true },
+      }),
+      prisma.userFollow.count({
+        where: { followingId: targetUserId },
+      }),
     ]);
 
     if (incomingConnection && incomingConnection.status === "blocked") {
       return NextResponse.json({ message: "Este perfil no está disponible." }, { status: 403 });
     }
 
-    // Auto-heal pending connections on profile access
-    if (outgoingConnection && outgoingConnection.status === "pending") {
-      prisma.userConnection.update({
-        where: { id: outgoingConnection.id },
-        data: { status: "accepted" },
-      }).catch(() => null);
-      outgoingConnection.status = "accepted";
-    }
-    if (incomingConnection && incomingConnection.status === "pending") {
-      prisma.userConnection.update({
-        where: { id: incomingConnection.id },
-        data: { status: "accepted" },
-      }).catch(() => null);
-      incomingConnection.status = "accepted";
-    }
-
-    const isFollowing = outgoingConnection?.status === "accepted";
-    const isFollower = incomingConnection?.status === "accepted";
     const isBlocked = outgoingConnection?.status === "blocked";
+    const isAccepted = outgoingConnection?.status === "accepted" || incomingConnection?.status === "accepted";
+    const isPendingSent = outgoingConnection?.status === "pending";
+    const isPendingReceived = incomingConnection?.status === "pending";
+    const connectionStatus = isBlocked
+      ? "blocked"
+      : isAccepted
+        ? "accepted"
+        : isPendingSent
+          ? "pending_sent"
+          : isPendingReceived
+            ? "pending_received"
+            : null;
+    const connectionDirection = isAccepted
+      ? outgoingConnection?.status === "accepted"
+        ? "outgoing"
+        : "incoming"
+      : isPendingSent
+        ? "outgoing"
+        : isPendingReceived
+          ? "incoming"
+          : null;
 
     if (!user.slug && (user.profile?.firstName || user.profile?.lastName)) {
       try {
@@ -173,11 +188,13 @@ export async function GET(request: Request) {
         other_interests: profile.intention ?? "",
         tier: user.tier ?? "FREE",
         member_since: user.memberSince?.toISOString?.() ?? null,
-        connection_status: isBlocked ? "blocked" : (isFollowing ? "accepted" : null),
-        connection_direction: isFollowing ? "outgoing" : null,
-        is_in_network: isFollowing,
-        has_in_network: isFollower,
-        is_mutual: Boolean(isFollowing && isFollower),
+        connection_status: connectionStatus,
+        connection_direction: connectionDirection,
+        is_in_network: isAccepted,
+        has_in_network: incomingConnection?.status === "accepted",
+        is_mutual: isAccepted,
+        is_following: Boolean(followRow),
+        followers_count: followersCount,
         is_own_profile: targetUserId === session.userId,
         specialistProfile: user.specialistProfile ? {
           specialty: user.specialistProfile.specialty,

@@ -1,13 +1,23 @@
 import { renderEmailLayout, PLATFORM_APP_URL } from "./EmailLayout";
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export function renderWelcomeEmailHtml(name: string = "Usuario"): string {
+  const safeName = escapeHtml(name || "Usuario");
   const contentHtml = `
     <h1 style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 16px 0; color: #0f172a; text-align: center;">
       Te damos la bienvenida a LUMINUS
     </h1>
 
     <p style="font-size: 15.5px; line-height: 1.65; margin: 0 0 20px 0; color: #334155; text-align: center;">
-      Hola <strong style="color: #0f172a;">${name}</strong>, nos alegra darte la bienvenida a esta red creada para conectar, aprender y cuidar tu bienestar.
+      Hola <strong style="color: #0f172a;">${safeName}</strong>, nos alegra darte la bienvenida a esta red creada para conectar, aprender y cuidar tu bienestar.
     </p>
 
     <!-- Tarjeta de descubrimiento (alineada a las tarjetas de bienvenida del onboarding) -->

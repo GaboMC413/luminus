@@ -14,7 +14,7 @@ function getClientIp(request: Request): string {
 
 function isValidOrigin(request: Request): boolean {
   const origin = request.headers.get("origin") || request.headers.get("referer");
-  if (!origin) return true; // Direct client or mobile
+  if (!origin) return process.env.NODE_ENV !== "production";
   try {
     const parsed = new URL(origin);
     const host = parsed.hostname.toLowerCase();

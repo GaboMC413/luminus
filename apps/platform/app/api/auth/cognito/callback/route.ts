@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
+import { createReactivationToken, createSessionToken, setSessionCookie } from "@/lib/auth/session";
 import { decodeCognitoIdToken } from "@/lib/auth/cognito-password";
 import { getSafeRedirectUrl } from "@/lib/utils/url";
 
@@ -20,6 +20,7 @@ type CognitoStartState = {
   provider?: "Google";
   intent?: "signup" | "signin";
   plan?: "membership" | "free";
+  billing?: "annual" | "monthly";
   redirect?: string;
 };
 
@@ -289,10 +290,13 @@ export async function GET(request: Request) {
       where: { cognitoSub: cognitoSubject },
       include: { profile: true },
     });
-    const existingByEmail = await prisma.user.findUnique({
-      where: { email },
-      include: { profile: true },
-    });
+    const emailVerifiedClaim = isEmailVerified(cognitoUser.email_verified) || isEmailVerified(tokenClaims.email_verified);
+    const existingByEmail = emailVerifiedClaim
+      ? await prisma.user.findUnique({
+          where: { email },
+          include: { profile: true },
+        })
+      : null;
 
     const matchingUsers = [existingByIdentity?.user, existingByExternalIdentity?.user, existingByLegacySub, existingByEmail].filter(Boolean);
     const matchingUserIds = new Set(matchingUsers.map((user) => user!.id));
@@ -310,7 +314,7 @@ export async function GET(request: Request) {
         return redirectTo(requestUrl, "/iniciar-sesion?error=account_disabled");
       }
       if (existingUser.status === "deleted") {
-        const token = createSessionToken({
+        const token = createReactivationToken({
           userId: existingUser.id,
           email: existingUser.email,
           role: existingUser.role,
@@ -380,7 +384,7 @@ export async function GET(request: Request) {
             authProvider: federatedProvider.authProvider,
             emailVerified: isEmailVerified(cognitoUser.email_verified),
             lastLoginAt: new Date(),
-            trialExpiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 3 months trial
+            trialExpiresAt: null,
             identities: {
               create: {
                 provider: "cognito",
@@ -453,7 +457,8 @@ export async function GET(request: Request) {
     }
 
     if (storedState?.plan === "membership" && user.tier !== "MECENAS") {
-      return redirectTo(requestUrl, "/unirme/pago");
+      const billingQuery = storedState.billing === "annual" ? "?billing=annual" : "?billing=monthly";
+      return redirectTo(requestUrl, `/unirme/pago${billingQuery}`);
     }
 
     if (!user.profile?.isOnboarded) {

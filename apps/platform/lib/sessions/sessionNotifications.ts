@@ -68,7 +68,12 @@ export async function createSessionNotification({
 }: {
   prisma: any;
   userId: string;
-  type: "session_requested" | "session_accepted" | "session_declined" | "session_cancelled";
+  type:
+    | "session_requested"
+    | "session_accepted"
+    | "session_declined"
+    | "session_cancelled"
+    | "session_guidance";
   title: string;
   actorName: string;
   actorAvatarUrl: string;

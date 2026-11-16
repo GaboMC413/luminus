@@ -13,9 +13,19 @@ export interface EventInscriptionEmailOptions {
   location?: string | null;
   userTimezone?: string | null;
   source?: "platform" | "web";
+  calendarUrl?: string | null;
 }
 
 const DEFAULT_EVENT_TIMEZONE = "America/Argentina/Buenos_Aires";
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 /**
  * Resolves a direct event join/watch URL if provided.
@@ -27,7 +37,7 @@ export function resolveDirectEventLink(rawUrl?: string | null): string | null {
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
     return trimmed;
   }
-  return `https://www.youtube.com/watch?v=${trimmed}`;
+  return `https://www.youtube.com/watch?v=${encodeURIComponent(trimmed)}`;
 }
 
 /**
@@ -126,6 +136,7 @@ function renderEventCardHtml(params: {
   directLink: string | null;
   isPlatformUser: boolean;
   showPendingNotice: boolean;
+  calendarUrl?: string | null;
 }): string {
   const {
     eventTitle,
@@ -137,16 +148,26 @@ function renderEventCardHtml(params: {
     directLink,
     isPlatformUser,
     showPendingNotice,
+    calendarUrl,
   } = params;
 
-  const coverHtml = coverImageUrl
-    ? directLink
-      ? `<a href="${directLink}" target="_blank" style="display: block; border: 0; outline: none; text-decoration: none;"><img src="${coverImageUrl}" alt="${eventTitle}" style="width: 100%; max-height: 320px; object-fit: cover; display: block; border: 0; outline: none;" /></a>`
-      : `<img src="${coverImageUrl}" alt="${eventTitle}" style="width: 100%; max-height: 320px; object-fit: cover; display: block; border: 0; outline: none;" />`
+  const safeTitle = escapeHtml(eventTitle);
+  const safeSpeaker = speakerName ? escapeHtml(speakerName) : "";
+  const safeDate = escapeHtml(formattedDate);
+  const safeTime = escapeHtml(formattedTime);
+  const safeLocation = escapeHtml(eventLocation);
+  const safeCoverUrl = coverImageUrl ? escapeHtml(coverImageUrl) : "";
+  const safeDirectLink = directLink ? escapeHtml(directLink) : "";
+  const safeCalendarUrl = calendarUrl ? escapeHtml(calendarUrl) : "";
+
+  const coverHtml = safeCoverUrl
+    ? safeDirectLink
+      ? `<a href="${safeDirectLink}" target="_blank" style="display: block; border: 0; outline: none; text-decoration: none;"><img src="${safeCoverUrl}" alt="${safeTitle}" style="width: 100%; max-height: 320px; object-fit: cover; display: block; border: 0; outline: none;" /></a>`
+      : `<img src="${safeCoverUrl}" alt="${safeTitle}" style="width: 100%; max-height: 320px; object-fit: cover; display: block; border: 0; outline: none;" />`
     : "";
 
-  const actionHtml = directLink
-    ? `<a href="${directLink}" target="_blank" style="display: inline-block; background-color: #000000 !important; color: #ffffff !important; text-decoration: none; padding: 13px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center; border: 0;">
+  const actionHtml = safeDirectLink
+    ? `<a href="${safeDirectLink}" target="_blank" style="display: inline-block; background-color: #000000 !important; color: #ffffff !important; text-decoration: none; padding: 13px 28px; border-radius: 12px; font-size: 15px; font-weight: 600; text-align: center; border: 0;">
         Unirse al evento
       </a>`
     : showPendingNotice
@@ -164,32 +185,42 @@ function renderEventCardHtml(params: {
       
       <div style="padding: 24px; text-align: center;">
         <h3 style="font-size: 20px; font-weight: 700; line-height: 1.3; color: #0f172a !important; margin: 0 0 6px 0; text-align: center;">
-          ${eventTitle}
+          ${safeTitle}
         </h3>
         
-        ${speakerName ? `<p style="font-size: 15px; font-weight: 600; color: #334155 !important; margin: 0; text-align: center;">Con ${speakerName}</p>` : ""}
+        ${safeSpeaker ? `<p style="font-size: 15px; font-weight: 600; color: #334155 !important; margin: 0; text-align: center;">Con ${safeSpeaker}</p>` : ""}
         
         <div style="margin: 16px 0 ${actionHtml ? "22px" : "0"} 0; text-align: center;">
           <p style="margin: 0; font-size: 14px; font-weight: 600; color: #334155 !important; text-align: center;">
-            ${formattedDate}
+            ${safeDate}
           </p>
           <p style="margin: 4px 0 0 0; font-size: 18px; font-weight: 700; color: #0f172a !important; text-align: center;">
-            ${formattedTime}
+            ${safeTime}
           </p>
           <p style="margin: 4px 0 0 0; font-size: 13px; font-weight: 500; color: #64748b !important; text-align: center;">
-            ${eventLocation}
+            ${safeLocation}
           </p>
         </div>
         
         ${actionHtml}
+        ${
+          safeCalendarUrl
+            ? `<div style="margin-top: 14px; text-align: center;">
+                <a href="${safeCalendarUrl}" target="_blank" style="display: inline-block; background-color: #ffffff !important; color: #0f172a !important; text-decoration: none; padding: 10px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; text-align: center; border: 1px solid #cbd5e1;">
+                  Agregar a Google Calendar
+                </a>
+              </div>`
+            : ""
+        }
       </div>
     </div>
   `;
 }
 
 export function renderEventRegistrationEmailHtml(data: EventInscriptionEmailOptions): string {
-  const firstName = data.firstName || "Usuario";
+  const firstName = escapeHtml(data.firstName || "Usuario");
   const eventTitle = data.eventTitle || "Evento de Bienestar LUMINUS";
+  const safeEventTitle = escapeHtml(eventTitle);
   const { formattedDate, formattedTime } = formatEventDateAndTime(
     data.eventDate,
     data.timeText,
@@ -206,7 +237,7 @@ export function renderEventRegistrationEmailHtml(data: EventInscriptionEmailOpti
     </h1>
 
     <p style="font-size: 16px; line-height: 1.6; color: #000000 !important; font-weight: 500; margin: 0 0 24px 0; text-align: center;">
-      Tu inscripción a <strong style="color: #000000 !important;">${eventTitle}</strong> está confirmada.
+      Tu inscripción a <strong style="color: #000000 !important;">${safeEventTitle}</strong> está confirmada.
     </p>
 
     ${renderEventCardHtml({
@@ -219,22 +250,25 @@ export function renderEventRegistrationEmailHtml(data: EventInscriptionEmailOpti
       directLink,
       isPlatformUser,
       showPendingNotice: true,
+      calendarUrl: data.calendarUrl,
     })}
 
     ${isPlatformUser ? "" : renderPlatformPromoBanner()}
   `;
 
   return renderEmailLayout({
-    title: `Confirmación de inscripción: ${eventTitle}`,
-    preheader: `${formattedDate} • ${formattedTime}`,
+    title: `Confirmación de inscripción: ${safeEventTitle}`,
+    preheader: `${escapeHtml(formattedDate)} • ${escapeHtml(formattedTime)}`,
     contentHtml,
     alignCenter: true,
   });
 }
 
 export function renderEventLiveEmailHtml(data: EventInscriptionEmailOptions): string {
-  const firstName = data.firstName || "Usuario";
+  const firstName = escapeHtml(data.firstName || "Usuario");
   const eventTitle = data.eventTitle || "Evento de Bienestar LUMINUS";
+  const safeEventTitle = escapeHtml(eventTitle);
+  const safeSpeakerName = data.speakerName ? escapeHtml(data.speakerName) : "";
   const { formattedDate, formattedTime } = formatEventDateAndTime(
     data.eventDate,
     data.timeText,
@@ -251,7 +285,7 @@ export function renderEventLiveEmailHtml(data: EventInscriptionEmailOptions): st
     </h1>
 
     <p style="font-size: 16px; line-height: 1.6; color: #000000 !important; font-weight: 500; margin: 0 0 24px 0; text-align: center;">
-      <strong style="color: #000000 !important;">${eventTitle}</strong>${data.speakerName ? `, con ${data.speakerName},` : ""} ya está disponible para que te unas.
+      <strong style="color: #000000 !important;">${safeEventTitle}</strong>${safeSpeakerName ? `, con ${safeSpeakerName},` : ""} ya está disponible para que te unas.
     </p>
 
     ${renderEventCardHtml({
@@ -270,8 +304,55 @@ export function renderEventLiveEmailHtml(data: EventInscriptionEmailOptions): st
   `;
 
   return renderEmailLayout({
-    title: `Ya puedes unirte: ${eventTitle}`,
-    preheader: `${formattedDate} • ${formattedTime}`,
+    title: `Ya puedes unirte: ${safeEventTitle}`,
+    preheader: `${escapeHtml(formattedDate)} • ${escapeHtml(formattedTime)}`,
+    contentHtml,
+    alignCenter: true,
+  });
+}
+
+export function renderEventReminderEmailHtml(data: EventInscriptionEmailOptions): string {
+  const firstName = escapeHtml(data.firstName || "Usuario");
+  const eventTitle = data.eventTitle || "Evento de Bienestar LUMINUS";
+  const safeEventTitle = escapeHtml(eventTitle);
+  const safeSpeakerName = data.speakerName ? escapeHtml(data.speakerName) : "";
+  const { formattedDate, formattedTime } = formatEventDateAndTime(
+    data.eventDate,
+    data.timeText,
+    data.userTimezone
+  );
+  const eventLocation = data.location || "Evento online";
+  const directLink = resolveDirectEventLink(data.youtubeUrl);
+  const coverImageUrl = data.eventCoverUrl || LOGO_IMAGE_URL;
+  const isPlatformUser = data.source === "platform";
+
+  const contentHtml = `
+    <h1 style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 16px 0; color: #000000 !important; text-align: center;">
+      ¡Hola ${firstName}!
+    </h1>
+
+    <p style="font-size: 16px; line-height: 1.6; color: #000000 !important; font-weight: 500; margin: 0 0 24px 0; text-align: center;">
+      <strong style="color: #000000 !important;">${safeEventTitle}</strong>${safeSpeakerName ? `, con ${safeSpeakerName},` : ""} comienza en <strong style="color: #000000 !important;">10 minutos</strong>.
+    </p>
+
+    ${renderEventCardHtml({
+      eventTitle,
+      speakerName: data.speakerName,
+      formattedDate,
+      formattedTime,
+      eventLocation,
+      coverImageUrl,
+      directLink,
+      isPlatformUser,
+      showPendingNotice: !directLink,
+    })}
+
+    ${isPlatformUser ? "" : renderPlatformPromoBanner()}
+  `;
+
+  return renderEmailLayout({
+    title: `Comienza en 10 minutos: ${safeEventTitle}`,
+    preheader: `${escapeHtml(formattedDate)} • ${escapeHtml(formattedTime)}`,
     contentHtml,
     alignCenter: true,
   });

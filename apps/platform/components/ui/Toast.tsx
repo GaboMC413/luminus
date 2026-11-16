@@ -59,7 +59,7 @@ export function Toast({
     <aside
       aria-live="polite"
       role="status"
-      className="fixed bottom-24 left-1/2 -translate-x-1/2 sm:bottom-6 sm:right-6 sm:left-auto sm:translate-x-0 z-[9999] w-[calc(100%-32px)] sm:w-[380px] pointer-events-auto"
+      className="fixed bottom-24 left-1/2 -translate-x-1/2 sm:bottom-24 lg:bottom-6 sm:right-6 sm:left-auto sm:translate-x-0 z-[9999] w-[calc(100%-32px)] sm:w-[380px] pointer-events-auto"
     >
       <div
         className={`w-full bg-white rounded-2xl border ${iconConfig.border} shadow-lg shadow-slate-900/10 p-4 flex items-start gap-3.5 transition-all duration-300 animate-in fade-in slide-in-from-bottom-3`}

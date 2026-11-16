@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { invalidateServerCacheTag } from "@/lib/serverCache";
 
 export const runtime = "nodejs";
 
@@ -165,6 +166,7 @@ export async function POST(request: Request) {
       },
     });
 
+    invalidateServerCacheTag("categories");
     return NextResponse.json({ category });
   } catch (error: any) {
     console.error("Failed to create category:", error);
@@ -213,6 +215,7 @@ export async function PATCH(request: Request) {
       },
     });
 
+    invalidateServerCacheTag("categories");
     return NextResponse.json({ category });
   } catch (error) {
     console.error("Failed to update category:", error);
@@ -240,6 +243,7 @@ export async function DELETE(request: Request) {
       where: { id },
     });
 
+    invalidateServerCacheTag("categories");
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Failed to delete category:", error);

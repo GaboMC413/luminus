@@ -28,6 +28,13 @@ import { ProfileInterestsSection } from "./ProfileInterestsSection";
 import { ProfileMembershipCard } from "./ProfileMembershipCard";
 import { ProfileCompletionCard } from "./ProfileCompletionCard";
 import { uploadAvatar } from "@/lib/uploadAvatar";
+import {
+  getCachedData,
+  setCachedData,
+  fetchWithCache,
+  invalidateClientCache,
+  clearAllClientCache,
+} from "@/lib/clientCache";
 
 export interface Profile {
   id?: string;
@@ -74,10 +81,18 @@ function syncProfileToLocalStorage(profile: Profile, email?: string) {
 export function ProfileContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [email, setEmail] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-  const [coverUrl, setCoverUrl] = useState("");
+  const [profile, setProfile] = useState<Profile | null>(
+    () => (getCachedData<any>("/api/profile")?.profile as Profile) ?? null
+  );
+  const [email, setEmail] = useState<string>(
+    () => getCachedData<any>("/api/profile")?.email ?? ""
+  );
+  const [loading, setLoading] = useState<boolean>(
+    () => !getCachedData<any>("/api/profile")?.profile
+  );
+  const [coverUrl, setCoverUrl] = useState<string>(
+    () => getCachedData<any>("/api/profile")?.profile?.cover_url ?? ""
+  );
 
   // Modal states
   const [showCoverModal, setShowCoverModal] = useState(false);
@@ -114,16 +129,25 @@ export function ProfileContent() {
   useEffect(() => {
     async function loadProfile() {
       try {
-        const response = await fetch("/api/profile", {
-          credentials: "include",
-        });
+        const data = await fetchWithCache(
+          "/api/profile",
+          async () => {
+            const response = await fetch("/api/profile", {
+              credentials: "include",
+            });
 
-        if (!response.ok) {
-          router.push("/auth/iniciar-sesion");
-          return;
-        }
+            if (!response.ok) {
+              router.push("/auth/iniciar-sesion");
+              return null;
+            }
 
-        const data = await response.json();
+            return response.json();
+          },
+          { ttlMs: 120_000 }
+        );
+
+        if (!data?.profile) return;
+
         const loadedProfile = data.profile as Profile;
         setProfile(loadedProfile);
         setCoverUrl(loadedProfile.cover_url || "");
@@ -179,6 +203,7 @@ export function ProfileContent() {
       credentials: "include",
     });
     const data = await res.json().catch(() => ({}));
+    clearAllClientCache();
 
     if (data?.cognitoLogoutUrl) {
       window.location.href = data.cognitoLogoutUrl;
@@ -207,6 +232,12 @@ export function ProfileContent() {
       });
     }
     const savedProfile = data.profile as Profile;
+    setCachedData("/api/profile", data);
+    invalidateClientCache([
+      "/api/auth/me",
+      "/api/especialistas*",
+      "/api/comunidad*",
+    ]);
     setProfile(savedProfile);
     setCoverUrl(savedProfile.cover_url || "");
     syncProfileToLocalStorage(savedProfile, data.email);

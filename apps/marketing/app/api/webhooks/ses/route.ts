@@ -65,8 +65,12 @@ async function verifySnsSignature(payload: Record<string, any>): Promise<boolean
     return false;
   }
 
-  // Verify TopicArn if configured
-  const expectedTopicArn = process.env.AWS_SNS_SES_TOPIC_ARN;
+  // Verify TopicArn: required in production to prevent cross-account SNS spoofing
+  const expectedTopicArn = process.env.AWS_SNS_SES_TOPIC_ARN?.trim();
+  if (process.env.NODE_ENV === "production" && !expectedTopicArn) {
+    console.error("[AWS SES Webhook] CRITICAL: AWS_SNS_SES_TOPIC_ARN is not configured in production.");
+    return false;
+  }
   if (expectedTopicArn && payload.TopicArn !== expectedTopicArn) {
     console.error("[AWS SES Webhook] TopicArn mismatch:", payload.TopicArn);
     return false;

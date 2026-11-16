@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { withServerCache } from "@/lib/serverCache";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -37,45 +38,51 @@ const LEGACY_COLOR_UPGRADE: Record<string, { color: string; bgColor: string }> =
 
 export async function GET() {
   try {
-    const { prisma } = await import("@/lib/db");
+    const result = await withServerCache(
+      "public-categories",
+      async () => {
+        const { prisma } = await import("@/lib/db");
 
-    const categories = await prisma.interestCategory.findMany({
-      orderBy: {
-        sortOrder: "asc",
-      },
-      include: {
-        interests: {
-          where: { isActive: true },
-          orderBy: { sortOrder: "asc" },
-        },
-        specialistAreas: {
-          where: { isActive: true },
-          orderBy: { sortOrder: "asc" },
-        },
-      },
-    });
+        const categories = await prisma.interestCategory.findMany({
+          orderBy: {
+            sortOrder: "asc",
+          },
+          include: {
+            interests: {
+              where: { isActive: true },
+              orderBy: { sortOrder: "asc" },
+            },
+            specialistAreas: {
+              where: { isActive: true },
+              orderBy: { sortOrder: "asc" },
+            },
+          },
+        });
 
-    const result = categories
-      .filter((cat) => cat.name !== "Otro" && cat.name !== "Otros")
-      .map((cat) => {
-        const rawIcon = (cat.icon || "tag").trim().toLowerCase();
-        const icon = LEGACY_ICON_UPGRADE[rawIcon] || rawIcon;
-        const rawColor = (cat.color || "#2563EB").trim().toUpperCase();
-        const upgradedColors = LEGACY_COLOR_UPGRADE[rawColor];
-        return {
-          id: cat.id,
-          title: cat.name,
-          slug: cat.slug,
-          icon,
-          iconFilled: cat.iconFilled,
-          color: upgradedColors ? upgradedColors.color : cat.color || "#2563EB",
-          bgColor: upgradedColors ? upgradedColors.bgColor : cat.bgColor || "#EFF6FF",
-          items: cat.interests
-            .map((item: any) => item.name)
-            .filter((name: string) => name !== "Otro" && name !== "Otros"),
-          specialistAreas: (cat.specialistAreas || []).map((area: any) => area.name),
-        };
-      });
+        return categories
+          .filter((cat) => cat.name !== "Otro" && cat.name !== "Otros")
+          .map((cat) => {
+            const rawIcon = (cat.icon || "tag").trim().toLowerCase();
+            const icon = LEGACY_ICON_UPGRADE[rawIcon] || rawIcon;
+            const rawColor = (cat.color || "#2563EB").trim().toUpperCase();
+            const upgradedColors = LEGACY_COLOR_UPGRADE[rawColor];
+            return {
+              id: cat.id,
+              title: cat.name,
+              slug: cat.slug,
+              icon,
+              iconFilled: cat.iconFilled,
+              color: upgradedColors ? upgradedColors.color : cat.color || "#2563EB",
+              bgColor: upgradedColors ? upgradedColors.bgColor : cat.bgColor || "#EFF6FF",
+              items: cat.interests
+                .map((item: any) => item.name)
+                .filter((name: string) => name !== "Otro" && name !== "Otros"),
+              specialistAreas: (cat.specialistAreas || []).map((area: any) => area.name),
+            };
+          });
+      },
+      { ttlMs: 300_000, tags: ["categories"] }
+    );
 
     return NextResponse.json({ categories: result });
   } catch (error) {

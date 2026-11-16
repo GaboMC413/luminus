@@ -12,9 +12,11 @@ import {
   X,
   ChevronDown,
   UserMinus,
+  UserPlus,
   Ban,
   Camera,
-  Pencil
+  Pencil,
+  MoreHorizontal
 } from "lucide-react";
 import { Button, BackButton } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -29,6 +31,8 @@ interface ProfileHeroHeaderProps {
   onTabChange?: (tab: "profesional" | "personal") => void;
   // Actions
   onConnect?: () => void;
+  onFollow?: () => void;
+  followLoading?: boolean;
   onRemoveConnection?: () => void;
   onBlockConnection?: () => void;
   connectionLoading?: boolean;
@@ -67,6 +71,8 @@ export function ProfileHeroHeader({
   activeTab = "profesional",
   onTabChange,
   onConnect,
+  onFollow,
+  followLoading = false,
   onRemoveConnection,
   onBlockConnection,
   connectionLoading = false,
@@ -87,10 +93,6 @@ export function ProfileHeroHeader({
   backLabel,
 }: ProfileHeroHeaderProps) {
   const isOwn = isOwnProfile || Boolean(profile?.is_own_profile);
-  const MONTH_NAMES = [
-    "enero", "febrero", "marzo", "abril", "mayo", "junio",
-    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"
-  ];
 
   const fullName = `${profile?.first_name || ""} ${profile?.last_name || ""}`.trim() || "Usuario LUMINUS";
   const hasCover = profile?.cover_url && profile.cover_url !== "" && !profile.cover_url.includes("empty");
@@ -108,11 +110,20 @@ export function ProfileHeroHeader({
     if (connectionLoading) {
       if (profile?.connection_status === "blocked") return "Desbloqueando...";
       if (profile?.connection_status === "accepted") return "Eliminando...";
-      return "Sumando...";
+      if (profile?.connection_status === "pending_sent") return "Cancelando...";
+      if (profile?.connection_status === "pending_received") return "Aceptando...";
+      return "Enviando...";
     }
     if (profile?.connection_status === "blocked") return "Desbloquear";
-    if (profile?.connection_status === "accepted") return "En mi red";
-    return "Sumar a mi red";
+    if (profile?.connection_status === "accepted") return "Conectados";
+    if (profile?.connection_status === "pending_sent") return "Solicitud enviada";
+    if (profile?.connection_status === "pending_received") return "Aceptar solicitud";
+    return "Conectar";
+  };
+
+  const getFollowLabel = () => {
+    if (followLoading) return profile?.is_following ? "Dejando..." : "Siguiendo...";
+    return profile?.is_following ? "Siguiendo" : "Seguir";
   };
 
   return (
@@ -165,9 +176,9 @@ export function ProfileHeroHeader({
                       {fullName}
                     </h1>
 
-                    {profile?.has_in_network && !isOwn && (
+                    {profile?.connection_status === "pending_received" && !isOwn && (
                       <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 text-meta font-semibold font-jakarta border border-blue-200/60 flex items-center select-none">
-                        Te sumó a su red
+                        Quiere conectar contigo
                       </span>
                     )}
                   </div>
@@ -218,7 +229,7 @@ export function ProfileHeroHeader({
                           Miembro desde {(() => {
                             try {
                               const d = new Date(profile.member_since);
-                              return `${MONTH_NAMES[d.getMonth()]} de ${d.getFullYear()}`;
+                              return Number.isNaN(d.getTime()) ? "" : d.getFullYear();
                             } catch {
                               return "";
                             }
@@ -254,9 +265,101 @@ export function ProfileHeroHeader({
                       <span>Compartir</span>
                     </Button>
                   </>
+                ) : isSpecialist ? (
+                  <>
+                    {/* Specialist Profile: Follow Primary + Connect in Overflow Menu */}
+                    {profile?.connection_status === "blocked" ? (
+                      <Button
+                        onClick={onConnect}
+                        variant="secondary"
+                        disabled={connectionLoading}
+                        className="px-4 text-xs font-semibold"
+                      >
+                        <Ban className="w-3.5 h-3.5 text-rose-500 mr-1.5" />
+                        <span>{getConnectionLabel()}</span>
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          onClick={onFollow}
+                          variant={profile?.is_following ? "secondary" : "primary"}
+                          disabled={followLoading}
+                          className="gap-1.5 px-4 text-xs font-semibold"
+                        >
+                          {profile?.is_following ? (
+                            <Check className="w-3.5 h-3.5" />
+                          ) : (
+                            <UserPlus className="w-3.5 h-3.5" />
+                          )}
+                          <span>{getFollowLabel()}</span>
+                        </Button>
+
+                        <Button
+                          onClick={onSendMessage}
+                          variant="secondary"
+                          className="gap-1.5 px-4 text-xs font-semibold"
+                        >
+                          <Mail className="w-3.5 h-3.5" />
+                          <span>Mensaje</span>
+                        </Button>
+
+                        <div className="relative" ref={connectionDropdownRefDesktop}>
+                          <Button
+                            onClick={() => setIsConnectionDropdownOpen?.(!isConnectionDropdownOpen)}
+                            variant="secondary"
+                            className="!w-11 !h-11 !p-0 shrink-0"
+                            title="Más opciones"
+                            aria-label="Más opciones de conexión"
+                          >
+                            <MoreHorizontal className="w-4 h-4 text-slate-700" />
+                          </Button>
+
+                          {isConnectionDropdownOpen && (
+                            <div className="absolute top-full right-0 mt-1.5 w-52 bg-white border border-slate-200/90 rounded-2xl overflow-hidden z-50 animate-in fade-in duration-150 shadow-xl shadow-slate-900/10">
+                              <button
+                                onClick={() => {
+                                  setIsConnectionDropdownOpen?.(false);
+                                  onConnect?.();
+                                }}
+                                disabled={connectionLoading}
+                                className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors border-none cursor-pointer bg-transparent text-left font-jakarta"
+                              >
+                                {profile?.connection_status === "accepted" ? (
+                                  <UserMinus className="w-3.5 h-3.5 text-rose-500" />
+                                ) : (
+                                  <UserPlus className="w-3.5 h-3.5 text-slate-500" />
+                                )}
+                                <span>
+                                  {profile?.connection_status === "accepted"
+                                    ? "Eliminar contacto"
+                                    : getConnectionLabel()}
+                                </span>
+                              </button>
+                              <button
+                                onClick={onBlockConnection}
+                                className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-rose-50/50 transition-colors border-none cursor-pointer bg-transparent text-left font-jakarta"
+                              >
+                                <Ban className="w-3.5 h-3.5" />
+                                <span>Bloquear usuario</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+
+                    <Button
+                      onClick={onShareProfile}
+                      variant="secondary"
+                      className="!w-11 !h-11 !p-0 shrink-0"
+                      title="Compartir perfil"
+                    >
+                      <Share2 className="w-4 h-4 text-slate-700" />
+                    </Button>
+                  </>
                 ) : (
                   <>
-                    {/* Slot 1: Unified Relationship Action */}
+                    {/* Member Profile: Mutual Connect Primary */}
                     {profile?.connection_status === "accepted" ? (
                       <div className="relative" ref={connectionDropdownRefDesktop}>
                         <Button
@@ -265,7 +368,7 @@ export function ProfileHeroHeader({
                           disabled={connectionLoading}
                           className="gap-1.5 px-3.5 text-xs font-semibold"
                         >
-                          <span>En mi red</span>
+                          <span>Conectados</span>
                           <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                         </Button>
 
@@ -276,7 +379,7 @@ export function ProfileHeroHeader({
                               className="w-full flex items-center gap-2 px-3.5 py-2.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-rose-50/50 transition-colors border-none cursor-pointer bg-transparent text-left font-jakarta"
                             >
                               <UserMinus className="w-3.5 h-3.5" />
-                              <span>Eliminar de mi red</span>
+                              <span>Eliminar contacto</span>
                             </button>
                             <button
                               onClick={onBlockConnection}
@@ -291,7 +394,11 @@ export function ProfileHeroHeader({
                     ) : (
                       <Button
                         onClick={onConnect}
-                        variant={profile?.connection_status === "blocked" ? "secondary" : "primary"}
+                        variant={
+                          profile?.connection_status === "blocked" || profile?.connection_status === "pending_sent"
+                            ? "secondary"
+                            : "primary"
+                        }
                         disabled={connectionLoading}
                         className="px-4 text-xs font-semibold"
                       >
@@ -357,6 +464,92 @@ export function ProfileHeroHeader({
                     <span>Compartir</span>
                   </Button>
                 </div>
+              ) : isSpecialist ? (
+                <div className="flex items-center gap-2 w-full">
+                  {profile?.connection_status === "blocked" ? (
+                    <Button
+                      onClick={onConnect}
+                      variant="secondary"
+                      size="md"
+                      disabled={connectionLoading}
+                      className="flex-1 min-w-0 gap-1.5 !px-3 whitespace-nowrap"
+                    >
+                      <Ban className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                      <span className="truncate">{getConnectionLabel()}</span>
+                    </Button>
+                  ) : (
+                    <>
+                      <Button
+                        onClick={onFollow}
+                        variant={profile?.is_following ? "secondary" : "primary"}
+                        size="md"
+                        disabled={followLoading}
+                        className="flex-1 min-w-0 gap-1.5 !px-3 whitespace-nowrap"
+                      >
+                        {profile?.is_following ? (
+                          <Check className="w-3.5 h-3.5 shrink-0" />
+                        ) : (
+                          <UserPlus className="w-3.5 h-3.5 shrink-0" />
+                        )}
+                        <span className="truncate">{getFollowLabel()}</span>
+                      </Button>
+
+                      <Button
+                        onClick={onSendMessage}
+                        variant="secondary"
+                        size="md"
+                        className="flex-1 min-w-0 gap-1.5 !px-3 whitespace-nowrap"
+                      >
+                        <Mail className="w-3.5 h-3.5 shrink-0" />
+                        <span>Mensaje</span>
+                      </Button>
+
+                      <div className="relative shrink-0" ref={connectionDropdownRefMobile}>
+                        <Button
+                          onClick={() => setIsConnectionDropdownOpen?.(!isConnectionDropdownOpen)}
+                          variant="secondary"
+                          size="md"
+                          className="!w-11 !p-0 shrink-0"
+                          title="Más opciones"
+                          aria-label="Más opciones de conexión"
+                        >
+                          <MoreHorizontal className="w-4 h-4 text-slate-700" />
+                        </Button>
+
+                        {isConnectionDropdownOpen && (
+                          <div className="absolute top-full right-0 mt-1.5 w-52 bg-white border border-slate-200/90 rounded-2xl overflow-hidden z-50 animate-in fade-in duration-150 shadow-xl shadow-slate-900/10">
+                            <button
+                              onClick={() => {
+                                setIsConnectionDropdownOpen?.(false);
+                                onConnect?.();
+                              }}
+                              disabled={connectionLoading}
+                              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors border-none cursor-pointer bg-transparent text-left font-jakarta"
+                            >
+                              {profile?.connection_status === "accepted" ? (
+                                <UserMinus className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                              ) : (
+                                <UserPlus className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                              )}
+                              <span>
+                                {profile?.connection_status === "accepted"
+                                  ? "Eliminar contacto"
+                                  : getConnectionLabel()}
+                              </span>
+                            </button>
+                            <button
+                              onClick={onBlockConnection}
+                              className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-rose-50/50 transition-colors border-none cursor-pointer bg-transparent text-left font-jakarta"
+                            >
+                              <Ban className="w-3.5 h-3.5 shrink-0" />
+                              <span>Bloquear usuario</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
               ) : (
                 <div className="flex items-center gap-2 w-full">
                   {profile?.connection_status === "accepted" ? (
@@ -369,7 +562,7 @@ export function ProfileHeroHeader({
                         fullWidth
                         className="gap-1.5 !px-3 whitespace-nowrap"
                       >
-                        <span className="truncate">En mi red</span>
+                        <span className="truncate">Conectados</span>
                         <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                       </Button>
 
@@ -380,7 +573,7 @@ export function ProfileHeroHeader({
                             className="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-rose-50/50 transition-colors border-none cursor-pointer bg-transparent text-left font-jakarta"
                           >
                             <UserMinus className="w-3.5 h-3.5 shrink-0" />
-                            <span>Eliminar de mi red</span>
+                            <span>Eliminar contacto</span>
                           </button>
                           <button
                             onClick={onBlockConnection}
@@ -395,7 +588,11 @@ export function ProfileHeroHeader({
                   ) : (
                     <Button
                       onClick={onConnect}
-                      variant={profile?.connection_status === "blocked" ? "secondary" : "primary"}
+                      variant={
+                        profile?.connection_status === "blocked" || profile?.connection_status === "pending_sent"
+                          ? "secondary"
+                          : "primary"
+                      }
                       size="md"
                       disabled={connectionLoading}
                       className="flex-1 min-w-0 gap-1.5 !px-3 whitespace-nowrap"

@@ -41,7 +41,13 @@ function serializeNotification(notification: any) {
   } else if (notification.type === "connection_accepted") {
     title = "Solicitud aceptada";
     body = "aceptó tu solicitud de conexión.";
-  } else if (notification.type === "connection_request" || notification.type === "network_add") {
+  } else if (notification.type === "connection_request") {
+    title = "Solicitud de conexión";
+    body = "te envió una solicitud de conexión.";
+  } else if (notification.type === "specialist_follow") {
+    title = "Nuevo seguidor";
+    body = "empezó a seguirte.";
+  } else if (notification.type === "network_add") {
     title = "Nueva conexión";
     body = "te sumó a su red.";
   } else if (String(notification.type).startsWith("session_")) {
@@ -55,15 +61,15 @@ function serializeNotification(notification: any) {
     }
   }
 
-  // Extract actorId from actionUrl if available
-  const actorIdMatch = (notification.actionUrl || "").match(/[?&]id=([^&]+)/);
-  const actorId = actorIdMatch ? actorIdMatch[1] : undefined;
-
-  const normalizedType = notification.type === "connection_request" ? "network_add" : notification.type;
+  // Extract actorId from actionUrl if available (?id=... or /perfil/<uuid>)
+  const urlStr = notification.actionUrl || "";
+  const queryIdMatch = urlStr.match(/[?&]id=([^&]+)/);
+  const pathIdMatch = urlStr.match(/\/perfil\/([^/?]+)/);
+  const actorId = queryIdMatch ? queryIdMatch[1] : (pathIdMatch ? pathIdMatch[1] : undefined);
 
   return {
     id: notification.id,
-    type: normalizedType,
+    type: notification.type,
     title,
     user: notification.actorName || "LUMINUS",
     avatar: isQuestCompleted ? "" : (notification.actorAvatarUrl || ""),
@@ -103,21 +109,6 @@ export async function GET() {
         select: { id: true },
       }),
     ]);
-
-    const hasLegacyRequests = notifications.some((n: any) => n.type === "connection_request");
-    if (hasLegacyRequests) {
-      prisma.notification.updateMany({
-        where: {
-          userId: session.userId,
-          type: "connection_request",
-        },
-        data: {
-          type: "network_add",
-          title: "Nueva conexión",
-          body: "te sumó a su red.",
-        },
-      }).catch((notifUpdateErr) => console.error("Auto-heal legacy notifications failed:", notifUpdateErr));
-    }
 
     const serialized: any[] = notifications.map(serializeNotification);
 

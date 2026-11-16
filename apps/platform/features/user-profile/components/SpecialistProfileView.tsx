@@ -102,6 +102,8 @@ interface SpecialistProfileViewProps {
   profile: any;
   isPublic?: boolean;
   onConnect?: () => void;
+  onFollow?: () => void;
+  followLoading?: boolean;
   onRemoveConnection?: () => void;
   onBlockConnection?: () => void;
   connectionLoading?: boolean;
@@ -134,6 +136,8 @@ export function SpecialistProfileView({
   profile,
   isPublic = true,
   onConnect,
+  onFollow,
+  followLoading = false,
   onRemoveConnection,
   onBlockConnection,
   connectionLoading,
@@ -291,6 +295,8 @@ export function SpecialistProfileView({
         activeTab={mainTab}
         onTabChange={setMainTab}
         onConnect={onConnect}
+        onFollow={onFollow}
+        followLoading={followLoading}
         onRemoveConnection={onRemoveConnection}
         onBlockConnection={onBlockConnection}
         connectionLoading={connectionLoading}
@@ -412,7 +418,7 @@ export function SpecialistProfileView({
                     )}
 
                     {hasInstitution && (
-                      <div className="flex flex-col gap-1.5">
+                      <div className="flex flex-col gap-3.5">
                         <h4 className="text-title-section text-slate-900 font-bold">
                           Formación
                         </h4>
@@ -423,7 +429,7 @@ export function SpecialistProfileView({
                     )}
 
                     {socialLinks.length > 0 && (
-                      <div className="flex flex-col gap-2.5">
+                      <div className="flex flex-col gap-3.5">
                         <h4 className="text-title-section text-slate-900 font-bold">
                           Redes sociales
                         </h4>
@@ -651,35 +657,37 @@ export function SpecialistProfileView({
                       {activeAvailability.map((slot: any, idx: number) => (
                         <div
                           key={`${slot.dayOfWeek}-${idx}`}
-                          className="flex items-center justify-between py-1.5 text-meta text-slate-700"
+                          className="flex items-center justify-between py-1.5 text-body"
                         >
-                          <span className="font-semibold text-slate-900">
+                          <span className="font-medium text-slate-900">
                             {FULL_DAY_LABELS[slot.dayOfWeek] ?? `Día ${slot.dayOfWeek}`}
                           </span>
-                          <span className="inline-flex items-center gap-1.5 text-slate-500">
-                            <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          <span className="inline-flex items-center gap-1.5 text-slate-500 tabular-nums">
+                            <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                             {slot.startTime} – {slot.endTime}
                           </span>
                         </div>
                       ))}
                       <Button
-                        variant="soft"
+                        variant="secondary"
                         size="sm"
                         fullWidth
                         onClick={() => router.push("/sesiones?tab=recibidas")}
                         className="mt-2 gap-1.5"
                       >
-                        <CalendarCheck className="w-3.5 h-3.5" />
-                        <span>Gestionar solicitudes</span>
+                        <CalendarCheck className="w-3.5 h-3.5 shrink-0" />
+                        <span>Ver mis sesiones</span>
                       </Button>
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        fullWidth
                         onClick={() => setShowSessionGuide(true)}
-                        className="inline-flex items-center justify-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 bg-transparent border-none p-1 cursor-pointer font-jakarta"
+                        className="gap-1.5 text-slate-500 hover:text-slate-900"
                       >
-                        <HelpCircle className="w-3.5 h-3.5" />
+                        <HelpCircle className="w-3.5 h-3.5 shrink-0" />
                         <span>¿Cómo funcionan las sesiones?</span>
-                      </button>
+                      </Button>
                     </div>
                   ) : myActiveSession ? (
                     <div className="flex flex-col gap-3.5">
@@ -728,31 +736,26 @@ export function SpecialistProfileView({
                       </p>
 
                       {availableDates.length > 0 && (
-                        <div className="flex flex-col gap-2.5 pt-2 border-t border-slate-100">
-                          <span className="text-label text-slate-500">
-                            Próximos días disponibles
-                          </span>
-                          <div className="grid grid-cols-3 gap-2">
-                            {availableDates.slice(0, 6).map((day) => (
-                              <button
-                                key={day.dateKey}
-                                type="button"
-                                onClick={() => {
-                                  setSelectedDateKeyForModal(day.dateKey);
-                                  setIsSchedulerOpen(true);
-                                }}
-                                className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white hover:border-slate-900 hover:bg-slate-50 px-2 py-2.5 text-slate-900 transition-all font-jakarta cursor-pointer shadow-none"
-                              >
-                                <span className="text-meta text-slate-500">
-                                  {day.dayLabel}
-                                </span>
-                                <span className="text-xs font-bold mt-0.5">
-                                  {day.dayNumber} {day.monthShort}
-                                </span>
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1" />
-                              </button>
-                            ))}
-                          </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {availableDates.slice(0, 6).map((day) => (
+                            <button
+                              key={day.dateKey}
+                              type="button"
+                              onClick={() => {
+                                setSelectedDateKeyForModal(day.dateKey);
+                                setIsSchedulerOpen(true);
+                              }}
+                              className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white hover:border-slate-900 hover:bg-slate-50 px-2 py-2.5 text-slate-900 transition-all font-jakarta cursor-pointer shadow-none"
+                            >
+                              <span className="text-meta text-slate-500">
+                                {day.dayLabel}
+                              </span>
+                              <span className="text-xs font-bold mt-0.5">
+                                {day.dayNumber} {day.monthShort}
+                              </span>
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1" />
+                            </button>
+                          ))}
                         </div>
                       )}
 
@@ -773,14 +776,16 @@ export function SpecialistProfileView({
                         <span>Elegir horario</span>
                       </Button>
 
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        fullWidth
                         onClick={() => setShowSessionGuide(true)}
-                        className="inline-flex items-center justify-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 bg-transparent border-none p-1 cursor-pointer font-jakarta"
+                        className="gap-1.5 text-slate-500 hover:text-slate-900"
                       >
-                        <HelpCircle className="w-3.5 h-3.5" />
+                        <HelpCircle className="w-3.5 h-3.5 shrink-0" />
                         <span>¿Cómo funciona?</span>
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </ProfileSectionCard>

@@ -179,7 +179,7 @@ export async function POST(request: Request) {
             select: { tier: true, stripeSubscriptionId: true, profile: { select: { selectedPlan: true } } },
           });
 
-          const isUserMecenas = fullUser?.tier === "MECENAS" || Boolean(fullUser?.stripeSubscriptionId);
+          const isUserMecenas = fullUser?.tier === "MECENAS";
           const userName = firstName || profile?.firstName || undefined;
 
           if (isUserMecenas) {

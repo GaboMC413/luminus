@@ -10,7 +10,12 @@ export type IntroSessionEmailVariant =
   | "accepted_requester"
   | "accepted_specialist"
   | "declined_requester"
-  | "cancelled";
+  | "cancelled"
+  | "reminder_requester"
+  | "reminder_specialist"
+  | "feedback_requester"
+  | "feedback_specialist"
+  | "specialist_guidance";
 
 export interface IntroSessionEmailOptions {
   variant: IntroSessionEmailVariant;
@@ -18,10 +23,13 @@ export interface IntroSessionEmailOptions {
   counterpartyName: string;
   friendlyDate: string;
   startTime: string;
+  endTime?: string;
+  scheduledDate?: string;
   timezone: string;
   note?: string;
   meetingLink?: string;
   actionPath?: string;
+  calendarUrl?: string | null;
 }
 
 function escapeHtml(value: string): string {
@@ -60,6 +68,15 @@ export function getIntroSessionEmailSubject(
       return `Actualización sobre tu solicitud con ${counterpartyName}`;
     case "cancelled":
       return `Sesión cancelada (${friendlyDate}, ${startTime})`;
+    case "reminder_requester":
+    case "reminder_specialist":
+      return `Tu sesión con ${counterpartyName} comienza en 10 minutos (${startTime} hs)`;
+    case "feedback_requester":
+      return `¿Cómo sentiste tu sesión con ${counterpartyName}?`;
+    case "feedback_specialist":
+      return `Cierra tu sesión con ${counterpartyName} con una breve valoración`;
+    case "specialist_guidance":
+      return `${counterpartyName} te dejó una orientación de tu sesión`;
   }
 }
 
@@ -76,6 +93,7 @@ export function renderIntroSessionEmailHtml(
     note,
     meetingLink,
     actionPath,
+    calendarUrl,
   } = options;
 
   const safeRecipient = escapeHtml(recipientName || "Hola");
@@ -87,11 +105,14 @@ export function renderIntroSessionEmailHtml(
 
   const isAcceptedVariant =
     variant === "accepted_requester" || variant === "accepted_specialist";
-  const effectiveMeetingLink = isAcceptedVariant ? meetingLink : undefined;
+  const isReminderVariant =
+    variant === "reminder_requester" || variant === "reminder_specialist";
+  const hasMeetingLinkVariant = isAcceptedVariant || isReminderVariant;
+  const effectiveMeetingLink = hasMeetingLinkVariant ? meetingLink : undefined;
   const safeLink = effectiveMeetingLink ? escapeHtml(effectiveMeetingLink) : "";
 
   const ctaUrl =
-    isAcceptedVariant && isHttpUrl(effectiveMeetingLink)
+    hasMeetingLinkVariant && isHttpUrl(effectiveMeetingLink)
       ? effectiveMeetingLink!.trim()
       : `${PLATFORM_APP_URL}${actionPath || "/sesiones"}`;
 
@@ -145,6 +166,31 @@ export function renderIntroSessionEmailHtml(
       ctaLabel = "Ver mis sesiones";
       noteLabel = `Mensaje de ${safeCounterparty}`;
       break;
+    case "reminder_requester":
+    case "reminder_specialist":
+      heading = "Tu sesión comienza en 10 minutos";
+      intro = `tu sesión introductoria de 15 minutos con <strong>${safeCounterparty}</strong> está por comenzar.`;
+      ctaLabel = isHttpUrl(effectiveMeetingLink)
+        ? "Unirse a la sesión"
+        : "Ver detalle de la sesión";
+      noteLabel = `Mensaje de ${safeCounterparty}`;
+      break;
+    case "feedback_requester":
+      heading = "¿Cómo sentiste tu sesión?";
+      intro = `tu sesión de 15 minutos con <strong>${safeCounterparty}</strong> acaba de finalizar. Cuéntanos en menos de un minuto cómo estuvo la experiencia para seguir cuidando la calidad de LUMINUS.`;
+      ctaLabel = "Compartir mi experiencia";
+      break;
+    case "feedback_specialist":
+      heading = "¿Cómo estuvo la sesión?";
+      intro = `tu sesión de 15 minutos con <strong>${safeCounterparty}</strong> acaba de finalizar. Puedes dejarle una orientación o próximo paso y ayudarnos a saber si el encuentro fue un buen match.`;
+      ctaLabel = "Completar valoración";
+      break;
+    case "specialist_guidance":
+      heading = "Tienes una nueva orientación";
+      intro = `<strong>${safeCounterparty}</strong> compartió una reflexión y próximo paso tras tu sesión introductoria.`;
+      ctaLabel = "Ver en mis sesiones";
+      noteLabel = `Orientación de ${safeCounterparty}`;
+      break;
   }
 
   const summaryBox = `
@@ -170,7 +216,7 @@ export function renderIntroSessionEmailHtml(
           : ""
       }
       ${
-        isAcceptedVariant && safeLink && !isHttpUrl(effectiveMeetingLink)
+        hasMeetingLinkVariant && safeLink && !isHttpUrl(effectiveMeetingLink)
           ? `<div style="margin: 14px 0 0 0; padding-top: 14px; border-top: 1px solid #e2e8f0; text-align: left;">
               <p style="margin: 0 0 4px 0; font-size: 12px; font-weight: 600; color: #64748b;">Cómo conectarse</p>
               <p style="margin: 0; font-size: 14px; color: #0f172a;">${safeLink}</p>
@@ -224,6 +270,15 @@ export function renderIntroSessionEmailHtml(
         <a href="${escapeHtml(ctaUrl)}" target="_blank" style="display: inline-block; background-color: #0f172a; color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 600; padding: 12px 24px; border-radius: 10px;">
           ${ctaLabel}
         </a>
+        ${
+          isAcceptedVariant && calendarUrl
+            ? `<div style="margin-top: 12px;">
+                <a href="${escapeHtml(calendarUrl)}" target="_blank" style="display: inline-block; background-color: #ffffff; color: #0f172a; text-decoration: none; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 10px; border: 1px solid #cbd5e1;">
+                  Agregar a Google Calendar
+                </a>
+              </div>`
+            : ""
+        }
       </div>
       ${guideBox}
       ${legalFooter}

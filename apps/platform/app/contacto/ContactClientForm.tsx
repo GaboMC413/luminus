@@ -19,6 +19,7 @@ interface UserDisplay {
 }
 
 const MOTIVO_OPTIONS = [
+  { value: "Comentarios o sugerencias", label: "Comentarios o sugerencias" },
   { value: "Espacios", label: "Espacios" },
   { value: "Especialistas", label: "Especialistas" },
   { value: "Eventos y actividades", label: "Eventos y actividades" },
@@ -30,6 +31,7 @@ const MOTIVO_OPTIONS = [
 function resolveInitialMotivo(param: string | null): string {
   if (!param) return "";
   const lower = param.toLowerCase();
+  if (lower.startsWith("comentario") || lower.startsWith("sugerencia") || lower.startsWith("feedback")) return "Comentarios o sugerencias";
   if (lower.startsWith("espacio")) return "Espacios";
   if (lower.startsWith("especialista")) return "Especialistas";
   if (lower.startsWith("evento") || lower.startsWith("actividad")) return "Eventos y actividades";

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCurrentSession } from "@/lib/auth/session";
 import { sendEventRegistrationEmail } from "@/lib/mails/sender";
+import { withServerCache } from "@/lib/serverCache";
+import { resolveEventUtcDate } from "@/lib/eventDateUtils";
 import fs from "fs";
 import path from "path";
 
@@ -72,129 +74,147 @@ export async function GET(request: Request) {
     }
 
     if (type === "past") {
-      let pastEvents = await prisma.event.findMany({
-        where: {
-          OR: [
-            { isUpcoming: false },
-            {
-              AND: [
-                { date: { not: null } },
-                { date: { lt: today } },
-              ],
-            },
-          ],
-          AND: [
-            {
+      const pastEvents = await withServerCache(
+        "events-past",
+        async () => {
+          let dbPastEvents: any[] = await prisma.event.findMany({
+            where: {
               OR: [
-                { youtubeId: { not: null } },
-                { link: { contains: "youtube" } },
-                { link: { contains: "youtu.be" } },
+                { isUpcoming: false },
+                {
+                  AND: [
+                    { date: { not: null } },
+                    { date: { lt: today } },
+                  ],
+                },
+              ],
+              AND: [
+                {
+                  OR: [
+                    { youtubeId: { not: null } },
+                    { link: { contains: "youtube" } },
+                    { link: { contains: "youtu.be" } },
+                  ],
+                },
               ],
             },
-          ],
-        },
-        orderBy: { date: "desc" },
-        select: {
-          id: true,
-          slug: true,
-          title: true,
-          description: true,
-          speakerName: true,
-          speakerBio: true,
-          category: true,
-          coverUrl: true,
-          date: true,
-          timeText: true,
-          location: true,
-          link: true,
-          youtubeId: true,
-          isUpcoming: true,
-        },
-      });
+            orderBy: { date: "desc" },
+            select: {
+              id: true,
+              slug: true,
+              title: true,
+              description: true,
+              speakerName: true,
+              speakerBio: true,
+              category: true,
+              coverUrl: true,
+              date: true,
+              timeText: true,
+              location: true,
+              link: true,
+              youtubeId: true,
+              isUpcoming: true,
+            },
+          });
 
-      // Fallback to local json data if DB has no recordings
-      if (!pastEvents || pastEvents.length === 0) {
-        try {
-          const possiblePaths = [
-            path.join(process.cwd(), "apps", "marketing", "data", "youtube_videos.json"),
-            path.join(process.cwd(), "data", "youtube_videos.json"),
-            path.join(process.cwd(), "..", "marketing", "data", "youtube_videos.json"),
-          ];
-          for (const jsonPath of possiblePaths) {
-            if (fs.existsSync(jsonPath)) {
-              const fileData = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
-              if (Array.isArray(fileData)) {
-                pastEvents = fileData.map((item: any) => ({
-                  id: item.youtube_id || item.id,
-                  slug: item.slug || null,
-                  title: item.title,
-                  description: item.description || "",
-                  speakerName: item.speaker_name || item.speakerName || null,
-                  speakerBio: item.speaker_bio || item.speakerBio || null,
-                  category: item.category || null,
-                  coverUrl: item.cover_url || item.coverUrl || null,
-                  date: item.date || null,
-                  timeText: item.timeText || item.publishTimeText || null,
-                  location: item.location || "YouTube",
-                  link: item.link || (item.youtube_id ? `https://www.youtube.com/watch?v=${item.youtube_id}` : null),
-                  youtubeId: item.youtube_id || item.youtubeId || null,
-                  isUpcoming: false,
-                }));
-                break;
+          if (!dbPastEvents || dbPastEvents.length === 0) {
+            try {
+              const possiblePaths = [
+                path.join(process.cwd(), "apps", "marketing", "data", "youtube_videos.json"),
+                path.join(process.cwd(), "data", "youtube_videos.json"),
+                path.join(process.cwd(), "..", "marketing", "data", "youtube_videos.json"),
+              ];
+              for (const jsonPath of possiblePaths) {
+                if (fs.existsSync(jsonPath)) {
+                  const fileData = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
+                  if (Array.isArray(fileData)) {
+                    dbPastEvents = fileData.map((item: any) => ({
+                      id: item.youtube_id || item.id,
+                      slug: item.slug || null,
+                      title: item.title,
+                      description: item.description || "",
+                      speakerName: item.speaker_name || item.speakerName || null,
+                      speakerBio: item.speaker_bio || item.speakerBio || null,
+                      category: item.category || null,
+                      coverUrl: item.cover_url || item.coverUrl || null,
+                      date: item.date || null,
+                      timeText: item.timeText || item.publishTimeText || null,
+                      location: item.location || "YouTube",
+                      link: item.link || (item.youtube_id ? `https://www.youtube.com/watch?v=${item.youtube_id}` : null),
+                      youtubeId: item.youtube_id || item.youtubeId || null,
+                      isUpcoming: false,
+                    }));
+                    break;
+                  }
+                }
               }
+            } catch (fsErr) {
+              console.warn("[Platform /api/events] Error reading fallback youtube_videos.json:", fsErr);
             }
           }
-        } catch (fsErr) {
-          console.warn("[Platform /api/events] Error reading fallback youtube_videos.json:", fsErr);
-        }
-      }
 
-      return NextResponse.json({ events: pastEvents || [] });
+          return dbPastEvents || [];
+        },
+        { ttlMs: 60_000, tags: ["events"] }
+      );
+
+      return NextResponse.json({ events: pastEvents });
     }
 
     // Default: Only return active upcoming events whose date is today or in the future
-    const events = await prisma.event.findMany({
-      where: {
-        isUpcoming: true,
-        date: { gte: today },
-      },
-      orderBy: { date: "asc" },
-      select: {
-        id: true,
-        slug: true,
-        title: true,
-        description: true,
-        speakerName: true,
-        speakerBio: true,
-        category: true,
-        coverUrl: true,
-        date: true,
-        timeText: true,
-        location: true,
-        link: true,
-        youtubeId: true,
-        isUpcoming: true,
-        inscriptions: userEmail
-          ? {
+    const [baseUpcomingEvents, userInscribedIds] = await Promise.all([
+      withServerCache(
+        "events-upcoming-base",
+        () =>
+          prisma.event.findMany({
+            where: {
+              isUpcoming: true,
+              date: { gte: today },
+            },
+            orderBy: { date: "asc" },
+            select: {
+              id: true,
+              slug: true,
+              title: true,
+              description: true,
+              speakerName: true,
+              speakerBio: true,
+              category: true,
+              coverUrl: true,
+              date: true,
+              timeText: true,
+              location: true,
+              link: true,
+              youtubeId: true,
+              isUpcoming: true,
+            },
+          }),
+        { ttlMs: 60_000, tags: ["events"] }
+      ),
+      userEmail
+        ? prisma.eventInscription
+            .findMany({
               where: {
                 guest: { email: userEmail.toLowerCase().trim() },
+                event: { isUpcoming: true, date: { gte: today } },
               },
-              select: { id: true },
-            }
-          : false,
-      },
-    });
+              select: { eventId: true },
+            })
+            .then((rows) => new Set(rows.map((r) => r.eventId)))
+        : Promise.resolve(new Set<string>()),
+    ]);
 
-    const formattedEvents = events.map((event) => {
-      const isRegistered = Boolean(
-        Array.isArray((event as any).inscriptions) && (event as any).inscriptions.length > 0
-      );
-      const { inscriptions, ...rest } = event as any;
-      return {
-        ...rest,
-        isRegistered,
-      };
-    });
+    const nowMs = Date.now();
+    const formattedEvents = baseUpcomingEvents
+      .filter((event) => {
+        if (event.isUpcoming === false) return false;
+        const utcDate = resolveEventUtcDate(event.date, event.timeText);
+        return !utcDate || utcDate.getTime() >= nowMs;
+      })
+      .map((event) => ({
+        ...event,
+        isRegistered: userInscribedIds.has(event.id),
+      }));
 
     return NextResponse.json({ events: formattedEvents });
   } catch (error: any) {
@@ -233,6 +253,14 @@ export async function POST(request: Request) {
 
     if (!event) {
       return NextResponse.json({ error: "Evento no encontrado." }, { status: 404 });
+    }
+
+    const eventStartUtc = resolveEventUtcDate(event.date, event.timeText);
+    if (event.isUpcoming === false || (eventStartUtc !== null && eventStartUtc.getTime() < Date.now())) {
+      return NextResponse.json(
+        { error: "No es posible inscribirse a una actividad que ya finalizó." },
+        { status: 400 }
+      );
     }
 
     const cleanEmail = user.email.toLowerCase().trim();
@@ -336,7 +364,7 @@ export async function DELETE(request: Request) {
       }),
       prisma.event.findUnique({
         where: { id: eventId },
-        select: { id: true, isUpcoming: true, date: true },
+        select: { id: true, isUpcoming: true, date: true, timeText: true },
       }),
     ]);
 
@@ -348,9 +376,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: "Evento no encontrado." }, { status: 404 });
     }
 
+    const eventStartUtc = resolveEventUtcDate(event.date, event.timeText);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const isPast = event.isUpcoming === false || (event.date !== null && event.date < today);
+    const isPast =
+      event.isUpcoming === false ||
+      (eventStartUtc !== null && eventStartUtc.getTime() < Date.now()) ||
+      (event.date !== null && event.date < today);
 
     if (isPast) {
       return NextResponse.json(

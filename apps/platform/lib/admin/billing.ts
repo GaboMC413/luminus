@@ -14,7 +14,7 @@ export async function getUserBillingSnapshot(
   if (!user) return null;
 
   if (!stripe || !user.stripeCustomerId || user.stripeCustomerId.startsWith("cus_mock_")) {
-    const isMecenasTier = user.tier === "MECENAS" || Boolean(user.stripeSubscriptionId);
+    const isMecenasTier = user.tier === "MECENAS";
     const isAnnual = user.profile?.selectedPlan?.toLowerCase() === "annual";
     return {
       userId: user.id,

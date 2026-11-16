@@ -9,13 +9,17 @@ export function renderMembershipSwitchMonthlyEmailHtml({
   name = "Usuario",
   periodEndDate = "el fin de tu ciclo anual actual",
 }: MembershipSwitchMonthlyEmailOptions = {}): string {
+  const escapeHtml = (v: string) =>
+    v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  const safeName = escapeHtml(String(name || "Usuario"));
+  const safeDate = escapeHtml(String(periodEndDate || "el fin de tu ciclo anual actual"));
   const contentHtml = `
     <h1 style="font-size: 22px; font-weight: 700; letter-spacing: -0.02em; margin: 0 0 16px 0; color: #0f172a; text-align: center;">
       Cambio de ciclo programado
     </h1>
 
     <p style="font-size: 15.5px; line-height: 1.65; margin: 0 0 16px 0; color: #334155; text-align: center;">
-      Hola <strong style="color: #0f172a;">${name}</strong>, hemos programado el cambio de tu suscripción a la modalidad mensual.
+      Hola <strong style="color: #0f172a;">${safeName}</strong>, hemos programado el cambio de tu suscripción a la modalidad mensual.
     </p>
 
     <!-- Ficha de detalle del cambio programado -->
@@ -24,7 +28,7 @@ export function renderMembershipSwitchMonthlyEmailHtml({
         ¿Cómo se aplicará esta transición?
       </p>
       <ul style="margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.6; color: #475569;">
-        <li>Tu suscripción anual ya abonada continúa vigente con todos sus beneficios hasta el <strong>${periodEndDate}</strong>.</li>
+        <li>Tu suscripción anual ya abonada continúa vigente con todos sus beneficios hasta el <strong>${safeDate}</strong>.</li>
         <li>A partir de esa fecha, tu plan pasará a ser <strong>Mecenas Mensual por USD 5 / mes</strong> con renovación mensual.</li>
         <li>No se te cobrará ningún importe adicional hasta que venza tu período anual actual.</li>
       </ul>
