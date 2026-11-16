@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { stripe } from "@/lib/stripe";
+import { handleApiError } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
 
@@ -119,11 +120,10 @@ export async function POST() {
       success: true,
       message: "¡Tu membresía Mecenas se renovará automáticamente como antes!",
     });
-  } catch (error: any) {
-    console.error("[reactivate] Error:", error);
-    return NextResponse.json(
-      { message: error?.message || "Error al reactivar la membresía." },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error, {
+      context: "[membership/reactivate] POST",
+      message: "Error al reactivar la membresía.",
+    });
   }
 }

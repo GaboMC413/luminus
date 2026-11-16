@@ -270,14 +270,16 @@ export function getCognitoErrorMessage(error: unknown, fallback: string) {
   }
 
   if (cognitoError.code === "CognitoConfigError") {
-    return "Cognito todavia no esta configurado para este entorno.";
+    console.error("[Cognito Config Error]: Auth provider not configured for this environment.");
+    return "El servicio de autenticación no está disponible temporalmente.";
   }
 
   if (
     cognitoError.code === "InvalidParameterException" &&
     (cognitoError.message?.includes("USER_PASSWORD_AUTH") || cognitoError.message?.includes("Auth flow"))
   ) {
-    return "Cognito necesita habilitar USER_PASSWORD_AUTH para este cliente.";
+    console.error("[Cognito Auth Flow Error]: USER_PASSWORD_AUTH is not enabled for this client.");
+    return "El servicio de autenticación no está disponible temporalmente.";
   }
 
   if (cognitoError.code === "InvalidParameterException") {

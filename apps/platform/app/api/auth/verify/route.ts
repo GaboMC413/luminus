@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { confirmSignUp } from "@/lib/auth/cognito-password";
 import { createSessionToken, setSessionCookie } from "@/lib/auth/session";
+import { handleApiError, logServerError } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
 
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
       await confirmSignUp(email, body.code);
     } catch (cognitoError: any) {
       if (process.env.NODE_ENV !== "production") {
-        console.warn("[LOCAL DEV] Bypassing Cognito verification error in local. Code accepted:", body.code);
+        console.warn("[LOCAL DEV] Bypassing Cognito verification error in local.");
       } else {
         throw cognitoError;
       }
@@ -82,29 +83,27 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, onboardingStatus }, { status: 200 });
   } catch (error: any) {
-    console.error("Cognito verification failed.", error);
-
-    if (error.code === "CodeMismatchException") {
+    if (error?.code === "CodeMismatchException") {
       return NextResponse.json({ message: "El código ingresado es incorrecto." }, { status: 400 });
     }
 
-    if (error.code === "ExpiredCodeException") {
+    if (error?.code === "ExpiredCodeException") {
       return NextResponse.json(
         { message: "El código ha expirado. Por favor, solicita uno nuevo." },
         { status: 400 }
       );
     }
 
-    if (error.code === "NotAuthorizedException") {
+    if (error?.code === "NotAuthorizedException") {
       return NextResponse.json(
         { message: "El usuario ya ha sido verificado u ocurrió un error de autorización." },
         { status: 400 }
       );
     }
 
-    return NextResponse.json(
-      { message: error.message || "No pudimos verificar tu correo en este momento." },
-      { status: error.status || 500 }
-    );
+    return handleApiError(error, {
+      context: "[auth/verify] POST",
+      message: "No pudimos verificar tu correo en este momento.",
+    });
   }
 }

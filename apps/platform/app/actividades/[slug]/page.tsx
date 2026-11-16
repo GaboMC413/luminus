@@ -24,6 +24,22 @@ async function getEventData(slug: string) {
         ...(isUuid ? [{ id: slug }] : []),
       ],
     },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      description: true,
+      speakerName: true,
+      speakerBio: true,
+      category: true,
+      coverUrl: true,
+      date: true,
+      timeText: true,
+      location: true,
+      link: true,
+      youtubeId: true,
+      isUpcoming: true,
+    },
   });
 
   return event;

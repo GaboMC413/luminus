@@ -41,6 +41,24 @@ jobs:
           node-version: "22"
           cache: npm
 
+      - name: Cachear build de Next.js (Marketing)
+        uses: actions/cache@v4
+        with:
+          path: apps/marketing/.next/cache
+          key: ${{ runner.os }}-nextjs-marketing-${{ hashFiles('package-lock.json') }}-${{ hashFiles('apps/marketing/**') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-marketing-${{ hashFiles('package-lock.json') }}-
+            ${{ runner.os }}-nextjs-marketing-
+
+      - name: Cachear build de Next.js (Plataforma)
+        uses: actions/cache@v4
+        with:
+          path: apps/platform/.next/cache
+          key: ${{ runner.os }}-nextjs-platform-${{ hashFiles('package-lock.json') }}-${{ hashFiles('apps/platform/**') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-platform-${{ hashFiles('package-lock.json') }}-
+            ${{ runner.os }}-nextjs-platform-
+
       - name: Instalar dependencias
         run: npm ci --no-audit
 

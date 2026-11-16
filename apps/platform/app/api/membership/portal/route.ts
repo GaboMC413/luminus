@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { createCustomerPortalSession } from "@/lib/stripe";
+import { handleApiError } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
 
@@ -40,11 +41,10 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(portal);
-  } catch (error: any) {
-    console.error("Error creating customer portal session:", error);
-    return NextResponse.json(
-      { message: "Error al conectar con la pasarela de Stripe." },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error, {
+      context: "[membership/portal] POST",
+      message: "Error al conectar con la pasarela de Stripe.",
+    });
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import type Stripe from "stripe";
+import { handleApiError, logServerError } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -116,8 +117,8 @@ export async function POST(request: Request) {
 
   try {
     event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
-  } catch (err: any) {
-    console.error("[webhooks/stripe] Signature verification failed:", err?.message || err);
+  } catch (err: unknown) {
+    logServerError("[webhooks/stripe] Signature verification failed", err);
     return NextResponse.json(
       { message: "Invalid Stripe webhook signature." },
       { status: 400 }
@@ -156,11 +157,10 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json({ received: true });
-  } catch (err: any) {
-    console.error("[webhooks/stripe] Handler error:", err);
-    return NextResponse.json(
-      { message: "Webhook handler failed." },
-      { status: 500 }
-    );
+  } catch (err: unknown) {
+    return handleApiError(err, {
+      context: "[webhooks/stripe] Handler error",
+      message: "Webhook handler failed.",
+    });
   }
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { stripe, getOrCreateMembershipPrice } from "@/lib/stripe";
+import { handleApiError } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
 
@@ -129,11 +130,10 @@ export async function POST(req: Request) {
         : "Tu membresía cambiará a Mecenas Mensual al finalizar tu ciclo actual.",
       scheduledChange: targetInterval,
     });
-  } catch (error: any) {
-    console.error("[switch-plan] Error:", error);
-    return NextResponse.json(
-      { message: error?.message || "Error al programar el cambio de plan." },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error, {
+      context: "[membership/switch-plan] POST",
+      message: "Error al programar el cambio de plan.",
+    });
   }
 }

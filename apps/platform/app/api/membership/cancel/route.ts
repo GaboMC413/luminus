@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { stripe } from "@/lib/stripe";
+import { handleApiError } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
 
@@ -122,16 +123,17 @@ export async function POST(req: Request) {
       success: true,
       message: "Tu membresía no se renovará al finalizar tu ciclo actual.",
     });
-  } catch (error: any) {
-    console.error("[cancel] Error:", error);
-    const rawMsg = error?.message || "";
-    let friendlyMessage = "Error al procesar la cancelación. Por favor, intenta de nuevo.";
+  } catch (error: unknown) {
+    const rawMsg = error instanceof Error ? error.message : "";
     if (rawMsg.includes("canceled subscription")) {
-      friendlyMessage = "Esta membresía ya se encuentra cancelada.";
+      return NextResponse.json(
+        { message: "Esta membresía ya se encuentra cancelada." },
+        { status: 400 }
+      );
     }
-    return NextResponse.json(
-      { message: friendlyMessage },
-      { status: 500 }
-    );
+    return handleApiError(error, {
+      context: "[membership/cancel] POST",
+      message: "Error al procesar la cancelación. Por favor, intenta de nuevo.",
+    });
   }
 }

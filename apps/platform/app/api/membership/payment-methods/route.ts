@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { stripe } from "@/lib/stripe";
+import { handleApiError } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
 
@@ -55,12 +56,11 @@ export async function PUT(request: Request) {
     }
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error("[payment-methods] PUT Error:", error);
-    return NextResponse.json(
-      { message: error.message || "Error al actualizar el método de pago predeterminado." },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error, {
+      context: "[membership/payment-methods] PUT",
+      message: "Error al actualizar el método de pago predeterminado.",
+    });
   }
 }
 
@@ -142,11 +142,10 @@ export async function DELETE(request: Request) {
     await stripe.paymentMethods.detach(paymentMethodId);
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error("[payment-methods] DELETE Error:", error);
-    return NextResponse.json(
-      { message: error.message || "Error al eliminar el método de pago." },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error, {
+      context: "[membership/payment-methods] DELETE",
+      message: "Error al eliminar el método de pago.",
+    });
   }
 }

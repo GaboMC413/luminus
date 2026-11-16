@@ -3,6 +3,7 @@ import { getCurrentSession } from "@/lib/auth/session";
 import { prisma } from "@/lib/db";
 import { deleteS3FileByUrl } from "@/lib/storage/s3FileCleanup";
 import { invalidateServerCacheTag } from "@/lib/serverCache";
+import { handleApiError } from "@/lib/errors/server-error";
 
 function extractYoutubeId(url?: string | null): string | null {
   if (!url) return null;
@@ -138,9 +139,12 @@ export async function POST(request: Request) {
       invalidateServerCacheTag("events");
       return NextResponse.json({ success: true, event: created });
     }
-  } catch (error: any) {
-    console.error("[API Admin Events Error]:", error);
-    return NextResponse.json({ error: error.message || "Error guardando el evento." }, { status: 500 });
+  } catch (error: unknown) {
+    return handleApiError(error, {
+      context: "[admin/events] SAVE",
+      field: "error",
+      message: "Error guardando el evento.",
+    });
   }
 }
 
@@ -178,8 +182,11 @@ export async function DELETE(request: Request) {
 
     invalidateServerCacheTag("events");
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error("[API Admin Events Delete Error]:", error);
-    return NextResponse.json({ error: error.message || "Error eliminando el evento." }, { status: 500 });
+  } catch (error: unknown) {
+    return handleApiError(error, {
+      context: "[admin/events] DELETE",
+      field: "error",
+      message: "Error eliminando el evento.",
+    });
   }
 }

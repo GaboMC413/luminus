@@ -95,8 +95,15 @@ export function PublicProfileView({ identifier }: PublicProfileViewProps) {
                 restrictedErr.code = 403;
                 throw restrictedErr;
               }
+              if (res.status === 404) {
+                const notFoundErr: any = new Error("not_found");
+                notFoundErr.code = 404;
+                throw notFoundErr;
+              }
               const errData = await res.json().catch(() => ({}));
-              throw new Error(errData.message || `Error del servidor: ${res.status}`);
+              const serverErr: any = new Error(errData.message || `Error del servidor: ${res.status}`);
+              serverErr.code = res.status;
+              throw serverErr;
             }
             const data = await res.json();
             return data.profile;
@@ -109,8 +116,12 @@ export function PublicProfileView({ identifier }: PublicProfileViewProps) {
           setError("restricted");
           return;
         }
+        if (err?.code === 404 || err?.message === "not_found") {
+          setError("not_found");
+          return;
+        }
         console.error("Error al cargar el perfil público:", err);
-        setError(err.message || "Error al conectar con el servidor.");
+        setError("server_error");
       } finally {
         setLoading(false);
       }
@@ -408,22 +419,31 @@ export function PublicProfileView({ identifier }: PublicProfileViewProps) {
 
   if (error || !profile) {
     const isRestricted = error === "restricted";
+    const isServerError = error === "server_error";
 
     return (
       <div className="w-full flex flex-col relative bg-slate-50 min-h-screen font-sans">
         <div className="w-full flex-1 min-h-[calc(100vh-140px)] flex flex-col items-center justify-center p-4">
           <div className="w-full max-w-md bg-white rounded-2xl p-8 border border-slate-200/90 shadow-none flex flex-col items-center text-center gap-5">
             <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500">
-              {isRestricted ? <Lock className="w-6 h-6" /> : <UserX className="w-6 h-6" />}
+              {isRestricted ? (
+                <Lock className="w-6 h-6" />
+              ) : isServerError ? (
+                <Info className="w-6 h-6" />
+              ) : (
+                <UserX className="w-6 h-6" />
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <h2 className="text-title-page font-bold tracking-tight text-slate-900 font-jakarta">
-                Perfil no disponible
+                {isServerError ? "No pudimos cargar este perfil" : "Perfil no disponible"}
               </h2>
               <p className="text-body text-slate-500 font-sans leading-relaxed">
                 {isRestricted
                   ? "Este perfil no está disponible."
-                  : "Este perfil ya no está disponible o la cuenta ha sido eliminada."}
+                  : isServerError
+                    ? "Ocurrió un error al conectar con el servidor. Intenta nuevamente en unos instantes."
+                    : "Este perfil ya no está disponible o la cuenta ha sido eliminada."}
               </p>
             </div>
             <Button

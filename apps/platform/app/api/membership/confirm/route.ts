@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
+import { handleApiError } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
 
@@ -246,11 +247,10 @@ export async function POST(request: Request) {
       memberSince: updatedUser.memberSince,
       email: updatedUser.email,
     });
-  } catch (error: any) {
-    console.error("Confirm membership failed:", error);
-    return NextResponse.json(
-      { message: error.message || "Error al confirmar la membresía." },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error, {
+      context: "[membership/confirm] POST",
+      message: "Error al confirmar la membresía.",
+    });
   }
 }

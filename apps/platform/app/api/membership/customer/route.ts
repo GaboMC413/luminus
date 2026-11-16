@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { stripe } from "@/lib/stripe";
+import { handleApiError } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
 
@@ -58,11 +59,10 @@ export async function PATCH(request: Request) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    console.error("[customer] PATCH Error:", error);
-    return NextResponse.json(
-      { message: error.message || "Error al actualizar los datos de facturación." },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error, {
+      context: "[membership/customer] PATCH",
+      message: "Error al actualizar los datos de facturación.",
+    });
   }
 }

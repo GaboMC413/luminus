@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentSession } from "@/lib/auth/session";
 import { stripe } from "@/lib/stripe";
+import { handleApiError } from "@/lib/errors/server-error";
 
 export const runtime = "nodejs";
 
@@ -57,11 +58,10 @@ export async function POST() {
       clientSecret: setupIntent.client_secret,
       isMock: false,
     });
-  } catch (error: any) {
-    console.error("[setup-intent] Error:", error);
-    return NextResponse.json(
-      { message: error.message || "Error al inicializar la configuración de tarjeta." },
-      { status: 500 }
-    );
+  } catch (error: unknown) {
+    return handleApiError(error, {
+      context: "[membership/setup-intent] POST",
+      message: "Error al inicializar la configuración de tarjeta.",
+    });
   }
 }
