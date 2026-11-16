@@ -45,7 +45,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: apps/marketing/.next/cache
-          key: ${{ runner.os }}-nextjs-marketing-${{ hashFiles('package-lock.json') }}-${{ hashFiles('apps/marketing/**') }}
+          key: ${{ runner.os }}-nextjs-marketing-${{ hashFiles('package-lock.json') }}-${{ hashFiles('apps/marketing/app/**', 'apps/marketing/components/**', 'apps/marketing/content/**', 'apps/marketing/data/**', 'apps/marketing/lib/**', 'apps/marketing/utils/**', 'apps/marketing/*.js', 'apps/marketing/*.json') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-marketing-${{ hashFiles('package-lock.json') }}-
             ${{ runner.os }}-nextjs-marketing-
@@ -54,7 +54,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: apps/platform/.next/cache
-          key: ${{ runner.os }}-nextjs-platform-${{ hashFiles('package-lock.json') }}-${{ hashFiles('apps/platform/**') }}
+          key: ${{ runner.os }}-nextjs-platform-${{ hashFiles('package-lock.json') }}-${{ hashFiles('apps/platform/app/**', 'apps/platform/components/**', 'apps/platform/features/**', 'apps/platform/lib/**', 'apps/platform/utils/**', 'apps/platform/prisma/**', 'apps/platform/*.js', 'apps/platform/*.json', 'apps/platform/*.mts') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-platform-${{ hashFiles('package-lock.json') }}-
             ${{ runner.os }}-nextjs-platform-

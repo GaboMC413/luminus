@@ -100,6 +100,7 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
   const [selectedAdminCategory, setSelectedAdminCategory] = useState<string | null>(null);
   const [selectedAreas, setSelectedAreas] = useState<string[]>([]);
   const [publishDate, setPublishDate] = useState("");
+  const [postAsOfficial, setPostAsOfficial] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isAdminCategoryOpen, setIsAdminCategoryOpen] = useState(false);
 
@@ -370,6 +371,7 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
       authorAvatar: userAvatar,
       authorRole: "Miembro",
       authorLocation: userLocation,
+      isOfficial: isAdmin && postAsOfficial ? true : undefined,
       date: "Hoy",
       createdAt: customCreatedAt,
       imageUrl: finalImageUrl,
@@ -407,6 +409,7 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
     setSelectedCategory(null);
     setSelectedAreas([]);
     setPublishDate("");
+    setPostAsOfficial(false);
     setShowTagPills(false);
     setIsCategoryOpen(false);
     setIsModalOpen(false);
@@ -612,6 +615,21 @@ export function CreatePostCard({ currentUserProfile, onAddPost }: CreatePostCard
                 className="w-full h-11 px-3.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 focus:border-slate-900 text-sm font-sans text-slate-700 outline-none transition-colors"
               />
             </div>
+            <label
+              htmlFor="admin-post-official"
+              className="flex items-center gap-2.5 h-11 px-3.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 cursor-pointer select-none transition-colors"
+            >
+              <input
+                id="admin-post-official"
+                type="checkbox"
+                checked={postAsOfficial}
+                onChange={(e) => setPostAsOfficial(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900 cursor-pointer"
+              />
+              <span className="text-sm font-sans text-slate-700">
+                Publicar como cuenta oficial LUMINUS
+              </span>
+            </label>
           </div>
           ) : (
             /* Single Category Selector for Regular Members */

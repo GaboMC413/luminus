@@ -1,18 +1,17 @@
 import { PrismaClient } from "@prisma/client";
 import { randomUUID } from "crypto";
 
-export async function sendWelcomeMessage(prisma: PrismaClient, newUserId: string) {
-  const SYSTEM_EMAIL = "info@luminuslatam.com";
+export const OFFICIAL_LUMINUS_EMAIL = "info@luminuslatam.com";
 
-  // 1. Find or create the official LUMINUS system account
+export async function getOrCreateOfficialLuminusUser(prisma: PrismaClient) {
   let systemUser = await prisma.user.findUnique({
-    where: { email: SYSTEM_EMAIL },
+    where: { email: OFFICIAL_LUMINUS_EMAIL },
   });
 
   if (!systemUser) {
     systemUser = await prisma.user.create({
       data: {
-        email: SYSTEM_EMAIL,
+        email: OFFICIAL_LUMINUS_EMAIL,
         cognitoSub: `system:${randomUUID()}`,
         authProvider: "email",
         role: "ADMIN",
@@ -47,6 +46,13 @@ export async function sendWelcomeMessage(prisma: PrismaClient, newUserId: string
       },
     });
   }
+
+  return systemUser;
+}
+
+export async function sendWelcomeMessage(prisma: PrismaClient, newUserId: string) {
+  // 1. Find or create the official LUMINUS system account
+  const systemUser = await getOrCreateOfficialLuminusUser(prisma);
 
   // 2. Check if a conversation between the system account and the user already exists
   const existingConversation = await prisma.conversation.findFirst({
