@@ -7,6 +7,7 @@ import { SelectInput } from "@/components/ui/SelectInput";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { AdminBadge, AdminCard, AdminDetailRow } from "../AdminDesignSystem";
+import { decodeCsvBuffer, parseLeadsCsv, ParseLeadsCsvResult } from "@/lib/csv/parseLeadsCsv";
 
 interface EventsTabProps {
   events: AdminEvent[];
@@ -174,6 +175,89 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
   const [isNotifyingLive, setIsNotifyingLive] = useState<boolean>(false);
   const [showNotifyLiveConfirmModal, setShowNotifyLiveConfirmModal] = useState<boolean>(false);
   const [notifySuccessMessage, setNotifySuccessMessage] = useState<string | null>(null);
+
+  // CSV Import Modal State
+  const [showImportModal, setShowImportModal] = useState<boolean>(false);
+  const [importFileName, setImportFileName] = useState<string>("");
+  const [importParseResult, setImportParseResult] = useState<ParseLeadsCsvResult | null>(null);
+  const [importParseError, setImportParseError] = useState<string | null>(null);
+  const [isImportingCsv, setIsImportingCsv] = useState<boolean>(false);
+  const [importSummary, setImportSummary] = useState<string | null>(null);
+  const importFileInputRef = useRef<HTMLInputElement>(null);
+
+  const resetImportModalState = () => {
+    setImportFileName("");
+    setImportParseResult(null);
+    setImportParseError(null);
+    if (importFileInputRef.current) {
+      importFileInputRef.current.value = "";
+    }
+  };
+
+  const handleImportFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setImportParseError(null);
+    setImportParseResult(null);
+    if (!file) {
+      setImportFileName("");
+      return;
+    }
+
+    setImportFileName(file.name);
+    try {
+      const buffer = await file.arrayBuffer();
+      const text = decodeCsvBuffer(buffer);
+      const parsed = parseLeadsCsv(text);
+      if (parsed.rows.length === 0) {
+        setImportParseError("No se encontraron filas con email válido para importar.");
+        return;
+      }
+      setImportParseResult(parsed);
+    } catch (err: unknown) {
+      setImportParseError(err instanceof Error ? err.message : "No se pudo leer el archivo.");
+    }
+  };
+
+  const handleConfirmImport = async () => {
+    if (!selectedEvent || !importParseResult || importParseResult.rows.length === 0) return;
+    setIsImportingCsv(true);
+    setImportParseError(null);
+    try {
+      const res = await fetch(`/api/admin/events/${selectedEvent.id}/import-inscriptions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rows: importParseResult.rows }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setImportParseError(data.error || "Error al importar las inscripciones.");
+        return;
+      }
+
+      if (Array.isArray(data.inscriptions) && data.inscriptions.length > 0) {
+        setInscriptionsList((prev) => [...data.inscriptions, ...prev]);
+        setEventsList((prev) =>
+          prev.map((ev) =>
+            ev.id === selectedEvent.id
+              ? { ...ev, inscriptionsCount: (ev.inscriptionsCount ?? 0) + data.inscriptions.length }
+              : ev
+          )
+        );
+      }
+
+      const parts = [`${data.importedCount || 0} importados`];
+      if (data.alreadyRegisteredCount) parts.push(`${data.alreadyRegisteredCount} ya inscriptos`);
+      if (data.skippedCount) parts.push(`${data.skippedCount} omitidos`);
+      setImportSummary(`Importación completada: ${parts.join(", ")}.`);
+      setShowImportModal(false);
+      resetImportModalState();
+    } catch (err) {
+      console.error("Error importing CSV inscriptions:", err);
+      setImportParseError("Error de conexión al importar las inscripciones.");
+    } finally {
+      setIsImportingCsv(false);
+    }
+  };
 
   const handleNotifyLive = async () => {
     if (!selectedEvent) return;
@@ -833,9 +917,36 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                 {/* Inscriptions Table */}
                 {detailSubTab === "inscriptos" && (
                   <div>
-                    <h3 className="text-[11.5px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-                      Personas Inscriptas ({selectedEventInscriptions.length})
-                    </h3>
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <h3 className="text-[11.5px] font-bold uppercase tracking-wider text-slate-400">
+                        Personas Inscriptas ({selectedEventInscriptions.length})
+                      </h3>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setImportSummary(null);
+                          resetImportModalState();
+                          setShowImportModal(true);
+                        }}
+                        className="h-8 text-xs px-3 gap-1.5"
+                      >
+                        <span className="material-symbols-rounded text-[15px]">upload_file</span>
+                        <span>Importar CSV</span>
+                      </Button>
+                    </div>
+
+                    {importSummary && (
+                      <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2 text-xs font-medium text-emerald-800 flex items-center justify-between gap-2">
+                        <span>{importSummary}</span>
+                        <button
+                          type="button"
+                          onClick={() => setImportSummary(null)}
+                          className="text-emerald-700 hover:text-emerald-900 font-bold cursor-pointer bg-transparent border-none"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
                     {selectedEventInscriptions.length === 0 ? (
                       <div className="bg-slate-50/50 rounded-xl p-8 text-center text-slate-400 text-xs">
                         Aún no hay personas inscriptas a este evento.
@@ -1344,6 +1455,122 @@ export function EventsTab({ events: initialEvents, inscriptions }: EventsTabProp
                 className="h-10 text-xs px-5 bg-slate-900 hover:bg-slate-800 text-white font-bold"
               >
                 {isNotifyingLive ? "Enviando..." : "Confirmar y Enviar Mails"}
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Import CSV Inscriptions Modal */}
+      {showImportModal && selectedEvent && (
+        <Modal
+          isOpen={showImportModal}
+          onClose={() => {
+            if (!isImportingCsv) {
+              setShowImportModal(false);
+              resetImportModalState();
+            }
+          }}
+          title="Importar inscriptos desde CSV"
+          subtitle={selectedEvent.title}
+          maxWidth="max-w-lg"
+        >
+          <div className="flex flex-col gap-4 p-1 text-sm">
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Sube un archivo CSV o TSV (por ejemplo, exportación de leads de Meta). Solo se completarán los campos disponibles (email, nombre, ciudad, provincia y país) sin enviar correos de confirmación.
+            </p>
+
+            <div>
+              <input
+                ref={importFileInputRef}
+                type="file"
+                accept=".csv,.tsv,.txt"
+                onChange={handleImportFileChange}
+                className="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border file:border-slate-200 file:text-xs file:font-semibold file:bg-slate-50 file:text-slate-700 hover:file:bg-slate-100 cursor-pointer"
+              />
+              {importFileName && (
+                <p className="mt-1.5 text-[11px] text-slate-500 font-mono truncate">
+                  Archivo: {importFileName}
+                </p>
+              )}
+            </div>
+
+            {importParseError && (
+              <div className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs text-rose-700 font-medium">
+                {importParseError}
+              </div>
+            )}
+
+            {importParseResult && (
+              <div className="space-y-2.5">
+                <div className="flex flex-wrap gap-2 text-[11px] font-semibold">
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    {importParseResult.rows.length} listos para importar
+                  </span>
+                  {importParseResult.duplicateCount > 0 && (
+                    <span className="px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 border border-amber-200">
+                      {importParseResult.duplicateCount} duplicados en archivo
+                    </span>
+                  )}
+                  {importParseResult.skippedCount > 0 && (
+                    <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 border border-slate-200">
+                      {importParseResult.skippedCount} sin email válido
+                    </span>
+                  )}
+                </div>
+
+                <div className="bg-slate-50 rounded-xl border border-slate-200/80 overflow-x-auto">
+                  <table className="w-full text-left text-[11px] border-collapse">
+                    <thead>
+                      <tr className="bg-slate-100/80 border-b border-slate-200 text-slate-500 font-bold uppercase">
+                        <th className="py-2 px-2.5">Nombre</th>
+                        <th className="py-2 px-2.5">Email</th>
+                        <th className="py-2 px-2.5">Ubicación</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
+                      {importParseResult.rows.slice(0, 5).map((row) => (
+                        <tr key={row.email}>
+                          <td className="py-1.5 px-2.5 font-medium text-slate-900">
+                            {[row.firstName, row.lastName].filter(Boolean).join(" ") || "Invitado"}
+                          </td>
+                          <td className="py-1.5 px-2.5 font-mono text-slate-600">{row.email}</td>
+                          <td className="py-1.5 px-2.5 text-slate-600">
+                            {[row.city, row.state, row.country].filter(Boolean).join(", ") || "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {importParseResult.rows.length > 5 && (
+                    <div className="px-2.5 py-1.5 text-[11px] text-slate-500 border-t border-slate-200/60 bg-slate-50">
+                      ...y {importParseResult.rows.length - 5} personas más.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowImportModal(false);
+                  resetImportModalState();
+                }}
+                disabled={isImportingCsv}
+                className="h-10 text-xs px-4"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleConfirmImport}
+                disabled={isImportingCsv || !importParseResult || importParseResult.rows.length === 0}
+                className="h-10 text-xs px-5 bg-slate-900 hover:bg-slate-800 text-white font-bold"
+              >
+                {isImportingCsv
+                  ? "Importando..."
+                  : `Importar ${importParseResult?.rows.length || 0} personas`}
               </Button>
             </div>
           </div>
