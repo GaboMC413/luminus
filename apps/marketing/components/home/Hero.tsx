@@ -14,7 +14,7 @@ export function Hero() {
             href="https://app.luminuslatam.com/unirme"
             className="flex items-center justify-center w-full sm:w-auto py-3.5 px-8 text-base font-normal text-white bg-black hover:bg-slate-800 rounded-2xl text-center sm:min-w-[240px] transition-colors"
           >
-            Unirme gratis
+            Unirme a la red
           </a>
           <div className="text-base sm:text-lg text-black leading-relaxed flex flex-col gap-0.5 font-normal">
             <p>Crea tu cuenta gratis sin datos de pago, o impulsa la red como Mecenas.</p>
